@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <Transition
+        motion:constraintSetEnd="@+id/end_info"
+        motion:constraintSetStart="@id/start_info"
+        motion:duration="1000">
+       <KeyFrameSet>
+       </KeyFrameSet>
+        <OnClick motion:targetId="@+id/moreInfo" />
+    </Transition>
+
+    <ConstraintSet android:id="@+id/start_info">
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/end_info">
+        <Constraint
+            android:id="@+id/optionsBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            motion:layout_constraintBottom_toTopOf="@id/moreInfo"
+            motion:layout_constraintTop_toBottomOf="@id/infoLayout" />
+        <Constraint
+            android:id="@+id/infoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="5dp"
+            motion:layout_constraintBottom_toTopOf="@id/optionsBar"
+            motion:layout_constraintTop_toTopOf="parent" />
+    </ConstraintSet>
+</MotionScene>

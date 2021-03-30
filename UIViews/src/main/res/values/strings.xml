@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <string name="removed">Removed %s</string>
+    <string name="undo">Undo</string>
+    <string name="removeFromFavorites">Remove from Favorites</string>
+    <string name="addToFavorites">Add to Favorites</string>
+    <string name="searchHint">Search %s</string>
+    <string name="chooseASource">Choose a Source</string>
+    <string name="updateNumber">There are %d update(s)</string>
+    <string name="hadAnUpdate">%s had an update. %s</string>
+    <string name="startingUpdateCheck">Starting Manga Update Checks</string>
+    <string name="checkingUpdate">Checking for Manga Updates</string>
+    <string name="finishedChecking">Finished Checking for Manga Updates</string>
+    <string name="addChapter">Marked %s as read</string>
+    <string name="removeChapter">Removed %s from read</string>
+    <plurals name="updateAmount">
+        <item quantity="one">There is %d update</item>
+        <item quantity="other">There are %d updates</item>
+    </plurals>
+
+    <plurals name="numFavorites">
+        <item quantity="one">Search %d Favorite</item>
+        <item quantity="other">Search %d Favorites</item>
+    </plurals>
+
+    <string name="removeSourceFromFavorites">Remove Source from Favorites</string>
+    <string name="selectSource">Select %s Source</string>
+    <string name="downloadPage">Download Page?</string>
+
+    <string name="moreInfo">More Info</string>
+    <string name="read">Read</string>
+    <string name="download">Download</string>
+    <string name="markAs" tools:ignore="TypographyEllipsis">Mark As...</string>
+    <string name="loadNextChapter">Load Next Chapter</string>
+    <string name="reachedLastChapter">Reached Last Chapter</string>
+    <string name="goBack">Go Back</string>
+
+    <string name="searchFavorites">Search Favorites</string>
+
+    <string name="mangaWorldUpdate">Manga World Update %s</string>
+    <string name="notNow">Not Now</string>
+    <string name="gotoBrowser">Go to Browser</string>
+    <string name="update">Update</string>
+    <string name="updateTitle">There\'s an update! %s</string>
+
+    <string name="viewFavoritesMenu">View Favorites</string>
+    <string name="viewHistoryMenu">View History</string>
+    <string name="changeSourcesMenu">Change Source</string>
+    <string name="viewSettingsMenu">View Settings</string>
+    <string name="gotoSource">Go to Source in Browser</string>
+    <string name="checkForUpdates">Check For Updates</string>
+
+    <string name="all">All</string>
+
+    <string name="areYouSureSignOut">"Are you sure you want to sign out?"</string>
+    <string name="signIn">Sign in</string>
+    <string name="signOut">Sign out</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <string name="ok">OK</string>
+    <string name="wentWrong">Something Went Wrong!</string>
+    <string name="wentWrongInfo">Something happened while trying to load %s. Please try again or use a different source, but please report this to the developer.</string>
+    <string name="wentWrongManga">Something happened while trying to load %s. Please try again, but please report this to the developer.</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>

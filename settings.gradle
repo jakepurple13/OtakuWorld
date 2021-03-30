@@ -1,0 +1,8 @@
+include ':anime_sources'
+include ':manga_sources'
+include ':Models'
+include ':UIViews'
+include ':animeworld'
+include ':mangaworld'
+include ':app'
+rootProject.name = "OtakuWorld"
