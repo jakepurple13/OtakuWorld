@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
+import androidx.navigation.fragment.findNavController
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -45,6 +46,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
             sourcePublish.subscribe { p.title = "Current Source: ${it.serviceName}" }
                 .addTo(disposable)
+        }
+
+        findPreference<Preference>("view_favorites")?.setOnPreferenceClickListener {
+            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
+            true
         }
 
     }

@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld
+package com.programmersbox.uiviews.utils
 
 import android.content.Context
 import androidx.recyclerview.widget.GridLayoutManager

@@ -7,6 +7,11 @@
             app:key="current_source"
             app:title="Current Source: " />
 
+        <Preference
+            app:icon="@android:drawable/star_big_on"
+            app:key="view_favorites"
+            app:title="View Favorites" />
+
         <ListPreference
             app:defaultValue="reply"
             app:entries="@array/reply_entries"

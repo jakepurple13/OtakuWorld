@@ -1,3 +1,4 @@
+include ':favoritesdatabase'
 include ':anime_sources'
 include ':manga_sources'
 include ':Models'

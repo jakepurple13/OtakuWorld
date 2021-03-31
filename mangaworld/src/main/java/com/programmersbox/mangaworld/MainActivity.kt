@@ -1,24 +1,16 @@
 package com.programmersbox.mangaworld
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
+import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
 import com.programmersbox.uiviews.utils.currentService
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy

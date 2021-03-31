@@ -18,6 +18,8 @@ object GogoAnimeApi : ShowApi(
     recentPath = "home/latest-episodes"
 ) {
 
+    override val serviceName: String get() = "GOGOANIME"
+
     override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create {
         try {
             it(doc.allElements.select("div.dl-item").map {

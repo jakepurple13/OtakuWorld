@@ -49,7 +49,7 @@ data class Storage(
 
 data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?) : ViewModel()
 
-interface ApiService {
+interface ApiService: Serializable {
     val baseUrl: String
     val canScroll: Boolean get() = false
     fun getRecent(page: Int = 1): Single<List<ItemModel>>
@@ -59,7 +59,7 @@ interface ApiService {
         Single.create { it.onSuccess(list.filter { it.title.contains(searchText, true) }) }
     fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>>
 
-    val serviceName: String get() = ""
+    val serviceName: String get() = this::class.java.name
 }
 
 val sourcePublish = BehaviorSubject.create<ApiService>()
