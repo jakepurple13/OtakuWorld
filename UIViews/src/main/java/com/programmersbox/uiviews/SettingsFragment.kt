@@ -22,6 +22,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         generalPreferences(genericInfo)
 
+        genericInfo.customPreferences(preferenceScreen)
     }
 
     private fun generalPreferences(genericInfo: GenericInfo) {

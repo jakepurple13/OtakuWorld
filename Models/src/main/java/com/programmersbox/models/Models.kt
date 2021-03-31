@@ -34,8 +34,18 @@ data class ChapterModel(
     val source: ApiService
 ) : ViewModel() {
     var uploadedTime: Long? = null
-    //fun getPageInfo() = sources.getPageInfo(this)
+    fun getChapterInfo() = source.getChapterInfo(this)
 }
+
+class NormalLink(var normal: Normal? = null)
+class Normal(var storage: Array<Storage>? = emptyArray())
+data class Storage(
+    var sub: String? = null,
+    var source: String? = null,
+    var link: String? = null,
+    var quality: String? = null,
+    var filename: String? = null
+)
 
 data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?) : ViewModel()
 
@@ -47,7 +57,7 @@ interface ApiService {
     fun getItemInfo(model: ItemModel): Single<InfoModel>
     fun searchList(searchText: CharSequence, page: Int = 1, list: List<ItemModel>): Single<List<ItemModel>> =
         Single.create { it.onSuccess(list.filter { it.title.contains(searchText, true) }) }
-    //fun getVideoLink(info: ChapterModel): Single<List<String>>
+    fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>>
 
     val serviceName: String get() = ""
 }

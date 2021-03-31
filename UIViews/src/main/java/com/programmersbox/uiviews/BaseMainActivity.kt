@@ -9,23 +9,19 @@ import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.setupWithNavController
 import io.reactivex.disposables.CompositeDisposable
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 
-abstract class BaseMainActivity : AppCompatActivity() {
+abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
 
-    private val disposable = CompositeDisposable()
+    protected val disposable = CompositeDisposable()
 
     private var currentNavController: LiveData<NavController>? = null
 
     protected abstract fun onCreate()
 
-    abstract fun createGenericInfo(): GenericInfo
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        genericInfo = createGenericInfo()
+        genericInfo = this
         setContentView(R.layout.base_main_activity)
 
         currentService?.let { sourcePublish.onNext(it) }

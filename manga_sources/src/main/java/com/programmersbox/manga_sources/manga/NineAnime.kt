@@ -1,9 +1,6 @@
 package com.programmersbox.manga_sources.manga
 
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
+import com.programmersbox.models.*
 import io.reactivex.Single
 import org.jsoup.Jsoup
 import java.text.ParseException
@@ -82,6 +79,20 @@ object NineAnime : ApiService {
             source = Sources.NINE_ANIME
         )
     }*/
+
+    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
+        try {
+            val doc = Jsoup.connect(chapterModel.url).header("Referer", "$baseUrl/manga.").followRedirects(true).get()
+            val script = doc.select("script:containsData(all_imgs_url)").firstOrNull()?.data() ?: throw Exception("Something went wrong")
+            emitter.onSuccess(
+                Regex(""""(http.*)",""").findAll(script).map { it.groupValues[1] }
+                    .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+                    .toList()
+            )
+        } catch (e: Exception) {
+            emitter.onError(e)
+        }
+    }
 
     /*override fun getPageInfo(chapterModel: ChapterModel): PageModel {
         val doc = Jsoup.connect(chapterModel.url).header("Referer", "$baseUrl/manga.").followRedirects(true).get()

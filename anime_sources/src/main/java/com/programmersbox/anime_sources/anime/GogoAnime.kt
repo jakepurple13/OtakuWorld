@@ -1,13 +1,16 @@
 package com.programmersbox.anime_sources.anime
 
 import com.programmersbox.anime_sources.ShowApi
+import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
+import com.programmersbox.models.Storage
 import com.programmersbox.rxutils.invoke
 import io.reactivex.Single
 import org.jsoup.nodes.Document
+import java.net.URI
 
 object GogoAnimeApi : ShowApi(
     baseUrl = "https://www.gogoanime1.com",
@@ -44,6 +47,22 @@ object GogoAnimeApi : ShowApi(
                         source = this
                     )
                 })
+        } catch (e: Exception) {
+            it(e)
+        }
+    }
+
+    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
+        try {
+            val storage = Storage(
+                link = chapterModel.url.toJsoup().select("a[download^=http]").attr("abs:download"),
+                source = chapterModel.url,
+                quality = "Good",
+                sub = "Yes"
+            )
+            val regex = "^[^\\[]+(.*mp4)".toRegex().toPattern().matcher(storage.link!!)
+            storage.filename = if (regex.find()) regex.group(1)!! else "${URI(chapterModel.url).path.split("/")[2]} ${chapterModel.name}.mp4"
+            it(listOf(storage))
         } catch (e: Exception) {
             it(e)
         }
