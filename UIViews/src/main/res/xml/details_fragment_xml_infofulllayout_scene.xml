@@ -6,7 +6,7 @@
     <Transition
         motion:constraintSetEnd="@+id/end_info"
         motion:constraintSetStart="@id/start_info"
-        motion:duration="1000">
+        motion:duration="100">
        <KeyFrameSet>
        </KeyFrameSet>
         <OnClick motion:targetId="@+id/moreInfo" />
