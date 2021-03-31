@@ -24,6 +24,8 @@ enum class Sources(
     //TSUMINO(domain = "tsumino", isAdult = true, source = Tsumino)
     ;
 
+    override val serviceName: String get() = this.name
+
     companion object {
         fun getSourceByUrl(url: String) = values().find { url.contains(it.domain, true) }
 

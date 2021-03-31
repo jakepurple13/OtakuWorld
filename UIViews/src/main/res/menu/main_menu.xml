@@ -12,7 +12,7 @@
         android:title="All" />
 
     <item
-        android:id="@+id/settings_nav"
+        android:id="@+id/setting_nav"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="Settings" />
 

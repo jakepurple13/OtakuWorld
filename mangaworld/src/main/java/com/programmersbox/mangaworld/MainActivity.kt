@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.manga_sources.Sources
+import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
@@ -18,6 +19,7 @@ import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
+import com.programmersbox.uiviews.utils.currentService
 
 class MainActivity : BaseMainActivity() {
 
@@ -33,12 +35,22 @@ class MainActivity : BaseMainActivity() {
 
         }
 
+        override fun sourceList(): List<ApiService> = Sources.values().toList()
+
+        override fun toSource(s: String): ApiService? = try {
+            Sources.valueOf(s)
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+
     }
 
     override fun onCreate() {
 
-        sourcePublish.onNext(Sources.NINE_ANIME)
-
+        if(currentService == null) {
+            sourcePublish.onNext(Sources.NINE_ANIME)
+            currentService = Sources.NINE_ANIME
+        }
     }
 
 }

@@ -48,6 +48,8 @@ interface ApiService {
     fun searchList(searchText: CharSequence, page: Int = 1, list: List<ItemModel>): Single<List<ItemModel>> =
         Single.create { it.onSuccess(list.filter { it.title.contains(searchText, true) }) }
     //fun getVideoLink(info: ChapterModel): Single<List<String>>
+
+    val serviceName: String get() = ""
 }
 
 val sourcePublish = BehaviorSubject.create<ApiService>()

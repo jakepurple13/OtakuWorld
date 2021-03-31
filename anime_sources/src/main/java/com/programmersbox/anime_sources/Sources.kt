@@ -10,7 +10,9 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 enum class Sources(private val api: ApiService) : ApiService by api {
-    GOGOANIME(GogoAnimeApi)
+    GOGOANIME(GogoAnimeApi);
+
+    override val serviceName: String get() = this.name
 }
 
 internal fun String.toJsoup() = Jsoup.connect(this).get()

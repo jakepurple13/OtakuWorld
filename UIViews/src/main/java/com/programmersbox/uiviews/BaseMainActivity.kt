@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.programmersbox.models.sourcePublish
+import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.setupWithNavController
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.GlobalScope
@@ -26,6 +28,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
         genericInfo = createGenericInfo()
         setContentView(R.layout.base_main_activity)
 
+        currentService?.let { sourcePublish.onNext(it) }
+
         if (savedInstanceState == null) {
             setupBottomNavBar()
         }
@@ -39,7 +43,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavBar() {
-        val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav)//, R.navigation.settings_nav)
+        val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav, R.navigation.setting_nav)
 
         val controller = findViewById<BottomNavigationView>(R.id.navLayout2)
             .setupWithNavController(
