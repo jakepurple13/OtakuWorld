@@ -40,6 +40,7 @@
                 tools:src="@tools:sample/avatars" />
 
             <LinearLayout
+                app:layout_constraintBottom_toBottomOf="@id/descriptionLayout"
                 android:id="@+id/moreInfoLayout"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
