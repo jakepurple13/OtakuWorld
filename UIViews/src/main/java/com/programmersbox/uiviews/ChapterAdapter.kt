@@ -29,7 +29,7 @@ class ChapterAdapter(private val context: Context, private val genericInfo: Gene
             binding.chapter = chapterModel
             binding.swatch = swatchInfo
             binding.executePendingBindings()
-            binding.chapterListCard.setOnClickListener { genericInfo.chapterOnClick(chapterModel, context) }
+            binding.chapterListCard.setOnClickListener { genericInfo.chapterOnClick(chapterModel, dataList, context) }
         }
     }
 }

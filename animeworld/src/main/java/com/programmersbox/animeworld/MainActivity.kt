@@ -41,7 +41,7 @@ class MainActivity : BaseMainActivity() {
 
     override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
-    override fun chapterOnClick(model: ChapterModel, context: Context) {
+    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
 
         model.getChapterInfo()
             .subscribeOn(Schedulers.io())

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:gravity="center"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/loadNextChapter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/loadNextChapter" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/goBackFromReadingLoad"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/loadNextChapter"
+        android:text="@string/goBack"
+        app:strokeColor="@color/colorPrimary" />
+
+</RelativeLayout>

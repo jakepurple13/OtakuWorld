@@ -12,7 +12,7 @@ interface GenericInfo {
 
     fun createLayoutManager(context: Context): RecyclerView.LayoutManager
 
-    fun chapterOnClick(model: ChapterModel, context: Context)
+    fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context)
 
     fun sourceList(): List<ApiService>
 

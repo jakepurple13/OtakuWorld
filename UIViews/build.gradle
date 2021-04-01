@@ -65,6 +65,8 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-alpha01"
 
+    implementation 'com.google.code.gson:gson:2.8.6'
+
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.palette:palette-ktx:1.0.0'
     implementation 'com.airbnb.android:lottie:3.6.1'

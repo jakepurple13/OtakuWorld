@@ -1,8 +1,14 @@
 package com.programmersbox.mangaworld
 
 import android.content.Context
+import android.content.Intent
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.github.piasy.biv.BigImageViewer
+import com.github.piasy.biv.loader.glide.GlideImageLoader
+import com.programmersbox.gsonutils.getObjectExtra
+import com.programmersbox.gsonutils.putExtra
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -11,6 +17,7 @@ import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
+import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.currentService
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
@@ -19,6 +26,8 @@ import io.reactivex.schedulers.Schedulers
 class MainActivity : BaseMainActivity() {
 
     override fun onCreate() {
+
+        BigImageViewer.initialize(GlideImageLoader.with(applicationContext))
 
         if(currentService == null) {
             sourcePublish.onNext(Sources.NINE_ANIME)
@@ -32,13 +41,22 @@ class MainActivity : BaseMainActivity() {
     override fun createLayoutManager(context: Context): RecyclerView.LayoutManager =
         AutoFitGridLayoutManager(context, 360).apply { orientation = GridLayoutManager.VERTICAL }
 
-    override fun chapterOnClick(model: ChapterModel, context: Context) {
+    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
 
-        model.getChapterInfo()
+        //mangaTitle = intent.getStringExtra("mangaTitle")
+        //model = intent.getObjectExtra<ChapterModel>("currentChapter")
+        //val list = intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
+        startActivity(Intent(this, ReadActivity::class.java).apply {
+            putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+            putExtra("allChapters", allChapters)
+            putExtra("mangaTitle", model.name)
+        })
+
+        /*model.getChapterInfo()
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
             .subscribeBy { println(it) }
-            .addTo(disposable)
+            .addTo(disposable)*/
 
     }
 
