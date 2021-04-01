@@ -84,7 +84,6 @@ class DetailsFragment : Fragment() {
                             binding.infoCover.setImageDrawable(image)
                             binding.swatch = image.getPalette().vibrantSwatch
                                 ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
-                                .also { println(it) }
                                 .also { swatch ->
                                     swatch?.rgb?.let { binding.infoLayout.setBackgroundColor(it) }
                                     swatch?.rgb?.let { binding.moreInfo.setBackgroundColor(it) }
