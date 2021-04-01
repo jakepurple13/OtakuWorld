@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.children
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -34,6 +35,7 @@ fun otherNames(view: TextView, names: List<String>?) {
 
 @BindingAdapter("genreList", "swatch")
 fun loadGenres(view: ChipGroup, genres: List<String>?, swatchInfo: SwatchInfo?) {
+    view.removeAllViews()
     genres?.forEach {
         view.addView(Chip(view.context).apply {
             text = it

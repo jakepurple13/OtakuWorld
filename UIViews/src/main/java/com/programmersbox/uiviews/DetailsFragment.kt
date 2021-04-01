@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -15,6 +16,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.material.chip.Chip
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.colorFromTheme
@@ -181,7 +183,10 @@ class DetailsFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
-        requireActivity().window.statusBarColor = requireContext().colorFromTheme(R.attr.colorPrimaryVariant)
+        val window = requireActivity().window
+        ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorPrimaryVariant))
+            .apply { addUpdateListener { window.statusBarColor = it.animatedValue as Int } }
+            .start()
     }
 
 }

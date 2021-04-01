@@ -11,6 +11,10 @@
         android:label="fragment_recent"
         tools:layout="@layout/fragment_recent" >
         <action
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/slide_in"
+            app:popExitAnim="@anim/slide_out"
             android:id="@+id/action_recentFragment2_to_detailsFragment2"
             app:destination="@id/detailsFragment2" />
     </fragment>
