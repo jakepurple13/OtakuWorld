@@ -5,18 +5,16 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.Drawable
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.google.android.material.chip.Chip
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.colorFromTheme
@@ -32,8 +30,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 class DetailsFragment : Fragment() {
 
@@ -56,7 +52,7 @@ class DetailsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = DetailsFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -66,14 +62,14 @@ class DetailsFragment : Fragment() {
         args.itemInfo?.toInfoModel()
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribeBy {
-                binding.info = it
+            ?.subscribeBy { info ->
+                binding.info = info
                 binding.executePendingBindings()
-                adapter.addItems(it.chapters)
-                onInfoGet(it)
+                adapter.addItems(info.chapters)
+                onInfoGet(info)
 
                 Glide.with(binding.infoCover)
-                    .load(it.imageUrl)
+                    .load(info.imageUrl)
                     .override(360, 480)
                     /*.placeholder(R.drawable.manga_world_round_logo)
                     .error(R.drawable.manga_world_round_logo)
