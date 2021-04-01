@@ -1,6 +1,9 @@
 package com.programmersbox.uiviews
 
+import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
@@ -10,13 +13,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.InfoModel
+import com.programmersbox.models.SwatchInfo
 import com.programmersbox.rxutils.invoke
-import com.programmersbox.thirdpartyutils.ChromeCustomTabTransformationMethod
-import com.programmersbox.thirdpartyutils.changeTint
-import com.programmersbox.thirdpartyutils.check
+import com.programmersbox.thirdpartyutils.*
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -42,7 +47,7 @@ class DetailsFragment : Fragment() {
 
     private val disposable = CompositeDisposable()
 
-    private val adapter by lazy { ChapterAdapter(requireContext(), BaseMainActivity.genericInfo) }
+    private val adapter by lazy { ChapterAdapter(requireContext(), BaseMainActivity.genericInfo, dao) }
 
     private val isFavorite = BehaviorSubject.createDefault(false)
 
@@ -56,8 +61,6 @@ class DetailsFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        //viewModel = ViewModelProvider(this).get(DetailsViewModel::class.java)
-        //binding.info = args.itemInfo
         args.itemInfo?.toInfoModel()
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
@@ -66,6 +69,41 @@ class DetailsFragment : Fragment() {
                 binding.executePendingBindings()
                 adapter.addItems(it.chapters)
                 onInfoGet(it)
+
+                Glide.with(binding.infoCover)
+                    .load(it.imageUrl)
+                    .override(360, 480)
+                    /*.placeholder(R.drawable.manga_world_round_logo)
+                    .error(R.drawable.manga_world_round_logo)
+                    .fallback(R.drawable.manga_world_round_logo)*/
+                    .transform(RoundedCorners(15))
+                    .into<Drawable> {
+                        resourceReady { image, _ ->
+                            binding.infoCover.setImageDrawable(image)
+                            binding.swatch = image.getPalette().vibrantSwatch
+                                ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
+                                .also { println(it) }
+                                .also { swatch ->
+                                    swatch?.rgb?.let { binding.infoLayout.setBackgroundColor(it) }
+                                    swatch?.rgb?.let { binding.moreInfo.setBackgroundColor(it) }
+                                    swatch?.titleColor?.let { binding.moreInfo.setTextColor(it) }
+                                    swatch?.rgb?.let {
+                                        binding.markChapters.strokeColor = ColorStateList.valueOf(it)
+                                        binding.markChapters.setTextColor(it)
+                                    }
+                                    swatch?.rgb?.let {
+                                        binding.shareButton.strokeColor = ColorStateList.valueOf(it)
+                                        binding.shareButton.iconTint = ColorStateList.valueOf(it)
+                                    }
+                                    binding.favoriteItem.changeTint(swatch?.rgb ?: Color.WHITE)
+                                    swatch?.rgb?.let { requireActivity().window.statusBarColor = it }
+                                    adapter.swatchInfo = swatch
+                                }
+
+                            binding.executePendingBindings()
+                        }
+                    }
+
             }
             ?.addTo(disposable)
 
@@ -78,7 +116,10 @@ class DetailsFragment : Fragment() {
         binding.infoUrl.movementMethod = LinkMovementMethod.getInstance()
 
         isFavorite
-            .subscribe { binding.favoriteItem.check(it) }
+            .subscribe {
+                binding.favoriteItem.check(it)
+                binding.favoriteInfo.text = getText(if (it) R.string.removeFromFavorites else R.string.addToFavorites)
+            }
             .addTo(disposable)
 
         binding.favoriteItem.changeTint(Color.WHITE)
@@ -127,11 +168,20 @@ class DetailsFragment : Fragment() {
             (if (isFavorite.value!!) ::removeItem else ::addItem)(infoModel)
 
         }
+
+        binding.shareButton.setOnClickListener {
+            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, infoModel.url)
+                putExtra(Intent.EXTRA_TITLE, infoModel.title)
+            }, "Share ${infoModel.title}"))
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
+        requireActivity().window.statusBarColor = requireContext().colorFromTheme(R.attr.colorPrimaryVariant)
     }
 
 }

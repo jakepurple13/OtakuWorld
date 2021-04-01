@@ -68,6 +68,7 @@ fun optionTint(view: MaterialButton, swatchInfo: SwatchInfo?) {
 @BindingAdapter("checkedButtonTint")
 fun buttonTint(view: CheckBox, swatchInfo: SwatchInfo?) {
     swatchInfo?.bodyColor?.let { view.buttonTintList = ColorStateList.valueOf(it) }
+    swatchInfo?.bodyColor?.let { view.setTextColor(it) }
 }
 
 @BindingAdapter("uploadedText")

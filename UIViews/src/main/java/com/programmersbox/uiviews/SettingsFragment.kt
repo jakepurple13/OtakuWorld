@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.navigation.fragment.findNavController
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -51,6 +52,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("view_favorites")?.setOnPreferenceClickListener {
             findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
             true
+        }
+
+        findPreference<ListPreference>("theme_setting")?.let { p ->
+            p.setDefaultValue("system")
+            p.setOnPreferenceChangeListener { _, newValue ->
+                when (newValue) {
+                    "system" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    "light" -> AppCompatDelegate.MODE_NIGHT_NO
+                    "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                    else -> null
+                }?.let(AppCompatDelegate::setDefaultNightMode)
+                true
+            }
         }
 
     }

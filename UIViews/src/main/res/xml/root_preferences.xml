@@ -13,6 +13,18 @@
             app:title="View Favorites" />
 
         <ListPreference
+            app:defaultValue="system"
+            app:dialogIcon="@drawable/ic_baseline_settings_brightness_24"
+            app:dialogTitle="Choose a Theme"
+            app:entries="@array/theme_items"
+            app:entryValues="@array/theme_values"
+            app:icon="@drawable/ic_baseline_settings_brightness_24"
+            app:key="theme_setting"
+            app:persistent="true"
+            app:title="Theme"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
             app:defaultValue="reply"
             app:entries="@array/reply_entries"
             app:entryValues="@array/reply_values"

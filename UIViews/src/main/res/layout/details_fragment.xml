@@ -33,7 +33,6 @@
                 android:layout_width="360px"
                 android:layout_height="480px"
                 android:layout_margin="5dp"
-                app:coverImage="@{info.imageUrl}"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="ContentDescription,PxUsage"
@@ -253,6 +252,7 @@
             android:padding="0dp"
             android:text="@string/moreInfo"
             app:cornerRadius="0dp"
+            app:optionTint="@{swatch}"
             app:layout_constraintBottom_toBottomOf="parent"
             tools:backgroundTint="@sample/sample_colors"
             tools:textColor="@sample/sample_colors" />
