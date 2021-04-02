@@ -24,28 +24,25 @@
             app:title="Theme"
             app:useSimpleSummaryProvider="true" />
 
-        <ListPreference
+        <!--<ListPreference
             app:defaultValue="reply"
             app:entries="@array/reply_entries"
             app:entryValues="@array/reply_values"
             app:key="reply"
             app:title="@string/reply_title"
-            app:useSimpleSummaryProvider="true" />
+            app:useSimpleSummaryProvider="true" />-->
 
-    </PreferenceCategory>
+        <Preference
+            app:enabled="true"
+            app:title="Last Time Updates Were Checked"
+            app:key="sync_time" />
 
-    <PreferenceCategory app:title="@string/sync_header">
-
-        <SwitchPreferenceCompat
-            app:key="sync"
-            app:title="@string/sync_title" />
-
-        <SwitchPreferenceCompat
-            app:dependency="sync"
-            app:key="attachment"
-            app:summaryOff="@string/attachment_summary_off"
-            app:summaryOn="@string/attachment_summary_on"
-            app:title="@string/attachment_title" />
+        <SeekBarPreference
+            app:icon="@drawable/ic_baseline_battery_alert_24"
+            app:key="battery_alert"
+            app:min="1"
+            app:seekBarIncrement="1"
+            app:title="Battery Alert Percentage" />
 
     </PreferenceCategory>
 

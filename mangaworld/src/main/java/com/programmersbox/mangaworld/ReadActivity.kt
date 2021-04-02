@@ -1,17 +1,14 @@
 package com.programmersbox.mangaworld
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -26,14 +23,13 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.gsonutils.getObjectExtra
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import io.reactivex.Single
+import com.programmersbox.uiviews.utils.batteryAlertPercent
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -41,8 +37,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import java.io.File
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
 

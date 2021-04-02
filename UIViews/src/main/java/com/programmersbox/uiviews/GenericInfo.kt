@@ -19,4 +19,5 @@ interface GenericInfo {
     fun toSource(s: String): ApiService?
 
     fun customPreferences(preferenceScreen: PreferenceScreen) = Unit
+
 }

@@ -166,6 +166,8 @@ class DetailsFragment : Fragment() {
 
         }
 
+        binding.favoriteInfo.setOnClickListener { binding.favoriteItem.performClick() }
+
         binding.shareButton.setOnClickListener {
             startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"

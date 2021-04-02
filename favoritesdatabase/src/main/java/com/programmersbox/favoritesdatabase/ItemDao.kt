@@ -16,8 +16,14 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem")
     fun getAllFavorites(): Flowable<List<DbModel>>
 
+    @Query("SELECT * FROM FavoriteItem")
+    fun getAllFavoritesSync(): List<DbModel>
+
     @Query("SELECT COUNT(*) FROM FavoriteItem WHERE url = :url")
     fun getItemById(url: String): Flowable<Int>
+
+    @Update
+    fun updateItem(model: DbModel): Completable
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertChapter(vachapterWatched: ChapterWatched): Completable

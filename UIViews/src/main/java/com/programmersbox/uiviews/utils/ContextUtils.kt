@@ -2,13 +2,25 @@ package com.programmersbox.uiviews.utils
 
 import android.content.Context
 import com.google.gson.*
+import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
+import com.programmersbox.helpfulutils.sharedPrefDelegate
+import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.uiviews.GenericInfo
+import io.reactivex.subjects.BehaviorSubject
 import java.lang.reflect.Type
 
 var Context.currentService: ApiService? by sharedPrefObjectDelegate(null)
+
+var Context.shouldCheck: Boolean by sharedPrefNotNullObjectDelegate(true)
+
+var Context.lastUpdateCheck: Long? by sharedPrefDelegate(null)
+
+val updateCheckPublish = BehaviorSubject.create<Long>()
+
+var Context.batteryAlertPercent: Int by sharedPrefNotNullDelegate(20)
 
 class ChapterModelSerializer : JsonSerializer<ChapterModel> {
     override fun serialize(src: ChapterModel, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
