@@ -38,7 +38,20 @@ object NineAnime : ApiService {
         super.searchList(searchText, page, list)
     }
 
-    override fun getList(page: Int): Single<List<ItemModel>> = getRecent(page)
+    override fun getList(page: Int): Single<List<ItemModel>> = Single.create {
+        it.onSuccess(
+            Jsoup.connect("$baseUrl/category/index_$page.html").followRedirects(true).get()
+                .select("div.post").map {
+                    ItemModel(
+                        title = it.select("p.title a").text(),
+                        description = "",
+                        url = it.select("p.title a").attr("abs:href"),
+                        imageUrl = it.select("img").attr("abs:src"),
+                        source = this
+                    )
+                }
+        )
+    }
 
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
         val doc = try {

@@ -1,29 +1,30 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import com.jakewharton.rxbinding2.widget.RxTextView.textChanges
 import com.jakewharton.rxbinding2.widget.textChanges
 import com.programmersbox.dragswipe.DragSwipeAdapter
 import com.programmersbox.dragswipe.DragSwipeDiffUtil
-import com.programmersbox.dragswipe.setData
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.uiviews.utils.EndlessScrollingListener
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 /**
@@ -49,6 +50,15 @@ class AllFragment() : BaseListFragment() {
         rv?.apply {
             adapter = this@AllFragment.adapter
             layoutManager = createLayoutManager(this@AllFragment.requireContext())
+            addOnScrollListener(object : EndlessScrollingListener(layoutManager!!) {
+                override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
+                    if (sourcePublish.value!!.canScroll) {
+                        count++
+                        refresh.isRefreshing = true
+                        sourceLoad(sourcePublish.value!!, count)
+                    }
+                }
+            })
         }
 
         sourcePublish
@@ -61,6 +71,14 @@ class AllFragment() : BaseListFragment() {
             }
             .addTo(disposable)
 
+        view.findViewById<FloatingActionButton>(R.id.scrollToTop).setOnClickListener {
+            GlobalScope.launch {
+                activity?.runOnUiThread { rv?.smoothScrollToPosition(0) }
+                delay(500)
+                activity?.runOnUiThread { rv?.scrollToPosition(0) }
+            }
+        }
+
         view.findViewById<TextInputEditText>(R.id.search_info)
             .textChanges()
             .subscribeOn(Schedulers.io())
@@ -69,7 +87,7 @@ class AllFragment() : BaseListFragment() {
             .flatMapSingle { sourcePublish.value!!.searchList(it, 1, currentList) }
             .subscribe {
                 adapter.setData(it)
-                activity?.runOnUiThread { view?.findViewById<TextInputLayout>(R.id.search_layout)?.suffixText = "${it.size}" }
+                activity?.runOnUiThread { view.findViewById<TextInputLayout>(R.id.search_layout)?.suffixText = "${it.size}" }
             }
             .addTo(disposable)
 
@@ -87,6 +105,7 @@ class AllFragment() : BaseListFragment() {
     }
 
     private fun sourceLoad(sources: ApiService, page: Int = 1) {
+        val searchLayout = view?.findViewById<TextInputLayout>(R.id.search_layout)
         sources.getList(page)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -96,8 +115,8 @@ class AllFragment() : BaseListFragment() {
                 currentList.addAll(it)
                 view?.findViewById<SwipeRefreshLayout>(R.id.allRefresh)?.isRefreshing = false
                 activity?.runOnUiThread {
-                    view?.findViewById<TextInputLayout>(R.id.search_layout)?.suffixText = "${adapter.dataList.size}"
-                    //search_layout?.hint = "Search: ${sourcePublish.value?.name}"
+                    searchLayout?.suffixText = "${adapter.dataList.size}"
+                    searchLayout?.hint = "Search: ${sourcePublish.value?.serviceName}"
                 }
             }
             .addTo(disposable)

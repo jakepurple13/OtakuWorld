@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.navigation.fragment.findNavController
@@ -11,12 +12,12 @@ import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.auth.FirebaseUser
 import com.programmersbox.models.sourcePublish
-import com.programmersbox.uiviews.utils.batteryAlertPercent
-import com.programmersbox.uiviews.utils.currentService
-import com.programmersbox.uiviews.utils.lastUpdateCheck
-import com.programmersbox.uiviews.utils.updateCheckPublish
+import com.programmersbox.thirdpartyutils.into
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import java.text.SimpleDateFormat
@@ -31,9 +32,50 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val genericInfo = BaseMainActivity.genericInfo
 
+        accountPreferences()
         generalPreferences(genericInfo)
+        aboutPreferences()
 
         genericInfo.customPreferences(preferenceScreen)
+    }
+
+    private fun accountPreferences() {
+        findPreference<Preference>("user_account")?.let { p ->
+
+            fun accountChanges(user: FirebaseUser?) {
+                Glide.with(this@SettingsFragment)
+                    .load(user?.photoUrl)
+                    //.placeholder(R.mipmap.round_logo)
+                    //.error(R.mipmap.round_logo)
+                    //.fallback(R.mipmap.round_logo)
+                    .circleCrop()
+                    .into<Drawable> { resourceReady { image, _ -> p.icon = image } }
+                p.title = user?.displayName ?: "User"
+            }
+
+            FirebaseAuthentication.auth.addAuthStateListener {
+                accountChanges(it.currentUser)
+                //findPreference<Preference>("upload_favorites")?.isEnabled = it.currentUser != null
+                //findPreference<Preference>("upload_favorites")?.isVisible = it.currentUser != null
+            }
+
+            accountChanges(FirebaseAuthentication.currentUser)
+
+            p.setOnPreferenceClickListener {
+                FirebaseAuthentication.currentUser?.let {
+                    MaterialAlertDialogBuilder(this@SettingsFragment.requireContext())
+                        .setTitle("Log Out?")
+                        .setMessage("Are you sure you want to log out?")
+                        .setPositiveButton("Yes") { d, _ ->
+                            FirebaseAuthentication.signOut()
+                            d.dismiss()
+                        }
+                        .setNegativeButton("No") { d, _ -> d.dismiss() }
+                        .show()
+                } ?: FirebaseAuthentication.signIn(requireActivity())
+                true
+            }
+        }
     }
 
     private fun generalPreferences(genericInfo: GenericInfo) {
@@ -76,6 +118,27 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        findPreference<SeekBarPreference>("battery_alert")?.let { s ->
+            s.showSeekBarValue = true
+            s.setDefaultValue(requireContext().batteryAlertPercent)
+            s.value = requireContext().batteryAlertPercent
+            s.max = 100
+            s.setOnPreferenceChangeListener { _, newValue ->
+                if (newValue is Int) {
+                    requireContext().batteryAlertPercent = newValue
+                }
+                true
+            }
+        }
+
+    }
+
+    private fun aboutPreferences() {
+
+        findPreference<Preference>("about_version")?.let { p ->
+            p.summary = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName
+        }
+
         findPreference<Preference>("sync_time")?.let { s ->
             requireContext().lastUpdateCheck
                 ?.let { SimpleDateFormat("MM/dd/yyyy hh:mm a", Locale.getDefault()).format(it) }
@@ -103,19 +166,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             )
                             .build()
                     )
-                true
-            }
-        }
-
-        findPreference<SeekBarPreference>("battery_alert")?.let { s ->
-            s.showSeekBarValue = true
-            s.setDefaultValue(requireContext().batteryAlertPercent)
-            s.value = requireContext().batteryAlertPercent
-            s.max = 100
-            s.setOnPreferenceChangeListener { _, newValue ->
-                if (newValue is Int) {
-                    requireContext().batteryAlertPercent = newValue
-                }
                 true
             }
         }

@@ -1,5 +1,28 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory app:title="Account">
+
+        <Preference
+            app:key="user_account"
+            app:title="User" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="aboutCategory"
+        app:title="About">
+
+        <Preference
+            app:key="about_version"
+            app:title="Version: " />
+
+        <Preference
+            app:enabled="true"
+            app:key="sync_time"
+            app:title="Last Time Updates Were Checked" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="General">
 
         <Preference
@@ -31,11 +54,6 @@
             app:key="reply"
             app:title="@string/reply_title"
             app:useSimpleSummaryProvider="true" />-->
-
-        <Preference
-            app:enabled="true"
-            app:title="Last Time Updates Were Checked"
-            app:key="sync_time" />
 
         <SeekBarPreference
             app:icon="@drawable/ic_baseline_battery_alert_24"

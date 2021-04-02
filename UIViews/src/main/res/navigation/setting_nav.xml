@@ -10,9 +10,9 @@
         android:name="com.programmersbox.uiviews.SettingsFragment"
         android:label="SettingsFragment" >
         <action
-            app:enterAnim="@anim/fade_in"
+            app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/slide_in"
+            app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out"
             android:id="@+id/action_settingsFragment_to_favoriteFragment"
             app:destination="@id/favoriteFragment" />
@@ -23,9 +23,9 @@
         android:label="fragment_favorite"
         tools:layout="@layout/fragment_favorite" >
         <action
-            app:enterAnim="@anim/fade_in"
+            app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/slide_in"
+            app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out"
             android:id="@+id/action_favoriteFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />
