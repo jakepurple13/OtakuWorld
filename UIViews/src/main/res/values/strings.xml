@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <string name="addedChapterItem">Hello World</string>
+    <string name="removedChapterItem">Hello World</string>
     <string name="removed">Removed %s</string>
     <string name="undo">Undo</string>
     <string name="removeFromFavorites">Remove from Favorites</string>

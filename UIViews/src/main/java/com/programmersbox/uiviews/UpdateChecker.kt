@@ -17,6 +17,7 @@ import com.programmersbox.loggingutils.Loged
 import com.programmersbox.loggingutils.f
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
+import com.programmersbox.uiviews.utils.FirebaseDb
 import com.programmersbox.uiviews.utils.lastUpdateCheck
 import com.programmersbox.uiviews.utils.updateCheckPublish
 import io.reactivex.Single
@@ -54,7 +55,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
             Loged.f("Start")
             val list = listOf(
                 dao.getAllFavoritesSync(),
-                emptyList()//FirebaseDb.getAllShows().requireNoNulls()
+                FirebaseDb.getAllShows().requireNoNulls()
             ).flatten().groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! }
             //applicationContext.dbAndFireMangaSync3(dao)
             /*val sourceList = Sources.getUpdateSearches()
@@ -130,7 +131,7 @@ class UpdateNotification(private val context: Context) {
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
             dao.updateItem(item).subscribe()
-            //FirebaseDb.updateShow(show).subscribe()
+            FirebaseDb.updateShow(item).subscribe()
         }
     }
 

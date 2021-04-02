@@ -1,8 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.children
@@ -22,7 +20,6 @@ import com.programmersbox.dragswipe.DragSwipeAdapter
 import com.programmersbox.dragswipe.DragSwipeDiffUtil
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.favoritesdatabase.toInfoModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ApiService
@@ -30,7 +27,7 @@ import com.programmersbox.rxutils.behaviorDelegate
 import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.databinding.FavoriteItemBinding
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
-import io.reactivex.Flowable
+import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -49,6 +46,8 @@ class FavoriteFragment : BaseFragment() {
     private var sourcesList by behaviorDelegate(sourcePublisher)
     private val adapter by lazy { FavoriteAdapter() }
 
+    private val fireListener = FirebaseDb.FirebaseListener()
+
     override val layoutId: Int get() = R.layout.fragment_favorite
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
@@ -57,13 +56,17 @@ class FavoriteFragment : BaseFragment() {
 
         val favRv = view.findViewById<RecyclerView>(R.id.favRv)
 
-        /*val dbFire = Flowables.combineLatest(
-            Flowable.empty<List<DbModel>>(),//fired,
+        val fired = fireListener.getAllShowsFlowable()
+
+        val dbFire = Flowables.combineLatest(
+            fired,
             dao.getAllFavorites()
-        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }*/
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
 
         Flowables.combineLatest(
-            source1 = dao.getAllFavorites()
+            source1 = dbFire
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread()),
             source2 = sourcePublisher.toLatestFlowable(),
@@ -126,6 +129,7 @@ class FavoriteFragment : BaseFragment() {
 
     override fun onDestroy() {
         disposable.dispose()
+        fireListener.unregister()
         super.onDestroy()
     }
 

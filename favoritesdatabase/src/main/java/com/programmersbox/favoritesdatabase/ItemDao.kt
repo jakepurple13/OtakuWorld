@@ -26,7 +26,7 @@ interface ItemDao {
     fun updateItem(model: DbModel): Completable
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertChapter(vachapterWatched: ChapterWatched): Completable
+    fun insertChapter(chapterWatched: ChapterWatched): Completable
 
     @Delete
     fun deleteChapter(chapterWatched: ChapterWatched): Completable

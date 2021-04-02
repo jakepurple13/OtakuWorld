@@ -23,9 +23,11 @@ import com.programmersbox.models.SwatchInfo
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.thirdpartyutils.*
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
+import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
@@ -47,6 +49,9 @@ class DetailsFragment : Fragment() {
 
     private val adapter by lazy { ChapterAdapter(requireContext(), BaseMainActivity.genericInfo, dao) }
 
+    private val itemListener = FirebaseDb.FirebaseListener()
+    private val chapterListener = FirebaseDb.FirebaseListener()
+
     private val isFavorite = BehaviorSubject.createDefault(false)
 
     override fun onCreateView(
@@ -63,6 +68,7 @@ class DetailsFragment : Fragment() {
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeBy { info ->
+                adapter.itemUrl = info.url
                 binding.info = info
                 binding.executePendingBindings()
                 adapter.addItems(info.chapters)
@@ -127,10 +133,14 @@ class DetailsFragment : Fragment() {
     }
 
     private fun onInfoGet(infoModel: InfoModel) {
-        dao.getItemById(infoModel.url)
+
+        Flowables.combineLatest(
+            itemListener.findItemByUrl(infoModel.url),
+            dao.getItemById(infoModel.url)
+        )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .map { it > 0 }
+            .map { it.second > 0 || it.first }
             .subscribe(isFavorite::onNext)
             .addTo(disposable)
 
@@ -142,7 +152,7 @@ class DetailsFragment : Fragment() {
             fun addItem(model: InfoModel) {
                 val db = model.toDbModel(model.chapters.size)
                 Completable.concatArray(
-                    Completable.complete(),//FirebaseDb.insertShow(show.toShowModel()),
+                    FirebaseDb.insertShow(db),
                     dao.insertFavorite(db).subscribeOn(Schedulers.io())
                 )
                     .subscribeOn(Schedulers.io())
@@ -152,8 +162,9 @@ class DetailsFragment : Fragment() {
             }
 
             fun removeItem(model: InfoModel) {
+                val db = model.toDbModel(model.chapters.size)
                 Completable.concatArray(
-                    Completable.complete(),//FirebaseDb.removeShow(show.toShowModel()),
+                    FirebaseDb.removeShow(db),
                     dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
                 )
                     .subscribeOn(Schedulers.io())
@@ -168,6 +179,16 @@ class DetailsFragment : Fragment() {
 
         binding.favoriteInfo.setOnClickListener { binding.favoriteItem.performClick() }
 
+        Flowables.combineLatest(
+            chapterListener.getAllEpisodesByShow(infoModel.url),
+            dao.getAllChapters(infoModel.url).subscribeOn(Schedulers.io())
+        ) { f, d -> (f + d).distinctBy { it.url } }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            //.distinct { it }
+            .subscribe { adapter.update(it) { c, m -> c.url == m.url } }
+            .addTo(disposable)
+
         binding.shareButton.setOnClickListener {
             startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
@@ -180,6 +201,8 @@ class DetailsFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
+        itemListener.unregister()
+        chapterListener.unregister()
         val window = requireActivity().window
         ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorPrimaryVariant))
             .apply { addUpdateListener { window.statusBarColor = it.animatedValue as Int } }

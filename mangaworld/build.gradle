@@ -54,6 +54,7 @@ dependencies {
 
     implementation project(':UIViews')
     implementation project(':Models')
+    implementation project(':favoritesdatabase')
 
     implementation project(':manga_sources')
 
