@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -51,8 +52,8 @@ dependencies {
     implementation 'com.airbnb.android:lottie:3.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
 
-    api project(':UIViews')
-    api project(':Models')
+    implementation project(':UIViews')
+    implementation project(':Models')
 
     implementation project(':anime_sources')
 

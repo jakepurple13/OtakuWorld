@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+/animeworld/google-services.json
+/mangaworld/google-services.json

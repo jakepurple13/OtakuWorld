@@ -1,16 +1,11 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.programmersbox.dragswipe.DragSwipeAdapter
-import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.utils.EndlessScrollingListener
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -51,6 +46,8 @@ class RecentFragment : BaseListFragment() {
                 }
             })
         }
+
+        refresh.setOnRefreshListener { sourceLoad(sourcePublish.value!!) }
 
         sourcePublish
             .subscribeOn(Schedulers.io())

@@ -52,8 +52,8 @@ dependencies {
 
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
 
-    api project(':UIViews')
-    api project(':Models')
+    implementation project(':UIViews')
+    implementation project(':Models')
 
     implementation project(':manga_sources')
 
