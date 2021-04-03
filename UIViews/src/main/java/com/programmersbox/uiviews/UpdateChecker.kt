@@ -124,7 +124,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
 
 class UpdateNotification(private val context: Context) {
 
-    private val icon = R.drawable.baseline_import_export_black_18dp
+    private val icon = OtakuApp.notificationLogo
 
     fun updateManga(dao: ItemDao, triple: List<Pair<InfoModel?, DbModel>>) {
         triple.forEach {

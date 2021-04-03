@@ -4,10 +4,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.navigation.fragment.findNavController
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SeekBarPreference
+import androidx.preference.*
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -45,9 +42,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             fun accountChanges(user: FirebaseUser?) {
                 Glide.with(this@SettingsFragment)
                     .load(user?.photoUrl)
-                    //.placeholder(R.mipmap.round_logo)
-                    //.error(R.mipmap.round_logo)
-                    //.fallback(R.mipmap.round_logo)
+                    .placeholder(OtakuApp.logo)
+                    .error(OtakuApp.logo)
+                    .fallback(OtakuApp.logo)
                     .circleCrop()
                     .into<Drawable> { resourceReady { image, _ -> p.icon = image } }
                 p.title = user?.displayName ?: "User"
@@ -79,6 +76,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun generalPreferences(genericInfo: GenericInfo) {
+
+        findPreference<PreferenceCategory>("aboutCategory")?.setIcon(OtakuApp.logo)
 
         findPreference<Preference>("current_source")?.let { p ->
             val list = genericInfo.sourceList().toTypedArray()

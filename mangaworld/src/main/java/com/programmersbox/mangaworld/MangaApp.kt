@@ -8,6 +8,9 @@ import com.programmersbox.uiviews.utils.FirebaseDb
 class MangaApp : OtakuApp() {
     override fun onCreated() {
 
+        logo = R.mipmap.ic_launcher
+        notificationLogo = R.mipmap.ic_launcher_foreground
+
         UpdateWorker.sourcesList = Sources.values().toList()
         UpdateWorker.sourceFromString = {
             try {

@@ -62,4 +62,9 @@ abstract class OtakuApp : Application() {
 
     abstract fun onCreated()
 
+    companion object {
+        var logo: Int = R.drawable.baseline_import_export_black_18dp
+        var notificationLogo: Int = 0
+    }
+
 }
