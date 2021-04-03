@@ -77,9 +77,9 @@ class DetailsFragment : Fragment() {
                 Glide.with(binding.infoCover)
                     .load(info.imageUrl)
                     .override(360, 480)
-                    /*.placeholder(R.drawable.manga_world_round_logo)
-                    .error(R.drawable.manga_world_round_logo)
-                    .fallback(R.drawable.manga_world_round_logo)*/
+                    .placeholder(OtakuApp.logo)
+                    .error(OtakuApp.logo)
+                    .fallback(OtakuApp.logo)
                     .transform(RoundedCorners(15))
                     .into<Drawable> {
                         resourceReady { image, _ ->
