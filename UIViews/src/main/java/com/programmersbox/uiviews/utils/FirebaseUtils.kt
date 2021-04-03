@@ -56,11 +56,12 @@ object FirebaseAuthentication {
 
 object FirebaseDb {
 
-    var DOCUMENT_ID = "favoriteShows"
-    var CHAPTERS_ID = "episodesWatched"
+    var DOCUMENT_ID = ""
+    var CHAPTERS_ID = ""
     var COLLECTION_ID = ""
     var CHAPTER_ID = ""
     var ITEM_ID = ""
+    var READ_OR_WATCHED_ID = ""
 
     @SuppressLint("StaticFieldLeak")
     private val db = FirebaseFirestore.getInstance().apply {
@@ -85,6 +86,7 @@ object FirebaseDb {
         val title: String? = null,
         val description: String? = null,
         val showUrl: String? = null,
+        val mangaUrl: String? = null,
         val imageUrl: String? = null,
         val source: String? = null,
         var numEpisodes: Int = 0,
@@ -99,7 +101,7 @@ object FirebaseDb {
     private fun FirebaseDbModel.toDbModel() = DbModel(
         title.orEmpty(),
         description.orEmpty(),
-        showUrl.orEmpty(),
+        (showUrl ?: mangaUrl).orEmpty(),
         imageUrl.orEmpty(),
         source.orEmpty(),
         numEpisodes,
@@ -108,6 +110,7 @@ object FirebaseDb {
     private fun DbModel.toFirebaseDbModel() = FirebaseDbModel(
         title,
         description,
+        url,
         url,
         imageUrl,
         source,
