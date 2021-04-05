@@ -42,4 +42,5 @@
     <string name="download_speed_bytes">%1$d B/s</string>
     <string name="download_speed_kb">%1$s KB/s</string>
     <string name="download_speed_mb">%1$s MB/s</string>
+    <string name="read">Download</string>
 </resources>

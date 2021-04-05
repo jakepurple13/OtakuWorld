@@ -35,7 +35,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
         generalPreferences(genericInfo)
         aboutPreferences()
 
-        genericInfo.customPreferences(preferenceScreen)
+        val settingsDsl = SettingsDsl()
+
+        genericInfo.customPreferences(settingsDsl)
+
+        findPreference<PreferenceCategory>("generalCategory")?.let { settingsDsl.generalSettings(it) }
+        findPreference<PreferenceCategory>("viewCategory")?.let { settingsDsl.viewSettings(it) }
     }
 
     private fun accountPreferences() {
@@ -197,5 +202,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
+    }
+}
+
+class SettingsDsl {
+    internal var generalSettings: (PreferenceCategory) -> Unit = {}
+
+    fun generalSettings(block: (PreferenceCategory) -> Unit) {
+        generalSettings = block
+    }
+
+    internal var viewSettings: (PreferenceCategory) -> Unit = {}
+
+    fun viewSettings(block: (PreferenceCategory) -> Unit) {
+        viewSettings = block
     }
 }

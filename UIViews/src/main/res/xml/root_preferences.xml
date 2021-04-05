@@ -27,7 +27,20 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="General">
+    <PreferenceCategory
+        app:key="viewCategory"
+        app:title="View">
+
+        <Preference
+            app:icon="@drawable/ic_baseline_star_24"
+            app:key="view_favorites"
+            app:title="View Favorites" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="generalCategory"
+        app:title="General">
 
         <Preference
             app:icon="@android:drawable/ic_menu_preferences"
@@ -38,11 +51,6 @@
             app:icon="@drawable/ic_baseline_open_in_browser_24"
             app:key="view_source"
             app:title="View Source in Browser" />
-
-        <Preference
-            app:icon="@android:drawable/star_big_on"
-            app:key="view_favorites"
-            app:title="View Favorites" />
 
         <ListPreference
             app:defaultValue="system"
@@ -55,14 +63,6 @@
             app:persistent="true"
             app:title="Theme"
             app:useSimpleSummaryProvider="true" />
-
-        <!--<ListPreference
-            app:defaultValue="reply"
-            app:entries="@array/reply_entries"
-            app:entryValues="@array/reply_values"
-            app:key="reply"
-            app:title="@string/reply_title"
-            app:useSimpleSummaryProvider="true" />-->
 
         <SeekBarPreference
             app:icon="@drawable/ic_baseline_battery_alert_24"

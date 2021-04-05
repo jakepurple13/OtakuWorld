@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
-import androidx.preference.PreferenceScreen
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -18,6 +17,6 @@ interface GenericInfo {
 
     fun toSource(s: String): ApiService?
 
-    fun customPreferences(preferenceScreen: PreferenceScreen) = Unit
+    fun customPreferences(preferenceScreen: SettingsDsl) = Unit
 
 }

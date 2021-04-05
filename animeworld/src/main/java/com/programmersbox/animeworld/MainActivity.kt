@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.ContextCompat
 import androidx.preference.Preference
-import androidx.preference.PreferenceScreen
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.anime_sources.Sources
@@ -16,6 +15,7 @@ import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.ItemListAdapter
+import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
 import com.tonyodev.fetch2.Fetch
 import com.tonyodev.fetch2.NetworkType
@@ -94,28 +94,32 @@ class MainActivity : BaseMainActivity() {
         null
     }
 
-    override fun customPreferences(preferenceScreen: PreferenceScreen) {
-        preferenceScreen.addPreference(
-            Preference(preferenceScreen.context).apply {
-                title = "View Videos"
-                icon = ContextCompat.getDrawable(preferenceScreen.context, R.drawable.ic_baseline_video_library_24)
-                setOnPreferenceClickListener {
-                    ViewVideosFragment().show(supportFragmentManager, "videoViewer")
-                    true
-                }
-            }
-        )
+    override fun customPreferences(preferenceScreen: SettingsDsl) {
 
-        preferenceScreen.addPreference(
-            Preference(preferenceScreen.context).apply {
-                title = "View Downloads"
-                icon = ContextCompat.getDrawable(preferenceScreen.context, R.drawable.ic_baseline_video_library_24)
-                setOnPreferenceClickListener {
-                    DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
-                    true
+        preferenceScreen.viewSettings {
+            it.addPreference(
+                Preference(it.context).apply {
+                    title = "View Videos"
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_video_library_24)
+                    setOnPreferenceClickListener {
+                        ViewVideosFragment().show(supportFragmentManager, "videoViewer")
+                        true
+                    }
                 }
-            }
-        )
+            )
+
+            it.addPreference(
+                Preference(it.context).apply {
+                    title = "View Downloads"
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
+                    setOnPreferenceClickListener {
+                        DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
+                        true
+                    }
+                }
+            )
+        }
+
     }
 
 }
