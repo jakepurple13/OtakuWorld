@@ -43,9 +43,6 @@ object MangaPark : ApiService {
         super.searchList(searchText, page, list)
     }
 
-    //TODO: MangaHere and MangaMunity
-    //TODO: add firebase messaging to alert people of new updates
-
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         cloudflare("$baseUrl/genre/$page").execute().asJsoup()
             .select("div.ls1").select("div.d-flex, div.flex-row, div.item")
