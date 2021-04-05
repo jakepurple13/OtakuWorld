@@ -85,8 +85,20 @@ class FavoriteFragment : BaseFragment() {
             .distinctUntilChanged()
             .subscribe {
                 adapter.setData(it.second.toList())
-                view.findViewById<TextInputLayout>(R.id.fav_search_layout)?.hint = resources.getQuantityString(R.plurals.numFavorites, it.first, it.first)
+                view.findViewById<TextInputLayout>(R.id.fav_search_layout)?.hint =
+                    resources.getQuantityString(R.plurals.numFavorites, it.first, it.first)
                 favRv?.smoothScrollToPosition(0)
+            }
+            .addTo(disposable)
+
+        val sourceList = view.findViewById<ChipGroup>(R.id.sourceList)
+
+        dbFire
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { it.groupBy { s -> s.source } }
+            .subscribe { s ->
+                s.forEach { m -> sourceList.children.filterIsInstance<Chip>().find { it.text == m.key }?.text = "${m.key}: ${m.value.size}" }
             }
             .addTo(disposable)
 
