@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DownloadViewerFragment">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/download_list"
+        android:layout_width="match_parent"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:orientation="vertical"
+        tools:listitem="@layout/download_item"
+        android:layout_height="match_parent"
+        android:layout_above="@id/multiple_download_delete" />
+
+    <com.google.android.material.button.MaterialButton
+        android:insetBottom="0dp"
+        app:cornerRadius="0dp"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/multiple_download_delete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete Multiple" />
+
+</RelativeLayout>

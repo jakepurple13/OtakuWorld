@@ -1,12 +1,15 @@
 package com.programmersbox.animeworld
 
+import android.Manifest
 import android.content.Context
+import android.net.Uri
 import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceScreen
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.anime_sources.Sources
+import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.sourcePublish
@@ -14,9 +17,12 @@ import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.utils.currentService
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import com.tonyodev.fetch2.Fetch
+import com.tonyodev.fetch2.NetworkType
+import com.tonyodev.fetch2.Priority
+import com.tonyodev.fetch2.Request
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : BaseMainActivity() {
 
@@ -36,14 +42,48 @@ class MainActivity : BaseMainActivity() {
 
     override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
+    private val fetch = Fetch.getDefaultInstance()
+
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
+        requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
+            if (it.isGranted) {
+                GlobalScope.launch { fetchIt(model) }
+            }
+        }
+    }
 
-        model.getChapterInfo()
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .subscribeBy { println(it) }
-            .addTo(disposable)
+    private fun fetchIt(ep: ChapterModel) {
 
+        fetch.setGlobalNetworkType(NetworkType.ALL)
+
+        fun getNameFromUrl(url: String): String {
+            return Uri.parse(url).lastPathSegment?.let { if (it.isNotEmpty()) it else ep.name } ?: ep.name
+        }
+
+        val requestList = arrayListOf<Request>()
+        val url = ep.getChapterInfo().blockingGet()
+        for (i in url) {
+
+            val filePath = folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
+            //Loged.wtf("${File(filePath).exists()}")
+            val request = Request(i.link!!, filePath)
+            request.priority = Priority.HIGH
+            request.networkType = NetworkType.ALL
+            //request.enqueueAction = EnqueueAction.DO_NOT_ENQUEUE_IF_EXISTING
+            request.extras.map.toProperties()["URL_INTENT"] = ep.url
+            request.extras.map.toProperties()["NAME_INTENT"] = ep.name
+
+            request.addHeader("Accept-Language", "en-US,en;q=0.5")
+            request.addHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
+            request.addHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            request.addHeader("Access-Control-Allow-Origin", "*")
+            request.addHeader("Referer", "http://thewebsite.com")
+            request.addHeader("Connection", "keep-alive")
+
+            requestList.add(request)
+
+        }
+        fetch.enqueue(requestList) {}
     }
 
     override fun sourceList(): List<ApiService> = Sources.values().toList()
@@ -61,6 +101,17 @@ class MainActivity : BaseMainActivity() {
                 icon = ContextCompat.getDrawable(preferenceScreen.context, R.drawable.ic_baseline_video_library_24)
                 setOnPreferenceClickListener {
                     ViewVideosFragment().show(supportFragmentManager, "videoViewer")
+                    true
+                }
+            }
+        )
+
+        preferenceScreen.addPreference(
+            Preference(preferenceScreen.context).apply {
+                title = "View Downloads"
+                icon = ContextCompat.getDrawable(preferenceScreen.context, R.drawable.ic_baseline_video_library_24)
+                setOnPreferenceClickListener {
+                    DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
                     true
                 }
             }

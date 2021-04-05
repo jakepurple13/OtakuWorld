@@ -3,10 +3,8 @@ package com.programmersbox.animeworld
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
@@ -16,7 +14,6 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -25,8 +22,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.dragswipe.*
@@ -39,30 +34,7 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-fun <T : View> BottomSheetBehavior<T>.open() {
-    state = BottomSheetBehavior.STATE_EXPANDED
-}
-
-fun <T : View> BottomSheetBehavior<T>.close() {
-    state = BottomSheetBehavior.STATE_COLLAPSED
-}
-
-fun <T : View> BottomSheetBehavior<T>.halfOpen() {
-    state = BottomSheetBehavior.STATE_HALF_EXPANDED
-}
-
-class ViewVideosFragment : BottomSheetDialogFragment() {
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = super.onCreateDialog(savedInstanceState)
-        .apply {
-            setOnShowListener {
-                val sheet = findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
-                sheet.setBackgroundColor(Color.TRANSPARENT)
-                val bottomSheet = BottomSheetBehavior.from(sheet)
-                bottomSheet.skipCollapsed = true
-                bottomSheet.open()
-            }
-        }
+class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
