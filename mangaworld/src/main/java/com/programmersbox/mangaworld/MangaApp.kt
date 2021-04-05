@@ -1,5 +1,6 @@
 package com.programmersbox.mangaworld
 
+import com.programmersbox.manga_sources.MangaContext
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.UpdateWorker
@@ -10,6 +11,8 @@ class MangaApp : OtakuApp() {
 
         logo = R.mipmap.ic_launcher
         notificationLogo = R.mipmap.ic_launcher_foreground
+
+        MangaContext.context = this
 
         UpdateWorker.sourcesList = Sources.values().toList()
         UpdateWorker.sourceFromString = {

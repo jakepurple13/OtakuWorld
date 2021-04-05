@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -36,27 +37,7 @@ abstract class OtakuApp : Application() {
 
         onCreated()
 
-        val work = WorkManager.getInstance(this)
-        //work.cancelAllWork()
-        if (shouldCheck) {
-            work.enqueueUniquePeriodicWork(
-                "updateChecks",
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequest.Builder(UpdateWorker::class.java, 1, TimeUnit.HOURS)
-                    //PeriodicWorkRequest.Builder(UpdateWorker::class.java, 15, TimeUnit.MINUTES)
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
-                            .setRequiresBatteryNotLow(false)
-                            .setRequiresCharging(false)
-                            .setRequiresDeviceIdle(false)
-                            .setRequiresStorageNotLow(false)
-                            .build()
-                    )
-                    .setInitialDelay(10, TimeUnit.SECONDS)
-                    .build()
-            ).state.observeForever { println(it) }
-        } else work.cancelAllWork()
+        updateSetup(this)
 
     }
 
@@ -65,6 +46,30 @@ abstract class OtakuApp : Application() {
     companion object {
         var logo: Int = R.drawable.baseline_import_export_black_18dp
         var notificationLogo: Int = 0
+
+        fun updateSetup(context: Context) {
+            val work = WorkManager.getInstance(context)
+            //work.cancelAllWork()
+            if (context.shouldCheck) {
+                work.enqueueUniquePeriodicWork(
+                    "updateChecks",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    PeriodicWorkRequest.Builder(UpdateWorker::class.java, 1, TimeUnit.HOURS)
+                        //PeriodicWorkRequest.Builder(UpdateWorker::class.java, 15, TimeUnit.MINUTES)
+                        .setConstraints(
+                            Constraints.Builder()
+                                .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                                .setRequiresBatteryNotLow(false)
+                                .setRequiresCharging(false)
+                                .setRequiresDeviceIdle(false)
+                                .setRequiresStorageNotLow(false)
+                                .build()
+                        )
+                        .setInitialDelay(10, TimeUnit.SECONDS)
+                        .build()
+                ).state.observeForever { println(it) }
+            } else work.cancelAllWork()
+        }
     }
 
 }

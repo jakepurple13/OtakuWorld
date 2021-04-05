@@ -21,6 +21,10 @@
             app:key="sync_time"
             app:title="Last Time Updates Were Checked" />
 
+        <SwitchPreferenceCompat
+            app:key="sync"
+            app:title="Check for Updates Periodically" />
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="General">

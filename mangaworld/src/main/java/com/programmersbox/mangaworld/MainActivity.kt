@@ -6,8 +6,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.piasy.biv.BigImageViewer
 import com.github.piasy.biv.loader.glide.GlideImageLoader
-import com.programmersbox.gsonutils.getObjectExtra
-import com.programmersbox.gsonutils.putExtra
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.models.ApiService
@@ -19,9 +17,6 @@ import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.currentService
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
 
 class MainActivity : BaseMainActivity() {
 
@@ -48,7 +43,7 @@ class MainActivity : BaseMainActivity() {
         //val list = intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
         startActivity(Intent(this, ReadActivity::class.java).apply {
             putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-            putExtra("allChapters", allChapters)
+            putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
             putExtra("mangaTitle", model.name)
         })
 

@@ -86,7 +86,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     .setTitle("Choose a source")
                     .setSingleChoiceItems(
                         list.map { it.serviceName }.toTypedArray(),
-                        list.indexOf(requireContext().currentService)
+                        list.indexOfFirst { it.serviceName == requireContext().currentService?.serviceName }
                     ) { d, i ->
                         sourcePublish.onNext(list[i])
                         requireContext().currentService = list[i]
@@ -165,6 +165,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             )
                             .build()
                     )
+                true
+            }
+        }
+
+        findPreference<SwitchPreferenceCompat>("sync")?.let { s ->
+            s.setDefaultValue(requireContext().shouldCheck)
+            s.setOnPreferenceChangeListener { _, newValue ->
+                if (newValue is Boolean) {
+                    requireContext().shouldCheck = newValue
+                    OtakuApp.updateSetup(requireContext())
+                }
                 true
             }
         }

@@ -70,9 +70,9 @@ class ReadActivity : AppCompatActivity() {
 
     private val adapter2: PageAdapter by lazy {
         loader.let {
-            val list = intent.getStringExtra("currentChapter")
+            val list = intent.getStringExtra("allChapters")
                 ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(BaseMainActivity.genericInfo))
-                .orEmpty()
+                .orEmpty().also { println(it) }
             //intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
             val url = intent.getStringExtra("mangaUrl") ?: ""
             val mangaUrl = intent.getStringExtra("mangaInfoUrl") ?: ""
