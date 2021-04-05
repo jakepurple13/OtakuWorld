@@ -225,15 +225,14 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 }" else ""
             }"
 
-            /*itemView.setOnClickListener(
-                Navigation.createNavigateOnClickListener(
-                    ViewVideosFragmentDirections.actionViewVideosFragmentToVideoPlayerActivity(
-                        showPath = item.absolutePath,
-                        showName = item.name,
-                        downloadOrStream = true,
-                    )
+            itemView.setOnClickListener {
+                context.startActivity(
+                    Intent(context, VideoPlayerActivity::class.java).apply {
+                        putExtra("showPath", item.absolutePath)
+                        putExtra("showName", item.name)
+                    }
                 )
-            )*/
+            }
 
             Glide.with(context)
                 .load(item)

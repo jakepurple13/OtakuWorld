@@ -63,9 +63,15 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-dash:2.11.8'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.8'
     implementation 'androidx.mediarouter:mediarouter:1.2.2'
+    implementation 'com.github.rubensousa:previewseekbar-exoplayer:2.11.4.0'
     implementation "androidx.tonyodev.fetch2:xfetch2:3.1.6"
     implementation "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
     implementation "androidx.tonyodev.fetch2rx:xfetch2rx:3.1.6"
+
+    implementation "com.mikepenz:iconics-core:5.0.3"
+    implementation 'com.mikepenz:google-material-typeface:3.0.1.4.original-kotlin@aar'
+    //Google Material Icons
+    implementation 'com.mikepenz:fontawesome-typeface:5.9.0.0-kotlin@aar'
 
     implementation project(':UIViews')
     implementation project(':Models')

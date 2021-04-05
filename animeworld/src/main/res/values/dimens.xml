@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="mx_progress_dialog_margin_top">80dp</dimen>
+    <dimen name="mx_volume_dialog_margin_top">80dp</dimen>
+    <dimen name="mx_layout_bottom_height">40dp</dimen>
+    <dimen name="mx_current_time_marginLeft">16dp</dimen>
+    <dimen name="mx_total_time_marginRight">16dp</dimen>
+    <dimen name="mx_progress_height">2dp</dimen>
+    <dimen name="mx_progress_padding">8dp</dimen>
+    <dimen name="mx_fullscreen_paddingRight">16dp</dimen>
+    <dimen name="mx_tiny_width">23dp</dimen>
+    <dimen name="mx_tiny_height">23dp</dimen>
+    <dimen name="mx_tiny_marginLeft">6dp</dimen>
+    <dimen name="mx_tiny_marginTop">6dp</dimen>
+    <dimen name="mx_layout_top_height">48dp</dimen>
+    <dimen name="mx_iv_back_width">48dp</dimen>
+    <dimen name="mx_iv_back_height">48dp</dimen>
+    <dimen name="mx_iv_back_paddingLeft">10dp</dimen>
+    <dimen name="mx_title_textSize">18sp</dimen>
+    <dimen name="mx_loading_width">60dp</dimen>
+    <dimen name="mx_loading_height">60dp</dimen>
+    <dimen name="mx_start_btn_width">60dp</dimen>
+    <dimen name="mx_start_btn_height">60dp</dimen>
+
+    <dimen name="mx_mobile_dialog_width">175dp</dimen>
+    <dimen name="mobile_dialog_image_tip_width">36dp</dimen>
+    <dimen name="mobile_dialog_image_tip_height">25dp</dimen>
+    <dimen name="mobile_dialog_image_marginTop">16dp</dimen>
+    <dimen name="mobile_dialog_ll_tv_marginTop">10dp</dimen>
+    <dimen name="mobile_dialog_tv_textSize">14sp</dimen>
+    <dimen name="mobile_dialog_progress_height">4dp</dimen>
+    <dimen name="mobile_dialog_progress_marginBottom">16dp</dimen>
+    <dimen name="mobile_dialog_progress_marginLeft">16dp</dimen>
+    <dimen name="mobile_dialog_progress_marginRight">16dp</dimen>
+    <dimen name="mobile_dialog_progress_marginTop">8dp</dimen>
+
+    <dimen name="mobile_volume_dialog_iv_width">24dp</dimen>
+    <dimen name="mobile_volume_dialog_iv_height">24dp</dimen>
+    <dimen name="mobile_volume_dialog_iv_marginBottom">16dp</dimen>
+    <dimen name="mobile_volume_dialog_iv_marginTop">16dp</dimen>
+
+    <dimen name="tv_volume_dialog_ll_width">220dp</dimen>
+    <dimen name="tv_volume_dialog_ll_height">100dp</dimen>
+
+    <dimen name="mx_tv_layout_top_height">65dp</dimen>
+    <dimen name="mx_tv_iv_back_paddingLeft">18dp</dimen>
+    <dimen name="mx_tv_title_textSize">22sp</dimen>
+    <dimen name="mx_tv_loading_width">90dp</dimen>
+    <dimen name="mx_tv_loading_height">90dp</dimen>
+    <dimen name="mx_tv_start_btn_width">90dp</dimen>
+    <dimen name="mx_tv_start_btn_height">90dp</dimen>
+    <dimen name="tv_progress_dialog_width">235dp</dimen>
+    <dimen name="mx_tv_progress_dialog_margin_top">140dp</dimen>
+    <dimen name="tv_dialog_tv_textSize">22sp</dimen>
+    <dimen name="tv_volume_dialog_iv_width">35dp</dimen>
+    <dimen name="tv_volume_dialog_iv_height">35dp</dimen>
+    <dimen name="mx_tv_time_textSize">18sp</dimen>
+    <dimen name="mx_iv_back_marginRight">4dp</dimen>
+
+    <dimen name="video_frame_width">2dp</dimen>
+</resources>

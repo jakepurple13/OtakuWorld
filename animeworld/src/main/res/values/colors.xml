@@ -15,4 +15,8 @@
     <color name="emeraldGreen">#2ecc71</color>
     <color name="alizarin">#e74c3c</color>
     <color name="niceBlue">#0091ea</color>
+    <color name="progress_color">#0030ef</color>
+    <color name="secProgress_color">#ffe0e0e0</color>
+    <color name="solid_color">#44000000</color>
+    <color name="gary">#cc999999</color>
 </resources>

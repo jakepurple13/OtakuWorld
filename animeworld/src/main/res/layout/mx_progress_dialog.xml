@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/mx_dialog_progress_bg">
+
+    <ImageView
+        android:id="@+id/duration_image_tip"
+        android:layout_width="@dimen/mobile_dialog_image_tip_width"
+        android:layout_height="@dimen/mobile_dialog_image_tip_height"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/mobile_dialog_image_marginTop" />
+
+    <LinearLayout
+        android:id="@+id/duration_ll_time_tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/duration_image_tip"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/mobile_dialog_ll_tv_marginTop"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/video_current"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/progress_color"
+            android:textSize="@dimen/mobile_dialog_tv_textSize" />
+
+        <TextView
+            android:id="@+id/video_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/mobile_dialog_tv_textSize" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/duration_progressbar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/mobile_dialog_progress_height"
+        android:layout_below="@id/duration_ll_time_tip"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="@dimen/mobile_dialog_progress_marginLeft"
+        android:layout_marginTop="@dimen/mobile_dialog_progress_marginTop"
+        android:layout_marginEnd="@dimen/mobile_dialog_progress_marginRight"
+        android:layout_marginBottom="@dimen/mobile_dialog_progress_marginBottom"
+        android:max="100"
+        android:progressDrawable="@drawable/mx_dialog_progress" />
+
+    <!--<com.github.rubensousa.previewseekbar.PreviewSeekBar
+        android:id="@+id/duration_progressbar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/mobile_dialog_progress_height"
+        android:layout_below="@id/duration_ll_time_tip"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="@dimen/mobile_dialog_progress_marginLeft"
+        android:layout_marginTop="@dimen/mobile_dialog_progress_marginTop"
+        android:layout_marginEnd="@dimen/mobile_dialog_progress_marginRight"
+        android:layout_marginBottom="@dimen/mobile_dialog_progress_marginBottom"
+        android:max="100"
+        android:progressDrawable="@drawable/mx_dialog_progress" />-->
+
+</RelativeLayout>
