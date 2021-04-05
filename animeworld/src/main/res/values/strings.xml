@@ -3,4 +3,5 @@
 
     <string name="addedChapterItem">Added Chapter</string>
     <string name="removedChapterItem">Removed Chapter</string>
+    <string name="percent_progress">%1$d%%</string>
 </resources>

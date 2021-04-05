@@ -11,4 +11,8 @@
     <color name="blue_200">#90CAF9</color>
     <color name="blue_500">#2196F3</color>
     <color name="blue_700">#1976D2</color>
+
+    <color name="emeraldGreen">#2ecc71</color>
+    <color name="alizarin">#e74c3c</color>
+    <color name="niceBlue">#0091ea</color>
 </resources>

@@ -1,6 +1,7 @@
 package com.programmersbox.animeworld
 
 import android.content.Context
+import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceScreen
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -54,7 +55,16 @@ class MainActivity : BaseMainActivity() {
     }
 
     override fun customPreferences(preferenceScreen: PreferenceScreen) {
-        preferenceScreen.addPreference(Preference(preferenceScreen.context).apply { title = "Hello" })
+        preferenceScreen.addPreference(
+            Preference(preferenceScreen.context).apply {
+                title = "View Videos"
+                icon = ContextCompat.getDrawable(preferenceScreen.context, R.drawable.ic_baseline_video_library_24)
+                setOnPreferenceClickListener {
+                    ViewVideosFragment().show(supportFragmentManager, "videoViewer")
+                    true
+                }
+            }
+        )
     }
 
 }

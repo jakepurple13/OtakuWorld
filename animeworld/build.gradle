@@ -48,12 +48,24 @@ dependencies {
     implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'com.google.firebase:firebase-crashlytics:17.2.1'
     implementation 'com.google.firebase:firebase-analytics:17.5.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation 'com.airbnb.android:lottie:3.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+
+    implementation "com.ncorti:slidetoact:0.9.0"
+    implementation 'com.google.android.exoplayer:exoplayer:2.11.8'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.11.8'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.11.8'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.8'
+    implementation 'androidx.mediarouter:mediarouter:1.2.2'
+    implementation "androidx.tonyodev.fetch2:xfetch2:3.1.6"
+    implementation "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
+    implementation "androidx.tonyodev.fetch2rx:xfetch2rx:3.1.6"
 
     implementation project(':UIViews')
     implementation project(':Models')
