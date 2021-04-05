@@ -3,6 +3,7 @@ package com.programmersbox.uiviews
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.navigation.fragment.findNavController
 import androidx.preference.*
 import androidx.work.Constraints
@@ -14,6 +15,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.thirdpartyutils.into
+import com.programmersbox.thirdpartyutils.openInCustomChromeBrowser
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -97,6 +99,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
             sourcePublish.subscribe { p.title = "Current Source: ${it.serviceName}" }
                 .addTo(disposable)
+        }
+
+        findPreference<Preference>("view_source")?.let { p ->
+            p.setOnPreferenceClickListener {
+                requireContext().openInCustomChromeBrowser(sourcePublish.value!!.baseUrl) {
+                    setStartAnimations(requireContext(), R.anim.fui_slide_in_right, R.anim.fui_slide_out_left)
+                    setShareState(CustomTabsIntent.SHARE_STATE_ON)
+                }
+                true
+            }
         }
 
         findPreference<Preference>("view_favorites")?.setOnPreferenceClickListener {

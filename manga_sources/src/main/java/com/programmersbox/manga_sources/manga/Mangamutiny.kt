@@ -14,7 +14,7 @@ object Mangamutiny : ApiService {
 
     override val serviceName: String get() = "MANGAMUTINY"
 
-    //override val websiteUrl: String = "https://mangamutiny.org"
+    override val websiteUrl: String = "https://mangamutiny.org"
 
     val headers: List<Pair<String, String>>
         get() = listOf(

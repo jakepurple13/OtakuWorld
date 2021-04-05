@@ -52,6 +52,7 @@
                 android:layout_marginHorizontal="5dp"
                 android:drawableTop="@drawable/ic_baseline_download_24"
                 android:drawableTint="#ffffff"
+                android:visibility="gone"
                 android:text="@string/download"
                 android:textColor="#ffffff"
                 app:optionTint="@{swatch}"

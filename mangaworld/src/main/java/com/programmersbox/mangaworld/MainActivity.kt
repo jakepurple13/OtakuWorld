@@ -24,7 +24,7 @@ class MainActivity : BaseMainActivity() {
 
         BigImageViewer.initialize(GlideImageLoader.with(applicationContext))
 
-        if(currentService == null) {
+        if (currentService == null) {
             sourcePublish.onNext(Sources.NINE_ANIME)
             currentService = Sources.NINE_ANIME
         }
@@ -38,20 +38,14 @@ class MainActivity : BaseMainActivity() {
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
 
-        //mangaTitle = intent.getStringExtra("mangaTitle")
-        //model = intent.getObjectExtra<ChapterModel>("currentChapter")
-        //val list = intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
-        startActivity(Intent(this, ReadActivity::class.java).apply {
-            putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-            putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-            putExtra("mangaTitle", model.name)
-        })
-
-        /*model.getChapterInfo()
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .subscribeBy { println(it) }
-            .addTo(disposable)*/
+        startActivity(
+            Intent(this, ReadActivity::class.java).apply {
+                putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                putExtra("mangaTitle", model.name)
+                putExtra("mangaUrl", model.url)
+            }
+        )
 
     }
 

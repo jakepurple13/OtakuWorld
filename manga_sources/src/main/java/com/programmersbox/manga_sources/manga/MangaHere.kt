@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit
 object MangaHere : ApiService {
 
     override val baseUrl = "https://www.mangahere.cc"
-    //override val websiteUrl: String = baseUrl
 
     override val serviceName: String get() = "MANGA_HERE"
 

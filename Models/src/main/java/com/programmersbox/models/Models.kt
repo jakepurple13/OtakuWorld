@@ -51,6 +51,7 @@ data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?) 
 
 interface ApiService: Serializable {
     val baseUrl: String
+    val websiteUrl: String get() = baseUrl
     val canScroll: Boolean get() = false
     fun getRecent(page: Int = 1): Single<List<ItemModel>>
     fun getList(page: Int = 1): Single<List<ItemModel>>

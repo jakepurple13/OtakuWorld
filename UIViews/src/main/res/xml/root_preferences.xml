@@ -35,6 +35,11 @@
             app:title="Current Source: " />
 
         <Preference
+            app:icon="@drawable/ic_baseline_open_in_browser_24"
+            app:key="view_source"
+            app:title="View Source in Browser" />
+
+        <Preference
             app:icon="@android:drawable/star_big_on"
             app:key="view_favorites"
             app:title="View Favorites" />
