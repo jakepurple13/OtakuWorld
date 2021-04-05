@@ -27,7 +27,7 @@ class MangaApp : OtakuApp() {
         FirebaseDb.CHAPTERS_ID = "chaptersRead"
         FirebaseDb.COLLECTION_ID = "mangaworld"
         FirebaseDb.ITEM_ID = "mangaUrl"
-        FirebaseDb.READ_OR_WATCHED_ID = "chapters"
+        FirebaseDb.READ_OR_WATCHED_ID = "chapterCount"
 
     }
 }

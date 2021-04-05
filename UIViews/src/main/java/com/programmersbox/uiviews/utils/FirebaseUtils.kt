@@ -89,7 +89,8 @@ object FirebaseDb {
         val mangaUrl: String? = null,
         val imageUrl: String? = null,
         val source: String? = null,
-        var numEpisodes: Int = 0,
+        var numEpisodes: Int? = null,
+        var chapterCount: Int? = null
     )
 
     private data class FirebaseChapterWatched(
@@ -104,7 +105,7 @@ object FirebaseDb {
         (showUrl ?: mangaUrl).orEmpty(),
         imageUrl.orEmpty(),
         source.orEmpty(),
-        numEpisodes,
+        numEpisodes ?: chapterCount ?: 0,
     )
 
     private fun DbModel.toFirebaseDbModel() = FirebaseDbModel(
@@ -115,6 +116,7 @@ object FirebaseDb {
         imageUrl,
         source,
         numChapters,
+        numChapters
     )
 
     private fun FirebaseChapterWatched.toChapterWatchedModel() = ChapterWatched(
@@ -155,7 +157,7 @@ object FirebaseDb {
 
     fun updateShow(showDbModel: DbModel) = Completable.create { emitter ->
         showDoc2?.document(showDbModel.url.urlToPath())
-            ?.update(CHAPTER_ID, showDbModel.numChapters)
+            ?.update(READ_OR_WATCHED_ID, showDbModel.numChapters)
             ?.addOnSuccessListener { emitter.onComplete() }
             ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
     }

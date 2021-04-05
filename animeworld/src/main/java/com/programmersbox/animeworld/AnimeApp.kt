@@ -34,7 +34,7 @@ class AnimeApp : OtakuApp() {
         FirebaseDb.CHAPTERS_ID = "episodesWatched"
         FirebaseDb.COLLECTION_ID = "animeworld"
         FirebaseDb.ITEM_ID = "showUrl"
-        FirebaseDb.READ_OR_WATCHED_ID = "watched"
+        FirebaseDb.READ_OR_WATCHED_ID = "episodesWatched"
 
         val fetchConfiguration = FetchConfiguration.Builder(this)
             .enableAutoStart(true)

@@ -90,6 +90,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                     try {
                         loadMarkersJob.getAndSet(methodReturningJob())?.cancel()
                         val newData = sourceFromString(model.source)?.let { model.toItemModel(it).toInfoModel().blockingGet() }
+                        println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
                         if (model.numChapters >= newData?.chapters?.size ?: -1) null
                         else Pair(newData, model)
                     } catch (e: Exception) {
@@ -166,7 +167,7 @@ class UpdateNotification(private val context: Context) {
                 )
             }
             showWhen = true
-            groupId = "showGroup"
+            groupId = "otakuGroup"
             pendingIntent { context ->
                 NavDeepLinkBuilder(context)
                     .setGraph(R.navigation.all_nav)
