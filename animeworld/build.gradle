@@ -54,13 +54,13 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation 'com.airbnb.android:lottie:3.6.1'
+    implementation 'com.airbnb.android:lottie:3.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
 
     implementation "com.ncorti:slidetoact:0.9.0"
     implementation 'com.google.android.exoplayer:exoplayer:2.11.8'
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.11.8'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.13.2'
     implementation 'com.google.android.exoplayer:exoplayer-dash:2.11.8'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.8'
     implementation 'androidx.mediarouter:mediarouter:1.2.2'
