@@ -75,7 +75,7 @@ dependencies {
 
     implementation 'com.github.piasy:BigImageViewer:1.7.1'
     implementation 'com.github.piasy.BigImageViewer:GlideImageLoader:1.7.1'
-    implementation "com.mikepenz:iconics-core:5.0.3"
+    implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:3.0.1.4.original-kotlin@aar'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
