@@ -10,7 +10,7 @@ class MangaApp : OtakuApp() {
     override fun onCreated() {
 
         logo = R.mipmap.ic_launcher
-        notificationLogo = R.mipmap.ic_launcher_foreground
+        notificationLogo = R.drawable.manga_world_round_logo//R.mipmap.ic_launcher_foreground
 
         MangaContext.context = this
 
