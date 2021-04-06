@@ -54,7 +54,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation 'com.airbnb.android:lottie:3.6.1'
+    implementation 'com.airbnb.android:lottie:3.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
 
@@ -72,7 +72,7 @@ dependencies {
     implementation "com.mikepenz:iconics-core:5.0.3"
     implementation 'com.mikepenz:google-material-typeface:3.0.1.4.original-kotlin@aar'
     //Google Material Icons
-    implementation 'com.mikepenz:fontawesome-typeface:5.9.0.0-kotlin@aar'
+    implementation 'com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar'
 
     implementation project(':UIViews')
     implementation project(':Models')
