@@ -107,7 +107,7 @@ class AnimeApp : OtakuApp() {
             }
         )
 
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
 
     }
 
@@ -132,7 +132,7 @@ class AnimeApp : OtakuApp() {
                 .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_file_download).toBitmap()))
                 .setShortLabel("View Downloads")
                 .setLongLabel("View Downloads")
-                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse("animeworld://view_downloads")))
+                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse("animeworld://view_downloads"), this, MainActivity::class.java))
                 .build()
         )
 
@@ -142,7 +142,7 @@ class AnimeApp : OtakuApp() {
                 .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
                 .setShortLabel("View Videos")
                 .setLongLabel("View Videos")
-                .setIntent(Intent(Intent.ACTION_VIEW, Uri.parse("animeworld://view_videos")))
+                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse("animeworld://view_videos"), this, MainActivity::class.java))
                 .build()
         )
 

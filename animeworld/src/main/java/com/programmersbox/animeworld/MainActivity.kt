@@ -28,14 +28,22 @@ import kotlinx.coroutines.launch
 
 class MainActivity : BaseMainActivity() {
 
+    companion object {
+        private const val VIEW_DOWNLOADS = "animeworld://view_downloads"
+        private const val VIEW_VIDEOS = "animeworld://view_videos"
+    }
+
     override fun onCreate() {
+
+        when (intent.data) {
+            Uri.parse(VIEW_DOWNLOADS) -> DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
+            Uri.parse(VIEW_VIDEOS) -> ViewVideosFragment().show(supportFragmentManager, "videoViewer")
+        }
 
         if (currentService == null) {
             sourcePublish.onNext(Sources.GOGOANIME)
             currentService = Sources.GOGOANIME
         }
-
-        //TODO: For view videos and view downloads, use a bottomsheetdialogfragment!
 
     }
 
