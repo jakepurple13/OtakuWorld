@@ -38,7 +38,7 @@
         <Preference
             app:icon="@drawable/ic_baseline_star_24"
             app:key="view_favorites"
-            app:title="View Favorites" />
+            app:title="Favorites" />
 
     </PreferenceCategory>
 

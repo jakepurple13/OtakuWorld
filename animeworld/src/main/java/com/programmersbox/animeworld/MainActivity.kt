@@ -110,7 +110,7 @@ class MainActivity : BaseMainActivity() {
         preferenceScreen.viewSettings {
             it.addPreference(
                 Preference(it.context).apply {
-                    title = "View Videos"
+                    title = "Videos"
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_video_library_24)
                     setOnPreferenceClickListener {
                         ViewVideosFragment().show(supportFragmentManager, "videoViewer")
@@ -121,7 +121,7 @@ class MainActivity : BaseMainActivity() {
 
             it.addPreference(
                 Preference(it.context).apply {
-                    title = "View Downloads"
+                    title = "Downloads"
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
                     setOnPreferenceClickListener {
                         DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
