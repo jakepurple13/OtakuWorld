@@ -56,6 +56,7 @@ dependencies {
 
     implementation 'com.airbnb.android:lottie:3.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
 
     implementation "com.ncorti:slidetoact:0.9.0"
     implementation 'com.google.android.exoplayer:exoplayer:2.11.8'

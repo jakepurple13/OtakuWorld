@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.ApiService
@@ -114,6 +115,39 @@ class MainActivity : BaseMainActivity() {
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
                     setOnPreferenceClickListener {
                         DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
+                        true
+                    }
+                }
+            )
+        }
+
+        preferenceScreen.generalSettings {
+            it.addPreference(
+                Preference(it.context).apply {
+                    title = "Folder Location"
+                    summary = it.context.folderLocation
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_folder_24)
+                    setOnPreferenceClickListener {
+                        requestPermissions(
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        ) {
+                            if (it.isGranted) {
+                                ChooserDialog(this@MainActivity)
+                                    .withIcon(R.mipmap.ic_launcher)
+                                    .withStringResources("Choose a Directory", "CHOOSE", "CANCEL")
+                                    .withFilter(true, false)
+                                    .withStartFile(folderLocation)
+                                    .enableOptions(true)
+                                    .withChosenListener { dir, _ ->
+                                        folderLocation = "$dir/"
+                                        println(dir)
+                                        summary = folderLocation
+                                    }
+                                    .build()
+                                    .show()
+                            }
+                        }
                         true
                     }
                 }
