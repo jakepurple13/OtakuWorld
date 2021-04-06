@@ -17,6 +17,10 @@
             app:title="Version: " />
 
         <Preference
+            app:key="updateAvailable"
+            app:title="Update Available" />
+
+        <Preference
             app:enabled="true"
             app:key="sync_time"
             app:title="Last Time Updates Were Checked" />

@@ -13,14 +13,20 @@ import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.thirdpartyutils.openInCustomChromeBrowser
 import com.programmersbox.uiviews.utils.*
+import com.squareup.okhttp.OkHttpClient
+import com.squareup.okhttp.Request
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -97,6 +103,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     ) { d, i ->
                         sourcePublish.onNext(list[i])
                         requireContext().currentService = list[i]
+                        d.dismiss()
                     }
                     .setPositiveButton("Done") { d, _ -> d.dismiss() }
                     .show()
@@ -150,9 +157,48 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun aboutPreferences() {
+        val checker = AtomicBoolean(false)
+        fun updateSetter() {
+            if (!checker.get()) {
+                GlobalScope.launch {
+                    checker.set(true)
+                    val request = Request.Builder()
+                        .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                        .get()
+                        .build()
+                    @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
+                    val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
+                    runOnUIThread {
+                        findPreference<Preference>("updateAvailable")?.let { p1 ->
+                            p1.summary = "Version: $f"
+                            p1.isVisible =
+                                context?.packageManager?.getPackageInfo(
+                                    requireContext().packageName,
+                                    0
+                                )?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0
+                        }
+                    }
+                    checker.set(false)
+                }
+            }
+        }
 
         findPreference<Preference>("about_version")?.let { p ->
-            p.summary = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName
+            p.title = "Version: ${context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName}"
+            p.summary = "Press to Check for Updates"
+            p.setOnPreferenceClickListener {
+                updateSetter()
+                true
+            }
+        }
+
+        findPreference<Preference>("updateAvailable")?.let { p ->
+            p.isVisible = false
+            updateSetter()
+            p.setOnPreferenceClickListener {
+                requireContext().openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                true
+            }
         }
 
         findPreference<Preference>("sync_time")?.let { s ->

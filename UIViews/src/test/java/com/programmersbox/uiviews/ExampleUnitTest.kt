@@ -1,8 +1,8 @@
 package com.programmersbox.uiviews
 
+import com.squareup.okhttp.OkHttpClient
+import com.squareup.okhttp.Request
 import org.junit.Test
-
-import org.junit.Assert.*
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -12,6 +12,14 @@ import org.junit.Assert.*
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+
+        val request = Request.Builder()
+            .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+            .get()
+            .build()
+        val response = OkHttpClient().newCall(request).execute()
+        val f = response.request().url()//if (response.code == 200) response.body!!.string() else null
+
+        println(f)
     }
 }
