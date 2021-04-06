@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MangaWorld</string>
+    <string name="addedChapterItem">Added Chapter</string>
+    <string name="removedChapterItem">Removed Chapter</string>
 </resources>

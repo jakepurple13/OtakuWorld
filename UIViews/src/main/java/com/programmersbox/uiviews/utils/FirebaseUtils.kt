@@ -59,7 +59,6 @@ object FirebaseDb {
     var DOCUMENT_ID = ""
     var CHAPTERS_ID = ""
     var COLLECTION_ID = ""
-    var CHAPTER_ID = ""
     var ITEM_ID = ""
     var READ_OR_WATCHED_ID = ""
 

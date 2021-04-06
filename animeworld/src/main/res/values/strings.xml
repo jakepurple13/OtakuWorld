@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">AnimeWorld</string>
 
-    <string name="addedChapterItem">Added Chapter</string>
-    <string name="removedChapterItem">Removed Chapter</string>
+    <string name="addedChapterItem">Added Episode</string>
+    <string name="removedChapterItem">Removed Episode</string>
     <string name="pause">PAUSE</string>
     <string name="resume">RESUME</string>
     <string name="download">Download</string>
