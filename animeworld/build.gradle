@@ -54,7 +54,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation 'com.airbnb.android:lottie:3.6.1'
+    implementation 'com.airbnb.android:lottie:3.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
 
@@ -62,7 +62,7 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer:2.11.8'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.11.8'
     implementation 'com.google.android.exoplayer:exoplayer-dash:2.11.8'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.8'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.13.2'
     implementation 'androidx.mediarouter:mediarouter:1.2.2'
     implementation 'com.github.rubensousa:previewseekbar-exoplayer:2.11.4.0'
     implementation "androidx.tonyodev.fetch2:xfetch2:3.1.6"
