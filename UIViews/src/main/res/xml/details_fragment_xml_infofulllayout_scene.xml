@@ -6,9 +6,8 @@
     <Transition
         motion:constraintSetEnd="@+id/end_info"
         motion:constraintSetStart="@id/start_info"
-        motion:duration="100">
-       <KeyFrameSet>
-       </KeyFrameSet>
+        motion:duration="250">
+        <KeyFrameSet></KeyFrameSet>
         <OnClick motion:targetId="@+id/moreInfo" />
     </Transition>
 

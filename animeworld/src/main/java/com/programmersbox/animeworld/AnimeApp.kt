@@ -1,7 +1,17 @@
 package com.programmersbox.animeworld
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
+import android.graphics.drawable.Icon
+import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
+import com.mikepenz.iconics.IconicsDrawable
+import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
+import com.mikepenz.iconics.utils.icon
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.loggingutils.Loged
@@ -97,6 +107,46 @@ class AnimeApp : OtakuApp() {
             }
         )
 
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
+
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    private fun shortcutSetup() {
+        val manager = getSystemService(ShortcutManager::class.java)
+        if (manager.dynamicShortcuts.size == 0) {
+            // Application restored. Need to re-publish dynamic shortcuts.
+            if (manager.pinnedShortcuts.size > 0) {
+                // Pinned shortcuts have been restored. Use
+                // updateShortcuts() to make sure they contain
+                // up-to-date information.
+                manager.removeAllDynamicShortcuts()
+            }
+        }
+
+        val shortcuts = mutableListOf<ShortcutInfo>()
+
+        //download viewer
+        shortcuts.add(
+            ShortcutInfo.Builder(this, "download_viewer")
+                .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_file_download).toBitmap()))
+                .setShortLabel("View Downloads")
+                .setLongLabel("View Downloads")
+                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse("animeworld://view_downloads")))
+                .build()
+        )
+
+        //video viewer
+        shortcuts.add(
+            ShortcutInfo.Builder(this, "video_viewer")
+                .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
+                .setShortLabel("View Videos")
+                .setLongLabel("View Videos")
+                .setIntent(Intent(Intent.ACTION_VIEW, Uri.parse("animeworld://view_videos")))
+                .build()
+        )
+
+        manager.dynamicShortcuts = shortcuts
     }
 }
 

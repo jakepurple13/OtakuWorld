@@ -49,7 +49,10 @@ class ChapterAdapter(
             binding.executePendingBindings()
             binding.readChapterButton.setOnClickListener { binding.chapterListCard.performClick() }
             binding.markedReadButton.setOnClickListener { binding.readChapter.performClick() }
-            binding.chapterListCard.setOnClickListener { genericInfo.chapterOnClick(chapterModel, dataList, context) }
+            binding.chapterListCard.setOnClickListener {
+                genericInfo.chapterOnClick(chapterModel, dataList, context)
+                binding.readChapter.performClick()
+            }
             binding.readChapter.setOnCheckedChangeListener(null)
             binding.readChapter.isChecked = currentList.any { it.url == chapterModel.url }
             binding.readChapter.setOnCheckedChangeListener { _, b ->

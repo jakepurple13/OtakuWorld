@@ -3,6 +3,7 @@ package com.programmersbox.animeworld
 import android.Manifest
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -48,6 +49,7 @@ class MainActivity : BaseMainActivity() {
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
         requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
             if (it.isGranted) {
+                Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show()
                 GlobalScope.launch { fetchIt(model) }
             }
         }

@@ -11,10 +11,15 @@ import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.github.piasy.biv.view.BigImageView
 import com.google.android.material.button.MaterialButton
+import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.thirdpartyutils.DragSwipeGlideAdapter
+import com.programmersbox.uiviews.utils.FirebaseDb
+import io.reactivex.Completable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
@@ -33,7 +38,7 @@ class PageAdapter(
 
     private val context: Context = activity
 
-    //private val dao by lazy { MangaDatabase.getInstance(context).mangaDao() }
+    private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 
     override val itemToModel: (String) -> String = { it }
 
@@ -63,18 +68,18 @@ class PageAdapter(
                 holder.render(activity) {
                     runOnUIThread {
                         chapterModels.getOrNull(--currentChapter)?.let(loadNewPages)
-                        /*chapterModels.getOrNull(currentChapter)?.let { item ->
-                            MangaReadChapter(item.url, item.name, mangaUrl)
+                        chapterModels.getOrNull(currentChapter)?.let { item ->
+                            ChapterWatched(item.url, item.name, mangaUrl)
                                 .let {
                                     Completable.mergeArray(
-                                        FirebaseDb.addChapter(it),
+                                        FirebaseDb.insertEpisodeWatched(it),
                                         dao.insertChapter(it)
                                     )
                                 }
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(Schedulers.io())
                                 .subscribe()
-                        }*/
+                        }
                     }
                 }
             }
