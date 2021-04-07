@@ -27,7 +27,6 @@ allprojects {
         maven { url "https://jitpack.io" }
         maven { url "http://dl.bintray.com/piasy/maven" }
     }
-    apply from: "$rootDir/versions.gradle"
 }
 
 task clean(type: Delete) {

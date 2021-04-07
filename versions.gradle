@@ -1,4 +1,0 @@
-ext {
-    jakepurple131 = "10.5.0"
-    flowUtils = "com.github.jakepurple13.HelpfulTools:flowutils:$jakepurple131"
-}
