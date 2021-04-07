@@ -154,6 +154,20 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        findPreference<Preference>("saved_notifications")?.let { p ->
+            p.setOnPreferenceClickListener {
+                SavedNotifications().viewNotificationsFromDb(requireContext())
+                true
+            }
+        }
+
+        findPreference<Preference>("delete_notifications")?.let { p ->
+            p.setOnPreferenceClickListener {
+
+                true
+            }
+        }
+
     }
 
     private fun aboutPreferences() {

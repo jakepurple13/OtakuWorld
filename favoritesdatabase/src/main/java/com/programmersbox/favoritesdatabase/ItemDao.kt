@@ -3,6 +3,8 @@ package com.programmersbox.favoritesdatabase
 import androidx.room.*
 import io.reactivex.Completable
 import io.reactivex.Flowable
+import io.reactivex.Maybe
+import io.reactivex.Single
 
 @Dao
 interface ItemDao {
@@ -22,6 +24,9 @@ interface ItemDao {
     @Query("SELECT COUNT(*) FROM FavoriteItem WHERE url = :url")
     fun getItemById(url: String): Flowable<Int>
 
+    @Query("SELECT * FROM FavoriteItem WHERE url = :url")
+    fun getItemByUrl(url: String): Maybe<DbModel>
+
     @Update
     fun updateItem(model: DbModel): Completable
 
@@ -33,5 +38,17 @@ interface ItemDao {
 
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     fun getAllChapters(url: String): Flowable<List<ChapterWatched>>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    fun insertNotification(notificationItem: NotificationItem): Completable
+
+    @Delete
+    fun deleteNotification(notificationItem: NotificationItem): Completable
+
+    @Query("SELECT * FROM Notifications where url = :url")
+    fun getNotificationItem(url: String): NotificationItem
+
+    @Query("SELECT * FROM Notifications")
+    fun getAllNotifications(): Single<List<NotificationItem>>
 
 }

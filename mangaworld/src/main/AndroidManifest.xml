@@ -4,16 +4,30 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
+        android:name=".MangaApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:name=".MangaApp"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
-        android:theme="@style/Theme.OtakuWorld">
+        android:theme="@style/Theme.OtakuWorld"
+        android:usesCleartextTraffic="true">
+
+        <receiver
+            android:name="com.programmersbox.uiviews.DeleteNotificationReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver android:name="com.programmersbox.uiviews.BootReceived">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.PACKAGE_FIRST_LAUNCH" />
+            </intent-filter>
+        </receiver>
+
         <activity android:name=".ReadActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>

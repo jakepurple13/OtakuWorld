@@ -31,3 +31,22 @@ data class ChapterWatched(
     @ColumnInfo(name = "favoriteUrl")
     val favoriteUrl: String
 )
+
+@Entity(tableName = "Notifications")
+data class NotificationItem(
+    @ColumnInfo(name = "id")
+    val id: Int,
+    @PrimaryKey
+    @ColumnInfo(name = "url")
+    val url: String,
+    @ColumnInfo(name = "summaryText")
+    val summaryText: String,
+    @ColumnInfo(name = "notiTitle")
+    val notiTitle: String,
+    @ColumnInfo(name = "notiPicture")
+    val imageUrl: String?,
+    @ColumnInfo(name = "source")
+    val source: String,
+    @ColumnInfo(name = "contentTitle")
+    val contentTitle: String
+)

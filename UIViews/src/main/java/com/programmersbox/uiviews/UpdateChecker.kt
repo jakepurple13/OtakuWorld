@@ -1,7 +1,10 @@
 package com.programmersbox.uiviews
 
 import android.app.Notification
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -107,7 +110,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
             }
             .map {
                 update.updateManga(dao, it)
-                update.mapDbModel(it)
+                update.mapDbModel(dao, it)
             }
             .map { update.onEnd(it).also { Loged.f("Finished!") } }
             .map {
@@ -136,9 +139,20 @@ class UpdateNotification(private val context: Context) {
         }
     }
 
-    fun mapDbModel(list: List<Pair<InfoModel?, DbModel>>) = list.mapIndexed { index, pair ->
+    fun mapDbModel(dao: ItemDao, list: List<Pair<InfoModel?, DbModel>>) = list.mapIndexed { index, pair ->
         sendRunningNotification(list.size, index, pair.second.title)
         //index + 3 + (Math.random() * 50).toInt() //for a possible new notification value
+        dao.insertNotification(
+            NotificationItem(
+                id = pair.second.hashCode(),
+                url = pair.second.url,
+                summaryText = context.getString(R.string.hadAnUpdate, pair.second.title, pair.first?.chapters?.firstOrNull()?.name ?: ""),
+                notiTitle = pair.second.title,
+                imageUrl = pair.second.imageUrl,
+                source = pair.second.source,
+                contentTitle = pair.second.title
+            )
+        ).subscribe()
         pair.second.hashCode() to NotificationDslBuilder.builder(
             context,
             "otakuChannel",
@@ -168,6 +182,12 @@ class UpdateNotification(private val context: Context) {
             }
             showWhen = true
             groupId = "otakuGroup"
+            deleteIntent { context ->
+                val intent = Intent(context, DeleteNotificationReceiver::class.java)
+                intent.action = "NOTIFICATION_DELETED_ACTION"
+                intent.putExtra("url", pair.second.url)
+                PendingIntent.getBroadcast(context, 0, intent, 0)
+            }
             pendingIntent { context ->
                 NavDeepLinkBuilder(context)
                     .setGraph(R.navigation.all_nav)
@@ -176,17 +196,17 @@ class UpdateNotification(private val context: Context) {
                     .createPendingIntent()
             }
         }
-    } to list.map { m -> m.second }
+    }
 
-    fun onEnd(list: Pair<List<Pair<Int, Notification>>, List<DbModel>>) {
+    fun onEnd(list: List<Pair<Int, Notification>>) {
         val n = context.notificationManager
-        val currentNotificationSize = n.activeNotifications.filterNot { list.first.any { l -> l.first == it.id } }.size - 1
-        list.first.forEach { pair -> n.notify(pair.first, pair.second) }
-        if (list.first.isNotEmpty()) n.notify(
+        val currentNotificationSize = n.activeNotifications.filterNot { list.any { l -> l.first == it.id } }.size - 1
+        list.forEach { pair -> n.notify(pair.first, pair.second) }
+        if (list.isNotEmpty()) n.notify(
             42,
             NotificationDslBuilder.builder(context, "otakuChannel", icon) {
                 title = context.getText(R.string.app_name)
-                val size = list.first.size + currentNotificationSize
+                val size = list.size + currentNotificationSize
                 subText = context.resources.getQuantityString(R.plurals.updateAmount, size, size)
                 showWhen = true
                 groupSummary = true
@@ -231,5 +251,91 @@ class UpdateNotification(private val context: Context) {
             timeoutAfter = 750L
         }
         context.notificationManager.notify(13, notification)
+    }
+}
+
+class DeleteNotificationReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        val dao by lazy { context?.let { ItemDatabase.getInstance(it).itemDao() } }
+        val url = intent?.getStringExtra("url")
+        println(url)
+        GlobalScope.launch {
+            val noti = url?.let { dao?.getNotificationItem(it) }
+            println(noti)
+            noti?.let { dao?.deleteNotification(it)?.subscribe() }
+        }
+    }
+}
+
+class BootReceived : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        Loged.d("BootReceived")
+        context?.let { SavedNotifications().viewNotificationsFromDb(it) }
+    }
+}
+
+class SavedNotifications {
+    fun viewNotificationsFromDb(context: Context) {
+        val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
+        val icon = OtakuApp.notificationLogo
+        val update = UpdateNotification(context)
+        GlobalScope.launch {
+            dao.getAllNotifications()
+                .blockingGet()
+                .map { n ->
+                    println(n)
+                    n.id to NotificationDslBuilder.builder(
+                        context,
+                        "otakuChannel",
+                        icon
+                    ) {
+                        title = n.notiTitle
+                        subText = n.source
+                        getBitmapFromURL(n.imageUrl)?.let {
+                            largeIconBitmap = it
+                            pictureStyle {
+                                bigPicture = it
+                                largeIcon = it
+                                contentTitle = n.contentTitle
+                                summaryText = n.summaryText
+                            }
+                        } ?: bigTextStyle {
+                            contentTitle = n.contentTitle
+                            bigText = n.summaryText
+                        }
+                        showWhen = true
+                        groupId = "otakuGroup"
+                        deleteIntent { context ->
+                            val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
+                            intent1.action = "NOTIFICATION_DELETED_ACTION"
+                            intent1.putExtra("url", n.url)
+                            PendingIntent.getBroadcast(context, n.id, intent1, 0)
+                        }
+                        pendingIntent { context ->
+                            val itemModel = UpdateWorker.sourceFromString(n.source)?.let { it1 ->
+                                dao.getItemByUrl(n.url)
+                                    .blockingGet()
+                                    ?.toItemModel(it1)
+                            }
+                            NavDeepLinkBuilder(context)
+                                .setGraph(R.navigation.all_nav)
+                                .setDestination(R.id.detailsFragment3)
+                                .setArguments(Bundle().apply { putSerializable("itemInfo", itemModel) })
+                                .createPendingIntent()
+                        }
+                    }
+                }
+                .let { update.onEnd(it) }
+        }
+    }
+
+    private fun getBitmapFromURL(strURL: String?): Bitmap? = try {
+        val url = URL(strURL)
+        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        connection.doInput = true
+        connection.connect()
+        BitmapFactory.decodeStream(connection.inputStream)
+    } catch (e: IOException) {
+        null
     }
 }

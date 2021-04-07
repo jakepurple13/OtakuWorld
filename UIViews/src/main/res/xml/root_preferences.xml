@@ -77,4 +77,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        app:title="Notifications"
+        app:isPreferenceVisible="false">
+        <Preference
+            app:key="saved_notifications"
+            app:title="View Notifications" />
+
+        <Preference
+            app:key="delete_notifications"
+            app:title="Delete Notifications" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

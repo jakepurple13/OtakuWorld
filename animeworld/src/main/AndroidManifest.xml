@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".AnimeApp"
@@ -17,6 +18,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OtakuWorld"
         android:usesCleartextTraffic="true">
+        <receiver
+            android:name="com.programmersbox.uiviews.DeleteNotificationReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver android:name="com.programmersbox.uiviews.BootReceived">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.PACKAGE_FIRST_LAUNCH" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".VideoPlayerActivity"
             android:screenOrientation="sensorLandscape" />
