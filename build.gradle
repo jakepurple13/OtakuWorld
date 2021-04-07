@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = "1.4.32"
     ext.jakepurple13 = "10.6.0"
-    ext.otakuVersionName = "2.0"
+    ext.otakuVersionName = "3.0"
     repositories {
         google()
         jcenter()
@@ -27,6 +27,7 @@ allprojects {
         maven { url "https://jitpack.io" }
         maven { url "http://dl.bintray.com/piasy/maven" }
     }
+    apply from: "$rootDir/versions.gradle"
 }
 
 task clean(type: Delete) {
