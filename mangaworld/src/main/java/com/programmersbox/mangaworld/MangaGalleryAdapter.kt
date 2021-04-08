@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.mangaworld.databinding.MangaGalleryItemBinding
 import com.programmersbox.models.ItemModel
@@ -41,6 +42,10 @@ class MangaGalleryAdapter(context: Context, baseListFragment: BaseListFragment) 
                 }
             }
     }
+
+    override val currentList: MutableList<DbModel> get() = mutableListOf()
+    override val previousList: MutableList<DbModel> get() = mutableListOf()
+    override fun update(list: List<DbModel>, check: (ItemModel, DbModel) -> Boolean) {}
 
 }
 

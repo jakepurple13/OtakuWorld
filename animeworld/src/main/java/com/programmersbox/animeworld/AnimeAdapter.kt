@@ -4,8 +4,6 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.animeworld.databinding.AnimeListItemBinding
-import com.programmersbox.dragswipe.CheckAdapter
-import com.programmersbox.dragswipe.CheckAdapterInterface
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ItemModel
@@ -17,12 +15,7 @@ import com.programmersbox.uiviews.ItemListAdapter
 class AnimeAdapter(
     context: Context,
     baseListFragment: BaseListFragment,
-    check: CheckAdapter<ItemModel, DbModel> = CheckAdapter()
-) : ItemListAdapter<AnimeHolder>(context, baseListFragment), CheckAdapterInterface<ItemModel, DbModel> by check {
-
-    init {
-        check.adapter = this
-    }
+) : ItemListAdapter<AnimeHolder>(context, baseListFragment) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AnimeHolder =
         AnimeHolder(AnimeListItemBinding.inflate(context.layoutInflater, parent, false))

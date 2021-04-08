@@ -5,11 +5,15 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.utils.EndlessScrollingListener
+import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
@@ -27,11 +31,23 @@ class RecentFragment : BaseListFragment() {
 
     private var count = 1
 
+    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
+    private val itemListener = FirebaseDb.FirebaseListener()
+
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
         super.viewCreated(view, savedInstanceState)
 
         val rv = view.findViewById<RecyclerView>(R.id.recentList)
         val refresh = view.findViewById<SwipeRefreshLayout>(R.id.recentRefresh)
+
+        Flowables.combineLatest(
+            itemListener.getAllShowsFlowable(),
+            dao.getAllFavorites()
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { adapter.update(it) { s, d -> s.url == d.url } }
+            .addTo(disposable)
 
         rv?.apply {
             adapter = this@RecentFragment.adapter
@@ -76,6 +92,7 @@ class RecentFragment : BaseListFragment() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
+        itemListener.unregister()
     }
 
     companion object {
