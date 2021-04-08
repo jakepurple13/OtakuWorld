@@ -26,7 +26,7 @@ class MainActivity : BaseMainActivity() {
 
         if (currentService == null) {
             sourcePublish.onNext(Sources.NINE_ANIME)
-            currentService = Sources.NINE_ANIME
+            currentService = Sources.NINE_ANIME.serviceName
         }
     }
 

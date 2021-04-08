@@ -42,7 +42,7 @@ class MainActivity : BaseMainActivity() {
 
         if (currentService == null) {
             sourcePublish.onNext(Sources.GOGOANIME)
-            currentService = Sources.GOGOANIME
+            currentService = Sources.GOGOANIME.serviceName
         }
 
     }

@@ -95,14 +95,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("current_source")?.let { p ->
             val list = genericInfo.sourceList().toTypedArray()
             p.setOnPreferenceClickListener {
+                val service = requireContext().currentService
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Choose a source")
                     .setSingleChoiceItems(
                         list.map { it.serviceName }.toTypedArray(),
-                        list.indexOfFirst { it.serviceName == requireContext().currentService?.serviceName }
+                        list.indexOfFirst {
+                            println(it)
+                            println(service)
+                            it.serviceName == service
+                        }.also { println(it) }
                     ) { d, i ->
                         sourcePublish.onNext(list[i])
-                        requireContext().currentService = list[i]
+                        requireContext().currentService = list[i].serviceName
                         d.dismiss()
                     }
                     .setPositiveButton("Done") { d, _ -> d.dismiss() }

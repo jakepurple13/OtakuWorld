@@ -24,7 +24,7 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
         genericInfo = this
         setContentView(R.layout.base_main_activity)
 
-        currentService?.let { sourcePublish.onNext(it) }
+        toSource(currentService.orEmpty())?.let { sourcePublish.onNext(it) }
 
         if (savedInstanceState == null) {
             setupBottomNavBar()
