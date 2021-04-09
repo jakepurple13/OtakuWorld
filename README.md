@@ -1,6 +1,6 @@
 # OtakuWorld
 
-## [Latest Release](https://github.com/jakepurple13/MangaWorld/releases/latest)
+## [Latest Release](https://github.com/jakepurple13/OtakuWorld/releases/latest)
 
 # Screenshots
 
