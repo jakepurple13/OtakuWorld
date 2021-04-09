@@ -100,11 +100,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     .setTitle("Choose a source")
                     .setSingleChoiceItems(
                         list.map { it.serviceName }.toTypedArray(),
-                        list.indexOfFirst {
-                            println(it)
-                            println(service)
-                            it.serviceName == service
-                        }.also { println(it) }
+                        list.indexOfFirst { it.serviceName == service }
                     ) { d, i ->
                         sourcePublish.onNext(list[i])
                         requireContext().currentService = list[i].serviceName

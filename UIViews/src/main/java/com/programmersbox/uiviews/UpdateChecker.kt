@@ -190,8 +190,8 @@ class UpdateNotification(private val context: Context) {
             }
             pendingIntent { context ->
                 NavDeepLinkBuilder(context)
-                    .setGraph(R.navigation.all_nav)
-                    .setDestination(R.id.detailsFragment3)
+                    .setGraph(R.navigation.recent_nav)
+                    .setDestination(R.id.detailsFragment2)
                     .setArguments(Bundle().apply { putSerializable("itemInfo", pair.second.toItemModel(pair.first!!.source)) })
                     .createPendingIntent()
             }
