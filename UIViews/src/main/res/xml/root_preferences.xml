@@ -18,6 +18,7 @@
 
         <Preference
             app:key="updateAvailable"
+            app:icon="@drawable/ic_baseline_system_update_alt_24"
             app:title="Update Available" />
 
         <Preference
