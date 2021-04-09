@@ -19,10 +19,7 @@ import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
-import com.tonyodev.fetch2.Fetch
-import com.tonyodev.fetch2.NetworkType
-import com.tonyodev.fetch2.Priority
-import com.tonyodev.fetch2.Request
+import com.tonyodev.fetch2.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -76,11 +73,10 @@ class MainActivity : BaseMainActivity() {
         for (i in url) {
 
             val filePath = folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
-            //Loged.wtf("${File(filePath).exists()}")
             val request = Request(i.link!!, filePath)
             request.priority = Priority.HIGH
             request.networkType = NetworkType.ALL
-            //request.enqueueAction = EnqueueAction.DO_NOT_ENQUEUE_IF_EXISTING
+            request.enqueueAction = EnqueueAction.REPLACE_EXISTING
             request.extras.map.toProperties()["URL_INTENT"] = ep.url
             request.extras.map.toProperties()["NAME_INTENT"] = ep.name
 
