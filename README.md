@@ -4,7 +4,7 @@
 
 # Screenshots
 
-### AnimeWorld
+### MangaWorld
 <p align="center">
   <img src="/ss/s1.png" width="32%"/>
   <img src="/ss/s2.png" width="32%"/>
@@ -14,7 +14,7 @@
   <img src="/ss/s6.png" width="32%"/>
 </p>
 
-### MangaWorld
+### AnimeWorld
 <p align="center">
   <img src="/ss/s7.png" width="32%"/>
   <img src="/ss/s8.png" width="32%"/>
