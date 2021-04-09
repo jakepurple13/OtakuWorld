@@ -30,6 +30,9 @@ class MainActivity : BaseMainActivity() {
         }
     }
 
+    override val apkString: String
+        get() = "mangaworld-debug.apk"
+
     override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
         (MangaGalleryAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)
 

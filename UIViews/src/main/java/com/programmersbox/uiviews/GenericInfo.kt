@@ -19,4 +19,6 @@ interface GenericInfo {
 
     fun customPreferences(preferenceScreen: SettingsDsl) = Unit
 
+    val apkString: String
+
 }

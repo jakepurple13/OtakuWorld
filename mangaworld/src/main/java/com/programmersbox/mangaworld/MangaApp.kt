@@ -1,5 +1,6 @@
 package com.programmersbox.mangaworld
 
+import androidx.core.content.FileProvider
 import com.programmersbox.manga_sources.MangaContext
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.uiviews.OtakuApp
@@ -31,3 +32,5 @@ class MangaApp : OtakuApp() {
 
     }
 }
+
+class GenericFileProvider : FileProvider()

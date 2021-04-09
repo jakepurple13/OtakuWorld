@@ -1,9 +1,19 @@
 package com.programmersbox.uiviews
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.webkit.URLUtil
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.FileProvider
 import androidx.navigation.fragment.findNavController
 import androidx.preference.*
 import androidx.work.Constraints
@@ -13,7 +23,9 @@ import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
+import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.thirdpartyutils.openInCustomChromeBrowser
@@ -22,11 +34,17 @@ import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.MalformedURLException
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.CoroutineContext
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -39,7 +57,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         accountPreferences()
         generalPreferences(genericInfo)
-        aboutPreferences()
+        aboutPreferences(genericInfo)
 
         val settingsDsl = SettingsDsl()
 
@@ -171,7 +189,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     }
 
-    private fun aboutPreferences() {
+    private fun aboutPreferences(genericInfo: GenericInfo) {
         val checker = AtomicBoolean(false)
         fun updateSetter() {
             if (!checker.get()) {
@@ -211,7 +229,32 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.isVisible = false
             updateSetter()
             p.setOnPreferenceClickListener {
-                requireContext().openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Update to ${p.summary}")
+                    .setMessage("There's an update! Please update if you want to have the latest features!")
+                    .setPositiveButton(R.string.update) { d, _ ->
+                        activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
+                            if (it.isGranted) {
+                                val isApkAlreadyThere =
+                                    File(context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/", genericInfo.apkString)
+                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+
+                                DownloadApk(
+                                    requireContext(),
+                                    "https://github.com/jakepurple13/OtakuWorld/releases/latest/download/${genericInfo.apkString}",
+                                    genericInfo.apkString
+                                ).startDownloadingApk()
+                            }
+                        }
+                        d.dismiss()
+                    }
+                    .setNeutralButton(R.string.gotoBrowser) { d, _ ->
+                        context?.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                        d.dismiss()
+                    }
+                    .setNegativeButton(R.string.notNow) { d, _ -> d.dismiss() }
+                    .show()
+
                 true
             }
         }
@@ -277,5 +320,120 @@ class SettingsDsl {
 
     fun viewSettings(block: (PreferenceCategory) -> Unit) {
         viewSettings = block
+    }
+}
+
+class DownloadApk(val context: Context, private val downloadUrl: String, private val outputName: String) : CoroutineScope {
+    private var job: Job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job // to run code in Main(UI) Thread
+
+    // call this method to cancel a coroutine when you don't need it anymore,
+    // e.g. when user closes the screen
+    fun cancel() {
+        job.cancel()
+    }
+
+    fun startDownloadingApk() {
+        if (URLUtil.isValidUrl(downloadUrl)) execute()
+    }
+
+    private lateinit var bar: AlertDialog
+
+    private fun execute() = launch {
+        onPreExecute()
+        val result = doInBackground() // runs in background thread without blocking the Main Thread
+        onPostExecute(result)
+    }
+
+    private suspend fun onProgressUpdate(vararg values: Int?) = withContext(Dispatchers.Main) {
+        val progress = values[0]
+        if (progress != null) {
+            bar.setMessage(if (progress > 99) "Finishing... " else "Downloading... $progress%")
+        }
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private suspend fun doInBackground(): Boolean = withContext(Dispatchers.IO) { // to run code in Background Thread
+        // do async work
+        var flag = false
+
+        try {
+            val url = URL(downloadUrl)
+            val c = url.openConnection() as HttpURLConnection
+            c.requestMethod = "GET"
+            c.connect()
+            val path = Environment.getExternalStorageDirectory().toString() + "/Download/"
+            val file = File(path)
+            file.mkdirs()
+            val outputFile = File(file, outputName)
+
+            if (outputFile.exists()) outputFile.delete()
+
+            val fos = FileOutputStream(outputFile)
+            val inputStream = c.inputStream
+            val totalSize = c.contentLength.toFloat() //size of apk
+
+            val buffer = ByteArray(1024)
+            var len1: Int
+            var per: Float
+            var downloaded = 0f
+            while (inputStream.read(buffer).also { len1 = it } != -1) {
+                fos.write(buffer, 0, len1)
+                downloaded += len1
+                per = (downloaded * 100 / totalSize)
+                onProgressUpdate(per.toInt())
+            }
+            fos.close()
+            inputStream.close()
+            openNewVersion(path)
+            flag = true
+        } catch (e: MalformedURLException) {
+            Loged.e("Update Error: " + e.message, "DownloadApk")
+            flag = false
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return@withContext flag
+    }
+
+    // Runs on the Main(UI) Thread
+    private fun onPreExecute() {
+        // show progress
+        bar = MaterialAlertDialogBuilder(context)
+            .setTitle("Updating...")
+            .setMessage("Downloading...")
+            .setCancelable(false)
+            .setIcon(OtakuApp.logo)
+            .show()
+    }
+
+    // Runs on the Main(UI) Thread
+    private fun onPostExecute(result: Boolean?) {
+        // hide progress
+        bar.dismiss()
+        if (result != null && result) {
+            Toast.makeText(context, "Update Done", Toast.LENGTH_SHORT)
+                .show()
+        } else {
+            Toast.makeText(context, "Error: Try Again", Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
+    private fun openNewVersion(location: String) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(getUriFromFile(location), "application/vnd.android.package-archive")
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(intent)
+    }
+
+    private fun getUriFromFile(location: String): Uri {
+        return if (Build.VERSION.SDK_INT < 24) {
+            Uri.fromFile(File(location + outputName))
+        } else {
+            FileProvider.getUriForFile(context, context.packageName + ".provider", File(location + outputName))
+        }
     }
 }
