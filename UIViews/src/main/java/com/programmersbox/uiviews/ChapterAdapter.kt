@@ -36,6 +36,7 @@ class ChapterAdapter(
         }
 
     var itemUrl: String? = null
+    var title: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChapterHolder =
         ChapterHolder(ChapterItemBinding.inflate(context.layoutInflater, parent, false))
@@ -53,6 +54,7 @@ class ChapterAdapter(
                 genericInfo.chapterOnClick(chapterModel, dataList, context)
                 binding.readChapter.isChecked = true
             }
+            binding.downloadChapterButton.setOnClickListener { genericInfo.downloadChapter(chapterModel, title.orEmpty()) }
             binding.readChapter.setOnCheckedChangeListener(null)
             binding.readChapter.isChecked = currentList.any { it.url == chapterModel.url }
             binding.readChapter.setOnCheckedChangeListener { _, b ->

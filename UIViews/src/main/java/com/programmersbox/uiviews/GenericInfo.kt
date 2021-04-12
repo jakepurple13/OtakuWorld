@@ -19,6 +19,8 @@ interface GenericInfo {
 
     fun customPreferences(preferenceScreen: SettingsDsl) = Unit
 
+    fun downloadChapter(chapterModel: ChapterModel, title: String)
+
     val apkString: String
 
 }

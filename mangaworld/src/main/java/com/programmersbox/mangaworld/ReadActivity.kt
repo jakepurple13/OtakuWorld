@@ -1,14 +1,17 @@
 package com.programmersbox.mangaworld
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -37,6 +40,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import java.io.File
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -93,9 +97,9 @@ class ReadActivity : AppCompatActivity() {
                 mangaUrl = mangaUrl,
                 loadNewPages = this::loadPages
             ) { image ->
-                /*requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
+                requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
                     if (p.isGranted) saveImage("${mangaTitle}_${model?.name}_${image.toUri().lastPathSegment}", image)
-                }*/
+                }
             }
         }
     }
@@ -269,21 +273,19 @@ class ReadActivity : AppCompatActivity() {
     }
 
     private fun saveImage(filename: String, downloadUrlOfImage: String) {
-        /*val direct = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES)!!.absolutePath + "/" + "MangaWorld" + "/")
+        val direct = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES)!!.absolutePath + File.separator + "MangaWorld" + File.separator)
 
-        if (!direct.exists()) {
-            direct.mkdir()
-        }
+        if (!direct.exists()) direct.mkdir()
 
         downloadManager.enqueue(this) {
             downloadUri = Uri.parse(downloadUrlOfImage)
             allowOverRoaming = true
             networkType = DownloadDslManager.NetworkType.WIFI_MOBILE
-            title = mangaTitle ?: filename
+            title = filename
             mimeType = "image/jpeg"
             visibility = DownloadDslManager.NotificationVisibility.COMPLETED
             destinationInExternalPublicDir(Environment.DIRECTORY_PICTURES, File.separator + "MangaWorld" + File.separator + filename)
-        }*/
+        }
     }
 
     override fun onPause() {

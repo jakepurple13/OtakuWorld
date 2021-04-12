@@ -68,6 +68,7 @@ class DetailsFragment : Fragment() {
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeBy { info ->
+                adapter.title = info.title
                 adapter.itemUrl = info.url
                 binding.info = info
                 binding.executePendingBindings()

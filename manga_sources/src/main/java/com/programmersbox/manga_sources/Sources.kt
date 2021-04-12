@@ -43,9 +43,11 @@ enum class Sources(
 
 @SuppressLint("StaticFieldLeak")
 object MangaContext {
+    @Transient
     lateinit var context: Context
 
     @Volatile
+    @Transient
     private var INSTANCE: NetworkHelper? = null
 
     fun getInstance(context: Context): NetworkHelper = INSTANCE ?: synchronized(this) { INSTANCE ?: NetworkHelper(context).also { INSTANCE = it } }

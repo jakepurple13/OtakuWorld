@@ -323,6 +323,23 @@ class SettingsDsl {
     }
 }
 
+abstract class CoroutineTask<Params, Progress, Result> : CoroutineScope {
+    protected open val job: Job = Job()
+    override val coroutineContext: CoroutineContext get() = Dispatchers.Main + job
+    protected suspend fun publishProgress(vararg values: Progress) = withContext(Dispatchers.Main) { onProgressUpdate(*values) }
+    open fun onProgressUpdate(vararg values: Progress) {}
+    abstract suspend fun doInBackground(vararg params: Params): Result
+    open fun onPreExecute() {}
+    open fun onPostExecute(result: Result) {}
+    fun cancel() = job.cancel()
+    fun execute() = launch {
+        onPreExecute()
+        val result = withContext(Dispatchers.IO) { doInBackground() } // runs in background thread without blocking the Main Thread
+        onPostExecute(result)
+    }
+
+}
+
 class DownloadApk(val context: Context, private val downloadUrl: String, private val outputName: String) : CoroutineScope {
     private var job: Job = Job()
     override val coroutineContext: CoroutineContext
@@ -347,10 +364,7 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
     }
 
     private suspend fun onProgressUpdate(vararg values: Int?) = withContext(Dispatchers.Main) {
-        val progress = values[0]
-        if (progress != null) {
-            bar.setMessage(if (progress > 99) "Finishing... " else "Downloading... $progress%")
-        }
+        values[0]?.let { bar.setMessage(if (it > 99) "Finishing... " else "Downloading... $it%") }
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -376,13 +390,11 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
 
             val buffer = ByteArray(1024)
             var len1: Int
-            var per: Float
             var downloaded = 0f
             while (inputStream.read(buffer).also { len1 = it } != -1) {
                 fos.write(buffer, 0, len1)
                 downloaded += len1
-                per = (downloaded * 100 / totalSize)
-                onProgressUpdate(per.toInt())
+                onProgressUpdate((downloaded * 100 / totalSize).toInt())
             }
             fos.close()
             inputStream.close()
@@ -412,13 +424,7 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
     private fun onPostExecute(result: Boolean?) {
         // hide progress
         bar.dismiss()
-        if (result != null && result) {
-            Toast.makeText(context, "Update Done", Toast.LENGTH_SHORT)
-                .show()
-        } else {
-            Toast.makeText(context, "Error: Try Again", Toast.LENGTH_SHORT)
-                .show()
-        }
+        Toast.makeText(context, if (result == true) "Update Done" else "Error: Try Again", Toast.LENGTH_SHORT).show()
     }
 
     private fun openNewVersion(location: String) {

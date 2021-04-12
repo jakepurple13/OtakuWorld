@@ -52,6 +52,10 @@ class MainActivity : BaseMainActivity() {
 
     override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
+    override fun downloadChapter(chapterModel: ChapterModel, title: String) {
+
+    }
+
     private val fetch = Fetch.getDefaultInstance()
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
