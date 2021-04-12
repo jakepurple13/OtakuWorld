@@ -21,7 +21,7 @@ import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.dragswipe.*
@@ -239,7 +239,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 .load(item)
                 .override(360, 270)
                 .thumbnail(0.5f)
-                .transform(RoundedCorners(15))
+                .transform(GranularRoundedCorners(0f, 15f, 15f, 0f))
                 .into(thumbnail)
 
         }
