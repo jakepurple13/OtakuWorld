@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.view.children
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -12,9 +11,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
-import com.programmersbox.uiviews.R
 
 @BindingAdapter("coverImage")
 fun loadImage(view: ImageView, imageUrl: String?) {
@@ -70,6 +67,12 @@ fun optionTint(view: MaterialButton, swatchInfo: SwatchInfo?) {
 @BindingAdapter("checkedButtonTint")
 fun buttonTint(view: CheckBox, swatchInfo: SwatchInfo?) {
     swatchInfo?.bodyColor?.let { view.buttonTintList = ColorStateList.valueOf(it) }
+    swatchInfo?.bodyColor?.let { view.setTextColor(it) }
+}
+
+@BindingAdapter("startButtonColor")
+fun startButtonColor(view: MaterialButton, swatchInfo: SwatchInfo?) {
+    swatchInfo?.bodyColor?.let { view.iconTint = ColorStateList.valueOf(it) }
     swatchInfo?.bodyColor?.let { view.setTextColor(it) }
 }
 
