@@ -127,7 +127,6 @@ class DetailsFragment : Fragment() {
             .addTo(disposable)
 
         binding.favoriteItem.changeTint(Color.WHITE)
-        binding.favoriteInfo.setTextColor(Color.WHITE)
 
         binding.favoriteItem.isEnabled = false
         binding.favoriteInfo.isEnabled = false

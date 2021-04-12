@@ -39,10 +39,10 @@
                 android:layout_marginHorizontal="5dp"
                 app:icon="@drawable/ic_baseline_play_arrow_24"
                 app:iconGravity="textTop"
-                app:iconTint="#ffffff"
+                app:iconTint="?android:textColorPrimary"
                 android:drawableTint="#ffffff"
                 android:text="@string/read"
-                android:textColor="#ffffff"
+                android:textColor="?android:textColorPrimary"
                 app:optionTint="@{swatch}"
                 app:strokeColor="#ffffff" />
 
@@ -54,10 +54,10 @@
                 android:layout_marginHorizontal="5dp"
                 app:icon="@drawable/ic_baseline_download_24"
                 app:iconGravity="textTop"
-                app:iconTint="#ffffff"
+                app:iconTint="?android:textColorPrimary"
                 android:drawableTint="#ffffff"
                 android:text="@string/download_chapter"
-                android:textColor="#ffffff"
+                android:textColor="?android:textColorPrimary"
                 app:optionTint="@{swatch}"
                 app:strokeColor="#ffffff" />
 
@@ -68,11 +68,11 @@
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="5dp"
                 app:icon="@drawable/ic_baseline_done_24"
-                app:iconTint="#ffffff"
+                app:iconTint="?android:textColorPrimary"
                 android:drawableTint="#ffffff"
                 app:iconGravity="textTop"
                 android:text="@string/markAs"
-                android:textColor="#ffffff"
+                android:textColor="?android:textColorPrimary"
                 app:optionTint="@{swatch}"
                 app:strokeColor="#ffffff" />
 

@@ -167,7 +167,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:lottie_loop="true"
                 app:lottie_rawRes="@raw/heart"
-                app:tint="#ffffff" />
+                app:tint="?android:textColorPrimary" />
 
             <TextView
                 android:id="@+id/favoriteInfo"
@@ -177,6 +177,7 @@
                 android:layout_marginStart="5dp"
                 android:gravity="center_vertical"
                 android:minLines="2"
+                android:textColor="?android:textColorPrimary"
                 app:layout_constraintBottom_toBottomOf="@id/favoriteItem"
                 app:layout_constraintEnd_toStartOf="@id/markChapters"
                 app:layout_constraintStart_toEndOf="@id/favoriteItem"
