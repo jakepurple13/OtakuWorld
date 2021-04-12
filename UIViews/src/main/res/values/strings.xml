@@ -33,6 +33,7 @@
     <string name="moreInfo">More Info</string>
     <string name="read">Read</string>
     <string name="download">Download</string>
+    <string name="download_chapter">Download</string>
     <string name="markAs" tools:ignore="TypographyEllipsis">Mark As...</string>
     <string name="loadNextChapter">Load Next Chapter</string>
     <string name="reachedLastChapter">Reached Last Chapter</string>

@@ -230,6 +230,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     Intent(context, VideoPlayerActivity::class.java).apply {
                         putExtra("showPath", item.absolutePath)
                         putExtra("showName", item.name)
+                        putExtra("downloadOrStream", true)
                     }
                 )
             }

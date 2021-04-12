@@ -133,6 +133,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         val showPath = intent.getStringExtra("showPath")
         val showName = intent.getStringExtra("showName")
+        val downloadOrStream = intent.getBooleanExtra("downloadOrStream", true)
 
         findViewById<TextView>(R.id.video_name).text = showName
 
@@ -183,7 +184,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         playerView.player = player
 
         //download
-        if (false) {
+        if (downloadOrStream) {
             val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "AnimeWorld"))
             val videoSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(showPath!!.toUri())
             player.prepare(videoSource)

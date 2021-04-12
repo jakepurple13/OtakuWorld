@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -50,11 +51,16 @@ class ChapterAdapter(
             binding.executePendingBindings()
             binding.readChapterButton.setOnClickListener { binding.chapterListCard.performClick() }
             binding.markedReadButton.setOnClickListener { binding.readChapter.performClick() }
+            binding.uploadedInfo2.setOnClickListener { binding.chapterListCard.performClick() }
             binding.chapterListCard.setOnClickListener {
                 genericInfo.chapterOnClick(chapterModel, dataList, context)
                 binding.readChapter.isChecked = true
             }
-            binding.downloadChapterButton.setOnClickListener { genericInfo.downloadChapter(chapterModel, title.orEmpty()) }
+            binding.downloadChapterButton.visibility = if (genericInfo.showMiddleChapterButton) View.VISIBLE else View.GONE
+            binding.downloadChapterButton.setOnClickListener {
+                genericInfo.downloadChapter(chapterModel, title.orEmpty())
+                binding.readChapter.isChecked = true
+            }
             binding.readChapter.setOnCheckedChangeListener(null)
             binding.readChapter.isChecked = currentList.any { it.url == chapterModel.url }
             binding.readChapter.setOnCheckedChangeListener { _, b ->

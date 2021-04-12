@@ -41,6 +41,9 @@ class MainActivity : BaseMainActivity() {
         }
     }
 
+    override val showMiddleChapterButton: Boolean
+        get() = false
+
     override val apkString: String
         get() = "mangaworld-debug.apk"
 

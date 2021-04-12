@@ -2,6 +2,7 @@ package com.programmersbox.animeworld
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -44,6 +45,9 @@ class MainActivity : BaseMainActivity() {
 
     }
 
+    override val showMiddleChapterButton: Boolean
+        get() = true
+
     override val apkString: String
         get() = "animeworld-debug.apk"
 
@@ -53,7 +57,18 @@ class MainActivity : BaseMainActivity() {
     override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
-
+        GlobalScope.launch {
+            val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()?.link
+            runOnUiThread {
+                startActivity(
+                    Intent(this@MainActivity, VideoPlayerActivity::class.java).apply {
+                        putExtra("showPath", link)
+                        putExtra("showName", chapterModel.name)
+                        putExtra("downloadOrStream", true)
+                    }
+                )
+            }
+        }
     }
 
     private val fetch = Fetch.getDefaultInstance()

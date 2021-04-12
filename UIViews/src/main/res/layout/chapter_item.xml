@@ -52,8 +52,7 @@
                 android:layout_marginHorizontal="5dp"
                 android:drawableTop="@drawable/ic_baseline_download_24"
                 android:drawableTint="#ffffff"
-                android:visibility="gone"
-                android:text="@string/download"
+                android:text="@string/download_chapter"
                 android:textColor="#ffffff"
                 app:optionTint="@{swatch}"
                 app:strokeColor="#ffffff" />
@@ -95,7 +94,7 @@
                     app:checkedButtonTint="@{swatch}"
                     app:layout_constrainedWidth="true"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/startReading"
+                    app:layout_constraintEnd_toStartOf="@id/uploadedInfo2"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toStartOf="parent"
@@ -106,11 +105,26 @@
                     tools:text="@tools:sample/full_names"
                     tools:textColor="@sample/sample_colors" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/uploadedInfo2"
+                    style="@style/Widget.App.Button.Borderless.IconOnly"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:drawableTop="@drawable/action_chapter"
+                    android:drawableTint="#ffffff"
+                    app:optionTint="@{swatch}"
+                    app:uploadedText="@{chapter}" />
+
                 <TextView
                     android:id="@+id/uploadedInfo"
                     style="@style/TextAppearance.MaterialComponents.Subtitle2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     app:bodyColor="@{swatch}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -122,7 +136,8 @@
                     android:id="@+id/startReading"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:src="@android:drawable/ic_media_play"
+                    android:visibility="gone"
+                    android:src="@drawable/action_chapter"
                     app:layout_constraintBottom_toTopOf="@id/uploadedInfo"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/uploadedInfo"

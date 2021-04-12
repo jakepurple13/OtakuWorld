@@ -23,4 +23,6 @@ interface GenericInfo {
 
     val apkString: String
 
+    val showMiddleChapterButton: Boolean
+
 }
