@@ -212,6 +212,7 @@ class DetailsFragment : Fragment() {
             }, "Share ${infoModel.title}"))
         }
     }
+
     /*override fun onResume() {
         super.onResume()
         swatchBarColor?.let {

@@ -23,6 +23,8 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.utils.FirebaseDb
 import com.programmersbox.uiviews.utils.lastUpdateCheck
 import com.programmersbox.uiviews.utils.updateCheckPublish
+import com.squareup.okhttp.OkHttpClient
+import com.squareup.okhttp.Request
 import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -32,6 +34,47 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.atomic.AtomicReference
+
+
+class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams) {
+
+    override fun createWork(): Single<Result> = Single.create {
+        try {
+            val request = Request.Builder()
+                .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                .get()
+                .build()
+            @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
+            val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
+            if (
+                applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0
+            ) {
+                val n = NotificationDslBuilder.builder(
+                    applicationContext,
+                    "appUpdate",
+                    OtakuApp.notificationLogo
+                ) {
+                    title = "There's an update!"
+                    subText = "Version $f is now available!"
+                    pendingIntent { context ->
+                        NavDeepLinkBuilder(context)
+                            .setGraph(R.navigation.recent_nav)
+                            .setDestination(R.id.recentFragment2)
+                            .createPendingIntent()
+                    }
+
+                }
+
+                applicationContext.notificationManager.notify(12, n)
+
+                it.onSuccess(Result.success())
+            }
+        } catch (e: Exception) {
+            it.onSuccess(Result.failure())
+        }
+    }
+
+}
 
 
 class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams) {

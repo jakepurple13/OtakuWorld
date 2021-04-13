@@ -37,6 +37,25 @@ abstract class OtakuApp : Application() {
 
         onCreated()
 
+        val work = WorkManager.getInstance(this)
+
+        work.enqueueUniquePeriodicWork(
+            "appChecks",
+            ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequest.Builder(AppCheckWorker::class.java, 1, TimeUnit.DAYS)
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                        .setRequiresBatteryNotLow(false)
+                        .setRequiresCharging(false)
+                        .setRequiresDeviceIdle(false)
+                        .setRequiresStorageNotLow(false)
+                        .build()
+                )
+                .setInitialDelay(10, TimeUnit.SECONDS)
+                .build()
+        ).state.observeForever { println(it) }
+
         updateSetup(this)
 
     }
