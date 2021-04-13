@@ -59,6 +59,8 @@ dependencies {
 
     implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.2.0'
 
+    implementation 'me.zhanghai.android.fastscroll:library:1.1.4'
+
     implementation project(':Models')
     implementation project(':favoritesdatabase')
 

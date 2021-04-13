@@ -29,13 +29,16 @@ class MainActivity : BaseMainActivity() {
     companion object {
         private const val VIEW_DOWNLOADS = "animeworld://view_downloads"
         private const val VIEW_VIDEOS = "animeworld://view_videos"
+        private lateinit var activity: MainActivity
     }
 
     override fun onCreate() {
 
+        activity = this
+
         when (intent.data) {
-            Uri.parse(VIEW_DOWNLOADS) -> DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
-            Uri.parse(VIEW_VIDEOS) -> ViewVideosFragment().show(supportFragmentManager, "videoViewer")
+            Uri.parse(VIEW_DOWNLOADS) -> openDownloads()
+            Uri.parse(VIEW_VIDEOS) -> openVideos()
         }
 
         if (currentService == null) {
@@ -131,7 +134,7 @@ class MainActivity : BaseMainActivity() {
                     title = "Videos"
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_video_library_24)
                     setOnPreferenceClickListener {
-                        ViewVideosFragment().show(supportFragmentManager, "videoViewer")
+                        openVideos()
                         true
                     }
                 }
@@ -142,7 +145,7 @@ class MainActivity : BaseMainActivity() {
                     title = "Downloads"
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
                     setOnPreferenceClickListener {
-                        DownloadViewerFragment().show(supportFragmentManager, "downloadViewer")
+                        openDownloads()
                         true
                     }
                 }
@@ -182,6 +185,14 @@ class MainActivity : BaseMainActivity() {
             )
         }
 
+    }
+
+    private fun openDownloads() {
+        DownloadViewerFragment().show(activity.supportFragmentManager, "downloadViewer")
+    }
+
+    private fun openVideos() {
+        ViewVideosFragment().show(activity.supportFragmentManager, "videoViewer")
     }
 
 }

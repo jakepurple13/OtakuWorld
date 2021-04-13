@@ -11,13 +11,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.helpfulutils.colorFromTheme
+import com.programmersbox.helpfulutils.whatIfNotNull
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.rxutils.invoke
@@ -32,6 +35,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import me.zhanghai.android.fastscroll.FastScrollerBuilder
 
 class DetailsFragment : Fragment() {
 
@@ -53,6 +57,8 @@ class DetailsFragment : Fragment() {
     private val chapterListener = FirebaseDb.FirebaseListener()
 
     private val isFavorite = BehaviorSubject.createDefault(false)
+
+    private var swatchBarColor: Int? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -101,7 +107,16 @@ class DetailsFragment : Fragment() {
                                     }
                                     binding.favoriteItem.changeTint(swatch?.rgb ?: Color.WHITE)
                                     swatch?.rgb?.let { requireActivity().window.statusBarColor = it }
+                                    swatchBarColor = swatch?.rgb
                                     adapter.swatchInfo = swatch
+
+                                    FastScrollerBuilder(binding.infoChapterList)
+                                        .useMd2Style()
+                                        .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
+                                            swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
+                                            setThumbDrawable(drawable)
+                                        }
+                                        .build()
                                 }
 
                             binding.executePendingBindings()
@@ -197,6 +212,16 @@ class DetailsFragment : Fragment() {
             }, "Share ${infoModel.title}"))
         }
     }
+    /*override fun onResume() {
+        super.onResume()
+        swatchBarColor?.let {
+            requireActivity().window?.let { it1 ->
+                ValueAnimator.ofArgb(it1.statusBarColor, it)
+                    .apply { addUpdateListener { it1.statusBarColor = it.animatedValue as Int } }
+                    .start()
+            }
+        }
+    }*/
 
     override fun onDestroy() {
         super.onDestroy()
