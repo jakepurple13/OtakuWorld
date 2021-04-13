@@ -14,6 +14,7 @@ import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.ItemListAdapter
 
+
 class MangaGalleryAdapter(context: Context, baseListFragment: BaseListFragment) :
     ItemListAdapter<GalleryHolder>(context, baseListFragment) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GalleryHolder =
@@ -35,6 +36,7 @@ class MangaGalleryAdapter(context: Context, baseListFragment: BaseListFragment) 
             //.error(R.drawable.manga_world_round_logo)
             .into<Bitmap> {
                 resourceReady { image, _ ->
+                    //cover.setImageBitmap(image.glowEffect(10, title.currentTextColor) ?: image)
                     cover.setImageBitmap(image)
                     /*if (context.usePalette) {
                         swatch = image.getPalette().vibrantSwatch

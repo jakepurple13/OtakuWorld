@@ -2,10 +2,12 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
+import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -76,6 +78,15 @@ class AllFragment : BaseListFragment() {
                 }
             })
         }
+
+        ReactiveNetwork.observeInternetConnectivity()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                view.findViewById<RelativeLayout>(R.id.offline_view).visibility = if (it) View.GONE else View.VISIBLE
+                refresh.visibility = if (it) View.VISIBLE else View.GONE
+            }
+            .addTo(disposable)
 
         sourcePublish
             .subscribeOn(Schedulers.io())

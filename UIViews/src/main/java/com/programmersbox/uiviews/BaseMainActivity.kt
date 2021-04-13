@@ -49,16 +49,19 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
         val controller = findViewById<BottomNavigationView>(R.id.navLayout2)
             .also {
                 GlobalScope.launch {
-                    val request = Request.Builder()
-                        .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                        .get()
-                        .build()
-                    @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
-                    val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
-                    runOnUIThread {
-                        if (packageManager?.getPackageInfo(packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0) {
-                            it.getOrCreateBadge(R.id.setting_nav).number = 1
+                    try {
+                        val request = Request.Builder()
+                            .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                            .get()
+                            .build()
+                        @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
+                        val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
+                        runOnUIThread {
+                            if (packageManager?.getPackageInfo(packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0) {
+                                it.getOrCreateBadge(R.id.setting_nav).number = 1
+                            }
                         }
+                    } catch (e: Exception) {
                     }
                 }
             }

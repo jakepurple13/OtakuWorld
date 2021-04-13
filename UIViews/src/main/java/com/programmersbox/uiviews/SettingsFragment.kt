@@ -194,24 +194,29 @@ class SettingsFragment : PreferenceFragmentCompat() {
         fun updateSetter() {
             if (!checker.get()) {
                 GlobalScope.launch {
-                    checker.set(true)
-                    val request = Request.Builder()
-                        .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                        .get()
-                        .build()
-                    @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
-                    val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
-                    runOnUIThread {
-                        findPreference<Preference>("updateAvailable")?.let { p1 ->
-                            p1.summary = "Version: $f"
-                            p1.isVisible =
-                                context?.packageManager?.getPackageInfo(
-                                    requireContext().packageName,
-                                    0
-                                )?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0
+                    try {
+                        checker.set(true)
+                        val request = Request.Builder()
+                            .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                            .get()
+                            .build()
+                        @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
+                        val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
+                        runOnUIThread {
+                            findPreference<Preference>("updateAvailable")?.let { p1 ->
+                                p1.summary = "Version: $f"
+                                p1.isVisible =
+                                    context?.packageManager?.getPackageInfo(
+                                        requireContext().packageName,
+                                        0
+                                    )?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0
+                            }
                         }
+                    } catch (e: Exception) {
+
+                    } finally {
+                        checker.set(false)
                     }
-                    checker.set(false)
                 }
             }
         }
@@ -323,12 +328,12 @@ class SettingsDsl {
     }
 }
 
-abstract class CoroutineTask<Params, Progress, Result> : CoroutineScope {
+abstract class CoroutineTask<Progress, Result> : CoroutineScope {
     protected open val job: Job = Job()
     override val coroutineContext: CoroutineContext get() = Dispatchers.Main + job
     protected suspend fun publishProgress(vararg values: Progress) = withContext(Dispatchers.Main) { onProgressUpdate(*values) }
     open fun onProgressUpdate(vararg values: Progress) {}
-    abstract suspend fun doInBackground(vararg params: Params): Result
+    abstract suspend fun doInBackground(): Result
     open fun onPreExecute() {}
     open fun onPostExecute(result: Result) {}
     fun cancel() = job.cancel()

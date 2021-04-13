@@ -2,9 +2,11 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
+import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.models.ApiService
@@ -62,6 +64,15 @@ class RecentFragment : BaseListFragment() {
                 }
             })
         }
+
+        ReactiveNetwork.observeInternetConnectivity()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                view.findViewById<RelativeLayout>(R.id.offline_view).visibility = if (it) View.GONE else View.VISIBLE
+                refresh.visibility = if (it) View.VISIBLE else View.GONE
+            }
+            .addTo(disposable)
 
         refresh.setOnRefreshListener { sourceLoad(sourcePublish.value!!) }
 

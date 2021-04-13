@@ -61,6 +61,8 @@ dependencies {
 
     implementation 'me.zhanghai.android.fastscroll:library:1.1.5'
 
+    implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.8'
+
     implementation project(':Models')
     implementation project(':favoritesdatabase')
 
