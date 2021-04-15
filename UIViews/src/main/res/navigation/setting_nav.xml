@@ -5,10 +5,12 @@
     android:id="@+id/setting_nav"
     app:startDestination="@id/settingsFragment">
 
+    <include app:graph="@navigation/aboutlibs_navigation" />
+
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.programmersbox.uiviews.SettingsFragment"
-        android:label="SettingsFragment" >
+        android:label="SettingsFragment">
         <action
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
@@ -16,6 +18,19 @@
             app:popExitAnim="@anim/slide_out"
             android:id="@+id/action_settingsFragment_to_favoriteFragment"
             app:destination="@id/favoriteFragment" />
+
+        <action
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out"
+            android:id="@+id/action_x_to_about_libs"
+            app:destination="@id/about_libraries">
+            <argument
+                android:name="data"
+                app:argType="java.io.Serializable"
+                app:nullable="true" />
+        </action>
     </fragment>
     <fragment
         android:id="@+id/favoriteFragment"

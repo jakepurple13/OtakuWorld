@@ -48,9 +48,9 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
     }
 
     @Suppress("RegExpRedundantEscape")
-    override fun getChapterInfo(info: ChapterModel): Single<List<Storage>> = Single.create {
+    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         try {
-            val m = "<iframe src=\"([^\"]+)\"[^<]+<\\/iframe>".toRegex().toPattern().matcher(getHtml(info.url))
+            val m = "<iframe src=\"([^\"]+)\"[^<]+<\\/iframe>".toRegex().toPattern().matcher(getHtml(chapterModel.url))
             val list = arrayListOf<String>()
             while (m.find()) list.add(m.group(1)!!)
             val regex = "(http|https):\\/\\/([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\%\\&\\-\\_\\?\\.\\=\\/])+(part[0-9])+.(\\w*)"

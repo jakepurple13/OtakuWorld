@@ -23,6 +23,8 @@ import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
+import com.mikepenz.aboutlibraries.Libs
+import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.loggingutils.Loged
@@ -306,12 +308,46 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        findPreference<Preference>("used_libraries")?.setOnPreferenceClickListener {
+            findNavController()
+                .navigate(
+                    SettingsFragmentDirections.actionXToAboutLibs(
+                        LibsBuilder()
+                            .withSortEnabled(true)
+                            .customUtils("loggingutils", "LoggingUtils")
+                            .customUtils("flowutils", "FlowUtils")
+                            .customUtils("gsonutils", "GsonUtils")
+                            .customUtils("helpfulutils", "HelpfulUtils")
+                            .customUtils("dragswipe", "DragSwipe")
+                            .customUtils("funutils", "FunUtils")
+                            .customUtils("rxutils", "RxUtils")
+                            .customUtils("thirdpartyutils", "ThirdPartyUtils")
+                            .withShowLoadingProgress(true)
+                    )
+                )
+            true
+        }
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
     }
+
+    fun LibsBuilder.customUtils(libraryName: String, newName: String) =
+        withLibraryModification(
+            libraryName,
+            Libs.LibraryFields.LIBRARY_REPOSITORY_LINK,
+            "https://www.github.com/jakepurple13/HelpfulTools"
+        )
+            .withLibraryModification(
+                libraryName,
+                Libs.LibraryFields.LIBRARY_NAME,
+                newName
+            )
+
+
 }
 
 class SettingsDsl {

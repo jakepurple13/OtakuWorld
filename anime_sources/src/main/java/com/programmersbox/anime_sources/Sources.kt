@@ -54,10 +54,10 @@ abstract class ShowApi(
         .flatMap { getList(it) }
         .map { it.sortedBy(ItemModel::title) }
 
-    override fun getItemInfo(source: ItemModel): Single<InfoModel> = Single.create<Document> { it.onSuccess(source.url.toJsoup()) }
+    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create<Document> { it.onSuccess(model.url.toJsoup()) }
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
-        .flatMap { getItemInfo(source, it) }
+        .flatMap { getItemInfo(model, it) }
 
     internal abstract fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel>
 }

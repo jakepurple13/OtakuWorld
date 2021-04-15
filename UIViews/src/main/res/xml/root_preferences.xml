@@ -30,6 +30,11 @@
             app:key="sync"
             app:title="Check for Updates Periodically" />
 
+        <Preference
+            app:icon="@drawable/ic_baseline_library_books_24"
+            app:key="used_libraries"
+            app:title="View Libraries Used" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
