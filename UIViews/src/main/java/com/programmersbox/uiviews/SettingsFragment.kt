@@ -328,23 +328,6 @@ class SettingsDsl {
     }
 }
 
-abstract class CoroutineTask<Progress, Result> : CoroutineScope {
-    protected open val job: Job = Job()
-    override val coroutineContext: CoroutineContext get() = Dispatchers.Main + job
-    protected suspend fun publishProgress(vararg values: Progress) = withContext(Dispatchers.Main) { onProgressUpdate(*values) }
-    open fun onProgressUpdate(vararg values: Progress) {}
-    abstract suspend fun doInBackground(): Result
-    open fun onPreExecute() {}
-    open fun onPostExecute(result: Result) {}
-    fun cancel() = job.cancel()
-    fun execute() = launch {
-        onPreExecute()
-        val result = withContext(Dispatchers.IO) { doInBackground() } // runs in background thread without blocking the Main Thread
-        onPostExecute(result)
-    }
-
-}
-
 class DownloadApk(val context: Context, private val downloadUrl: String, private val outputName: String) : CoroutineScope {
     private var job: Job = Job()
     override val coroutineContext: CoroutineContext
@@ -429,7 +412,7 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
     private fun onPostExecute(result: Boolean?) {
         // hide progress
         bar.dismiss()
-        Toast.makeText(context, if (result == true) "Update Done" else "Error: Try Again", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, if (result == true) "Finished Downloading" else "Error: Try Again", Toast.LENGTH_SHORT).show()
     }
 
     private fun openNewVersion(location: String) {

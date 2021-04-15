@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = "1.4.32"
-    ext.jakepurple13 = "10.6.0"
+    ext.jakepurple13 = "10.6.3"
     ext.otakuVersionName = "7.0"
     repositories {
         google()
