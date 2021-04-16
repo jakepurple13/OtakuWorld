@@ -80,7 +80,7 @@ dependencies {
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
 
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3-native-mt'
 
     def room_version = "2.2.6"
     implementation "androidx.room:room-runtime:$room_version"
