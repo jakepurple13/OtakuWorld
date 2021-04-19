@@ -91,8 +91,6 @@ class MainActivity : BaseMainActivity() {
                 when (model.source) {
                     Yts -> {
 
-                        //TODO: For the download viewer, look into the concat adapter
-
                         val f = model.extras["torrents"].toString().fromJson<Torrents>()?.let {
                             val m = model.extras["info"].toString().fromJson<Movies>()
                             Torrent(

@@ -22,7 +22,6 @@ import com.github.se_bastiaan.torrentstream.TorrentOptions
 import com.github.se_bastiaan.torrentstream.TorrentStream
 import com.github.se_bastiaan.torrentstream.listeners.TorrentListener
 import com.github.se_bastiaan.torrentstream.utils.FileUtils
-import com.google.gson.Gson
 import com.programmersbox.animeworld.ytsdatabase.*
 import java.io.File
 import java.io.IOException
@@ -442,7 +441,7 @@ class DownloadService : IntentService("blank") {
 
                 /** Save details of file in database. */
                 val imagePath = File(currentModel?.saveLocation, "banner.png")
-                saveImageFromUrl(model.banner_url, imagePath)
+                //saveImageFromUrl(model.banner_url, imagePath)
 
                 val todayDate = SimpleDateFormat("yyyy-MM-dd")
                     .format(Calendar.getInstance().time)
@@ -466,8 +465,8 @@ class DownloadService : IntentService("blank") {
                 downloadRepository.saveDownload(downloadResponse)
 
                 /** Save a detail.json file. */
-                val detailPath = File(currentModel?.saveLocation, "details.json")
-                detailPath.writeText(Gson().toJson(downloadResponse))
+                //val detailPath = File(currentModel?.saveLocation, "details.json")
+                //detailPath.writeText(Gson().toJson(downloadResponse))
 
                 /** Send download complete notification */
                 Notifications.sendDownloadNotification(context, model.title)
