@@ -12,7 +12,7 @@ data class ItemModel(
     val imageUrl: String,
     val source: ApiService
 ) : ViewModel(), Serializable {
-    internal val extras = mutableMapOf<String, Any>()
+    val extras = mutableMapOf<String, Any>()
     fun toInfoModel() = source.getItemInfo(this)
 }
 
@@ -35,6 +35,7 @@ data class ChapterModel(
 ) : ViewModel() {
     var uploadedTime: Long? = null
     fun getChapterInfo() = source.getChapterInfo(this)
+    val extras = mutableMapOf<String, Any>()
 }
 
 class NormalLink(var normal: Normal? = null)

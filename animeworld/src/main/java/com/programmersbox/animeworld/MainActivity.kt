@@ -11,6 +11,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.Sources
+import com.programmersbox.anime_sources.anime.Movies
+import com.programmersbox.anime_sources.anime.Torrents
+import com.programmersbox.anime_sources.anime.Yts
+import com.programmersbox.animeworld.ytsdatabase.Torrent
+import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -35,6 +40,8 @@ class MainActivity : BaseMainActivity() {
     override fun onCreate() {
 
         activity = this
+
+        Notifications.setup(this)
 
         when (intent.data) {
             Uri.parse(VIEW_DOWNLOADS) -> openDownloads()
@@ -80,7 +87,40 @@ class MainActivity : BaseMainActivity() {
         requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
             if (it.isGranted) {
                 Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show()
-                GlobalScope.launch { fetchIt(model) }
+
+                when (model.source) {
+                    Yts -> {
+
+                        //TODO: For the download viewer, look into the concat adapter
+
+                        val f = model.extras["torrents"].toString().fromJson<Torrents>()?.let {
+                            val m = model.extras["info"].toString().fromJson<Movies>()
+                            Torrent(
+                                title = m?.title.orEmpty(),
+                                banner_url = m?.background_image.orEmpty(),
+                                url = it.url.orEmpty(),
+                                hash = it.hash.orEmpty(),
+                                quality = it.quality.orEmpty(),
+                                type = it.type.orEmpty(),
+                                seeds = it.seeds?.toInt() ?: 0,
+                                peers = it.peers?.toInt() ?: 0,
+                                size_pretty = it.size.orEmpty(),
+                                size = it.size_bytes?.toLong() ?: 0L,
+                                date_uploaded = it.date_uploaded.orEmpty(),
+                                date_uploaded_unix = it.date_uploaded_unix.toString(),
+                                movieId = m?.id?.toInt() ?: 0,
+                                imdbCode = m?.imdb_code.orEmpty(),
+                            )
+                        }
+
+                        val serviceIntent = Intent(this, DownloadService::class.java)
+                        serviceIntent.putExtra(DownloadService.TORRENT_JOB, f)
+                        startService(serviceIntent)
+                    }
+                    else -> {
+                        GlobalScope.launch { fetchIt(model) }
+                    }
+                }
             }
         }
     }

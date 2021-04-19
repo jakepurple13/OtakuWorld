@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <FrameLayout
+            android:background="?colorOnSurface"
+            android:id="@+id/mainFrame"
+            android:layout_marginStart="3dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="80dp"
+            android:layout_height="125dp">
+
+            <ImageView
+                app:tint="?colorSurface"
+                android:layout_gravity="center"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/ic_baseline_play_arrow_24" />
+
+            <ImageView
+                android:transitionName="banner_photo"
+                android:id="@+id/item_image"
+                android:scaleType="centerCrop"
+                android:layout_width="80dp"
+                android:layout_height="120dp" />
+        </FrameLayout>
+
+        <com.google.android.material.card.MaterialCardView
+
+            android:id="@+id/card1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            app:layout_constraintBottom_toTopOf="@id/card2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@id/mainFrame"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    style="@style/TextAppearance.MaterialComponents.Headline1"
+                    android:id="@+id/item_title"
+                    android:layout_width="0dp"
+                    android:lines="2"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="10dp"
+                    android:padding="7dp"
+                    android:text="Title"
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/item_more_imageView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/item_more_imageView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:padding="3dp"
+                    android:src="@drawable/ic_baseline_more_vert_24"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/item_title"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="?colorPrimary" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="3dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/mainFrame"
+            app:layout_constraintTop_toBottomOf="@id/card1">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp">
+
+                <LinearLayout
+                    android:id="@+id/layout1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    app:layout_constraintBottom_toTopOf="@id/item_progressBar"
+                    app:layout_constraintEnd_toStartOf="@id/item_play_pause"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/item_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Paused"
+                        android:textSize="12sp" />
+
+                    <!--<include layout="@layout/bullet_separater" />-->
+
+                    <TextView
+                        android:id="@+id/item_progress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0%"
+                        android:textSize="12sp" />
+
+                    <!--<include layout="@layout/bullet_separater" />-->
+
+                    <TextView
+                        android:id="@+id/item_seeds_peers"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="4/14"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/item_progressBar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:progress="30"
+                    app:layout_constraintBottom_toTopOf="@id/layout2"
+                    app:layout_constraintEnd_toStartOf="@id/item_play_pause"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/layout1" />
+
+                <LinearLayout
+                    android:id="@+id/layout2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/item_play_pause"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/item_progressBar">
+
+                    <TextView
+                        android:id="@+id/item_current_size"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="720 KB"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:text="/"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/item_total_size"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1.3 GB"
+                        android:textSize="12sp" />
+
+                    <!--<include layout="@layout/bullet_separater" />-->
+
+                    <TextView
+                        android:id="@+id/item_download_speed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1.2 KB/s"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp"
+                        android:text="↓"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:visibility="gone"
+                    android:id="@+id/item_play_pause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:padding="5dp"
+                    android:src="@drawable/ic_baseline_play_arrow_24"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="?android:textColorPrimary" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

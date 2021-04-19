@@ -58,7 +58,11 @@ dependencies {
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.2.0'
     implementation 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0'
 
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+
     implementation "com.github.jakepurple13.HelpfulTools:rxutils:$jakepurple13"
+    implementation "com.github.jakepurple13.HelpfulTools:thirdpartyutils:$jakepurple13"
 
     implementation project(':Models')
 }

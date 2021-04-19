@@ -24,6 +24,9 @@ interface ItemDao {
     @Query("SELECT COUNT(*) FROM FavoriteItem WHERE url = :url")
     fun getItemById(url: String): Flowable<Int>
 
+    @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
+    fun containsItem(url: String): Flowable<Boolean>
+
     @Query("SELECT * FROM FavoriteItem WHERE url = :url")
     fun getItemByUrl(url: String): Maybe<DbModel>
 

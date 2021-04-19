@@ -1,8 +1,9 @@
 package com.programmersbox.anime_sources
 
+import com.programmersbox.anime_sources.anime.YTSQuery
+import com.programmersbox.anime_sources.anime.YtsService
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
-
-import org.junit.Assert.*
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -11,7 +12,18 @@ import org.junit.Assert.*
  */
 class ExampleUnitTest {
     @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+    fun addition_isCorrect() = runBlocking {
+        val f = YtsService.build()//getJsonApi<Base>("https://yts.mx/api/v2/list_movies.json")
+        val f1 = f.listMovies(YTSQuery.ListMoviesBuilder.getDefault().setQuery("big bang").build())
+        val movies = f1?.blockingGet()?.data?.movies
+        println(movies?.joinToString("\n"))
+
+        val m1 = f.getMovie(
+            YTSQuery.MovieBuilder().setMovieId(movies?.first()?.id?.toInt() ?: 30478).build()
+        )
+
+        println(m1.blockingGet())
+
     }
+
 }

@@ -151,11 +151,11 @@ class DetailsFragment : Fragment() {
 
         Flowables.combineLatest(
             itemListener.findItemByUrl(infoModel.url),
-            dao.getItemById(infoModel.url)
+            dao.containsItem(infoModel.url)
         )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .map { it.second > 0 || it.first }
+            .map { it.second || it.first }
             .subscribe(isFavorite::onNext)
             .addTo(disposable)
 

@@ -14,7 +14,7 @@ android {
     defaultConfig {
         applicationId "com.programmersbox.animeworld"
         minSdkVersion 23
-        targetSdkVersion 30
+        targetSdkVersion 29
         versionCode 1
         versionName otakuVersionName
 
@@ -70,6 +70,10 @@ dependencies {
     implementation "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
     implementation "androidx.tonyodev.fetch2rx:xfetch2rx:3.1.6"
 
+    implementation "com.github.TorrentStream:TorrentStream-Android:2.7.0"
+
+    implementation "com.google.code.gson:gson:2.8.6"
+
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
     //Google Material Icons
@@ -80,6 +84,18 @@ dependencies {
     implementation project(':favoritesdatabase')
 
     implementation project(':anime_sources')
+
+    def room_version = "2.2.6"
+    implementation "androidx.room:room-runtime:$room_version"
+    // For Kotlin use kapt instead of annotationProcessor
+    kapt "androidx.room:room-compiler:$room_version"
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation "androidx.room:room-ktx:$room_version"
+    implementation "androidx.room:room-rxjava2:$room_version"
+
+    def autoBinding = "1.1-alpha16"
+    implementation "io.github.kaustubhpatange:autobindings:$autoBinding"
+    kapt "io.github.kaustubhpatange:autobindings-compiler:$autoBinding"
 
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'

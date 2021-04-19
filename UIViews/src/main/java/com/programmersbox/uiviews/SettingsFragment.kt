@@ -330,12 +330,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-    }
-
-    fun LibsBuilder.customUtils(libraryName: String, newName: String) =
+    private fun LibsBuilder.customUtils(libraryName: String, newName: String) =
         withLibraryModification(
             libraryName,
             Libs.LibraryFields.LIBRARY_REPOSITORY_LINK,
@@ -347,7 +342,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 newName
             )
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.dispose()
+    }
 }
 
 class SettingsDsl {
