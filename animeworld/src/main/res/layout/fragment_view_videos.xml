@@ -6,9 +6,30 @@
     android:layout_height="match_parent"
     tools:context=".ViewVideosFragment">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:layout_width="match_parent"
+            android:id="@+id/toolbarmenu"
+            app:menu="@menu/expanded_controller"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/TextAppearance.MaterialComponents.Headline5"
+                android:text="Downloaded Videos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.appbar.MaterialToolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/view_video_refresh"
         android:layout_width="match_parent"
+        android:layout_below="@id/appbar"
         android:layout_above="@id/multiple_video_delete"
         android:layout_height="match_parent">
 

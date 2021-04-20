@@ -22,8 +22,10 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
@@ -44,10 +46,11 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         return inflater.inflate(R.layout.fragment_view_videos, container, false)
     }
 
-    private val adapter by lazy { VideoAdapter(requireContext()) }
+    private val adapter by lazy { VideoAdapter(requireContext(), MainActivity.cast) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        MainActivity.cast.setMediaRouteMenu(requireContext(), view.findViewById<MaterialToolbar>(R.id.toolbarmenu).menu)
         val videoRv = view.findViewById<RecyclerView>(R.id.videoRv)
         videoRv.adapter = adapter
         DragSwipeUtils.setDragSwipeUp(
@@ -59,7 +62,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 onSwiped { viewHolder, _, dragSwipeAdapter ->
                     val listener: DeleteDialog.DeleteDialogListener = object : DeleteDialog.DeleteDialogListener {
                         override fun onDelete() {
-                            val file = dragSwipeAdapter.removeItem(viewHolder.adapterPosition)
+                            val file = dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition)
                             if (file.exists()) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                     val deleteRequest = MediaStore.createDeleteRequest(requireContext().contentResolver, listOf(file.toUri()))
@@ -86,9 +89,9 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     }
                     DeleteDialog(
                         context,
-                        dragSwipeAdapter[viewHolder.adapterPosition].name,
+                        dragSwipeAdapter[viewHolder.absoluteAdapterPosition].name,
                         null,
-                        dragSwipeAdapter.dataList[viewHolder.adapterPosition],
+                        dragSwipeAdapter.dataList[viewHolder.absoluteAdapterPosition],
                         listener
                     ).show()
                 }
@@ -110,6 +113,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         f.delete()
                         adapter.notifyDataSetChanged()
                     }
+                    MainActivity.cast.stopCast()
                     //adapter.notifyDataSetChanged()
                     d.dismiss()
                 }
@@ -177,7 +181,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         return inFiles
     }
 
-    class VideoAdapter(private val context: Context) : DragSwipeAdapter<File, VideoHolder>() {
+    class VideoAdapter(private val context: Context, private val cast: CastHelper) : DragSwipeAdapter<File, VideoHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder =
             VideoHolder(context.layoutInflater.inflate(R.layout.video_layout, parent, false))
 
@@ -226,13 +230,22 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             }"
 
             itemView.setOnClickListener {
-                context.startActivity(
-                    Intent(context, VideoPlayerActivity::class.java).apply {
-                        putExtra("showPath", item.absolutePath)
-                        putExtra("showName", item.name)
-                        putExtra("downloadOrStream", true)
-                    }
-                )
+                if (cast.isCastActive()) {
+                    cast.loadMedia(
+                        item,
+                        context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0),
+                        null,
+                        null
+                    )
+                } else {
+                    context.startActivity(
+                        Intent(context, VideoPlayerActivity::class.java).apply {
+                            putExtra("showPath", item.absolutePath)
+                            putExtra("showName", item.name)
+                            putExtra("downloadOrStream", true)
+                        }
+                    )
+                }
             }
 
             Glide.with(context)

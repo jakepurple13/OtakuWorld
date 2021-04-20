@@ -14,6 +14,8 @@ import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.anime.Movies
 import com.programmersbox.anime_sources.anime.Torrents
 import com.programmersbox.anime_sources.anime.Yts
+import com.programmersbox.animeworld.cast.CastHelper
+import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.ytsdatabase.Torrent
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.requestPermissions
@@ -26,6 +28,7 @@ import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
 import com.tonyodev.fetch2.*
+import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -35,11 +38,26 @@ class MainActivity : BaseMainActivity() {
         private const val VIEW_DOWNLOADS = "animeworld://view_downloads"
         private const val VIEW_VIDEOS = "animeworld://view_videos"
         private lateinit var activity: MainActivity
+        val cast: CastHelper = CastHelper()
     }
 
     override fun onCreate() {
 
         activity = this
+
+        /*
+        startActivity(Intent(this, ExpandedControlsActivity::class.java))
+         */
+
+        cast.init(
+            this,
+            onSessionDisconnected = { _, _ ->
+
+            },
+            onSessionConnected = {
+
+            }
+        )
 
         Notifications.setup(this)
 
@@ -177,6 +195,21 @@ class MainActivity : BaseMainActivity() {
                     }
                 }
             )
+
+            val casting = Preference(it.context).apply {
+                title = "Cast Controls"
+                icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_cast_24)
+                setOnPreferenceClickListener {
+                    startActivity(Intent(this@MainActivity, ExpandedControlsActivity::class.java))
+                    true
+                }
+            }
+
+            cast.sessionStatus()
+                .subscribe(casting::setVisible)
+                .addTo(disposable)
+
+            it.addPreference(casting)
 
             it.addPreference(
                 Preference(it.context).apply {
