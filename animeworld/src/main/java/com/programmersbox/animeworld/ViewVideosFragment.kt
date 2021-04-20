@@ -113,7 +113,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         f.delete()
                         adapter.notifyDataSetChanged()
                     }
-                    MainActivity.cast.stopCast()
+                    //MainActivity.cast.stopCast()
                     //adapter.notifyDataSetChanged()
                     d.dismiss()
                 }
