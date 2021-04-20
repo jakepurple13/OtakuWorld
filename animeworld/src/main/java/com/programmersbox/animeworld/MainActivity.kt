@@ -6,9 +6,11 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.preference.Preference
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.anime.Movies
@@ -45,19 +47,7 @@ class MainActivity : BaseMainActivity() {
 
         activity = this
 
-        /*
-        startActivity(Intent(this, ExpandedControlsActivity::class.java))
-         */
-
-        cast.init(
-            this,
-            onSessionDisconnected = { _, _ ->
-
-            },
-            onSessionConnected = {
-
-            }
-        )
+        cast.init(this)
 
         Notifications.setup(this)
 
@@ -85,6 +75,10 @@ class MainActivity : BaseMainActivity() {
     override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
+        if (chapterModel.source == Yts) {
+            Toast.makeText(this, "Yts cannot stream at the moment", Toast.LENGTH_SHORT).show()
+            return
+        }
         GlobalScope.launch {
             val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()?.link
             runOnUiThread {
@@ -197,16 +191,27 @@ class MainActivity : BaseMainActivity() {
             )
 
             val casting = Preference(it.context).apply {
-                title = "Cast Controls"
+                title = "Cast"
                 icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_cast_24)
                 setOnPreferenceClickListener {
-                    startActivity(Intent(this@MainActivity, ExpandedControlsActivity::class.java))
+                    if (cast.isCastActive()) {
+                        startActivity(Intent(this@MainActivity, ExpandedControlsActivity::class.java))
+                    } else {
+                        MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
+                            .also { it.routeSelector = CastContext.getSharedInstance(applicationContext)?.mergedSelector }
+                            .show(activity.supportFragmentManager, "media_chooser")
+                    }
                     true
                 }
             }
 
-            cast.sessionStatus()
+            cast.sessionConnected()
                 .subscribe(casting::setVisible)
+                .addTo(disposable)
+
+            cast.sessionStatus()
+                .map { if (it) R.drawable.ic_baseline_cast_connected_24 else R.drawable.ic_baseline_cast_24 }
+                .subscribe(casting::setIcon)
                 .addTo(disposable)
 
             it.addPreference(casting)

@@ -13,6 +13,7 @@ import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.mediarouter.app.MediaRouteButton
 import com.google.android.gms.cast.*
 import com.google.android.gms.cast.framework.*
 import com.google.android.gms.cast.framework.CastOptions
@@ -106,7 +107,11 @@ class CastHelper {
 
     private val sessionConnected = PublishSubject.create<Boolean>()
 
-    fun sessionStatus(): Observable<Boolean> = sessionConnected
+    fun sessionConnected(): Observable<Boolean> = sessionConnected
+
+    private val sessionStatus = PublishSubject.create<Boolean>()
+
+    fun sessionStatus(): Observable<Boolean> = sessionStatus
 
     fun isCastActive() =
         mCastContext.castState == CastState.CONNECTED
@@ -121,9 +126,7 @@ class CastHelper {
         mCastContext = CastContext.getSharedInstance(mApplicationContext)
 
         setUpCastListener()
-        mCastContext.sessionManager.addSessionManagerListener(
-            mSessionManagerListener, CastSession::class.java
-        )
+        mCastContext.sessionManager.addSessionManagerListener(mSessionManagerListener, CastSession::class.java)
     }
 
     fun String?.toFile(): File? {
@@ -160,36 +163,33 @@ class CastHelper {
     /** Destroy the session callbacks to avoid memory leaks */
     fun unInit() {
         mCastContext.removeCastStateListener(castListener)
-        mCastContext.sessionManager.removeSessionManagerListener(
-            mSessionManagerListener, CastSession::class.java
-        )
+        mCastContext.sessionManager.removeSessionManagerListener(mSessionManagerListener, CastSession::class.java)
         onSessionDisconnected = null
         onNeedToShowIntroductoryOverlay = null
     }
 
     private val castListener: (Int) -> Unit = { state ->
-        if (state != CastState.NO_DEVICES_AVAILABLE)
-            this.onNeedToShowIntroductoryOverlay?.invoke()
+        sessionConnected.onNext(state != CastState.NO_DEVICES_AVAILABLE)
+        if (state != CastState.NO_DEVICES_AVAILABLE) this.onNeedToShowIntroductoryOverlay?.invoke()
         if (state == CastState.NOT_CONNECTED) {
             /** When casting is disconnected we post updateLastModel */
             postUpdateLastModel()
             SimpleWebServer.stopServer()
-            sessionConnected.onNext(false)
+            //sessionConnected.onNext(false)
         }
         if (state == CastState.CONNECTED) {
             onSessionConnected()
-            sessionConnected.onNext(true)
+            //sessionConnected.onNext(true)
         }
+        sessionStatus.onNext(state == CastState.CONNECTED)
     }
 
     /** Separate UI logic to avoid memory, use context from view */
     fun setMediaRouteMenu(context: Context, menu: Menu): MenuItem? =
-        CastButtonFactory.setUpMediaRouteButton(
-            context,
-            menu,
-            com.programmersbox.animeworld.R.id.media_route_menu_item
-        )
+        CastButtonFactory.setUpMediaRouteButton(context, menu, com.programmersbox.animeworld.R.id.media_route_menu_item)
 
+    fun setMediaRouteMenu(context: Context, button: MediaRouteButton) =
+        CastButtonFactory.setUpMediaRouteButton(context, button)
 
     /**
      * Should be used only in [LibraryFragment]
@@ -218,8 +218,7 @@ class CastHelper {
         val remoteFileName = Utils.getRemoteFileName(deviceIpAddress, mediaFile)
             ?.replace(" ", "%20")
         val remoteImageFileName =
-            if (bannerImage != null)
-                Utils.getRemoteFileName(deviceIpAddress, bannerImage)?.replace(" ", "%20")
+            if (bannerImage != null) Utils.getRemoteFileName(deviceIpAddress, bannerImage)?.replace(" ", "%20")
             else ""//APP_IMAGE_URL
 
         /** Generate media metadata */
@@ -286,8 +285,7 @@ class CastHelper {
         val remoteFileName = Utils.getRemoteFileName(deviceIp, mediaFile)
             ?.replace(" ", "%20")
         val remoteImageFileName =
-            if (bannerFile != null)
-                Utils.getRemoteFileName(deviceIp, bannerFile)?.replace(" ", "%20")
+            if (bannerFile != null) Utils.getRemoteFileName(deviceIp, bannerFile)?.replace(" ", "%20")
             else ""//APP_IMAGE_URL
 
         /** Generate movie meta data */
