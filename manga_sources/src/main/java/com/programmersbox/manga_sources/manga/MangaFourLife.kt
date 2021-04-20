@@ -5,6 +5,8 @@ import com.github.salomonbrys.kotson.get
 import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.gsonutils.getApi
+import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.models.*
 import io.reactivex.Single
 import org.jsoup.Jsoup
@@ -21,15 +23,27 @@ object MangaFourLife : ApiService {
         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:71.0) Gecko/20100101 Firefox/71.0"
     )
 
+    private val mangaList = mutableListOf<ItemModel>()
+
+    private fun getManga(pageNumber: Int): List<ItemModel> {
+        if (mangaList.isEmpty()) {
+            mangaList.addAll(
+                ("vm\\.Directory = (.*?.*;)".toRegex()
+                    .find(getApi("https://manga4life.com/search/?sort=lt&desc=true").toString())
+                    ?.groupValues?.get(1)?.dropLast(1)
+                    ?.fromJson<List<LifeBase>>()
+                    ?.sortedByDescending { m -> m.lt?.let { 1000 * it.toDouble() } }
+                    ?.map(toMangaModel) ?: getApiVersion())
+                    .orEmpty()
+            )
+        }
+        val endRange = ((pageNumber * 24) - 1).let { if (it <= mangaList.lastIndex) it else mangaList.lastIndex }
+        return mangaList.subList((pageNumber - 1) * 24, endRange)
+    }
+
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         try {
-            "vm\\.Directory = (.*?.*;)".toRegex()
-                .find(Jsoup.connect("https://manga4life.com/search/?sort=lt&desc=true").get().html())
-                ?.groupValues?.get(1)?.dropLast(1)
-                ?.fromJson<List<LifeBase>>()
-                ?.sortedByDescending { m -> m.lt?.let { 1000 * it.toDouble() } }
-                ?.map(toMangaModel)
-                ?.let(emitter::onSuccess) ?: throw Exception("Error")
+            getManga(page)?.let(emitter::onSuccess) ?: throw Exception("Error")
         } catch (e: Exception) {
             emitter.onError(e)
         }
@@ -37,25 +51,28 @@ object MangaFourLife : ApiService {
 
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         try {
-            "vm\\.Directory = (.*?.*;)".toRegex()
-                .find(Jsoup.connect("https://manga4life.com/search/?sort=vm&desc=true").get().html())
-                ?.groupValues?.get(1)?.dropLast(1)
-                ?.fromJson<List<LifeBase>>()
-                ?.sortedByDescending { m -> m.lt?.let { 1000 * it.toDouble() } }
-                ?.map(toMangaModel)
-                ?.let(emitter::onSuccess) ?: throw Exception("Error")
+            getManga(page)?.let(emitter::onSuccess) ?: throw Exception("Error")
         } catch (e: Exception) {
             emitter.onError(e)
         }
     }
 
+    private fun getApiVersion() = getJsonApi<List<Life>>("https://manga4life.com/_search.php")?.map {
+        ItemModel(
+            title = it.s.toString(),
+            description = "",
+            url = "https://manga4life.com/manga/${it.i}",
+            imageUrl = "https://cover.nep.li/cover/${it.i}.jpg",
+            source = this
+        )
+    }
+
     private val toMangaModel: (LifeBase) -> ItemModel = {
-        println(it)
         ItemModel(
             title = it.s.toString(),
             description = "Last updated: ${it.ls}",
             url = "https://manga4life.com/manga/${it.i}",
-            imageUrl = "https://cover.mangabeast01.com/cover/${it.i}.jpg",
+            imageUrl = "https://cover.nep.li/cover/${it.i}.jpg",
             source = this
         )
     }
@@ -132,7 +149,7 @@ object MangaFourLife : ApiService {
         return if (b == 0) a else "$a.$b"
     }
 
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
+    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
         val document = Jsoup.connect(chapterModel.url).get()
         val script = document.select("script:containsData(MainFunction)").first().data()
         val curChapter = script.substringAfter("vm.CurChapter = ").substringBefore(";").fromJson<JsonElement>()!!
@@ -152,6 +169,7 @@ object MangaFourLife : ApiService {
             "$path$chNum-$imageNum.png"
         }
             .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            .let(emitter::onSuccess)
     }
 
     override val canScroll: Boolean = true

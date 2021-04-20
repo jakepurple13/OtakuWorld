@@ -2,10 +2,7 @@ package com.programmersbox.manga_sources
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.programmersbox.manga_sources.manga.MangaHere
-import com.programmersbox.manga_sources.manga.MangaPark
-import com.programmersbox.manga_sources.manga.Mangamutiny
-import com.programmersbox.manga_sources.manga.NineAnime
+import com.programmersbox.manga_sources.manga.*
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
 
@@ -20,7 +17,7 @@ enum class Sources(
     //MANGANELO(domain = "manganelo", source = Manganelo),
     MANGA_HERE(domain = "mangahere", source = MangaHere),
 
-    //MANGA_4_LIFE(domain = "manga4life", source = MangaFourLife),
+    MANGA_4_LIFE(domain = "manga4life", source = MangaFourLife),
     MANGA_PARK(domain = "mangapark", source = MangaPark),
     NINE_ANIME(domain = "nineanime", source = NineAnime),
 
