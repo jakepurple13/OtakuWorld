@@ -1,5 +1,6 @@
 package com.programmersbox.anime_sources
 
+import com.programmersbox.anime_sources.anime.AnimeToonDubbed
 import com.programmersbox.anime_sources.anime.YTSQuery
 import com.programmersbox.anime_sources.anime.YtsService
 import kotlinx.coroutines.runBlocking
@@ -24,6 +25,23 @@ class ExampleUnitTest {
 
         println(m1.blockingGet())
 
+    }
+
+    @Test
+    fun animetoon() {
+        val f = AnimeToonDubbed
+
+        val r = f.getRecent().blockingGet()
+
+        println(r)
+
+        val d = r.first().toInfoModel().blockingGet()
+
+        println(d)
+
+        val v = d.chapters.first().getChapterInfo().doOnError { }.blockingGet()
+
+        println(v)
     }
 
 }

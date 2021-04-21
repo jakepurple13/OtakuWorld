@@ -96,13 +96,12 @@ class MainActivity : BaseMainActivity() {
     private val fetch = Fetch.getDefaultInstance()
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
-        requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
-            if (it.isGranted) {
+        requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
+            if (p.isGranted) {
                 Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show()
 
                 when (model.source) {
                     Yts -> {
-
                         val f = model.extras["torrents"].toString().fromJson<Torrents>()?.let {
                             val m = model.extras["info"].toString().fromJson<Movies>()
                             Torrent(
@@ -144,7 +143,10 @@ class MainActivity : BaseMainActivity() {
         }
 
         val requestList = arrayListOf<Request>()
-        val url = ep.getChapterInfo().blockingGet()
+        val url = ep.getChapterInfo()
+            .doOnError { runOnUiThread { Toast.makeText(this@MainActivity, "Something went wrong", Toast.LENGTH_SHORT).show() } }
+            .onErrorReturnItem(emptyList())
+            .blockingGet()
         for (i in url) {
 
             val filePath = folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"

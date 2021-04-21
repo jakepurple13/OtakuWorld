@@ -50,7 +50,7 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
     @Suppress("RegExpRedundantEscape")
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         try {
-            val m = "<iframe src=\"([^\"]+)\"[^<]+<\\/iframe>".toRegex().toPattern().matcher(getHtml(chapterModel.url))
+            val m = "<iframe src=\"([^\"]+)\"[^<]+<\\/iframe>".toRegex().toPattern().matcher(getHtml(chapterModel.url)!!)
             val list = arrayListOf<String>()
             while (m.find()) list.add(m.group(1)!!)
             val regex = "(http|https):\\/\\/([\\w+?\\.\\w+])+([a-zA-Z0-9\\~\\%\\&\\-\\_\\?\\.\\=\\/])+(part[0-9])+.(\\w*)"
@@ -58,24 +58,24 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
                 is ArrayList<*> -> {
                     val urlList = mutableListOf<Storage?>()
                     for (i in htmlc) {
-                        val reg = "var video_links = (\\{.*?\\});".toRegex().toPattern().matcher(getHtml(i.toString()))
+                        val reg = "var video_links = (\\{.*?\\});".toRegex().toPattern().matcher(getHtml(i.toString())!!)
                         while (reg.find()) urlList.add(reg.group(1).fromJson<NormalLink>()?.normal?.storage?.get(0))
                     }
-                    it(urlList.filterNotNull())
+                    it.onSuccess(urlList.filterNotNull())
                 }
                 is String -> {
                     val reg = "var video_links = (\\{.*?\\});".toRegex().toPattern().matcher(htmlc)
-                    while (reg.find()) it(listOfNotNull(reg.group(1).fromJson<NormalLink>()?.normal?.storage?.get(0)))
+                    while (reg.find()) it.onSuccess(listOfNotNull(reg.group(1).fromJson<NormalLink>()?.normal?.storage?.get(0)))
                 }
             }
-            it(emptyList())
+            it.onError(Exception("Something went wrong"))
         } catch (e: Exception) {
-            it(e)
+            it.onError(e)
         }
     }
 
     @Throws(IOException::class)
-    private fun getHtml(url: String): String {
+    private fun getHtml(url: String): String? = try {
         // Build and set timeout values for the request.
         val connection = URL(url).openConnection()
         connection.connectTimeout = 5000
@@ -89,7 +89,9 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
         val reader = BufferedReader(InputStreamReader(in1))
         val html = reader.readText()
         in1.close()
-        return html
+        html
+    } catch (e: Exception) {
+        null
     }
 
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create {
