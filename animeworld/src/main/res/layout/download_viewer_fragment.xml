@@ -6,11 +6,32 @@
     android:layout_height="match_parent"
     tools:context=".DownloadViewerFragment">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/download_appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:layout_width="match_parent"
+            android:id="@+id/toolbarmenu"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/TextAppearance.MaterialComponents.Headline5"
+                android:text="In Progress Downloads"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.appbar.MaterialToolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/download_list"
         android:layout_width="match_parent"
+        android:layout_below="@id/download_appbar"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:orientation="vertical"
+        android:nestedScrollingEnabled="false"
         tools:listitem="@layout/download_item"
         android:layout_height="match_parent"
         android:layout_above="@id/multiple_download_delete" />
