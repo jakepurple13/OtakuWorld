@@ -97,7 +97,7 @@ dependencies {
     implementation "io.github.kaustubhpatange:autobindings:$autoBinding"
     kapt "io.github.kaustubhpatange:autobindings-compiler:$autoBinding"
 
-    implementation "com.google.android.gms:play-services-cast-framework:19.0.0"
+    implementation "com.google.android.gms:play-services-cast-framework:20.0.0"
     implementation "androidx.mediarouter:mediarouter:1.2.2"
     implementation "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 
