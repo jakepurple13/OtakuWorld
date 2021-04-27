@@ -1,6 +1,8 @@
 package com.programmersbox.mangaworld
 
+import android.graphics.Bitmap
 import androidx.core.content.FileProvider
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.programmersbox.manga_sources.MangaContext
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.uiviews.OtakuApp
@@ -23,6 +25,8 @@ class MangaApp : OtakuApp() {
                 null
             }
         }
+
+        SubsamplingScaleImageView.setPreferredBitmapConfig(Bitmap.Config.ARGB_8888)
 
         FirebaseDb.DOCUMENT_ID = "favoriteManga"
         FirebaseDb.CHAPTERS_ID = "chaptersRead"
