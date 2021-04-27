@@ -361,8 +361,8 @@ class SavedNotifications {
                                     ?.toItemModel(it1)
                             }
                             NavDeepLinkBuilder(context)
-                                .setGraph(R.navigation.all_nav)
-                                .setDestination(R.id.detailsFragment3)
+                                .setGraph(R.navigation.recent_nav)
+                                .setDestination(R.id.detailsFragment2)
                                 .setArguments(Bundle().apply { putSerializable("itemInfo", itemModel) })
                                 .createPendingIntent()
                         }
