@@ -14,7 +14,7 @@ import java.util.*
 
 object MangaPark : ApiService {
 
-    override val baseUrl = "https://mangapark.net"
+    override val baseUrl = "https://v2.mangapark.net"
 
     override val serviceName: String get() = "MANGA_PARK"
 

@@ -13,6 +13,9 @@ enum class Sources(private val api: ApiService) : ApiService by api {
     GOGOANIME(GogoAnimeApi),
     YTS(Yts),
     ANIMETOON(AnimeToonApi),
+
+    //DUBBED_ANIME_BIZ(DubbedAnimeBiz),
+    //WCO_DUBBED(WcoDubbed),
     DUBBED_ANIME(AnimeToonDubbed),
     ANIMETOON_MOVIES(AnimeToonMovies);
 

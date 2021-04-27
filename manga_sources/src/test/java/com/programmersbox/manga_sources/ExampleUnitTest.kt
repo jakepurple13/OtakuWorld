@@ -1,11 +1,15 @@
 package com.programmersbox.manga_sources
 
+import android.content.Context
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.manga_sources.manga.MangaFourLife
+import com.programmersbox.manga_sources.manga.MangaPark
+import com.programmersbox.manga_sources.manga.NineAnime
 import com.programmersbox.models.ItemModel
 import org.junit.Test
+import org.mockito.Mockito
 import java.io.File
 
 /**
@@ -14,6 +18,45 @@ import java.io.File
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun nineamimetest() {
+
+        val f = NineAnime.getRecent().blockingGet()
+
+        println(f)
+
+        val i = f.first().toInfoModel().blockingGet()
+
+        println(i)
+
+        val e = i.chapters.first().getChapterInfo().blockingGet()
+
+        println(e)
+
+    }
+
+    @Test
+    fun mangaparkNewDesign() {
+
+        val c = Mockito.mock(Context::class.java)
+
+        MangaContext.getInstance(c)
+
+        val f = MangaPark.getRecent().blockingGet()
+
+        println(f)
+
+        val i = f.first().toInfoModel().blockingGet()
+
+        println(i)
+
+        val e = i.chapters.first().getChapterInfo().blockingGet()
+
+        println(e)
+
+    }
+
     @Test
     fun addition_isCorrect() {
 
