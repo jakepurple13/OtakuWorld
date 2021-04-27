@@ -5,9 +5,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.media.MediaMetadataRetriever
-import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -33,7 +30,6 @@ import com.programmersbox.helpfulutils.stringForTime
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 class ViewVideosFragment : BaseBottomSheetDialogFragment() {
@@ -62,7 +58,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 onSwiped { viewHolder, _, dragSwipeAdapter ->
                     val listener: DeleteDialog.DeleteDialogListener = object : DeleteDialog.DeleteDialogListener {
                         override fun onDelete() {
-                            val file = dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition)
+                            val file = File(dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition).path!!)
                             if (file.exists()) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                     val deleteRequest = MediaStore.createDeleteRequest(requireContext().contentResolver, listOf(file.toUri()))
@@ -89,9 +85,9 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     }
                     DeleteDialog(
                         context,
-                        dragSwipeAdapter[viewHolder.absoluteAdapterPosition].name,
+                        dragSwipeAdapter[viewHolder.absoluteAdapterPosition].videoName.orEmpty(),
                         null,
-                        dragSwipeAdapter.dataList[viewHolder.absoluteAdapterPosition],
+                        File(dragSwipeAdapter.dataList[viewHolder.absoluteAdapterPosition].path!!),
                         listener
                     ).show()
                 }
@@ -102,16 +98,17 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         view.findViewById<SwipeRefreshLayout>(R.id.view_video_refresh).setOnRefreshListener { loadVideos() }
 
         view.findViewById<MaterialButton>(R.id.multiple_video_delete).setOnClickListener {
-            val downloadItems = mutableListOf<File>()
+            val downloadItems = mutableListOf<String>()
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Delete")
-                .setMultiChoiceItems(adapter.dataList.map { it.name }.toTypedArray(), null) { _, i, b ->
-                    if (b) downloadItems.add(adapter.dataList[i]) else downloadItems.remove(adapter.dataList[i])
+                .setMultiChoiceItems(adapter.dataList.map { it.videoName }.toTypedArray(), null) { _, i, b ->
+                    if (b) downloadItems.add(adapter.dataList[i].path!!) else downloadItems.remove(adapter.dataList[i].path!!)
                 }
                 .setPositiveButton("Delete") { d, _ ->
                     downloadItems.forEach { f ->
-                        f.delete()
-                        adapter.notifyDataSetChanged()
+                        adapter.dataList.indexOfFirst { it.path == f }
+                            .let { if (it != -1) adapter.removeItem(it) else null }
+                            ?.let { File(it.path!!).delete() }
                     }
                     //MainActivity.cast.stopCast()
                     //adapter.notifyDataSetChanged()
@@ -144,7 +141,9 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     private fun getStuff() {
         GlobalScope.launch {
-            val files = getListFiles2(File(requireContext().folderLocation))
+
+            val files = VideoGet.getInstance(requireContext())?.getAllVideoContent(VideoGet.externalContentUri)?.reversed().orEmpty()
+            //getListFiles2(File(requireContext().folderLocation))
 
             //to get rid of any preferences of any videos that have been deleted else where
             val prefs = requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).all.keys
@@ -166,42 +165,16 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         }
     }
 
-    private fun getListFiles2(parentDir: File): ArrayList<File> {
-        val inFiles = arrayListOf<File>()
-        val files = LinkedList<File>()
-        files.addAll(parentDir.listFiles().orEmpty())
-        while (!files.isEmpty()) {
-            val file = files.remove()
-            if (file.isDirectory) {
-                files.addAll(file.listFiles().orEmpty())
-            } else if (file.name.endsWith(".mp4")) {
-                inFiles.add(file)
-            }
-        }
-        return inFiles
-    }
-
-    class VideoAdapter(private val context: Context, private val cast: CastHelper) : DragSwipeAdapter<File, VideoHolder>() {
+    class VideoAdapter(private val context: Context, private val cast: CastHelper) : DragSwipeDiffUtilAdapter<VideoContent, VideoHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoHolder =
             VideoHolder(context.layoutInflater.inflate(R.layout.video_layout, parent, false))
 
+        override val dragSwipeDiffUtil: (oldList: List<VideoContent>, newList: Collection<VideoContent>) -> DragSwipeDiffUtil<VideoContent>
+            get() = { oldList, newList -> DragSwipeDiffUtil(oldList, newList.toList()) }
+
         @SuppressLint("SetTextI18n")
-        override fun VideoHolder.onBind(item: File, position: Int) {
-            val duration = try {
-                val retriever = MediaMetadataRetriever()
-                //use one of overloaded setDataSource() functions to set your data source
-                retriever.setDataSource(context, Uri.fromFile(item))
-                val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                retriever.release()
-                time?.toLong()
-            } catch (e: Exception) {
-                try {
-                    val mp = MediaPlayer.create(context, Uri.parse(item.path))
-                    mp.duration.toLong()
-                } catch (e: Exception) {
-                    null
-                }
-            } ?: 0L
+        override fun VideoHolder.onBind(item: VideoContent, position: Int) {
+            val duration = item.videoDuration
 
             /*convert millis to appropriate time*/
             val runTimeString = if (duration > TimeUnit.HOURS.toMillis(1)) {
@@ -220,28 +193,24 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             }
 
             videoRuntime.text = runTimeString
-            videoName.text = "${item.name} ${
+            videoName.text = "${item.videoName} ${
                 if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) "\nat ${
-                    context.getSharedPreferences(
-                        "videos",
-                        Context.MODE_PRIVATE
-                    ).getLong(item.path, 0).stringForTime()
+                    context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()
                 }" else ""
             }"
 
             itemView.setOnClickListener {
                 if (cast.isCastActive()) {
                     cast.loadMedia(
-                        item,
+                        File(item.path!!),
                         context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0),
-                        null,
-                        null
+                        null, null
                     )
                 } else {
                     context.startActivity(
                         Intent(context, VideoPlayerActivity::class.java).apply {
-                            putExtra("showPath", item.absolutePath)
-                            putExtra("showName", item.name)
+                            putExtra("showPath", item.assetFileStringUri)
+                            putExtra("showName", item.videoName)
                             putExtra("downloadOrStream", true)
                         }
                     )
@@ -249,7 +218,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             }
 
             Glide.with(context)
-                .load(item)
+                .load(item.assetFileStringUri)
                 .override(360, 270)
                 .thumbnail(0.5f)
                 .transform(GranularRoundedCorners(0f, 15f, 15f, 0f))
