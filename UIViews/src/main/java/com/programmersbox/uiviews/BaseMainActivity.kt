@@ -5,13 +5,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.uiviews.utils.appUpdateCheck
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.setupWithNavController
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
@@ -47,23 +48,11 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
         val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav, R.navigation.setting_nav)
 
         val controller = findViewById<BottomNavigationView>(R.id.navLayout2)
-            .also {
-                GlobalScope.launch {
-                    try {
-                        val request = Request.Builder()
-                            .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                            .get()
-                            .build()
-                        @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
-                        val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
-                        runOnUIThread {
-                            if (packageManager?.getPackageInfo(packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0) {
-                                it.getOrCreateBadge(R.id.setting_nav).number = 1
-                            }
-                        }
-                    } catch (e: Exception) {
-                    }
-                }
+            .also { b ->
+                appUpdateCheck
+                    .filter { packageManager?.getPackageInfo(packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < it ?: 0.0 }
+                    .subscribe { b.getOrCreateBadge(R.id.setting_nav).number = 1 }
+                    .addTo(disposable)
             }
             .setupWithNavController(
                 navGraphIds = navGraphIds,
@@ -73,6 +62,19 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
             )
 
         currentNavController = controller
+
+        GlobalScope.launch {
+            try {
+                val request = Request.Builder()
+                    .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                    .get()
+                    .build()
+                @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
+                val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
+                f?.let { it1 -> appUpdateCheck.onNext(it1) }
+            } catch (e: Exception) {
+            }
+        }
 
         /*sourcePublish.onNext(currentSource)
 

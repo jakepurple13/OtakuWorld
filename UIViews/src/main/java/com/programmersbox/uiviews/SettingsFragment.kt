@@ -26,7 +26,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.thirdpartyutils.into
@@ -204,18 +203,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             .build()
                         @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
                         val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
-                        runOnUIThread {
-                            findPreference<Preference>("updateAvailable")?.let { p1 ->
-                                p1.summary = "Version: $f"
-                                p1.isVisible =
-                                    context?.packageManager?.getPackageInfo(
-                                        requireContext().packageName,
-                                        0
-                                    )?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0
-                            }
-                        }
+                        f?.let { appUpdateCheck.onNext(it) }
                     } catch (e: Exception) {
-
                     } finally {
                         checker.set(false)
                     }
@@ -234,7 +223,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("updateAvailable")?.let { p ->
             p.isVisible = false
-            updateSetter()
+            appUpdateCheck
+                .subscribe {
+                    p.summary = "Version: $it"
+                    p.isVisible =
+                        context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < it ?: 0.0
+                }
+                .addTo(disposable)
             p.setOnPreferenceClickListener {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Update to ${p.summary}")

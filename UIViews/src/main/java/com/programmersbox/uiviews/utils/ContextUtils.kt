@@ -25,6 +25,8 @@ val updateCheckPublish = BehaviorSubject.create<Long>()
 
 var Context.batteryAlertPercent: Int by sharedPrefNotNullDelegate(20)
 
+val appUpdateCheck = BehaviorSubject.create<Double>()
+
 fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap? {
     val margin = 24
     val halfMargin = margin / 2f
