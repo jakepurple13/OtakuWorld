@@ -119,18 +119,18 @@ object MangaFourLife : ApiService {
         )
     }
 
-    /*override fun getMangaModelByUrl(url: String): MangaModel {
+    override suspend fun getSourceByUrl(url: String): ItemModel {
         val doc = Jsoup.connect(url).get()
         val title = doc.select("li.list-group-item, li.d-none, li.d-sm-block").select("h1").text()
         val description = doc.select("div.BoxBody > div.row").select("div.Content").text()
-        return MangaModel(
+        return ItemModel(
             title = title,
             description = description,
-            mangaUrl = url,
+            url = url,
             imageUrl = doc.select("img.img-fluid, img.bottom-5").attr("abs:src"),
             source = this
         )
-    }*/
+    }
 
     private fun chapterURLEncode(e: String): String {
         var index = ""

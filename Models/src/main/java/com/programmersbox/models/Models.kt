@@ -59,7 +59,10 @@ interface ApiService: Serializable {
     fun getItemInfo(model: ItemModel): Single<InfoModel>
     fun searchList(searchText: CharSequence, page: Int = 1, list: List<ItemModel>): Single<List<ItemModel>> =
         Single.create { it.onSuccess(list.filter { it.title.contains(searchText, true) }) }
+
     fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>>
+
+    suspend fun getSourceByUrl(url: String): ItemModel? = ItemModel("", "", "", "", this)
 
     val serviceName: String get() = this::class.java.name
 }

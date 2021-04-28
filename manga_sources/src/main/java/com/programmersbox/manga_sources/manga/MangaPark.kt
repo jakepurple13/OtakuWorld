@@ -237,17 +237,19 @@ object MangaPark : ApiService {
         return now.timeInMillis
     }
 
-    /*override fun getMangaModelByUrl(url: String): MangaModel {
+    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
         val doc = cloudflare(url).execute().asJsoup()
         val titleAndImg = doc.select("div.w-100, div.cover").select("img")
-        return MangaModel(
+        ItemModel(
             title = titleAndImg.attr("title"),
             description = doc.select("p.summary").text(),
-            mangaUrl = url,
+            url = url,
             imageUrl = titleAndImg.attr("abs:src"),
-            source = Sources.MANGA_PARK
+            source = this
         )
-    }*/
+    } catch (e: Exception) {
+        null
+    }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
         cloudflare(chapterModel.url).execute().asJsoup().toString()

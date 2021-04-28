@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = "1.5.0"
     ext.jakepurple13 = "10.6.3"
-    ext.otakuVersionName = "9.5"
+    ext.otakuVersionName = "10.0"
     ext.latestAboutLibsRelease = "+"
     repositories {
         google()

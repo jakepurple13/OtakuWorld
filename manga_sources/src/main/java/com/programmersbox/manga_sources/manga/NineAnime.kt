@@ -83,22 +83,25 @@ object NineAnime : ApiService {
         )
     }
 
-    /*override fun getMangaModelByUrl(url: String): MangaModel {
+    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
         val doc = Jsoup.connect(url).get()
         val genreAndDescription = doc.select("div.manga-detailmiddle")
-        return MangaModel(
+        ItemModel(
             title = doc.select("div.manga-detail > h1").select("h1").text(),
             description = genreAndDescription.select("p.mobile-none").text(),
-            mangaUrl = url,
+            url = url,
             imageUrl = doc.select("img.detail-cover").attr("abs:src"),
-            source = Sources.NINE_ANIME
+            source = this
         )
-    }*/
+    } catch (e: Exception) {
+        null
+    }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
         try {
-            val doc = Jsoup.connect(chapterModel.url).header("Referer", "$baseUrl/manga.").followRedirects(true).get()
-            val script = doc.select("script:containsData(all_imgs_url)").firstOrNull()?.data() ?: throw Exception("Something went wrong")
+            val doc = Jsoup.connect(chapterModel.url)
+                .header("Referer", "$baseUrl/manga/").followRedirects(true).get()
+            val script = doc.select("script:containsData(all_imgs_url)").firstOrNull()?.data() ?: throw Exception("all_imgsurl not found")
             emitter.onSuccess(
                 Regex(""""(http.*)",""").findAll(script).map { it.groupValues[1] }
                     .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }

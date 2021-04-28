@@ -2,8 +2,7 @@ package com.programmersbox.anime_sources
 
 import com.programmersbox.anime_sources.anime.AnimeToonDubbed
 import com.programmersbox.anime_sources.anime.WcoDubbed
-import com.programmersbox.anime_sources.anime.YTSQuery
-import com.programmersbox.anime_sources.anime.YtsService
+import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -41,7 +40,7 @@ class ExampleUnitTest {
 
     @Test
     fun addition_isCorrect() = runBlocking {
-        val f = YtsService.build()//getJsonApi<Base>("https://yts.mx/api/v2/list_movies.json")
+        /*val f = YtsService.build()//getJsonApi<Base>("https://yts.mx/api/v2/list_movies.json")
         val f1 = f.listMovies(YTSQuery.ListMoviesBuilder.getDefault().setQuery("big bang").build())
         val movies = f1?.blockingGet()?.data?.movies
         println(movies?.joinToString("\n"))
@@ -50,7 +49,10 @@ class ExampleUnitTest {
             YTSQuery.MovieBuilder().setMovieId(movies?.first()?.id?.toInt() ?: 30478).build()
         )
 
-        println(m1.blockingGet())
+        println(m1.blockingGet())*/
+
+        val f = Yts.getSourceByUrl("https://yts.mx/movies/doing-time-1979")
+        println(f)
 
     }
 

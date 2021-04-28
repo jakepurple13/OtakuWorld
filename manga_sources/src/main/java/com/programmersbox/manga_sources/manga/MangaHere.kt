@@ -139,16 +139,18 @@ object MangaHere : ApiService {
         }
     }
 
-    /*override fun getMangaModelByUrl(url: String): MangaModel {
+    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
         val doc = Jsoup.connect(url).get()
-        return MangaModel(
+        ItemModel(
             title = doc.select("span.detail-info-right-title-font").text(),
             description = doc.select("p.fullcontent").text(),
-            mangaUrl = url,
+            url = url,
             imageUrl = doc.select("img.detail-info-cover-img").select("img[src^=http]").attr("abs:src"),
             source = this
         )
-    }*/
+    } catch (e: Exception) {
+        null
+    }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         it.onSuccess(

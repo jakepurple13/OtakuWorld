@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
+import android.webkit.URLUtil
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
@@ -37,6 +38,19 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
         }
 
         onCreate()
+
+        intent.data?.let {
+            if (URLUtil.isValidUrl(it.toString())) {
+                currentService?.let { it1 ->
+                    GlobalScope.launch {
+                        genericInfo.toSource(it1)?.getSourceByUrl(it.toString())?.let { it2 ->
+                            runOnUiThread { currentNavController?.value?.navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it2)) }
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {

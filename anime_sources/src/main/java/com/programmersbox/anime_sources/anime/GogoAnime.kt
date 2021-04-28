@@ -9,6 +9,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import com.programmersbox.rxutils.invoke
 import io.reactivex.Single
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.URI
 
@@ -110,23 +111,36 @@ object GogoAnimeApi : ShowApi(
         }
     }
 
+    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
+        val doc = Jsoup.connect(url).get()
+        ItemModel(
+            source = this,
+            title = doc.select("div.anime-title").text(),
+            url = url,
+            description = doc.select("p.anime-details").text(),
+            imageUrl = doc.select("div.animeDetail-image").select("img[src^=http]")?.attr("abs:src").orEmpty(),
+        )
+    } catch (e: Exception) {
+        null
+    }
+
     override fun searchList(text: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
         return Single.create { emitter ->
             try {
                 if (text.isNotEmpty()) {
                     emitter.onSuccess(
-                    getJsonApi<Base>("https://www.gogoanime1.com/search/topSearch?q=$text")
-                        ?.data
-                        .orEmpty()
-                        .map {
-                            ItemModel(
-                                title = it.name.orEmpty(),
-                                description = "",
-                                imageUrl = "",
-                                url = "https://www.gogoanime1.com/watch/${it.seo_name}",
-                                source = this
-                            )
-                        }
+                        getJsonApi<Base>("https://www.gogoanime1.com/search/topSearch?q=$text")
+                            ?.data
+                            .orEmpty()
+                            .map {
+                                ItemModel(
+                                    title = it.name.orEmpty(),
+                                    description = "",
+                                    imageUrl = "",
+                                    url = "https://www.gogoanime1.com/watch/${it.seo_name}",
+                                    source = this
+                                )
+                            }
                     )
                 } else {
                     emitter.onSuccess(searchListNonSingle(text, page, list))

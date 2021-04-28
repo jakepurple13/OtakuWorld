@@ -1,16 +1,22 @@
 package com.programmersbox.anime_sources.anime
 
+import androidx.core.text.isDigitsOnly
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.*
 import com.programmersbox.thirdpartyutils.gsonConverter
 import com.programmersbox.thirdpartyutils.rx2FactoryAsync
 import io.reactivex.Single
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.*
+import org.jsoup.Jsoup
 import retrofit2.Retrofit
 import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.QueryMap
+import java.io.IOException
+import kotlin.coroutines.resumeWithException
 
 object Yts : ApiService {
 
@@ -28,6 +34,91 @@ object Yts : ApiService {
             url = it.url.orEmpty(),
             source = this
         ).apply { extras["info"] = it.toJson() }
+    }
+
+    private suspend fun Call.await(): Response {
+        return suspendCancellableCoroutine { continuation ->
+            enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    if (continuation.isCancelled) return
+                    continuation.resumeWithException(e)
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    continuation.resume(response) {}
+                }
+            })
+            continuation.invokeOnCancellation {
+                try {
+                    cancel()
+                } catch (ex: Throwable) {
+                }
+            }
+        }
+    }
+
+    override suspend fun getSourceByUrl(url: String): ItemModel? {
+        try {
+            val subResponse = OkHttpClient().newCall((Request.Builder().url(url).build())).await()
+            if (!subResponse.isSuccessful) return null
+            val subDoc = Jsoup.parse(subResponse.body?.string())
+
+            subResponse.close() // Always close the response when not needed
+
+            val movieId = subDoc.getElementById("movie-info").attr("data-movie-id").toString().toInt()
+            var imdbCode = ""
+            var rating = 0.0
+            subDoc.getElementsByClass("rating-row").forEach { row ->
+                if (row.hasAttr("itemscope")) {
+                    imdbCode = row.getElementsByClass("icon")[0].attr("href").toString().split("/")[4]
+                    row.allElements.forEach { element ->
+                        if (element.hasAttr("itemprop") && element.attr("itemprop").toString() == "ratingValue") {
+                            rating = element.ownText().toDouble()
+                        }
+                    }
+                }
+            }
+
+            var title = ""
+            var year = 0
+            var bannerUrl = ""
+            var runtime = 0
+
+            subDoc.getElementById("mobile-movie-info").allElements.forEach {
+                if (it.hasAttr("itemprop"))
+                    title = it.ownText()
+                else
+                    if (it.ownText().isNotBlank() && it.ownText().isDigitsOnly())
+                        year = it.ownText().toInt()
+            }
+
+            subDoc.getElementById("movie-poster").allElements.forEach {
+                if (it.hasAttr("itemprop"))
+                    bannerUrl = it.attr("src").toString()
+            }
+
+            subDoc.getElementsByClass("icon-clock")[0]?.let {
+                val runtimeString = it.parent().ownText().trim()
+                if (runtimeString.contains("hr")) {
+                    runtime = runtimeString.split("hr")[0].trim().toInt() * 60
+                    if (runtimeString.contains("min"))
+                        runtime += runtimeString.split(" ")[2].trim().toInt()
+                    return@let
+                }
+                if (runtimeString.contains("min"))
+                    runtime += runtimeString.split("min")[0].trim().toInt()
+            }
+
+            return ItemModel(
+                source = this,
+                imageUrl = bannerUrl,
+                url = url,
+                title = title,
+                description = ""
+            ).apply { extras["info"] = service.getMovie(YTSQuery.MovieBuilder().setMovieId(movieId).build()).blockingGet()?.data?.movie.toJson() }
+        } catch (e: Exception) {
+            return null
+        }
     }
 
     override fun getRecent(page: Int): Single<List<ItemModel>> =
@@ -118,8 +209,7 @@ class YTSQuery {
     }
 
     class MovieBuilder {
-        var vals: MutableMap<String, String> =
-            HashMap()
+        var vals: MutableMap<String, String> = HashMap()
 
         /**
          * The ID of the movie.
@@ -292,7 +382,7 @@ class YTSQuery {
 
 data class Base(val status: String?, val status_message: String?, val data: Data?, val meta: String)
 
-data class Data(val movie_count: Number?, val limit: Number?, val page_number: Number?, val movies: List<Movies>?)
+data class Data(val movie_count: Number?, val limit: Number?, val page_number: Number?, val movies: List<Movies>?, val movie: Movies?)
 
 data class Movies(
     val id: Number?,
