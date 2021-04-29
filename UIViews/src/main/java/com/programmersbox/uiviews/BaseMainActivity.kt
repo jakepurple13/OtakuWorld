@@ -64,7 +64,7 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
         val controller = findViewById<BottomNavigationView>(R.id.navLayout2)
             .also { b ->
                 appUpdateCheck
-                    .filter { packageManager?.getPackageInfo(packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < it ?: 0.0 }
+                    .filter { packageManager?.getPackageInfo(packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < it }
                     .subscribe { b.getOrCreateBadge(R.id.setting_nav).number = 1 }
                     .addTo(disposable)
             }

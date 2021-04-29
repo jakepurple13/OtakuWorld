@@ -19,7 +19,7 @@
 
             <TextView
                 style="@style/TextAppearance.MaterialComponents.Headline5"
-                android:text="Downloaded Videos"
+                android:text="@string/downloaded_videos"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
@@ -51,6 +51,6 @@
         android:id="@+id/multiple_video_delete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Delete Multiple" />
+        android:text="@string/delete_multiple" />
 
 </RelativeLayout>

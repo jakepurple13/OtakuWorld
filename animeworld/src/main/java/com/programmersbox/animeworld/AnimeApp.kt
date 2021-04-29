@@ -130,9 +130,9 @@ class AnimeApp : OtakuApp() {
         shortcuts.add(
             ShortcutInfo.Builder(this, "download_viewer")
                 .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_file_download).toBitmap()))
-                .setShortLabel("View Downloads")
-                .setLongLabel("View Downloads")
-                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse("animeworld://view_downloads"), this, MainActivity::class.java))
+                .setShortLabel(getString(R.string.view_downloads))
+                .setLongLabel(getString(R.string.view_downloads))
+                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_DOWNLOADS), this, MainActivity::class.java))
                 .build()
         )
 
@@ -140,9 +140,9 @@ class AnimeApp : OtakuApp() {
         shortcuts.add(
             ShortcutInfo.Builder(this, "video_viewer")
                 .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
-                .setShortLabel("View Videos")
-                .setLongLabel("View Videos")
-                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse("animeworld://view_videos"), this, MainActivity::class.java))
+                .setShortLabel(getString(R.string.view_videos))
+                .setLongLabel(getString(R.string.view_videos))
+                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_VIDEOS), this, MainActivity::class.java))
                 .build()
         )
 

@@ -79,7 +79,7 @@ class ChapterAdapter(
                             if (b) R.string.addedChapterItem else R.string.removedChapterItem,
                             Snackbar.LENGTH_SHORT
                         )
-                            .setAction("Undo") { binding.readChapter.isChecked = !binding.readChapter.isChecked }
+                            .setAction(R.string.undo) { binding.readChapter.isChecked = !binding.readChapter.isChecked }
                             .show()
                     }
             }

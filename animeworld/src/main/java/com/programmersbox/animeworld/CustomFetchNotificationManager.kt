@@ -190,7 +190,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
             var icon = 0
             val pauseIntent: Intent = when {
                 downloadNotification.isDownloading -> {
-                    text = "Pause"
+                    text = context.getString(R.string.cast_pause)
                     icon = android.R.drawable.ic_media_pause
                     Intent(context, PauseReceiver::class.java).apply {
                         action = "${packageName}PAUSE_DOWNLOAD"
@@ -198,7 +198,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
                     }
                 }
                 downloadNotification.isPaused -> {
-                    text = "Resume"
+                    text = context.getString(R.string.resume_text)
                     icon = android.R.drawable.ic_media_play
                     Intent(context, ResumeReceiver::class.java).apply {
                         action = "${packageName}RESUME_DOWNLOAD"
@@ -206,7 +206,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
                     }
                 }
                 downloadNotification.isFailed -> {
-                    text = "Retry"
+                    text = context.getString(R.string.retry_text)
                     icon = android.R.drawable.ic_delete
                     Intent(context, RetryReceiver::class.java).apply {
                         action = "${packageName}RETRY"

@@ -18,7 +18,7 @@
 
             <TextView
                 style="@style/TextAppearance.MaterialComponents.Headline5"
-                android:text="In Progress Downloads"
+                android:text="@string/in_progress_downloads"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
@@ -43,6 +43,6 @@
         android:id="@+id/multiple_download_delete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Delete Multiple" />
+        android:text="@string/delete_multiple" />
 
 </RelativeLayout>

@@ -190,7 +190,7 @@ class FavoriteFragment : BaseFragment() {
                     binding.root.findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
                 } else {
                     MaterialAlertDialogBuilder(itemView.context)
-                        .setTitle("Choose Source")
+                        .setTitle(R.string.chooseASource)
                         .setItems(info.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
                             val item = info[i].let { BaseMainActivity.genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                             binding.root.findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))

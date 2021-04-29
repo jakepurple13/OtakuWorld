@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.databinding.ItemTorrentDownloadBinding
 import com.programmersbox.animeworld.ytsdatabase.Model
 import com.programmersbox.animeworld.ytsdatabase.TorrentJob
@@ -25,7 +26,7 @@ class PauseAdapter(private val context: Context) : DragSwipeAdapter<Model.respon
         Glide.with(context).load(item.job.bannerUrl).into(binding.itemImage)
 
         binding.itemTitle.text = item.job.title
-        binding.itemStatus.text = "Paused"
+        binding.itemStatus.text = context.getString(R.string.paused_text)
         binding.itemProgress.text = "${item.job.progress}%"
         binding.itemSeedsPeers.text = "0/0"
         binding.itemProgressBar.progress = item.job.progress

@@ -37,8 +37,8 @@ import kotlinx.coroutines.launch
 class MainActivity : BaseMainActivity() {
 
     companion object {
-        private const val VIEW_DOWNLOADS = "animeworld://view_downloads"
-        private const val VIEW_VIDEOS = "animeworld://view_videos"
+        const val VIEW_DOWNLOADS = "animeworld://view_downloads"
+        const val VIEW_VIDEOS = "animeworld://view_videos"
         private lateinit var activity: MainActivity
         val cast: CastHelper = CastHelper()
     }
@@ -76,7 +76,7 @@ class MainActivity : BaseMainActivity() {
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
         if (chapterModel.source == Yts) {
-            Toast.makeText(this, "Yts cannot stream at the moment", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.yts_no_stream, Toast.LENGTH_SHORT).show()
             return
         }
         GlobalScope.launch {
@@ -98,7 +98,7 @@ class MainActivity : BaseMainActivity() {
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
         requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
-                Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
 
                 when (model.source) {
                     Yts -> {
@@ -144,7 +144,7 @@ class MainActivity : BaseMainActivity() {
 
         val requestList = arrayListOf<Request>()
         val url = ep.getChapterInfo()
-            .doOnError { runOnUiThread { Toast.makeText(this@MainActivity, "Something went wrong", Toast.LENGTH_SHORT).show() } }
+            .doOnError { runOnUiThread { Toast.makeText(this@MainActivity, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
             .onErrorReturnItem(emptyList())
             .blockingGet()
         for (i in url) {
@@ -183,7 +183,7 @@ class MainActivity : BaseMainActivity() {
         preferenceScreen.viewSettings {
             it.addPreference(
                 Preference(it.context).apply {
-                    title = "Videos"
+                    title = getString(R.string.video_menu_title)
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_video_library_24)
                     setOnPreferenceClickListener {
                         openVideos()
@@ -193,14 +193,14 @@ class MainActivity : BaseMainActivity() {
             )
 
             val casting = Preference(it.context).apply {
-                title = "Cast"
+                title = getString(R.string.cast_menu_title)
                 icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_cast_24)
                 setOnPreferenceClickListener {
                     if (cast.isCastActive()) {
                         startActivity(Intent(this@MainActivity, ExpandedControlsActivity::class.java))
                     } else {
                         MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                            .also { it.routeSelector = CastContext.getSharedInstance(applicationContext)?.mergedSelector }
+                            .also { it.routeSelector = CastContext.getSharedInstance(applicationContext).mergedSelector }
                             .show(activity.supportFragmentManager, "media_chooser")
                     }
                     true
@@ -220,7 +220,7 @@ class MainActivity : BaseMainActivity() {
 
             it.addPreference(
                 Preference(it.context).apply {
-                    title = "Downloads"
+                    title = getString(R.string.downloads_menu_title)
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
                     setOnPreferenceClickListener {
                         openDownloads()
@@ -233,7 +233,7 @@ class MainActivity : BaseMainActivity() {
         preferenceScreen.generalSettings {
             it.addPreference(
                 Preference(it.context).apply {
-                    title = "Folder Location"
+                    title = getString(R.string.folder_location)
                     summary = it.context.folderLocation
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_folder_24)
                     setOnPreferenceClickListener {
@@ -244,7 +244,7 @@ class MainActivity : BaseMainActivity() {
                             if (it.isGranted) {
                                 ChooserDialog(this@MainActivity)
                                     .withIcon(R.mipmap.ic_launcher)
-                                    .withStringResources("Choose a Directory", "CHOOSE", "CANCEL")
+                                    .withResources(R.string.choose_a_directory, R.string.chooseText, R.string.cancelText)
                                     .withFilter(true, false)
                                     .withStartFile(folderLocation)
                                     .enableOptions(true)

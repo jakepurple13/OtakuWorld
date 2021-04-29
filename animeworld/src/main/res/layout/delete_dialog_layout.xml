@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/rounded_corner"
     android:backgroundTint="?android:colorBackground"
-    tools:ignore="HardcodedText">
+    android:padding="5dp">
 
     <com.ncorti.slidetoact.SlideToActView
         android:id="@+id/slide_button"
@@ -19,7 +19,7 @@
         android:layout_marginBottom="16dp"
         app:outer_color="@color/alizarin"
         app:slider_icon_color="@color/alizarin"
-        app:text="Delete" />
+        app:text="@string/delete" />
 
     <TextView
         android:id="@+id/textView6"
@@ -29,7 +29,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
         android:gravity="center"
-        android:text="Slide to Delete " />
+        android:text="@string/slide_to_delete" />
 
     <Button
         android:id="@+id/delete_dismiss_button"
@@ -40,7 +40,7 @@
         android:layout_marginBottom="16dp"
         android:background="@drawable/dialog_bg"
         android:backgroundTint="@color/emeraldGreen"
-        android:text="Don't Delete" />
+        android:text="@string/don_t_delete" />
 
     <TextView
         android:id="@+id/all_download_info"
@@ -51,6 +51,7 @@
         android:layout_alignBottom="@id/delete_dismiss_button"
         android:layout_marginEnd="16dp"
         android:layout_toStartOf="@id/delete_dismiss_button"
-        android:text="Current Progress: 100%" />
+        android:text="Current Progress: 100%"
+        tools:ignore="HardcodedText" />
 
 </RelativeLayout>

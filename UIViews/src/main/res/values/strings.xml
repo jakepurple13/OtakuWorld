@@ -11,11 +11,7 @@
     <string name="chooseASource">Choose a Source</string>
     <string name="updateNumber">There are %d update(s)</string>
     <string name="hadAnUpdate">%s had an update. %s</string>
-    <string name="startingUpdateCheck">Starting Manga Update Checks</string>
-    <string name="checkingUpdate">Checking for Manga Updates</string>
-    <string name="finishedChecking">Finished Checking for Manga Updates</string>
-    <string name="addChapter">Marked %s as read</string>
-    <string name="removeChapter">Removed %s from read</string>
+    <string name="finishedChecking">Finished</string>
     <plurals name="updateAmount">
         <item quantity="one">There is %d update</item>
         <item quantity="other">There are %d updates</item>
@@ -41,47 +37,57 @@
 
     <string name="searchFavorites">Search Favorites</string>
 
-    <string name="mangaWorldUpdate">Manga World Update %s</string>
     <string name="notNow">Not Now</string>
     <string name="gotoBrowser">Go to Browser</string>
     <string name="update">Update</string>
     <string name="updateTitle">There\'s an update! %s</string>
 
-    <string name="viewFavoritesMenu">View Favorites</string>
+    <string name="viewFavoritesMenu">Favorites</string>
     <string name="viewHistoryMenu">View History</string>
-    <string name="changeSourcesMenu">Change Source</string>
-    <string name="viewSettingsMenu">View Settings</string>
-    <string name="gotoSource">Go to Source in Browser</string>
-    <string name="checkForUpdates">Check For Updates</string>
 
-    <string name="all">All</string>
-
-    <string name="areYouSureSignOut">"Are you sure you want to sign out?"</string>
-    <string name="signIn">Sign in</string>
-    <string name="signOut">Sign out</string>
+    <string name="areYouSureLogOut">Are you sure you want to log out?</string>
+    <string name="logIn">Log in</string>
+    <string name="logOut">Log Out?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="done">Done</string>
 
     <string name="ok">OK</string>
-    <string name="wentWrong">Something Went Wrong!</string>
-    <string name="wentWrongInfo">Something happened while trying to load %s. Please try again or use a different source, but please report this to the developer.</string>
-    <string name="wentWrongManga">Something happened while trying to load %s. Please try again, but please report this to the developer.</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <!-- Preference Titles -->
-    <string name="messages_header">Messages</string>
-    <string name="sync_header">Sync</string>
+    <string name="something_went_wrong">Something Went Wrong</string>
 
-    <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
+    <string name="recent">Recent</string>
+    <string name="all">All</string>
+    <string name="settings">Settings</string>
 
-    <!-- Sync Preferences -->
-    <string name="sync_title">Sync email periodically</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails
-    </string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="you_re_offline">You\'re Offline</string>
+    <string name="searchFor">Search: %s</string>
+    <string name="theresAnUpdate">There\'s an Update!</string>
+    <string name="versionAvailable">Version %s is now available!</string>
+    <string name="startingCheck">Starting Check</string>
+    <string name="checking">Checking</string>
+    <string name="about">About</string>
+    <string name="account_category_title">Account</string>
+    <string name="last_update_check_time">Last Time Updates Were Checked</string>
+    <string name="check_for_periodic_updates">Check for Updates Periodically</string>
+    <string name="view_libraries_used">View Libraries Used</string>
+    <string name="view_menu_category_title">View</string>
+    <string name="general_menu_title">General</string>
+    <string name="view_source_in_browser">View Source in Browser</string>
+    <string name="choose_a_theme">Choose a Theme</string>
+    <string name="theme_choice_title">Theme</string>
+    <string name="battery_alert_percentage">Battery Alert Percentage</string>
+    <string name="press_to_check_for_updates">Press to Check for Updates</string>
+    <string name="update_available">Update Available</string>
+    <string name="currentSource">Current Source: %s</string>
+    <string name="currentVersion">Version: %s</string>
+    <string name="please_update_for_leatest_features">There\'s an update! Please update if you want to have the latest features!</string>
+    <string name="updateTo">Update to %s</string>
+    <string name="finishing_dots">Finishing…</string>
+    <string name="downloading_dots">Downloading…%d\%</string>
+    <string name="downloading_dots_no_percent">Downloading…</string>
+    <string name="updating_dots">Updating…</string>
+    <string name="finishedDownloading">Finished Downloading</string>
+    <string name="errorTryAgain">Error: Try Again</string>
 
     <string-array name="theme_items">
         <item>System</item>

@@ -54,8 +54,8 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                     "appUpdate",
                     OtakuApp.notificationLogo
                 ) {
-                    title = "There's an update!"
-                    subText = "Version $f is now available!"
+                    title = applicationContext.getString(R.string.theresAnUpdate)
+                    subText = applicationContext.getString(R.string.versionAvailable, f?.toString().orEmpty())
                     pendingIntent { context ->
                         NavDeepLinkBuilder(context)
                             .setGraph(R.navigation.recent_nav)
@@ -93,7 +93,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
     }
 
     override fun createWork(): Single<Result> {
-        update.sendRunningNotification(100, 0, "Starting check")
+        update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
         Loged.f("Starting check here")
         applicationContext.lastUpdateCheck = System.currentTimeMillis()
         applicationContext.lastUpdateCheck?.let { updateCheckPublish.onNext(it) }
@@ -281,7 +281,7 @@ class UpdateNotification(private val context: Context) {
             }
             showWhen = true
             message = contextText
-            subText = "Checking"
+            subText = context.getString(R.string.checking)
         }
         context.notificationManager.notify(13, notification)
         Loged.f("Checking for $contextText")
@@ -290,7 +290,7 @@ class UpdateNotification(private val context: Context) {
     fun sendFinishedNotification() {
         val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon) {
             onlyAlertOnce = true
-            subText = "Finished"
+            subText = context.getString(R.string.finishedChecking)
             timeoutAfter = 750L
         }
         context.notificationManager.notify(13, notification)

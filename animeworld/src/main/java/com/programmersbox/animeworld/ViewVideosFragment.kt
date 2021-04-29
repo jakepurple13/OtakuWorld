@@ -72,8 +72,11 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                                         null
                                     )
                                 } else {
-                                    Toast.makeText(requireContext(), if (file.delete()) "File Deleted" else "File Not Deleted", Toast.LENGTH_SHORT)
-                                        .show()
+                                    Toast.makeText(
+                                        requireContext(),
+                                        if (file.delete()) R.string.fileDeleted else R.string.fileNotDeleted,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             }
 
@@ -100,11 +103,11 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         view.findViewById<MaterialButton>(R.id.multiple_video_delete).setOnClickListener {
             val downloadItems = mutableListOf<String>()
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Delete")
+                .setTitle(R.string.delete)
                 .setMultiChoiceItems(adapter.dataList.map { it.videoName }.toTypedArray(), null) { _, i, b ->
                     if (b) downloadItems.add(adapter.dataList[i].path!!) else downloadItems.remove(adapter.dataList[i].path!!)
                 }
-                .setPositiveButton("Delete") { d, _ ->
+                .setPositiveButton(R.string.delete) { d, _ ->
                     downloadItems.forEach { f ->
                         adapter.dataList.indexOfFirst { it.path == f }
                             .let { if (it != -1) adapter.removeItem(it) else null }
@@ -122,7 +125,11 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             123 -> {
-                Toast.makeText(requireContext(), if (resultCode == Activity.RESULT_OK) "File Deleted" else "File Not Deleted", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    requireContext(),
+                    if (resultCode == Activity.RESULT_OK) R.string.fileDeleted else R.string.fileNotDeleted,
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
         }

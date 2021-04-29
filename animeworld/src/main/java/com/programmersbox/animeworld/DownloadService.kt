@@ -143,7 +143,7 @@ class DownloadService : IntentService("blank") {
 
         val notification = NotificationCompat.Builder(context, "yts_01")
             .setContentTitle(getContentTitle(config.title, 0))
-            .addAction(R.mipmap.ic_launcher, "Cancel", cancelIntent)
+            .addAction(R.mipmap.ic_launcher, getString(R.string.cancel), cancelIntent)
             .setContentText(getContentText("0 KB/s"))
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentIntent(contentIntent)
@@ -354,7 +354,7 @@ class DownloadService : IntentService("blank") {
         val notificationBuilder =
             NotificationCompat.Builder(context, "yts_01")
                 .setContentTitle(getContentTitle(model.title, progress.toInt()))
-                .addAction(R.mipmap.ic_launcher, "Cancel", cancelIntent)
+                .addAction(R.mipmap.ic_launcher, getString(R.string.cancel), cancelIntent)
                 .setContentText(getContentText(speedString))
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentIntent(contentIntent)
@@ -384,9 +384,7 @@ class DownloadService : IntentService("blank") {
 
     private fun getContentText(speedString: String?): String {
         return "Downloading: ${pendingJobs.size + 1}  ${Html.fromHtml("&#8226;")}  $speedString ${
-            Html.fromHtml(
-                "&#8595;"
-            )
+            Html.fromHtml("&#8595;")
         }"
     }
 
@@ -729,7 +727,7 @@ object Notifications {
 
         val notification =
             NotificationCompat.Builder(this, "yts_02").apply {
-                setContentTitle("Completed")
+                setContentTitle(getString(R.string.completed))
                 setContentText(contentText)
                 setSmallIcon(R.drawable.exo_ic_check)
                 setContentIntent(pendingIntent)
@@ -744,7 +742,7 @@ object Notifications {
         val notification =
             NotificationCompat.Builder(this, "yts_02").apply {
                 setDefaults(Notification.DEFAULT_ALL)
-                setContentTitle("Failed")
+                setContentTitle(getString(R.string.failed))
                 setContentText(contentText)
                 setSmallIcon(R.drawable.ic_dialog_close_dark)
                 setAutoCancel(true)

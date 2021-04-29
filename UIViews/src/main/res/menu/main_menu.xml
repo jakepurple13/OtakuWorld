@@ -4,16 +4,16 @@
     <item
         android:id="@+id/recent_nav"
         android:icon="@android:drawable/ic_menu_recent_history"
-        android:title="Recent" />
+        android:title="@string/recent" />
 
     <item
         android:id="@+id/all_nav"
         android:icon="@android:drawable/ic_menu_gallery"
-        android:title="All" />
+        android:title="@string/all" />
 
     <item
         android:id="@+id/setting_nav"
         android:icon="@android:drawable/ic_menu_preferences"
-        android:title="Settings" />
+        android:title="@string/settings" />
 
 </menu>

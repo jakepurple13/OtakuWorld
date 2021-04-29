@@ -59,7 +59,7 @@ class DeleteDialog(
         window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         if (download != null)
             Fetch.getDefaultInstance().pause(download.id)
-        setTitle("Delete $title")
+        setTitle(context.getString(R.string.deleteDownload, title))
         findViewById<TextView>(R.id.textView6).append(title)
 
         val allDownloadInfo = findViewById<TextView>(R.id.all_download_info)

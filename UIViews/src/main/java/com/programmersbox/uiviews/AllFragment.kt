@@ -143,7 +143,7 @@ class AllFragment : BaseListFragment() {
                 view?.findViewById<SwipeRefreshLayout>(R.id.allRefresh)?.isRefreshing = false
                 activity?.runOnUiThread {
                     searchLayout?.suffixText = "${adapter.dataList.size}"
-                    searchLayout?.hint = "Search: ${sourcePublish.value?.serviceName}"
+                    searchLayout?.hint = getString(R.string.searchFor, sourcePublish.value?.serviceName.orEmpty())
                 }
             }
             .addTo(disposable)

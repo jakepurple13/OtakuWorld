@@ -93,13 +93,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.setOnPreferenceClickListener {
                 FirebaseAuthentication.currentUser?.let {
                     MaterialAlertDialogBuilder(this@SettingsFragment.requireContext())
-                        .setTitle("Log Out?")
-                        .setMessage("Are you sure you want to log out?")
-                        .setPositiveButton("Yes") { d, _ ->
+                        .setTitle(R.string.logOut)
+                        .setMessage(R.string.areYouSureLogOut)
+                        .setPositiveButton(R.string.yes) { d, _ ->
                             FirebaseAuthentication.signOut()
                             d.dismiss()
                         }
-                        .setNegativeButton("No") { d, _ -> d.dismiss() }
+                        .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
                         .show()
                 } ?: FirebaseAuthentication.signIn(requireActivity())
                 true
@@ -116,7 +116,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.setOnPreferenceClickListener {
                 val service = requireContext().currentService
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Choose a source")
+                    .setTitle(R.string.chooseASource)
                     .setSingleChoiceItems(
                         list.map { it.serviceName }.toTypedArray(),
                         list.indexOfFirst { it.serviceName == service }
@@ -125,11 +125,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         requireContext().currentService = list[i].serviceName
                         d.dismiss()
                     }
-                    .setPositiveButton("Done") { d, _ -> d.dismiss() }
+                    .setPositiveButton(R.string.done) { d, _ -> d.dismiss() }
                     .show()
                 true
             }
-            sourcePublish.subscribe { p.title = "Current Source: ${it.serviceName}" }
+            sourcePublish.subscribe { p.title = getString(R.string.currentSource, it.serviceName) }
                 .addTo(disposable)
         }
 
@@ -167,9 +167,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             s.value = requireContext().batteryAlertPercent
             s.max = 100
             s.setOnPreferenceChangeListener { _, newValue ->
-                if (newValue is Int) {
-                    requireContext().batteryAlertPercent = newValue
-                }
+                if (newValue is Int) requireContext().batteryAlertPercent = newValue
                 true
             }
         }
@@ -213,8 +211,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("about_version")?.let { p ->
-            p.title = "Version: ${context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName}"
-            p.summary = "Press to Check for Updates"
+            p.title =
+                getString(R.string.currentVersion, context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty())
             p.setOnPreferenceClickListener {
                 updateSetter()
                 true
@@ -225,15 +223,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.isVisible = false
             appUpdateCheck
                 .subscribe {
-                    p.summary = "Version: $it"
+                    p.summary = getString(R.string.currentVersion, it.toString())
                     p.isVisible =
                         context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < it ?: 0.0
                 }
                 .addTo(disposable)
             p.setOnPreferenceClickListener {
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Update to ${p.summary}")
-                    .setMessage("There's an update! Please update if you want to have the latest features!")
+                    .setTitle(getString(R.string.updateTo, p.summary))
+                    .setMessage(R.string.please_update_for_leatest_features)
                     .setPositiveButton(R.string.update) { d, _ ->
                         activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
                             if (it.isGranted) {
@@ -381,7 +379,9 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
     }
 
     private suspend fun onProgressUpdate(vararg values: Int?) = withContext(Dispatchers.Main) {
-        values[0]?.let { bar.setMessage(if (it > 99) "Finishing... " else "Downloading... $it%") }
+        values[0]?.let {
+            bar.setMessage(if (it > 99) context.getString(R.string.finishing_dots) else context.getString(R.string.downloading_dots, it))
+        }
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -430,8 +430,8 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
     private fun onPreExecute() {
         // show progress
         bar = MaterialAlertDialogBuilder(context)
-            .setTitle("Updating...")
-            .setMessage("Downloading...")
+            .setTitle(R.string.updating_dots)
+            .setMessage(R.string.downloading_dots_no_percent)
             .setCancelable(false)
             .setIcon(OtakuApp.logo)
             .show()
@@ -441,7 +441,7 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
     private fun onPostExecute(result: Boolean?) {
         // hide progress
         bar.dismiss()
-        Toast.makeText(context, if (result == true) "Finished Downloading" else "Error: Try Again", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, if (result == true) R.string.finishedDownloading else R.string.errorTryAgain, Toast.LENGTH_SHORT).show()
     }
 
     private fun openNewVersion(location: String) {

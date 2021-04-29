@@ -99,14 +99,13 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         )*/
 
         view.findViewById<MaterialButton>(R.id.multiple_download_delete).setOnClickListener {
-
             val downloadItems = mutableListOf<FileAdapter.DownloadData>()
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Delete")
+                .setTitle(R.string.delete)
                 .setMultiChoiceItems(fileAdapter!!.dataList.map { it.download?.file }.toTypedArray(), null) { _, i, b ->
                     if (b) downloadItems.add(fileAdapter!!.dataList[i]) else downloadItems.remove(fileAdapter!!.dataList[i])
                 }
-                .setPositiveButton("Delete") { d, _ ->
+                .setPositiveButton(R.string.delete) { d, _ ->
                     Fetch.getDefaultInstance().delete(downloadItems.map { it.id })
                     d.dismiss()
                 }
@@ -241,8 +240,8 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             }
             R.id.action_deleteJob -> {
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Do you want to delete?")
-                    .setMessage("Delete")
+                    .setTitle(R.string.do_you_want_to_delete)
+                    .setMessage(R.string.delete)
                     .setPositiveButton(getString(R.string.yes)) { d, _ ->
                         model.saveLocation?.let {
                             FileUtils.recursiveDelete(File(it))

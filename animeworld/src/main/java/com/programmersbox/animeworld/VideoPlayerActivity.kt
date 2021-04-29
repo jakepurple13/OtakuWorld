@@ -72,9 +72,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var locked = false
         set(value) {
             field = value
-            runOnUiThread {
-                findViewById<MaterialButton>(R.id.video_lock).text = if (locked) "Locked" else "Unlocked"
-            }
+            runOnUiThread { findViewById<MaterialButton>(R.id.video_lock).setText(if (locked) R.string.locked else R.string.unlocked) }
         }
 
     private lateinit var gesture: GestureDetector

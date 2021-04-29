@@ -1,6 +1,6 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Account">
+    <PreferenceCategory app:title="@string/account_category_title">
 
         <Preference
             app:key="user_account"
@@ -10,47 +10,48 @@
 
     <PreferenceCategory
         app:key="aboutCategory"
-        app:title="About">
+        app:title="@string/about">
 
         <Preference
             app:key="about_version"
+            app:summary="@string/press_to_check_for_updates"
             app:title="Version: " />
 
         <Preference
-            app:key="updateAvailable"
             app:icon="@drawable/ic_baseline_system_update_alt_24"
-            app:title="Update Available" />
+            app:key="updateAvailable"
+            app:title="@string/update_available" />
 
         <Preference
             app:enabled="true"
             app:key="sync_time"
-            app:title="Last Time Updates Were Checked" />
+            app:title="@string/last_update_check_time" />
 
         <SwitchPreferenceCompat
             app:key="sync"
-            app:title="Check for Updates Periodically" />
+            app:title="@string/check_for_periodic_updates" />
 
         <Preference
             app:icon="@drawable/ic_baseline_library_books_24"
             app:key="used_libraries"
-            app:title="View Libraries Used" />
+            app:title="@string/view_libraries_used" />
 
     </PreferenceCategory>
 
     <PreferenceCategory
         app:key="viewCategory"
-        app:title="View">
+        app:title="@string/view_menu_category_title">
 
         <Preference
             app:icon="@drawable/ic_baseline_star_24"
             app:key="view_favorites"
-            app:title="Favorites" />
+            app:title="@string/viewFavoritesMenu" />
 
     </PreferenceCategory>
 
     <PreferenceCategory
         app:key="generalCategory"
-        app:title="General">
+        app:title="@string/general_menu_title">
 
         <Preference
             app:icon="@android:drawable/ic_menu_preferences"
@@ -60,18 +61,18 @@
         <Preference
             app:icon="@drawable/ic_baseline_open_in_browser_24"
             app:key="view_source"
-            app:title="View Source in Browser" />
+            app:title="@string/view_source_in_browser" />
 
         <ListPreference
             app:defaultValue="system"
             app:dialogIcon="@drawable/ic_baseline_settings_brightness_24"
-            app:dialogTitle="Choose a Theme"
+            app:dialogTitle="@string/choose_a_theme"
             app:entries="@array/theme_items"
             app:entryValues="@array/theme_values"
             app:icon="@drawable/ic_baseline_settings_brightness_24"
             app:key="theme_setting"
             app:persistent="true"
-            app:title="Theme"
+            app:title="@string/theme_choice_title"
             app:useSimpleSummaryProvider="true" />
 
         <SeekBarPreference
@@ -79,13 +80,13 @@
             app:key="battery_alert"
             app:min="1"
             app:seekBarIncrement="1"
-            app:title="Battery Alert Percentage" />
+            app:title="@string/battery_alert_percentage" />
 
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:title="Notifications"
-        app:isPreferenceVisible="false">
+        app:isPreferenceVisible="false"
+        app:title="Notifications">
         <Preference
             app:key="saved_notifications"
             app:title="View Notifications" />

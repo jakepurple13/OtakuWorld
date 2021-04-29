@@ -38,7 +38,7 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
         val status = downloadData.download!!.status
         val context: Context = holder.itemView.context
         holder.titleTextView.text = uri.lastPathSegment
-        holder.statusTextView.text = getStatusString(status)
+        holder.statusTextView.text = context.getString(getStatusString(status))
         var progress = downloadData.download!!.progress
         if (progress == -1) { // Download progress is undermined at the moment.
             progress = 0
@@ -163,17 +163,15 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
         }
     }
 
-    private fun getStatusString(status: Status): String {
-        return when (status) {
-            COMPLETED -> "Done"
-            DOWNLOADING -> "Downloading"
-            FAILED -> "Error"
-            PAUSED -> "Paused"
-            QUEUED -> "Waiting in Queue"
-            REMOVED -> "Removed"
-            NONE -> "Not Queued"
-            else -> "Unknown"
-        }
+    private fun getStatusString(status: Status): Int = when (status) {
+        COMPLETED -> R.string.done
+        DOWNLOADING -> R.string.downloading_no_dots
+        FAILED -> R.string.error_text
+        PAUSED -> R.string.paused_text
+        QUEUED -> R.string.waiting_in_queue
+        REMOVED -> R.string.removed_text
+        NONE -> R.string.not_queued
+        else -> R.string.unknown
     }
 
     fun onItemDismiss(position: Int, direction: Int) {
