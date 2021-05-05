@@ -74,7 +74,7 @@ dependencies {
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.2.0'
     implementation 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0'
 
-    implementation 'com.github.piasy:BigImageViewer:1.7.1'
+    implementation 'com.github.piasy:BigImageViewer:1.8.0'
     implementation 'com.github.piasy.BigImageViewer:GlideImageLoader:1.7.1'
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
