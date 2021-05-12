@@ -4,6 +4,28 @@ buildscript {
     ext.jakepurple13 = "10.6.3"
     ext.otakuVersionName = "11.0"
     ext.latestAboutLibsRelease = "+"
+    ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1"
+
+    ext.flowutils = "com.github.jakepurple13.HelpfulTools:flowutils:$jakepurple13"
+    ext.gsonutils = "com.github.jakepurple13.HelpfulTools:gsonutils:$jakepurple13"
+    ext.helpfulutils = "com.github.jakepurple13.HelpfulTools:helpfulutils:$jakepurple13"
+    ext.loggingutils = "com.github.jakepurple13.HelpfulTools:loggingutils:$jakepurple13"
+    ext.dragswipe = "com.github.jakepurple13.HelpfulTools:dragswipe:$jakepurple13"
+    ext.funutils = "com.github.jakepurple13.HelpfulTools:funutils:$jakepurple13"
+    ext.rxutils = "com.github.jakepurple13.HelpfulTools:rxutils:$jakepurple13"
+    ext.thirdpartyutils = "com.github.jakepurple13.HelpfulTools:thirdpartyutils:$jakepurple13"
+
+    ext.gson = 'com.google.code.gson:gson:2.8.6'
+
+    ext.rxkotlin = "io.reactivex.rxjava2:rxkotlin:2.4.0"
+    ext.rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1"
+    ext.rxbinding = 'com.jakewharton.rxbinding2:rxbinding:2.2.0'
+    ext.rxbindingKotlin = 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0'
+
+    ext.androidCore = 'androidx.core:core-ktx:1.3.2'
+    ext.appCompat = 'androidx.appcompat:appcompat:1.2.0'
+    ext.material = 'com.google.android.material:material:1.3.0'
+
     repositories {
         google()
         jcenter()

@@ -33,36 +33,35 @@ android {
 }
 
 dependencies {
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.3.2'
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'com.google.android.material:material:1.3.0'
+    implementation androidCore
+    implementation appCompat
+    implementation material
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation "com.squareup.okhttp3:okhttp:4.9.1"
     implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.1"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
+    implementation coroutinesCore
     implementation 'org.jsoup:jsoup:1.13.1'
     implementation 'com.squareup.duktape:duktape-android:1.3.0'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation gson
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
-    implementation "com.github.jakepurple13.HelpfulTools:gsonutils:$jakepurple13"
-    implementation "com.github.jakepurple13.HelpfulTools:helpfulutils:$jakepurple13"
+    implementation gsonutils
+    implementation helpfulutils
 
-    implementation "io.reactivex.rxjava2:rxkotlin:2.4.0"
-    implementation "io.reactivex.rxjava2:rxandroid:2.1.1"
-    implementation 'com.jakewharton.rxbinding2:rxbinding:2.2.0'
-    implementation 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0'
+    implementation rxkotlin
+    implementation rxandroid
+    implementation rxbinding
+    implementation rxbindingKotlin
 
     implementation "com.squareup.retrofit2:retrofit:2.9.0"
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
 
-    implementation "com.github.jakepurple13.HelpfulTools:rxutils:$jakepurple13"
-    implementation "com.github.jakepurple13.HelpfulTools:thirdpartyutils:$jakepurple13"
+    implementation rxutils
+    implementation thirdpartyutils
 
     implementation project(':Models')
 }
