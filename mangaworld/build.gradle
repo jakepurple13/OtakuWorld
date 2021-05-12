@@ -8,8 +8,8 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.2"
+    compileSdkVersion compileVersion
+    buildToolsVersion buildVersion
 
     defaultConfig {
         applicationId "com.programmersbox.mangaworld"
@@ -53,12 +53,9 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-
     implementation project(':UIViews')
     implementation project(':Models')
     implementation project(':favoritesdatabase')
-
     implementation project(':manga_sources')
 
     implementation 'com.github.bumptech.glide:glide:4.12.0'
