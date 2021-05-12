@@ -65,9 +65,9 @@ dependencies {
     implementation project(':Models')
     implementation project(':favoritesdatabase')
 
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation constraintlayout
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation swiperefresh
     implementation coroutinesCore
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-rx2:1.4.1'
@@ -76,7 +76,7 @@ dependencies {
 
     implementation gson
 
-    implementation 'androidx.recyclerview:recyclerview:1.2.0'
+    implementation recyclerview
     implementation 'androidx.palette:palette-ktx:1.0.0'
     implementation 'com.airbnb.android:lottie:3.7.0'
     implementation "androidx.room:room-runtime:2.3.0"
@@ -121,12 +121,5 @@ dependencies {
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
 
     //Custom Libraries
-    implementation flowutils
-    implementation gsonutils
-    implementation helpfulutils
-    implementation loggingutils
-    implementation dragswipe
-    implementation funutils
-    implementation rxutils
-    implementation thirdpartyutils
+    implementation jakepurple13Tools.helpfultools
 }

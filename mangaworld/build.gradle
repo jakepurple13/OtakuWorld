@@ -44,9 +44,9 @@ dependencies {
     implementation androidCore
     implementation appCompat
     implementation material
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview:1.2.0'
+    implementation constraintlayout
+    implementation swiperefresh
+    implementation recyclerview
     implementation 'com.google.firebase:firebase-crashlytics:18.0.0'
     implementation 'com.google.firebase:firebase-analytics:19.0.0'
     testImplementation 'junit:junit:4.+'
@@ -78,21 +78,10 @@ dependencies {
     implementation coroutinesCore
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1'
 
-    def room_version = "2.3.0"
-    implementation "androidx.room:room-runtime:$room_version"
+    implementation room.room
     // For Kotlin use kapt instead of annotationProcessor
     kapt "androidx.room:room-compiler:$room_version"
-    // optional - Kotlin Extensions and Coroutines support for Room
-    implementation "androidx.room:room-ktx:$room_version"
-    implementation "androidx.room:room-rxjava2:$room_version"
 
     //Custom Libraries
-    implementation flowutils
-    implementation gsonutils
-    implementation helpfulutils
-    implementation loggingutils
-    implementation dragswipe
-    implementation funutils
-    implementation rxutils
-    implementation thirdpartyutils
+    implementation jakepurple13Tools.helpfultools
 }

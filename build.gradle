@@ -29,6 +29,25 @@ buildscript {
     ext.compileVersion = 30
     ext.buildVersion = "30.0.2"
 
+    ext.recyclerview = 'androidx.recyclerview:recyclerview:1.2.0'
+    ext.constraintlayout = 'androidx.constraintlayout:constraintlayout:2.0.4'
+    ext.swiperefresh = 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+
+    ext.room_version = "2.3.0"
+
+    ext {
+        jakepurple13Tools = [
+                helpfultools: [flowutils, gsonutils, helpfulutils, loggingutils, dragswipe, funutils, rxutils, thirdpartyutils]
+        ]
+        room = [
+                room: [
+                        "androidx.room:room-runtime:$room_version",
+                        "androidx.room:room-ktx:$room_version",
+                        "androidx.room:room-rxjava2:$room_version"
+                ]
+        ]
+    }
+
     repositories {
         google()
         gradlePluginPortal()
