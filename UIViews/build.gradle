@@ -55,7 +55,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:19.0.0'
     implementation 'com.firebaseui:firebase-ui-auth:7.1.1'
     implementation 'com.google.firebase:firebase-firestore-ktx:22.1.2'
-    implementation 'com.google.firebase:firebase-database-ktx:19.7.0'
+    implementation 'com.google.firebase:firebase-database-ktx:20.0.0'
 
     implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.2.0'
 
