@@ -29,18 +29,18 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 
 # Features
 
-## Shared Features
+### Shared Features
 - Log in to save your favorites and watched episodes from device to device
 - Favorite to be alerted of any updates
 - Share Anime/Manga and open in app!
 
-## AnimeWorld
-- Stream and download Anime from GogoAnime, AnimeToon, and YTS (for movies)
+### AnimeWorld
+- Stream and download Anime various different video sites
 - Watch in a built-in video player
-- Cast Downloaded Videos!
+- Cast Downloaded Videos to Chromecast Enabled Devices!
 
-## MangaWorld
-- Read Manga from NineAnime, MangaPark, Mangamutiny, Manga4Life, and MangaHere
+### MangaWorld
+- Read Manga from various different manga sites
 
 # Issues
 
