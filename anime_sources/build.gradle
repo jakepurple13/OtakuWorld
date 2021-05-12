@@ -36,7 +36,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation androidCore
     implementation appCompat
-    implementation material
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -56,8 +55,6 @@ dependencies {
 
     implementation rxkotlin
     implementation rxandroid
-    implementation rxbinding
-    implementation rxbindingKotlin
 
     implementation "com.squareup.retrofit2:retrofit:2.9.0"
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"

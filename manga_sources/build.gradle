@@ -36,7 +36,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation androidCore
     implementation appCompat
-    implementation material
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -57,14 +56,9 @@ dependencies {
     implementation helpfulutils
 
     implementation 'androidx.webkit:webkit:1.4.0'
-    implementation "com.squareup.okhttp3:okhttp:4.9.1"
-    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.1"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
 
     implementation rxkotlin
     implementation rxandroid
-    implementation rxbinding
-    implementation rxbindingKotlin
 
     implementation project(':Models')
 }
