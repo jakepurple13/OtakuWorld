@@ -27,6 +27,21 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/s12.png" width="32%"/>
 </p>
 
+# Features
+
+## Shared Features
+- Log in to save your favorites and watched episodes from device to device
+- Favorite to be alerted of any updates
+- Share Anime/Manga and open in app!
+
+## AnimeWorld
+- Stream and download Anime from GogoAnime, AnimeToon, and YTS (for movies)
+- Watch in a built-in video player
+- Cast Downloaded Videos!
+
+## MangaWorld
+- Read Manga from NineAnime, MangaPark, Mangamutiny, Manga4Life, and MangaHere
+
 # Issues
 
 If you run into any issues, please create an issue request with the following details:

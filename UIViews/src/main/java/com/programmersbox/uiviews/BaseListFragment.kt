@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.CallSuper
