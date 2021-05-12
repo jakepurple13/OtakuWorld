@@ -35,7 +35,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 - Share Anime/Manga and open in app!
 
 ### AnimeWorld
-- Stream and download Anime various different video sites
+- Stream and download Anime from various different video sites
 - Watch in a built-in video player
 - Cast Downloaded Videos to Chromecast Enabled Devices!
 
