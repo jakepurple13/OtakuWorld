@@ -6,6 +6,8 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import io.reactivex.Single
+import okio.ByteString.Companion.decodeBase64
+import okio.ByteString.Companion.encodeUtf8
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
@@ -84,9 +86,50 @@ abstract class WcoStream(allPath: String) : ShowApi(
             .get()
             //.also { println(it) }
             .let {
-                val f1 = it.select("div.kaynak_star_rating").let {
+
+                //it.select("script").also { println(it) }
+
+                var q = ""
+
+                it
+                    .select("meta[itemprop=embedURL]")
+                    .alsoPrint()
+                    .next()
+                    .alsoPrint()
+                    .let { it.toString() }
+                    .let {
+                        "var (.*?) = \\[(.*?)\\];".toRegex().find(it)?.groups?.get(2)?.value
+                            //?.replace("=", "")
+                            ?.replace("\"", "")
+                            ?.split(",")
+                            //?.joinToString("", postfix = "=") { it.trim() }
+                            .alsoPrint()
+                            /*?.let {
+                                it.decodeBase64().alsoPrint()
+                                it.decodeBase64()?.base64().alsoPrint()
+                            }*/
+                            ?.forEach {
+                                it.trim().decodeBase64()
+                                    .alsoPrint()
+                                    ?.base64Url()?.replace("\\D".toRegex(), "")
+                                    .alsoPrint()
+                                    ?.toIntOrNull()?.minus(20945957)
+                                    ?.toChar()
+                                    .alsoPrint()
+                                    ?.let { q += it }
+                                //forEach { TZu += String.fromCharCode(parseInt(atob(value).replace("/\D/g".toRegex(),'')) - 20945957) }
+                                //document.write(decodeURIComponent(escape(TZu)))
+
+                                //b.decode(it.trim()).contentToString().alsoPrint()
+                            }
+                    }
+                    .alsoPrint()
+
+                println(q.encodeUtf8())
+
+                /*val f1 = it.select("div.kaynak_star_rating").let {
                     Triple(it.attr("data-id"), it.attr("data-token"), it.attr("data-time"))
-                }
+                }*/
 
                 //https://www.wcostream.com/playlist-cat/zaion-i-wish-you-were-here
 
@@ -97,7 +140,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
         //return java.util.Base64.getEncoder().encodeToString(clientInfo.toByteArray())
                  */
 
-                val scriptUrl = it
+                /*val scriptUrl = it
                     .select("meta[itemprop=embedURL]")
                     .attr("content")
                     .alsoPrint()
@@ -118,7 +161,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
                     ?.split(",")
                     ?.map { it.removeSurrounding("\"") }
                     ?.lastOrNull()
-                    .alsoPrint()
+                    .alsoPrint()*/
                 //?.let { Base64.getDecoder().decode(it) }
                 //.alsoPrint()
 

@@ -1,5 +1,6 @@
 package com.programmersbox.anime_sources
 
+import androidx.annotation.WorkerThread
 import com.programmersbox.anime_sources.anime.AnimeToonDubbed
 import com.programmersbox.anime_sources.anime.WcoDubbed
 import com.programmersbox.anime_sources.anime.Yts
@@ -10,6 +11,11 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import io.reactivex.Single
 import kotlinx.coroutines.runBlocking
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.RequestBody
+import okio.BufferedSink
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.junit.Test
@@ -20,6 +26,188 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun animeheavenpro() {
+
+        val url = "https://www.animeheaven.pro"
+
+        //val r = getApiPost("$url/ajax/list/recently_updated")
+
+        //println(r)
+
+        val recent = AnimeHeaven.getRecent().blockingGet()
+
+        println(recent)
+
+        val info = recent.first().toInfoModel().blockingGet()
+
+        println(info)
+
+        val chapter = info.chapters.first().getChapterInfo().blockingGet()
+
+        println(chapter)
+
+    }
+
+    object AnimeHeaven : ShowApi(
+        baseUrl = "https://www.animeheaven.pro",
+        allPath = "",
+        recentPath = ""
+    ) {
+
+        override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
+            doc
+                .select("section#RecentlyUpdated")
+                .select("div.flw-item")
+                .select("div.film-poster")
+                .map {
+                    //println(it)
+                    ItemModel(
+                        title = it.select("img").attr("title"),
+                        description = "",
+                        imageUrl = it.select("img").attr("data-src"),
+                        url = it.select("a").attr("abs:href")
+                            .let { it.dropLast(9 + it.split("-").last().length) }
+                            .replace("/watch/", "/anime/"),
+                        source = AnimeHeaven
+                    )
+                }
+                .let(emitter::onSuccess)
+        }
+
+        override fun getList(doc: Document): Single<List<ItemModel>> {
+            TODO("Not yet implemented")
+        }
+
+        override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
+            //println(doc)
+            emitter.onSuccess(
+                InfoModel(
+                    source = AnimeHeaven,
+                    url = source.url,
+                    title = source.title,
+                    description = doc.select("div.description").text(),
+                    imageUrl = source.imageUrl,
+                    genres = emptyList(),
+                    chapters = doc
+                        .select("div.slce-list")
+                        .select("ul.nav")
+                        .select("li.nav-item")
+                        .map {
+                            ChapterModel(
+                                name = it.select("a").attr("title"),
+                                url = it.select("a").attr("abs:href"),
+                                uploaded = "",
+                                source = AnimeHeaven
+                            )
+                        },
+                    alternativeNames = emptyList()
+                )
+            )
+        }
+
+        data class Graph(
+            val `@context`: String?,
+            val `@type`: String?,
+            val url: String?,
+            val name: String?,
+            val episodeNumber: String?,
+            val position: String?,
+            val dateModified: String?,
+            val thumbnailUrl: String?,
+            val director: String?,
+            val datePublished: String?,
+            val potentialAction: PotentialAction?,
+            val video: Video?,
+            val inLanguage: String?,
+            val subtitleLanguage: String?
+        )
+
+        data class Base(val `@context`: String?, val `@graph`: List<Graph>?)
+
+        data class PotentialAction(val `@type`: String?, val target: String?)
+
+        data class Video(
+            val `@type`: String?,
+            val url: String?,
+            val name: String?,
+            val uploadDate: String?,
+            val thumbnailUrl: String?,
+            val description: String?,
+            val videoQuality: String?,
+            val embedUrl: String?,
+            val potentialAction: PotentialAction?
+        )
+
+        override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
+            val f = chapterModel.url.toJsoup()
+                .also { println(it) }
+
+            //https://storage.googleapis.com/134634f609a35cb2c21b/28893/3f2aad38a1e38efba011cbd4cb0491fb.mp4
+
+            val a = f
+                .select("div#servers-list")
+                .select("ul.nav")
+                .select("li.nav-item")
+                .select("a")
+                .map { Triple(it.attr("data-embed"), it.text(), it.attr("data-eid")) }
+
+            println(a)
+
+            a.forEach { p ->
+                Jsoup.connect(p.first)
+                    .data("Referer", chapterModel.url)
+                    .data("id", p.third)
+                    .get()
+                    .let {
+                        println("${p.second}${"------".repeat(10)}")
+                        println(it)
+                    }
+            }
+
+            /*val v = f
+                .select("div#main-wrapper")
+                .select("script")
+                .first()
+                .data()
+                .fromJson<Base>()
+                ?.`@graph`?.first()?.let {
+                    Jsoup.connect(it.video?.embedUrl).get()
+                }
+
+            println(v)*/
+
+            /*
+            Storage(
+                link = chapterModel.url.toJsoup().select("a[download^=http]").attr("abs:download"),
+                source = chapterModel.url,
+                quality = "Good",
+                sub = "Yes"
+            )
+             */
+
+            it.onSuccess(emptyList())
+        }
+
+    }
+
+    @WorkerThread
+    fun getApiPost(url: String, builder: okhttp3.Request.Builder.() -> Unit = {}): String? {
+        val request = okhttp3.Request.Builder()
+            .url(url)
+            .apply(builder)
+            .post(object : RequestBody() {
+                override fun contentType(): MediaType? = "application/json".toMediaTypeOrNull()
+
+                override fun writeTo(sink: BufferedSink) {
+                }
+
+            })
+            .build()
+        val response = OkHttpClient().newCall(request).execute()
+        return if (response.code == 200) response.body!!.string() else null
+    }
 
     @Test
     fun wcostreamTest() {
