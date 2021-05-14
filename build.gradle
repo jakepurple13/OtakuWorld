@@ -4,7 +4,7 @@ buildscript {
     ext.jakepurple13 = "10.6.3"
     ext.otakuVersionName = "11.2"
     ext.latestAboutLibsRelease = "+"
-    ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1"
+    ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
 
     ext.flowutils = "com.github.jakepurple13.HelpfulTools:flowutils:$jakepurple13"
     ext.gsonutils = "com.github.jakepurple13.HelpfulTools:gsonutils:$jakepurple13"
