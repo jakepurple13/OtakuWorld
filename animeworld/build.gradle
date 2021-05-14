@@ -60,7 +60,7 @@ dependencies {
     implementation "com.ncorti:slidetoact:0.9.0"
     implementation 'com.google.android.exoplayer:exoplayer:2.13.3'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.13.3'
-    implementation 'com.google.android.exoplayer:exoplayer-dash:2.13.3'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.14.0'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.13.3'
     implementation 'androidx.mediarouter:mediarouter:1.2.3'
     implementation 'com.github.rubensousa:previewseekbar-exoplayer:2.11.4.0'
