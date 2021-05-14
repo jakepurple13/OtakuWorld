@@ -1,36 +1,47 @@
 package com.programmersbox.anime_sources.anime
 
+import androidx.annotation.WorkerThread
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import io.reactivex.Single
+import okhttp3.OkHttpClient
 import okio.ByteString.Companion.decodeBase64
-import okio.ByteString.Companion.encodeUtf8
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 object WcoDubbed : WcoStream("dubbed-anime-list")
+object WcoSubbed : WcoStream("subbed-anime-list")
+object WcoCartoon : WcoStream("cartoon-list")
+object WcoMovies : WcoStream("movie-list")
+object WcoOva : WcoStream("cartoon-list")
 
 abstract class WcoStream(allPath: String) : ShowApi(
     baseUrl = "https://www.wcostream.com",
     allPath = allPath,
-    recentPath = ""
+    recentPath = "last-50-recent-release"
 ) {
 
-    /*override fun recentPage(page: Int): String = page.toString()*/
+    override val canScroll: Boolean get() = false
 
     override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
+        //https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide
+        //https://www.wcostream.com/wonder-egg-priority-episode-7-english-dubbed
+        //https://www.wcostream.com/anime/wonder-egg-priority
         doc
-            .select("ul.items")
+            //.select("ul.items")
+            .select("div.menulaststyle")
             .select("li")
+            .select("a")
+            .alsoPrint()
             .map {
                 ItemModel(
-                    title = it.select("div.img").select("img").attr("alt"),
+                    title = it.text(),
                     description = "",
                     imageUrl = it.select("div.img").select("img").attr("abs:src"),
-                    url = it.select("div.release").select("a").attr("abs:href"),
+                    url = it.attr("abs:href"),//Jsoup.connect(it.attr("abs:href")).get().select("div.ildate").select("a").attr("abs:href"),
                     source = this
                 )
             }
@@ -84,125 +95,109 @@ abstract class WcoStream(allPath: String) : ShowApi(
             .userAgent("Mozilla/5.0 (Windows NT 10.0; Win 64; x64; rv:69.0) Gecko/20100101 Firefox/69.0")
             .followRedirects(true)
             .get()
-            //.also { println(it) }
             .let {
-
-                //it.select("script").also { println(it) }
-
-                var q = ""
+                val q = StringBuilder()
 
                 it
                     .select("meta[itemprop=embedURL]")
-                    .alsoPrint()
+                    //.alsoPrint()
                     .next()
-                    .alsoPrint()
+                    //.alsoPrint()
                     .let { it.toString() }
                     .let {
+
+                        val ending = " - ([0-9]+)".toRegex().find(it)?.groups?.get(1)?.value
                         "var (.*?) = \\[(.*?)\\];".toRegex().find(it)?.groups?.get(2)?.value
-                            //?.replace("=", "")
                             ?.replace("\"", "")
                             ?.split(",")
-                            //?.joinToString("", postfix = "=") { it.trim() }
-                            .alsoPrint()
-                            /*?.let {
-                                it.decodeBase64().alsoPrint()
-                                it.decodeBase64()?.base64().alsoPrint()
-                            }*/
                             ?.forEach {
-                                it.trim().decodeBase64()
-                                    .alsoPrint()
-                                    ?.base64Url()?.replace("\\D".toRegex(), "")
-                                    .alsoPrint()
-                                    ?.toIntOrNull()?.minus(20945957)
+                                it.trim()
+                                    .decodeBase64()
+                                    ?.utf8()
+                                    //.alsoPrint()
+                                    ?.replace("[^0-9]+".toRegex(), "")
+                                    //.alsoPrint()
+                                    ?.toIntOrNull()
+                                    ?.minus(ending?.toIntOrNull() ?: 20945957)
                                     ?.toChar()
-                                    .alsoPrint()
-                                    ?.let { q += it }
-                                //forEach { TZu += String.fromCharCode(parseInt(atob(value).replace("/\D/g".toRegex(),'')) - 20945957) }
-                                //document.write(decodeURIComponent(escape(TZu)))
-
-                                //b.decode(it.trim()).contentToString().alsoPrint()
+                                    //.alsoPrint()
+                                    ?.let { q.append(it) }
                             }
                     }
-                    .alsoPrint()
-
-                println(q.encodeUtf8())
-
-                /*val f1 = it.select("div.kaynak_star_rating").let {
-                    Triple(it.attr("data-id"), it.attr("data-token"), it.attr("data-time"))
-                }*/
-
-                //https://www.wcostream.com/playlist-cat/zaion-i-wish-you-were-here
-
-                ///inc/embed/getvidlink.php?v=Zaion/Zaion%20I%20Wish%20You%20Were%20Here%20-%2004%20-%20HerePresence%20%5BDr-Love55%5D.mp4&embed=anime
-
-                /*
-                return Base64.encodeToString(clientInfo.toByteArray(), Base64.DEFAULT).removeSurrounding("\n").replace("\n", "")
-        //return java.util.Base64.getEncoder().encodeToString(clientInfo.toByteArray())
-                 */
-
-                /*val scriptUrl = it
-                    .select("meta[itemprop=embedURL]")
-                    .attr("content")
-                    .alsoPrint()
-
-                val list = it
-                    .select("meta[itemprop=embedURL]")
-                    .alsoPrint()
-                    .next()
-                    .alsoPrint()
-                    .let { it.toString() }
-                    .let { "var (.*?) = \\[(.*?)\\];".toRegex().find(it)?.groups?.get(2)?.value }
-                    .alsoPrint()
-
-                val ending = " - ([0-9]+)".toRegex().find(scriptUrl)?.groups?.get(1)?.value
-                    .alsoPrint()
-
-                val letters = list
-                    ?.split(",")
-                    ?.map { it.removeSurrounding("\"") }
-                    ?.lastOrNull()
-                    .alsoPrint()*/
-                //?.let { Base64.getDecoder().decode(it) }
                 //.alsoPrint()
 
-                /*.attr("content")
-                .also { println(it) }
-                .let { "$baseUrl$it&pid=${f1.first}&h=${f1.second}&t=${f1.third}" }
-                .also { println(it) }
-                .let {
-                    Jsoup
-                        .connect(it)
-                        .header("X-Requested-With", "XMLHttpRequest")
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win 64; x64; rv:69.0) Gecko/20100101 Firefox/69.0")
-                        .get()
+                //println(q)
+
+                val hiddenUrl = Jsoup.parse(q.toString()).select("iframe").attr("src")
+                //println("$baseUrl$hiddenUrl")
+
+                val q2 = Jsoup.connect("$baseUrl$hiddenUrl").get()
+                //println(q2)
+
+                val q3 = q2
+                    .select("div#d-player")
+                    .select("p.text-center")
+                    .select("a")
+                    .attr("href")
+                //.replace("embed-adh", "embed-adh-html5")
+
+                val d = if (q2.toString().contains("embed-adh-html5")) q3.replace("embed-adh", "embed-adh-html5") else q3
+
+                val q4 = Jsoup.connect(d)
+                    .followRedirects(true)
+                    .get()
+                    .select("source").attr("abs:src")
+
+                //val u = "get\\(\"(.*?)\"\\)".toRegex()
+
+                //if(u.containsMatchIn(q2.toString())) {
+
+                //println(u)
+
+                /*val g = getJsonApi<VideoBase>("$baseUrl${u.find(q2.toString())?.groups?.get(1)?.value}") {
+                    header("Referer", "$baseUrl$hiddenUrl")
+                    header(
+                        "User-Agent",
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"
+                    )
+                    header("Accept", "* / *")
+                    header("X-Requested-With", "XMLHttpRequest")
+                }
+
+                val quality = if (g?.hd?.isNotEmpty() == true) g.hd else g?.enc*/
+
+                Storage(
+                    link = getApiFinalUrl(q4),//q4,//"${g?.cdn}/getvid?evid=$quality",
+                    source = chapterModel.url,
+                    quality = "Good",
+                    sub = "Yes"
+                ).apply {
+                    headers["Accept"] = "video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5"
+                    /*headers["Host"] = "${g?.cdn}/getvid?evid=$quality"
+                        .split("//")
+                        .lastOrNull()
+                        ?.split("/")
+                        ?.firstOrNull()
+                        ?.split("?")
+                        ?.firstOrNull()
+                        .toString()*/
+                    headers["User-Agent"] =
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"
+                    headers["X-Requested-With"] = "XMLHttpRequest"
+                    headers["Referer"] = "$baseUrl$hiddenUrl".replace("https://wcostream.com", "https://www.wcostream.com")
+                    headers["Mimetype"] = "video/mp4"
+                }
+                /*} else {
+                    Storage(
+                        link = "",
+                        source = chapterModel.url,
+                        quality = "Good",
+                        sub = "Yes"
+                    )
                 }*/
             }
-            //.also { println(it) }
-            /*.select("script")
-            .also { println(it) }
-            .eachAttr("abs:src")
-            .filter { !it.contains("firebase") }
-            .map { getApi(it) }*//*
-            //.filter { it.toString().contains("getvidlink") }
-            //.also { println(it) }
-            *//* .select("meta[itemprop=embedURL]")
-             .also { println(it) }
-             .attr("content")
-             .also { println(it) }
-             .let { getApi("$baseUrl$it") }*/
             .also { println("-".repeat(50)) }
-            .also { println(it) }
-        //.let { getApi("$baseUrl$it") }
-        //.also { println(it) }
-
-        /*.map {
-            Storage(
-                link = "",
-                source = chapterModel.url,
-                quality = "Good",
-                sub = "Yes"
-            )
-        }*/
+            //.also { println(it) }
 
         /*
         Storage(
@@ -213,7 +208,20 @@ abstract class WcoStream(allPath: String) : ShowApi(
             )
          */
 
-        emitter.onSuccess(emptyList())
+        emitter.onSuccess(listOf(f))
     }
+
+    @WorkerThread
+    private fun getApiFinalUrl(url: String, builder: okhttp3.Request.Builder.() -> Unit = {}): String? {
+        val request = okhttp3.Request.Builder()
+            .url(url)
+            .apply(builder)
+            .get()
+            .build()
+        val response = OkHttpClient().newCall(request).execute()
+        return response.request.url.toString()
+    }
+
+    data class VideoBase(val enc: String?, val server: String?, val cdn: String?, val hd: String?)
 
 }

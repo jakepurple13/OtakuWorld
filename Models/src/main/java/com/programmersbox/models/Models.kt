@@ -46,7 +46,9 @@ data class Storage(
     var link: String? = null,
     var quality: String? = null,
     var filename: String? = null
-)
+) {
+    val headers = mutableMapOf<String, String>()
+}
 
 data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?) : ViewModel()
 

@@ -212,17 +212,26 @@ class ExampleUnitTest {
     @Test
     fun wcostreamTest() {
 
-        val f = WcoDubbed.getList().blockingGet()
+        /*val f = WcoDubbed.getList().blockingGet()
 
         println(f.size)
 
-        val i = f.random().toInfoModel().blockingGet()
+        val i = f.find { it.title == "Mushishi" }!!.toInfoModel().blockingGet()
 
         println(i)
 
         val e = i.chapters.first().getChapterInfo().blockingGet()
 
-        println(e)
+        println(e)*/
+
+        /*val f = Jsoup.connect("https://www.wcostream.com/wonder-egg-priority-episode-7-english-dubbed").get()
+            .select("div.ildate").select("a").attr("abs:href")
+        println(f)*/
+
+        val f1 = WcoDubbed.getRecent().blockingGet()
+
+        println(f1.size)
+        println(f1.joinToString("\n"))
 
     }
 

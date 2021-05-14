@@ -164,6 +164,8 @@ class MainActivity : BaseMainActivity() {
             request.addHeader("Referer", "http://thewebsite.com")
             request.addHeader("Connection", "keep-alive")
 
+            i.headers.entries.forEach { request.headers[it.key] = it.value }
+
             requestList.add(request)
 
         }
