@@ -48,6 +48,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="?colorOnPrimary"
                 app:layout_collapseMode="pin">
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -77,40 +78,40 @@
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/scrollToTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="15dp"
-        app:backgroundTint="@color/colorAccent"
         android:src="@drawable/ic_baseline_vertical_align_top_24"
-        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        app:backgroundTint="@color/colorAccent"
+        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior" />
 
     <RelativeLayout
         android:id="@+id/offline_view"
-        android:visibility="gone"
-        tools:visibility="visible"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
         android:gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <ImageView
             android:id="@+id/offline_icon"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true"
-            android:src="@drawable/ic_baseline_cloud_off_24"
             android:layout_width="0dp"
-            android:layout_height="50dp" />
+            android:layout_height="50dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_baseline_cloud_off_24" />
 
         <TextView
             style="@style/TextAppearance.MaterialComponents.Headline5"
-            android:text="@string/you_re_offline"
-            android:gravity="center"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/offline_icon"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_below="@id/offline_icon"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:text="@string/you_re_offline" />
 
     </RelativeLayout>
 

@@ -68,15 +68,18 @@ class ReadingActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun batterySetup() {
         val batteryInformation = binding.batteryInformation
+
+        val normalBatteryColor = colorFromTheme(R.attr.colorOnBackground, Color.WHITE)
+
         batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
-            colorInt = Color.WHITE
+            colorInt = normalBatteryColor
             sizePx = batteryInformation.textSize.roundToInt()
         }
 
         Flowables.combineLatest(
             batteryLevelAlert
                 .map { it <= batteryAlertPercent }
-                .map { if (it) Color.RED else Color.WHITE }
+                .map { if (it) Color.RED else normalBatteryColor }
                 .toLatestFlowable(),
             batteryInfoItem
                 .map {

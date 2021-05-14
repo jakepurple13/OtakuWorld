@@ -159,6 +159,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }?.let(AppCompatDelegate::setDefaultNightMode)
                 true
             }
+
+            when (p.value) {
+                "system" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                "light" -> AppCompatDelegate.MODE_NIGHT_NO
+                "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                else -> null
+            }?.let(AppCompatDelegate::setDefaultNightMode)
         }
 
         findPreference<SeekBarPreference>("battery_alert")?.let { s ->

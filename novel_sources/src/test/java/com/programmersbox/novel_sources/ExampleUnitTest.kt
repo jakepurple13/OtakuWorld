@@ -10,11 +10,11 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
     @Test
     fun novelTest2() {
 
-        val f = WuxiaWorld.getList().blockingGet().first()
-            .toInfoModel().blockingGet()
+        val f = WuxiaWorld.getList(2).blockingGet()
 
         println(f)
 

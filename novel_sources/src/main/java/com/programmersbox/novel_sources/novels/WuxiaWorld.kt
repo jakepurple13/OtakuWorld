@@ -7,7 +7,11 @@ import io.reactivex.Single
 
 object WuxiaWorld : ApiService {
 
+    //TODO: Add search
+
     override val baseUrl: String get() = "https://wuxiaworld.online"
+
+    override val canScroll: Boolean get() = true
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create {
         val pop = "/wuxia-list?view=list&page=$page"
