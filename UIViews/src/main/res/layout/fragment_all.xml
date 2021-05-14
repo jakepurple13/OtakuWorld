@@ -22,6 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
+                tools:listitem="@layout/listitem_opensource"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:itemCount="10" />
 
@@ -48,7 +49,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?colorOnPrimary"
+                android:background="?colorSurface"
                 app:layout_collapseMode="pin">
 
                 <com.google.android.material.textfield.TextInputLayout

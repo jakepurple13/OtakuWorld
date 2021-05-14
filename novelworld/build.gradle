@@ -48,6 +48,7 @@ dependencies {
     implementation material
     implementation constraintlayout
     implementation recyclerview
+    implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'com.google.firebase:firebase-crashlytics:18.0.0'
     implementation 'com.google.firebase:firebase-analytics:19.0.0'
     testImplementation 'junit:junit:4.+'

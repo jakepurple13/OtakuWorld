@@ -8,19 +8,19 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.preference.Preference
+import androidx.preference.SwitchPreference
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.anime.Movies
-import com.programmersbox.anime_sources.anime.Torrents
-import com.programmersbox.anime_sources.anime.Yts
+import com.programmersbox.anime_sources.anime.*
 import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.ytsdatabase.Torrent
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.sourcePublish
@@ -43,6 +43,8 @@ class MainActivity : BaseMainActivity() {
         val cast: CastHelper = CastHelper()
     }
 
+    private var Context.wcoRecent by sharedPrefNotNullDelegate(true)
+
     override fun onCreate() {
 
         activity = this
@@ -50,6 +52,8 @@ class MainActivity : BaseMainActivity() {
         cast.init(this)
 
         Notifications.setup(this)
+
+        WcoStream.RECENT_TYPE = wcoRecent
 
         when (intent.data) {
             Uri.parse(VIEW_DOWNLOADS) -> openDownloads()
@@ -233,6 +237,28 @@ class MainActivity : BaseMainActivity() {
         }
 
         preferenceScreen.generalSettings {
+
+            it.addPreference(
+                SwitchPreference(it.context).apply {
+                    title = "Wcostream Recent Type"
+                    summary =
+                        "Due to some possible with this source, multiple calls need to be made which we need to be careful of. If you turn this off, just be wary that Wcostream could stop you from getting data."
+                    key = "wco_recent"
+                    isChecked = wcoRecent
+                    setOnPreferenceChangeListener { _, newValue ->
+                        WcoStream.RECENT_TYPE = newValue as Boolean
+                        wcoRecent = newValue as Boolean
+                        true
+                    }
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_article_24)
+                    sourcePublish.subscribe {
+                        isVisible = it == Sources.WCO_CARTOON || it == Sources.WCO_DUBBED ||
+                                it == Sources.WCO_MOVIES || it == Sources.WCO_SUBBED || it == Sources.WCO_OVA
+                    }
+                        .addTo(disposable)
+                }
+            )
+
             it.addPreference(
                 Preference(it.context).apply {
                     title = getString(R.string.folder_location)

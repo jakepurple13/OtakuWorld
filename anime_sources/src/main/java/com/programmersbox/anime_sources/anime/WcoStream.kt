@@ -24,6 +24,10 @@ abstract class WcoStream(allPath: String) : ShowApi(
     recentPath = "last-50-recent-release"
 ) {
 
+    companion object {
+        var RECENT_TYPE = true
+    }
+
     override val canScroll: Boolean get() = false
 
     override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
@@ -35,13 +39,16 @@ abstract class WcoStream(allPath: String) : ShowApi(
             .select("div.menulaststyle")
             .select("li")
             .select("a")
-            .alsoPrint()
+            //.alsoPrint()
             .map {
                 ItemModel(
                     title = it.text(),
                     description = "",
                     imageUrl = it.select("div.img").select("img").attr("abs:src"),
-                    url = it.attr("abs:href"),//Jsoup.connect(it.attr("abs:href")).get().select("div.ildate").select("a").attr("abs:href"),
+                    url = if (RECENT_TYPE)
+                        it.attr("abs:href")
+                    else
+                        Jsoup.connect(it.attr("abs:href")).get().select("div.ildate").select("a").attr("abs:href"),
                     source = this
                 )
             }
@@ -197,7 +204,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
                 }*/
             }
             .also { println("-".repeat(50)) }
-            //.also { println(it) }
+        //.also { println(it) }
 
         /*
         Storage(
