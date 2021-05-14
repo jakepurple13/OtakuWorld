@@ -7,3 +7,5 @@ include ':animeworld'
 include ':mangaworld'
 include ':app'
 rootProject.name = "OtakuWorld"
+include ':novelworld'
+include ':novel_sources'

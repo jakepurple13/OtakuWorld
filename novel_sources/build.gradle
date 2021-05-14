@@ -1,24 +1,19 @@
 plugins {
-    id 'com.android.application'
+    id 'com.android.library'
     id 'kotlin-android'
-    id 'kotlin-kapt'
-    id 'com.mikepenz.aboutlibraries.plugin'
 }
 
-//This is just to show what the minimum is needed to create a new app
-
 android {
-    compileSdkVersion compileVersion
-    buildToolsVersion buildVersion
+    compileSdkVersion 30
 
     defaultConfig {
-        applicationId "com.programmersbox.otakuworld"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 1
-        versionName otakuVersionName
+        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
@@ -34,37 +29,26 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    buildFeatures {
-        dataBinding true
-    }
 }
 
 dependencies {
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation androidCore
     implementation appCompat
-    implementation material
-    implementation constraintlayout
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation recyclerview
+    implementation gsonutils
+    implementation helpfulutils
+    implementation rxutils
+    implementation gson
 
-    implementation project(':UIViews')
-    implementation project(':Models')
-    implementation project(':favoritesdatabase')
-    implementation project(':novel_sources')
+    implementation jsoup
 
     implementation rxkotlin
     implementation rxandroid
-    implementation rxbinding
-    implementation rxbindingKotlin
 
-    implementation room.room
-    // For Kotlin use kapt instead of annotationProcessor
-    kapt "androidx.room:room-compiler:$room_version"
-
-    //Custom Libraries
-    implementation jakepurple13Tools.helpfultools
+    implementation project(':Models')
 }

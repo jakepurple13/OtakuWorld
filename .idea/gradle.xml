@@ -20,10 +20,11 @@
             <option value="$PROJECT_DIR$/favoritesdatabase" />
             <option value="$PROJECT_DIR$/manga_sources" />
             <option value="$PROJECT_DIR$/mangaworld" />
+            <option value="$PROJECT_DIR$/novel_sources" />
+            <option value="$PROJECT_DIR$/novelworld" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
-        <option name="useQualifiedModuleNames" value="true" />
       </GradleProjectSettings>
     </option>
   </component>

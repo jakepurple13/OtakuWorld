@@ -2,17 +2,17 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
     id 'com.mikepenz.aboutlibraries.plugin'
 }
-
-//This is just to show what the minimum is needed to create a new app
 
 android {
     compileSdkVersion compileVersion
     buildToolsVersion buildVersion
 
     defaultConfig {
-        applicationId "com.programmersbox.otakuworld"
+        applicationId "com.programmersbox.novelworld"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 1
@@ -36,20 +36,26 @@ android {
     }
     buildFeatures {
         dataBinding true
+        viewBinding true
     }
 }
 
 dependencies {
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation androidCore
     implementation appCompat
     implementation material
     implementation constraintlayout
+    implementation recyclerview
+    implementation 'com.google.firebase:firebase-crashlytics:18.0.0'
+    implementation 'com.google.firebase:firebase-analytics:19.0.0'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation recyclerview
+    implementation "com.mikepenz:iconics-core:5.2.8"
+    implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
 
     implementation project(':UIViews')
     implementation project(':Models')

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">NovelWorld</string>
+    <string name="title_activity_reading">ScrollingActivity</string>
+    <string name="action_settings">Settings</string>
+</resources>
