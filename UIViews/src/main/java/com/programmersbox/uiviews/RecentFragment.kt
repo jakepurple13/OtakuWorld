@@ -83,6 +83,7 @@ class RecentFragment : BaseListFragment() {
                 count = 1
                 adapter.setListNotify(emptyList())
                 sourceLoad(it)
+                rv?.scrollToPosition(0)
             }
             .addTo(disposable)
 

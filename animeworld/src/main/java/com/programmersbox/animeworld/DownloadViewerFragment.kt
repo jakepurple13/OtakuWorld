@@ -177,7 +177,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         override fun onCompleted(download: Download) {
             fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
-            requireContext().notificationManager.cancel(download.id)
+            context?.notificationManager?.cancel(download.id)
         }
 
         override fun onError(download: Download, error: Error, throwable: Throwable?) {
@@ -199,7 +199,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         override fun onCancelled(download: Download) {
             fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
-            requireContext().notificationManager.cancel(download.id)
+            context?.notificationManager?.cancel(download.id)
         }
 
         override fun onRemoved(download: Download) {
@@ -208,7 +208,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         override fun onDeleted(download: Download) {
             fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
-            requireContext().notificationManager.cancel(download.id)
+            context?.notificationManager?.cancel(download.id)
         }
     }
 
