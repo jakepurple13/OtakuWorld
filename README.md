@@ -8,6 +8,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 # Screenshots
 
 ### MangaWorld
+![MangaWorld Logo](https://github.com/jakepurple13/OtakuWorld/blob/master/mangaworld/src/main/ic_launcher-playstore.png)
 <p align="center">
   <img src="/ss/s1.png" width="32%"/>
   <img src="/ss/s2.png" width="32%"/>
@@ -18,6 +19,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 </p>
 
 ### AnimeWorld
+![AnimeWorld Logo](https://github.com/jakepurple13/OtakuWorld/blob/master/animeworld/src/main/ic_launcher-playstore.png)
 <p align="center">
   <img src="/ss/s7.png" width="32%"/>
   <img src="/ss/s8.png" width="32%"/>
@@ -75,4 +77,4 @@ If you want to add a new source or have a change that might make the app better
 - Make a new branch
 - Make changes
 - Push and create a new PR
-- Add me (jakepurple13) as a reviewer
+- Add me (@jakepurple13) as a reviewer
