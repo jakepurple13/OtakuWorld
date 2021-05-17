@@ -240,14 +240,13 @@ class MainActivity : BaseMainActivity() {
 
             it.addPreference(
                 SwitchPreference(it.context).apply {
-                    title = "Wcostream Recent Type"
-                    summary =
-                        "Due to some possible with this source, multiple calls need to be made which we need to be careful of. If you turn this off, just be wary that Wcostream could stop you from getting data."
+                    title = getString(R.string.wco_recent_title)
+                    summary = getString(R.string.wco_recent_info)
                     key = "wco_recent"
                     isChecked = wcoRecent
                     setOnPreferenceChangeListener { _, newValue ->
                         WcoStream.RECENT_TYPE = newValue as Boolean
-                        wcoRecent = newValue as Boolean
+                        wcoRecent = newValue
                         true
                     }
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_article_24)

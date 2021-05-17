@@ -52,7 +52,7 @@ class MainActivity : BaseMainActivity() {
 
     }
 
-    override val apkString: String get() = ""
+    override val apkString: String get() = "novelworld-debug.apk"
 
     override val showMiddleChapterButton: Boolean get() = false
 

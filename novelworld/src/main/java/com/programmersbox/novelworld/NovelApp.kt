@@ -7,6 +7,7 @@ import com.programmersbox.uiviews.utils.FirebaseDb
 
 class NovelApp : OtakuApp() {
     override fun onCreated() {
+
         logo = R.mipmap.ic_launcher
         notificationLogo = R.drawable.ic_launcher_foreground
 
