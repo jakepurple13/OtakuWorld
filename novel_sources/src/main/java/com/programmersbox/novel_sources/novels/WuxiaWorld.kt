@@ -29,7 +29,7 @@ object WuxiaWorld : ApiService {
                         .select("h3")
                         .select("a.tooltip")
                         .attr("abs:href"),
-                    source = this
+                    source = Sources.WUXIAWORLD
                 )
             }
             .let(it::onSuccess)
@@ -51,7 +51,7 @@ object WuxiaWorld : ApiService {
                         .select("h3")
                         .select("a.tooltip")
                         .attr("abs:href"),
-                    source = this
+                    source = Sources.WUXIAWORLD
                 )
             }
             .let(it::onSuccess)
@@ -62,7 +62,7 @@ object WuxiaWorld : ApiService {
         val info = model.url.toJsoup()
 
         InfoModel(
-            source = this,
+            source = Sources.WUXIAWORLD,
             url = model.url,
             title = model.title,
             description = info.select("meta[name='description']").attr("content"),
@@ -95,7 +95,7 @@ object WuxiaWorld : ApiService {
             description = doc.select("meta[name='description']").attr("content"),
             imageUrl = doc.select("link[rel='image_src']").attr("href"),
             url = url,
-            source = this
+            source = Sources.WUXIAWORLD
         )
     } catch (e: Exception) {
         null
