@@ -27,6 +27,16 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/s12.png" width="32%"/>
 </p>
 
+### NovelWorld
+<p align="center">
+  <img src="/ss/novel_ss13.png" width="32%"/>
+  <img src="/ss/novel_ss14.png" width="32%"/>
+  <img src="/ss/novel_ss15.png" width="32%"/>
+  <img src="/ss/novel_ss16.png" width="32%"/>
+  <img src="/ss/novel_ss17.png" width="32%"/>
+  <img src="/ss/novel_ss18.png" width="32%"/>
+</p>
+
 # Features
 
 ### Shared Features
@@ -41,6 +51,9 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 
 ### MangaWorld
 - Read Manga from various different manga sites
+
+### NovelWorld
+- Read Novels from various different novel sites
 
 # Issues
 
