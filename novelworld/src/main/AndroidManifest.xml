@@ -18,13 +18,30 @@
         <activity
             android:name=".ReadingActivity"
             android:label="@string/title_activity_reading"
-            android:theme="@style/Theme.OtakuWorld.NoActionBar"></activity>
+            android:theme="@style/Theme.OtakuWorld.NoActionBar" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter android:label="View Novel">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data
+                    android:host="wuxiaworld.name"
+                    android:pathPrefix="/" />
+                <data
+                    android:host="wuxiaworld.online"
+                    android:pathPrefix="/" />
+            </intent-filter>
+
         </activity>
 
         <receiver

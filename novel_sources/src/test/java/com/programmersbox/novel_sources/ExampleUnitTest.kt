@@ -2,6 +2,7 @@ package com.programmersbox.novel_sources
 
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.novel_sources.novels.WuxiaWorld
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 /**
@@ -12,11 +13,15 @@ import org.junit.Test
 class ExampleUnitTest {
 
     @Test
-    fun novelTest2() {
+    fun novelTest2() = runBlocking {
 
-        val f = WuxiaWorld.getList(2).blockingGet()
+        //val f = WuxiaWorld.getList(2).blockingGet()
 
-        println(f)
+        //println(f)
+
+        //https://wuxiaworld.online/236130/start-a-dungeon
+
+        println(WuxiaWorld.getSourceByUrl("https://wuxiaworld.online/236130/start-a-dungeon"))
 
     }
 
