@@ -10,6 +10,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 <p align="center">
   <img src="https://github.com/jakepurple13/OtakuWorld/blob/master/mangaworld/src/main/ic_launcher-playstore.png" width="32%"/>
   <img src="https://github.com/jakepurple13/OtakuWorld/blob/master/animeworld/src/main/ic_launcher-playstore.png" width="32%"/>
+  <img src="https://github.com/jakepurple13/OtakuWorld/blob/master/novelworld/src/main/ic_launcher-playstore.png" width="32%"/>
 </p>
 
 ### MangaWorld
