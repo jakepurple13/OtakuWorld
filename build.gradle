@@ -4,7 +4,7 @@ buildscript {
     ext.jakepurple13 = "10.6.3"
     ext.otakuVersionName = "12.0"
     ext.latestAboutLibsRelease = "+"
-    ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1"
+    ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
 
     ext.flowutils = "com.github.jakepurple13.HelpfulTools:flowutils:$jakepurple13"
     ext.gsonutils = "com.github.jakepurple13.HelpfulTools:gsonutils:$jakepurple13"
@@ -60,7 +60,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.5'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.6.0'
-        classpath "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${latestAboutLibsRelease}"
+        classpath "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:8.8.5"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
         def nav_version = "2.3.5"

@@ -9,7 +9,7 @@ class NovelApp : OtakuApp() {
     override fun onCreated() {
 
         logo = R.mipmap.ic_launcher
-        notificationLogo = R.drawable.ic_launcher_foreground
+        notificationLogo = R.mipmap.ic_launcher_foreground
 
         FirebaseDb.DOCUMENT_ID = "favoriteNovels"
         FirebaseDb.CHAPTERS_ID = "novelsChaptersRead"
