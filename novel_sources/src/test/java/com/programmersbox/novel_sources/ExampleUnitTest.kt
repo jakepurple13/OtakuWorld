@@ -21,7 +21,13 @@ class ExampleUnitTest {
 
         //https://wuxiaworld.online/236130/start-a-dungeon
 
-        println(WuxiaWorld.getSourceByUrl("https://wuxiaworld.online/236130/start-a-dungeon"))
+        //println(WuxiaWorld.getSourceByUrl("https://wuxiaworld.online/236130/start-a-dungeon"))
+
+        println(
+            WuxiaWorld.searchList("solo", 1, emptyList())
+                .blockingGet()
+                .joinToString("\n")
+        )
 
     }
 

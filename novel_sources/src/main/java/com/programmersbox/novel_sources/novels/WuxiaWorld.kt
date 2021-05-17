@@ -4,14 +4,33 @@ import com.programmersbox.models.*
 import com.programmersbox.novel_sources.Sources
 import com.programmersbox.novel_sources.toJsoup
 import io.reactivex.Single
+import org.jsoup.Jsoup
 
 object WuxiaWorld : ApiService {
-
-    //TODO: Add search
 
     override val baseUrl: String get() = "https://wuxiaworld.online"
 
     override val canScroll: Boolean get() = true
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
+        if (searchText.isBlank()) throw Exception("No search necessary")
+        Single.create { emitter ->
+            Jsoup.connect("$baseUrl/search.ajax?type=&query=$searchText").followRedirects(true).post()
+                //.also { println(it) }
+                .select("li.option").map {
+                    ItemModel(
+                        title = it.select("a").text(),
+                        description = "",
+                        url = it.select("a").attr("abs:href"),
+                        imageUrl = it.select("img").attr("abs:src"),
+                        source = this
+                    )
+                }
+                .let { emitter.onSuccess(it) }
+        }
+
+    } catch (e: Exception) {
+        super.searchList(searchText, page, list)
+    }
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create {
         val pop = "/wuxia-list?view=list&page=$page"
