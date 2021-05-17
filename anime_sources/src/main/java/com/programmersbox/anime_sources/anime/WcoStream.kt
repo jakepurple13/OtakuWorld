@@ -2,6 +2,7 @@ package com.programmersbox.anime_sources.anime
 
 import androidx.annotation.WorkerThread
 import com.programmersbox.anime_sources.ShowApi
+import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
@@ -93,7 +94,18 @@ abstract class WcoStream(allPath: String) : ShowApi(
             .let(emitter::onSuccess)
     }
 
-    private fun <T> T.alsoPrint() = also { println(it) }
+    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
+        val doc = url.toJsoup()
+        ItemModel(
+            title = doc.select("div#content").select("h2[title]").text(),
+            description = doc.select("div.iltext").text(),
+            imageUrl = doc.select("div#cat-img-desc").select("img").attr("abs:src"),
+            url = url,
+            source = this
+        )
+    } catch (e: Exception) {
+        null
+    }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
 

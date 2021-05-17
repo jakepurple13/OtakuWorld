@@ -210,7 +210,7 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun wcostreamTest() {
+    fun wcostreamTest() = runBlocking {
 
         /*val f = WcoDubbed.getList().blockingGet()
 
@@ -228,10 +228,12 @@ class ExampleUnitTest {
             .select("div.ildate").select("a").attr("abs:href")
         println(f)*/
 
-        val f1 = WcoDubbed.getRecent().blockingGet()
+        //val f1 = WcoDubbed.getRecent().blockingGet()
 
-        println(f1.size)
-        println(f1.joinToString("\n"))
+        //println(f1.size)
+        //println(f1.joinToString("\n"))
+
+        println(WcoDubbed.getSourceByUrl("https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide"))
 
     }
 

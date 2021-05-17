@@ -93,6 +93,13 @@
                     android:host="www.yts.mx"
                     android:pathPrefix="/movies" />
 
+                <data
+                    android:host="wcostream.com"
+                    android:pathPrefix="/anime" />
+                <data
+                    android:host="www.wcostream.com"
+                    android:pathPrefix="/anime" />
+
             </intent-filter>
         </activity>
 
