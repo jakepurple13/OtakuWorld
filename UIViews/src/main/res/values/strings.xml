@@ -83,7 +83,7 @@
     <string name="please_update_for_leatest_features">There\'s an update! Please update if you want to have the latest features!</string>
     <string name="updateTo">Update to %s</string>
     <string name="finishing_dots">Finishing…</string>
-    <string name="downloading_dots">Downloading…%d\%</string>
+    <string name="downloading_dots">Downloading…%d%%</string>
     <string name="downloading_dots_no_percent">Downloading…</string>
     <string name="updating_dots">Updating…</string>
     <string name="finishedDownloading">Finished Downloading</string>
