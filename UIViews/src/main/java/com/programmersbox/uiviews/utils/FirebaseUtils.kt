@@ -194,31 +194,37 @@ object FirebaseDb {
         private var listener: ListenerRegistration? = null
 
         fun getAllShowsFlowable() = PublishSubject.create<List<DbModel>> { emitter ->
-            require(listener == null)
+            assert(listener == null)
             listener = showDoc2?.addSnapshotListener { value, error ->
-                value?.toObjects<FirebaseDbModel>()?.map { it.toDbModel() }?.let { emitter.onNext(it) }
+                value?.toObjects<FirebaseDbModel>()
+                    ?.map { it.toDbModel() }
+                    ?.let(emitter::onNext)
+                error?.let(emitter::onError)
             }
             if (listener == null) emitter.onNext(emptyList())
         }.toLatestFlowable()
 
         fun findItemByUrl(url: String?) = PublishSubject.create<Boolean> { emitter ->
-            require(listener == null)
+            assert(listener == null)
             listener = showDoc2?.whereEqualTo(ITEM_ID, url)?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
                     .also { println(it) }
-                    ?.map { it.toDbModel() }?.let { emitter.onNext(it.isNotEmpty()) }
+                    ?.map { it.toDbModel() }
+                    ?.let { emitter.onNext(it.isNotEmpty()) }
+                error?.let(emitter::onError)
             }
             if (listener == null) emitter.onNext(false)
         }.toLatestFlowable()
 
         fun getAllEpisodesByShow(showUrl: String) = PublishSubject.create<List<ChapterWatched>> { emitter ->
-            require(listener == null)
+            assert(listener == null)
             listener = episodeDoc2
                 ?.document(showUrl.urlToPath())
                 ?.addSnapshotListener { value, error ->
                     value?.toObject(Watched::class.java)?.watched
                         ?.map { it.toChapterWatchedModel() }
-                        ?.let { emitter.onNext(it) }
+                        ?.let(emitter::onNext)
+                    error?.let(emitter::onError)
                 }
             if (listener == null) emitter.onNext(emptyList())
         }.toLatestFlowable()
@@ -227,6 +233,7 @@ object FirebaseDb {
 
         fun unregister() {
             listener?.remove()
+            listener = null
         }
 
     }
