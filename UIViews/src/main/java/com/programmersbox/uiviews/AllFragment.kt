@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -28,7 +29,6 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -55,6 +55,7 @@ class AllFragment : BaseListFragment() {
 
         val rv = view.findViewById<RecyclerView>(R.id.allList)
         val refresh = view.findViewById<SwipeRefreshLayout>(R.id.allRefresh)
+        val editText = view.findViewById<TextInputEditText>(R.id.search_info)
 
         Flowables.combineLatest(
             itemListener.getAllShowsFlowable(),
@@ -70,7 +71,7 @@ class AllFragment : BaseListFragment() {
             layoutManager = createLayoutManager(this@AllFragment.requireContext())
             addOnScrollListener(object : EndlessScrollingListener(layoutManager!!) {
                 override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
-                    if (sourcePublish.value!!.canScroll) {
+                    if (sourcePublish.value!!.canScroll && editText.text.isNullOrEmpty()) {
                         count++
                         refresh.isRefreshing = true
                         sourceLoad(sourcePublish.value!!, count)
@@ -100,14 +101,14 @@ class AllFragment : BaseListFragment() {
             .addTo(disposable)
 
         view.findViewById<FloatingActionButton>(R.id.scrollToTop).setOnClickListener {
-            GlobalScope.launch {
+            lifecycleScope.launch {
                 activity?.runOnUiThread { rv?.smoothScrollToPosition(0) }
                 delay(500)
                 activity?.runOnUiThread { rv?.scrollToPosition(0) }
             }
         }
 
-        view.findViewById<TextInputEditText>(R.id.search_info)
+        editText
             .textChanges()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -143,6 +144,7 @@ class AllFragment : BaseListFragment() {
                 currentList.addAll(it)
                 view?.findViewById<SwipeRefreshLayout>(R.id.allRefresh)?.isRefreshing = false
                 activity?.runOnUiThread {
+                    searchLayout?.editText?.setText("")
                     searchLayout?.suffixText = "${adapter.dataList.size}"
                     searchLayout?.hint = getString(R.string.searchFor, sourcePublish.value?.serviceName.orEmpty())
                 }
