@@ -10,6 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
+import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -26,7 +27,6 @@ import com.tonyodev.fetch2.AbstractFetchListener
 import com.tonyodev.fetch2.Download
 import com.tonyodev.fetch2.Error
 import com.tonyodev.fetch2.Fetch
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -144,7 +144,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                     fileAdapter?.onItemDismiss(viewHolder.absoluteAdapterPosition, direction)
                 }
                 is PauseAdapter -> {
-                    GlobalScope.launch {
+                    lifecycleScope.launch {
                         pauseAdapter?.get(viewHolder.absoluteAdapterPosition)?.let {
                             it.saveLocation?.let { FileUtils.recursiveDelete(File(it)) }
                             pauseRepository.deletePause(it.hash)

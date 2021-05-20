@@ -48,10 +48,16 @@ interface ItemDao {
     @Delete
     fun deleteNotification(notificationItem: NotificationItem): Completable
 
+    @Query("DELETE FROM Notifications")
+    fun deleteAllNotifications(): Single<Int>
+
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItem(url: String): NotificationItem
 
     @Query("SELECT * FROM Notifications")
     fun getAllNotifications(): Single<List<NotificationItem>>
+
+    @Query("SELECT COUNT(id) FROM Notifications")
+    fun getAllNotificationCount(): Flowable<Int>
 
 }

@@ -10,7 +10,9 @@
             android:name="com.programmersbox.uiviews.DeleteNotificationReceiver"
             android:enabled="true"
             android:exported="true" />
-        <receiver android:name="com.programmersbox.uiviews.BootReceived">
+        <receiver
+            android:name="com.programmersbox.uiviews.BootReceived"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.PACKAGE_FIRST_LAUNCH" />

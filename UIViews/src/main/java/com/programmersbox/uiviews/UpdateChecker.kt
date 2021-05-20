@@ -241,12 +241,12 @@ class UpdateNotification(private val context: Context) {
         }
     }
 
-    fun onEnd(list: List<Pair<Int, Notification>>) {
+    fun onEnd(list: List<Pair<Int, Notification>>, notificationId: Int = 42) {
         val n = context.notificationManager
         val currentNotificationSize = n.activeNotifications.filterNot { list.any { l -> l.first == it.id } }.size - 1
         list.forEach { pair -> n.notify(pair.first, pair.second) }
         if (list.isNotEmpty()) n.notify(
-            42,
+            notificationId,
             NotificationDslBuilder.builder(context, "otakuChannel", icon) {
                 title = context.getText(R.string.app_name)
                 val size = list.size + currentNotificationSize
@@ -368,7 +368,7 @@ class SavedNotifications {
                         }
                     }
                 }
-                .let { update.onEnd(it) }
+                .let { update.onEnd(it, 52) }
         }
     }
 

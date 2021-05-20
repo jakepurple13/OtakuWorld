@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.FileProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.*
 import androidx.work.Constraints
@@ -25,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
+import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
@@ -33,8 +35,11 @@ import com.programmersbox.thirdpartyutils.openInCustomChromeBrowser
 import com.programmersbox.uiviews.utils.*
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
@@ -179,7 +184,24 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        val itemDao = ItemDatabase.getInstance(requireContext()).itemDao()
+
+        findPreference<PreferenceCategory>("notification_category")?.let { p ->
+            itemDao.getAllNotificationCount()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy { p.isVisible = it > 0 }
+                .addTo(disposable)
+        }
+
         findPreference<Preference>("saved_notifications")?.let { p ->
+
+            itemDao.getAllNotificationCount()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy { p.summary = getString(R.string.pending_saved_notifications, it) }
+                .addTo(disposable)
+
             p.setOnPreferenceClickListener {
                 SavedNotifications().viewNotificationsFromDb(requireContext())
                 true
@@ -188,7 +210,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("delete_notifications")?.let { p ->
             p.setOnPreferenceClickListener {
-
+                itemDao
+                    .deleteAllNotifications()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .map { getString(R.string.deleted_notifications, it) }
+                    .subscribeBy { Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() }
+                    .addTo(disposable)
                 true
             }
         }
@@ -199,7 +227,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val checker = AtomicBoolean(false)
         fun updateSetter() {
             if (!checker.get()) {
-                GlobalScope.launch {
+                lifecycleScope.launch {
                     try {
                         checker.set(true)
                         val request = Request.Builder()

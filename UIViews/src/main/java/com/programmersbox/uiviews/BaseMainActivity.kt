@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.webkit.URLUtil
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.models.sourcePublish
@@ -14,7 +15,6 @@ import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 
@@ -42,7 +42,7 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
         intent.data?.let {
             if (URLUtil.isValidUrl(it.toString())) {
                 currentService?.let { it1 ->
-                    GlobalScope.launch {
+                    lifecycleScope.launch {
                         genericInfo.toSource(it1)?.getSourceByUrl(it.toString())?.let { it2 ->
                             runOnUiThread { currentNavController?.value?.navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it2)) }
                         }
@@ -77,7 +77,7 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
 
         currentNavController = controller
 
-        GlobalScope.launch {
+        lifecycleScope.launch {
             try {
                 val request = Request.Builder()
                     .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")

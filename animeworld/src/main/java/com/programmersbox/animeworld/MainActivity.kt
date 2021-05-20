@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
@@ -31,7 +32,6 @@ import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
 import com.tonyodev.fetch2.*
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class MainActivity : BaseMainActivity() {
@@ -83,7 +83,7 @@ class MainActivity : BaseMainActivity() {
             Toast.makeText(this, R.string.yts_no_stream, Toast.LENGTH_SHORT).show()
             return
         }
-        GlobalScope.launch {
+        lifecycleScope.launch {
             val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()?.link
             runOnUiThread {
                 startActivity(
@@ -131,7 +131,7 @@ class MainActivity : BaseMainActivity() {
                         startService(serviceIntent)
                     }
                     else -> {
-                        GlobalScope.launch { fetchIt(model) }
+                        lifecycleScope.launch { fetchIt(model) }
                     }
                 }
             }

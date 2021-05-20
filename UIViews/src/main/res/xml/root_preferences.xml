@@ -39,6 +39,21 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        app:key="notification_category"
+        app:title="@string/notifications_category_title">
+
+        <Preference
+            app:key="saved_notifications"
+            app:summary=""
+            app:title="@string/view_notifications_title" />
+
+        <Preference
+            app:key="delete_notifications"
+            app:summary="@string/delete_notifications_summary"
+            app:title="@string/delete_saved_notifications_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         app:key="viewCategory"
         app:title="@string/view_menu_category_title">
 
@@ -82,18 +97,6 @@
             app:seekBarIncrement="1"
             app:title="@string/battery_alert_percentage" />
 
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        app:isPreferenceVisible="false"
-        app:title="Notifications">
-        <Preference
-            app:key="saved_notifications"
-            app:title="View Notifications" />
-
-        <Preference
-            app:key="delete_notifications"
-            app:title="Delete Notifications" />
     </PreferenceCategory>
 
 </PreferenceScreen>
