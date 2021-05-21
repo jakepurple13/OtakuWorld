@@ -194,7 +194,8 @@ object FirebaseDb {
         private var listener: ListenerRegistration? = null
 
         fun getAllShowsFlowable() = PublishSubject.create<List<DbModel>> { emitter ->
-            assert(listener == null)
+            //assert(listener == null)
+            listener?.remove()
             listener = showDoc2?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
                     ?.map { it.toDbModel() }
@@ -205,7 +206,8 @@ object FirebaseDb {
         }.toLatestFlowable()
 
         fun findItemByUrl(url: String?) = PublishSubject.create<Boolean> { emitter ->
-            assert(listener == null)
+            //assert(listener == null)
+            listener?.remove()
             listener = showDoc2?.whereEqualTo(ITEM_ID, url)?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
                     .also { println(it) }
@@ -217,7 +219,8 @@ object FirebaseDb {
         }.toLatestFlowable()
 
         fun getAllEpisodesByShow(showUrl: String) = PublishSubject.create<List<ChapterWatched>> { emitter ->
-            assert(listener == null)
+            //assert(listener == null)
+            listener?.remove()
             listener = episodeDoc2
                 ?.document(showUrl.urlToPath())
                 ?.addSnapshotListener { value, error ->

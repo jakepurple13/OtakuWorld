@@ -116,7 +116,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val topShowing = AtomicBoolean(true)
 
-    val playerView by lazy { findViewById<PlayerView>(R.id.playerView) }
+    val playerView: PlayerView by lazy { findViewById(R.id.playerView) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -151,16 +151,23 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         })
 
+        var lastPos = 0L
+
+        val g = Glide.with(this)
+            .asBitmap()
+            .load(showPath?.toUri())
+            .thumbnail(0.05f)
+            .override(IMAGE_ORIGINAL_SIZE, IMAGE_ORIGINAL_SIZE)
+            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+
         findViewById<PreviewTimeBar>(R.id.exo_progress)?.let {
             it.setPreviewLoader { currentPosition, _ ->
-                Glide.with(this)
-                    .asBitmap()
-                    .load(showPath?.toUri())
-                    .thumbnail(0.05f)
-                    .frame(currentPosition * 1000)
-                    .override(IMAGE_ORIGINAL_SIZE, IMAGE_ORIGINAL_SIZE)
-                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                    .into(findViewById(R.id.imageView))
+                if (abs(lastPos - currentPosition) > 1000) {
+                    g
+                        .frame(currentPosition * 1000)
+                        .into(findViewById(R.id.imageView))
+                }
+                lastPos = currentPosition
             }
 
             it.addOnScrubListener(object : PreviewBar.OnScrubListener {
