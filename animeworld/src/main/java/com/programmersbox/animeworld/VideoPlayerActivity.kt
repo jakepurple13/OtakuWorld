@@ -155,7 +155,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             it.setPreviewLoader { currentPosition, _ ->
                 Glide.with(this)
                     .asBitmap()
-                    .load(showPath)
+                    .load(showPath?.toUri())
                     .thumbnail(0.05f)
                     .frame(currentPosition * 1000)
                     .override(IMAGE_ORIGINAL_SIZE, IMAGE_ORIGINAL_SIZE)
