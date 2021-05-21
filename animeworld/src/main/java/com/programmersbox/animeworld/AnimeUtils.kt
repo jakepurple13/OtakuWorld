@@ -2,17 +2,23 @@ package com.programmersbox.animeworld
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.ContentResolver
 import android.content.Context
+import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
 import android.provider.MediaStore
 import android.view.View
 import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
+import io.reactivex.subjects.PublishSubject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 var Context.folderLocation: String by sharedPrefNotNullDelegate(
@@ -97,7 +103,7 @@ class VideoGet private constructor(private val videoContex: Context) {
         //MediaStore.Video.Media.DATE_ADDED,
     )
 
-    /**Returns an Arraylist of [!ideoContent]   */
+    /**Returns an Arraylist of [VideoContent]   */
     @SuppressLint("InlinedApi")
     fun getAllVideoContent(contentLocation: Uri): List<VideoContent> {
         val allVideo = mutableListOf<VideoContent>()
@@ -131,6 +137,41 @@ class VideoGet private constructor(private val videoContex: Context) {
             cursor?.close()
         }
         return allVideo
+    }
+
+    private fun ContentResolver.registerObserver(
+        uri: Uri,
+        observer: (selfChange: Boolean) -> Unit
+    ): ContentObserver {
+        val contentObserver = object : ContentObserver(Handler()) {
+            override fun onChange(selfChange: Boolean) {
+                observer(selfChange)
+                println("Changed!!!")
+            }
+        }
+        registerContentObserver(uri, true, contentObserver)
+        return contentObserver
+    }
+
+    private var contentObserver: ContentObserver? = null
+
+    fun unregister() {
+        contentObserver?.let { videoContex.contentResolver.unregisterContentObserver(it) }
+    }
+
+    val videos = PublishSubject.create<List<VideoContent>>()
+
+    fun loadVideos(scope: CoroutineScope, contentLocation: Uri) {
+        scope.launch {
+            val imageList = getAllVideoContent(contentLocation)
+            videos.onNext(imageList)
+
+            if (contentObserver == null) {
+                contentObserver = videoContex.contentResolver.registerObserver(contentLocation) {
+                    loadVideos(scope, contentLocation)
+                }
+            }
+        }
     }
 
     /**Returns an Arraylist of [videoFolderContent] with each videoFolderContent having an Arraylist of all it videoContent */

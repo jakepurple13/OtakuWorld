@@ -32,6 +32,7 @@ import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
 import com.tonyodev.fetch2.*
 import io.reactivex.rxkotlin.addTo
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class MainActivity : BaseMainActivity() {
@@ -131,7 +132,7 @@ class MainActivity : BaseMainActivity() {
                         startService(serviceIntent)
                     }
                     else -> {
-                        lifecycleScope.launch { fetchIt(model) }
+                        GlobalScope.launch { fetchIt(model) }
                     }
                 }
             }

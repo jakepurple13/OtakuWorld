@@ -2,7 +2,6 @@ package com.programmersbox.animeworld
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -15,6 +14,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
@@ -27,8 +27,10 @@ import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.stringForTime
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.schedulers.Schedulers
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -43,6 +45,8 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
     }
 
     private val adapter by lazy { VideoAdapter(requireContext(), MainActivity.cast) }
+
+    private val disposable = CompositeDisposable()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -61,16 +65,15 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             val file = File(dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition).path!!)
                             if (file.exists()) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    val deleteRequest = MediaStore.createDeleteRequest(requireContext().contentResolver, listOf(file.toUri()))
-                                    startIntentSenderForResult(
-                                        deleteRequest.intentSender,
-                                        123,
-                                        null,
-                                        0,
-                                        0,
-                                        0,
-                                        null
-                                    )
+                                    dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition).let {
+                                        it.assetFileStringUri?.toUri()?.let { it1 ->
+                                            context?.contentResolver?.delete(
+                                                it1,
+                                                "${MediaStore.Video.Media._ID} = ?",
+                                                arrayOf(it.videoId.toString())
+                                            )
+                                        }
+                                    }
                                 } else {
                                     Toast.makeText(
                                         requireContext(),
@@ -98,7 +101,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         )
 
         loadVideos()
-        view.findViewById<SwipeRefreshLayout>(R.id.view_video_refresh).setOnRefreshListener { loadVideos() }
+        view.findViewById<SwipeRefreshLayout>(R.id.view_video_refresh).isEnabled = false//setOnRefreshListener { loadVideos() }
 
         view.findViewById<MaterialButton>(R.id.multiple_video_delete).setOnClickListener {
             val downloadItems = mutableListOf<String>()
@@ -111,27 +114,27 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     downloadItems.forEach { f ->
                         adapter.dataList.indexOfFirst { it.path == f }
                             .let { if (it != -1) adapter.removeItem(it) else null }
-                            ?.let { File(it.path!!).delete() }
+                            ?.let {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                    it.let {
+                                        it.assetFileStringUri?.toUri()?.let { it1 ->
+                                            context?.contentResolver?.delete(
+                                                it1,
+                                                "${MediaStore.Video.Media._ID} = ?",
+                                                arrayOf(it.videoId.toString())
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    File(it.path!!).delete()
+                                }
+                            }
                     }
                     //MainActivity.cast.stopCast()
                     //adapter.notifyDataSetChanged()
                     d.dismiss()
                 }
                 .show()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            123 -> {
-                Toast.makeText(
-                    requireContext(),
-                    if (resultCode == Activity.RESULT_OK) R.string.fileDeleted else R.string.fileNotDeleted,
-                    Toast.LENGTH_SHORT
-                )
-                    .show()
-            }
         }
     }
 
@@ -147,29 +150,35 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
     }
 
     private fun getStuff() {
-        GlobalScope.launch {
 
-            val files = VideoGet.getInstance(requireContext())?.getAllVideoContent(VideoGet.externalContentUri)?.reversed().orEmpty()
-            //getListFiles2(File(requireContext().folderLocation))
+        val v = VideoGet.getInstance(requireContext())
+        v
+            ?.videos
+            ?.subscribeOn(Schedulers.io())
+            ?.observeOn(AndroidSchedulers.mainThread())
+            ?.subscribe {
 
-            //to get rid of any preferences of any videos that have been deleted else where
-            val prefs = requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).all.keys
-            val fileRegex = "(\\/[^*|\"<>?\\n]*)|(\\\\\\\\.*?\\\\.*)".toRegex()
-            val filePrefs = prefs.filter { fileRegex.containsMatchIn(it) }
-            for (p in filePrefs) {
-                //Loged.i(p)
-                if (!files.any { it.path == p }) {
-                    requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).edit().remove(p).apply()
+                val prefs = requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).all.keys
+                val fileRegex = "(\\/[^*|\"<>?\\n]*)|(\\\\\\\\.*?\\\\.*)".toRegex()
+                val filePrefs = prefs.filter { fileRegex.containsMatchIn(it) }
+                for (p in filePrefs) {
+                    //Loged.i(p)
+                    if (!it.any { it.path == p }) {
+                        requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).edit().remove(p).apply()
+                    }
                 }
-            }
-
-            //Loged.f(files)
-
-            requireActivity().runOnUiThread {
-                adapter.setListNotify(files)
+                adapter.setListNotify(it)
                 view?.findViewById<SwipeRefreshLayout>(R.id.view_video_refresh)?.isRefreshing = false
             }
-        }
+            ?.addTo(disposable)
+
+        v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.dispose()
+        VideoGet.getInstance(requireContext())?.unregister()
     }
 
     class VideoAdapter(private val context: Context, private val cast: CastHelper) : DragSwipeDiffUtilAdapter<VideoContent, VideoHolder>() {
