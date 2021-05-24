@@ -22,20 +22,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.github.rubensousa.previewseekbar.PreviewBar
 import com.github.rubensousa.previewseekbar.exoplayer.PreviewTimeBar
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
+import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
 import com.google.android.material.button.MaterialButton
 import com.mikepenz.iconics.IconicsDrawable
@@ -117,6 +111,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     val playerView: PlayerView by lazy { findViewById(R.id.playerView) }
 
+    private val retriever = MediaMetadataRetriever()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
@@ -141,7 +137,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         player = SimpleExoPlayer.Builder(this).build()
 
-        player.addListener(object : Player.EventListener {
+        player.addListener(object : Player.Listener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 if (playbackState == ExoPlayer.STATE_ENDED) {
                     //player back ended
@@ -150,17 +146,19 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         })
 
-        var lastPos = 0L
-
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(this@VideoPlayerActivity, showPath?.toUri())
-
         findViewById<PreviewTimeBar>(R.id.exo_progress)?.let {
-            it.setPreviewLoader { currentPosition, _ ->
-                if (abs(lastPos - currentPosition) > 1000) {
-                    findViewById<ImageView>(R.id.imageView).setImageBitmap(retriever.getFrameAtTime(currentPosition * 1000))
+            try {
+                retriever.setDataSource(this@VideoPlayerActivity, showPath?.toUri())
+                val preview = findViewById<ImageView>(R.id.imageView)
+                var lastPos = 0L
+                it.setPreviewLoader { currentPosition, _ ->
+                    if (abs(lastPos - currentPosition) > 1000) {
+                        preview.setImageBitmap(retriever.getFrameAtTime(currentPosition * 1000))
+                    }
+                    lastPos = currentPosition
                 }
-                lastPos = currentPosition
+            } catch (e: Exception) {
+                it.isPreviewEnabled = false
             }
 
             it.addOnScrubListener(object : PreviewBar.OnScrubListener {
@@ -182,19 +180,19 @@ class VideoPlayerActivity : AppCompatActivity() {
         playerView.player = player
 
         //download
-        if (downloadOrStream) {
+        val source = if (downloadOrStream) {
             val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "AnimeWorld"))
-            val videoSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(showPath!!.toUri())
-            player.prepare(videoSource)
+            ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(showPath!!.toUri()))
         } else {
 
             //stream
             //fun buildMediaSource(uri: Uri): MediaSource =
             //ProgressiveMediaSource.Factory(DefaultHttpDataSourceFactory("exoplayer-codelab")).createMediaSource(uri)
 
-            val source = getMediaSource(showPath!!.toUri(), false)!!
-            player.prepare(source, true, false)
+            getMediaSource(showPath!!.toUri(), false)!!
         }
+        player.setMediaSource(source, true)
+        player.prepare()
         playerView.controllerAutoShow = true
         //playerView.controllerHideOnTouch = true
         playerView.controllerShowTimeoutMs = 2000
@@ -301,6 +299,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         } catch (e: IllegalStateException) {
 
         }
+        retriever.release()
         lockTimer.stopLock()
         super.onStop()
     }
@@ -640,8 +639,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val bandwidthMeter by lazy { DefaultBandwidthMeter.Builder(this).build() }
 
-    private fun getMediaSource(url: Uri, preview: Boolean): MediaSource? {
-        return when (val f = Util.inferContentType(url.lastPathSegment.toString())) {
+    private fun getMediaSource(url: Uri, preview: Boolean): MediaSource? =
+        when (Util.inferContentType(url.lastPathSegment.toString())) {
             C.TYPE_SS -> SsMediaSource.Factory(
                 DefaultDataSourceFactory(
                     this, null,
@@ -657,23 +656,16 @@ class VideoPlayerActivity : AppCompatActivity() {
             C.TYPE_HLS -> HlsMediaSource.Factory(getDataSourceFactory(preview))//.createMediaSource(uri)
             C.TYPE_OTHER -> ProgressiveMediaSource.Factory(getDataSourceFactory(preview))//.createMediaSource(uri)
             else -> null
-        }?.createMediaSource(url)
-    }
+        }?.createMediaSource(MediaItem.fromUri(url))
 
-    private fun getDataSourceFactory(preview: Boolean): DataSource.Factory {
-        return DefaultDataSourceFactory(
-            this, if (preview) null else bandwidthMeter,
-            getHttpDataSourceFactory(preview)
-        )
-    }
+    private fun getDataSourceFactory(preview: Boolean): DataSource.Factory = DefaultDataSourceFactory(
+        this, if (preview) null else bandwidthMeter,
+        getHttpDataSourceFactory(preview)
+    )
 
-    private fun getHttpDataSourceFactory(preview: Boolean): DataSource.Factory {
-        return DefaultHttpDataSourceFactory(
-            Util.getUserAgent(
-                this,
-                "AnimeWorld"
-            ), if (preview) null else bandwidthMeter
-        )
+    private fun getHttpDataSourceFactory(preview: Boolean): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
+        setUserAgent(Util.getUserAgent(this@VideoPlayerActivity, "AnimeWorld"))
+        setTransferListener(if (preview) null else bandwidthMeter)
     }
 
 }

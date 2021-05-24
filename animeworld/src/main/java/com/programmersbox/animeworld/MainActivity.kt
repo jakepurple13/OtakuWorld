@@ -32,6 +32,7 @@ import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
 import com.tonyodev.fetch2.*
 import io.reactivex.rxkotlin.addTo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -84,7 +85,7 @@ class MainActivity : BaseMainActivity() {
             Toast.makeText(this, R.string.yts_no_stream, Toast.LENGTH_SHORT).show()
             return
         }
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()?.link
             runOnUiThread {
                 startActivity(
