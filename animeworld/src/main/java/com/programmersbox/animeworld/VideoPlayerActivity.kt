@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.graphics.Color
 import android.media.AudioManager
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -19,8 +20,6 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.github.rubensousa.previewseekbar.PreviewBar
 import com.github.rubensousa.previewseekbar.exoplayer.PreviewTimeBar
 import com.google.android.exoplayer2.C
@@ -57,7 +56,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import com.bumptech.glide.request.target.Target.SIZE_ORIGINAL as IMAGE_ORIGINAL_SIZE
+
 
 class VideoPlayerActivity : AppCompatActivity() {
 
@@ -153,19 +152,13 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         var lastPos = 0L
 
-        val g = Glide.with(this)
-            .asBitmap()
-            .load(showPath?.toUri())
-            .thumbnail(0.05f)
-            .override(IMAGE_ORIGINAL_SIZE, IMAGE_ORIGINAL_SIZE)
-            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(this@VideoPlayerActivity, showPath?.toUri())
 
         findViewById<PreviewTimeBar>(R.id.exo_progress)?.let {
             it.setPreviewLoader { currentPosition, _ ->
                 if (abs(lastPos - currentPosition) > 1000) {
-                    g
-                        .frame(currentPosition * 1000)
-                        .into(findViewById(R.id.imageView))
+                    findViewById<ImageView>(R.id.imageView).setImageBitmap(retriever.getFrameAtTime(currentPosition * 1000))
                 }
                 lastPos = currentPosition
             }
