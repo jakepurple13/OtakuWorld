@@ -310,18 +310,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onBackPressed()
     }
 
-    private fun playVideo() {
-        val pause = playerView.findViewById<ImageButton>(R.id.exo_pause)
-        if (pause.visibility != View.GONE)
-            pause.performClick()
-    }
-
-    private fun pauseVideo() {
-        val play = playerView.findViewById<ImageButton>(R.id.exo_play)
-        if (play.visibility != View.GONE)
-            play.performClick()
-    }
-
     private fun initVideoPlayer() {
         gesture = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {})
         gesture.setOnDoubleTapListener(object : GestureDetector.OnDoubleTapListener {
@@ -348,14 +336,14 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private val onTouch = View.OnTouchListener { v, event ->
+    private val onTouch = View.OnTouchListener { _, event ->
         lockTimer.stopLock()
         //Loged.v("$event")
         if (!locked) {
             gesture.onTouchEvent(event!!)
             val x = event.x
             val y = event.y
-            val id = v.id
+            //val id = v.id
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     //Loged.i("onTouch: surfaceContainer actionDown [" + this.hashCode() + "] ")
@@ -505,9 +493,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun dismissProgressDialog() {
-        if (mProgressDialog != null) {
-            mProgressDialog!!.dismiss()
-        }
+        mProgressDialog?.dismiss()
     }
 
     private fun showVolumeDialog(v: Float, volumePercent: Int) {
@@ -524,10 +510,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
             val params = mVolumeDialog!!.window!!.attributes
             params.gravity = 49
-            params.y = resources
-                .getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
-            params.width = resources
-                .getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
+            params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
+            params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
             mVolumeDialog!!.window!!.attributes = params
         }
         if (!mVolumeDialog!!.isShowing) {
@@ -537,9 +521,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun dismissVolumeDialog() {
-        if (mVolumeDialog != null) {
-            mVolumeDialog!!.dismiss()
-        }
+        mVolumeDialog?.dismiss()
     }
 
     private fun showBrightnessDialog(v: Float, brightnessPercent: Int) {
@@ -556,10 +538,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
             val params = mBrightnessDialog!!.window!!.attributes
             params.gravity = 49
-            params.y = resources
-                .getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
-            params.width = resources
-                .getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
+            params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
+            params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
             mBrightnessDialog!!.window!!.attributes = params
         }
         if (!mBrightnessDialog!!.isShowing) {
@@ -569,9 +549,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun dismissBrightnessDialog() {
-        if (mBrightnessDialog != null) {
-            mBrightnessDialog!!.dismiss()
-        }
+        mBrightnessDialog?.dismiss()
     }
 
     private fun setWindowBrightness(activity: Activity, brightness: Float) {
