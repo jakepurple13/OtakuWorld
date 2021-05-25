@@ -37,6 +37,13 @@ buildscript {
 
     ext.room_version = "2.3.0"
 
+    def koin_version = "3.0.2"
+
+    // Koin main features for Android (Scope,ViewModel ...)
+    ext.koinAndroid = "io.insert-koin:koin-android:$koin_version"
+    // Koin Android - experimental builder extensions
+    ext.koinAndroidExt = "io.insert-koin:koin-android-ext:$koin_version"
+
     ext {
         jakepurple13Tools = [
                 helpfultools: [flowutils, gsonutils, helpfulutils, loggingutils, dragswipe, funutils, rxutils, thirdpartyutils]
@@ -48,6 +55,8 @@ buildscript {
                         "androidx.room:room-rxjava2:$room_version"
                 ]
         ]
+
+        koin = [koin: [koinAndroid, koinAndroidExt]]
     }
 
     repositories {

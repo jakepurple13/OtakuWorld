@@ -52,7 +52,7 @@ class RecentFragment : BaseListFragment() {
 
         binding.recentList.apply {
             adapter = this@RecentFragment.adapter
-            layoutManager = createLayoutManager(this@RecentFragment.requireContext())
+            layoutManager = info.createLayoutManager(this@RecentFragment.requireContext())
             addOnScrollListener(object : EndlessScrollingListener(layoutManager!!) {
                 override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
                     if (sourcePublish.value!!.canScroll) {

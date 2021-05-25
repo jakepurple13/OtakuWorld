@@ -8,9 +8,12 @@ import com.programmersbox.manga_sources.Sources
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.UpdateWorker
 import com.programmersbox.uiviews.utils.FirebaseDb
+import org.koin.core.context.loadKoinModules
 
 class MangaApp : OtakuApp() {
     override fun onCreated() {
+
+        loadKoinModules(appModule)
 
         logo = R.mipmap.ic_launcher
         notificationLogo = R.drawable.manga_world_round_logo

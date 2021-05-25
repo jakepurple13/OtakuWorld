@@ -36,6 +36,7 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import me.zhanghai.android.fastscroll.FastScrollerBuilder
+import org.koin.android.ext.android.inject
 
 class DetailsFragment : Fragment() {
 
@@ -51,7 +52,7 @@ class DetailsFragment : Fragment() {
 
     private val disposable = CompositeDisposable()
 
-    private val adapter by lazy { ChapterAdapter(requireContext(), BaseMainActivity.genericInfo, dao) }
+    private val adapter by lazy { ChapterAdapter(requireContext(), inject<GenericInfo>().value, dao) }
 
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()

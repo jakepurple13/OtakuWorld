@@ -41,6 +41,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
+import org.koin.android.ext.android.inject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -56,10 +57,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private val disposable: CompositeDisposable = CompositeDisposable()
 
+    private val genericInfo: GenericInfo by inject()
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
-
-        val genericInfo = BaseMainActivity.genericInfo
 
         accountPreferences()
         generalPreferences(genericInfo)

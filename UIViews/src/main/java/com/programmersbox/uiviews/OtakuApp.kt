@@ -13,6 +13,9 @@ import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.uiviews.utils.shouldCheck
 import io.reactivex.plugins.RxJavaPlugins
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
 import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application() {
@@ -33,6 +36,11 @@ abstract class OtakuApp : Application() {
         RxJavaPlugins.setErrorHandler {
             it.printStackTrace()
             //FirebaseCrashlytics.getInstance().recordException(it)
+        }
+
+        startKoin {
+            androidLogger()
+            androidContext(this@OtakuApp)
         }
 
         onCreated()

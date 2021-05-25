@@ -16,22 +16,23 @@ import com.squareup.okhttp.Request
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
+import org.koin.android.ext.android.inject
 
-abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
+abstract class BaseMainActivity : AppCompatActivity() {
 
     protected val disposable = CompositeDisposable()
 
     private var currentNavController: LiveData<NavController>? = null
 
+    protected val genericInfo: GenericInfo by inject()
+
     protected abstract fun onCreate()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        genericInfo = this
         setContentView(R.layout.base_main_activity)
 
-        toSource(currentService.orEmpty())?.let { sourcePublish.onNext(it) }
+        genericInfo.toSource(currentService.orEmpty())?.let { sourcePublish.onNext(it) }
 
         if (savedInstanceState == null) {
             setupBottomNavBar()
@@ -110,10 +111,6 @@ abstract class BaseMainActivity : AppCompatActivity(), GenericInfo {
     override fun onDestroy() {
         disposable.dispose()
         super.onDestroy()
-    }
-
-    companion object {
-        var genericInfo by Delegates.notNull<GenericInfo>()
     }
 
 }

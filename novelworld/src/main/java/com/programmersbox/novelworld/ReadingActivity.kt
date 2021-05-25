@@ -16,7 +16,7 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.novelworld.databinding.ActivityReadingBinding
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.rxutils.toLatestFlowable
-import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.batteryAlertPercent
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -26,6 +26,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import org.koin.android.ext.android.inject
 import kotlin.math.roundToInt
 
 class ReadingActivity : AppCompatActivity() {
@@ -46,6 +47,8 @@ class ReadingActivity : AppCompatActivity() {
         UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown)
     }
 
+    private val genericInfo by inject<GenericInfo>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -56,7 +59,7 @@ class ReadingActivity : AppCompatActivity() {
         batterySetup()
 
         intent.getStringExtra("model")
-            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(BaseMainActivity.genericInfo))
+            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
             ?.getChapterInfo()
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())

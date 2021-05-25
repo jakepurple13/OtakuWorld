@@ -26,9 +26,10 @@ import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.Storage
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.rxutils.toLatestFlowable
-import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.batteryAlertPercent
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -38,6 +39,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import org.koin.android.ext.android.inject
 import java.io.File
 import java.util.*
 import kotlin.math.roundToInt
@@ -70,11 +72,14 @@ class ReadActivity : AppCompatActivity() {
         }
     }*/
 
+
+    private val genericInfo by inject<GenericInfo>()
+
     private val adapter2: PageAdapter by lazy {
         loader.let {
             val list = intent.getStringExtra("allChapters")
-                ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(BaseMainActivity.genericInfo))
-                .orEmpty().also { println(it) }
+                ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+                .orEmpty().also(::println)
             //intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
             val url = intent.getStringExtra("mangaUrl") ?: ""
             val mangaUrl = intent.getStringExtra("mangaInfoUrl") ?: ""
@@ -173,7 +178,7 @@ class ReadActivity : AppCompatActivity() {
 
         mangaTitle = intent.getStringExtra("mangaTitle")
         model = intent.getStringExtra("currentChapter")
-            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(BaseMainActivity.genericInfo))
+            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
 
         //titleManga.text = mangaTitle
         loadPages(model)
@@ -204,7 +209,7 @@ class ReadActivity : AppCompatActivity() {
             .start()
         adapter2.setListNotify(emptyList())
         model?.getChapterInfo()
-            ?.map { it.mapNotNull { it.link } }
+            ?.map { it.mapNotNull(Storage::link) }
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }
@@ -217,7 +222,7 @@ class ReadActivity : AppCompatActivity() {
                     .start()
                 adapter2.setListNotify(pages)
                 //adapter.addItems(pages)
-                binding.readView.layoutManager!!.scrollToPosition(model?.url?.let { defaultSharedPref.getInt(it, 0) } ?: 0)
+                //binding.readView.layoutManager!!.scrollToPosition(model.url.let { defaultSharedPref.getInt(it, 0) })
             }
             ?.addTo(disposable)
     }

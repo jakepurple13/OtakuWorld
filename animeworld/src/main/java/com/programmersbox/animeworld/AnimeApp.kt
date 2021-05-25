@@ -22,11 +22,14 @@ import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2.Fetch.Impl.setDefaultInstanceConfiguration
 import com.tonyodev.fetch2core.Downloader
 import com.tonyodev.fetch2core.deleteFile
+import org.koin.core.context.loadKoinModules
 import java.net.HttpURLConnection
 import javax.net.ssl.*
 
 class AnimeApp : OtakuApp() {
     override fun onCreated() {
+
+        loadKoinModules(appModule)
 
         logo = R.mipmap.ic_launcher
         notificationLogo = R.mipmap.ic_launcher_foreground

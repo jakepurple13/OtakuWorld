@@ -113,4 +113,6 @@ dependencies {
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools
+
+    implementation koin.koin
 }

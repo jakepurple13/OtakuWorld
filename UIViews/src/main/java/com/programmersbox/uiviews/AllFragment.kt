@@ -64,7 +64,7 @@ class AllFragment : BaseListFragment() {
 
         binding.allList.apply {
             adapter = this@AllFragment.adapter
-            layoutManager = createLayoutManager(this@AllFragment.requireContext())
+            layoutManager = info.createLayoutManager(this@AllFragment.requireContext())
             addOnScrollListener(object : EndlessScrollingListener(layoutManager!!) {
                 override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
                     if (sourcePublish.value!!.canScroll && binding.searchInfo.text.isNullOrEmpty()) {

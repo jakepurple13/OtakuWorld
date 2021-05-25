@@ -33,6 +33,7 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
 class FavoriteFragment : BaseFragment() {
@@ -40,7 +41,8 @@ class FavoriteFragment : BaseFragment() {
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val disposable = CompositeDisposable()
 
-    private val sources by lazy { BaseMainActivity.genericInfo.sourceList() }
+    private val genericInfo by inject<GenericInfo>()
+    private val sources by lazy { genericInfo.sourceList() }
     private val sourcePublisher = BehaviorSubject.createDefault(sources.toMutableList())
     private var sourcesList by behaviorDelegate(sourcePublisher)
     private val adapter by lazy { FavoriteAdapter() }
@@ -164,12 +166,12 @@ class FavoriteFragment : BaseFragment() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteHolder =
             FavoriteHolder(FavoriteItemBinding.inflate(requireContext().layoutInflater, parent, false))
 
-        override fun FavoriteHolder.onBind(item: Pair<String, List<DbModel>>, position: Int) = bind(item.second)
+        override fun FavoriteHolder.onBind(item: Pair<String, List<DbModel>>, position: Int) = bind(item.second, genericInfo)
     }
 
     class FavoriteHolder(private val binding: FavoriteItemBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(info: List<DbModel>) {
+        fun bind(info: List<DbModel>, genericInfo: GenericInfo) {
             binding.show = info.random()
             Glide.with(itemView.context)
                 .asBitmap()
@@ -183,13 +185,13 @@ class FavoriteFragment : BaseFragment() {
 
             binding.root.setOnClickListener {
                 if (info.size == 1) {
-                    val item = info.firstOrNull()?.let { BaseMainActivity.genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                    val item = info.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                     binding.root.findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
                 } else {
                     MaterialAlertDialogBuilder(itemView.context)
                         .setTitle(R.string.chooseASource)
                         .setItems(info.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
-                            val item = info[i].let { BaseMainActivity.genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                            val item = info[i].let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                             binding.root.findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
                             d.dismiss()
                         }
