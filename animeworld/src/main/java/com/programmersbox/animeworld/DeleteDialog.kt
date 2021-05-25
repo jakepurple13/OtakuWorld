@@ -1,98 +1,67 @@
 package com.programmersbox.animeworld
 
-import android.app.Dialog
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.os.Bundle
-import android.view.Window
-import android.widget.Button
-import android.widget.TextView
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.widget.Toast
+import androidx.core.net.toUri
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.ncorti.slidetoact.SlideToActView
+import com.programmersbox.animeworld.databinding.DeleteDialogLayoutBinding
+import com.programmersbox.helpfulutils.layoutInflater
 import com.tonyodev.fetch2.Download
 import com.tonyodev.fetch2.Fetch
 import java.io.File
 
-class DeleteDialog(
-    context: Context?,
-    var title: String = "",
-    val download: Download? = null,
-    val file: File? = null,
-    var listener: DeleteDialogListener? = null
-) : Dialog(context!!) {
+private fun Context.deleteDialogSet(title: CharSequence, onSlide: () -> Unit, onCancel: () -> Unit) {
+    val binding = DeleteDialogLayoutBinding.inflate(layoutInflater)
 
-    companion object {
-        fun deleteDialog(context: Context?, download: Download? = null, file: File? = null, block: DeleteDialog.() -> Unit): DeleteDialog =
-            DeleteDialog(context, file = file, download = download).apply(block)
-
-        fun deleteDialog(context: Context?, title: String, block: DeleteDialog.() -> Unit): DeleteDialog =
-            DeleteDialog(context, title = title).apply(block)
-    }
-
-    class DialogBuilder {
-        var title = ""
-        var download: Download? = null
-        var file: File? = null
-        var dialogListener: DeleteDialogListener? = null
-        var context: Context? = null
-
-        fun deleteDialog(block: DialogBuilder.() -> Unit): DeleteDialog {
-            return DialogBuilder().apply(block).build()
+    val dialog = MaterialAlertDialogBuilder(this)
+        .setView(binding.root)
+        .setTitle(getString(R.string.deleteDownload, title))
+        .setNegativeButton(R.string.cancel) { d, _ ->
+            d.dismiss()
+            onCancel()
         }
+        .setOnDismissListener { onCancel() }
+        .create()
 
-        fun build(): DeleteDialog =
-            DeleteDialog(context, title, download, file, dialogListener)
-    }
-
-    interface DeleteDialogListener {
-        fun onDelete()
-        fun onCancel() {
-
+    binding.slideButton.onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
+        override fun onSlideComplete(view: SlideToActView) {
+            onSlide()
+            dialog.dismiss()
         }
     }
+    dialog.show()
+}
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
-        setContentView(R.layout.delete_dialog_layout)
-
-        window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        if (download != null)
-            Fetch.getDefaultInstance().pause(download.id)
-        setTitle(context.getString(R.string.deleteDownload, title))
-        findViewById<TextView>(R.id.textView6).append(title)
-
-        val allDownloadInfo = findViewById<TextView>(R.id.all_download_info)
-
-        if (download != null) {
-            val info = "Current Progress: ${context.getString(R.string.percent_progress, download.progress)}"
-            allDownloadInfo.text = info
-        }
-
-        if (file != null) {
-            allDownloadInfo.text = file.path
-        }
-
-        findViewById<SlideToActView>(R.id.slide_button).onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
-            override fun onSlideComplete(view: SlideToActView) {
-                if (download != null) {
-                    Fetch.getDefaultInstance().delete(download.id)
+fun Context.deleteDialog(video: VideoContent, onCancel: () -> Unit) {
+    deleteDialogSet(
+        video.videoName.orEmpty(),
+        onSlide = {
+            val file = File(video.path!!)
+            if (file.exists()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    video.assetFileStringUri
+                        ?.toUri()
+                        ?.let { it1 -> contentResolver?.delete(it1, "${MediaStore.Video.Media._ID} = ?", arrayOf(video.videoId.toString())) }
+                } else {
+                    Toast.makeText(this, if (file.delete()) R.string.fileDeleted else R.string.fileNotDeleted, Toast.LENGTH_SHORT).show()
                 }
-                file?.delete()
-                this@DeleteDialog.dismiss()
-                listener?.onDelete()
             }
-        }
+        },
+        onCancel
+    )
+}
 
-        findViewById<Button>(R.id.delete_dismiss_button).setOnClickListener {
-            dismiss()
+fun Context.deleteDialog(download: Download, onCancel: () -> Unit) {
+    deleteDialogSet(
+        getString(R.string.delete_title, Uri.parse(download.url).lastPathSegment),
+        onSlide = { Fetch.getDefaultInstance().delete(download.id) },
+        onCancel = {
+            onCancel()
+            Fetch.getDefaultInstance().resume(download.id)
         }
-
-        setOnDismissListener {
-            listener?.onCancel()
-            if (download != null)
-                Fetch.getDefaultInstance().resume(download.id)
-        }
-    }
-
+    )
 }

@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/rounded_corner"
     android:backgroundTint="?android:colorBackground"
     android:padding="5dp">
 
@@ -28,12 +27,14 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
+        android:visibility="gone"
         android:gravity="center"
         android:text="@string/slide_to_delete" />
 
     <Button
         android:id="@+id/delete_dismiss_button"
         android:layout_width="wrap_content"
+        android:visibility="gone"
         android:layout_height="wrap_content"
         android:layout_below="@id/slide_button"
         android:layout_alignEnd="@id/slide_button"
@@ -46,6 +47,7 @@
         android:id="@+id/all_download_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         android:layout_alignStart="@+id/slide_button"
         android:layout_alignTop="@+id/delete_dismiss_button"
         android:layout_alignBottom="@id/delete_dismiss_button"

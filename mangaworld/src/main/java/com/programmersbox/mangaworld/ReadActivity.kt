@@ -7,14 +7,11 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -27,6 +24,7 @@ import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.*
+import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.rxutils.toLatestFlowable
@@ -117,9 +115,13 @@ class ReadActivity : AppCompatActivity() {
         UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown)
     }
 
+    private lateinit var binding: ActivityReadBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_read)
+
+        binding = ActivityReadBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         /*MobileAds.initialize(this) {}
         MobileAds.setRequestConfiguration(RequestConfiguration.Builder().setTestDeviceIds(listOf("BCF3E346AED658CDCCB1DDAEE8D84845")).build())*/
@@ -144,13 +146,11 @@ class ReadActivity : AppCompatActivity() {
 
     private fun readerSetup() {
         val preloader: RecyclerViewPreloader<String> = RecyclerViewPreloader(loader, adapter2, ViewPreloadSizeProvider(), 10)
-        val readView = findViewById<RecyclerView>(R.id.readView)
+        val readView = binding.readView
         readView.addOnScrollListener(preloader)
         readView.setItemViewCacheSize(0)
 
         readView.adapter = adapter2
-
-        val pageCount = findViewById<TextView>(R.id.pageCount)
 
         readView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -159,7 +159,7 @@ class ReadActivity : AppCompatActivity() {
                 val image = l.findLastVisibleItemPosition()
                 if (image > -1) {
                     val total = l.itemCount
-                    pageCount.text = String.format("%d/%d", image + 1, total)
+                    binding.pageCount.text = String.format("%d/%d", image + 1, total)
                 }
             }
         })
@@ -178,20 +178,28 @@ class ReadActivity : AppCompatActivity() {
         //titleManga.text = mangaTitle
         loadPages(model)
 
-        val readRefresh = findViewById<SwipeRefreshLayout>(R.id.readRefresh)
-
-        readRefresh.setOnRefreshListener {
-            readRefresh.isRefreshing = false
+        binding.readRefresh.setOnRefreshListener {
+            binding.readRefresh.isRefreshing = false
             adapter2.reloadChapter()
+        }
+
+        binding.readView.setOnClickListener {
+            scrollView(binding.scrollToTopManga.isOrWillBeHidden)
+        }
+    }
+
+    private fun scrollView(show: Boolean) {
+        if (show) {
+            binding.scrollToTopManga.show()
+        } else {
+            binding.scrollToTopManga.hide()
         }
     }
 
     private fun loadPages(model: ChapterModel?) {
-        val readView = findViewById<RecyclerView>(R.id.readView)
-        val readLoading = findViewById<ProgressBar>(R.id.readLoading)
-        readLoading
+        binding.readLoading
             .animate()
-            .withStartAction { readLoading.visible() }
+            .withStartAction { binding.readLoading.visible() }
             .alpha(1f)
             .start()
         adapter2.setListNotify(emptyList())
@@ -202,14 +210,14 @@ class ReadActivity : AppCompatActivity() {
             ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }
             ?.subscribeBy { pages: List<String> ->
                 BigImageViewer.prefetch(*pages.map { Uri.parse(it) }.toTypedArray())
-                readLoading
+                binding.readLoading
                     .animate()
                     .alpha(0f)
-                    .withEndAction { readLoading.gone() }
+                    .withEndAction { binding.readLoading.gone() }
                     .start()
                 adapter2.setListNotify(pages)
                 //adapter.addItems(pages)
-                readView.layoutManager!!.scrollToPosition(model?.url?.let { defaultSharedPref.getInt(it, 0) } ?: 0)
+                binding.readView.layoutManager!!.scrollToPosition(model?.url?.let { defaultSharedPref.getInt(it, 0) } ?: 0)
             }
             ?.addTo(disposable)
     }
@@ -220,13 +228,11 @@ class ReadActivity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun batterySetup() {
-        val batteryInformation = findViewById<TextView>(R.id.batteryInformation)
-
         val normalBatteryColor = colorFromTheme(R.attr.colorOnBackground, Color.WHITE)
 
-        batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
+        binding.batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
             colorInt = normalBatteryColor
-            sizePx = batteryInformation.textSize.roundToInt()
+            sizePx = binding.batteryInformation.textSize.roundToInt()
         }
 
         Flowables.combineLatest(
@@ -245,21 +251,21 @@ class ReadActivity : AppCompatActivity() {
                     }
                 }
                 .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(this, it.icon).apply { sizePx = batteryInformation.textSize.roundToInt() } }
+                .map { IconicsDrawable(this, it.icon).apply { sizePx = binding.batteryInformation.textSize.roundToInt() } }
                 .toLatestFlowable()
         )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
                 it.second.colorInt = it.first
-                batteryInformation.startDrawable = it.second
-                batteryInformation.setTextColor(it.first)
-                batteryInformation.startDrawable?.setTint(it.first)
+                binding.batteryInformation.startDrawable = it.second
+                binding.batteryInformation.setTextColor(it.first)
+                binding.batteryInformation.startDrawable?.setTint(it.first)
             }
             .addTo(disposable)
 
         batteryInfo = battery {
-            batteryInformation.text = "${it.percent.toInt()}%"
+            binding.batteryInformation.text = "${it.percent.toInt()}%"
             batteryLevelAlert(it.percent)
             batteryInfoItem(it)
         }

@@ -10,7 +10,6 @@ import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
 import android.provider.Settings
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -21,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.github.rubensousa.previewseekbar.PreviewBar
-import com.github.rubensousa.previewseekbar.exoplayer.PreviewTimeBar
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -31,11 +29,11 @@ import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
-import com.google.android.material.button.MaterialButton
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
+import com.programmersbox.animeworld.databinding.*
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.rxutils.toLatestFlowable
@@ -47,7 +45,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -65,16 +62,10 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var locked = false
         set(value) {
             field = value
-            runOnUiThread { findViewById<MaterialButton>(R.id.video_lock).setText(if (locked) R.string.locked else R.string.unlocked) }
+            runOnUiThread { exoBinding.videoLock.setText(if (locked) R.string.locked else R.string.unlocked) }
         }
 
     private lateinit var gesture: GestureDetector
-
-    private var lockTimer = TimerStuff {
-        /*video_info_layout.animate().setDuration(500).alpha(0f).withEndAction {
-            topShowing.set(false)
-        }*/
-    }
 
     private var mDownX: Float = 0.toFloat()
     private var mDownY: Float = 0.toFloat()
@@ -91,34 +82,79 @@ class VideoPlayerActivity : AppCompatActivity() {
     @Suppress("PrivatePropertyName")
     private val THRESHOLD = 70
 
-    private var mVolumeDialog: Dialog? = null
-    private var mDialogVolumeProgressBar: ProgressBar? = null
+    private val mVolumeDialog: Dialog by lazy {
+        Dialog(this, R.style.mx_style_dialog_progress).apply {
+            setContentView(volumeBinding.root)
+            window!!.addFlags(8)
+            window!!.addFlags(32)
+            window!!.addFlags(16)
+            window!!.setLayout(-2, -2)
+            val params = window!!.attributes
+            params.gravity = 49
+            params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
+            params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
+            window!!.attributes = params
+        }
+    }
+    private val volumeBinding by lazy { MxMobileVolumeDialogBinding.inflate(layoutInflater) }
 
-    private var mBrightnessDialog: Dialog? = null
-    private lateinit var mDialogBrightnessProgressBar: ProgressBar
+    private val mBrightnessDialog: Dialog by lazy {
+        Dialog(this, R.style.mx_style_dialog_progress).apply {
+            setContentView(brightBinding.root)
+            window!!.addFlags(8)
+            window!!.addFlags(32)
+            window!!.addFlags(16)
+            window!!.setLayout(-2, -2)
+            val params = window!!.attributes
+            params.gravity = 49
+            params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
+            params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
+            window!!.attributes = params
+        }
+    }
+    private val brightBinding by lazy { MxMobileBrightnessDialogBinding.inflate(layoutInflater) }
 
-    private var mProgressDialog: Dialog? = null
-    private var mDialogProgressBar: ProgressBar? = null
-    private var mDialogSeekTime: TextView? = null
-    private var mDialogTotalTime: TextView? = null
-    private var mDialogIcon: ImageView? = null
+    private val mProgressDialog: Dialog by lazy {
+        Dialog(this, R.style.mx_style_dialog_progress).apply {
+            setContentView(progressBinding.root)
+            window!!.addFlags(Window.FEATURE_ACTION_BAR)
+            window!!.addFlags(32)
+            window!!.addFlags(16)
+            window!!.setLayout(-2, -2)
+
+            val params = window!!.attributes
+            params.gravity = 49
+            params.y = resources.getDimensionPixelOffset(R.dimen.mx_progress_dialog_margin_top)
+            params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
+            window!!.attributes = params
+        }
+    }
+    private val progressBinding by lazy { MxProgressDialogBinding.inflate(layoutInflater) }
+
     private var mChangePosition: Boolean = false
     private var mTouchingProgressBar = false
     private var mDownPosition: Int = 0
     private var mSeekTimePosition: Int = 0
 
-    private val topShowing = AtomicBoolean(true)
-
-    val playerView: PlayerView by lazy { findViewById(R.id.playerView) }
+    private val playerView: PlayerView by lazy { videoBinding.playerView }
 
     private val retriever = MediaMetadataRetriever()
 
+    private lateinit var videoBinding: ActivityVideoPlayerBinding
+    private lateinit var exoBinding: ExoControlsBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_video_player)
+        videoBinding = ActivityVideoPlayerBinding.inflate(layoutInflater)
+        setContentView(videoBinding.root)
         enableImmersiveMode()
+        exoBinding = ExoControlsBinding.bind(videoBinding.root.findViewById(R.id.exo_controls))
+        exoBinding.videoBack.setOnClickListener { finish() }
 
-        findViewById<ImageView>(R.id.video_back).setOnClickListener { finish() }
+        videoBinding.playerView.setControllerVisibilityListener {
+            //exoBinding.videoInfoLayout.animate().setDuration(500).alpha(1f)
+            exoBinding.videoInfoLayout.visibility = it
+        }
 
         /*if (args.showPath.isEmpty()) {
             finish()
@@ -128,7 +164,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         val showName = intent.getStringExtra("showName")
         val downloadOrStream = intent.getBooleanExtra("downloadOrStream", true)
 
-        findViewById<TextView>(R.id.video_name).text = showName
+        exoBinding.videoName.text = showName
 
         currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
@@ -146,36 +182,33 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         })
 
-        findViewById<PreviewTimeBar>(R.id.exo_progress)?.let {
-            try {
-                retriever.setDataSource(this@VideoPlayerActivity, showPath?.toUri())
-                val preview = findViewById<ImageView>(R.id.imageView)
-                var lastPos = 0L
-                it.setPreviewLoader { currentPosition, _ ->
-                    if (abs(lastPos - currentPosition) > 1000) {
-                        preview.setImageBitmap(retriever.getFrameAtTime(currentPosition * 1000))
-                    }
-                    lastPos = currentPosition
+        try {
+            retriever.setDataSource(this@VideoPlayerActivity, showPath?.toUri())
+            var lastPos = 0L
+            exoBinding.exoProgress.setPreviewLoader { currentPosition, _ ->
+                if (abs(lastPos - currentPosition) > 1000) {
+                    exoBinding.imageView.setImageBitmap(retriever.getFrameAtTime(currentPosition * 1000))
                 }
-            } catch (e: Exception) {
-                it.isPreviewEnabled = false
+                lastPos = currentPosition
+            }
+        } catch (e: Exception) {
+            exoBinding.exoProgress.isPreviewEnabled = false
+        }
+
+        exoBinding.exoProgress.addOnScrubListener(object : PreviewBar.OnScrubListener {
+            override fun onScrubStart(previewBar: PreviewBar?) {
+                player.playWhenReady = false
             }
 
-            it.addOnScrubListener(object : PreviewBar.OnScrubListener {
-                override fun onScrubStart(previewBar: PreviewBar?) {
-                    player.playWhenReady = false
-                }
+            override fun onScrubMove(previewBar: PreviewBar?, progress: Int, fromUser: Boolean) {
 
-                override fun onScrubMove(previewBar: PreviewBar?, progress: Int, fromUser: Boolean) {
+            }
 
-                }
+            override fun onScrubStop(previewBar: PreviewBar?) {
+                player.playWhenReady = true
+            }
 
-                override fun onScrubStop(previewBar: PreviewBar?) {
-                    player.playWhenReady = true
-                }
-
-            })
-        }
+        })
 
         playerView.player = player
 
@@ -200,17 +233,14 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         //video_lock.icon = IconicsDrawable(this).icon(FontAwesome.Icon.faw_unlock).sizeDp(24)
         //video_lock.icon = IconicsDrawable(this).icon(FontAwesome.Icon.faw_unlock).size { IconicsSize.dp(24) }
-        val videoLock = findViewById<MaterialButton>(R.id.video_lock)
-        videoLock.setOnClickListener {
+        exoBinding.videoLock.setOnClickListener {
             locked = !locked
 
             //video_lock.setImageDrawable(IconicsDrawable(this).icon(if (locked) FontAwesome.Icon.faw_lock else FontAwesome.Icon.faw_unlock).sizeDp(24))
-            videoLock.icon = ContextCompat.getDrawable(this, if (locked) R.drawable.ic_baseline_lock_24 else R.drawable.ic_baseline_lock_open_24)
+            exoBinding.videoLock.icon =
+                ContextCompat.getDrawable(this, if (locked) R.drawable.ic_baseline_lock_24 else R.drawable.ic_baseline_lock_open_24)
             if (!locked)
                 playerView.showController()
-        }
-        videoLock.setOnClickListener {
-            onBackPressed()
         }
 
         initVideoPlayer()
@@ -240,11 +270,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun batterySetup() {
 
-        val batteryInformation = findViewById<TextView>(R.id.batteryInformation)
-
-        batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
+        exoBinding.batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
             colorInt = Color.WHITE
-            sizePx = batteryInformation.textSize.roundToInt()
+            sizePx = exoBinding.batteryInformation.textSize.roundToInt()
         }
 
         Flowables.combineLatest(
@@ -263,21 +291,21 @@ class VideoPlayerActivity : AppCompatActivity() {
                     }
                 }
                 .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(this, it.icon).apply { sizePx = batteryInformation.textSize.roundToInt() } }
+                .map { IconicsDrawable(this, it.icon).apply { sizePx = exoBinding.batteryInformation.textSize.roundToInt() } }
                 .toLatestFlowable()
         )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
                 it.second.colorInt = it.first
-                batteryInformation.startDrawable = it.second
-                batteryInformation.setTextColor(it.first)
-                batteryInformation.startDrawable?.setTint(it.first)
+                exoBinding.batteryInformation.startDrawable = it.second
+                exoBinding.batteryInformation.setTextColor(it.first)
+                exoBinding.batteryInformation.startDrawable?.setTint(it.first)
             }
             .addTo(disposable)
 
         batteryInfo = battery {
-            batteryInformation.text = "${it.percent.toInt()}%"
+            exoBinding.batteryInformation.text = "${it.percent.toInt()}%"
             batteryLevelAlert(it.percent)
             batteryInfoItem(it)
         }
@@ -300,7 +328,6 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         }
         retriever.release()
-        lockTimer.stopLock()
         super.onStop()
     }
 
@@ -314,12 +341,10 @@ class VideoPlayerActivity : AppCompatActivity() {
         gesture = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {})
         gesture.setOnDoubleTapListener(object : GestureDetector.OnDoubleTapListener {
             override fun onDoubleTap(p0: MotionEvent?): Boolean {
-                val play = playerView.findViewById<ImageButton>(R.id.exo_play)
-                val pause = playerView.findViewById<ImageButton>(R.id.exo_pause)
-                if (play.visibility == View.GONE)
-                    pause.performClick()
+                if (exoBinding.exoPlay.visibility == View.GONE)
+                    exoBinding.exoPause.performClick()
                 else
-                    play.performClick()
+                    exoBinding.exoPlay.performClick()
                 return true
             }
 
@@ -337,7 +362,6 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     @SuppressLint("ClickableViewAccessibility")
     private val onTouch = View.OnTouchListener { _, event ->
-        lockTimer.stopLock()
         //Loged.v("$event")
         if (!locked) {
             gesture.onTouchEvent(event!!)
@@ -434,122 +458,42 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
 
         //playerView.useController = !locked
-
-        showLayout()
-        if (topShowing.get()) {
-            lockTimer.action()
-        } else {
-            //showLayout()
-            lockTimer.startLock()
-        }
         false
-    }
-
-    private fun showLayout() {
-        findViewById<LinearLayout>(R.id.video_info_layout).animate().setDuration(500).alpha(1f).withEndAction {
-            topShowing.set(true)
-        }
     }
 
     private fun showProgressDialog(
         deltaX: Float, seekTime: String,
         seekTimePosition: Int, totalTime: String, totalTimeDuration: Int
     ) {
-        if (mProgressDialog == null) {
-            val localView = View.inflate(this, R.layout.mx_progress_dialog, null)
-            mDialogProgressBar = localView.findViewById<View>(R.id.duration_progressbar) as ProgressBar
-            //mDialogProgressBar = ((PreviewSeekBar) localView.findViewById(R.id.duration_progressbar));
-            mDialogSeekTime = localView.findViewById<View>(R.id.video_current) as TextView
-            mDialogTotalTime = localView.findViewById<View>(R.id.video_duration) as TextView
-            mDialogIcon = localView.findViewById<View>(R.id.duration_image_tip) as ImageView
-            mProgressDialog = Dialog(this, R.style.mx_style_dialog_progress)
-            mProgressDialog!!.setContentView(localView)
-            if (mProgressDialog!!.window != null) {
-                mProgressDialog!!.window!!.addFlags(Window.FEATURE_ACTION_BAR)
-                mProgressDialog!!.window!!.addFlags(32)
-                mProgressDialog!!.window!!.addFlags(16)
-                mProgressDialog!!.window!!.setLayout(-2, -2)
-            }
-            val params = mProgressDialog!!.window!!.attributes
-            params.gravity = 49
-            params.y = resources.getDimensionPixelOffset(R.dimen.mx_progress_dialog_margin_top)
-            params.width = this.resources
-                .getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
-            mProgressDialog!!.window!!.attributes = params
-        }
-        if (!mProgressDialog!!.isShowing) {
-            mProgressDialog!!.show()
-        }
+        if (!mProgressDialog.isShowing) mProgressDialog.show()
         val seekedTime = abs(playerView.player!!.currentPosition - seekTimePosition)
         val seekTimeText = "(" + stringForTime(seekedTime) + ") " + seekTime
-        mDialogSeekTime!!.text = seekTimeText
-        mDialogTotalTime!!.text = String.format(" / %s", totalTime)
-        mDialogProgressBar!!.progress = if (totalTimeDuration <= 0) 0 else seekTimePosition * 100 / totalTimeDuration
-        if (deltaX > 0) {
-            mDialogIcon!!.setBackgroundResource(R.drawable.mx_forward_icon)
-        } else {
-            mDialogIcon!!.setBackgroundResource(R.drawable.mx_backward_icon)
-        }
+        progressBinding.videoCurrent.text = seekTimeText
+        progressBinding.videoDuration.text = String.format(" / %s", totalTime)
+        progressBinding.durationProgressbar.progress = if (totalTimeDuration <= 0) 0 else seekTimePosition * 100 / totalTimeDuration
+        progressBinding.durationImageTip.setBackgroundResource(if (deltaX > 0) R.drawable.mx_forward_icon else R.drawable.mx_backward_icon)
     }
 
     private fun dismissProgressDialog() {
-        mProgressDialog?.dismiss()
+        mProgressDialog.dismiss()
     }
 
     private fun showVolumeDialog(v: Float, volumePercent: Int) {
-        if (mVolumeDialog == null) {
-            val localView = View.inflate(this, R.layout.mx_mobile_volume_dialog, null)
-            mDialogVolumeProgressBar = localView.findViewById<View>(R.id.volume_progressbar) as ProgressBar
-            mVolumeDialog = Dialog(this, R.style.mx_style_dialog_progress)
-            mVolumeDialog!!.setContentView(localView)
-            if (mVolumeDialog!!.window != null) {
-                mVolumeDialog!!.window!!.addFlags(8)
-                mVolumeDialog!!.window!!.addFlags(32)
-                mVolumeDialog!!.window!!.addFlags(16)
-                mVolumeDialog!!.window!!.setLayout(-2, -2)
-            }
-            val params = mVolumeDialog!!.window!!.attributes
-            params.gravity = 49
-            params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
-            params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
-            mVolumeDialog!!.window!!.attributes = params
-        }
-        if (!mVolumeDialog!!.isShowing) {
-            mVolumeDialog!!.show()
-        }
-        mDialogVolumeProgressBar!!.progress = volumePercent
+        if (!mVolumeDialog.isShowing) mVolumeDialog.show()
+        volumeBinding.volumeProgressbar.progress = volumePercent
     }
 
     private fun dismissVolumeDialog() {
-        mVolumeDialog?.dismiss()
+        mVolumeDialog.dismiss()
     }
 
     private fun showBrightnessDialog(v: Float, brightnessPercent: Int) {
-        if (mBrightnessDialog == null) {
-            val localView = View.inflate(this, R.layout.mx_mobile_brightness_dialog, null)
-            mDialogBrightnessProgressBar = localView.findViewById<View>(R.id.brightness_progressbar) as ProgressBar
-            mBrightnessDialog = Dialog(this, R.style.mx_style_dialog_progress)
-            mBrightnessDialog!!.setContentView(localView)
-            if (mBrightnessDialog!!.window != null) {
-                mBrightnessDialog!!.window!!.addFlags(8)
-                mBrightnessDialog!!.window!!.addFlags(32)
-                mBrightnessDialog!!.window!!.addFlags(16)
-                mBrightnessDialog!!.window!!.setLayout(-2, -2)
-            }
-            val params = mBrightnessDialog!!.window!!.attributes
-            params.gravity = 49
-            params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
-            params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
-            mBrightnessDialog!!.window!!.attributes = params
-        }
-        if (!mBrightnessDialog!!.isShowing) {
-            mBrightnessDialog!!.show()
-        }
-        mDialogBrightnessProgressBar.progress = brightnessPercent
+        if (!mBrightnessDialog.isShowing) mBrightnessDialog.show()
+        brightBinding.brightnessProgressbar.progress = brightnessPercent
     }
 
     private fun dismissBrightnessDialog() {
-        mBrightnessDialog?.dismiss()
+        mBrightnessDialog.dismiss()
     }
 
     private fun setWindowBrightness(activity: Activity, brightness: Float) {
@@ -591,27 +535,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             mFormatter.format("%02d:%02d:%02d", hour, minute, second).toString()
         } else {
             mFormatter.format("%02d:%02d", minute, second).toString()
-        }
-    }
-
-    class TimerStuff(private val TIME_TO_WAIT: Long = 2000, var action: () -> Unit) {
-        private var myRunnable: Runnable = Runnable {
-            action()
-        }
-
-        private var myHandler = Handler()
-
-        fun startLock() {
-            myHandler.postDelayed(myRunnable, TIME_TO_WAIT)
-        }
-
-        fun stopLock() {
-            myHandler.removeCallbacks(myRunnable)
-        }
-
-        fun restartLock() {
-            myHandler.removeCallbacks(myRunnable)
-            myHandler.postDelayed(myRunnable, TIME_TO_WAIT)
         }
     }
 

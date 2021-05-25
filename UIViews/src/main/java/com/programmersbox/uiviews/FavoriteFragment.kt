@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.jakewharton.rxbinding2.widget.textChanges
 import com.programmersbox.dragswipe.DragSwipeAdapter
 import com.programmersbox.dragswipe.DragSwipeDiffUtil
@@ -26,6 +24,7 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.rxutils.behaviorDelegate
 import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.databinding.FavoriteItemBinding
+import com.programmersbox.uiviews.databinding.FragmentFavoriteBinding
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
 import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -50,11 +49,14 @@ class FavoriteFragment : BaseFragment() {
 
     override val layoutId: Int get() = R.layout.fragment_favorite
 
+    private lateinit var binding: FragmentFavoriteBinding
+
+    @SuppressLint("SetTextI18n")
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
 
-        uiSetup(view)
+        binding = FragmentFavoriteBinding.bind(view)
 
-        val favRv = view.findViewById<RecyclerView>(R.id.favRv)
+        uiSetup()
 
         val fired = fireListener.getAllShowsFlowable()
 
@@ -70,7 +72,7 @@ class FavoriteFragment : BaseFragment() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread()),
             source2 = sourcePublisher.toLatestFlowable(),
-            source3 = view.findViewById<TextInputEditText>(R.id.fav_search_info)
+            source3 = binding.favSearchInfo
                 .textChanges()
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .toLatestFlowable()
@@ -79,26 +81,23 @@ class FavoriteFragment : BaseFragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .map { pair ->
                 pair.first.sortedBy(DbModel::title)
-                    .filter { it.source in pair.second.map { it.serviceName } && it.title.contains(pair.third, true) }
+                    .filter { it.source in pair.second.map(ApiService::serviceName) && it.title.contains(pair.third, true) }
             }
             .map { it.size to it.toGroup() }
             .distinctUntilChanged()
             .subscribe {
                 adapter.setData(it.second.toList())
-                view.findViewById<TextInputLayout>(R.id.fav_search_layout)?.hint =
-                    resources.getQuantityString(R.plurals.numFavorites, it.first, it.first)
-                favRv?.smoothScrollToPosition(0)
+                binding.favSearchLayout.hint = resources.getQuantityString(R.plurals.numFavorites, it.first, it.first)
+                binding.favRv.smoothScrollToPosition(0)
             }
             .addTo(disposable)
-
-        val sourceList = view.findViewById<ChipGroup>(R.id.sourceList)
 
         dbFire
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .map { it.groupBy { s -> s.source } }
             .subscribe { s ->
-                s.forEach { m -> sourceList.children.filterIsInstance<Chip>().find { it.text == m.key }?.text = "${m.key}: ${m.value.size}" }
+                s.forEach { m -> binding.sourceList.children.filterIsInstance<Chip>().find { it.text == m.key }?.text = "${m.key}: ${m.value.size}" }
             }
             .addTo(disposable)
 
@@ -106,32 +105,30 @@ class FavoriteFragment : BaseFragment() {
 
     private fun List<DbModel>.toGroup() = groupBy(DbModel::title)
 
-    private fun uiSetup(view: View) = with(view) {
-        val favRv = view.findViewById<RecyclerView>(R.id.favRv)
-        favRv.layoutManager = AutoFitGridLayoutManager(requireContext(), 360).apply { orientation = GridLayoutManager.VERTICAL }
-        favRv.adapter = adapter
-        favRv.setItemViewCacheSize(20)
-        favRv.setHasFixedSize(true)
+    @SuppressLint("SetTextI18n")
+    private fun uiSetup() {
+        binding.favRv.layoutManager = AutoFitGridLayoutManager(requireContext(), 360).apply { orientation = GridLayoutManager.VERTICAL }
+        binding.favRv.adapter = adapter
+        binding.favRv.setItemViewCacheSize(20)
+        binding.favRv.setHasFixedSize(true)
 
-        val sourceList = findViewById<ChipGroup>(R.id.sourceList)
-
-        sourceList.addView(Chip(requireContext()).apply {
+        binding.sourceList.addView(Chip(requireContext()).apply {
             text = "ALL"
             isCheckable = true
             isClickable = true
             isChecked = true
-            setOnClickListener { sourceList.children.filterIsInstance<Chip>().forEach { it.isChecked = true } }
+            setOnClickListener { binding.sourceList.children.filterIsInstance<Chip>().forEach { it.isChecked = true } }
         })
 
         sources.forEach {
-            sourceList.addView(Chip(requireContext()).apply {
+            binding.sourceList.addView(Chip(requireContext()).apply {
                 text = it.serviceName
                 isCheckable = true
                 isClickable = true
                 isChecked = true
                 setOnCheckedChangeListener { _, isChecked -> addOrRemoveSource(isChecked, it) }
                 setOnLongClickListener {
-                    sourceList.clearCheck()
+                    binding.sourceList.clearCheck()
                     isChecked = true
                     true
                 }

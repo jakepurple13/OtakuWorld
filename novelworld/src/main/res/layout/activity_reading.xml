@@ -45,8 +45,7 @@
             android:id="@+id/contentArea"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
-            tools:text="@string/large_text" />
+            android:layout_margin="@dimen/text_margin" />
 
     </androidx.core.widget.NestedScrollView>
 

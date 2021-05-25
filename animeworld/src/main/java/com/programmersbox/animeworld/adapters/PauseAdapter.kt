@@ -17,7 +17,7 @@ class PauseAdapter(private val context: Context) : DragSwipeAdapter<Model.respon
 
     lateinit var setOnMoreListener: (View, Model.response_pause, Int) -> Unit
 
-    class PauseHolder(val binding: ItemTorrentDownloadBinding) : RecyclerView.ViewHolder(binding.root) {}
+    class PauseHolder(val binding: ItemTorrentDownloadBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         PauseHolder(ItemTorrentDownloadBinding.inflate(parent.context.layoutInflater, parent, false))
@@ -43,8 +43,7 @@ class PauseAdapter(private val context: Context) : DragSwipeAdapter<Model.respon
     }
 
     private fun calculateCurrentSize(torrentJob: TorrentJob): String? {
-        val currentSize =
-            (torrentJob.progress.toLong() * (torrentJob.totalSize as Long)) / (100).toLong()
+        val currentSize = (torrentJob.progress.toLong() * (torrentJob.totalSize as Long)) / (100).toLong()
         return getSizePretty(currentSize)
     }
 

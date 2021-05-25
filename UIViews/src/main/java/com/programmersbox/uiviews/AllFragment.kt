@@ -2,16 +2,11 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
-import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.jakewharton.rxbinding2.widget.textChanges
 import com.programmersbox.dragswipe.DragSwipeAdapter
 import com.programmersbox.dragswipe.DragSwipeDiffUtil
@@ -21,6 +16,7 @@ import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.uiviews.databinding.FragmentAllBinding
 import com.programmersbox.uiviews.utils.EndlessScrollingListener
 import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -50,12 +46,12 @@ class AllFragment : BaseListFragment() {
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
 
+    private lateinit var binding: FragmentAllBinding
+
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
         super.viewCreated(view, savedInstanceState)
 
-        val rv = view.findViewById<RecyclerView>(R.id.allList)
-        val refresh = view.findViewById<SwipeRefreshLayout>(R.id.allRefresh)
-        val editText = view.findViewById<TextInputEditText>(R.id.search_info)
+        binding = FragmentAllBinding.bind(view)
 
         Flowables.combineLatest(
             itemListener.getAllShowsFlowable(),
@@ -66,14 +62,14 @@ class AllFragment : BaseListFragment() {
             .subscribe { adapter.update(it) { s, d -> s.url == d.url } }
             .addTo(disposable)
 
-        rv?.apply {
+        binding.allList.apply {
             adapter = this@AllFragment.adapter
             layoutManager = createLayoutManager(this@AllFragment.requireContext())
             addOnScrollListener(object : EndlessScrollingListener(layoutManager!!) {
                 override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
-                    if (sourcePublish.value!!.canScroll && editText.text.isNullOrEmpty()) {
+                    if (sourcePublish.value!!.canScroll && binding.searchInfo.text.isNullOrEmpty()) {
                         count++
-                        refresh.isRefreshing = true
+                        binding.allRefresh.isRefreshing = true
                         sourceLoad(sourcePublish.value!!, count)
                     }
                 }
@@ -84,8 +80,8 @@ class AllFragment : BaseListFragment() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                view.findViewById<RelativeLayout>(R.id.offline_view).visibility = if (it) View.GONE else View.VISIBLE
-                refresh.visibility = if (it) View.VISIBLE else View.GONE
+                binding.offlineView.visibility = if (it) View.GONE else View.VISIBLE
+                binding.allRefresh.visibility = if (it) View.VISIBLE else View.GONE
             }
             .addTo(disposable)
 
@@ -96,19 +92,19 @@ class AllFragment : BaseListFragment() {
                 count = 1
                 adapter.setListNotify(emptyList())
                 sourceLoad(it)
-                rv?.scrollToPosition(0)
+                binding.allList.scrollToPosition(0)
             }
             .addTo(disposable)
 
-        view.findViewById<FloatingActionButton>(R.id.scrollToTop).setOnClickListener {
+        binding.scrollToTop.setOnClickListener {
             lifecycleScope.launch {
-                activity?.runOnUiThread { rv?.smoothScrollToPosition(0) }
+                activity?.runOnUiThread { binding.allList.smoothScrollToPosition(0) }
                 delay(500)
-                activity?.runOnUiThread { rv?.scrollToPosition(0) }
+                activity?.runOnUiThread { binding.allList.scrollToPosition(0) }
             }
         }
 
-        editText
+        binding.searchInfo
             .textChanges()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -116,7 +112,7 @@ class AllFragment : BaseListFragment() {
             .flatMapSingle { sourcePublish.value!!.searchList(it, 1, currentList) }
             .subscribe {
                 adapter.setData(it)
-                activity?.runOnUiThread { view.findViewById<TextInputLayout>(R.id.search_layout)?.suffixText = "${it.size}" }
+                activity?.runOnUiThread { binding.searchLayout.suffixText = "${it.size}" }
             }
             .addTo(disposable)
 
@@ -134,7 +130,6 @@ class AllFragment : BaseListFragment() {
     }
 
     private fun sourceLoad(sources: ApiService, page: Int = 1) {
-        val searchLayout = view?.findViewById<TextInputLayout>(R.id.search_layout)
         sources.getList(page)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -142,11 +137,11 @@ class AllFragment : BaseListFragment() {
                 adapter.addItems(it)
                 currentList.clear()
                 currentList.addAll(it)
-                view?.findViewById<SwipeRefreshLayout>(R.id.allRefresh)?.isRefreshing = false
+                binding.allRefresh.isRefreshing = false
                 activity?.runOnUiThread {
-                    searchLayout?.editText?.setText("")
-                    searchLayout?.suffixText = "${adapter.dataList.size}"
-                    searchLayout?.hint = getString(R.string.searchFor, sourcePublish.value?.serviceName.orEmpty())
+                    binding.searchLayout.editText?.setText("")
+                    binding.searchLayout.suffixText = "${adapter.dataList.size}"
+                    binding.searchLayout.hint = getString(R.string.searchFor, sourcePublish.value?.serviceName.orEmpty())
                 }
             }
             .addTo(disposable)

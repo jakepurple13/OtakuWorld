@@ -105,14 +105,7 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
 
         //Set delete action
         holder.itemView.setOnLongClickListener { v: View? ->
-            val uri12: Uri = Uri.parse(downloadData.download!!.url)
-            DeleteDialog(
-                context,
-                context.getString(R.string.delete_title, uri12.lastPathSegment),
-                downloadData.download,
-                null,
-                null
-            ).show()
+            context.deleteDialog(downloadData.download!!) {}
             true
         }
     }
@@ -175,17 +168,7 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
     }
 
     fun onItemDismiss(position: Int, direction: Int) {
-        val listener: DeleteDialog.DeleteDialogListener = object : DeleteDialog.DeleteDialogListener {
-            override fun onDelete() {
-                dataList.removeAt(position)
-                notifyItemRemoved(position)
-            }
-
-            override fun onCancel() {
-                notifyDataSetChanged()
-            }
-        }
-        DeleteDialog(context, dataList[position].download!!.file, dataList[position].download, null, listener).show()
+        context.deleteDialog(removeItem(position).download!!) { notifyDataSetChanged() }
     }
 
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {

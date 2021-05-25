@@ -12,17 +12,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.animeworld.cast.CastHelper
+import com.programmersbox.animeworld.databinding.FragmentViewVideosBinding
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
@@ -36,12 +33,15 @@ import java.util.concurrent.TimeUnit
 
 class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
+    private lateinit var binding: FragmentViewVideosBinding
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_view_videos, container, false)
+        binding = FragmentViewVideosBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     private val adapter by lazy { VideoAdapter(requireContext(), MainActivity.cast) }
@@ -50,60 +50,26 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        MainActivity.cast.setMediaRouteMenu(requireContext(), view.findViewById<MaterialToolbar>(R.id.toolbarmenu).menu)
-        val videoRv = view.findViewById<RecyclerView>(R.id.videoRv)
-        videoRv.adapter = adapter
+        MainActivity.cast.setMediaRouteMenu(requireContext(), binding.toolbarmenu.menu)
+        binding.videoRv.adapter = adapter
         DragSwipeUtils.setDragSwipeUp(
             adapter,
-            videoRv,
+            binding.videoRv,
             listOf(Direction.NOTHING),
             listOf(Direction.START, Direction.END),
             DragSwipeActionBuilder {
                 onSwiped { viewHolder, _, dragSwipeAdapter ->
-                    val listener: DeleteDialog.DeleteDialogListener = object : DeleteDialog.DeleteDialogListener {
-                        override fun onDelete() {
-                            val file = File(dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition).path!!)
-                            if (file.exists()) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition).let {
-                                        it.assetFileStringUri?.toUri()?.let { it1 ->
-                                            context?.contentResolver?.delete(
-                                                it1,
-                                                "${MediaStore.Video.Media._ID} = ?",
-                                                arrayOf(it.videoId.toString())
-                                            )
-                                        }
-                                    }
-                                } else {
-                                    Toast.makeText(
-                                        requireContext(),
-                                        if (file.delete()) R.string.fileDeleted else R.string.fileNotDeleted,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-
-                        }
-
-                        override fun onCancel() {
-                            dragSwipeAdapter.notifyDataSetChanged()
-                        }
+                    context?.deleteDialog(dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition)) {
+                        dragSwipeAdapter.notifyDataSetChanged()
                     }
-                    DeleteDialog(
-                        context,
-                        dragSwipeAdapter[viewHolder.absoluteAdapterPosition].videoName.orEmpty(),
-                        null,
-                        File(dragSwipeAdapter.dataList[viewHolder.absoluteAdapterPosition].path!!),
-                        listener
-                    ).show()
                 }
             }
         )
 
         loadVideos()
-        view.findViewById<SwipeRefreshLayout>(R.id.view_video_refresh).isEnabled = false//setOnRefreshListener { loadVideos() }
+        binding.viewVideoRefresh.isEnabled = false//setOnRefreshListener { loadVideos() }
 
-        view.findViewById<MaterialButton>(R.id.multiple_video_delete).setOnClickListener {
+        binding.multipleVideoDelete.setOnClickListener {
             val downloadItems = mutableListOf<String>()
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.delete)
@@ -139,7 +105,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
     }
 
     private fun loadVideos() {
-        view?.findViewById<SwipeRefreshLayout>(R.id.view_video_refresh)?.isRefreshing = true
+        binding.viewVideoRefresh.isRefreshing = true
         val permissions = listOfNotNull(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -160,15 +126,15 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
                 val prefs = requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).all.keys
                 val fileRegex = "(\\/[^*|\"<>?\\n]*)|(\\\\\\\\.*?\\\\.*)".toRegex()
-                val filePrefs = prefs.filter { fileRegex.containsMatchIn(it) }
+                val filePrefs = prefs.filter(fileRegex::containsMatchIn)
                 for (p in filePrefs) {
                     //Loged.i(p)
-                    if (!it.any { it.path == p }) {
+                    if (!it.any { it1 -> it1.path == p }) {
                         requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).edit().remove(p).apply()
                     }
                 }
                 adapter.setListNotify(it)
-                view?.findViewById<SwipeRefreshLayout>(R.id.view_video_refresh)?.isRefreshing = false
+                binding.viewVideoRefresh.isRefreshing = false
             }
             ?.addTo(disposable)
 

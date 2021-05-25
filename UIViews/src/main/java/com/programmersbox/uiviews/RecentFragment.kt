@@ -2,15 +2,14 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
-import android.widget.RelativeLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.uiviews.databinding.FragmentRecentBinding
 import com.programmersbox.uiviews.utils.EndlessScrollingListener
 import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -36,11 +35,11 @@ class RecentFragment : BaseListFragment() {
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
 
+    private lateinit var binding: FragmentRecentBinding
+
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
         super.viewCreated(view, savedInstanceState)
-
-        val rv = view.findViewById<RecyclerView>(R.id.recentList)
-        val refresh = view.findViewById<SwipeRefreshLayout>(R.id.recentRefresh)
+        binding = FragmentRecentBinding.bind(view)
 
         Flowables.combineLatest(
             itemListener.getAllShowsFlowable(),
@@ -51,14 +50,14 @@ class RecentFragment : BaseListFragment() {
             .subscribe { adapter.update(it) { s, d -> s.url == d.url } }
             .addTo(disposable)
 
-        rv?.apply {
+        binding.recentList.apply {
             adapter = this@RecentFragment.adapter
             layoutManager = createLayoutManager(this@RecentFragment.requireContext())
             addOnScrollListener(object : EndlessScrollingListener(layoutManager!!) {
                 override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
                     if (sourcePublish.value!!.canScroll) {
                         count++
-                        refresh.isRefreshing = true
+                        binding.recentRefresh.isRefreshing = true
                         sourceLoad(sourcePublish.value!!, count)
                     }
                 }
@@ -69,12 +68,12 @@ class RecentFragment : BaseListFragment() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                view.findViewById<RelativeLayout>(R.id.offline_view).visibility = if (it) View.GONE else View.VISIBLE
-                refresh.visibility = if (it) View.VISIBLE else View.GONE
+                binding.offlineView.visibility = if (it) View.GONE else View.VISIBLE
+                binding.recentRefresh.visibility = if (it) View.VISIBLE else View.GONE
             }
             .addTo(disposable)
 
-        refresh.setOnRefreshListener { sourceLoad(sourcePublish.value!!) }
+        binding.recentRefresh.setOnRefreshListener { sourceLoad(sourcePublish.value!!) }
 
         sourcePublish
             .subscribeOn(Schedulers.io())
@@ -83,7 +82,7 @@ class RecentFragment : BaseListFragment() {
                 count = 1
                 adapter.setListNotify(emptyList())
                 sourceLoad(it)
-                rv?.scrollToPosition(0)
+                binding.recentList.scrollToPosition(0)
             }
             .addTo(disposable)
 
@@ -96,7 +95,7 @@ class RecentFragment : BaseListFragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy {
                 adapter.addItems(it)
-                view?.findViewById<SwipeRefreshLayout>(R.id.recentRefresh)?.isRefreshing = false
+                binding.recentRefresh.isRefreshing = false
             }
             .addTo(disposable)
     }

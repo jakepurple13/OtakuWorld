@@ -16,10 +16,10 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.github.se_bastiaan.torrentstream.utils.FileUtils
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.animeworld.adapters.JobQueueAdapter
 import com.programmersbox.animeworld.adapters.PauseAdapter
+import com.programmersbox.animeworld.databinding.DownloadViewerFragmentBinding
 import com.programmersbox.animeworld.ytsdatabase.*
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
@@ -40,18 +40,20 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     private var fetch: Fetch = Fetch.getDefaultInstance()
     private var fileAdapter: FileAdapter? = null
 
-
     private val pauseRepository: PauseRepository by lazy { PauseRepository(DownloadDatabase.getInstance(requireContext()).getPauseDao()) }
 
     private var jobQueueAdapter: JobQueueAdapter? = null
     private var pauseAdapter: PauseAdapter? = null
 
+    private lateinit var binding: DownloadViewerFragmentBinding
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.download_viewer_fragment, container, false)
+        binding = DownloadViewerFragmentBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -81,10 +83,9 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         val downloadsAdapter = ConcatAdapter(fileAdapter!!, jobQueueAdapter!!, pauseAdapter!!)
 
-        val downloadList = view.findViewById<RecyclerView>(R.id.download_list)
-        downloadList.adapter = downloadsAdapter
+        binding.downloadList.adapter = downloadsAdapter
 
-        ItemTouchHelper(itemCallback).attachToRecyclerView(downloadList)
+        ItemTouchHelper(itemCallback).attachToRecyclerView(binding.downloadList)
 
         /*DragSwipeUtils.setDragSwipeUp(
             fileAdapter!!,
@@ -98,7 +99,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             }
         )*/
 
-        view.findViewById<MaterialButton>(R.id.multiple_download_delete).setOnClickListener {
+        binding.multipleDownloadDelete.setOnClickListener {
             val downloadItems = mutableListOf<FileAdapter.DownloadData>()
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.delete)
