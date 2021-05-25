@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = "1.5.10"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "12.5"
+    ext.otakuVersionName = "13.0"
     ext.latestAboutLibsRelease = "+"
     ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
 
@@ -15,7 +15,7 @@ buildscript {
     ext.rxutils = "com.github.jakepurple13.HelpfulTools:rxutils:$jakepurple13"
     ext.thirdpartyutils = "com.github.jakepurple13.HelpfulTools:thirdpartyutils:$jakepurple13"
 
-    ext.gson = 'com.google.code.gson:gson:2.8.6'
+    ext.gson = 'com.google.code.gson:gson:2.8.7'
 
     ext.rxkotlin = "io.reactivex.rxjava2:rxkotlin:2.4.0"
     ext.rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1"
