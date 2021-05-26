@@ -11,13 +11,14 @@ import org.jsoup.nodes.Document
 
 enum class Sources(private val api: ApiService) : ApiService by api {
     GOGOANIME(GogoAnimeApi),
-    YTS(Yts),
-    ANIMETOON(AnimeToonApi),
 
-    //DUBBED_ANIME_BIZ(DubbedAnimeBiz),
+    YTS(Yts),
+
+    ANIMEKISA_SUBBED(AnimeKisaSubbed), ANIMEKISA_DUBBED(AnimeKisaDubbed), ANIMEKISA_MOVIES(AnimeKisaMovies),
+
     WCO_DUBBED(WcoDubbed), WCO_SUBBED(WcoSubbed), WCO_CARTOON(WcoCartoon), WCO_MOVIES(WcoMovies), WCO_OVA(WcoOva),
-    DUBBED_ANIME(AnimeToonDubbed),
-    ANIMETOON_MOVIES(AnimeToonMovies);
+
+    ANIMETOON(AnimeToonApi), DUBBED_ANIME(AnimeToonDubbed), ANIMETOON_MOVIES(AnimeToonMovies);
 
     override val serviceName: String get() = this.name
 }

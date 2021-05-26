@@ -1,6 +1,7 @@
 package com.programmersbox.anime_sources
 
 import androidx.annotation.WorkerThread
+import com.programmersbox.anime_sources.anime.AnimeKisaSubbed
 import com.programmersbox.anime_sources.anime.AnimeToonDubbed
 import com.programmersbox.anime_sources.anime.WcoDubbed
 import com.programmersbox.anime_sources.anime.Yts
@@ -26,6 +27,23 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun animekisaTest() {
+
+        val f = AnimeKisaSubbed.getList().blockingGet().take(10)
+        println(f.joinToString("\n"))
+
+        val e = f.first().toInfoModel().blockingGet()
+        println(e)
+
+        val c = e.chapters.first().getChapterInfo().blockingGet()
+        println(c)
+
+        //val v = c.first().link?.toJsoup()
+        //println(v)
+
+    }
 
     @Test
     fun animeheavenpro() {
