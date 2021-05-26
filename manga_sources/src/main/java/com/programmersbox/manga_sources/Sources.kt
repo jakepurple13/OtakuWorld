@@ -1,9 +1,6 @@
 package com.programmersbox.manga_sources
 
-import android.annotation.SuppressLint
-import android.content.Context
 import com.programmersbox.manga_sources.manga.*
-import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
 
 enum class Sources(
@@ -36,16 +33,4 @@ enum class Sources(
 
         fun getUpdateSearches() = values().filterNot(Sources::isAdult).filterNot(Sources::filterOutOfUpdate)
     }
-}
-
-@SuppressLint("StaticFieldLeak")
-object MangaContext {
-    @Transient
-    lateinit var context: Context
-
-    @Volatile
-    @Transient
-    private var INSTANCE: NetworkHelper? = null
-
-    fun getInstance(context: Context): NetworkHelper = INSTANCE ?: synchronized(this) { INSTANCE ?: NetworkHelper(context).also { INSTANCE = it } }
 }

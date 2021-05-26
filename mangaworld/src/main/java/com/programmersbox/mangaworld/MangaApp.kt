@@ -3,7 +3,6 @@ package com.programmersbox.mangaworld
 import android.graphics.Bitmap
 import androidx.core.content.FileProvider
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.programmersbox.manga_sources.MangaContext
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.UpdateWorker
@@ -17,8 +16,6 @@ class MangaApp : OtakuApp() {
 
         logo = R.mipmap.ic_launcher
         notificationLogo = R.drawable.manga_world_round_logo
-
-        MangaContext.context = this
 
         UpdateWorker.sourcesList = Sources.values().toList()
         UpdateWorker.sourceFromString = {

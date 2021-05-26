@@ -41,8 +41,6 @@ class ExampleUnitTest {
 
         val c = Mockito.mock(Context::class.java)
 
-        MangaContext.getInstance(c)
-
         val f = MangaPark.getRecent().blockingGet()
 
         println(f)

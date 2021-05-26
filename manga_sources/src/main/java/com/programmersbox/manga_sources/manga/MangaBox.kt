@@ -1,7 +1,7 @@
 package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
-import com.programmersbox.manga_sources.MangaContext
+import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
 import io.reactivex.Single
@@ -10,6 +10,8 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -19,7 +21,7 @@ abstract class MangaBox(
     override val serviceName: String,
     override val baseUrl: String,
     private val dateformat: SimpleDateFormat = SimpleDateFormat("MMM-dd-yy", Locale.ENGLISH)
-) : ApiService {
+) : ApiService, KoinComponent {
 
     companion object {
         const val DEFAULT_USER_AGENT =
@@ -115,16 +117,18 @@ abstract class MangaBox(
         return mangas
     }
 
+    private val helper: NetworkHelper by inject()
+
     //override val supportsLatest = true
 
     private val client: OkHttpClient by lazy {
-        MangaContext.getInstance(MangaContext.context).cloudflareClient.newBuilder()
+        helper.cloudflareClient.newBuilder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
     }
 
-    private fun cloudFlareClient(url: String) = cloudflare(url, *headers().toMap().toList().toTypedArray())
+    private fun cloudFlareClient(url: String) = cloudflare(helper, url, *headers().toMap().toList().toTypedArray())
 
     fun headers(): Headers = Headers.Builder()
         .add("User-Agent", DEFAULT_USER_AGENT)

@@ -12,6 +12,7 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
+import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
@@ -30,6 +31,7 @@ import java.io.File
 
 val appModule = module {
     single<GenericInfo> { GenericManga(get()) }
+    single { NetworkHelper(get()) }
 }
 
 class GenericManga(val context: Context) : GenericInfo {

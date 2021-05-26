@@ -8,13 +8,14 @@ import android.os.Looper
 import android.webkit.*
 import android.widget.Toast
 import androidx.webkit.WebViewFeature
-import com.programmersbox.manga_sources.MangaContext
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.dnsoverhttps.DnsOverHttps
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.IOException
 import java.net.InetAddress
@@ -27,13 +28,14 @@ fun Connection.headers(vararg pair: Pair<String, String>) = apply { headers(pair
 
 fun Response.asJsoup(html: String? = null): Document = Jsoup.parse(html ?: body!!.string(), request.url.toString())
 
-internal fun cloudflare(url: String, vararg headers: Pair<String, String>) = MangaContext.getInstance(MangaContext.context).cloudflareClient.newCall(
-    Request.Builder()
-        .url(url)
-        .header(*headers)
-        .cacheControl(CacheControl.Builder().maxAge(10, TimeUnit.MINUTES).build())
-        .build()
-)
+internal fun cloudflare(networkHelper: NetworkHelper, url: String, vararg headers: Pair<String, String>) = networkHelper
+    .cloudflareClient.newCall(
+        Request.Builder()
+            .url(url)
+            .header(*headers)
+            .cacheControl(CacheControl.Builder().maxAge(10, TimeUnit.MINUTES).build())
+            .build()
+    )
 
 internal fun OkHttpClient.cloudflare(url: String, vararg headers: Pair<String, String>) = newCall(
     Request.Builder()
@@ -43,11 +45,11 @@ internal fun OkHttpClient.cloudflare(url: String, vararg headers: Pair<String, S
         .build()
 )
 
-class CloudflareInterceptor(private val context: Context) : Interceptor {
+class CloudflareInterceptor(private val context: Context) : Interceptor, KoinComponent {
 
     private val handler = Handler(Looper.getMainLooper())
 
-    private val networkHelper: NetworkHelper by lazy { NetworkHelper(context) }//by injectLazy()
+    private val networkHelper: NetworkHelper by inject()
 
     /**
      * When this is called, it initializes the WebView if it wasn't already. We use this to avoid

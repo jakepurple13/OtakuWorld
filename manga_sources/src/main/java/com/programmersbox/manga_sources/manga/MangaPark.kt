@@ -3,20 +3,25 @@ package com.programmersbox.manga_sources.manga
 import android.annotation.SuppressLint
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.manga_sources.Sources
+import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.asJsoup
 import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
 import io.reactivex.Single
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.text.SimpleDateFormat
 import java.util.*
 
-object MangaPark : ApiService {
+object MangaPark : ApiService, KoinComponent {
 
     override val baseUrl = "https://v2.mangapark.net"
 
     override val serviceName: String get() = "MANGA_PARK"
+
+    private val helper: NetworkHelper by inject()
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
         if (searchText.isBlank()) {
@@ -24,7 +29,7 @@ object MangaPark : ApiService {
         } else {
             Single.create { emitter ->
                 emitter.onSuccess(
-                    cloudflare("$baseUrl/search?q=$searchText&page=$page&st-ss=1").execute().asJsoup()
+                    cloudflare(helper, "$baseUrl/search?q=$searchText&page=$page&st-ss=1").execute().asJsoup()
                         .select("div.item").map {
                             val title = it.select("a.cover")
                             ItemModel(
@@ -44,7 +49,7 @@ object MangaPark : ApiService {
     }
 
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare("$baseUrl/genre/$page").execute().asJsoup()
+        cloudflare(helper, "$baseUrl/genre/$page").execute().asJsoup()
             .select("div.ls1").select("div.d-flex, div.flex-row, div.item")
             .map {
                 ItemModel(
@@ -59,7 +64,7 @@ object MangaPark : ApiService {
     }
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare("$baseUrl/latest/$page").execute().asJsoup()
+        cloudflare(helper, "$baseUrl/latest/$page").execute().asJsoup()
             .select("div.ls1").select("div.d-flex, div.flex-row, div.item")
             .map {
                 ItemModel(
@@ -74,7 +79,7 @@ object MangaPark : ApiService {
     }
 
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = cloudflare(model.url).execute().asJsoup()//Jsoup.connect(model.mangaUrl).get()
+        val doc = cloudflare(helper, model.url).execute().asJsoup()//Jsoup.connect(model.mangaUrl).get()
         val genres = mutableListOf<String>()
         val alternateNames = mutableListOf<String>()
         doc.select(".attr > tbody > tr").forEach {
@@ -238,7 +243,7 @@ object MangaPark : ApiService {
     }
 
     override suspend fun getSourceByUrl(url: String): ItemModel? = try {
-        val doc = cloudflare(url).execute().asJsoup()
+        val doc = cloudflare(helper, url).execute().asJsoup()
         val titleAndImg = doc.select("div.w-100, div.cover").select("img")
         ItemModel(
             title = titleAndImg.attr("title"),
@@ -252,7 +257,7 @@ object MangaPark : ApiService {
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-        cloudflare(chapterModel.url).execute().asJsoup().toString()
+        cloudflare(helper, chapterModel.url).execute().asJsoup().toString()
             .substringAfter("var _load_pages = ").substringBefore(";").fromJson<List<Pages>>().orEmpty()
             .map { if (it.u.orEmpty().startsWith("//")) "https:${it.u}" else it.u.orEmpty() }
             .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }

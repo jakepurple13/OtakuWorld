@@ -53,4 +53,6 @@ dependencies {
     implementation rxandroid
 
     implementation project(':Models')
+
+    implementation koin.koin
 }
