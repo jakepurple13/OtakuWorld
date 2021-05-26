@@ -30,10 +30,7 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
         holder.actionButton.setOnClickListener(null)
         holder.actionButton.isEnabled = true
         val downloadData = dataList[position]
-        var url = ""
-        if (downloadData.download != null) {
-            url = downloadData.download!!.url
-        }
+        val url = downloadData.download?.url.orEmpty()
         val uri: Uri = Uri.parse(url)
         val status = downloadData.download!!.status
         val context: Context = holder.itemView.context
@@ -45,16 +42,9 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
         }
         holder.progressBar.progress = progress
         holder.progressTextView.text = context.getString(R.string.percent_progress, progress)
-        if (downloadData.eta == -1L) {
-            holder.timeRemainingTextView.text = ""
-        } else {
-            holder.timeRemainingTextView.text = getETAString(downloadData.eta, true)
-        }
-        if (downloadData.downloadedBytesPerSecond == 0L) {
-            holder.downloadedBytesPerSecondTextView.text = ""
-        } else {
-            holder.downloadedBytesPerSecondTextView.text = getDownloadSpeedString(downloadData.downloadedBytesPerSecond)
-        }
+        holder.timeRemainingTextView.text = if (downloadData.eta == -1L) "" else getETAString(downloadData.eta, true)
+        holder.downloadedBytesPerSecondTextView.text =
+            if (downloadData.downloadedBytesPerSecond == 0L) "" else getDownloadSpeedString(downloadData.downloadedBytesPerSecond)
         when (status) {
             COMPLETED -> {
                 holder.actionButton.setText(R.string.view)
@@ -69,28 +59,28 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
             }
             FAILED -> {
                 holder.actionButton.setText(R.string.retry)
-                holder.actionButton.setOnClickListener { view ->
+                holder.actionButton.setOnClickListener {
                     holder.actionButton.isEnabled = false
                     actionListener.onRetryDownload(downloadData.download!!.id)
                 }
             }
             PAUSED -> {
                 holder.actionButton.setText(R.string.resume)
-                holder.actionButton.setOnClickListener { view ->
+                holder.actionButton.setOnClickListener {
                     holder.actionButton.isEnabled = false
                     actionListener.onResumeDownload(downloadData.download!!.id)
                 }
             }
             DOWNLOADING, QUEUED -> {
                 holder.actionButton.setText(R.string.pause)
-                holder.actionButton.setOnClickListener { view ->
+                holder.actionButton.setOnClickListener {
                     holder.actionButton.isEnabled = false
                     actionListener.onPauseDownload(downloadData.download!!.id)
                 }
             }
             ADDED -> {
                 holder.actionButton.setText(R.string.download)
-                holder.actionButton.setOnClickListener { view ->
+                holder.actionButton.setOnClickListener {
                     holder.actionButton.isEnabled = false
                     actionListener.onResumeDownload(downloadData.download!!.id)
                 }
@@ -98,49 +88,38 @@ class FileAdapter internal constructor(private val actionListener: ActionListene
             else -> {
             }
         }
-        holder.actionButton.setOnLongClickListener { view ->
+        holder.actionButton.setOnLongClickListener {
             holder.itemView.performClick()
             true
         }
 
         //Set delete action
-        holder.itemView.setOnLongClickListener { v: View? ->
+        holder.itemView.setOnLongClickListener {
             context.deleteDialog(downloadData.download!!) {}
             true
         }
     }
 
     fun addDownload(download: Download) {
-        var found = false
-        var data: DownloadData? = null
-        var dataPosition = -1
-        for (i in dataList.indices) {
-            val downloadData = dataList[i]
-            if (downloadData.id == download.id) {
-                data = downloadData
-                dataPosition = i
-                found = true
-                break
-            }
-        }
-        if (!found) {
+        val d = dataList.withIndex().find { it.value.id == download.id }
+
+        if (d == null) {
             val downloadData = DownloadData()
             downloadData.id = download.id
             downloadData.download = download
             dataList.add(downloadData)
             notifyItemInserted(dataList.size - 1)
         } else {
-            data!!.download = download
-            notifyItemChanged(dataPosition)
+            d.value.download = download
+            notifyItemChanged(d.index)
         }
     }
 
     fun update(download: Download, eta: Long, downloadedBytesPerSecond: Long) {
-        for (position in dataList.indices) {
-            val downloadData = dataList[position]
+        for ((position, downloadData) in dataList.withIndex()) {
             if (downloadData.id == download.id) {
                 when (download.status) {
-                    Status.REMOVED, Status.DELETED -> {
+                    REMOVED, DELETED -> {
                         dataList.removeAt(position)
                         notifyItemRemoved(position)
                     }

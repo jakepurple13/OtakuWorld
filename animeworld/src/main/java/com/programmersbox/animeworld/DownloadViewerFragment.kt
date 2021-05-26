@@ -244,9 +244,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                     .setTitle(R.string.do_you_want_to_delete)
                     .setMessage(R.string.delete)
                     .setPositiveButton(getString(R.string.yes)) { d, _ ->
-                        model.saveLocation?.let {
-                            FileUtils.recursiveDelete(File(it))
-                        }
+                        model.saveLocation?.let { FileUtils.recursiveDelete(File(it)) }
                         pauseRepository.deletePause(model.hash)
                         d.dismiss()
                     }

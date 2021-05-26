@@ -125,7 +125,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             ?.subscribe {
 
                 val prefs = requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).all.keys
-                val fileRegex = "(\\/[^*|\"<>?\\n]*)|(\\\\\\\\.*?\\\\.*)".toRegex()
+                @Suppress("RegExpRedundantEscape") val fileRegex = "(\\/[^*|\"<>?\\n]*)|(\\\\\\\\.*?\\\\.*)".toRegex()
                 val filePrefs = prefs.filter(fileRegex::containsMatchIn)
                 for (p in filePrefs) {
                     //Loged.i(p)
