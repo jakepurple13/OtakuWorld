@@ -124,12 +124,12 @@ object GogoAnimeApi : ShowApi(
         null
     }
 
-    override fun searchList(text: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
         return Single.create { emitter ->
             try {
-                if (text.isNotEmpty()) {
+                if (searchText.isNotEmpty()) {
                     emitter.onSuccess(
-                        getJsonApi<Base>("https://www.gogoanime1.com/search/topSearch?q=$text")
+                        getJsonApi<Base>("https://www.gogoanime1.com/search/topSearch?q=$searchText")
                             ?.data
                             .orEmpty()
                             .map {
@@ -143,10 +143,10 @@ object GogoAnimeApi : ShowApi(
                             }
                     )
                 } else {
-                    emitter.onSuccess(searchListNonSingle(text, page, list))
+                    emitter.onSuccess(searchListNonSingle(searchText, page, list))
                 }
             } catch (e: Exception) {
-                emitter.onSuccess(searchListNonSingle(text, page, list))
+                emitter.onSuccess(searchListNonSingle(searchText, page, list))
             }
         }
     }

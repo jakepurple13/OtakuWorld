@@ -215,7 +215,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
                     )
                 }*/
             }
-            .also { println("-".repeat(50)) }
+            //.also { println("-".repeat(50)) }
         //.also { println(it) }
 
         /*
