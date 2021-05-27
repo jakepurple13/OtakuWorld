@@ -85,7 +85,7 @@ dependencies {
     implementation "androidx.room:room-runtime:2.3.0"
     implementation 'com.github.anzaizai:EasySwipeMenuLayout:1.1.4'
 
-    implementation 'com.github.noowenz:ShowMoreLess:v1.0.2'
+    implementation 'com.github.noowenz:ShowMoreLess:V1.01'
     implementation "com.mikepenz:aboutlibraries-core:${latestAboutLibsRelease}"
     implementation "com.mikepenz:aboutlibraries:${latestAboutLibsRelease}"
 
