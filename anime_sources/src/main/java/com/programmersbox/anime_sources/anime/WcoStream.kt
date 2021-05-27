@@ -121,10 +121,8 @@ abstract class WcoStream(allPath: String) : ShowApi(
                     .select("meta[itemprop=embedURL]")
                     //.alsoPrint()
                     .next()
-                    //.alsoPrint()
-                    .let { it.toString() }
+                    .toString()
                     .let {
-
                         val ending = " - ([0-9]+)".toRegex().find(it)?.groups?.get(1)?.value
                         "var (.*?) = \\[(.*?)\\];".toRegex().find(it)?.groups?.get(2)?.value
                             ?.replace("\"", "")
@@ -215,7 +213,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
                     )
                 }*/
             }
-            //.also { println("-".repeat(50)) }
+        //.also { println("-".repeat(50)) }
         //.also { println(it) }
 
         /*

@@ -16,7 +16,7 @@ object Mangamutiny : ApiService {
 
     override val websiteUrl: String = "https://mangamutiny.org"
 
-    val headers: List<Pair<String, String>>
+    private val headers: List<Pair<String, String>>
         get() = listOf(
             "Accept" to "application/json",
             "Origin" to "https://mangamutiny.org"

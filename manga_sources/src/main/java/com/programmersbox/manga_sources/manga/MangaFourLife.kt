@@ -43,7 +43,7 @@ object MangaFourLife : ApiService {
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         try {
-            getManga(page)?.let(emitter::onSuccess) ?: throw Exception("Error")
+            getManga(page).let(emitter::onSuccess)
         } catch (e: Exception) {
             emitter.onError(e)
         }
@@ -51,7 +51,7 @@ object MangaFourLife : ApiService {
 
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         try {
-            getManga(page)?.let(emitter::onSuccess) ?: throw Exception("Error")
+            getManga(page).let(emitter::onSuccess)
         } catch (e: Exception) {
             emitter.onError(e)
         }
