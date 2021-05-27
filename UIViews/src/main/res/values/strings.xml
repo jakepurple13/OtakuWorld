@@ -106,5 +106,7 @@
     <string name="delete_notifications_summary">You should do this every once in a while to make sure the saved database is cleared and up to date.</string>
     <string name="view_notifications_title">View Notifications</string>
     <string name="notifications_category_title">Notifications</string>
+    <string name="showMore">Show More</string>
+    <string name="showLess">Show Less</string>
 
 </resources>

@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
@@ -12,15 +13,22 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.navigation.ui.NavigationUI
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.noowenz.showmoreless.ShowMoreLess
+import com.programmersbox.dragswipe.get
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.helpfulutils.whatIfNotNull
+import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.rxutils.invoke
@@ -71,6 +79,7 @@ class DetailsFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        NavigationUI.setupWithNavController(binding.collapsingBar, binding.toolbar, findNavController())
         args.itemInfo?.toInfoModel()
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
@@ -82,7 +91,7 @@ class DetailsFragment : Fragment() {
                 adapter.addItems(info.chapters)
                 onInfoGet(info)
 
-                Glide.with(binding.infoCover)
+                Glide.with(binding.bigInfoCover)
                     .load(info.imageUrl)
                     .override(360, 480)
                     .placeholder(OtakuApp.logo)
@@ -91,21 +100,44 @@ class DetailsFragment : Fragment() {
                     .transform(RoundedCorners(15))
                     .into<Drawable> {
                         resourceReady { image, _ ->
+                            binding.bigInfoCover.setImageDrawable(image)
                             binding.infoCover.setImageDrawable(image)
                             binding.swatch = image.getPalette().vibrantSwatch
                                 ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
                                 .also { swatch ->
+                                    swatch?.rgb?.let {
+                                        binding.infoHeader.setBackgroundColor(
+                                            ColorUtils.setAlphaComponent(
+                                                ColorUtils.blendARGB(
+                                                    requireContext().colorFromTheme(R.attr.colorSurface),
+                                                    it,
+                                                    0.25f
+                                                ),
+                                                127
+                                            )
+
+                                        )
+                                    }
+
+                                    ShowMoreLess.Builder(requireContext())
+                                        .expandAnimation(true)
+                                        .showMoreLabel(getString(R.string.showMore))
+                                        .showLessLabel(getString(R.string.showLess))
+                                        .labelBold(true)
+                                        .textLengthAndLengthType(2, ShowMoreLess.TYPE_LINE)
+                                        .whatIfNotNull(swatch?.rgb) {
+                                            showLessLabelColor(it)
+                                            showMoreLabelColor(it)
+                                        }
+                                        .textClickable(textClickableInExpand = true, textClickableInCollapse = true)
+                                        .labelUnderLine(true)
+                                        .build()
+                                        .addShowMoreLess(binding.infoDescription, binding.infoDescription.text, false)
+
+                                    swatch?.rgb?.let { binding.toolbar.setBackgroundColor(it) }
                                     swatch?.rgb?.let { binding.infoLayout.setBackgroundColor(it) }
-                                    swatch?.rgb?.let { binding.moreInfo.setBackgroundColor(it) }
-                                    swatch?.titleColor?.let { binding.moreInfo.setTextColor(it) }
-                                    swatch?.rgb?.let {
-                                        binding.markChapters.strokeColor = ColorStateList.valueOf(it)
-                                        binding.markChapters.setTextColor(it)
-                                    }
-                                    swatch?.rgb?.let {
-                                        binding.shareButton.strokeColor = ColorStateList.valueOf(it)
-                                        binding.shareButton.iconTint = ColorStateList.valueOf(it)
-                                    }
+                                    swatch?.rgb?.let { binding.shareButton.backgroundTintList = ColorStateList.valueOf(it) }
+                                    swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
                                     binding.favoriteItem.changeTint(swatch?.rgb ?: Color.WHITE)
                                     swatch?.rgb?.let { requireActivity().window.statusBarColor = it }
                                     swatchBarColor = swatch?.rgb
@@ -124,16 +156,43 @@ class DetailsFragment : Fragment() {
                         }
                     }
 
+                binding.infoUrl.setOnClickListener {
+                    requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                }
+
+                binding.toolbar.setOnMenuItemClickListener {
+                    when (it.itemId) {
+                        R.id.markChaptersAs -> {
+                            val checked = adapter.currentList
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle(R.string.markAs)
+                                .setMultiChoiceItems(
+                                    adapter.dataList.map(ChapterModel::name).toTypedArray(),
+                                    BooleanArray(adapter.itemCount) { i -> checked.any { it1 -> it1.url == adapter[i].url } }
+                                ) { _, i, _ ->
+                                    (binding.infoChapterList.findViewHolderForAdapterPosition(i) as? ChapterAdapter.ChapterHolder)
+                                        ?.binding?.markedReadButton?.performClick()
+                                }
+                                .setPositiveButton(R.string.done) { d, _ -> d.dismiss() }
+                                .show()
+                        }
+                        R.id.openBrowser -> {
+                            requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                        }
+                    }
+                    true
+                }
+
             }
             ?.addTo(disposable)
 
         binding.infoChapterList.adapter = adapter
 
         binding.infoUrl.transformationMethod = ChromeCustomTabTransformationMethod(requireContext()) {
-            //swatch?.rgb?.let { setToolbarColor(it) }
             setShareState(CustomTabsIntent.SHARE_STATE_ON)
         }
         binding.infoUrl.movementMethod = LinkMovementMethod.getInstance()
+        binding.infoUrl.paintFlags += Paint.UNDERLINE_TEXT_FLAG
 
         isFavorite
             .subscribe {
@@ -146,6 +205,7 @@ class DetailsFragment : Fragment() {
 
         binding.favoriteItem.isEnabled = false
         binding.favoriteInfo.isEnabled = false
+
     }
 
     private fun onInfoGet(infoModel: InfoModel) {
@@ -213,17 +273,6 @@ class DetailsFragment : Fragment() {
             }, "Share ${infoModel.title}"))
         }
     }
-
-    /*override fun onResume() {
-        super.onResume()
-        swatchBarColor?.let {
-            requireActivity().window?.let { it1 ->
-                ValueAnimator.ofArgb(it1.statusBarColor, it)
-                    .apply { addUpdateListener { it1.statusBarColor = it.animatedValue as Int } }
-                    .start()
-            }
-        }
-    }*/
 
     override fun onDestroy() {
         super.onDestroy()

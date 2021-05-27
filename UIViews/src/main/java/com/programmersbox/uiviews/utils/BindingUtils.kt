@@ -4,12 +4,15 @@ import android.content.res.ColorStateList
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.SwatchInfo
 
@@ -41,6 +44,26 @@ fun loadGenres(view: ChipGroup, genres: List<String>?, swatchInfo: SwatchInfo?) 
             swatchInfo?.rgb?.let { setTextColor(it) }
             swatchInfo?.bodyColor?.let { chipBackgroundColor = ColorStateList.valueOf(it) }
         })
+    }
+}
+
+@BindingAdapter("toolbarColors")
+fun toolbarColors(view: Toolbar, swatchInfo: SwatchInfo?) {
+    swatchInfo?.titleColor?.let {
+        view.setTitleTextColor(it)
+        view.navigationIcon?.changeDrawableColor(it)
+        view.setSubtitleTextColor(it)
+        view.overflowIcon?.changeDrawableColor(it)
+    }
+    swatchInfo?.rgb?.let { view.setBackgroundColor(it) }
+}
+
+@BindingAdapter("collapsingToolbarColors")
+fun collapsingToolbarColors(view: CollapsingToolbarLayout, swatchInfo: SwatchInfo?) {
+    swatchInfo?.titleColor?.let { view.setCollapsedTitleTextColor(it) }
+    swatchInfo?.rgb?.let {
+        view.setBackgroundColor(it)
+        //view.setExpandedTitleColor(it)
     }
 }
 

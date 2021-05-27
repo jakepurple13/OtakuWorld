@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/markChaptersAs"
+        android:title="@string/markAs" />
+
+    <item
+        android:id="@+id/openBrowser"
+        android:title="@string/fallback_menu_item_open_in_browser" />
+
+</menu>

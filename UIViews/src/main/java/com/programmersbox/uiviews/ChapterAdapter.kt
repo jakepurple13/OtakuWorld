@@ -44,7 +44,7 @@ class ChapterAdapter(
 
     override fun ChapterHolder.onBind(item: ChapterModel, position: Int) = bind(item)
 
-    inner class ChapterHolder(private val binding: ChapterItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class ChapterHolder(val binding: ChapterItemBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(chapterModel: ChapterModel) {
             binding.chapter = chapterModel
             binding.swatch = swatchInfo
