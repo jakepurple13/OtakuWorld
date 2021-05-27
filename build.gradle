@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = "1.5.10"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "13.7"
+    ext.otakuVersionName = "14.0"
     ext.latestAboutLibsRelease = "+"
     ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
 
