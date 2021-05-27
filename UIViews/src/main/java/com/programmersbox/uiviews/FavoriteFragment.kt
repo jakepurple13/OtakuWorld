@@ -27,6 +27,7 @@ import com.programmersbox.uiviews.databinding.FavoriteItemBinding
 import com.programmersbox.uiviews.databinding.FragmentFavoriteBinding
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
 import com.programmersbox.uiviews.utils.FirebaseDb
+import com.programmersbox.uiviews.utils.toolTipText
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -173,6 +174,7 @@ class FavoriteFragment : BaseFragment() {
 
         fun bind(info: List<DbModel>, genericInfo: GenericInfo) {
             binding.show = info.random()
+            binding.root.toolTipText(info.random().title)
             Glide.with(itemView.context)
                 .asBitmap()
                 .load(info.random().imageUrl)

@@ -11,6 +11,7 @@ import com.programmersbox.thirdpartyutils.changeTint
 import com.programmersbox.thirdpartyutils.check
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.ItemListAdapter
+import com.programmersbox.uiviews.utils.toolTipText
 
 class AnimeAdapter(
     context: Context,
@@ -30,6 +31,7 @@ class AnimeHolder(private val binding: AnimeListItemBinding) : RecyclerView.View
 
     fun bind(info: ItemModel, list: List<DbModel>) {
         binding.show = info
+        binding.root.toolTipText(info.title)
         binding.favoriteHeart.changeTint(binding.animeTitle.currentTextColor)
         binding.favoriteHeart.check(false)
         binding.favoriteHeart.check(list.any { it.url == info.url })

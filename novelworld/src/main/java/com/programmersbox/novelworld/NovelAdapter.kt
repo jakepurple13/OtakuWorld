@@ -9,6 +9,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.novelworld.databinding.NovelListItemBinding
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.ItemListAdapter
+import com.programmersbox.uiviews.utils.toolTipText
 
 class NovelAdapter(
     context: Context,
@@ -28,6 +29,7 @@ class NovelHolder(private val binding: NovelListItemBinding) : RecyclerView.View
 
     fun bind(info: ItemModel, list: List<DbModel>) {
         binding.show = info
+        binding.root.toolTipText(info.title)
         /*binding.favoriteHeart.changeTint(binding.animeTitle.currentTextColor)
         binding.favoriteHeart.check(false)
         binding.favoriteHeart.check(list.any { it.url == info.url })*/

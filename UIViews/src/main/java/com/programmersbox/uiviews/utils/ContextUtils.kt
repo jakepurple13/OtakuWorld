@@ -5,6 +5,9 @@ import android.graphics.Bitmap
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Build
+import android.view.View
+import androidx.annotation.StringRes
 import com.google.gson.*
 import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
@@ -26,6 +29,12 @@ val updateCheckPublish = BehaviorSubject.create<Long>()
 var Context.batteryAlertPercent: Int by sharedPrefNotNullDelegate(20)
 
 val appUpdateCheck = BehaviorSubject.create<Double>()
+
+fun View.toolTipText(text: CharSequence) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) tooltipText = text
+}
+
+fun View.toolTipText(@StringRes stringId: Int) = toolTipText(context.getString(stringId))
 
 fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap? {
     val margin = 24

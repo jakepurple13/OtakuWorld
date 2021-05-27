@@ -13,7 +13,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.ItemListAdapter
-
+import com.programmersbox.uiviews.utils.toolTipText
 
 class MangaGalleryAdapter(context: Context, baseListFragment: BaseListFragment) :
     ItemListAdapter<GalleryHolder>(context, baseListFragment) {
@@ -58,6 +58,7 @@ class GalleryHolder(private val binding: MangaGalleryItemBinding) : RecyclerView
 
     fun bind(item: ItemModel) {
         binding.model = item
+        binding.root.toolTipText(item.title)
         binding.executePendingBindings()
 
     }

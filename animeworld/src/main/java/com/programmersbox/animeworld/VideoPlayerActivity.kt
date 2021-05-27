@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.GestureDetector
@@ -38,6 +39,7 @@ import com.programmersbox.helpfulutils.*
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.utils.batteryAlertPercent
+import com.programmersbox.uiviews.utils.toolTipText
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -150,6 +152,15 @@ class VideoPlayerActivity : AppCompatActivity() {
         enableImmersiveMode()
         exoBinding = ExoControlsBinding.bind(videoBinding.root.findViewById(R.id.exo_controls))
         exoBinding.videoBack.setOnClickListener { finish() }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            exoBinding.videoBack.toolTipText(R.string.videoPlayerBack)
+            exoBinding.exoPlay.toolTipText(R.string.videoPlayerPlay)
+            exoBinding.exoPause.toolTipText(R.string.videoPlayerPause)
+            exoBinding.exoFfwd.toolTipText(R.string.videoPlayerFF)
+            exoBinding.exoRew.toolTipText(R.string.videoPlayerRewind)
+            exoBinding.videoLock.toolTipText(R.string.videoPlayerLockUnlock)
+        }
 
         videoBinding.playerView.setControllerVisibilityListener {
             //exoBinding.videoInfoLayout.animate().setDuration(500).alpha(1f)
