@@ -62,8 +62,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-        //TODO: Add in a new Settings item: View Notifications in dialog fragment
-
         accountPreferences()
         generalPreferences(genericInfo)
         aboutPreferences(genericInfo)

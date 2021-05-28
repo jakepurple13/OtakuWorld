@@ -68,6 +68,13 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             }
         )
 
+        db.getAllNotificationCount()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .filter { it == 0 }
+            .subscribeBy { dismiss() }
+            .addTo(disposable)
+
         db.getAllNotificationsFlowable()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

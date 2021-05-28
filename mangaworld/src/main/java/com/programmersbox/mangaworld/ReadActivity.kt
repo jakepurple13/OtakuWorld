@@ -188,17 +188,8 @@ class ReadActivity : AppCompatActivity() {
             adapter2.reloadChapter()
         }
 
-        binding.readView.setOnClickListener {
-            scrollView(binding.scrollToTopManga.isOrWillBeHidden)
-        }
-    }
+        binding.scrollToTopManga.setOnClickListener { binding.readView.smoothScrollToPosition(0) }
 
-    private fun scrollView(show: Boolean) {
-        if (show) {
-            binding.scrollToTopManga.show()
-        } else {
-            binding.scrollToTopManga.hide()
-        }
     }
 
     private fun loadPages(model: ChapterModel?) {
@@ -214,7 +205,7 @@ class ReadActivity : AppCompatActivity() {
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }
             ?.subscribeBy { pages: List<String> ->
-                BigImageViewer.prefetch(*pages.map { Uri.parse(it) }.toTypedArray())
+                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
                 binding.readLoading
                     .animate()
                     .alpha(0f)
