@@ -30,7 +30,8 @@ abstract class ItemDatabase : RoomDatabase() {
 
         private fun buildDatabase(context: Context) =
             Room.databaseBuilder(context.applicationContext, ItemDatabase::class.java, "favoriteItems.db")
-                .addMigrations(MIGRATION_1_2).build()
+                .addMigrations(MIGRATION_1_2)
+                .build()
     }
 
 }

@@ -7,6 +7,8 @@ import com.programmersbox.models.*
 import com.programmersbox.thirdpartyutils.gsonConverter
 import com.programmersbox.thirdpartyutils.rx2FactoryAsync
 import io.reactivex.Single
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
 import org.jsoup.Jsoup
@@ -57,67 +59,70 @@ object Yts : ApiService {
         }
     }
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? {
-        try {
-            val subResponse = OkHttpClient().newCall((Request.Builder().url(url).build())).await()
-            if (!subResponse.isSuccessful) return null
-            val subDoc = Jsoup.parse(subResponse.body?.string())
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        GlobalScope.launch {
+            try {
+                val subResponse = OkHttpClient().newCall((Request.Builder().url(url).build())).await()
+                if (!subResponse.isSuccessful) throw Exception("Error")
+                val subDoc = Jsoup.parse(subResponse.body?.string())
 
-            subResponse.close() // Always close the response when not needed
+                subResponse.close() // Always close the response when not needed
 
-            val movieId = subDoc.getElementById("movie-info").attr("data-movie-id").toString().toInt()
-            var imdbCode = ""
-            var rating = 0.0
-            subDoc.getElementsByClass("rating-row").forEach { row ->
-                if (row.hasAttr("itemscope")) {
-                    imdbCode = row.getElementsByClass("icon")[0].attr("href").toString().split("/")[4]
-                    row.allElements.forEach { element ->
-                        if (element.hasAttr("itemprop") && element.attr("itemprop").toString() == "ratingValue") {
-                            rating = element.ownText().toDouble()
+                val movieId = subDoc.getElementById("movie-info").attr("data-movie-id").toString().toInt()
+                var imdbCode = ""
+                var rating = 0.0
+                subDoc.getElementsByClass("rating-row").forEach { row ->
+                    if (row.hasAttr("itemscope")) {
+                        imdbCode = row.getElementsByClass("icon")[0].attr("href").toString().split("/")[4]
+                        row.allElements.forEach { element ->
+                            if (element.hasAttr("itemprop") && element.attr("itemprop").toString() == "ratingValue") {
+                                rating = element.ownText().toDouble()
+                            }
                         }
                     }
                 }
-            }
 
-            var title = ""
-            var year = 0
-            var bannerUrl = ""
-            var runtime = 0
+                var title = ""
+                var year = 0
+                var bannerUrl = ""
+                var runtime = 0
 
-            subDoc.getElementById("mobile-movie-info").allElements.forEach {
-                if (it.hasAttr("itemprop"))
-                    title = it.ownText()
-                else
-                    if (it.ownText().isNotBlank() && it.ownText().isDigitsOnly())
-                        year = it.ownText().toInt()
-            }
-
-            subDoc.getElementById("movie-poster").allElements.forEach {
-                if (it.hasAttr("itemprop"))
-                    bannerUrl = it.attr("src").toString()
-            }
-
-            subDoc.getElementsByClass("icon-clock")[0]?.let {
-                val runtimeString = it.parent().ownText().trim()
-                if (runtimeString.contains("hr")) {
-                    runtime = runtimeString.split("hr")[0].trim().toInt() * 60
-                    if (runtimeString.contains("min"))
-                        runtime += runtimeString.split(" ")[2].trim().toInt()
-                    return@let
+                subDoc.getElementById("mobile-movie-info").allElements.forEach {
+                    if (it.hasAttr("itemprop"))
+                        title = it.ownText()
+                    else
+                        if (it.ownText().isNotBlank() && it.ownText().isDigitsOnly())
+                            year = it.ownText().toInt()
                 }
-                if (runtimeString.contains("min"))
-                    runtime += runtimeString.split("min")[0].trim().toInt()
-            }
 
-            return ItemModel(
-                source = this,
-                imageUrl = bannerUrl,
-                url = url,
-                title = title,
-                description = ""
-            ).apply { extras["info"] = service.getMovie(YTSQuery.MovieBuilder().setMovieId(movieId).build()).blockingGet()?.data?.movie.toJson() }
-        } catch (e: Exception) {
-            return null
+                subDoc.getElementById("movie-poster").allElements.forEach {
+                    if (it.hasAttr("itemprop"))
+                        bannerUrl = it.attr("src").toString()
+                }
+
+                subDoc.getElementsByClass("icon-clock")[0]?.let {
+                    val runtimeString = it.parent().ownText().trim()
+                    if (runtimeString.contains("hr")) {
+                        runtime = runtimeString.split("hr")[0].trim().toInt() * 60
+                        if (runtimeString.contains("min"))
+                            runtime += runtimeString.split(" ")[2].trim().toInt()
+                        return@let
+                    }
+                    if (runtimeString.contains("min"))
+                        runtime += runtimeString.split("min")[0].trim().toInt()
+                }
+
+                ItemModel(
+                    source = this@Yts,
+                    imageUrl = bannerUrl,
+                    url = url,
+                    title = title,
+                    description = ""
+                ).apply { extras["info"] = service.getMovie(YTSQuery.MovieBuilder().setMovieId(movieId).build()).blockingGet()?.data?.movie.toJson() }
+                    .let(it::onSuccess)
+            } catch (e: Exception) {
+                it.onError(e)
+            }
         }
     }
 

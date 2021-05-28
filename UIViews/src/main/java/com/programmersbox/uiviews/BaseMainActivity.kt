@@ -13,8 +13,11 @@ import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.setupWithNavController
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -43,11 +46,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
         intent.data?.let {
             if (URLUtil.isValidUrl(it.toString())) {
                 currentService?.let { it1 ->
-                    lifecycleScope.launch {
-                        genericInfo.toSource(it1)?.getSourceByUrl(it.toString())?.let { it2 ->
-                            runOnUiThread { currentNavController?.value?.navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it2)) }
+                    genericInfo.toSource(it1)?.getSourceByUrl(it.toString())
+                        ?.subscribeOn(Schedulers.io())
+                        ?.observeOn(AndroidSchedulers.mainThread())
+                        ?.subscribeBy { it2 ->
+                            currentNavController?.value?.navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it2))
                         }
-                    }
+                        ?.addTo(disposable)
                 }
             }
         }

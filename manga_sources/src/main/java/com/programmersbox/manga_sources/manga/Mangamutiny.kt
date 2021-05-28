@@ -129,14 +129,16 @@ object Mangamutiny : ApiService {
         return chapterTitle.toString()
     }
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? = getJsonApi<MangaInfoMunity>(url, header).let {
-        ItemModel(
-            title = it?.title.orEmpty(),
-            description = it?.summary.orEmpty(),
-            url = url,
-            imageUrl = it?.thumbnail.orEmpty(),
-            source = this
-        )
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        getJsonApi<MangaInfoMunity>(url, header).let {
+            ItemModel(
+                title = it?.title.orEmpty(),
+                description = it?.summary.orEmpty(),
+                url = url,
+                imageUrl = it?.thumbnail.orEmpty(),
+                source = this
+            )
+        }.let(it::onSuccess)
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->

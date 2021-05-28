@@ -108,5 +108,9 @@
     <string name="notifications_category_title">Notifications</string>
     <string name="showMore">Show More</string>
     <string name="showLess">Show Less</string>
+    <string name="delete_multiple">Delete Multiple</string>
+
+    <string name="removeNoti">Remove %s?</string>
+    <string name="notify">Notify</string>
 
 </resources>

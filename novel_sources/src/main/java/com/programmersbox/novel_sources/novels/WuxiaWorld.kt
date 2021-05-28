@@ -106,18 +106,21 @@ object WuxiaWorld : ApiService {
 
     }
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
-        val doc = url.toJsoup()
-        println(doc)
-        ItemModel(
-            title = doc.title(),
-            description = doc.select("meta[name='description']").attr("content"),
-            imageUrl = doc.select("link[rel='image_src']").attr("href"),
-            url = url,
-            source = Sources.WUXIAWORLD
-        )
-    } catch (e: Exception) {
-        null
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        try {
+            val doc = url.toJsoup()
+            it.onSuccess(
+                ItemModel(
+                    title = doc.title(),
+                    description = doc.select("meta[name='description']").attr("content"),
+                    imageUrl = doc.select("link[rel='image_src']").attr("href"),
+                    url = url,
+                    source = Sources.WUXIAWORLD
+                )
+            )
+        } catch (e: Exception) {
+            it.onError(e)
+        }
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {

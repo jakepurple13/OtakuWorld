@@ -83,18 +83,22 @@ object NineAnime : ApiService {
         )
     }
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
-        val doc = Jsoup.connect(url).get()
-        val genreAndDescription = doc.select("div.manga-detailmiddle")
-        ItemModel(
-            title = doc.select("div.manga-detail > h1").select("h1").text(),
-            description = genreAndDescription.select("p.mobile-none").text(),
-            url = url,
-            imageUrl = doc.select("img.detail-cover").attr("abs:src"),
-            source = this
-        )
-    } catch (e: Exception) {
-        null
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        try {
+            val doc = Jsoup.connect(url).get()
+            val genreAndDescription = doc.select("div.manga-detailmiddle")
+            it.onSuccess(
+                ItemModel(
+                    title = doc.select("div.manga-detail > h1").select("h1").text(),
+                    description = genreAndDescription.select("p.mobile-none").text(),
+                    url = url,
+                    imageUrl = doc.select("img.detail-cover").attr("abs:src"),
+                    source = this
+                )
+            )
+        } catch (e: Exception) {
+            it.onError(e)
+        }
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->

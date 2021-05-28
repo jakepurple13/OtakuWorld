@@ -313,11 +313,58 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
 class BootReceived : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         Loged.d("BootReceived")
-        context?.let { SavedNotifications().viewNotificationsFromDb(it) }
+        context?.let { SavedNotifications.viewNotificationsFromDb(it) }
     }
 }
 
-class SavedNotifications {
+object SavedNotifications {
+
+    fun viewNotificationFromDb(context: Context, n: NotificationItem) {
+        val icon = OtakuApp.notificationLogo
+        val update = UpdateNotification(context)
+        (n.id to NotificationDslBuilder.builder(
+            context,
+            "otakuChannel",
+            icon
+        ) {
+            title = n.notiTitle
+            subText = n.source
+            getBitmapFromURL(n.imageUrl)?.let {
+                largeIconBitmap = it
+                pictureStyle {
+                    bigPicture = it
+                    largeIcon = it
+                    contentTitle = n.contentTitle
+                    summaryText = n.summaryText
+                }
+            } ?: bigTextStyle {
+                contentTitle = n.contentTitle
+                bigText = n.summaryText
+            }
+            showWhen = true
+            groupId = "otakuGroup"
+            deleteIntent { context ->
+                val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
+                intent1.action = "NOTIFICATION_DELETED_ACTION"
+                intent1.putExtra("url", n.url)
+                PendingIntent.getBroadcast(context, n.id, intent1, 0)
+            }
+            pendingIntent { context ->
+                val itemModel = UpdateWorker.sourceFromString(n.source)
+                    ?.getSourceByUrl(n.url)
+                    ?.onErrorReturn { null }
+                    ?.blockingGet()
+
+                NavDeepLinkBuilder(context)
+                    .setGraph(R.navigation.recent_nav)
+                    .setDestination(R.id.detailsFragment2)
+                    .setArguments(Bundle().apply { putSerializable("itemInfo", itemModel) })
+                    .createPendingIntent()
+            }
+        })
+            .let { update.onEnd(listOf(it), 52) }
+    }
+
     fun viewNotificationsFromDb(context: Context) {
         val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
         val icon = OtakuApp.notificationLogo
@@ -355,11 +402,11 @@ class SavedNotifications {
                             PendingIntent.getBroadcast(context, n.id, intent1, 0)
                         }
                         pendingIntent { context ->
-                            val itemModel = UpdateWorker.sourceFromString(n.source)?.let { it1 ->
-                                dao.getItemByUrl(n.url)
-                                    .blockingGet()
-                                    ?.toItemModel(it1)
-                            }
+                            val itemModel = UpdateWorker.sourceFromString(n.source)
+                                ?.getSourceByUrl(n.url)
+                                ?.onErrorReturn { null }
+                                ?.blockingGet()
+
                             NavDeepLinkBuilder(context)
                                 .setGraph(R.navigation.recent_nav)
                                 .setDestination(R.id.detailsFragment2)

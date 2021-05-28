@@ -24,6 +24,7 @@ import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.stringForTime
+import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo

@@ -23,6 +23,7 @@ import com.programmersbox.animeworld.databinding.DownloadViewerFragmentBinding
 import com.programmersbox.animeworld.ytsdatabase.*
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
+import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
 import com.tonyodev.fetch2.AbstractFetchListener
 import com.tonyodev.fetch2.Download
 import com.tonyodev.fetch2.Error

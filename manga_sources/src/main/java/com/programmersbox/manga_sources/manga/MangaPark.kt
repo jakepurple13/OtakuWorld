@@ -242,18 +242,21 @@ object MangaPark : ApiService, KoinComponent {
         return now.timeInMillis
     }
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
-        val doc = cloudflare(helper, url).execute().asJsoup()
-        val titleAndImg = doc.select("div.w-100, div.cover").select("img")
-        ItemModel(
-            title = titleAndImg.attr("title"),
-            description = doc.select("p.summary").text(),
-            url = url,
-            imageUrl = titleAndImg.attr("abs:src"),
-            source = this
-        )
-    } catch (e: Exception) {
-        null
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        try {
+            val doc = cloudflare(helper, url).execute().asJsoup()
+            val titleAndImg = doc.select("div.w-100, div.cover").select("img")
+            ItemModel(
+                title = titleAndImg.attr("title"),
+                description = doc.select("p.summary").text(),
+                url = url,
+                imageUrl = titleAndImg.attr("abs:src"),
+                source = this
+            )
+                .let(it::onSuccess)
+        } catch (e: Exception) {
+            it.onError(e)
+        }
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->

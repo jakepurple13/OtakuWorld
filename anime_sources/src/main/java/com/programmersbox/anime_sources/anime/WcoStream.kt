@@ -94,17 +94,20 @@ abstract class WcoStream(allPath: String) : ShowApi(
             .let(emitter::onSuccess)
     }
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
-        val doc = url.toJsoup()
-        ItemModel(
-            title = doc.select("div#content").select("h2[title]").text(),
-            description = doc.select("div.iltext").text(),
-            imageUrl = doc.select("div#cat-img-desc").select("img").attr("abs:src"),
-            url = url,
-            source = this
-        )
-    } catch (e: Exception) {
-        null
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        try {
+            val doc = url.toJsoup()
+            ItemModel(
+                title = doc.select("div#content").select("h2[title]").text(),
+                description = doc.select("div.iltext").text(),
+                imageUrl = doc.select("div#cat-img-desc").select("img").attr("abs:src"),
+                url = url,
+                source = this
+            )
+                .let(it::onSuccess)
+        } catch (e: Exception) {
+            it.onError(e)
+        }
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->

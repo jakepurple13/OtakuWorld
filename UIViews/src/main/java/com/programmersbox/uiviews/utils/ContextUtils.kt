@@ -1,13 +1,18 @@
 package com.programmersbox.uiviews.utils
 
+import android.app.Dialog
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Build
+import android.os.Bundle
 import android.view.View
+import android.widget.FrameLayout
 import androidx.annotation.StringRes
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.gson.*
 import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
@@ -77,4 +82,28 @@ class ChapterModelDeserializer(private val genericInfo: GenericInfo) : JsonDeser
             }
         }
     }
+}
+
+fun <T : View> BottomSheetBehavior<T>.open() {
+    state = BottomSheetBehavior.STATE_EXPANDED
+}
+
+fun <T : View> BottomSheetBehavior<T>.close() {
+    state = BottomSheetBehavior.STATE_COLLAPSED
+}
+
+fun <T : View> BottomSheetBehavior<T>.halfOpen() {
+    state = BottomSheetBehavior.STATE_HALF_EXPANDED
+}
+
+abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = super.onCreateDialog(savedInstanceState)
+        .apply {
+            setOnShowListener {
+                val sheet = findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
+                val bottomSheet = BottomSheetBehavior.from(sheet)
+                bottomSheet.skipCollapsed = true
+                bottomSheet.open()
+            }
+        }
 }

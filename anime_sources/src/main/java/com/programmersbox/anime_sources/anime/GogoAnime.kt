@@ -111,17 +111,20 @@ object GogoAnimeApi : ShowApi(
         }
     }
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
-        val doc = Jsoup.connect(url).get()
-        ItemModel(
-            source = this,
-            title = doc.select("div.anime-title").text(),
-            url = url,
-            description = doc.select("p.anime-details").text(),
-            imageUrl = doc.select("div.animeDetail-image").select("img[src^=http]")?.attr("abs:src").orEmpty(),
-        )
-    } catch (e: Exception) {
-        null
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        try {
+            val doc = Jsoup.connect(url).get()
+            ItemModel(
+                source = this,
+                title = doc.select("div.anime-title").text(),
+                url = url,
+                description = doc.select("p.anime-details").text(),
+                imageUrl = doc.select("div.animeDetail-image").select("img[src^=http]")?.attr("abs:src").orEmpty(),
+            )
+                .let(it::onSuccess)
+        } catch (e: Exception) {
+            it.onError(e)
+        }
     }
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {

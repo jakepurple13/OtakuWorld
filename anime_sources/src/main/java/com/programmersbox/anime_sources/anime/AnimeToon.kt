@@ -29,28 +29,31 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
         source = this
     )
 
-    override suspend fun getSourceByUrl(url: String): ItemModel? = try {
-        val doc = Jsoup.connect(url).get()
-        ItemModel(
-            source = this,
-            url = url,
-            title = doc.select("div.right_col h1").text(),
-            description = doc.allElements.select("div#series_details").let { element ->
-                if (element.select("span#full_notes").hasText())
-                    element.select("span#full_notes").text().removeSuffix("less")
-                else
-                    element.select("div:contains(Description:)").select("div").text().let {
-                        try {
-                            it.substring(it.indexOf("Description: ") + 13, it.indexOf("Category: "))
-                        } catch (e: StringIndexOutOfBoundsException) {
-                            it
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        try {
+            val doc = Jsoup.connect(url).get()
+            ItemModel(
+                source = this,
+                url = url,
+                title = doc.select("div.right_col h1").text(),
+                description = doc.allElements.select("div#series_details").let { element ->
+                    if (element.select("span#full_notes").hasText())
+                        element.select("span#full_notes").text().removeSuffix("less")
+                    else
+                        element.select("div:contains(Description:)").select("div").text().let {
+                            try {
+                                it.substring(it.indexOf("Description: ") + 13, it.indexOf("Category: "))
+                            } catch (e: StringIndexOutOfBoundsException) {
+                                it
+                            }
                         }
-                    }
-            },
-            imageUrl = doc.select("div.left_col").select("img[src^=http]#series_image")?.attr("abs:src").orEmpty(),
-        )
-    } catch (e: Exception) {
-        null
+                },
+                imageUrl = doc.select("div.left_col").select("img[src^=http]#series_image")?.attr("abs:src").orEmpty(),
+            )
+                .let(it::onSuccess)
+        } catch (e: Exception) {
+            it.onError(e)
+        }
     }
 
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create {

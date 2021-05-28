@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="item"
+            type="com.programmersbox.favoritesdatabase.NotificationItem" />
+
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:layout_margin="5dp"
+        app:cardCornerRadius="5dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="5dp">
+
+            <TextView
+                android:id="@+id/notiTitle"
+                style="@style/TextAppearance.MaterialComponents.Headline6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                tools:text="@tools:sample/full_names"
+                android:text="@{item.notiTitle}" />
+
+            <TextView
+                android:id="@+id/notiSource"
+                style="@style/TextAppearance.MaterialComponents.Subtitle2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/notiTitle"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                tools:text="@tools:sample/full_names"
+                android:text="@{item.source}" />
+
+            <ImageView
+                android:id="@+id/infoCover"
+                android:layout_width="360px"
+                android:layout_height="480px"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/notiSource"
+                app:coverImage="@{item.imageUrl}"
+                tools:ignore="ContentDescription,PxUsage"
+                tools:src="@tools:sample/avatars" />
+
+            <TextView
+                android:id="@+id/summaryText"
+                style="@style/TextAppearance.MaterialComponents.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/infoCover"
+                tools:text="@tools:sample/full_names"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="true"
+                android:text="@{item.summaryText}" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sendNotification"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/summaryText"
+                android:text="@string/notify" />
+
+        </RelativeLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+</layout>

@@ -57,6 +57,9 @@ interface ItemDao {
     @Query("SELECT * FROM Notifications")
     fun getAllNotifications(): Single<List<NotificationItem>>
 
+    @Query("SELECT * FROM Notifications")
+    fun getAllNotificationsFlowable(): Flowable<List<NotificationItem>>
+
     @Query("SELECT COUNT(id) FROM Notifications")
     fun getAllNotificationCount(): Flowable<Int>
 
