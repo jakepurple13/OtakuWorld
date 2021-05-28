@@ -1,7 +1,6 @@
 package com.programmersbox.mangaworld
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -10,7 +9,6 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.mangaworld.databinding.MangaGalleryItemBinding
 import com.programmersbox.models.ItemModel
-import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.utils.toolTipText
@@ -21,34 +19,32 @@ class MangaGalleryAdapter(context: Context, baseListFragment: BaseListFragment) 
         GalleryHolder(MangaGalleryItemBinding.inflate(context.layoutInflater, parent, false))
 
     override fun GalleryHolder.onBind(item: ItemModel, position: Int) {
-
         bind(item)
         itemView.setOnClickListener { onClick(it, item) }
         Glide.with(context)
             .asBitmap()
-            //.load(item.imageUrl)
             .load(item.imageUrl)
             //.override(360, 480)
             .fitCenter()
             .transform(RoundedCorners(15))
-            //.fallback(R.drawable.manga_world_round_logo)
-            //.placeholder(R.drawable.manga_world_round_logo)
-            //.error(R.drawable.manga_world_round_logo)
-            .into<Bitmap> {
-                resourceReady { image, _ ->
-                    //cover.setImageBitmap(image.glowEffect(10, title.currentTextColor) ?: image)
-                    cover.setImageBitmap(image)
-                    /*if (context.usePalette) {
+            .fallback(R.drawable.manga_world_round_logo)
+            .placeholder(R.drawable.manga_world_round_logo)
+            .error(R.drawable.manga_world_round_logo)
+            .into(cover)
+        /*.into<Bitmap> {
+            resourceReady { image, _ ->
+                //cover.setImageBitmap(image.glowEffect(10, title.currentTextColor) ?: image)
+                cover.setImageBitmap(image)
+                *//*if (context.usePalette) {
                         swatch = image.getPalette().vibrantSwatch
-                    }*/
+                    }*//*
                 }
-            }
+            }*/
     }
 
     override val currentList: MutableList<DbModel> get() = mutableListOf()
     override val previousList: MutableList<DbModel> get() = mutableListOf()
     override fun update(list: List<DbModel>, check: (ItemModel, DbModel) -> Boolean) {}
-
 }
 
 class GalleryHolder(private val binding: MangaGalleryItemBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -60,6 +56,5 @@ class GalleryHolder(private val binding: MangaGalleryItemBinding) : RecyclerView
         binding.model = item
         binding.root.toolTipText(item.title)
         binding.executePendingBindings()
-
     }
 }

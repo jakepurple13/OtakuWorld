@@ -20,11 +20,10 @@ import com.programmersbox.loggingutils.Loged
 import com.programmersbox.loggingutils.f
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
+import com.programmersbox.uiviews.utils.AppUpdate
 import com.programmersbox.uiviews.utils.FirebaseDb
 import com.programmersbox.uiviews.utils.lastUpdateCheck
 import com.programmersbox.uiviews.utils.updateCheckPublish
-import com.squareup.okhttp.OkHttpClient
-import com.squareup.okhttp.Request
 import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -40,14 +39,9 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
 
     override fun createWork(): Single<Result> = Single.create {
         try {
-            val request = Request.Builder()
-                .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                .get()
-                .build()
-            @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
-            val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
+            val f = AppUpdate.getUpdate()?.update_version ?: 0.0
             if (
-                applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < f ?: 0.0
+                applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < f
             ) {
                 val n = NotificationDslBuilder.builder(
                     applicationContext,
@@ -55,7 +49,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                     OtakuApp.notificationLogo
                 ) {
                     title = applicationContext.getString(R.string.theresAnUpdate)
-                    subText = applicationContext.getString(R.string.versionAvailable, f?.toString().orEmpty())
+                    subText = applicationContext.getString(R.string.versionAvailable, f.toString())
                     pendingIntent { context ->
                         NavDeepLinkBuilder(context)
                             .setGraph(R.navigation.recent_nav)

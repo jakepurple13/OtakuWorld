@@ -14,7 +14,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.FileProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.*
 import androidx.work.Constraints
@@ -33,8 +32,7 @@ import com.programmersbox.models.sourcePublish
 import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.thirdpartyutils.openInCustomChromeBrowser
 import com.programmersbox.uiviews.utils.*
-import com.squareup.okhttp.OkHttpClient
-import com.squareup.okhttp.Request
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -229,21 +227,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val checker = AtomicBoolean(false)
         fun updateSetter() {
             if (!checker.get()) {
-                lifecycleScope.launch {
-                    try {
-                        checker.set(true)
-                        val request = Request.Builder()
-                            .url("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                            .get()
-                            .build()
-                        @Suppress("BlockingMethodInNonBlockingContext") val response = OkHttpClient().newCall(request).execute()
-                        val f = response.request().url().path.split("/").lastOrNull()?.toDoubleOrNull()
-                        f?.let { appUpdateCheck.onNext(it) }
-                    } catch (e: Exception) {
-                    } finally {
-                        checker.set(false)
-                    }
+                Single.create<AppUpdate.AppUpdates> {
+                    checker.set(true)
+                    AppUpdate.getUpdate()?.let { d -> it.onSuccess(d) } ?: it.onError(Exception("Something went wrong"))
                 }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError { }
+                    .subscribeBy {
+                        appUpdateCheck.onNext(it)
+                        checker.set(false)
+                        context?.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() }
+                    }
+                    .addTo(disposable)
             }
         }
 
@@ -260,9 +256,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.isVisible = false
             appUpdateCheck
                 .subscribe {
-                    p.summary = getString(R.string.currentVersion, it.toString())
-                    p.isVisible =
-                        context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < it ?: 0.0
+                    p.summary = getString(R.string.currentVersion, it.update_version?.toString().orEmpty())
+                    val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
+                    p.isVisible = appVersion < it.update_version ?: 0.0
                 }
                 .addTo(disposable)
             p.setOnPreferenceClickListener {
@@ -275,10 +271,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
                                 val isApkAlreadyThere =
                                     File(context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/", genericInfo.apkString)
                                 if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-
                                 DownloadApk(
                                     requireContext(),
-                                    "https://github.com/jakepurple13/OtakuWorld/releases/latest/download/${genericInfo.apkString}",
+                                    "${appUpdateCheck.value?.update_url}${genericInfo.apkString}",
                                     genericInfo.apkString
                                 ).startDownloadingApk()
                             }

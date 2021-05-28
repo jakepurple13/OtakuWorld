@@ -33,7 +33,7 @@ val updateCheckPublish = BehaviorSubject.create<Long>()
 
 var Context.batteryAlertPercent: Int by sharedPrefNotNullDelegate(20)
 
-val appUpdateCheck = BehaviorSubject.create<Double>()
+val appUpdateCheck = BehaviorSubject.create<AppUpdate.AppUpdates>()
 
 fun View.toolTipText(text: CharSequence) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) tooltipText = text
