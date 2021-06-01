@@ -115,6 +115,12 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun render(item: String?, canDownload: (String) -> Unit) {
             image?.setProgressIndicator(ProgressPieIndicator())
+            /*Glide.with(image)
+                .asBitmap()
+                .load(item)
+                .into<Bitmap> {
+                    resourceReady { images, transition -> image?.ssiv?.setImage(ImageSource.bitmap(images)) }
+                }*/
             image?.showImage(Uri.parse(item), Uri.parse(item))
             image.setOnLongClickListener {
                 try {

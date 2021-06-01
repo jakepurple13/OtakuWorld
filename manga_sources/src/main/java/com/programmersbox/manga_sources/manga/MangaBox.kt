@@ -1,6 +1,7 @@
 package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
@@ -49,7 +50,8 @@ abstract class MangaBox(
     }
 
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create {
-        it.onSuccess(mangaDetailsParse(client.newCall(GET("${baseUrl}/${model.url}", headers())).execute().asJsoup(), model))
+        it.onSuccess(mangaDetailsParse(client.newCall(GET(model.url, headers())).execute().asJsoup(), model))
+        //it.onSuccess(mangaDetailsParse(client.newCall(GET("${baseUrl}/${model.url}", headers())).execute().asJsoup(), model))
     }
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
@@ -66,12 +68,12 @@ abstract class MangaBox(
             .let { emitter.onSuccess(it) }
     }
 
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create { emitter ->
+    /*override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create { emitter ->
         client.newCall(searchMangaRequest(page, searchText.toString()))
             .execute()
             .let { searchMangaParse(it) }
             .let { emitter.onSuccess(it) }
-    }
+    }*/
 
     override val canScroll: Boolean = true
 
@@ -156,7 +158,7 @@ abstract class MangaBox(
     protected fun mangaFromElement(element: Element, urlSelector: String = "h3 a"): ItemModel {
 
         val f = element.select(urlSelector).first().let {
-            it.attr("abs:href").substringAfter(baseUrl) to it.text()
+            it.attr("abs:href")/*.substringAfter(baseUrl)*/ to it.text()
         }
 
         return ItemModel(
@@ -233,7 +235,9 @@ abstract class MangaBox(
             genres = genres,
             url = itemModel.url,
             alternativeNames = emptyList(),
-            chapters = client.newCall(chapterListRequest(itemModel.url)).execute().let { chapterListParse(it) },
+            chapters = document.select(chapterListSelector())
+                .map { chapterFromElement(it) }
+                .also { if (it.isEmpty()) checkForRedirectMessage(document) },//client.newCall(chapterListRequest(itemModel.url)).execute().let { chapterListParse(it) },
             description = document.select(descriptionSelector)?.firstOrNull()?.ownText()
                 ?.replace("""^${infoElement?.select("h1, h2")?.first()?.text().orEmpty()} summary:\s""".toRegex(), "")
                 ?.replace("""<\s*br\s*/?>""".toRegex(), "\n")
@@ -270,14 +274,14 @@ abstract class MangaBox(
 
     private fun chapterFromElement(element: Element): ChapterModel {
         return ChapterModel(
-            url = element.select("a").attr("abs:href").substringAfter(baseUrl),
+            url = element.select("a").attr("abs:href"),//.substringAfter(baseUrl),
             name = element.select("a").text(),
             uploaded = parseChapterDate(element.selectDateFromElement().text()).toString(),
             source = this
         )
     }
 
-    private fun parseChapterDate(date: String, host: String = "manganelo"): Long? {
+    private fun parseChapterDate(date: String, host: String = "manganato"): Long? {
         return if ("ago" in date) {
             val value = date.split(' ')[0].toIntOrNull()
             val cal = Calendar.getInstance()
@@ -289,7 +293,7 @@ abstract class MangaBox(
             }?.timeInMillis
         } else {
             try {
-                if (host.contains("manganelo", ignoreCase = true)) {
+                if (host.contains("manganato", ignoreCase = true)) {
                     // Nelo's date format
                     SimpleDateFormat("MMM dd,yy", Locale.ENGLISH).parse(date)
                 } else {
@@ -311,9 +315,9 @@ abstract class MangaBox(
     open val pageListSelector = "div#vungdoc img, div.container-chapter-reader img"
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-        client.newCall(imageRequest(chapterModel)).execute().asJsoup()
+        client.newCall(GET(chapterModel.url)).execute().asJsoup()
             .let { pageListParse(it) }
-            .also { println(it) }
+            .also { println(it.joinToString("\n") { Uri.parse(it.link).toString() }) }
             .let(emitter::onSuccess)
     }
 
@@ -342,7 +346,7 @@ abstract class MangaBox(
     // Based on change_alias JS function from Mangakakalot's website
     @SuppressLint("DefaultLocale")
     open fun normalizeSearchQuery(query: String): String {
-        var str = query.toLowerCase()
+        var str = query.lowercase()
         str = str.replace("[àáạảãâầấậẩẫăằắặẳẵ]".toRegex(), "a")
         str = str.replace("[èéẹẻẽêềếệểễ]".toRegex(), "e")
         str = str.replace("[ìíịỉĩ]".toRegex(), "i")
@@ -371,7 +375,7 @@ abstract class MangaBox(
     )
 }
 
-object Manganelo : MangaBox("Manganelo", "https://manganelo.com") {
+object Manganelo : MangaBox("Manganato", "https://manganato.com") {
     // Nelo's date format is part of the base class
     override fun popularMangaRequest(page: Int): Request = GET("$baseUrl/genre-all/$page?type=topview", headers())
     override fun popularMangaSelector() = "div.content-genres-item"
