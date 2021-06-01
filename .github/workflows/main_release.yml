@@ -1,4 +1,4 @@
-name: Minimal Android CI Workflow
+name: Release Workflow
  
 on:
   workflow_dispatch:
