@@ -32,20 +32,20 @@ jobs:
       - name: Build APK
         run: bash ./gradlew assembleDebug --stacktrace
         
-      - uses: r0adkll/sign-android-release@v1
+      - uses: Tlaster/android-sign@v1
         name: Sign app APK
-        # ID used to access action output
-        id: sign_app
         with:
-          releaseDirectory: mangaworld/release
+          releaseDirectory: |
+            mangaworld/build/outputs/apk/release
+            mangaworld/build/outputs/bundle/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Signed app bundle
-          path: ${{steps.sign_app.outputs.signedReleaseFile}}
+#       - uses: actions/upload-artifact@v2
+#         with:
+#           name: Signed app bundle
+#           path: ${{steps.sign_app.outputs.signedReleaseFile}}
 
       - name: Upload APK
         uses: actions/upload-artifact@v1
