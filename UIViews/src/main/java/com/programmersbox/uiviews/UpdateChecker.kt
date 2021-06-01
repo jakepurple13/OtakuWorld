@@ -52,8 +52,8 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                     subText = applicationContext.getString(R.string.versionAvailable, f.toString())
                     pendingIntent { context ->
                         NavDeepLinkBuilder(context)
-                            .setGraph(R.navigation.recent_nav)
-                            .setDestination(R.id.recentFragment2)
+                            .setGraph(R.navigation.setting_nav)
+                            .setDestination(R.id.settingsFragment)
                             .createPendingIntent()
                     }
 
