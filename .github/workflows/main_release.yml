@@ -32,6 +32,21 @@ jobs:
       - name: Build APK
         run: bash ./gradlew assembleDebug --stacktrace
         
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        # ID used to access action output
+        id: sign_app
+        with:
+          releaseDirectory: mangaworld/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Signed app bundle
+          path: ${{steps.sign_app.outputs.signedReleaseFile}}
+
       - name: Upload APK
         uses: actions/upload-artifact@v1
         with:
@@ -63,16 +78,16 @@ jobs:
        run: |
          set -x
          echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-     #- name: Create Release
-     #  id: create_release
-     #  uses: softprops/action-gh-release@v1
-     #  if: startsWith(github.ref, 'refs/tags/')
-     #  env:
-     #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-     #  with:
-     #    tag_name: ${{ env.VERSION_TAG }}
-     #    name: Release ${{ env.VERSION_TAG }}
-     #    files: |
-     #       apk/mangaworld-debug.apk
-     #       apk/animeworld-debug.apk
-     #       apk/novelworld-debug.apk
+#      - name: Create Release
+#        id: create_release
+#        uses: softprops/action-gh-release@v1
+#        if: startsWith(github.ref, 'refs/tags/')
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          tag_name: ${{ env.VERSION_TAG }}
+#          name: Release ${{ env.VERSION_TAG }}
+#          files: |
+#             apk/mangaworld-debug.apk
+#             apk/animeworld-debug.apk
+#             apk/novelworld-debug.apk
