@@ -119,8 +119,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<PreferenceCategory>("aboutCategory")?.setIcon(OtakuApp.logo)
 
         findPreference<Preference>("current_source")?.let { p ->
-            val list = genericInfo.sourceList().toTypedArray()
             p.setOnPreferenceClickListener {
+                val list = genericInfo.sourceList().toTypedArray()
                 val service = requireContext().currentService
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.chooseASource)

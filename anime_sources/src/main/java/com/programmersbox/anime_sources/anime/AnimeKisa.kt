@@ -15,9 +15,17 @@ import org.koin.core.component.inject
 import java.text.SimpleDateFormat
 import java.util.*
 
-object AnimeKisaSubbed : AnimeKisa("anime")
-object AnimeKisaDubbed : AnimeKisa("alldubbed")
-object AnimeKisaMovies : AnimeKisa("movies")
+object AnimeKisaSubbed : AnimeKisa("anime") {
+    override val serviceName: String get() = "ANIMEKISA_SUBBED"
+}
+
+object AnimeKisaDubbed : AnimeKisa("alldubbed") {
+    override val serviceName: String get() = "ANIMEKISA_DUBBED"
+}
+
+object AnimeKisaMovies : AnimeKisa("movies") {
+    override val serviceName: String get() = "ANIMEKISA_MOVIES"
+}
 
 abstract class AnimeKisa(allPath: String) : ShowApi(
     baseUrl = "https://www.animekisa.tv",

@@ -13,11 +13,25 @@ import okio.ByteString.Companion.decodeBase64
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-object WcoDubbed : WcoStream("dubbed-anime-list")
-object WcoSubbed : WcoStream("subbed-anime-list")
-object WcoCartoon : WcoStream("cartoon-list")
-object WcoMovies : WcoStream("movie-list")
-object WcoOva : WcoStream("cartoon-list")
+object WcoDubbed : WcoStream("dubbed-anime-list") {
+    override val serviceName: String get() = "WCO_DUBBED"
+}
+
+object WcoSubbed : WcoStream("subbed-anime-list") {
+    override val serviceName: String get() = "WCO_SUBBED"
+}
+
+object WcoCartoon : WcoStream("cartoon-list") {
+    override val serviceName: String get() = "WCO_CARTOON"
+}
+
+object WcoMovies : WcoStream("movie-list") {
+    override val serviceName: String get() = "WCO_MOVIES"
+}
+
+object WcoOva : WcoStream("cartoon-list") {
+    override val serviceName: String get() = "WCO_OVA"
+}
 
 abstract class WcoStream(allPath: String) : ShowApi(
     baseUrl = "https://www.wcostream.com",

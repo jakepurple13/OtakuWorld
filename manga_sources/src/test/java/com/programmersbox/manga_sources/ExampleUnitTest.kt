@@ -8,6 +8,7 @@ import com.programmersbox.manga_sources.manga.MangaFourLife
 import com.programmersbox.manga_sources.manga.MangaPark
 import com.programmersbox.manga_sources.manga.NineAnime
 import com.programmersbox.models.ItemModel
+import org.jsoup.Jsoup
 import org.junit.Test
 import org.mockito.Mockito
 import java.io.File
@@ -18,6 +19,21 @@ import java.io.File
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun mangaboxTest() {
+
+        /*val f = Manganelo.getRecent().blockingGet()
+        val m = f.first().toInfoModel().blockingGet().chapters.first()
+        println(m)
+        val c = m.getChapterInfo().blockingGet()
+        println(c)*/
+
+        val c = Jsoup.connect("https://readmanganato.com/manga-lq989051/chapter-2").get()
+
+        println(c)
+
+    }
 
     @Test
     fun nineamimetest() {
