@@ -249,6 +249,12 @@ class UpdateNotification(private val context: Context) {
                 groupSummary = true
                 groupAlertBehavior = GroupBehavior.ALL
                 groupId = "otakuGroup"
+                pendingIntent { context ->
+                    NavDeepLinkBuilder(context)
+                        .setGraph(R.navigation.setting_nav)
+                        .setDestination(R.id.notificationFragment)
+                        .createPendingIntent()
+                }
             }
         )
     }

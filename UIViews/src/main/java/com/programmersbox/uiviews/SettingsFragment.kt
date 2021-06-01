@@ -77,13 +77,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("user_account")?.let { p ->
 
             fun accountChanges(user: FirebaseUser?) {
-                Glide.with(this@SettingsFragment)
-                    .load(user?.photoUrl)
-                    .placeholder(OtakuApp.logo)
-                    .error(OtakuApp.logo)
-                    .fallback(OtakuApp.logo)
-                    .circleCrop()
-                    .into<Drawable> { resourceReady { image, _ -> p.icon = image } }
+                activity?.let {
+                    Glide.with(this@SettingsFragment)
+                        .load(user?.photoUrl)
+                        .placeholder(OtakuApp.logo)
+                        .error(OtakuApp.logo)
+                        .fallback(OtakuApp.logo)
+                        .circleCrop()
+                        .into<Drawable> { resourceReady { image, _ -> p.icon = image } }
+                }
                 p.title = user?.displayName ?: "User"
             }
 
