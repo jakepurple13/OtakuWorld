@@ -44,7 +44,7 @@
 
         <Preference
             app:key="saved_notifications"
-            app:summary=""
+            app:summary="@string/view_noti_summary"
             app:title="@string/view_notifications_title" />
 
         <Preference

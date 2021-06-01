@@ -110,7 +110,10 @@
     <string name="showLess">Show Less</string>
     <string name="delete_multiple">Delete Multiple</string>
 
+    <string name="removeNotification">Remove Notification</string>
+
     <string name="removeNoti">Remove %s?</string>
     <string name="notify">Notify</string>
+    <string name="view_noti_summary">View notifications that have been sent, just in case you accidentally dismissed one you didn\'t mean to.</string>
 
 </resources>

@@ -91,7 +91,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             val items = mutableListOf<NotificationItem>()
 
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Remove Notifications")
+                .setTitle(R.string.removeNotification)
                 .setCancelable(false)
                 .setMultiChoiceItems(
                     adapter.dataList.map(NotificationItem::notiTitle).toTypedArray(),
