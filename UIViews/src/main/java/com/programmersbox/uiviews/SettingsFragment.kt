@@ -26,6 +26,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
@@ -215,7 +216,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .map { getString(R.string.deleted_notifications, it) }
-                    .subscribeBy { Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() }
+                    .subscribeBy {
+                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                        requireContext().notificationManager.cancel(42)
+                    }
                     .addTo(disposable)
                 true
             }
@@ -261,6 +265,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     p.isVisible = appVersion < it.update_version ?: 0.0
                 }
                 .addTo(disposable)
+
             p.setOnPreferenceClickListener {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(getString(R.string.updateTo, p.summary))

@@ -356,7 +356,7 @@ object SavedNotifications {
                     .createPendingIntent()
             }
         })
-            .let { update.onEnd(listOf(it), 52) }
+            .let { update.onEnd(listOf(it)) }
     }
 
     fun viewNotificationsFromDb(context: Context) {
@@ -409,7 +409,7 @@ object SavedNotifications {
                         }
                     }
                 }
-                .let { update.onEnd(it, 52) }
+                .let { update.onEnd(it) }
         }
     }
 

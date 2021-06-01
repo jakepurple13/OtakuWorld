@@ -6,12 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.dragswipe.*
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.layoutInflater
+import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.databinding.FragmentNotificationBinding
 import com.programmersbox.uiviews.databinding.NotificationItemBinding
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
@@ -32,6 +34,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val disposable = CompositeDisposable()
 
     private val adapter by lazy { NotificationAdapter(requireContext(), genericInfo, disposable) }
+
+    private val notificationManager by lazy { requireContext().notificationManager }
 
     private lateinit var binding: FragmentNotificationBinding
 
@@ -60,6 +64,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe { d.dismiss() }
                                 .addTo(disposable)
+                            cancelNotification(item)
                         }
                         .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
                         .setOnDismissListener { dragSwipeAdapter.notifyDataSetChanged() }
@@ -72,7 +77,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .filter { it == 0 }
-            .subscribeBy { dismiss() }
+            .subscribeBy { findNavController().popBackStack() }
             .addTo(disposable)
 
         db.getAllNotificationsFlowable()
@@ -102,12 +107,19 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe()
                             .addTo(disposable)
+                        cancelNotification(it)
                     }
                     d.dismiss()
                 }
                 .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
                 .show()
         }
+    }
+
+    private fun cancelNotification(item: NotificationItem) {
+        notificationManager.cancel(item.id)
+        val g = notificationManager.activeNotifications.map { it.notification }.filter { it.group == "otakuGroup" }
+        if (g.size == 1) notificationManager.cancel(42)
     }
 
     class NotificationAdapter(
