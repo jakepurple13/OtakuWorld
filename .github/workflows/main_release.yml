@@ -36,7 +36,7 @@ jobs:
         name: Sign app APK
         id: sign_app
         with:
-          releaseDirectory: mangaworld/build/outputs/apk/release
+          releaseDirectory: app/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
