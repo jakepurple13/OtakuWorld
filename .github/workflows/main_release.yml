@@ -52,7 +52,7 @@ jobs:
       # ${{steps.sign_app.outputs.signedReleaseFile}}
       - name: Clean up build artifacts
         run: |
-          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld/build/outputs/apk/release/mangaworld-release.apk
           
        # TODO: copy and rename the signed apk and upload that. Remove the * in place for the actual name.
        
