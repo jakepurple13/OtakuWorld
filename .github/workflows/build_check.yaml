@@ -1,0 +1,51 @@
+name: Minimal Android CI Workflow
+ 
+on:
+   push: 
+    branches:
+     - master
+    paths-ignore: 
+     - '.github/**'
+   
+
+jobs:
+  apk:
+    name: Generate APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        
+      - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
+        env:
+          ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES }}
+      - run: echo $MANGA_GOOGLE_SERVICES_JSON > mangaworld/google-services.json
+        env:
+          MANGA_GOOGLE_SERVICES_JSON: ${{ secrets.MANGA_SERVICES }}
+      - run: echo $NOVEL_GOOGLE_SERVICES_JSON > novelworld/google-services.json
+        env:
+          NOVEL_GOOGLE_SERVICES_JSON: ${{ secrets.NOVEL_SERVICES }}
+          
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Build APK
+        run: bash ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: animeworld/build/outputs/apk/debug/animeworld-debug.apk 
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: mangaworld/build/outputs/apk/debug/mangaworld-debug.apk 
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: novelworld/build/outputs/apk/debug/novelworld-debug.apk 
+          
