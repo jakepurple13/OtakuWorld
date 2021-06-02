@@ -33,7 +33,7 @@ jobs:
         id: buildAllApks
         uses: eskatos/gradle-command-action@v1.3.3
         with:
-          gradle-version: current
+          gradle-version: 6.7.1
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
