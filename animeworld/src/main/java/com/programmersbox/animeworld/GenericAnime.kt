@@ -32,6 +32,7 @@ import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
+import com.programmersbox.uiviews.utils.AppUpdate
 import com.tonyodev.fetch2.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -50,11 +51,9 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private val disposable = CompositeDisposable()
 
-    override val showMiddleChapterButton: Boolean
-        get() = true
+    override val showMiddleChapterButton: Boolean get() = true
 
-    override val apkString: String
-        get() = "animeworld-debug.apk"
+    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
 
     override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
         (AnimeAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)

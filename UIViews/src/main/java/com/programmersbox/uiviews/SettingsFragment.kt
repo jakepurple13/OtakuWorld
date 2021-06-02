@@ -278,11 +278,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                                 val isApkAlreadyThere =
                                     File(context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/", genericInfo.apkString)
                                 if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                DownloadApk(
-                                    requireContext(),
-                                    "${appUpdateCheck.value?.update_url}${genericInfo.apkString}",
-                                    genericInfo.apkString
-                                ).startDownloadingApk()
+                                appUpdateCheck.value
+                                    ?.let { a ->
+                                        DownloadApk(
+                                            requireContext(),
+                                            a.downloadUrl(genericInfo.apkString),
+                                            a.let(genericInfo.apkString).toString()
+                                        ).startDownloadingApk()
+                                    }
                             }
                         }
                         d.dismiss()

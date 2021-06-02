@@ -23,6 +23,7 @@ import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
+import com.programmersbox.uiviews.utils.AppUpdate
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -44,7 +45,7 @@ class GenericManga(val context: Context) : GenericInfo {
 
     override val showMiddleChapterButton: Boolean get() = false
 
-    override val apkString: String get() = "mangaworld-debug.apk"
+    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { manga_file }
 
     override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
         (MangaGalleryAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)
@@ -53,7 +54,6 @@ class GenericManga(val context: Context) : GenericInfo {
         AutoFitGridLayoutManager(context, 360).apply { orientation = GridLayoutManager.VERTICAL }
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
-
         context.startActivity(
             Intent(context, ReadActivity::class.java).apply {
                 putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
@@ -62,7 +62,6 @@ class GenericManga(val context: Context) : GenericInfo {
                 putExtra("mangaUrl", model.url)
             }
         )
-
     }
 
     private fun downloadFullChapter(model: ChapterModel, title: String) {

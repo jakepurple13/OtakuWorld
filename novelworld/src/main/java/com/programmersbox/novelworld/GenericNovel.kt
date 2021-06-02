@@ -11,6 +11,7 @@ import com.programmersbox.novel_sources.Sources
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
+import com.programmersbox.uiviews.utils.AppUpdate
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import org.koin.dsl.module
 
@@ -44,7 +45,7 @@ class GenericNovel(val context: Context) : GenericInfo {
 
     }
 
-    override val apkString: String get() = "novelworld-debug.apk"
+    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 
     override val showMiddleChapterButton: Boolean get() = false
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.uiviews.utils.AppUpdate
 
 interface GenericInfo {
 
@@ -21,7 +22,7 @@ interface GenericInfo {
 
     fun downloadChapter(chapterModel: ChapterModel, title: String)
 
-    val apkString: String
+    val apkString: AppUpdate.AppUpdates.() -> String?
 
     val showMiddleChapterButton: Boolean
 

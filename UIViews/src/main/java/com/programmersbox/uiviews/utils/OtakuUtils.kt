@@ -11,6 +11,14 @@ fun tryThis(block: () -> Unit) = try {
 object AppUpdate {
     private const val url = "https://raw.githubusercontent.com/jakepurple13/OtakuWorld/master/update.json"
     fun getUpdate() = getJsonApi<AppUpdates>(url)
-    data class AppUpdates(val update_version: Double?, val update_url: String?)
+    data class AppUpdates(
+        val update_version: Double?,
+        val update_url: String?,
+        val manga_file: String?,
+        val anime_file: String?,
+        val novel_file: String?
+    ) {
+        fun downloadUrl(url: AppUpdates.() -> String?) = "$update_url${url()}"
+    }
 }
 
