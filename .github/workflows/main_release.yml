@@ -48,7 +48,9 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-          
+       
+       # TODO: copy and rename the signed apk and upload that. Remove the * in place for the actual name.
+       
       - uses: actions/upload-artifact@v2
         with:
           name: Signed Manga App
