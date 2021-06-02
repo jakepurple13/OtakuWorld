@@ -275,11 +275,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     .setPositiveButton(R.string.update) { d, _ ->
                         activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
                             if (it.isGranted) {
-                                val isApkAlreadyThere =
-                                    File(context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/", genericInfo.apkString)
-                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
                                 appUpdateCheck.value
                                     ?.let { a ->
+                                        val isApkAlreadyThere = File(
+                                            context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                            a.let(genericInfo.apkString).toString()
+                                        )
+                                        if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
                                         DownloadApk(
                                             requireContext(),
                                             a.downloadUrl(genericInfo.apkString),
