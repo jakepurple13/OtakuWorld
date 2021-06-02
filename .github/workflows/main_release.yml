@@ -26,10 +26,20 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Build APK
-        run: bash ./gradlew assembleRelease --stacktrace
+#       - name: Build APK
+#         run: bash ./gradlew assembleRelease --stacktrace
+
+      - name: Build all artifacts
+        id: buildAllApks
+        uses: eskatos/gradle-command-action@v1.3.3
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: assembleRelease
         
-      - uses: r0adkll/sign-android-release@v1
+      - uses: r0adkll/sign-android-release@v1.0.1
         name: Sign app APK
         id: sign_app
         with:
