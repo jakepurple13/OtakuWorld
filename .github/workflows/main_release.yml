@@ -118,10 +118,20 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
+    
      - name: Download APK from build
        uses: actions/download-artifact@v1
        with:
-         name: apk  
+         name: Signed Anime App
+     - name: Download APK from build
+       uses: actions/download-artifact@v1
+       with:
+         name: Signed Manga App
+     - name: Download APK from build
+       uses: actions/download-artifact@v1
+       with:
+         name: Signed Novel App    
+         
      - name: Get tag name
        id: get_tag_name
        run: |
