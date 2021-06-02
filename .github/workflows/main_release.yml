@@ -39,7 +39,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: assembleRelease
         
-      - uses: r0adkll/sign-android-release@v1.0.1
+      - uses: r0adkll/sign-android-release@v1.0.4
         name: Sign app APK
         id: sign_app
         with:
