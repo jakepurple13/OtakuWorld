@@ -49,18 +49,6 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           
-      # ${{steps.sign_app.outputs.signedReleaseFile}}
-      - name: Clean up build artifacts
-        run: |
-          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld/build/outputs/apk/release/mangaworld-release.apk
-          
-       # TODO: copy and rename the signed apk and upload that. Remove the * in place for the actual name.
-       
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Signed Manga App
-          path: mangaworld/build/outputs/apk/release/mangaworld-release.apk
-          
       - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: anime_sign
@@ -70,11 +58,6 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}    
-          
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Signed Anime App
-          path: animeworld/build/outputs/apk/release/*.apk
           
       - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
@@ -86,10 +69,28 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}    
           
+      # ${{steps.sign_app.outputs.signedReleaseFile}}
+      - name: Clean up build artifacts
+        run: |
+          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
+          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
+          
+       
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Signed Manga App
+          path: mangaworld-release.apk
+          
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Signed Anime App
+          path: animeworld-release.apk
+          
       - uses: actions/upload-artifact@v2
         with:
           name: Signed Novel App
-          path: novelworld/build/outputs/apk/release/*.apk
+          path: novelworld-release.apk
           
 
 #       - name: Upload APK
