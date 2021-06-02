@@ -1,7 +1,7 @@
 {
-  "update_version": 16.0,
-  "update_url": "https://github.com/jakepurple13/OtakuWorld/releases/16.0/download/",
-  "manga_file": "mangaworld-debug.apk",
-  "anime_file": "animeworld-debug.apk",
-  "novel_file": "novelworld-debug.apk"
+  "update_version": 17.0,
+  "update_url": "https://github.com/jakepurple13/OtakuWorld/releases/v16.72/download/",
+  "manga_file": "mangaworld-release.apk",
+  "anime_file": "animeworld-release.apk",
+  "novel_file": "novelworld-release.apk"
 }
