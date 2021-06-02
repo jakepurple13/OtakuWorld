@@ -137,6 +137,6 @@ jobs:
          tag_name: ${{ env.VERSION_TAG }}
          name: Release ${{ env.VERSION_TAG }}
          files: |
-            mangaworld-release.apk
-            animeworld-release.apk
-            novelworld-release.apk
+            Signed Manga App/mangaworld-release.apk
+            Signed Anime App/animeworld-release.apk
+            Signed Novel App/novelworld-release.apk
