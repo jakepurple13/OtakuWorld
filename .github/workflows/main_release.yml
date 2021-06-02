@@ -56,21 +56,21 @@ jobs:
           
           
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: animeworld/build/outputs/apk/debug/animeworld-debug.apk 
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: mangaworld/build/outputs/apk/debug/mangaworld-debug.apk 
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: novelworld/build/outputs/apk/debug/novelworld-debug.apk 
+#       - name: Upload APK
+#         uses: actions/upload-artifact@v1
+#         with:
+#           name: apk
+#           path: animeworld/build/outputs/apk/debug/animeworld-debug.apk 
+#       - name: Upload APK
+#         uses: actions/upload-artifact@v1
+#         with:
+#           name: apk
+#           path: mangaworld/build/outputs/apk/debug/mangaworld-debug.apk 
+#       - name: Upload APK
+#         uses: actions/upload-artifact@v1
+#         with:
+#           name: apk
+#           path: novelworld/build/outputs/apk/debug/novelworld-debug.apk 
           
   release:
     name: Release APK
