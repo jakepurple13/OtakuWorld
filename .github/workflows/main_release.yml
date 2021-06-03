@@ -6,6 +6,8 @@ on:
       - 'v*'
    paths-ignore: 
      - '.github/**'
+     
+  workflow_dispatch:
 
 jobs:
   apk:
