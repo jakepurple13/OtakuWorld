@@ -5,9 +5,17 @@
     android:gravity="center"
     android:layout_height="wrap_content">
 
+    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adViewNext"
+        ads:adSize="SMART_BANNER"
+        ads:adUnitId="@string/ad_unit_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/loadNextChapter"
         android:layout_width="match_parent"
+        android:layout_below="@id/adViewNext"
         android:layout_height="wrap_content"
         android:text="@string/loadNextChapter" />
 

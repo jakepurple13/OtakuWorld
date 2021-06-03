@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.github.piasy.biv.view.BigImageView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.favoritesdatabase.ChapterWatched
@@ -43,7 +45,7 @@ class PageAdapter(
 
     override val itemToModel: (String) -> String = { it }
 
-    //private val ad by lazy { AdRequest.Builder().build() }
+    private val ad by lazy { AdRequest.Builder().build() }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageHolder = context.layoutInflater.inflate(viewType, parent, false).let {
         when (viewType) {
@@ -66,7 +68,7 @@ class PageAdapter(
         when (holder) {
             is PageHolder.ReadingHolder -> holder.render(dataList[position], canDownload)
             is PageHolder.LoadNextChapterHolder -> {
-                holder.render(activity) {
+                holder.render(activity, ad) {
                     runOnUIThread {
                         chapterModels.getOrNull(--currentChapter)?.let(loadNewPages)
                         chapterModels.getOrNull(currentChapter)?.let { item ->
@@ -84,7 +86,7 @@ class PageAdapter(
                     }
                 }
             }
-            is PageHolder.LastChapterHolder -> holder.render(activity)
+            is PageHolder.LastChapterHolder -> holder.render(activity, ad)
         }
     }
 
@@ -104,8 +106,9 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     class LastChapterHolder(itemView: View) : PageHolder(itemView) {
         private val returnButton = itemView.findViewById<MaterialButton>(R.id.goBackFromReading)
-        fun render(activity: AppCompatActivity) {
-            //itemView.adViewEnd.loadAd(request)
+        private val adViewEnd = itemView.findViewById<AdView>(R.id.adViewEnd)
+        fun render(activity: AppCompatActivity, request: AdRequest) {
+            adViewEnd.loadAd(request)
             returnButton?.setOnClickListener { activity.finish() }
         }
     }
@@ -139,8 +142,9 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     class LoadNextChapterHolder(itemView: View) : PageHolder(itemView) {
         private val loadButton = itemView.findViewById<MaterialButton>(R.id.loadNextChapter)
         private val returnButton = itemView.findViewById<MaterialButton>(R.id.goBackFromReadingLoad)
-        fun render(activity: AppCompatActivity, load: suspend () -> Unit) {
-            //itemView.adViewNext.loadAd(request)
+        private val adViewNext = itemView.findViewById<AdView>(R.id.adViewNext)
+        fun render(activity: AppCompatActivity, request: AdRequest, load: suspend () -> Unit) {
+            adViewNext.loadAd(request)
             loadButton?.setOnClickListener { GlobalScope.launch { load() } }
             returnButton?.setOnClickListener { activity.finish() }
         }

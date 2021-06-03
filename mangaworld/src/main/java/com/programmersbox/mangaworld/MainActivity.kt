@@ -2,6 +2,7 @@ package com.programmersbox.mangaworld
 
 import com.github.piasy.biv.BigImageViewer
 import com.github.piasy.biv.loader.glide.GlideImageLoader
+import com.google.android.gms.ads.MobileAds
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseMainActivity
@@ -23,6 +24,9 @@ class MainActivity : BaseMainActivity() {
             sourcePublish.onNext(Sources.NINE_ANIME)
             currentService = Sources.NINE_ANIME.serviceName
         }
+
+        MobileAds.initialize(this)
+
     }
 
 }

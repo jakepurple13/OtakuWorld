@@ -3,4 +3,7 @@
     <string name="addedChapterItem">Added Chapter</string>
     <string name="removedChapterItem">Removed Chapter</string>
     <string name="showAdultSources">Show Adult Sources</string>
+
+    <string name="ad_id" translatable="false">ca-app-pub-4987825622505192~4498529586</string>
+    <string name="ad_unit_id" translatable="false">ca-app-pub-4987825622505192/5651829158</string>
 </resources>
