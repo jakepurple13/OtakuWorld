@@ -7,17 +7,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
-import com.github.piasy.biv.view.BigImageView
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.mangaworld.databinding.PageEndChapterItemBinding
+import com.programmersbox.mangaworld.databinding.PageItemBinding
+import com.programmersbox.mangaworld.databinding.PageNextChapterItemBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.thirdpartyutils.DragSwipeGlideAdapter
 import com.programmersbox.uiviews.utils.FirebaseDb
@@ -47,13 +48,11 @@ class PageAdapter(
 
     private val ad by lazy { AdRequest.Builder().build() }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageHolder = context.layoutInflater.inflate(viewType, parent, false).let {
-        when (viewType) {
-            R.layout.page_end_chapter_item -> PageHolder.LastChapterHolder(it)
-            R.layout.page_next_chapter_item -> PageHolder.LoadNextChapterHolder(it)
-            R.layout.page_item -> PageHolder.ReadingHolder(it)
-            else -> PageHolder.ReadingHolder(it)
-        }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageHolder = when (viewType) {
+        R.layout.page_end_chapter_item -> PageHolder.LastChapterHolder(PageEndChapterItemBinding.inflate(context.layoutInflater, parent, false))
+        R.layout.page_next_chapter_item -> PageHolder.LoadNextChapterHolder(PageNextChapterItemBinding.inflate(context.layoutInflater, parent, false))
+        R.layout.page_item -> PageHolder.ReadingHolder(PageItemBinding.inflate(context.layoutInflater, parent, false))
+        else -> PageHolder.ReadingHolder(PageItemBinding.inflate(context.layoutInflater, parent, false))
     }
 
     override fun getItemCount(): Int = super.getItemCount() + 1
@@ -70,6 +69,7 @@ class PageAdapter(
             is PageHolder.LoadNextChapterHolder -> {
                 holder.render(activity, ad) {
                     runOnUIThread {
+                        Glide.get(activity).clearMemory()
                         chapterModels.getOrNull(--currentChapter)?.let(loadNewPages)
                         chapterModels.getOrNull(currentChapter)?.let { item ->
                             ChapterWatched(item.url, item.name, mangaUrl)
@@ -104,32 +104,31 @@ class PageAdapter(
 
 sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    class LastChapterHolder(itemView: View) : PageHolder(itemView) {
-        private val returnButton = itemView.findViewById<MaterialButton>(R.id.goBackFromReading)
-        private val adViewEnd = itemView.findViewById<AdView>(R.id.adViewEnd)
+    class LastChapterHolder(private val binding: PageEndChapterItemBinding) : PageHolder(binding.root) {
         fun render(activity: AppCompatActivity, request: AdRequest) {
-            adViewEnd.loadAd(request)
-            returnButton?.setOnClickListener { activity.finish() }
+            binding.adViewEnd.loadAd(request)
+            binding.goBackFromReading.setOnClickListener { activity.finish() }
         }
     }
 
-    class ReadingHolder(itemView: View) : PageHolder(itemView) {
-        private val image by lazy { itemView.findViewById<BigImageView>(R.id.chapterPage) }
-
+    class ReadingHolder(private val binding: PageItemBinding) : PageHolder(binding.root) {
         fun render(item: String?, canDownload: (String) -> Unit) {
-            image?.setProgressIndicator(ProgressPieIndicator())
+            binding.chapterPage.setProgressIndicator(ProgressPieIndicator())
             /*Glide.with(image)
                 .asBitmap()
                 .load(item)
                 .into<Bitmap> {
                     resourceReady { images, transition -> image?.ssiv?.setImage(ImageSource.bitmap(images)) }
                 }*/
-            image?.showImage(Uri.parse(item), Uri.parse(item))
-            image.setOnLongClickListener {
+            binding.chapterPage.showImage(Uri.parse(item), Uri.parse(item))
+            binding.chapterPage.setOnLongClickListener {
                 try {
-                    MaterialAlertDialogBuilder(itemView.context)
+                    MaterialAlertDialogBuilder(binding.root.context)
                         .setTitle(itemView.context.getText(R.string.downloadPage))
-                        .setPositiveButton(itemView.context.getText(android.R.string.ok)) { d, _ -> canDownload(item!!);d.dismiss() }
+                        .setPositiveButton(binding.root.context.getText(android.R.string.ok)) { d, _ ->
+                            canDownload(item!!)
+                            d.dismiss()
+                        }
                         .setNegativeButton(itemView.context.getText(R.string.no)) { d, _ -> d.dismiss() }
                         .show()
                 } catch (e: Exception) {
@@ -139,14 +138,11 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         }
     }
 
-    class LoadNextChapterHolder(itemView: View) : PageHolder(itemView) {
-        private val loadButton = itemView.findViewById<MaterialButton>(R.id.loadNextChapter)
-        private val returnButton = itemView.findViewById<MaterialButton>(R.id.goBackFromReadingLoad)
-        private val adViewNext = itemView.findViewById<AdView>(R.id.adViewNext)
+    class LoadNextChapterHolder(private val binding: PageNextChapterItemBinding) : PageHolder(binding.root) {
         fun render(activity: AppCompatActivity, request: AdRequest, load: suspend () -> Unit) {
-            adViewNext.loadAd(request)
-            loadButton?.setOnClickListener { GlobalScope.launch { load() } }
-            returnButton?.setOnClickListener { activity.finish() }
+            binding.adViewNext.loadAd(request)
+            binding.loadNextChapter.setOnClickListener { GlobalScope.launch { load() } }
+            binding.goBackFromReadingLoad.setOnClickListener { activity.finish() }
         }
     }
 
