@@ -48,7 +48,7 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.1"
     implementation coroutinesCore
     implementation jsoup
-    implementation 'com.squareup.duktape:duktape-android:1.3.0'
+    implementation 'com.squareup.duktape:duktape-android:1.4.0'
     implementation gson
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
