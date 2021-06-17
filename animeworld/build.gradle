@@ -67,7 +67,7 @@ dependencies {
     implementation "com.google.android.exoplayer:exoplayer-dash:$exoplayer_version"
     implementation "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
 
-    implementation 'androidx.mediarouter:mediarouter:1.2.3'
+    implementation 'androidx.mediarouter:mediarouter:1.2.4'
     implementation 'com.github.rubensousa:previewseekbar-exoplayer:2.11.4.0'
     implementation "androidx.tonyodev.fetch2:xfetch2:3.1.6"
     implementation "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
