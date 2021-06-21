@@ -71,6 +71,9 @@
                     android:id="@+id/sourceListLayout"
                     android:layout_below="@id/fav_search_layout"
                     android:layout_width="match_parent"
+                    android:fadingEdge="horizontal"
+                    android:requiresFadingEdge="horizontal"
+                    android:fadingEdgeLength="10dp"
                     android:layout_height="wrap_content">
 
                     <com.google.android.material.chip.ChipGroup
