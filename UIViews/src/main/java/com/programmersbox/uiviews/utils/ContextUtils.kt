@@ -28,8 +28,10 @@ var Context.currentService: String? by sharedPrefObjectDelegate(null)
 var Context.shouldCheck: Boolean by sharedPrefNotNullObjectDelegate(true)
 
 var Context.lastUpdateCheck: Long? by sharedPrefDelegate(null)
+var Context.lastUpdateCheckEnd: Long? by sharedPrefDelegate(null)
 
 val updateCheckPublish = BehaviorSubject.create<Long>()
+val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 
 var Context.batteryAlertPercent: Int by sharedPrefNotNullDelegate(20)
 
