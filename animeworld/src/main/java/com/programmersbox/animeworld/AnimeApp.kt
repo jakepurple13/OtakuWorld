@@ -3,7 +3,6 @@ package com.programmersbox.animeworld
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ShortcutInfo
-import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
@@ -110,47 +109,26 @@ class AnimeApp : OtakuApp() {
             }
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
-
     }
 
     @RequiresApi(Build.VERSION_CODES.N_MR1)
-    private fun shortcutSetup() {
-        val manager = getSystemService(ShortcutManager::class.java)
-        if (manager.dynamicShortcuts.size == 0) {
-            // Application restored. Need to re-publish dynamic shortcuts.
-            if (manager.pinnedShortcuts.size > 0) {
-                // Pinned shortcuts have been restored. Use
-                // updateShortcuts() to make sure they contain
-                // up-to-date information.
-                manager.removeAllDynamicShortcuts()
-            }
-        }
-
-        val shortcuts = mutableListOf<ShortcutInfo>()
-
+    override fun shortcuts(): List<ShortcutInfo> = listOf(
         //download viewer
-        shortcuts.add(
-            ShortcutInfo.Builder(this, "download_viewer")
-                .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_file_download).toBitmap()))
-                .setShortLabel(getString(R.string.view_downloads))
-                .setLongLabel(getString(R.string.view_downloads))
-                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_DOWNLOADS), this, MainActivity::class.java))
-                .build()
-        )
-
+        ShortcutInfo.Builder(this, "download_viewer")
+            .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_file_download).toBitmap()))
+            .setShortLabel(getString(R.string.view_downloads))
+            .setLongLabel(getString(R.string.view_downloads))
+            .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_DOWNLOADS), this, MainActivity::class.java))
+            .build(),
         //video viewer
-        shortcuts.add(
-            ShortcutInfo.Builder(this, "video_viewer")
-                .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
-                .setShortLabel(getString(R.string.view_videos))
-                .setLongLabel(getString(R.string.view_videos))
-                .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_VIDEOS), this, MainActivity::class.java))
-                .build()
-        )
+        ShortcutInfo.Builder(this, "video_viewer")
+            .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
+            .setShortLabel(getString(R.string.view_videos))
+            .setLongLabel(getString(R.string.view_videos))
+            .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_VIDEOS), this, MainActivity::class.java))
+            .build()
+    )
 
-        manager.dynamicShortcuts = shortcuts
-    }
 }
 
 class HttpsUrlConnectionDownloader(fileDownloaderType: Downloader.FileDownloaderType) : HttpUrlConnectionDownloader(fileDownloaderType) {
