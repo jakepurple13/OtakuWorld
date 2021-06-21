@@ -1,6 +1,6 @@
 # OtakuWorld
  ![visitors](https://page-views.glitch.me/badge?page_id=jakepurple13.OtakuWorld)
- ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yml/badge.svg)
+ ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
  
 A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld) apps. This was created because there were a ton of shared elements between the two apps so I combined them, allowing two separate apps but a lot of the same base logic.
 
