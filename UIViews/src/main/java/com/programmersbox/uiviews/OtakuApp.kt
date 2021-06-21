@@ -2,7 +2,10 @@ package com.programmersbox.uiviews
 
 import android.app.Application
 import android.content.Context
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
@@ -66,9 +69,34 @@ abstract class OtakuApp : Application() {
 
         updateSetup(this)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
+
     }
 
     abstract fun onCreated()
+
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    protected open fun shortcuts(): List<ShortcutInfo> = emptyList()
+
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    private fun shortcutSetup() {
+        val manager = getSystemService(ShortcutManager::class.java)
+        if (manager.dynamicShortcuts.size == 0) {
+            // Application restored. Need to re-publish dynamic shortcuts.
+            if (manager.pinnedShortcuts.size > 0) {
+                // Pinned shortcuts have been restored. Use
+                // updateShortcuts() to make sure they contain
+                // up-to-date information.
+                manager.removeAllDynamicShortcuts()
+            }
+        }
+
+        val shortcuts = mutableListOf<ShortcutInfo>()
+
+        shortcuts.addAll(shortcuts())
+
+        manager.dynamicShortcuts = shortcuts
+    }
 
     companion object {
         var logo: Int = R.drawable.baseline_import_export_black_18dp
@@ -81,7 +109,11 @@ abstract class OtakuApp : Application() {
                 work.enqueueUniquePeriodicWork(
                     "updateChecks",
                     ExistingPeriodicWorkPolicy.KEEP,
-                    PeriodicWorkRequest.Builder(UpdateWorker::class.java, 1, TimeUnit.HOURS)
+                    PeriodicWorkRequest.Builder(
+                        UpdateWorker::class.java,
+                        1, TimeUnit.HOURS,
+                        5, TimeUnit.MINUTES
+                    )
                         //PeriodicWorkRequest.Builder(UpdateWorker::class.java, 15, TimeUnit.MINUTES)
                         .setConstraints(
                             Constraints.Builder()

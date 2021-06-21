@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -15,6 +16,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.NavigationUI
@@ -24,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.noowenz.showmoreless.ShowMoreLess
 import com.programmersbox.dragswipe.get
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.helpfulutils.colorFromTheme
@@ -43,6 +46,8 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.zhanghai.android.fastscroll.FastScrollerBuilder
 import org.koin.android.ext.android.inject
 
@@ -77,6 +82,7 @@ class DetailsFragment : Fragment() {
         return binding.root
     }
 
+    @SuppressLint("WrongConstant")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         NavigationUI.setupWithNavController(binding.collapsingBar, binding.toolbar, findNavController())
@@ -160,6 +166,12 @@ class DetailsFragment : Fragment() {
                     requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
                 }
 
+                dao.doesNotificationExist(info.url)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { binding.toolbar.menu.findItem(R.id.saveForLater).isVisible = !it }
+                    .addTo(disposable)
+
                 binding.toolbar.setOnMenuItemClickListener {
                     when (it.itemId) {
                         R.id.markChaptersAs -> {
@@ -178,6 +190,22 @@ class DetailsFragment : Fragment() {
                         }
                         R.id.openBrowser -> {
                             requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                        }
+                        R.id.saveForLater -> {
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                dao.insertNotification(
+                                    NotificationItem(
+                                        id = info.hashCode(),
+                                        url = info.url,
+                                        summaryText = requireContext()
+                                            .getString(R.string.hadAnUpdate, info.title, info.chapters.firstOrNull()?.name ?: ""),
+                                        notiTitle = info.title,
+                                        imageUrl = info.imageUrl,
+                                        source = info.source.serviceName,
+                                        contentTitle = info.title
+                                    )
+                                ).subscribe()
+                            }
                         }
                     }
                     true

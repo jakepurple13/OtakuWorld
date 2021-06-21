@@ -20,10 +20,7 @@ import com.programmersbox.loggingutils.Loged
 import com.programmersbox.loggingutils.f
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
-import com.programmersbox.uiviews.utils.AppUpdate
-import com.programmersbox.uiviews.utils.FirebaseDb
-import com.programmersbox.uiviews.utils.lastUpdateCheck
-import com.programmersbox.uiviews.utils.updateCheckPublish
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -219,12 +216,12 @@ class UpdateNotification(private val context: Context) {
             }
             showWhen = true
             groupId = "otakuGroup"
-            deleteIntent { context ->
+            /*deleteIntent { context ->
                 val intent = Intent(context, DeleteNotificationReceiver::class.java)
                 intent.action = "NOTIFICATION_DELETED_ACTION"
                 intent.putExtra("url", pair.second.url)
                 PendingIntent.getBroadcast(context, 0, intent, 0)
-            }
+            }*/
             pendingIntent { context ->
                 NavDeepLinkBuilder(context)
                     .setGraph(R.navigation.recent_nav)
@@ -288,6 +285,8 @@ class UpdateNotification(private val context: Context) {
     }
 
     fun sendFinishedNotification() {
+        context.lastUpdateCheckEnd = System.currentTimeMillis()
+        context.lastUpdateCheckEnd?.let { updateCheckPublishEnd.onNext(it) }
         val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon) {
             onlyAlertOnce = true
             subText = context.getString(R.string.finishedChecking)

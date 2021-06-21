@@ -108,7 +108,7 @@ class AllFragment : BaseListFragment() {
             .textChanges()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .debounce(500, TimeUnit.MILLISECONDS)
+            .debounce(1000, TimeUnit.MILLISECONDS)
             .flatMapSingle { sourcePublish.value!!.searchList(it, 1, currentList) }
             .subscribe {
                 adapter.setData(it)

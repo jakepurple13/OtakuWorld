@@ -36,6 +36,7 @@ import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.Observables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
@@ -304,12 +305,26 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("sync_time")?.let { s ->
-            requireContext().lastUpdateCheck
-                ?.let { SimpleDateFormat("MM/dd/yyyy hh:mm a", Locale.getDefault()).format(it) }
-                ?.let { s.summary = it }
 
-            updateCheckPublish
-                .map { SimpleDateFormat("MM/dd/yyyy hh:mm a", Locale.getDefault()).format(it) }
+            val format = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.getDefault())
+
+
+            listOfNotNull(
+                requireContext().lastUpdateCheck
+                    ?.let { "Start: ${format.format(it)}" },
+                requireContext().lastUpdateCheckEnd
+                    ?.let { "End: ${format.format(it)}" }
+            )
+                .joinToString("\n")
+                .let { s.summary = it }
+
+            Observables.combineLatest(
+                updateCheckPublish.map { "Start: ${format.format(it)}" },
+                updateCheckPublishEnd.map { "End: ${format.format(it)}" }
+            )
+                .map { "${it.first}\n${it.second}" }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { s.summary = it }
                 .addTo(disposable)
 

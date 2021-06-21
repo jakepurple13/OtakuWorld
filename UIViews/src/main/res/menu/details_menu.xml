@@ -9,4 +9,8 @@
         android:id="@+id/openBrowser"
         android:title="@string/fallback_menu_item_open_in_browser" />
 
+    <item
+        android:id="@+id/saveForLater"
+        android:title="@string/save_for_later" />
+
 </menu>
