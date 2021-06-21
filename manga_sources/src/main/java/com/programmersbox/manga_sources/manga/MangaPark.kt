@@ -1,13 +1,18 @@
 package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.manga_sources.Sources
-import com.programmersbox.manga_sources.utilities.NetworkHelper
-import com.programmersbox.manga_sources.utilities.asJsoup
-import com.programmersbox.manga_sources.utilities.cloudflare
+import com.programmersbox.manga_sources.utilities.*
 import com.programmersbox.models.*
+import com.squareup.duktape.Duktape
 import io.reactivex.Single
+import kotlinx.serialization.json.*
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.koin.core.component.KoinComponent
@@ -17,7 +22,7 @@ import java.util.*
 
 object MangaPark : ApiService, KoinComponent {
 
-    override val baseUrl = "https://v2.mangapark.net"
+    override val baseUrl = "https://mangapark.net"
 
     override val serviceName: String get() = "MANGA_PARK"
 
@@ -29,17 +34,9 @@ object MangaPark : ApiService, KoinComponent {
         } else {
             Single.create { emitter ->
                 emitter.onSuccess(
-                    cloudflare(helper, "$baseUrl/search?q=$searchText&page=$page&st-ss=1").execute().asJsoup()
-                        .select("div.item").map {
-                            val title = it.select("a.cover")
-                            ItemModel(
-                                title = title.attr("title"),
-                                description = it.select("p.summary").text(),
-                                url = "${baseUrl}${title.attr("href")}",
-                                imageUrl = title.select("img").attr("abs:src"),
-                                source = this
-                            )
-                        }
+                    cloudflare(helper, "$baseUrl/search?word=$searchText&page=$page").execute().asJsoup()
+                        .also { println(it) }
+                        .browseToItemModel("div#search-list div.col")
                 )
             }
 
@@ -49,57 +46,115 @@ object MangaPark : ApiService, KoinComponent {
     }
 
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare(helper, "$baseUrl/genre/$page").execute().asJsoup()
-            .select("div.ls1").select("div.d-flex, div.flex-row, div.item")
-            .map {
-                ItemModel(
-                    title = it.select("a.cover").attr("title"),
-                    description = "",
-                    url = "${baseUrl}${it.select("a.cover").attr("href")}",
-                    imageUrl = it.select("a.cover").select("img").attr("abs:src"),
-                    source = Sources.MANGA_PARK
-                )
-            }
+        cloudflare(helper, "$baseUrl/browse?sort=d007&page=$page").execute().asJsoup()
+            .browseToItemModel()
             .let { emitter.onSuccess(it) }
     }
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare(helper, "$baseUrl/latest/$page").execute().asJsoup()
-            .select("div.ls1").select("div.d-flex, div.flex-row, div.item")
-            .map {
-                ItemModel(
-                    title = it.select("a.cover").attr("title"),
-                    description = "",
-                    url = "${baseUrl}${it.select("a.cover").attr("href")}",
-                    imageUrl = it.select("a.cover").select("img").attr("abs:src"),
-                    source = Sources.MANGA_PARK
-                )
-            }
+        cloudflare(helper, "$baseUrl/browse?sort=update&page=$page").execute().asJsoup()
+            .browseToItemModel()
             .let { emitter.onSuccess(it) }
     }
 
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = cloudflare(helper, model.url).execute().asJsoup()//Jsoup.connect(model.mangaUrl).get()
-        val genres = mutableListOf<String>()
-        val alternateNames = mutableListOf<String>()
-        doc.select(".attr > tbody > tr").forEach {
-            when (it.getElementsByTag("th").first().text().trim().lowercase(Locale.getDefault())) {
-                "genre(s)" -> genres.addAll(it.getElementsByTag("a").map(Element::text))
-                "alternative" -> alternateNames.addAll(it.text().split("l"))
-            }
-        }
-        emitter.onSuccess(
-            InfoModel(
-                title = model.title,
-                description = doc.select("p.summary").text(),
-                url = model.url,
-                imageUrl = model.imageUrl,
-                chapters = chapterListParse(doc),
-                genres = genres,
-                alternativeNames = alternateNames,
-                source = this
+    private fun Document.browseToItemModel(query: String = "div#subject-list div.col") = select(query)
+        .map {
+            ItemModel(
+                title = it.select("a.fw-bold").text(),
+                description = it.select("div.limit-html").text(),
+                url = it.select("a.fw-bold").attr("abs:href"),
+                imageUrl = it.select("a.position-relative img").attr("abs:src"),
+                source = Sources.MANGA_PARK
             )
+        }
+
+    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
+        val doc = cloudflare(helper, model.url).execute().asJsoup()
+        try {
+            val infoElement = doc.select("div#mainer div.container-fluid")
+            emitter.onSuccess(
+                InfoModel(
+                    title = model.title,
+                    description = model.description,
+                    url = model.url,
+                    imageUrl = model.imageUrl,
+                    chapters = chapterListParse(helper.cloudflareClient.newCall(chapterListRequest(model)).execute()),
+                    genres = infoElement.select("div.attr-item:contains(genres) span span").map { it.text().trim() },
+                    alternativeNames = emptyList(),
+                    source = this
+                )
+            )
+        } catch (e: Exception) {
+            val genres = mutableListOf<String>()
+            val alternateNames = mutableListOf<String>()
+            doc.select(".attr > tbody > tr").forEach {
+                when (it.getElementsByTag("th").first().text().trim().lowercase(Locale.getDefault())) {
+                    "genre(s)" -> genres.addAll(it.getElementsByTag("a").map(Element::text))
+                    "alternative" -> alternateNames.addAll(it.text().split("l"))
+                }
+            }
+            emitter.onSuccess(
+                InfoModel(
+                    title = model.title,
+                    description = doc.select("p.summary").text(),
+                    url = model.url,
+                    imageUrl = model.imageUrl,
+                    chapters = chapterListParse(doc),
+                    genres = genres,
+                    alternativeNames = alternateNames,
+                    source = this
+                )
+            )
+        }
+    }
+
+    private fun chapterListRequest(manga: ItemModel): Request {
+
+        val url = manga.url.replace(baseUrl, "")
+        val sid = url.split("/")[2]
+
+        val jsonPayload = buildJsonObject {
+            put("lang", "en")
+            put("sid", sid)
+        }
+
+        val requestBody = jsonPayload.toString().toRequestBody("application/json;charset=UTF-8".toMediaType())
+
+        val refererUrl = "$baseUrl/$url".toHttpUrlOrNull()!!.newBuilder()
+            .toString()
+        val newHeaders = MangaUtils.headersBuilder()
+            .add("Content-Length", requestBody.contentLength().toString())
+            .add("Content-Type", requestBody.contentType().toString())
+            .set("Referer", refererUrl)
+            .build()
+
+        return POST(
+            "$baseUrl/ajax.reader.subject.episodes.lang",
+            headers = newHeaders,
+            body = requestBody
         )
+    }
+
+    private fun chapterListParse(response: Response): List<ChapterModel> {
+        val resToJson = Json.parseToJsonElement(response.body!!.string()).jsonObject
+        val document = Jsoup.parse(resToJson["html"]!!.jsonPrimitive.content)
+        return document.select("div.episode-item").map { chapterFromElement(it) }
+            .map {
+                ChapterModel(
+                    name = it.name,
+                    url = it.url,
+                    uploaded = it.originalDate,
+                    source = this
+                ).apply { uploadedTime = it.dateUploaded }
+            }
+    }
+
+    private class SChapter {
+        var url: String = ""
+        var name: String = ""
+        var chapterNumber: Float = 0f
+        var dateUploaded: Long? = null
+        var originalDate: String = ""
     }
 
     private fun chapterListParse(response: Document): List<ChapterModel> {
@@ -108,24 +163,14 @@ object MangaPark : ApiService, KoinComponent {
             return allChapters.filter { it.chapterNumber !in chapterNums }.distinctBy { it.chapterNumber }
         }
 
-        fun List<SChapter>.filterOrAll(source: String): List<SChapter> {
-            val chapters = this.filter { it.scanlator!!.contains(source) }
-            return if (chapters.isNotEmpty()) {
-                (chapters + chapters.getMissingChapters(this)).sortedByDescending { it.chapterNumber }
-            } else {
-                this
-            }
-        }
-
         val mangaBySource = response.select("div[id^=stream]")
             .map { sourceElement ->
                 var lastNum = 0F
-                val sourceName = sourceElement.select("i + span").text()
 
                 sourceElement.select(".volume .chapter li")
                     .reversed() // so incrementing lastNum works
                     .map { chapterElement ->
-                        chapterFromElement(chapterElement, sourceName, lastNum)
+                        chapterFromElement(chapterElement, lastNum)
                             .also { lastNum = it.chapterNumber }
                     }
                     .distinctBy { it.chapterNumber } // there's even duplicate chapters within a source ( -.- )
@@ -142,16 +187,21 @@ object MangaPark : ApiService, KoinComponent {
         }
     }
 
-    private class SChapter {
-        var url: String = ""
-        var name: String = ""
-        var chapterNumber: Float = 0f
-        var dateUploaded: Long? = null
-        var originalDate: String = ""
-        var scanlator: String? = null
+    private fun chapterFromElement(element: Element): SChapter {
+        val urlElement = element.select("a.chapt")
+        val time = element.select("div.extra > i.ps-2").text()
+
+        return SChapter().apply {
+            name = urlElement.text()
+            chapterNumber = urlElement.attr("href").substringAfterLast("/").toFloat()
+            if (time != "") {
+                dateUploaded = parseDate(time)
+            }
+            url = urlElement.attr("abs:href")
+        }
     }
 
-    private fun chapterFromElement(element: Element, source: String, lastNum: Float): SChapter {
+    private fun chapterFromElement(element: Element, lastNum: Float): SChapter {
         fun Float.incremented() = this + .00001F
         fun Float?.orIncrementLastNum() = if (this == null || this < lastNum) lastNum.incremented() else this
 
@@ -171,10 +221,12 @@ object MangaPark : ApiService, KoinComponent {
                 }
             dateUploaded = element.select(".time").firstOrNull()?.text()?.trim()?.let { parseDate(it) }
             originalDate = element.select(".time").firstOrNull()?.text()?.trim().toString()
-            scanlator = source
         }
     }
 
+    private val cryptoJS by lazy { helper.client.newCall(GET(cryptoJSUrl, MangaUtils.headers)).execute().body!!.string() }
+
+    private const val cryptoJSUrl = "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"
 
     private val dateFormat = SimpleDateFormat("MMM d, yyyy, HH:mm a", Locale.ENGLISH)
     private val dateFormatTimeOnly = SimpleDateFormat("HH:mm a", Locale.ENGLISH)
@@ -245,12 +297,14 @@ object MangaPark : ApiService, KoinComponent {
     override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
         try {
             val doc = cloudflare(helper, url).execute().asJsoup()
-            val titleAndImg = doc.select("div.w-100, div.cover").select("img")
+            val infoElement = doc.select("div#mainer div.container-fluid")
             ItemModel(
-                title = titleAndImg.attr("title"),
-                description = doc.select("p.summary").text(),
+                title = infoElement.select("h3.item-title").text(),
+                description = infoElement.select("div.limit-height-body")
+                    .select("h5.text-muted, div.limit-html")
+                    .joinToString("\n\n", transform = Element::text),
                 url = url,
-                imageUrl = titleAndImg.attr("abs:src"),
+                imageUrl = infoElement.select("div.detail-set div.attr-cover img").attr("abs:src"),
                 source = this
             )
                 .let(it::onSuccess)
@@ -260,14 +314,28 @@ object MangaPark : ApiService, KoinComponent {
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-        cloudflare(helper, chapterModel.url).execute().asJsoup().toString()
-            .substringAfter("var _load_pages = ").substringBefore(";").fromJson<List<Pages>>().orEmpty()
-            .map { if (it.u.orEmpty().startsWith("//")) "https:${it.u}" else it.u.orEmpty() }
+
+        val duktape = Duktape.create()
+        val script = cloudflare(helper, chapterModel.url).execute().asJsoup().select("script").html()
+        val imgCdnHost = script.substringAfter("const imgCdnHost = \"").substringBefore("\";")
+        val imgPathLisRaw = script.substringAfter("const imgPathLis = ").substringBefore(";")
+        val imgPathLis = Json.parseToJsonElement(imgPathLisRaw).jsonArray
+        val amPass = script.substringAfter("const amPass = ").substringBefore(";")
+        val amWord = script.substringAfter("const amWord = ").substringBefore(";")
+
+        val decryptScript = cryptoJS + "CryptoJS.AES.decrypt($amWord, $amPass).toString(CryptoJS.enc.Utf8);"
+
+        val imgWordLisRaw = duktape.evaluate(decryptScript).toString()
+        val imgWordLis = Json.parseToJsonElement(imgWordLisRaw).jsonArray
+
+        imgWordLis.mapIndexed { i, imgWordE ->
+            val imgPath = imgPathLis[i].jsonPrimitive.content
+            val imgWord = imgWordE.jsonPrimitive.content
+            "$imgCdnHost$imgPath?$imgWord"
+        }
             .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
             .let { emitter.onSuccess(it) }
     }
-
-    private data class Pages(val n: Number?, val w: String?, val h: String?, val u: String?)
 
     override val canScroll: Boolean = true
 }
