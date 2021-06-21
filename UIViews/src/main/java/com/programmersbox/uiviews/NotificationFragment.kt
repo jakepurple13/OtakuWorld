@@ -92,9 +92,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.removeNotification)
-                .setCancelable(false)
                 .setMultiChoiceItems(
-                    adapter.dataList.map(NotificationItem::notiTitle).toTypedArray(),
+                    adapter.dataList.map { i -> "${i.source} - ${i.notiTitle}" }.toTypedArray(),
                     null
                 ) { _, i, b ->
                     val item = adapter.dataList[i]
@@ -152,9 +151,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     ?.addTo(disposable)
             }
             binding.sendNotification.setOnClickListener {
-                GlobalScope.launch {
-                    SavedNotifications.viewNotificationFromDb(binding.root.context, item)
-                }
+                GlobalScope.launch { SavedNotifications.viewNotificationFromDb(binding.root.context, item) }
             }
             binding.executePendingBindings()
         }
