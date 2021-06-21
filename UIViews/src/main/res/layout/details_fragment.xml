@@ -67,6 +67,8 @@
                         android:id="@+id/infoCover"
                         android:layout_width="360px"
                         android:layout_height="480px"
+                        android:paddingHorizontal="5dp"
+                        android:layout_marginStart="5dp"
                         tools:ignore="ContentDescription,PxUsage"
                         tools:src="@tools:sample/avatars" />
 
