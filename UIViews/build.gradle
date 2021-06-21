@@ -77,6 +77,11 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-alpha01"
 
+    implementation "com.mikepenz:iconics-core:5.2.8"
+    implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
+    //Google Material Icons
+    implementation 'com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar'
+
     implementation gson
 
     implementation recyclerview

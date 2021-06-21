@@ -115,5 +115,6 @@
     <string name="removeNoti">Remove %s?</string>
     <string name="notify">Notify</string>
     <string name="view_noti_summary">View notifications that have been sent, just in case you accidentally dismissed one you didn\'t mean to.</string>
+    <string name="save_for_later">Save for Later</string>
 
 </resources>

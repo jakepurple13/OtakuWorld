@@ -63,4 +63,7 @@ interface ItemDao {
     @Query("SELECT COUNT(id) FROM Notifications")
     fun getAllNotificationCount(): Flowable<Int>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM Notifications WHERE url = :url)")
+    fun doesNotificationExist(url: String): Flowable<Boolean>
+
 }
