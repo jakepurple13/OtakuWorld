@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+    id 'kotlinx-serialization'
 }
 
 android {
@@ -54,6 +55,8 @@ dependencies {
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
     implementation gsonutils
     implementation helpfulutils
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0'
 
     implementation 'androidx.webkit:webkit:1.4.0'
 
