@@ -3,7 +3,8 @@ name: Minimal Android CI Workflow
 on:
    push: 
     branches:
-     - master
+      - master
+     - develop
     paths-ignore: 
      - '.github/**'
    
