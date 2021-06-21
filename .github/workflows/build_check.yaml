@@ -1,13 +1,19 @@
 name: Minimal Android CI Workflow
  
 on:
-   push: 
+  push:
     branches:
       - master
       - develop
-    paths-ignore: 
-     - '.github/**'
-   
+    paths-ignore:
+      - '.github/**'
+  pull_request:
+    branches:
+      - develop
+      - master
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch:
 
 jobs:
   apk:
