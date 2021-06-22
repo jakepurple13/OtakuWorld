@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.google.android.gms.ads.AdRequest
@@ -69,20 +68,21 @@ class PageAdapter(
             is PageHolder.LoadNextChapterHolder -> {
                 holder.render(activity, ad) {
                     runOnUIThread {
-                        Glide.get(activity).clearMemory()
-                        chapterModels.getOrNull(--currentChapter)?.let(loadNewPages)
-                        chapterModels.getOrNull(currentChapter)?.let { item ->
-                            ChapterWatched(item.url, item.name, mangaUrl)
-                                .let {
-                                    Completable.mergeArray(
-                                        FirebaseDb.insertEpisodeWatched(it),
-                                        dao.insertChapter(it)
-                                    )
-                                }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(Schedulers.io())
-                                .subscribe()
-                        }
+                        //Glide.get(activity).clearMemory()
+                        chapterModels.getOrNull(--currentChapter)
+                            ?.also(loadNewPages)
+                            ?.let { item ->
+                                ChapterWatched(item.url, item.name, mangaUrl)
+                                    .let {
+                                        Completable.mergeArray(
+                                            FirebaseDb.insertEpisodeWatched(it),
+                                            dao.insertChapter(it)
+                                        )
+                                    }
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(Schedulers.io())
+                                    .subscribe()
+                            }
                     }
                 }
             }

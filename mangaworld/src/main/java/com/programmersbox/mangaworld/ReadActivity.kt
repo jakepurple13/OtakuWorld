@@ -193,6 +193,7 @@ class ReadActivity : AppCompatActivity() {
     }
 
     private fun loadPages(model: ChapterModel?) {
+        Glide.get(this).clearMemory()
         binding.readLoading
             .animate()
             .withStartAction { binding.readLoading.visible() }

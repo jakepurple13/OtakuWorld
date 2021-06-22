@@ -104,6 +104,7 @@ object MangaHere : ApiService {
                         name = it.select("a").select("p.title3").text(),
                         url = it.select("a").attr("abs:href"),
                         uploaded = it.select("a").select("p.title2").text(),
+                        sourceUrl = model.url,
                         source = this
                     ).apply { uploadedTime = parseChapterDate(uploaded) }
                 },

@@ -60,6 +60,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("mangaTitle", model.name)
                 putExtra("mangaUrl", model.url)
+                putExtra("mangaInfoUrl", model.sourceUrl)
             }
         )
     }

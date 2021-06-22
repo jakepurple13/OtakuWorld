@@ -94,8 +94,9 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
                     val reg = "var video_links = (\\{.*?\\});".toRegex().toPattern().matcher(htmlc)
                     while (reg.find()) it.onSuccess(listOfNotNull(reg.group(1).fromJson<NormalLink>()?.normal?.storage?.get(0)))
                 }
+                else -> it.onError(Exception("Something went wrong"))
             }
-            it.onError(Exception("Something went wrong"))
+
         } catch (e: Exception) {
             it.onError(e)
         }
@@ -124,7 +125,7 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create {
         try {
             fun getStuff(document: Document) = document.allElements.select("div#videos").select("a[href^=http]")
-                .map { ChapterModel(it.text(), it.attr("abs:href"), "", source.source) }
+                .map { ChapterModel(it.text(), it.attr("abs:href"), "", source.url, source.source) }
             it(
                 InfoModel(
                     source = this,

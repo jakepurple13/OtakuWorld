@@ -2,12 +2,16 @@ package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import com.programmersbox.manga_sources.utilities.GET
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
 import io.reactivex.Single
-import okhttp3.*
+import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -31,22 +35,6 @@ abstract class MangaBox(
 
     fun Response.asJsoup(html: String? = null): Document {
         return Jsoup.parse(html ?: body!!.string(), request.url.toString())
-    }
-
-    private val DEFAULT_CACHE_CONTROL = CacheControl.Builder().maxAge(10, TimeUnit.MINUTES).build()
-    private val DEFAULT_HEADERS = Headers.Builder().build()
-    private val DEFAULT_BODY: RequestBody = FormBody.Builder().build()
-
-    fun GET(
-        url: String,
-        headers: Headers = DEFAULT_HEADERS,
-        cache: CacheControl = DEFAULT_CACHE_CONTROL
-    ): Request {
-        return Request.Builder()
-            .url(url)
-            .headers(headers)
-            .cacheControl(cache)
-            .build()
     }
 
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create {
@@ -236,7 +224,7 @@ abstract class MangaBox(
             url = itemModel.url,
             alternativeNames = emptyList(),
             chapters = document.select(chapterListSelector())
-                .map { chapterFromElement(it) }
+                .map { chapterFromElement(it, itemModel.url) }
                 .also { if (it.isEmpty()) checkForRedirectMessage(document) },//client.newCall(chapterListRequest(itemModel.url)).execute().let { chapterListParse(it) },
             description = document.select(descriptionSelector)?.firstOrNull()?.ownText()
                 ?.replace("""^${infoElement?.select("h1, h2")?.first()?.text().orEmpty()} summary:\s""".toRegex(), "")
@@ -261,7 +249,7 @@ abstract class MangaBox(
         val document = response.asJsoup()
 
         return document.select(chapterListSelector())
-            .map { chapterFromElement(it) }
+            .map { chapterFromElement(it, "") }
             .also { if (it.isEmpty()) checkForRedirectMessage(document) }
     }
 
@@ -272,11 +260,12 @@ abstract class MangaBox(
         return this.select(defaultChapterDateSelector).lastOrNull() ?: this.select(alternateChapterDateSelector).last()
     }
 
-    private fun chapterFromElement(element: Element): ChapterModel {
+    private fun chapterFromElement(element: Element, mangaUrl: String): ChapterModel {
         return ChapterModel(
             url = element.select("a").attr("abs:href"),//.substringAfter(baseUrl),
             name = element.select("a").text(),
             uploaded = parseChapterDate(element.selectDateFromElement().text()).toString(),
+            sourceUrl = mangaUrl,
             source = this
         )
     }

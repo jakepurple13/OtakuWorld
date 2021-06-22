@@ -102,7 +102,7 @@ object GogoAnimeApi : ShowApi(
                     chapters = doc.select("ul.check-list").select("li").map {
                         val urlInfo = it.select("a[href^=http]")
                         val epName = urlInfo.text().let { info -> if (info.contains(name)) info.substring(name.length) else info }.trim()
-                        ChapterModel(epName, urlInfo.attr("abs:href"), "", this)
+                        ChapterModel(epName, urlInfo.attr("abs:href"), "", source.url, this)
                     }.distinctBy(ChapterModel::url)
                 )
             )
