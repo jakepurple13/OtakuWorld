@@ -104,6 +104,7 @@ object MangaFourLife : ApiService {
                                     .last()
                             }${chapterURLEncode(it.Chapter)}",
                             uploaded = it.Date.toString(),
+                            sourceUrl = model.url,
                             source = this
                         ).apply {
                             try {

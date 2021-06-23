@@ -6,6 +6,7 @@ import com.programmersbox.anime_sources.anime.AnimeToonDubbed
 import com.programmersbox.anime_sources.anime.WcoDubbed
 import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.gsonutils.getApi
+import com.programmersbox.gsonutils.header
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
@@ -274,6 +275,26 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun animetoontvTest() {
+
+        val f = "http://api.animetoon.tv/GetNewDubbed"
+
+        val doc = getApi(f) {
+            header(
+                "User-Agent" to "okhttp/2.3.0",
+                "App-LandingPage" to "http://www.mobi24.net/toon.html",
+                "App-Name" to "#Toonmania",
+                "Connection" to "Keep-Alive",
+                "Host" to "api.animetoon.tv",
+                "App-Version" to "7.7"
+            )
+        }
+
+        println(doc)
+
+    }
+
+    @Test
     fun animetoon() {
         val f = AnimeToonDubbed
 
@@ -285,9 +306,11 @@ class ExampleUnitTest {
 
         println(d)
 
-        val v = d.chapters.first().getChapterInfo().doOnError { }.blockingGet()
+        val v = d.chapters.first().getChapterInfo().blockingGet()
 
         println(v)
+
+        println(Jsoup.connect(v.random().link!!).get())
     }
 
     @Test

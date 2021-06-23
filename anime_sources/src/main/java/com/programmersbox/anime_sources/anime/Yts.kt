@@ -146,7 +146,13 @@ object Yts : ApiService {
                     imageUrl = model.imageUrl,
                     genres = it.genres.orEmpty(),
                     chapters = it.torrents?.map { t ->
-                        ChapterModel("${model.title} - ${t.quality}", t.url.orEmpty(), "${t.date_uploaded}\n${t.size}", this)
+                        ChapterModel(
+                            "${model.title} - ${t.quality}",
+                            t.url.orEmpty(),
+                            "${t.date_uploaded}\n${t.size}",
+                            model.url,
+                            this
+                        )
                             .apply {
                                 extras["hash"] = t.hash.orEmpty()
                                 extras["torrents"] = t.toJson()

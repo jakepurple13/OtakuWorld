@@ -87,6 +87,7 @@ object Tsumino : ApiService {
                         url = model.url,
                         name = doc.select("#Pages").text(),
                         uploaded = "",
+                        sourceUrl = model.url,
                         source = Tsumino
                     )
                 ),

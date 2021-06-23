@@ -66,6 +66,7 @@ class ChapterModelSerializer : JsonSerializer<ChapterModel> {
         json.addProperty("name", src.name)
         json.addProperty("uploaded", src.uploaded)
         json.addProperty("source", src.source.serviceName)
+        json.addProperty("sourceUrl", src.sourceUrl)
         json.addProperty("url", src.url)
         return json
     }
@@ -79,6 +80,7 @@ class ChapterModelDeserializer(private val genericInfo: GenericInfo) : JsonDeser
                     name = it["name"].asString,
                     uploaded = it["uploaded"].asString,
                     source = it1,
+                    sourceUrl = it["sourceUrl"].asString,
                     url = it["url"].asString
                 )
             }

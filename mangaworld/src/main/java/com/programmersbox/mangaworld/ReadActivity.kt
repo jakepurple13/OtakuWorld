@@ -7,8 +7,11 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.view.View
+import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,6 +21,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
@@ -43,6 +47,7 @@ import org.koin.android.ext.android.inject
 import java.io.File
 import java.util.*
 import kotlin.math.roundToInt
+
 
 class ReadActivity : AppCompatActivity() {
 
@@ -75,6 +80,40 @@ class ReadActivity : AppCompatActivity() {
 
     private val genericInfo by inject<GenericInfo>()
 
+    private fun View.slideUp() {
+        val layoutParams = this.layoutParams
+        if (layoutParams is CoordinatorLayout.LayoutParams) {
+            @Suppress("UNCHECKED_CAST")
+            (layoutParams.behavior as? CustomHideBottomViewOnScrollBehavior<View>)?.slideUp(this)
+        }
+    }
+
+    private fun View.slideDown() {
+        val layoutParams = this.layoutParams
+        if (layoutParams is CoordinatorLayout.LayoutParams) {
+            @Suppress("UNCHECKED_CAST")
+            (layoutParams.behavior as? CustomHideBottomViewOnScrollBehavior<View>)?.slideDown(this)
+        }
+    }
+
+    private val sliderMenu by lazy {
+        val layoutParams = binding.bottomMenu.layoutParams
+        if (layoutParams is CoordinatorLayout.LayoutParams) {
+            @Suppress("UNCHECKED_CAST")
+            layoutParams.behavior as? CustomHideBottomViewOnScrollBehavior<RelativeLayout>
+        } else null
+    }
+
+    private val fab by lazy {
+        val layoutParams = binding.scrollToTopManga.layoutParams
+        if (layoutParams is CoordinatorLayout.LayoutParams) {
+            @Suppress("UNCHECKED_CAST")
+            layoutParams.behavior as? CustomHideBottomViewOnScrollBehavior<FloatingActionButton>
+        } else null
+    }
+
+    private var menuToggle = false
+
     private val adapter2: PageAdapter by lazy {
         loader.let {
             val list = intent.getStringExtra("allChapters")
@@ -95,6 +134,11 @@ class ReadActivity : AppCompatActivity() {
                     .transition(withCrossFade()),
                 activity = this@ReadActivity,
                 dataList = mutableListOf(),
+                onTap = {
+                    menuToggle = !menuToggle
+                    if (sliderMenu?.isShowing?.not() ?: menuToggle) binding.bottomMenu.slideUp() else binding.bottomMenu.slideDown()
+                    if (fab?.isShowing?.not() ?: menuToggle) binding.scrollToTopManga.slideUp() else binding.scrollToTopManga.slideDown()
+                },
                 chapterModels = list,
                 currentChapter = list.indexOfFirst { l -> l.url == url },
                 mangaUrl = mangaUrl,
@@ -165,6 +209,7 @@ class ReadActivity : AppCompatActivity() {
                 if (image > -1) {
                     val total = l.itemCount
                     binding.pageCount.text = String.format("%d/%d", image + 1, total)
+                    binding.pageChoice.value = (image + 1).toFloat()
                 }
             }
         })
@@ -189,10 +234,13 @@ class ReadActivity : AppCompatActivity() {
         }
 
         binding.scrollToTopManga.setOnClickListener { binding.readView.smoothScrollToPosition(0) }
-
+        binding.pageChoice.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) binding.readView.scrollToPosition(value.toInt() - 1)
+        }
     }
 
     private fun loadPages(model: ChapterModel?) {
+        Glide.get(this).clearMemory()
         binding.readLoading
             .animate()
             .withStartAction { binding.readLoading.visible() }
@@ -212,6 +260,12 @@ class ReadActivity : AppCompatActivity() {
                     .withEndAction { binding.readLoading.gone() }
                     .start()
                 adapter2.setListNotify(pages)
+                binding.pageChoice.valueTo = try {
+                    pages.size.toFloat() + 1
+                } catch (e: Exception) {
+                    2f
+                }
+                binding.readView.setItemViewCacheSize(pages.size + 1)
                 //adapter.addItems(pages)
                 //binding.readView.layoutManager!!.scrollToPosition(model.url.let { defaultSharedPref.getInt(it, 0) })
             }
@@ -300,9 +354,10 @@ class ReadActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        super.onDestroy()
+        Glide.get(this).clearMemory()
         unregisterReceiver(batteryInfo)
         disposable.dispose()
-        super.onDestroy()
     }
 
 }

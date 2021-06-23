@@ -100,6 +100,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
                         name = it.select("a").text(),
                         url = it.select("a").attr("abs:href"),
                         uploaded = "",
+                        sourceUrl = source.url,
                         source = this
                     )
                 },

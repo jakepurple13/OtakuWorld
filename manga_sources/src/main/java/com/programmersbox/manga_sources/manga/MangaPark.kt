@@ -78,7 +78,7 @@ object MangaPark : ApiService, KoinComponent {
                     description = model.description,
                     url = model.url,
                     imageUrl = model.imageUrl,
-                    chapters = chapterListParse(helper.cloudflareClient.newCall(chapterListRequest(model)).execute()),
+                    chapters = chapterListParse(helper.cloudflareClient.newCall(chapterListRequest(model)).execute(), model.url),
                     genres = infoElement.select("div.attr-item:contains(genres) span span").map { it.text().trim() },
                     alternativeNames = emptyList(),
                     source = this
@@ -99,7 +99,7 @@ object MangaPark : ApiService, KoinComponent {
                     description = doc.select("p.summary").text(),
                     url = model.url,
                     imageUrl = model.imageUrl,
-                    chapters = chapterListParse(doc),
+                    chapters = chapterListParse(doc, model.url),
                     genres = genres,
                     alternativeNames = alternateNames,
                     source = this
@@ -135,7 +135,7 @@ object MangaPark : ApiService, KoinComponent {
         )
     }
 
-    private fun chapterListParse(response: Response): List<ChapterModel> {
+    private fun chapterListParse(response: Response, mangaUrl: String): List<ChapterModel> {
         val resToJson = Json.parseToJsonElement(response.body!!.string()).jsonObject
         val document = Jsoup.parse(resToJson["html"]!!.jsonPrimitive.content)
         return document.select("div.episode-item").map { chapterFromElement(it) }
@@ -144,6 +144,7 @@ object MangaPark : ApiService, KoinComponent {
                     name = it.name,
                     url = it.url,
                     uploaded = it.originalDate,
+                    sourceUrl = mangaUrl,
                     source = this
                 ).apply { uploadedTime = it.dateUploaded }
             }
@@ -157,7 +158,7 @@ object MangaPark : ApiService, KoinComponent {
         var originalDate: String = ""
     }
 
-    private fun chapterListParse(response: Document): List<ChapterModel> {
+    private fun chapterListParse(response: Document, mangaUrl: String): List<ChapterModel> {
         fun List<SChapter>.getMissingChapters(allChapters: List<SChapter>): List<SChapter> {
             val chapterNums = this.map { it.chapterNumber }
             return allChapters.filter { it.chapterNumber !in chapterNums }.distinctBy { it.chapterNumber }
@@ -182,6 +183,7 @@ object MangaPark : ApiService, KoinComponent {
                 name = it.name,
                 url = "${baseUrl}${it.url}",
                 uploaded = it.originalDate,
+                sourceUrl = mangaUrl,
                 source = this
             ).apply { uploadedTime = it.dateUploaded }
         }

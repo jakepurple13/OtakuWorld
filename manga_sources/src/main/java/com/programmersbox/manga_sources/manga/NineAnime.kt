@@ -72,6 +72,7 @@ object NineAnime : ApiService {
                         name = it.select("a").select("span").firstOrNull()?.text() ?: it.text() ?: it.select("a").text(),
                         url = it.select("a").attr("abs:href"),
                         uploaded = it.select("span.time").text(),
+                        sourceUrl = model.url,
                         source = this
                     ).apply { uploadedTime = uploaded.toDate() }
                 },

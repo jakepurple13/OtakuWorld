@@ -101,6 +101,7 @@ object Mangamutiny : ApiService {
                         name = chapterTitleBuilder(c),
                         url = "$baseUrl$chapterApiPath/${c.slug}",
                         uploaded = c.releasedAt.orEmpty(),
+                        sourceUrl = model.url,
                         source = this
                     )
                 }.orEmpty(),

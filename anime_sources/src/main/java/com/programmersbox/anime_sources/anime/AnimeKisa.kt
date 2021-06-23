@@ -87,6 +87,7 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
                     name = it.text(),
                     url = it.attr("abs:href"),
                     uploaded = dateFormat.format(Date(it.select("div.timeS").attr("time").toLong() * 1000)),
+                    sourceUrl = source.url,
                     source = this
                 )
             },

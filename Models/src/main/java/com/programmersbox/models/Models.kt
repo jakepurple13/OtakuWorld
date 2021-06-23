@@ -31,6 +31,7 @@ data class ChapterModel(
     val name: String,
     val url: String,
     val uploaded: String,
+    val sourceUrl: String,
     val source: ApiService
 ) : ViewModel() {
     var uploadedTime: Long? = null
