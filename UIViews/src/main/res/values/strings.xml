@@ -69,7 +69,7 @@
     <string name="account_category_title">Account</string>
     <string name="last_update_check_time">Last Time Updates Were Checked</string>
     <string name="check_for_periodic_updates">Check for Updates Periodically</string>
-    <string name="view_libraries_used">View Libraries Used</string>
+    <string name="view_libraries_used">Libraries Used</string>
     <string name="view_menu_category_title">View</string>
     <string name="general_menu_title">General</string>
     <string name="view_source_in_browser">View Source in Browser</string>
@@ -116,5 +116,6 @@
     <string name="notify">Notify</string>
     <string name="view_noti_summary">View notifications that have been sent, just in case you accidentally dismissed one you didn\'t mean to.</string>
     <string name="save_for_later">Save for Later</string>
+    <string name="view_on_github">View on Github</string>
 
 </resources>

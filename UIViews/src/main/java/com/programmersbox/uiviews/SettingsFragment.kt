@@ -12,7 +12,6 @@ import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.FileProvider
 import androidx.navigation.fragment.findNavController
 import androidx.preference.*
@@ -145,7 +144,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.setOnPreferenceClickListener {
                 requireContext().openInCustomChromeBrowser(sourcePublish.value!!.baseUrl) {
                     setStartAnimations(requireContext(), R.anim.fui_slide_in_right, R.anim.fui_slide_out_left)
-                    setShareState(CustomTabsIntent.SHARE_STATE_ON)
                 }
                 true
             }
@@ -257,6 +255,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 updateSetter()
                 true
             }
+        }
+
+
+
+        findPreference<Preference>("view_on_github")?.setOnPreferenceClickListener {
+            context?.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/")
+            true
         }
 
         findPreference<Preference>("updateAvailable")?.let { p ->

@@ -36,6 +36,11 @@
             app:key="used_libraries"
             app:title="@string/view_libraries_used" />
 
+        <Preference
+            app:icon="@drawable/github_icon"
+            app:key="view_on_github"
+            app:title="@string/view_on_github" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
