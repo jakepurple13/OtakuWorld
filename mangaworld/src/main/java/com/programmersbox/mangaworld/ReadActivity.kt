@@ -210,6 +210,7 @@ class ReadActivity : AppCompatActivity() {
                     val total = l.itemCount
                     binding.pageCount.text = String.format("%d/%d", image + 1, total)
                     binding.pageChoice.value = (image + 1).toFloat()
+                    if (image + 1 == total) sliderMenu?.slideDown(binding.bottomMenu)
                 }
             }
         })
@@ -265,7 +266,6 @@ class ReadActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     2f
                 }
-                binding.readView.setItemViewCacheSize(pages.size + 1)
                 //adapter.addItems(pages)
                 //binding.readView.layoutManager!!.scrollToPosition(model.url.let { defaultSharedPref.getInt(it, 0) })
             }
