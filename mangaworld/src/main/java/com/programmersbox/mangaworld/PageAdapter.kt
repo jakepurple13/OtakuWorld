@@ -14,7 +14,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.layoutInflater
-import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.mangaworld.databinding.PageEndChapterItemBinding
 import com.programmersbox.mangaworld.databinding.PageItemBinding
 import com.programmersbox.mangaworld.databinding.PageNextChapterItemBinding
@@ -23,8 +22,6 @@ import com.programmersbox.thirdpartyutils.DragSwipeGlideAdapter
 import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.util.*
 
 class PageAdapter(
@@ -32,6 +29,7 @@ class PageAdapter(
     override val thumbRequest: RequestBuilder<Drawable>,
     private val activity: AppCompatActivity,
     dataList: MutableList<String>,
+    private val onTap: () -> Unit,
     private val chapterModels: List<ChapterModel>,
     var currentChapter: Int,
     private val mangaUrl: String,
@@ -64,26 +62,24 @@ class PageAdapter(
 
     override fun onBindViewHolder(holder: PageHolder, position: Int) {
         when (holder) {
-            is PageHolder.ReadingHolder -> holder.render(dataList[position], canDownload)
+            is PageHolder.ReadingHolder -> holder.render(dataList[position], onTap, canDownload)
             is PageHolder.LoadNextChapterHolder -> {
                 holder.render(activity, ad) {
-                    runOnUIThread {
-                        //Glide.get(activity).clearMemory()
-                        chapterModels.getOrNull(--currentChapter)
-                            ?.also(loadNewPages)
-                            ?.let { item ->
-                                ChapterWatched(item.url, item.name, mangaUrl)
-                                    .let {
-                                        Completable.mergeArray(
-                                            FirebaseDb.insertEpisodeWatched(it),
-                                            dao.insertChapter(it)
-                                        )
-                                    }
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(Schedulers.io())
-                                    .subscribe()
-                            }
-                    }
+                    //Glide.get(activity).clearMemory()
+                    chapterModels.getOrNull(--currentChapter)
+                        ?.also(loadNewPages)
+                        ?.let { item ->
+                            ChapterWatched(item.url, item.name, mangaUrl)
+                                .let {
+                                    Completable.mergeArray(
+                                        FirebaseDb.insertEpisodeWatched(it),
+                                        dao.insertChapter(it)
+                                    )
+                                }
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(Schedulers.io())
+                                .subscribe()
+                        }
                 }
             }
             is PageHolder.LastChapterHolder -> holder.render(activity, ad)
@@ -112,14 +108,9 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     }
 
     class ReadingHolder(private val binding: PageItemBinding) : PageHolder(binding.root) {
-        fun render(item: String?, canDownload: (String) -> Unit) {
+        fun render(item: String?, onTap: () -> Unit, canDownload: (String) -> Unit) {
             binding.chapterPage.setProgressIndicator(ProgressPieIndicator())
-            /*Glide.with(image)
-                .asBitmap()
-                .load(item)
-                .into<Bitmap> {
-                    resourceReady { images, transition -> image?.ssiv?.setImage(ImageSource.bitmap(images)) }
-                }*/
+            binding.chapterPage.setOnClickListener { onTap() }
             binding.chapterPage.showImage(Uri.parse(item), Uri.parse(item))
             binding.chapterPage.setOnLongClickListener {
                 try {
@@ -139,9 +130,9 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     }
 
     class LoadNextChapterHolder(private val binding: PageNextChapterItemBinding) : PageHolder(binding.root) {
-        fun render(activity: AppCompatActivity, request: AdRequest, load: suspend () -> Unit) {
+        fun render(activity: AppCompatActivity, request: AdRequest, load: () -> Unit) {
             binding.adViewNext.loadAd(request)
-            binding.loadNextChapter.setOnClickListener { GlobalScope.launch { load() } }
+            binding.loadNextChapter.setOnClickListener { load() }
             binding.goBackFromReadingLoad.setOnClickListener { activity.finish() }
         }
     }
