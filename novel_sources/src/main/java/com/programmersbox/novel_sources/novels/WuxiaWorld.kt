@@ -97,6 +97,7 @@ object WuxiaWorld : ApiService {
                         name = it.attr("title"),
                         url = it.attr("abs:href"),
                         uploaded = "",
+                        sourceUrl = model.url,
                         source = Sources.WUXIAWORLD
                     )
                 },
