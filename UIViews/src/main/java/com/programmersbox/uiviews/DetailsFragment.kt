@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.animation.ValueAnimator
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -30,14 +29,21 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.helpfulutils.colorFromTheme
+import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.whatIfNotNull
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.rxutils.invoke
-import com.programmersbox.thirdpartyutils.*
+import com.programmersbox.thirdpartyutils.changeTint
+import com.programmersbox.thirdpartyutils.check
+import com.programmersbox.thirdpartyutils.getPalette
+import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
+import com.programmersbox.uiviews.utils.ChromeCustomTabTransformationMethod
 import com.programmersbox.uiviews.utils.FirebaseDb
+import com.programmersbox.uiviews.utils.MainLogo
+import com.programmersbox.uiviews.utils.openInCustomChromeBrowser
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -70,6 +76,8 @@ class DetailsFragment : Fragment() {
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
 
+    private val logo: MainLogo by inject()
+
     private val isFavorite = BehaviorSubject.createDefault(false)
 
     private var swatchBarColor: Int? = null
@@ -82,14 +90,21 @@ class DetailsFragment : Fragment() {
         return binding.root
     }
 
-    @SuppressLint("WrongConstant")
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         NavigationUI.setupWithNavController(binding.collapsingBar, binding.toolbar, findNavController())
-        args.itemInfo?.toInfoModel()
+        args.itemInfo
+            ?.also {
+                binding.collapsingBar.title = it.title
+                binding.infoDescription.text = it.description
+                binding.toolbar.title = it.title
+            }
+            ?.toInfoModel()
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeBy { info ->
+                binding.shimmer.shimmerLayout.stopShimmer()
+                binding.shimmer.shimmerLayout.gone()
                 adapter.title = info.title
                 adapter.itemUrl = info.url
                 binding.info = info
@@ -100,9 +115,9 @@ class DetailsFragment : Fragment() {
                 Glide.with(binding.bigInfoCover)
                     .load(info.imageUrl)
                     .override(360, 480)
-                    .placeholder(OtakuApp.logo)
-                    .error(OtakuApp.logo)
-                    .fallback(OtakuApp.logo)
+                    .placeholder(logo.logoId)
+                    .error(logo.logoId)
+                    .fallback(logo.logoId)
                     .transform(RoundedCorners(15))
                     .into<Drawable> {
                         resourceReady { image, _ ->
@@ -121,8 +136,9 @@ class DetailsFragment : Fragment() {
                                                 ),
                                                 127
                                             )
-
                                         )
+
+                                        binding.collapsingBar.setContentScrimColor(it)
                                     }
 
                                     ShowMoreLess.Builder(requireContext())

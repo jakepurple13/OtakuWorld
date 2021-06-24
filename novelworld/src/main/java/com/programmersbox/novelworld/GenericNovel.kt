@@ -1,10 +1,13 @@
 package com.programmersbox.novelworld
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.novel_sources.Sources
@@ -13,10 +16,14 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.utils.AppUpdate
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.MainLogo
+import com.programmersbox.uiviews.utils.NotificationLogo
 import org.koin.dsl.module
 
 val appModule = module {
     single<GenericInfo> { GenericNovel(get()) }
+    single { MainLogo(R.mipmap.ic_launcher) }
+    single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 
 class GenericNovel(val context: Context) : GenericInfo {
@@ -44,6 +51,9 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
 
     }
+
+    @SuppressLint("InflateParams")
+    override fun shimmerUi(context: Context, logo: MainLogo): View = context.layoutInflater.inflate(R.layout.shimmer_item, null)
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 

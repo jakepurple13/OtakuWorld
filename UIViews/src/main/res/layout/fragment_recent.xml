@@ -35,6 +35,14 @@
 
     </RelativeLayout>
 
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmerLayout"
+        app:shimmer_auto_start="true"
+        app:shimmer_shape="linear"
+        app:shimmer_repeat_mode="restart"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/recentRefresh"
         android:layout_width="match_parent"

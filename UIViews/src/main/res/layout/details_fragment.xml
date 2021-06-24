@@ -20,6 +20,10 @@
         android:layout_height="match_parent"
         tools:context=".DetailsFragment">
 
+        <include
+            android:id="@+id/shimmer"
+            layout="@layout/details_shimmer" />
+
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar"
             android:layout_width="match_parent"
@@ -31,14 +35,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:collapsedTitleTextAppearance="?attr/textAppearanceHeadline6"
-                app:contentScrim="?attr/colorPrimary"
-                app:title="@{info.title}"
                 app:collapsingToolbarColors="@{swatch}"
+                app:contentScrim="?attr/colorPrimary"
                 app:expandedTitleGravity="top|center_horizontal"
-                app:titleEnabled="false"
                 app:expandedTitleMarginBottom="56dp"
                 app:expandedTitleTextAppearance="?attr/textAppearanceHeadline5"
-                app:layout_scrollFlags="scroll|enterAlways|exitUntilCollapsed|snap">
+                app:layout_scrollFlags="scroll|enterAlways|exitUntilCollapsed|snap"
+                app:title="@{info.title}"
+                app:titleEnabled="false">
 
                 <ImageView
                     android:id="@+id/bigInfoCover"
@@ -54,38 +58,38 @@
                     tools:src="@tools:sample/avatars" />
 
                 <RelativeLayout
-                    android:paddingVertical="5dp"
-                    android:paddingEnd="5dp"
-                    android:paddingStart="0dp"
-                    android:layout_marginBottom="5dp"
                     android:id="@+id/infoHeader"
-                    android:layout_marginTop="?attr/actionBarSize"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="?attr/actionBarSize"
+                    android:layout_marginBottom="5dp"
+                    android:paddingVertical="5dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="5dp">
 
                     <ImageView
                         android:id="@+id/infoCover"
                         android:layout_width="360px"
                         android:layout_height="480px"
-                        android:paddingHorizontal="5dp"
                         android:layout_marginStart="5dp"
+                        android:paddingHorizontal="5dp"
                         tools:ignore="ContentDescription,PxUsage"
                         tools:src="@tools:sample/avatars" />
 
                     <LinearLayout
-                        android:orientation="vertical"
-                        android:layout_toEndOf="@id/infoCover"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/infoCover"
+                        android:orientation="vertical">
 
                         <HorizontalScrollView
                             android:id="@+id/genreListLayout"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="5dp"
                             android:fadingEdge="horizontal"
-                            android:requiresFadingEdge="horizontal"
                             android:fadingEdgeLength="10dp"
-                            android:layout_marginHorizontal="5dp">
+                            android:requiresFadingEdge="horizontal">
 
                             <com.google.android.material.chip.ChipGroup
                                 android:id="@+id/genreList"
@@ -110,27 +114,27 @@
 
                         <TextView
                             android:id="@+id/infoUrl"
+                            style="@style/TextAppearance.MaterialComponents.Headline5"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:autoLink="web"
-                            android:visibility="gone"
-                            style="@style/TextAppearance.MaterialComponents.Headline5"
                             android:linksClickable="true"
                             android:text="@{info.title}"
+                            android:visibility="gone"
                             tools:text="@tools:sample/cities"
                             tools:textColorLink="@sample/sample_colors" />
 
                         <LinearLayout
-                            android:orientation="horizontal"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
 
                             <com.airbnb.lottie.LottieAnimationView
                                 android:id="@+id/favoriteItem"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginEnd="5dp"
                                 android:layout_gravity="center_vertical"
+                                android:layout_marginEnd="5dp"
                                 app:lottie_loop="true"
                                 app:lottie_rawRes="@raw/heart"
                                 app:tint="?android:textColorPrimary" />
@@ -167,15 +171,15 @@
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
-                    app:title="@{info.title}"
-                    tools:title="@tools:sample/full_names"
-                    tools:titleTextColor="@sample/sample_colors"
-                    app:toolbarColors="@{swatch}"
-                    app:menu="@menu/details_menu"
-                    tools:background="@sample/sample_colors"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    app:layout_collapseMode="pin" />
+                    app:layout_collapseMode="pin"
+                    app:menu="@menu/details_menu"
+                    app:title="@{info.title}"
+                    app:toolbarColors="@{swatch}"
+                    tools:background="@sample/sample_colors"
+                    tools:title="@tools:sample/full_names"
+                    tools:titleTextColor="@sample/sample_colors" />
 
             </com.google.android.material.appbar.CollapsingToolbarLayout>
         </com.google.android.material.appbar.AppBarLayout>
@@ -190,17 +194,17 @@
                 android:id="@+id/infoLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
                 android:layout_marginBottom="5dp"
+                android:visibility="gone"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <LinearLayout
-                    app:layout_constraintBottom_toBottomOf="parent"
                     android:id="@+id/moreInfoLayout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="5dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent">
 
                     <TextView
                         android:id="@+id/alternateNames"
@@ -230,15 +234,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:textColor="#ffffff"
-            android:src="@android:drawable/ic_menu_share"
             android:background="#ffffff"
+            android:contentDescription="@string/fallback_menu_item_share_link"
+            android:src="@android:drawable/ic_menu_share"
+            android:textColor="#ffffff"
             app:iconTint="#ffffff"
             app:layout_anchor="@id/app_bar"
             app:layout_anchorGravity="end|bottom"
             app:strokeColor="#ffffff"
-            tools:ignore="HardcodedText"
-            android:contentDescription="@string/fallback_menu_item_share_link" />
+            tools:ignore="HardcodedText" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

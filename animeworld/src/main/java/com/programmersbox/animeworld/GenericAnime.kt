@@ -1,9 +1,11 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -22,6 +24,7 @@ import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.ytsdatabase.Torrent
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -33,6 +36,8 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.AppUpdate
+import com.programmersbox.uiviews.utils.MainLogo
+import com.programmersbox.uiviews.utils.NotificationLogo
 import com.tonyodev.fetch2.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -43,6 +48,8 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<GenericInfo> { GenericAnime(get()) }
+    single { MainLogo(R.mipmap.ic_launcher) }
+    single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 
 class GenericAnime(val context: Context) : GenericInfo {
@@ -281,5 +288,8 @@ class GenericAnime(val context: Context) : GenericInfo {
     private fun openVideos() {
         ViewVideosFragment().show(MainActivity.activity.supportFragmentManager, "videoViewer")
     }
+
+    @SuppressLint("InflateParams")
+    override fun shimmerUi(context: Context, logo: MainLogo): View = context.layoutInflater.inflate(R.layout.shimmer_item, null)
 
 }

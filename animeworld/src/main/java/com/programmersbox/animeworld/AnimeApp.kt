@@ -11,11 +11,9 @@ import androidx.core.content.FileProvider
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.icon
-import com.programmersbox.anime_sources.Sources
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.UpdateWorker
 import com.programmersbox.uiviews.utils.FirebaseDb
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2.Fetch.Impl.setDefaultInstanceConfiguration
@@ -29,18 +27,6 @@ class AnimeApp : OtakuApp() {
     override fun onCreated() {
 
         loadKoinModules(appModule)
-
-        logo = R.mipmap.ic_launcher
-        notificationLogo = R.mipmap.ic_launcher_foreground
-
-        UpdateWorker.sourcesList = Sources.values().toList()
-        UpdateWorker.sourceFromString = {
-            try {
-                Sources.valueOf(it)
-            } catch (e: Exception) {
-                null
-            }
-        }
 
         FirebaseDb.DOCUMENT_ID = "favoriteShows"
         FirebaseDb.CHAPTERS_ID = "episodesWatched"

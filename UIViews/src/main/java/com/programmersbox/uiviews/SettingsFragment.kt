@@ -41,6 +41,8 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -57,6 +59,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private val disposable: CompositeDisposable = CompositeDisposable()
 
     private val genericInfo: GenericInfo by inject()
+
+    private val logo: MainLogo by inject()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -80,9 +84,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 activity?.let {
                     Glide.with(this@SettingsFragment)
                         .load(user?.photoUrl)
-                        .placeholder(OtakuApp.logo)
-                        .error(OtakuApp.logo)
-                        .fallback(OtakuApp.logo)
+                        .placeholder(logo.logoId)
+                        .error(logo.logoId)
+                        .fallback(logo.logoId)
                         .circleCrop()
                         .into<Drawable> { resourceReady { image, _ -> p.icon = image } }
                 }
@@ -116,7 +120,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun generalPreferences(genericInfo: GenericInfo) {
 
-        findPreference<PreferenceCategory>("aboutCategory")?.setIcon(OtakuApp.logo)
+        findPreference<PreferenceCategory>("aboutCategory")?.setIcon(logo.logoId)
 
         findPreference<Preference>("current_source")?.let { p ->
             p.setOnPreferenceClickListener {
@@ -419,10 +423,12 @@ class SettingsDsl {
     }
 }
 
-class DownloadApk(val context: Context, private val downloadUrl: String, private val outputName: String) : CoroutineScope {
+class DownloadApk(val context: Context, private val downloadUrl: String, private val outputName: String) : CoroutineScope, KoinComponent {
     private var job: Job = Job()
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job // to run code in Main(UI) Thread
+
+    private val logo: MainLogo by inject()
 
     // call this method to cancel a coroutine when you don't need it anymore,
     // e.g. when user closes the screen
@@ -497,7 +503,7 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
             .setTitle(R.string.updating_dots)
             .setMessage(R.string.downloading_dots_no_percent)
             .setCancelable(false)
-            .setIcon(OtakuApp.logo)
+            .setIcon(logo.logoId)
             .show()
     }
 

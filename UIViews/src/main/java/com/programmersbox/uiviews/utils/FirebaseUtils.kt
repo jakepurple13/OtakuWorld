@@ -15,16 +15,19 @@ import com.google.firebase.firestore.ktx.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.rxutils.toLatestFlowable
-import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import io.reactivex.Completable
 import io.reactivex.subjects.PublishSubject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-object FirebaseAuthentication {
+object FirebaseAuthentication : KoinComponent {
 
     private const val RC_SIGN_IN = 32
 
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
+
+    private val logo: MainLogo by inject()
 
     fun signIn(activity: Activity) {
         //val signInIntent = googleSignInClient!!.signInIntent
@@ -40,7 +43,7 @@ object FirebaseAuthentication {
                 .createSignInIntentBuilder()
                 .setTheme(R.style.Theme_OtakuWorld)
                 //.setLogo(R.mipmap.big_logo)
-                .setLogo(OtakuApp.logo)
+                .setLogo(logo.logoId)
                 .setAvailableProviders(providers)
                 .build(),
             RC_SIGN_IN
