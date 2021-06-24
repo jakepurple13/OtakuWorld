@@ -38,6 +38,7 @@ import com.programmersbox.rxutils.invoke
 import com.programmersbox.thirdpartyutils.*
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
 import com.programmersbox.uiviews.utils.FirebaseDb
+import com.programmersbox.uiviews.utils.MainLogo
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -70,6 +71,8 @@ class DetailsFragment : Fragment() {
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
 
+    private val logo: MainLogo by inject()
+
     private val isFavorite = BehaviorSubject.createDefault(false)
 
     private var swatchBarColor: Int? = null
@@ -100,9 +103,9 @@ class DetailsFragment : Fragment() {
                 Glide.with(binding.bigInfoCover)
                     .load(info.imageUrl)
                     .override(360, 480)
-                    .placeholder(OtakuApp.logo)
-                    .error(OtakuApp.logo)
-                    .fallback(OtakuApp.logo)
+                    .placeholder(logo.logoId)
+                    .error(logo.logoId)
+                    .fallback(logo.logoId)
                     .transform(RoundedCorners(15))
                     .into<Drawable> {
                         resourceReady { image, _ ->

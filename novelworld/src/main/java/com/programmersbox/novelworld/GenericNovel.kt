@@ -13,10 +13,14 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.utils.AppUpdate
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.MainLogo
+import com.programmersbox.uiviews.utils.NotificationLogo
 import org.koin.dsl.module
 
 val appModule = module {
     single<GenericInfo> { GenericNovel(get()) }
+    single { MainLogo(R.mipmap.ic_launcher) }
+    single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 
 class GenericNovel(val context: Context) : GenericInfo {

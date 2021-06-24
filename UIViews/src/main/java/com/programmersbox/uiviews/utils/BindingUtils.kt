@@ -15,16 +15,15 @@ import com.google.android.material.chip.ChipGroup
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.SwatchInfo
-import com.programmersbox.uiviews.OtakuApp
 
-@BindingAdapter("coverImage")
-fun loadImage(view: ImageView, imageUrl: String?) {
+@BindingAdapter("coverImage", "logoId")
+fun loadImage(view: ImageView, imageUrl: String?, logoId: Int) {
     Glide.with(view)
         .load(imageUrl)
         .override(360, 480)
-        .placeholder(OtakuApp.logo)
-        .error(OtakuApp.logo)
-        .fallback(OtakuApp.logo)
+        .placeholder(logoId)
+        .error(logoId)
+        .fallback(logoId)
         .transform(RoundedCorners(15))
         .into(view)
 }

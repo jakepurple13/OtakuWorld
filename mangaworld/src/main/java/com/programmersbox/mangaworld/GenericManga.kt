@@ -23,9 +23,7 @@ import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
-import com.programmersbox.uiviews.utils.AppUpdate
-import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -37,6 +35,8 @@ import java.io.File
 val appModule = module {
     single<GenericInfo> { GenericManga(get()) }
     single { NetworkHelper(get()) }
+    single { MainLogo(R.mipmap.ic_launcher) }
+    single { NotificationLogo(R.drawable.manga_world_round_logo) }
 }
 
 class GenericManga(val context: Context) : GenericInfo {

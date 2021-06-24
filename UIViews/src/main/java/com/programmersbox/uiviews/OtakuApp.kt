@@ -99,8 +99,6 @@ abstract class OtakuApp : Application() {
     }
 
     companion object {
-        var logo: Int = R.drawable.baseline_import_export_black_18dp
-        var notificationLogo: Int = 0
 
         fun updateSetup(context: Context) {
             val work = WorkManager.getInstance(context)

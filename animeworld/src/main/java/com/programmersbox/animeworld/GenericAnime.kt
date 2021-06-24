@@ -33,6 +33,8 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.AppUpdate
+import com.programmersbox.uiviews.utils.MainLogo
+import com.programmersbox.uiviews.utils.NotificationLogo
 import com.tonyodev.fetch2.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -43,6 +45,8 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<GenericInfo> { GenericAnime(get()) }
+    single { MainLogo(R.mipmap.ic_launcher) }
+    single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 
 class GenericAnime(val context: Context) : GenericInfo {

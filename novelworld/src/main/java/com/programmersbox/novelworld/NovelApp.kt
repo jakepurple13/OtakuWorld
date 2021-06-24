@@ -11,9 +11,6 @@ class NovelApp : OtakuApp() {
 
         loadKoinModules(appModule)
 
-        logo = R.mipmap.ic_launcher
-        notificationLogo = R.mipmap.ic_launcher_foreground
-
         FirebaseDb.DOCUMENT_ID = "favoriteNovels"
         FirebaseDb.CHAPTERS_ID = "novelsChaptersRead"
         FirebaseDb.COLLECTION_ID = "novelworld"

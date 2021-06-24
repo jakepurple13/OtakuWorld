@@ -16,9 +16,6 @@ class MangaApp : OtakuApp() {
 
         loadKoinModules(appModule)
 
-        logo = R.mipmap.ic_launcher
-        notificationLogo = R.drawable.manga_world_round_logo
-
         UpdateWorker.sourcesList = Sources.values().toList()
         UpdateWorker.sourceFromString = {
             try {

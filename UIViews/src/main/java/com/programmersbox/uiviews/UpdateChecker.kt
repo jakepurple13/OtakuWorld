@@ -26,13 +26,17 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.atomic.AtomicReference
 
 
-class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams) {
+class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
+
+    private val logo: NotificationLogo by inject()
 
     override fun createWork(): Single<Result> = Single.create {
         try {
@@ -43,7 +47,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                 val n = NotificationDslBuilder.builder(
                     applicationContext,
                     "appUpdate",
-                    OtakuApp.notificationLogo
+                    logo.notificationId
                 ) {
                     title = applicationContext.getString(R.string.theresAnUpdate)
                     subText = applicationContext.getString(R.string.versionAvailable, f.toString())
@@ -160,9 +164,9 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
 
 }
 
-class UpdateNotification(private val context: Context) {
+class UpdateNotification(private val context: Context) : KoinComponent {
 
-    private val icon = OtakuApp.notificationLogo
+    private val icon: NotificationLogo by inject()
 
     fun updateManga(dao: ItemDao, triple: List<Pair<InfoModel?, DbModel>>) {
         triple.forEach {
@@ -190,7 +194,7 @@ class UpdateNotification(private val context: Context) {
         pair.second.hashCode() to NotificationDslBuilder.builder(
             context,
             "otakuChannel",
-            icon
+            icon.notificationId
         ) {
             title = pair.second.title
             subText = pair.second.source
@@ -238,7 +242,7 @@ class UpdateNotification(private val context: Context) {
         list.forEach { pair -> n.notify(pair.first, pair.second) }
         if (list.isNotEmpty()) n.notify(
             notificationId,
-            NotificationDslBuilder.builder(context, "otakuChannel", icon) {
+            NotificationDslBuilder.builder(context, "otakuChannel", icon.notificationId) {
                 title = context.getText(R.string.app_name)
                 val size = list.size + currentNotificationSize
                 subText = context.resources.getQuantityString(R.plurals.updateAmount, size, size)
@@ -268,7 +272,7 @@ class UpdateNotification(private val context: Context) {
     }
 
     fun sendRunningNotification(max: Int, progress: Int, contextText: CharSequence = "") {
-        val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon) {
+        val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon.notificationId) {
             onlyAlertOnce = true
             ongoing = true
             progress {
@@ -287,7 +291,7 @@ class UpdateNotification(private val context: Context) {
     fun sendFinishedNotification() {
         context.lastUpdateCheckEnd = System.currentTimeMillis()
         context.lastUpdateCheckEnd?.let { updateCheckPublishEnd.onNext(it) }
-        val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon) {
+        val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon.notificationId) {
             onlyAlertOnce = true
             subText = context.getString(R.string.finishedChecking)
             timeoutAfter = 750L
@@ -302,24 +306,27 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
         val url = intent?.getStringExtra("url")
         println(url)
         GlobalScope.launch {
-            val noti = url?.let { dao?.getNotificationItem(it) }
-            println(noti)
-            noti?.let { dao?.deleteNotification(it)?.subscribe() }
+            url?.let { dao?.getNotificationItem(it) }
+                .also { println(it) }
+                ?.let { dao?.deleteNotification(it)?.subscribe() }
         }
     }
 }
 
-class BootReceived : BroadcastReceiver() {
+class BootReceived : BroadcastReceiver(), KoinComponent {
+
+    private val logo: NotificationLogo by inject()
+
     override fun onReceive(context: Context?, intent: Intent?) {
         Loged.d("BootReceived")
-        context?.let { SavedNotifications.viewNotificationsFromDb(it) }
+        context?.let { SavedNotifications.viewNotificationsFromDb(it, logo) }
     }
 }
 
 object SavedNotifications {
 
-    fun viewNotificationFromDb(context: Context, n: NotificationItem) {
-        val icon = OtakuApp.notificationLogo
+    fun viewNotificationFromDb(context: Context, n: NotificationItem, notificationLogo: NotificationLogo) {
+        val icon = notificationLogo.notificationId
         val update = UpdateNotification(context)
         (n.id to NotificationDslBuilder.builder(
             context,
@@ -364,9 +371,9 @@ object SavedNotifications {
             .let { update.onEnd(listOf(it)) }
     }
 
-    fun viewNotificationsFromDb(context: Context) {
+    fun viewNotificationsFromDb(context: Context, logo: NotificationLogo) {
         val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
-        val icon = OtakuApp.notificationLogo
+        val icon = logo.notificationId
         val update = UpdateNotification(context)
         GlobalScope.launch {
             dao.getAllNotifications()

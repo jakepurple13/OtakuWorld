@@ -30,9 +30,6 @@ class AnimeApp : OtakuApp() {
 
         loadKoinModules(appModule)
 
-        logo = R.mipmap.ic_launcher
-        notificationLogo = R.mipmap.ic_launcher_foreground
-
         UpdateWorker.sourcesList = Sources.values().toList()
         UpdateWorker.sourceFromString = {
             try {

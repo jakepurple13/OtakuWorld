@@ -27,6 +27,7 @@ import com.programmersbox.uiviews.databinding.FavoriteItemBinding
 import com.programmersbox.uiviews.databinding.FragmentFavoriteBinding
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
 import com.programmersbox.uiviews.utils.FirebaseDb
+import com.programmersbox.uiviews.utils.MainLogo
 import com.programmersbox.uiviews.utils.toolTipText
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -35,6 +36,8 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import org.koin.android.ext.android.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
 
 class FavoriteFragment : BaseFragment() {
@@ -170,7 +173,9 @@ class FavoriteFragment : BaseFragment() {
         override fun FavoriteHolder.onBind(item: Pair<String, List<DbModel>>, position: Int) = bind(item.second, genericInfo)
     }
 
-    class FavoriteHolder(private val binding: FavoriteItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    class FavoriteHolder(private val binding: FavoriteItemBinding) : RecyclerView.ViewHolder(binding.root), KoinComponent {
+
+        private val logo: MainLogo by inject()
 
         fun bind(info: List<DbModel>, genericInfo: GenericInfo) {
             binding.show = info.random()
@@ -178,9 +183,9 @@ class FavoriteFragment : BaseFragment() {
             Glide.with(itemView.context)
                 .asBitmap()
                 .load(info.random().imageUrl)
-                .fallback(OtakuApp.logo)
-                .placeholder(OtakuApp.logo)
-                .error(OtakuApp.logo)
+                .fallback(logo.logoId)
+                .placeholder(logo.logoId)
+                .error(logo.logoId)
                 .fitCenter()
                 .transform(RoundedCorners(15))
                 .into(binding.galleryListCover)

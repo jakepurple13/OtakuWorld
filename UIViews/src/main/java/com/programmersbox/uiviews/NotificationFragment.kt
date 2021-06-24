@@ -17,6 +17,7 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.databinding.FragmentNotificationBinding
 import com.programmersbox.uiviews.databinding.NotificationItemBinding
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.NotificationLogo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -25,6 +26,8 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class NotificationFragment : BaseBottomSheetDialogFragment() {
 
@@ -137,10 +140,13 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
     }
 
-    class NotificationHolder(private val binding: NotificationItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    class NotificationHolder(private val binding: NotificationItemBinding) : RecyclerView.ViewHolder(binding.root), KoinComponent {
+
+        private val logo: NotificationLogo by inject()
 
         fun bind(item: NotificationItem, info: GenericInfo, disposable: CompositeDisposable) {
             binding.item = item
+            binding.logo = logo
             binding.root.setOnClickListener { v ->
                 info.toSource(item.source)?.getSourceByUrl(item.url)
                     ?.subscribeOn(Schedulers.io())
@@ -151,7 +157,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     ?.addTo(disposable)
             }
             binding.sendNotification.setOnClickListener {
-                GlobalScope.launch { SavedNotifications.viewNotificationFromDb(binding.root.context, item) }
+                GlobalScope.launch { SavedNotifications.viewNotificationFromDb(binding.root.context, item, logo) }
             }
             binding.executePendingBindings()
         }
