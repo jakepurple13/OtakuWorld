@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.core.view.children
+import androidx.core.view.setPadding
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
@@ -19,6 +21,7 @@ import com.programmersbox.dragswipe.DragSwipeDiffUtil
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ApiService
 import com.programmersbox.rxutils.behaviorDelegate
@@ -54,6 +57,8 @@ class FavoriteFragment : BaseFragment() {
     private val fireListener = FirebaseDb.FirebaseListener()
 
     override val layoutId: Int get() = R.layout.fragment_favorite
+
+    private val logo: MainLogo by inject()
 
     private lateinit var binding: FragmentFavoriteBinding
 
@@ -95,6 +100,8 @@ class FavoriteFragment : BaseFragment() {
                 adapter.setData(it.second.toList())
                 binding.favSearchLayout.hint = resources.getQuantityString(R.plurals.numFavorites, it.first, it.first)
                 binding.favRv.smoothScrollToPosition(0)
+                binding.shimmerLayout.stopShimmer()
+                binding.shimmerLayout.gone()
             }
             .addTo(disposable)
 
@@ -140,6 +147,18 @@ class FavoriteFragment : BaseFragment() {
                 }
             })
         }
+
+        repeat(9) {
+            binding.shimmerGrid.addView(
+                ImageView(requireContext()).apply {
+                    setImageResource(logo.logoId)
+                    setBackgroundColor(0xB3B3B3)
+                    setPadding(5)
+                },
+                360, 480
+            )
+        }
+
     }
 
     override fun onDestroy() {

@@ -1,9 +1,11 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -22,6 +24,7 @@ import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.ytsdatabase.Torrent
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -285,5 +288,8 @@ class GenericAnime(val context: Context) : GenericInfo {
     private fun openVideos() {
         ViewVideosFragment().show(MainActivity.activity.supportFragmentManager, "videoViewer")
     }
+
+    @SuppressLint("InflateParams")
+    override fun shimmerUi(context: Context, logo: MainLogo): View = context.layoutInflater.inflate(R.layout.shimmer_item, null)
 
 }

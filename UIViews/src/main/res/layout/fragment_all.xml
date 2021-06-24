@@ -12,6 +12,14 @@
         android:layout_below="@+id/search_info"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/shimmerLayout"
+            app:shimmer_auto_start="true"
+            app:shimmer_shape="linear"
+            app:shimmer_repeat_mode="restart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/allRefresh"
             android:layout_width="match_parent"

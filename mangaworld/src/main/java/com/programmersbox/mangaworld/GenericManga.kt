@@ -1,17 +1,23 @@
 package com.programmersbox.mangaworld
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.os.Environment
+import android.view.View
+import android.widget.GridLayout
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.setPadding
 import androidx.preference.SwitchPreference
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
+import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
@@ -125,4 +131,20 @@ class GenericManga(val context: Context) : GenericInfo {
     } catch (e: IllegalArgumentException) {
         null
     }
+
+    @SuppressLint("InflateParams")
+    override fun shimmerUi(context: Context, logo: MainLogo): View =
+        context.layoutInflater.inflate(R.layout.shimmer_item, null)
+            .apply {
+                repeat(9) {
+                    (this as? GridLayout)?.addView(
+                        ImageView(context).apply {
+                            setImageResource(logo.logoId)
+                            setBackgroundColor(0xB3B3B3)
+                            setPadding(5)
+                        },
+                        360, 480
+                    )
+                }
+            }
 }

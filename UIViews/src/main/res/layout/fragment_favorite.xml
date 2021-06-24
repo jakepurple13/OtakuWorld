@@ -12,6 +12,23 @@
         android:layout_below="@+id/fav_search_info"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/shimmerLayout"
+            app:shimmer_auto_start="true"
+            app:shimmer_shape="linear"
+            app:shimmer_repeat_mode="restart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.programmersbox.uiviews.utils.AutoGridLayout
+                app:columnCount="3"
+                app:columnWidth="360px"
+                android:id="@+id/shimmerGrid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.facebook.shimmer.ShimmerFrameLayout>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/favRv"
             android:layout_width="match_parent"

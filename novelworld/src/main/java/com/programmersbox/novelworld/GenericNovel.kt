@@ -1,10 +1,13 @@
 package com.programmersbox.novelworld
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.novel_sources.Sources
@@ -48,6 +51,9 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
 
     }
+
+    @SuppressLint("InflateParams")
+    override fun shimmerUi(context: Context, logo: MainLogo): View = context.layoutInflater.inflate(R.layout.shimmer_item, null)
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 

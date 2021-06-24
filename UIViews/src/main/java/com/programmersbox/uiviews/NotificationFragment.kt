@@ -143,6 +143,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     class NotificationHolder(private val binding: NotificationItemBinding) : RecyclerView.ViewHolder(binding.root), KoinComponent {
 
         private val logo: NotificationLogo by inject()
+        private val info: GenericInfo by inject()
 
         fun bind(item: NotificationItem, info: GenericInfo, disposable: CompositeDisposable) {
             binding.item = item
@@ -157,7 +158,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     ?.addTo(disposable)
             }
             binding.sendNotification.setOnClickListener {
-                GlobalScope.launch { SavedNotifications.viewNotificationFromDb(binding.root.context, item, logo) }
+                GlobalScope.launch { SavedNotifications.viewNotificationFromDb(binding.root.context, item, logo, info) }
             }
             binding.executePendingBindings()
         }

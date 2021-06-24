@@ -2,6 +2,7 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
+import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
@@ -12,13 +13,16 @@ import com.programmersbox.dragswipe.DragSwipeAdapter
 import com.programmersbox.dragswipe.DragSwipeDiffUtil
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.helpfulutils.visible
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.databinding.FragmentAllBinding
 import com.programmersbox.uiviews.utils.EndlessScrollingListener
 import com.programmersbox.uiviews.utils.FirebaseDb
+import com.programmersbox.uiviews.utils.MainLogo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -27,6 +31,7 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
 /**
@@ -45,6 +50,8 @@ class AllFragment : BaseListFragment() {
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
+
+    private val logo: MainLogo by inject()
 
     private lateinit var binding: FragmentAllBinding
 
@@ -76,6 +83,12 @@ class AllFragment : BaseListFragment() {
             })
         }
 
+        binding.shimmerLayout.addView(
+            info.shimmerUi(requireContext(), logo),
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+
         ReactiveNetwork.observeInternetConnectivity()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -89,6 +102,8 @@ class AllFragment : BaseListFragment() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
+                binding.shimmerLayout.visible()
+                binding.shimmerLayout.startShimmer()
                 count = 1
                 adapter.setListNotify(emptyList())
                 sourceLoad(it)
@@ -143,6 +158,8 @@ class AllFragment : BaseListFragment() {
                     binding.searchLayout.suffixText = "${adapter.dataList.size}"
                     binding.searchLayout.hint = getString(R.string.searchFor, sourcePublish.value?.serviceName.orEmpty())
                 }
+                binding.shimmerLayout.stopShimmer()
+                binding.shimmerLayout.gone()
             }
             .addTo(disposable)
     }
