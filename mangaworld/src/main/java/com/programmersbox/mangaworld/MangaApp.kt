@@ -5,9 +5,7 @@ import androidx.core.content.FileProvider
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
-import com.programmersbox.manga_sources.Sources
 import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.UpdateWorker
 import com.programmersbox.uiviews.utils.FirebaseDb
 import org.koin.core.context.loadKoinModules
 
@@ -15,15 +13,6 @@ class MangaApp : OtakuApp() {
     override fun onCreated() {
 
         loadKoinModules(appModule)
-
-        UpdateWorker.sourcesList = Sources.values().toList()
-        UpdateWorker.sourceFromString = {
-            try {
-                Sources.valueOf(it)
-            } catch (e: Exception) {
-                null
-            }
-        }
 
         SubsamplingScaleImageView.setPreferredBitmapConfig(Bitmap.Config.ARGB_8888)
 

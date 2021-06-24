@@ -8,22 +8,15 @@ import com.programmersbox.uiviews.utils.AppUpdate
 
 interface GenericInfo {
 
-    fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder>
-
-    fun createLayoutManager(context: Context): RecyclerView.LayoutManager
-
-    fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context)
-
-    fun sourceList(): List<ApiService>
-
-    fun toSource(s: String): ApiService?
-
-    fun customPreferences(preferenceScreen: SettingsDsl) = Unit
-
-    fun downloadChapter(chapterModel: ChapterModel, title: String)
-
     val apkString: AppUpdate.AppUpdates.() -> String?
-
     val showMiddleChapterButton: Boolean
+
+    fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder>
+    fun createLayoutManager(context: Context): RecyclerView.LayoutManager
+    fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context)
+    fun sourceList(): List<ApiService>
+    fun toSource(s: String): ApiService?
+    fun customPreferences(preferenceScreen: SettingsDsl) = Unit
+    fun downloadChapter(chapterModel: ChapterModel, title: String)
 
 }

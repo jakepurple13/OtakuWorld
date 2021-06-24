@@ -18,7 +18,6 @@ import com.programmersbox.helpfulutils.intersect
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.loggingutils.f
-import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
@@ -72,7 +71,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
 }
 
 
-class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams) {
+class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
 
     private val update by lazy { UpdateNotification(this.applicationContext) }
     private val dao by lazy { ItemDatabase.getInstance(this@UpdateWorker.applicationContext).itemDao() }
@@ -82,10 +81,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
         return super.startWork()
     }*/
 
-    companion object {
-        var sourcesList: List<ApiService> = emptyList()
-        var sourceFromString: (String) -> ApiService? = { null }
-    }
+    private val genericInfo: GenericInfo by inject()
 
     override fun createWork(): Single<Result> {
         update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
@@ -104,7 +100,8 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                 .flatMap { m -> m.getManga() }*/
 
             val newList = list.intersect(
-                sourcesList
+                //sourcesList
+                genericInfo.sourceList()
                     .filter { s -> list.any { m -> m.source == s.serviceName } }
                     .mapNotNull { m ->
                         try {
@@ -130,7 +127,8 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                     update.sendRunningNotification(list.size, index, model.title)
                     try {
                         loadMarkersJob.getAndSet(methodReturningJob())?.cancel()
-                        val newData = sourceFromString(model.source)?.let { model.toItemModel(it).toInfoModel().blockingGet() }
+                        //val newData = sourceFromString(model.source)?.let { model.toItemModel(it).toInfoModel().blockingGet() }
+                        val newData = genericInfo.toSource(model.source)?.let { model.toItemModel(it).toInfoModel().blockingGet() }
                         println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
                         if (model.numChapters >= newData?.chapters?.size ?: -1) null
                         else Pair(newData, model)
@@ -316,16 +314,17 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
 class BootReceived : BroadcastReceiver(), KoinComponent {
 
     private val logo: NotificationLogo by inject()
+    private val info: GenericInfo by inject()
 
     override fun onReceive(context: Context?, intent: Intent?) {
         Loged.d("BootReceived")
-        context?.let { SavedNotifications.viewNotificationsFromDb(it, logo) }
+        context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info) }
     }
 }
 
 object SavedNotifications {
 
-    fun viewNotificationFromDb(context: Context, n: NotificationItem, notificationLogo: NotificationLogo) {
+    fun viewNotificationFromDb(context: Context, n: NotificationItem, notificationLogo: NotificationLogo, info: GenericInfo) {
         val icon = notificationLogo.notificationId
         val update = UpdateNotification(context)
         (n.id to NotificationDslBuilder.builder(
@@ -356,7 +355,7 @@ object SavedNotifications {
                 PendingIntent.getBroadcast(context, n.id, intent1, 0)
             }
             pendingIntent { context ->
-                val itemModel = UpdateWorker.sourceFromString(n.source)
+                val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
                     ?.getSourceByUrl(n.url)
                     ?.onErrorReturn { null }
                     ?.blockingGet()
@@ -371,7 +370,7 @@ object SavedNotifications {
             .let { update.onEnd(listOf(it)) }
     }
 
-    fun viewNotificationsFromDb(context: Context, logo: NotificationLogo) {
+    fun viewNotificationsFromDb(context: Context, logo: NotificationLogo, info: GenericInfo) {
         val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
         val icon = logo.notificationId
         val update = UpdateNotification(context)
@@ -408,7 +407,7 @@ object SavedNotifications {
                             PendingIntent.getBroadcast(context, n.id, intent1, 0)
                         }
                         pendingIntent { context ->
-                            val itemModel = UpdateWorker.sourceFromString(n.source)
+                            val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
                                 ?.getSourceByUrl(n.url)
                                 ?.onErrorReturn { null }
                                 ?.blockingGet()
