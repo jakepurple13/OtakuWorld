@@ -48,7 +48,7 @@ dependencies {
     implementation constraintlayout
     implementation swiperefresh
     implementation recyclerview
-    implementation 'com.google.firebase:firebase-crashlytics:18.0.1'
+    implementation 'com.google.firebase:firebase-crashlytics:18.1.0'
     implementation 'com.google.firebase:firebase-analytics:19.0.0'
     implementation 'com.google.android.gms:play-services-ads:20.2.0'
     testImplementation 'junit:junit:4.+'
