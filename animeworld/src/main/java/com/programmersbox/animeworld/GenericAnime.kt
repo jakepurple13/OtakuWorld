@@ -79,7 +79,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     Intent(context, VideoPlayerActivity::class.java).apply {
                         putExtra("showPath", link)
                         putExtra("showName", chapterModel.name)
-                        putExtra("downloadOrStream", true)
+                        putExtra("downloadOrStream", false)
                     }
                 )
             }
