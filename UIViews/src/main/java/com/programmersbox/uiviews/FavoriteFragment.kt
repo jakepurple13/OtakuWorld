@@ -23,6 +23,7 @@ import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.layoutInflater
+import com.programmersbox.helpfulutils.visible
 import com.programmersbox.models.ApiService
 import com.programmersbox.rxutils.behaviorDelegate
 import com.programmersbox.rxutils.toLatestFlowable
@@ -102,8 +103,12 @@ class FavoriteFragment : BaseFragment() {
                 binding.favRv.smoothScrollToPosition(0)
                 binding.shimmerLayout.stopShimmer()
                 binding.shimmerLayout.gone()
+                if (it.second.isNotEmpty()) binding.emptyState.gone()
+                else binding.emptyState.visible()
             }
             .addTo(disposable)
+
+        binding.viewRecentList.setOnClickListener { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) }
 
         dbFire
             .subscribeOn(Schedulers.io())

@@ -21,9 +21,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.animeworld.databinding.FragmentViewVideosBinding
 import com.programmersbox.dragswipe.*
-import com.programmersbox.helpfulutils.layoutInflater
-import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.helpfulutils.stringForTime
+import com.programmersbox.helpfulutils.*
+import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -136,8 +135,15 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 }
                 adapter.setListNotify(it)
                 binding.viewVideoRefresh.isRefreshing = false
+                if (it.isNotEmpty()) binding.emptyState.gone()
+                else binding.emptyState.visible()
             }
             ?.addTo(disposable)
+
+        binding.viewRecentList.setOnClickListener {
+            dismiss()
+            (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
+        }
 
         v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
     }
