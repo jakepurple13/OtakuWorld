@@ -272,7 +272,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         BitmapFactory.decodeStream(connection.inputStream)
     } catch (e: IOException) {
         //e.printStackTrace()
-        Loged.e(e.localizedMessage)
+        Loged.e(e.localizedMessage, showPretty = false)
         null
     }
 
