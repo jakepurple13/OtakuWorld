@@ -103,6 +103,8 @@ dependencies {
         transitive = false
     }
 
+    implementation 'com.facebook.stetho:stetho:1.6.0'
+
     def work_version = "2.5.0"
     // Kotlin + coroutines
     implementation "androidx.work:work-runtime-ktx:$work_version"

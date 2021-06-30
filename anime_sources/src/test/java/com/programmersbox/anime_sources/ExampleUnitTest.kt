@@ -118,7 +118,8 @@ class ExampleUnitTest {
                                 name = it.select("a").attr("title"),
                                 url = it.select("a").attr("abs:href"),
                                 uploaded = "",
-                                source = AnimeHeaven
+                                source = AnimeHeaven,
+                                sourceUrl = source.url
                             )
                         },
                     alternativeNames = emptyList()
@@ -396,7 +397,8 @@ object DubbedAnimeBiz : ShowApi(
                     name = it.select("a").text(),
                     url = it.select("a").attr("abs:href"),
                     uploaded = "",
-                    source = this
+                    source = this,
+                    sourceUrl = source.url
                 )
             },
             alternativeNames = emptyList()
