@@ -12,23 +12,6 @@
         android:layout_below="@+id/fav_search_info"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.facebook.shimmer.ShimmerFrameLayout
-            android:id="@+id/shimmerLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:shimmer_auto_start="true"
-            app:shimmer_repeat_mode="restart"
-            app:shimmer_shape="linear">
-
-            <com.programmersbox.uiviews.utils.AutoGridLayout
-                android:id="@+id/shimmerGrid"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:columnCount="3"
-                app:columnWidth="360px" />
-
-        </com.facebook.shimmer.ShimmerFrameLayout>
-
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/emptyState"
             android:layout_width="match_parent"
@@ -108,14 +91,24 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/fav_search_layout"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_alignParentStart="true"
                     android:layout_margin="5dp"
                     app:endIconMode="clear_text">
 
-                    <com.google.android.material.textfield.TextInputEditText
+                    <!--<com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/fav_search_info"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        tools:ignore="HardcodedText" />-->
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/fav_search_info"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
