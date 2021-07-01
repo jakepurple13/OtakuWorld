@@ -55,7 +55,7 @@ dependencies {
     implementation recyclerview
     implementation swiperefresh
     testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation 'com.airbnb.android:lottie:3.7.0'
