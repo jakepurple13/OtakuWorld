@@ -6,11 +6,13 @@ import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.google.android.gms.ads.AdRequest
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.layoutInflater
@@ -30,6 +32,7 @@ class PageAdapter(
     private val activity: AppCompatActivity,
     dataList: MutableList<String>,
     private val onTap: () -> Unit,
+    private val coordinatorLayout: CoordinatorLayout,
     private val chapterModels: List<ChapterModel>,
     var currentChapter: Int,
     private val mangaUrl: String,
@@ -78,7 +81,13 @@ class PageAdapter(
                                 }
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(Schedulers.io())
-                                .subscribe()
+                                .subscribe {
+                                    Snackbar.make(
+                                        coordinatorLayout,
+                                        R.string.addedChapterItem,
+                                        Snackbar.LENGTH_SHORT
+                                    ).show()
+                                }
                         }
                 }
             }

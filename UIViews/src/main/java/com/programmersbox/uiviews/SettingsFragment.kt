@@ -317,7 +317,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             val format = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.getDefault())
 
-
             listOfNotNull(
                 requireContext().lastUpdateCheck
                     ?.let { "Start: ${format.format(it)}" },

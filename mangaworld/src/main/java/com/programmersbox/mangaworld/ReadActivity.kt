@@ -139,6 +139,7 @@ class ReadActivity : AppCompatActivity() {
                     if (sliderMenu?.isShowing?.not() ?: menuToggle) binding.bottomMenu.slideUp() else binding.bottomMenu.slideDown()
                     if (fab?.isShowing?.not() ?: menuToggle) binding.scrollToTopManga.slideUp() else binding.scrollToTopManga.slideDown()
                 },
+                coordinatorLayout = binding.readLayout,
                 chapterModels = list,
                 currentChapter = list.indexOfFirst { l -> l.url == url },
                 mangaUrl = mangaUrl,
