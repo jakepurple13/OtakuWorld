@@ -84,7 +84,10 @@ class GenericManga(val context: Context) : GenericInfo {
             .map {
                 it.mapIndexed { index, s ->
                     DownloadManager.Request(s.toUri())
-                        .setDestinationInExternalPublicDir(Environment.DIRECTORY_PICTURES, "MangaWorld/$title/${model.name}/$index.png")
+                        .setDestinationInExternalPublicDir(
+                            Environment.DIRECTORY_PICTURES,
+                            "MangaWorld/$title/${model.name}/${String.format("%03d", index)}.png"
+                        )
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         .setAllowedOverRoaming(true)
                         .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
