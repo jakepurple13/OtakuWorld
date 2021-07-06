@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:summary="This is a dummy activity only to show case how to build a settings in an application. Changing configurations in this example doesn't affect anything."
+    android:title="Settings Example">
+    <!--<PreferenceScreen
+        android:icon="@drawable/exo_controls_pause"
+        android:key="prefs_wifi_screen_key"
+        android:title="Wi-Fi">
+        <PreferenceCategory
+            android:key="prefs_wifi_others_key"
+            android:title="Other options">
+            <Preference
+                android:key="prefs_wifi_connect_wps"
+                android:title="Connect via WPS">&lt;!&ndash; You can use Intents here &ndash;&gt;
+            </Preference>
+        </PreferenceCategory>
+    </PreferenceScreen>-->
+    <!--<PreferenceScreen
+        android:icon="@drawable/exo_ic_settings"
+        android:key="prefs_date_time_screen_key"
+        android:title="Date &amp; time">
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:disableDependentsState="true"
+            android:key="prefs_date_time_automatic"
+            android:summaryOff="On"
+            android:summaryOn="Off"
+            android:title="Automatic date  &amp; time" />
+        <Preference
+            android:dependency="prefs_date_time_automatic"
+            android:key="prefs_date"
+            android:summary="01/01/1970"
+            android:title="Date"/>
+        <Preference
+            android:dependency="prefs_date_time_automatic"
+            android:key="prefs_time"
+            android:summary="00:43 PM"
+            android:title="Time"/>
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:disableDependentsState="true"
+            android:key="prefs_date_time_use_timezone"
+            android:summary="Use network provided time zone"
+            android:title="Automatic time zone"/>
+        <Preference
+            android:dependency="prefs_date_time_use_timezone"
+            android:summary="GMT 07:00 Pacific Daylight Time"
+            android:title="Time zone"/>
+    </PreferenceScreen>-->
+    <!--<PreferenceScreen
+        app:icon="@drawable/exo_ic_settings"
+        app:key="prefs_apps_screen_key"
+        app:title="Apps">
+        <PreferenceCategory
+            app:key="prefs_app_settings_category"
+            app:title="Apps settings">
+            <PreferenceScreen
+                app:key="prefs_app_settings_screen_key"
+                app:summary="Lorem ipsum dolor sit amet consectur adipiscing."
+                app:title="App permissions">
+                <Preference
+                    app:icon="@mipmap/ic_launcher"
+                    app:selectable="false"
+                    app:summary="45.5 MB"
+                    app:title="Application A"/>
+                <Preference
+                    app:selectable="false"
+                    app:summary="Hier steht ein voelligst sinnfreier Text den ja sowieso niemandhier lesen kann. Deshalb macht es auch keinen Unterschied ob hier sinnvolles und nicht so sinnvolles Zeug steht. Hm... Sasha, du kannst das vielleicht lesen und denkst dir jetzt auch, dass ich voll haengen geblieben bin, oder?... ^_^" />
+                <Preference
+                    app:key="pref_force_stop"
+                    app:title="Force Stop">&lt;!&ndash; Start an Intent &ndash;&gt;</Preference>
+                <Preference
+                    app:key="pref_uninstall"
+                    app:title="Uninstall">&lt;!&ndash; Start an Intent &ndash;&gt;</Preference>
+                <Preference
+                    app:key="pref_more_info"
+                    app:title="More Information" />
+            </PreferenceScreen>
+        </PreferenceCategory>
+    </PreferenceScreen>-->
+    <Preference
+        app:icon="@mipmap/ic_launcher"
+        app:selectable="false"
+        app:summary="45.5 MB"
+        app:title="Application A" />
+    <Preference
+        app:selectable="false"
+        app:summary="Hier steht ein voelligst sinnfreier Text den ja sowieso niemandhier lesen kann. Deshalb macht es auch keinen Unterschied ob hier sinnvolles und nicht so sinnvolles Zeug steht. Hm... Sasha, du kannst das vielleicht lesen und denkst dir jetzt auch, dass ich voll haengen geblieben bin, oder?... ^_^" />
+    <Preference
+        app:key="pref_force_stop"
+        app:title="Force Stop"><!-- Start an Intent --></Preference>
+    <Preference
+        app:key="pref_uninstall"
+        app:title="Uninstall"><!-- Start an Intent --></Preference>
+    <Preference
+        app:key="pref_more_info"
+        app:title="More Information" />
+</PreferenceScreen>

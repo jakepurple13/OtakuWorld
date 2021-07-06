@@ -22,6 +22,9 @@
             android:name=".SearchActivity"
             android:theme="@style/Theme.Leanback" />
         <activity
+            android:name=".SettingsActivity"
+            android:theme="@style/Theme.Leanback" />
+        <activity
             android:name=".MainActivity"
             android:banner="@drawable/app_icon_your_company"
             android:icon="@drawable/app_icon_your_company"

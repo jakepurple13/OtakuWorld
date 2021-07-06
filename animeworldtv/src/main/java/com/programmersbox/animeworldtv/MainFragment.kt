@@ -1,12 +1,10 @@
 package com.programmersbox.animeworldtv
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
-import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
@@ -202,11 +200,18 @@ class MainFragment : BrowseSupportFragment() {
                     .toBundle()
                 startActivity(intent, bundle)
             } else if (item is String) {
-                if (item.contains(getString(R.string.error_fragment))) {
-                    val intent = Intent(context!!, BrowseErrorActivity::class.java)
-                    startActivity(intent)
-                } else {
-                    Toast.makeText(context!!, item, Toast.LENGTH_SHORT).show()
+                when {
+                    item.contains(getString(R.string.error_fragment)) -> {
+                        val intent = Intent(context!!, BrowseErrorActivity::class.java)
+                        startActivity(intent)
+                    }
+                    item.contains(getString(R.string.personal_settings)) -> {
+                        val intent = Intent(context!!, SettingsActivity::class.java)
+                        startActivity(intent)
+                    }
+                    else -> {
+                        Toast.makeText(context!!, item, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -283,28 +288,5 @@ class MainFragment : BrowseSupportFragment() {
         private val GRID_ITEM_HEIGHT = 200
         private val NUM_ROWS = 6
         private val NUM_COLS = 15
-    }
-}
-
-class CustomImageCardView : ImageCardView {
-
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
-
-    private val sDefaultBackgroundColor by lazy { ContextCompat.getColor(context, R.color.default_background) }
-    private val sSelectedBackgroundColor by lazy { ContextCompat.getColor(context, R.color.selected_background) }
-
-    override fun setSelected(selected: Boolean) {
-        updateCardBackgroundColor(selected)
-        super.setSelected(selected)
-    }
-
-    fun updateCardBackgroundColor(selected: Boolean) {
-        val color = if (selected) sSelectedBackgroundColor else sDefaultBackgroundColor
-        // Both background colors should be set because the view"s background is temporarily visible
-        // during animations.
-        setBackgroundColor(color)
-        setInfoAreaBackgroundColor(color)
     }
 }
