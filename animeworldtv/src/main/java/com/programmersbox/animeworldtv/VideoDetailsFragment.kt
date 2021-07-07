@@ -14,6 +14,7 @@ import androidx.leanback.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -55,7 +56,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 mAdapter = ArrayObjectAdapter(mPresenterSelector)
                 setupDetailsOverviewRow(it)
                 setupDetailsOverviewRowPresenter(it)
-                //setupRelatedMovieListRow(it)
+                setupRelatedMovieListRow(it)
                 adapter = mAdapter
                 initializeBackground(it)
                 onItemViewClickedListener = ItemViewClickedListener()
@@ -118,7 +119,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         val actionAdapter = ArrayObjectAdapter()
 
-        movie?.chapters?.reversed()?.forEach {
+        /*movie?.chapters?.reversed()?.forEach {
             actionAdapter.add(
                 Action(
                     it.hashCode().toLong(),
@@ -126,9 +127,17 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                     it.uploaded
                 )
             )
-        }
+        }*/
 
         actionAdapter.add(
+            Action(
+                4L,
+                "Source",
+                movie?.source?.serviceName.orEmpty(),
+            )
+        )
+
+        /*actionAdapter.add(
             Action(
                 ACTION_WATCH_TRAILER,
                 resources.getString(R.string.watch_trailer_1),
@@ -148,7 +157,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 resources.getString(R.string.buy_1),
                 resources.getString(R.string.buy_2)
             )
-        )
+        )*/
         row.actionsAdapter = actionAdapter
 
         mAdapter.add(row)
@@ -156,9 +165,8 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
     private fun setupDetailsOverviewRowPresenter(movie: InfoModel?) {
         // Set detail background.
-        val detailsPresenter = FullWidthDetailsOverviewRowPresenter(DetailsDescriptionPresenter())
-        detailsPresenter.backgroundColor =
-            ContextCompat.getColor(requireContext(), R.color.selected_background)
+        val detailsPresenter = FullWidthDetailsOverviewRowPresenter(DetailsDescriptionPresenter(movie))
+        detailsPresenter.backgroundColor = ContextCompat.getColor(requireContext(), R.color.detail_background)
 
         // Hook up transition element.
         val sharedElementHelper = FullWidthDetailsOverviewSharedElementHelper()
@@ -198,7 +206,6 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                     }
                     ?.addTo(disposable)*/
 
-
             } else {
                 Toast.makeText(requireContext(), action.toString(), Toast.LENGTH_SHORT).show()
             }
@@ -212,15 +219,27 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         /*val subcategories = arrayOf(getString(R.string.related_movies))
         val list = MovieList.list
 
-        Collections.shuffle(list)
-        val listRowAdapter = ArrayObjectAdapter(CardPresenter())
-        for (j in 0 until NUM_COLS) {
-            listRowAdapter.add(list[j % 5])
-        }
+        Collections.shuffle(list)*/
 
-        val header = HeaderItem(0, subcategories[0])
-        mAdapter.add(ListRow(header, listRowAdapter))
-        mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())*/
+        val chapters = model.chapters.reversed()//.map { it.copy(it.name.removePrefix(model.title)) }
+
+        chapters.chunked(5).forEachIndexed { index, list ->
+            val listRowAdapter = ArrayObjectAdapter(EpisodePresenter())
+            listRowAdapter.addAll(0, list)
+            val header = HeaderItem(index.toLong(), "Episodes ${(index * 5) + 1} - ${index * 5 + list.size}")
+            mAdapter.add(ListRow(header, listRowAdapter))
+        }
+        /*for (j in 0 until 5) {
+            listRowAdapter.add(chapters[j % 5])
+        }*/
+
+
+        /*val listRowAdapter = ArrayObjectAdapter(EpisodePresenter())
+        listRowAdapter.addAll(0, model.chapters.reversed())
+
+        val header = HeaderItem(0, "Episodes")
+        mAdapter.add(ListRow(header, listRowAdapter))*/
+        mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
     }
 
     private fun convertDpToPixel(context: Context, dp: Int): Int {
@@ -251,6 +270,14 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             } else {
                 Toast.makeText(requireContext(), item.toString(), Toast.LENGTH_SHORT).show()
             }*/
+
+            if (item is ChapterModel) {
+                val intent = Intent(requireContext(), PlaybackActivity::class.java)
+                intent.putExtra(DetailsActivity.MOVIE, item)
+                startActivity(intent)
+            } else {
+                Toast.makeText(requireContext(), item.toString(), Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

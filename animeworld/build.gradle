@@ -102,9 +102,9 @@ dependencies {
     implementation "androidx.mediarouter:mediarouter:1.2.3"
     implementation "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 
-    implementation 'com.github.bumptech.glide:glide:4.12.0'
-    kapt 'com.github.bumptech.glide:compiler:4.12.0'
-    implementation("com.github.bumptech.glide:recyclerview-integration:4.12.0") {
+    implementation glide
+    kapt glideCompiler
+    implementation("com.github.bumptech.glide:recyclerview-integration:$glideVersion") {
         // Excludes the support library because it's already included by Glide.
         transitive = false
     }
