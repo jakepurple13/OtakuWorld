@@ -181,7 +181,6 @@ class FavoriteFragment : BrowseSupportFragment() {
             rowViewHolder: RowPresenter.ViewHolder,
             row: Row
         ) {
-
             if (item is ItemModel) {
                 Log.d(TAG, "Item: $item")
                 val intent = Intent(context!!, DetailsActivity::class.java)

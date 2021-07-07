@@ -27,7 +27,7 @@ class CardPresenter : Presenter() {
 
         sDefaultBackgroundColor = ContextCompat.getColor(parent.context, R.color.default_background)
         sSelectedBackgroundColor = ContextCompat.getColor(parent.context, R.color.selected_background)
-        mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.drawable.movie)
+        mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.mipmap.ic_launcher)
 
         return Presenter.ViewHolder(
             parent.context.layoutInflater.inflate(R.layout.tv_item, parent, false).also {
