@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -48,6 +50,17 @@ dependencies {
     implementation material
     implementation constraintlayout
 
+    implementation 'com.google.firebase:firebase-crashlytics:18.1.0'
+    implementation 'com.google.firebase:firebase-analytics:19.0.0'
+
+    implementation 'com.google.firebase:firebase-auth:21.0.1'
+    implementation 'com.google.android.gms:play-services-auth:19.0.0'
+    implementation 'com.firebaseui:firebase-ui-auth:7.1.1'
+    implementation 'com.google.firebase:firebase-firestore-ktx:23.0.1'
+    implementation 'com.google.firebase:firebase-database-ktx:20.0.0'
+
+    //implementation project(':UIViews')
+
     implementation 'androidx.palette:palette-ktx:1.0.0'
 
     def exoplayer_version = "2.14.0"
@@ -60,6 +73,9 @@ dependencies {
 
     implementation project(':Models')
     implementation project(':anime_sources')
+    implementation project(':favoritesdatabase')
+
+    implementation room.room
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools

@@ -10,7 +10,6 @@ import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.leanback.app.BackgroundManager
@@ -19,19 +18,20 @@ import androidx.leanback.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
-import com.programmersbox.anime_sources.anime.WcoSubbed
+import com.programmersbox.anime_sources.Sources
+import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.models.ItemModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import java.util.*
 
-/**
- * Loads a grid of cards with movies to browse.
- */
-class MainFragment : BrowseSupportFragment() {
+class FavoriteFragment : BrowseSupportFragment() {
 
     private val mHandler = Handler()
     private lateinit var mBackgroundManager: BackgroundManager
@@ -57,6 +57,8 @@ class MainFragment : BrowseSupportFragment() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: " + mBackgroundTimer?.toString())
         mBackgroundTimer?.cancel()
+        disposable.dispose()
+        itemListener.unregister()
     }
 
     private fun prepareBackgroundManager() {
@@ -81,6 +83,8 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private val disposable = CompositeDisposable()
+    private val itemDao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
+    private val itemListener = FirebaseDb.FirebaseListener()
 
     private fun loadRows() {
         /*val list = Sources.ANIMEKISA_SUBBED.getRecent().blockingGet()
@@ -112,27 +116,27 @@ class MainFragment : BrowseSupportFragment() {
             rowsAdapter.add(ListRow(header, listRowAdapter))
         }*/
 
-        WcoSubbed.getList()
+        Flowables.combineLatest(
+            itemListener.getAllShowsFlowable(),
+            itemDao.getAllFavorites()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
             //Yts.getRecent()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .map {
-                /*it.map {
-                    MovieList.buildMovieInfo(
-                        title = it.title,
-                        description = it.description,
-                        studio = it.source.serviceName,
-                        videoUrl = it.url,
-                        cardImageUrl = it.imageUrl,//MovieList.list[0].cardImageUrl!!,//it.imageUrl,
-                        backgroundImageUrl = it.imageUrl
-                    ).also { m ->
-                        m.model = it.source.serviceName
-
+                it.mapNotNull {
+                    try {
+                        it.toItemModel(Sources.valueOf(it.source))
+                    } catch (e: IllegalArgumentException) {
+                        null
                     }
-                }*/
-                it.groupBy { it.title.firstOrNull() }
+                }
             }
+            .map { it.groupBy { it.source } }
             .subscribeBy {
+                rowsAdapter.clear()
                 it.entries.forEach {
                     val (t, u) = it
                     val listRowAdapter = ArrayObjectAdapter(cardPresenter)
@@ -156,16 +160,6 @@ class MainFragment : BrowseSupportFragment() {
                 }*/
             }
             .addTo(disposable)
-
-        val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
-
-        val mGridPresenter = GridItemPresenter()
-        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
-        gridRowAdapter.add(resources.getString(R.string.favorites))
-        gridRowAdapter.add(resources.getString(R.string.grid_view))
-        gridRowAdapter.add(getString(R.string.error_fragment))
-        gridRowAdapter.add(resources.getString(R.string.personal_settings))
-        rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
         adapter = rowsAdapter
     }
@@ -200,27 +194,6 @@ class MainFragment : BrowseSupportFragment() {
                 )
                     .toBundle()
                 startActivity(intent, bundle)
-            } else if (item is String) {
-                when {
-                    item.contains(getString(R.string.error_fragment)) -> {
-                        val intent = Intent(context!!, BrowseErrorActivity::class.java)
-                        startActivity(intent)
-                    }
-                    item.contains(getString(R.string.personal_settings)) -> {
-                        val intent = Intent(context!!, SettingsActivity::class.java)
-                        startActivity(intent)
-                    }
-                    item.contains(getString(R.string.grid_view)) -> {
-                        FirebaseAuthentication.signIn(requireActivity())
-                    }
-                    item.contains(getString(R.string.favorites)) -> {
-                        val intent = Intent(context!!, FavoritesActivity::class.java)
-                        startActivity(intent)
-                    }
-                    else -> {
-                        Toast.makeText(context!!, item, Toast.LENGTH_SHORT).show()
-                    }
-                }
             }
         }
     }
@@ -289,7 +262,7 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     companion object {
-        private val TAG = "MainFragment"
+        private val TAG = "FavoritesFragment"
 
         private val BACKGROUND_UPDATE_DELAY = 300
         private val GRID_ITEM_WIDTH = 200

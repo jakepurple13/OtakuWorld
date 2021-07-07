@@ -13,9 +13,13 @@
     <string name="buy_2">AT $9.99</string>
     <string name="movie">Movie</string>
 
+    <string name="removeFromFavorites">Remove from Favorites</string>
+    <string name="addToFavorites">Add to Favorites</string>
+
     <!-- Error messages -->
     <string name="error_fragment_message">An error occurred</string>
     <string name="dismiss_error">Dismiss</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="favorites">Favorites</string>
 </resources>

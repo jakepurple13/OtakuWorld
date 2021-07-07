@@ -9,6 +9,13 @@ class AnimeWorldTV : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        FirebaseDb.DOCUMENT_ID = "favoriteShows"
+        FirebaseDb.CHAPTERS_ID = "episodesWatched"
+        FirebaseDb.COLLECTION_ID = "animeworld"
+        FirebaseDb.ITEM_ID = "showUrl"
+        FirebaseDb.READ_OR_WATCHED_ID = "numEpisodes"
+
         startKoin {
             androidLogger()
             androidContext(this@AnimeWorldTV)
