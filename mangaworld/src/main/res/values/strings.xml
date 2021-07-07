@@ -6,4 +6,9 @@
 
     <string name="ad_id" translatable="false">ca-app-pub-4987825622505192~4498529586</string>
     <string name="ad_unit_id" translatable="false">ca-app-pub-4987825622505192/5651829158</string>
+    <string name="downloaded_manga">Downloads</string>
+    <string name="downloaded_chapters">Downloaded Chapters</string>
+    <string name="delete_title">Are you sure you want to delete %1$s?</string>
+    <string name="delete">Delete</string>
+    <string name="finished_deleting">Finished Deleting</string>
 </resources>

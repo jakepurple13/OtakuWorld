@@ -36,6 +36,7 @@ import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.batteryAlertPercent
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -54,6 +55,7 @@ class ReadActivity : AppCompatActivity() {
     private val disposable = CompositeDisposable()
     private var model: ChapterModel? = null
     private var mangaTitle: String? = null
+    private var isDownloaded = false
     private val loader by lazy { Glide.with(this) }
     /*private val adapter by lazy {
         loader.let {
@@ -227,8 +229,10 @@ class ReadActivity : AppCompatActivity() {
         model = intent.getStringExtra("currentChapter")
             ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
 
-        //titleManga.text = mangaTitle
-        loadPages(model)
+        isDownloaded = intent.getBooleanExtra("downloaded", false)
+        val file = intent.getSerializableExtra("filePath") as? File
+        if (isDownloaded && file != null) loadFileImages(file)
+        else loadPages(model)
 
         binding.readRefresh.setOnRefreshListener {
             binding.readRefresh.isRefreshing = false
@@ -239,6 +243,34 @@ class ReadActivity : AppCompatActivity() {
         binding.pageChoice.addOnChangeListener { _, value, fromUser ->
             if (fromUser) binding.readView.scrollToPosition(value.toInt() - 1)
         }
+    }
+
+    private fun loadFileImages(file: File) {
+        println(file.absolutePath)
+        Single.create<List<String>> {
+            file.listFiles()
+                ?.sortedBy { f -> f.name.split(".").first().toInt() }
+                ?.map(File::toUri)
+                ?.map(Uri::toString)
+                ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
+        }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy {
+                BigImageViewer.prefetch(*it.map(Uri::parse).toTypedArray())
+                binding.readLoading
+                    .animate()
+                    .alpha(0f)
+                    .withEndAction { binding.readLoading.gone() }
+                    .start()
+                adapter2.setListNotify(it)
+                binding.pageChoice.valueTo = try {
+                    it.size.toFloat() + 1
+                } catch (e: Exception) {
+                    2f
+                }
+            }
+            .addTo(disposable)
     }
 
     private fun loadPages(model: ChapterModel?) {

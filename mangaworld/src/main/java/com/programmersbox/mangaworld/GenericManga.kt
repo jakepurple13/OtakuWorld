@@ -12,6 +12,7 @@ import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.setPadding
+import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -121,6 +122,19 @@ class GenericManga(val context: Context) : GenericInfo {
                         true
                     }
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_text_format_24)
+                }
+            )
+        }
+
+        preferenceScreen.viewSettings {
+            it.addPreference(
+                Preference(it.context).apply {
+                    title = it.context.getString(R.string.downloaded_manga)
+                    setOnPreferenceClickListener {
+                        DownloadViewerNavFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
+                        true
+                    }
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_library_books_24)
                 }
             )
         }
