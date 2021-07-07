@@ -2,6 +2,7 @@ package com.programmersbox.animeworldtv
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -14,10 +15,13 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.rxutils.toLatestFlowable
 import io.reactivex.Completable
 import io.reactivex.subjects.PublishSubject
 import org.koin.core.component.KoinComponent
+
+var Context.currentService: String? by sharedPrefObjectDelegate(null)
 
 object FirebaseAuthentication : KoinComponent {
 

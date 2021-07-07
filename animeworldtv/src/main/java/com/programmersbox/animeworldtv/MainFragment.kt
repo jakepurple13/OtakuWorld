@@ -19,8 +19,8 @@ import androidx.leanback.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
-import com.programmersbox.anime_sources.anime.WcoSubbed
 import com.programmersbox.models.ItemModel
+import com.programmersbox.models.sourcePublish
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -112,7 +112,12 @@ class MainFragment : BrowseSupportFragment() {
             rowsAdapter.add(ListRow(header, listRowAdapter))
         }*/
 
-        WcoSubbed.getList()
+        sourcePublish
+            .flatMapSingle {
+                it.getList()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+            }
             //Yts.getRecent()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -133,6 +138,18 @@ class MainFragment : BrowseSupportFragment() {
                 it.groupBy { it.title.firstOrNull() }
             }
             .subscribeBy {
+                rowsAdapter.clear()
+
+                val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
+
+                val mGridPresenter = GridItemPresenter()
+                val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
+                gridRowAdapter.add(resources.getString(R.string.favorites))
+                //gridRowAdapter.add(resources.getString(R.string.grid_view))
+                //gridRowAdapter.add(getString(R.string.error_fragment))
+                gridRowAdapter.add(resources.getString(R.string.personal_settings))
+                rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
+
                 it.entries.forEach {
                     val (t, u) = it
                     val listRowAdapter = ArrayObjectAdapter(cardPresenter)
@@ -162,8 +179,8 @@ class MainFragment : BrowseSupportFragment() {
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
         gridRowAdapter.add(resources.getString(R.string.favorites))
-        gridRowAdapter.add(resources.getString(R.string.grid_view))
-        gridRowAdapter.add(getString(R.string.error_fragment))
+        //gridRowAdapter.add(resources.getString(R.string.grid_view))
+        //gridRowAdapter.add(getString(R.string.error_fragment))
         gridRowAdapter.add(resources.getString(R.string.personal_settings))
         rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
@@ -210,9 +227,9 @@ class MainFragment : BrowseSupportFragment() {
                         val intent = Intent(context!!, SettingsActivity::class.java)
                         startActivity(intent)
                     }
-                    item.contains(getString(R.string.grid_view)) -> {
+                    /*item.contains(getString(R.string.grid_view)) -> {
                         FirebaseAuthentication.signIn(requireActivity())
-                    }
+                    }*/
                     item.contains(getString(R.string.favorites)) -> {
                         val intent = Intent(context!!, FavoritesActivity::class.java)
                         startActivity(intent)

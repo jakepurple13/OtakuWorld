@@ -16,6 +16,11 @@
     <string name="removeFromFavorites">Remove from Favorites</string>
     <string name="addToFavorites">Add to Favorites</string>
 
+    <string name="currentVersion">Version: %s</string>
+    <string name="chooseASource">Choose a Source</string>
+    <string name="done">Done</string>
+    <string name="currentSource">Current Source: %s</string>
+
     <!-- Error messages -->
     <string name="error_fragment_message">An error occurred</string>
     <string name="dismiss_error">Dismiss</string>
