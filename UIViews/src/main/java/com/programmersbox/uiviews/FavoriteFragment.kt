@@ -4,9 +4,8 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
+import android.widget.ArrayAdapter
 import androidx.core.view.children
-import androidx.core.view.setPadding
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
@@ -23,6 +22,7 @@ import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.layoutInflater
+import com.programmersbox.helpfulutils.visible
 import com.programmersbox.models.ApiService
 import com.programmersbox.rxutils.behaviorDelegate
 import com.programmersbox.rxutils.toLatestFlowable
@@ -58,8 +58,6 @@ class FavoriteFragment : BaseFragment() {
 
     override val layoutId: Int get() = R.layout.fragment_favorite
 
-    private val logo: MainLogo by inject()
-
     private lateinit var binding: FragmentFavoriteBinding
 
     @SuppressLint("SetTextI18n")
@@ -69,10 +67,8 @@ class FavoriteFragment : BaseFragment() {
 
         uiSetup()
 
-        val fired = fireListener.getAllShowsFlowable()
-
         val dbFire = Flowables.combineLatest(
-            fired,
+            fireListener.getAllShowsFlowable(),
             dao.getAllFavorites()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -97,13 +93,16 @@ class FavoriteFragment : BaseFragment() {
             .map { it.size to it.toGroup() }
             .distinctUntilChanged()
             .subscribe {
+                binding.favSearchInfo.setAdapter(ArrayAdapter(requireContext(), R.layout.favorite_auto_item, it.second.map { it.key }))
                 adapter.setData(it.second.toList())
                 binding.favSearchLayout.hint = resources.getQuantityString(R.plurals.numFavorites, it.first, it.first)
                 binding.favRv.smoothScrollToPosition(0)
-                binding.shimmerLayout.stopShimmer()
-                binding.shimmerLayout.gone()
+                if (it.second.isNotEmpty()) binding.emptyState.gone()
+                else binding.emptyState.visible()
             }
             .addTo(disposable)
+
+        binding.viewRecentList.setOnClickListener { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) }
 
         dbFire
             .subscribeOn(Schedulers.io())
@@ -146,17 +145,6 @@ class FavoriteFragment : BaseFragment() {
                     true
                 }
             })
-        }
-
-        repeat(9) {
-            binding.shimmerGrid.addView(
-                ImageView(requireContext()).apply {
-                    setImageResource(logo.logoId)
-                    setBackgroundColor(0xB3B3B3)
-                    setPadding(5)
-                },
-                360, 480
-            )
         }
 
     }

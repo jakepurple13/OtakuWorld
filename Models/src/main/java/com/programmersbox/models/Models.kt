@@ -33,7 +33,7 @@ data class ChapterModel(
     val uploaded: String,
     val sourceUrl: String,
     val source: ApiService
-) : ViewModel() {
+) : ViewModel(), Serializable {
     var uploadedTime: Long? = null
     fun getChapterInfo() = source.getChapterInfo(this)
     val extras = mutableMapOf<String, Any>()

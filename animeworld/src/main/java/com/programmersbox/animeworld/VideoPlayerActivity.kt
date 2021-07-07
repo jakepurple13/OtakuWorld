@@ -50,7 +50,6 @@ import java.util.*
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-
 class VideoPlayerActivity : AppCompatActivity() {
 
     //private val args by navArgs<VideoPlayerActivityArgs>()
@@ -237,6 +236,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
         player.setMediaSource(source, true)
         player.prepare()
+        player.play()
+        playerView.setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
         playerView.controllerAutoShow = true
         //playerView.controllerHideOnTouch = true
         playerView.controllerShowTimeoutMs = 2000

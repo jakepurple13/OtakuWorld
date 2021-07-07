@@ -62,6 +62,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
         setupBottomNavBar()
     }
 
+    enum class Screen(val id: Int) { RECENT(R.id.recent_nav), ALL(R.id.all_nav), SETTINGS(R.id.setting_nav) }
+
+    fun goToScreen(screen: Screen) {
+        findViewById<BottomNavigationView>(R.id.navLayout2)?.selectedItemId = screen.id
+    }
+
     private fun setupBottomNavBar() {
         val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav, R.navigation.setting_nav)
 

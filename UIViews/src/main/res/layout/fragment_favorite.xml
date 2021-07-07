@@ -12,22 +12,49 @@
         android:layout_below="@+id/fav_search_info"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.facebook.shimmer.ShimmerFrameLayout
-            android:id="@+id/shimmerLayout"
-            app:shimmer_auto_start="true"
-            app:shimmer_shape="linear"
-            app:shimmer_repeat_mode="restart"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/emptyState"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:layout_margin="5dp"
+            android:background="?colorOnBackground"
+            app:cardCornerRadius="5dp"
+            android:padding="5dp"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <com.programmersbox.uiviews.utils.AutoGridLayout
-                app:columnCount="3"
-                app:columnWidth="360px"
-                android:id="@+id/shimmerGrid"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="wrap_content">
 
-        </com.facebook.shimmer.ShimmerFrameLayout>
+                <TextView
+                    android:id="@+id/getStarted"
+                    style="@style/TextAppearance.MaterialComponents.Headline4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:text="@string/get_started" />
+
+                <TextView
+                    android:id="@+id/getStartedInfo"
+                    android:layout_below="@id/getStarted"
+                    android:layout_centerHorizontal="true"
+                    style="@style/TextAppearance.MaterialComponents.Body1"
+                    android:text="@string/get_started_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:text="@string/add_a_favorite"
+                    android:id="@+id/viewRecentList"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@id/getStartedInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/favRv"
@@ -64,14 +91,24 @@
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/fav_search_layout"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_alignParentStart="true"
                     android:layout_margin="5dp"
                     app:endIconMode="clear_text">
 
-                    <com.google.android.material.textfield.TextInputEditText
+                    <!--<com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/fav_search_info"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        tools:ignore="HardcodedText" />-->
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/fav_search_info"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -84,14 +121,14 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <HorizontalScrollView
-                    android:layout_marginHorizontal="5dp"
                     android:id="@+id/sourceListLayout"
-                    android:layout_below="@id/fav_search_layout"
                     android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/fav_search_layout"
+                    android:layout_marginHorizontal="5dp"
                     android:fadingEdge="horizontal"
-                    android:requiresFadingEdge="horizontal"
                     android:fadingEdgeLength="10dp"
-                    android:layout_height="wrap_content">
+                    android:requiresFadingEdge="horizontal">
 
                     <com.google.android.material.chip.ChipGroup
                         android:id="@+id/sourceList"

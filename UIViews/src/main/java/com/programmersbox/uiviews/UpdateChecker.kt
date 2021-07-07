@@ -17,20 +17,18 @@ import com.programmersbox.helpfulutils.NotificationDslBuilder
 import com.programmersbox.helpfulutils.intersect
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.loggingutils.Loged
-import com.programmersbox.loggingutils.f
+import com.programmersbox.loggingutils.fd
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.TimeUnit
 
 
 class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
@@ -85,11 +83,11 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
 
     override fun createWork(): Single<Result> {
         update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
-        Loged.f("Starting check here")
+        Loged.fd("Starting check here")
         applicationContext.lastUpdateCheck = System.currentTimeMillis()
         applicationContext.lastUpdateCheck?.let { updateCheckPublish.onNext(it) }
         return Single.create<List<DbModel>> { emitter ->
-            Loged.f("Start")
+            Loged.fd("Start")
             val list = listOf(
                 dao.getAllFavoritesSync(),
                 FirebaseDb.getAllShows().requireNoNulls()
@@ -105,7 +103,10 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                     .filter { s -> list.any { m -> m.source == s.serviceName } }
                     .mapNotNull { m ->
                         try {
-                            m.getRecent().blockingGet()
+                            m.getRecent()
+                                .timeout(10, TimeUnit.SECONDS)
+                                .onErrorReturnItem(emptyList())
+                                .blockingGet()
                         } catch (e: Exception) {
                             e.printStackTrace()
                             null
@@ -115,20 +116,25 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
             emitter.onSuccess(newList.distinctBy { it.url })
         }
             .map { list ->
-                Loged.f("Map1")
-                val loadMarkersJob: AtomicReference<Job?> = AtomicReference(null)
+                Loged.fd("Map1")
+                /*val loadMarkersJob: AtomicReference<Job?> = AtomicReference(null)
                 fun methodReturningJob() = GlobalScope.launch {
                     println("Before Delay")
                     delay(30000)
                     println("After Delay")
                     throw Exception("Finished")
-                }
+                }*/
                 list.mapIndexedNotNull { index, model ->
                     update.sendRunningNotification(list.size, index, model.title)
                     try {
-                        loadMarkersJob.getAndSet(methodReturningJob())?.cancel()
+                        //loadMarkersJob.getAndSet(methodReturningJob())?.cancel()
                         //val newData = sourceFromString(model.source)?.let { model.toItemModel(it).toInfoModel().blockingGet() }
-                        val newData = genericInfo.toSource(model.source)?.let { model.toItemModel(it).toInfoModel().blockingGet() }
+                        val newData = genericInfo.toSource(model.source)
+                            ?.let {
+                                model.toItemModel(it).toInfoModel()
+                                    .timeout(30, TimeUnit.SECONDS)
+                                    .blockingGet()
+                            }
                         println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
                         if (model.numChapters >= newData?.chapters?.size ?: -1) null
                         else Pair(newData, model)
@@ -139,7 +145,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                     }
                 }.also {
                     try {
-                        loadMarkersJob.get()?.cancel()
+                        //loadMarkersJob.get()?.cancel()
                     } catch (ignored: Exception) {
                     }
                 }
@@ -148,7 +154,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                 update.updateManga(dao, it)
                 update.mapDbModel(dao, it)
             }
-            .map { update.onEnd(it).also { Loged.f("Finished!") } }
+            .map { update.onEnd(it).also { Loged.fd("Finished!") } }
             .map {
                 update.sendFinishedNotification()
                 Result.success()
@@ -265,7 +271,8 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         connection.connect()
         BitmapFactory.decodeStream(connection.inputStream)
     } catch (e: IOException) {
-        e.printStackTrace()
+        //e.printStackTrace()
+        Loged.e(e.localizedMessage, showPretty = false)
         null
     }
 
@@ -283,7 +290,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
             subText = context.getString(R.string.checking)
         }
         context.notificationManager.notify(13, notification)
-        Loged.f("Checking for $contextText")
+        Loged.fd("Checking for $contextText", showPretty = false)
     }
 
     fun sendFinishedNotification() {

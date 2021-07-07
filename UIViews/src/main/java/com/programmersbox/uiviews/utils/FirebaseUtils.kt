@@ -41,7 +41,7 @@ object FirebaseAuthentication : KoinComponent {
         activity.startActivityForResult(
             AuthUI.getInstance()
                 .createSignInIntentBuilder()
-                .setTheme(R.style.Theme_OtakuWorld)
+                .setTheme(R.style.Theme_OtakuWorldBase)
                 //.setLogo(R.mipmap.big_logo)
                 .setLogo(logo.logoId)
                 .setAvailableProviders(providers)
