@@ -101,6 +101,7 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
                     it.searchList(query, list = searchList)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
+                        .onErrorReturnItem(emptyList())
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

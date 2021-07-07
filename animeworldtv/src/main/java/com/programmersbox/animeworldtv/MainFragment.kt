@@ -117,6 +117,7 @@ class MainFragment : BrowseSupportFragment() {
                 it.getList()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .onErrorReturnItem(emptyList())
             }
             //Yts.getRecent()
             .subscribeOn(Schedulers.io())
