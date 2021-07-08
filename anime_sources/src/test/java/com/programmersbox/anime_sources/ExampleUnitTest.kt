@@ -1,10 +1,7 @@
 package com.programmersbox.anime_sources
 
 import androidx.annotation.WorkerThread
-import com.programmersbox.anime_sources.anime.AnimeKisaSubbed
-import com.programmersbox.anime_sources.anime.AnimeToonDubbed
-import com.programmersbox.anime_sources.anime.WcoDubbed
-import com.programmersbox.anime_sources.anime.Yts
+import com.programmersbox.anime_sources.anime.*
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.header
 import com.programmersbox.models.ChapterModel
@@ -28,6 +25,133 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun putlockerTest() {
+
+        //val f = "http://putlockers.fm/recently-added.html".toJsoup()
+        //println(f)
+
+        //PutlockerTV.IS_TEST = true
+
+        /*val list = PutlockerTV.getList().blockingGet().randomOrNull()
+            ?.toInfoModel()?.blockingGet()
+            ?.chapters?.firstOrNull()
+            ?.getChapterInfo()?.blockingGet()?.firstOrNull()
+        //println(list.joinToString("\n"))
+        println(list?.link)*/
+
+        val search = PutlockerTV.searchList("the mask", list = emptyList()).blockingGet()
+        //println(search.joinToString("\n"))
+        println(search.first().toInfoModel().blockingGet())
+
+        //println(list?.link?.toJsoup())
+
+        /*val items = f.select("ul.list").select("div.item").map { it.select("a.thumb").attr("abs:href") }
+        //println(items.joinToString("\n"))
+
+        val d = items.firstOrNull()?.toJsoup()
+        //println(d)
+
+        val regex = "Base64.decode\\(\"(.*)\"\\)".toRegex().find(d?.toString().orEmpty())?.groups?.get(1)?.value
+
+        //println(regex)
+
+        val b = Jsoup.parse(String(Base64.getDecoder().decode(regex))).select("iframe").attr("abs:src")
+        //println(b)
+
+        val links = b.toJsoup()
+        println(links)*/
+
+    }
+
+    @Test
+    fun watchmovieTest() {
+        val f = Jsoup.connect("https://watchmovie.movie/search.html").data("keyword", "One").get()
+        println(f)
+    }
+
+    @Test
+    fun vidStreamingTest() {
+
+        //val f = "https://vidstreaming.io/popular".toJsoup()
+        //println(f)
+
+        val f = Vidstreaming.getList().blockingGet().firstOrNull()?.toInfoModel()?.blockingGet()
+
+        println(f)
+
+        /*val e = "https://vidstreaming.io/videos/tensei-shitara-slime-datta-ken-episode-24-9".toJsoup()
+        //println(e)
+
+        val v = e.select("div.play-video").select("iframe").attr("abs:src")
+        println(v)
+
+        val s = v.toJsoup()
+        //println(s)
+        val links = s.select("li.linkserver")
+        println(links.joinToString("\n"))
+
+        val xstream = links.find { it.text() == "Xstreamcdn" }?.attr("abs:data-video")
+        println(xstream)
+
+        //val x = xstream?.toJsoup()
+        //println(x)
+
+        val xApi = "https://fcdn.stream/api/source/${xstream?.split("/")?.last()}"
+        println(xApi)
+        val api = getApiPost(xApi).fromJson<Xstream>()
+        println(api)
+        val file = api?.data?.firstOrNull()?.file
+        println(getApi(file!!))*/
+    }
+
+    @Test
+    fun fboxTest() {
+        //val f = "https://putlockernew.site/all-movies".toJsoup()//"https://putlockernew.site".toJsoup()
+        //println(f)
+
+        val g = "https://putlockernew.site/watch-movie/america-the-motion-picture-2021_cw9q88erb/976x909-full-movie-online?watchnow=1".toJsoup()
+        //println(g)
+
+        val d = g.select("div.show_player").select("iframe").attr("abs:src").toJsoup()
+        //println(d)
+
+        //val mix = "<iframe[^>]+src=\"([^\"]+)\"[^>]*><\\/iframe>".toRegex().find(doc.toString())!!.groups[1]!!.value
+        val doc2 = d//Jsoup.connect(mix.trim()).get()
+        val r = "\\}\\('(.+)',(\\d+),(\\d+),'([^']+)'\\.split\\('\\|'\\)".toRegex().find(doc2.toString())!!
+        fun encodeBaseN(num: Int, n: Int): String {
+            var num1 = num
+            val fullTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            //println("$num - $n")
+            val table = fullTable.substring(0..n - 1)
+            if (num1 == 0) return table[0].toString()
+            var ret = ""
+            while (num1 > 0) {
+                ret = (table[num1 % n].toString() + ret)
+                num1 = Math.floorDiv(num, n)
+                if (num1 == 1) num1 = 0
+                //println("$ret - $num1")
+            }
+            return ret
+        }
+        val (obfucastedCode, baseTemp, countTemp, symbolsTemp) = r.destructured
+        //println(r.destructured.toList().joinToString("\n"))
+        val base = baseTemp.toInt()
+        var count = countTemp.toInt()
+        val symbols = symbolsTemp.split("|")
+        val symbolTable = mutableMapOf<String, String>()
+        while (count > 0) {
+            count--
+            val baseNCount = encodeBaseN(count, base)
+            symbolTable[baseNCount] = if (symbols[count].isNotEmpty()) symbols[count] else baseNCount
+        }
+        val unpacked = "\\b(\\w+)\\b".toRegex().replace(obfucastedCode) { symbolTable[it.groups[0]!!.value].toString() }
+        println(unpacked)
+        val search = "MDCore\\.v.*?=\"([^\"]+)".toRegex().find(unpacked)?.groups?.get(1)?.value
+        //"https:$search"
+        println(search)
+    }
 
     @Test
     fun animekisaTest() {
