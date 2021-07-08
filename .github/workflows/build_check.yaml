@@ -33,6 +33,9 @@ jobs:
       - run: echo $NOVEL_GOOGLE_SERVICES_JSON > novelworld/google-services.json
         env:
           NOVEL_GOOGLE_SERVICES_JSON: ${{ secrets.NOVEL_SERVICES }}
+      - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
+        env:
+          ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
           
       - name: Setup JDK
         uses: actions/setup-java@v1
@@ -56,4 +59,9 @@ jobs:
         with:
           name: apk
           path: novelworld/build/outputs/apk/debug/novelworld-debug.apk 
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: animeworldtv/build/outputs/apk/debug/animeworldtv-debug.apk 
           
