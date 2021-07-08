@@ -83,7 +83,7 @@ dependencies {
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
     //Google Material Icons
-    implementation 'com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar'
+    implementation 'com.mikepenz:fontawesome-typeface:5.13.3.0-kotlin@aar'
 
     implementation project(':UIViews')
     implementation project(':Models')
