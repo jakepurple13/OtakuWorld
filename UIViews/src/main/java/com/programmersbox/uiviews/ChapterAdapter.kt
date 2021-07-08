@@ -50,8 +50,8 @@ class ChapterAdapter(
             binding.swatch = swatchInfo
             binding.executePendingBindings()
             binding.readChapterButton.setOnClickListener { binding.chapterListCard.performClick() }
-            binding.markedReadButton.setOnClickListener { binding.readChapter.performClick() }
-            binding.uploadedInfo2.setOnClickListener { binding.chapterListCard.performClick() }
+            //binding.markedReadButton.setOnClickListener { binding.readChapter.performClick() }
+            //binding.uploadedInfo2.setOnClickListener { binding.chapterListCard.performClick() }
             binding.chapterListCard.setOnClickListener {
                 genericInfo.chapterOnClick(chapterModel, dataList, context)
                 binding.readChapter.isChecked = true

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:showIn="@layout/details_fragment">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -15,148 +14,95 @@
             type="com.programmersbox.models.SwatchInfo" />
     </data>
 
-    <com.guanaj.easyswipemenulibrary.EasySwipeMenuLayout
-        android:id="@+id/swipeMenu"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/chapterListCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        app:canRightSwipe="true"
-        app:contentView="@id/chapterListCard"
-        app:rightMenuView="@id/chapterOptions">
+        android:layout_marginVertical="5dp"
+        app:cardBackgroundColor="@{swatch.rgb}"
+        app:cardCornerRadius="0dp"
+        tools:cardBackgroundColor="@sample/sample_colors">
 
         <LinearLayout
-            android:id="@+id/chapterOptions"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginHorizontal="5dp"
-            android:orientation="horizontal">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/readChapterButton"
-                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/readChapter"
+                style="@style/TextAppearance.MaterialComponents.Body1"
                 android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
+                android:text="@{chapter.name}"
+                app:checkedButtonTint="@{swatch}"
+                app:layout_constrainedWidth="true"
+                app:titleColor="@{swatch}"
+                tools:checked="true"
+                tools:checkedButtonTint="@sample/sample_colors"
+                tools:text="@tools:sample/full_names"
+                tools:textColor="@sample/sample_colors" />
+
+            <TextView
+                android:id="@+id/uploadedInfo"
+                style="@style/TextAppearance.MaterialComponents.Subtitle2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                app:bodyColor="@{swatch}"
+                android:layout_gravity="end"
+                android:layout_marginHorizontal="5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:uploadedText="@{chapter}"
+                tools:text="@tools:sample/date/mmddyy"
+                tools:textColor="@sample/sample_colors" />
+
+            <LinearLayout
+                android:id="@+id/chapterOptions"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="5dp"
-                app:icon="@drawable/ic_baseline_play_arrow_24"
-                app:iconGravity="textTop"
-                app:iconTint="?android:textColorPrimary"
-                android:drawableTint="#ffffff"
-                android:text="@string/read"
-                android:textColor="?android:textColorPrimary"
-                app:optionTint="@{swatch}"
-                app:strokeColor="#ffffff" />
+                android:orientation="horizontal"
+                android:weightSum="2">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/downloadChapterButton"
-                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginHorizontal="5dp"
-                app:icon="@drawable/ic_baseline_download_24"
-                app:iconGravity="textTop"
-                app:iconTint="?android:textColorPrimary"
-                android:drawableTint="#ffffff"
-                android:text="@string/download_chapter"
-                android:textColor="?android:textColorPrimary"
-                app:optionTint="@{swatch}"
-                app:strokeColor="#ffffff" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/readChapterButton"
+                    style="@style/Widget.App.Button.OutlinedButton.IconOnly"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_weight="1"
+                    android:drawableTint="#ffffff"
+                    android:text="@string/read"
+                    android:textColor="?android:textColorPrimary"
+                    app:icon="@drawable/ic_baseline_play_arrow_24"
+                    app:iconGravity="textTop"
+                    app:iconTint="?android:textColorPrimary"
+                    app:startButtonColor="@{swatch}"
+                    app:strokeColor="#ffffff" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/markedReadButton"
-                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginHorizontal="5dp"
-                app:icon="@drawable/ic_baseline_done_24"
-                app:iconTint="?android:textColorPrimary"
-                android:drawableTint="#ffffff"
-                app:iconGravity="textTop"
-                android:text="@string/markAs"
-                android:textColor="?android:textColorPrimary"
-                app:optionTint="@{swatch}"
-                app:strokeColor="#ffffff" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/downloadChapterButton"
+                    style="@style/Widget.App.Button.OutlinedButton.IconOnly"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_weight="1"
+                    android:drawableTint="#ffffff"
+                    android:text="@string/download_chapter"
+                    android:textColor="?android:textColorPrimary"
+                    app:icon="@drawable/ic_baseline_download_24"
+                    app:iconGravity="textTop"
+                    app:iconTint="?android:textColorPrimary"
+                    app:startButtonColor="@{swatch}"
+                    app:strokeColor="#ffffff" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/chapterListCard"
-            app:cardBackgroundColor="@{swatch.rgb}"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:cardBackgroundColor="@sample/sample_colors">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp">
-
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/readChapter"
-                    style="@style/TextAppearance.MaterialComponents.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="5dp"
-                    android:text="@{chapter.name}"
-                    app:checkedButtonTint="@{swatch}"
-                    app:layout_constrainedWidth="true"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/uploadedInfo2"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:titleColor="@{swatch}"
-                    tools:checked="true"
-                    tools:checkedButtonTint="@sample/sample_colors"
-                    tools:text="@tools:sample/full_names"
-                    tools:textColor="@sample/sample_colors" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/uploadedInfo2"
-                    style="@style/Widget.App.Button.Borderless.IconOnly"
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    android:layout_marginHorizontal="5dp"
-                    app:iconTint="?android:textColorPrimary"
-                    app:icon="@drawable/action_chapter"
-                    app:iconGravity="textTop"
-                    android:textColor="?android:textColorPrimary"
-                    app:startButtonColor="@{swatch}"
-                    app:uploadedText="@{chapter}" />
-
-                <TextView
-                    android:id="@+id/uploadedInfo"
-                    style="@style/TextAppearance.MaterialComponents.Subtitle2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    app:bodyColor="@{swatch}"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:uploadedText="@{chapter}"
-                    tools:text="@tools:sample/date/mmddyy"
-                    tools:textColor="@sample/sample_colors" />
-
-                <ImageView
-                    android:id="@+id/startReading"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone"
-                    android:src="@drawable/action_chapter"
-                    app:layout_constraintBottom_toTopOf="@id/uploadedInfo"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/uploadedInfo"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:ignore="ContentDescription"
-                    tools:tint="@sample/sample_colors" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-    </com.guanaj.easyswipemenulibrary.EasySwipeMenuLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </layout>
