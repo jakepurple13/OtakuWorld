@@ -154,7 +154,7 @@ class GenericAnime(val context: Context) : GenericInfo {
             request.addHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
             request.addHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
             request.addHeader("Access-Control-Allow-Origin", "*")
-            request.addHeader("Referer", "http://thewebsite.com")
+            request.addHeader("Referer", i.headers["referer"] ?: "http://thewebsite.com")
             request.addHeader("Connection", "keep-alive")
 
             i.headers.entries.forEach { request.headers[it.key] = it.value }

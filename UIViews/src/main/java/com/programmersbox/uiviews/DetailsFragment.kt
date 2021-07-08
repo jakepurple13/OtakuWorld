@@ -199,7 +199,7 @@ class DetailsFragment : Fragment() {
                                     BooleanArray(adapter.itemCount) { i -> checked.any { it1 -> it1.url == adapter[i].url } }
                                 ) { _, i, _ ->
                                     (binding.infoChapterList.findViewHolderForAdapterPosition(i) as? ChapterAdapter.ChapterHolder)
-                                        ?.binding?.markedReadButton?.performClick()
+                                        ?.binding?.readChapter?.performClick()
                                 }
                                 .setPositiveButton(R.string.done) { d, _ -> d.dismiss() }
                                 .show()

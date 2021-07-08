@@ -69,7 +69,7 @@ fun collapsingToolbarColors(view: CollapsingToolbarLayout, swatchInfo: SwatchInf
 
 @BindingAdapter("titleColor")
 fun titleColor(view: TextView, swatchInfo: SwatchInfo?) {
-    swatchInfo?.titleColor?.let { view.setTextColor(it) }
+    swatchInfo?.bodyColor?.let { view.setTextColor(it) }
 }
 
 @BindingAdapter("bodyColor")
@@ -97,6 +97,7 @@ fun buttonTint(view: CheckBox, swatchInfo: SwatchInfo?) {
 fun startButtonColor(view: MaterialButton, swatchInfo: SwatchInfo?) {
     swatchInfo?.bodyColor?.let { view.iconTint = ColorStateList.valueOf(it) }
     swatchInfo?.bodyColor?.let { view.setTextColor(it) }
+    swatchInfo?.bodyColor?.let { view.strokeColor = ColorStateList.valueOf(it) }
 }
 
 @BindingAdapter("uploadedText")

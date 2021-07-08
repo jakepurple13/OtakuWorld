@@ -10,13 +10,14 @@ import androidx.fragment.app.Fragment
 import androidx.leanback.app.SearchFragment
 import androidx.leanback.app.SearchSupportFragment
 import androidx.leanback.widget.*
-import com.programmersbox.anime_sources.anime.WcoSubbed
 import com.programmersbox.models.ItemModel
+import com.programmersbox.models.sourcePublish
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.TimeUnit
 
 /**
  * A simple [Fragment] subclass.
@@ -62,7 +63,12 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
         super.onCreate(savedInstanceState)
         setSearchResultProvider(this)
         setOnItemViewClickedListener(ItemViewClickedListener())
-        WcoSubbed.getList()
+        sourcePublish
+            .flatMapSingle {
+                it.getList()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy { searchList.addAll(it) }
@@ -87,9 +93,33 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
     override fun onQueryTextSubmit(query: String): Boolean {
         rowsAdapter.clear()
         if (!TextUtils.isEmpty(query)) {
-            delayedLoad.setSearchQuery(query)
-            handler.removeCallbacks(delayedLoad)
-            handler.postDelayed(delayedLoad, SEARCH_DELAY_MS)
+            //delayedLoad.setSearchQuery(query)
+            //handler.removeCallbacks(delayedLoad)
+            //handler.postDelayed(delayedLoad, SEARCH_DELAY_MS)
+            sourcePublish
+                .flatMapSingle {
+                    it.searchList(query, list = searchList)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .onErrorReturnItem(emptyList())
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .delay(SEARCH_DELAY_MS, TimeUnit.MILLISECONDS)
+                .map { it.groupBy { it.title.firstOrNull().toString() } }
+                .subscribe {
+                    it.forEach {
+                        val (t, u) = it
+                        val listRowAdapter = ArrayObjectAdapter(CardPresenter())
+
+                        listRowAdapter.addAll(0, u)
+
+                        val header = HeaderItem(t.hashCode().toLong(), t)
+
+                        rowsAdapter.add(ListRow(header, listRowAdapter))
+                    }
+                }
+                .addTo(disposable)
         }
         return true
     }

@@ -15,6 +15,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.programmersbox.models.ChapterModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -70,10 +71,23 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                     null
                 )*/
 
-                val dataSourceFactory = DefaultDataSourceFactory(
+                val link = it.firstOrNull()
+
+                val dataSourceFactory = if (link?.headers?.isEmpty() == true) {
+                    DefaultDataSourceFactory(
+                        requireContext(),
+                        com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
+                    )
+                } else {
+                    DefaultHttpDataSource.Factory()
+                        .setUserAgent(com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld"))
+                        .setDefaultRequestProperties(hashMapOf("Referer" to link?.headers?.get("referer").orEmpty()))
+                }
+
+                /*val dataSourceFactory = DefaultDataSourceFactory(
                     requireContext(),
                     com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
-                )
+                )*/
                 val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
                     .createMediaSource(MediaItem.fromUri(Uri.parse(it.firstOrNull()?.link)))
 

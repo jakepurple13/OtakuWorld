@@ -3,11 +3,13 @@ package com.programmersbox.animeworldtv
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.leanback.widget.ImageCardView
 import androidx.leanback.widget.Presenter
 import com.bumptech.glide.Glide
 import com.programmersbox.helpfulutils.layoutInflater
+import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.ItemModel
 import kotlin.properties.Delegates
 
@@ -25,7 +27,7 @@ class CardPresenter : Presenter() {
 
         sDefaultBackgroundColor = ContextCompat.getColor(parent.context, R.color.default_background)
         sSelectedBackgroundColor = ContextCompat.getColor(parent.context, R.color.selected_background)
-        mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.drawable.movie)
+        mDefaultCardImage = ContextCompat.getDrawable(parent.context, R.mipmap.ic_launcher)
 
         return Presenter.ViewHolder(
             parent.context.layoutInflater.inflate(R.layout.tv_item, parent, false).also {
@@ -77,5 +79,30 @@ class CardPresenter : Presenter() {
 
         private val CARD_WIDTH = 313
         private val CARD_HEIGHT = 176
+    }
+}
+
+class EpisodePresenter : Presenter() {
+
+    override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
+
+        return Presenter.ViewHolder(
+            parent.context.layoutInflater.inflate(R.layout.episode_item, parent, false).also {
+
+                it.isFocusable = true
+                it.isFocusableInTouchMode = true
+
+            }
+        )
+    }
+
+    override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+        val movie = item as ChapterModel
+        val cardView = viewHolder.view.findViewById<TextView>(R.id.episode_name)
+        cardView.text = movie.name
+    }
+
+    override fun onUnbindViewHolder(viewHolder: ViewHolder?) {
+
     }
 }
