@@ -87,7 +87,7 @@ dependencies {
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
 
     implementation coroutinesCore
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
 
     implementation room.room
     // For Kotlin use kapt instead of annotationProcessor
