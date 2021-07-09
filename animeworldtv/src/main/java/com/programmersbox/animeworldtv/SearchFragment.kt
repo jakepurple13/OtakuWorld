@@ -101,7 +101,7 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
             /*Sources.PUTLOCKERTV
             Sources.WCO_SUBBED*/
 
-            Observable.combineLatest(
+            /*Observable.combineLatest(
                 Sources.PUTLOCKERTV
                     .searchList(query, list = searchList)
                     .subscribeOn(Schedulers.io())
@@ -120,15 +120,27 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
                     .observeOn(AndroidSchedulers.mainThread())
                     .onErrorReturnItem(emptyList())
                     .toObservable()
-            ) { p, w, v -> listOf(p, w, v).flatten().sortedBy { it.title } }
+            ) { p, w, v -> listOf(p, w, v).flatten().sortedBy { it.title } }*/
 
-                /*sourcePublish
-                    .flatMapSingle {
-                        it.searchList(query, list = searchList)
+            /*sourcePublish
+                .flatMapSingle {
+                    it.searchList(query, list = searchList)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .onErrorReturnItem(emptyList())
+                }*/
+            Observable.combineLatest(
+                //Sources.values().distinctBy { it.baseUrl }
+                Sources.searchSources
+                    .map {
+                        it
+                            .searchList(query, list = searchList)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .onErrorReturnItem(emptyList())
-                    }*/
+                            .toObservable()
+                    }
+            ) { (it as Array<List<ItemModel>>).toList().flatten().sortedBy(ItemModel::title) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .delay(SEARCH_DELAY_MS, TimeUnit.MILLISECONDS)

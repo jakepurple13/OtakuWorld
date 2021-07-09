@@ -3,6 +3,7 @@ package com.programmersbox.animeworldtv
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.leanback.media.PlaybackTransportControlGlue
@@ -38,7 +39,14 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         /*val (_, title, description, _, _, videoUrl) =
             activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as Movie*/
 
-        val item = activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as ChapterModel
+        val item = try {
+            activity?.intent?.getSerializableExtra(DetailsActivity.MOVIE) as ChapterModel
+        } catch (e: Exception) {
+            //e.printStackTrace()
+            Toast.makeText(requireContext(), "Something went wrong", Toast.LENGTH_SHORT).show()
+            activity?.finish()
+            return
+        }
 
         val glueHost = VideoSupportFragmentGlueHost(this@PlaybackVideoFragment)
         /*val bandwidthMeter = DefaultBandwidthMeter()
@@ -60,6 +68,10 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         item.getChapterInfo()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnError {
+                Toast.makeText(requireContext(), "Something went wrong", Toast.LENGTH_SHORT).show()
+                activity?.finish()
+            }
             .subscribeBy {
                 //playerAdapter.setDataSource(Uri.parse(it.firstOrNull()?.link))
                 /*val userAgent: String = com.google.android.exoplayer2.util.Util.getUserAgent(requireActivity(), "VideoPlayerGlue")

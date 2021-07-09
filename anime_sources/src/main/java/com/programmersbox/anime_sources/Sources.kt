@@ -25,6 +25,10 @@ enum class Sources(private val api: ApiService) : ApiService by api {
     ANIMETOON(AnimeToonApi), DUBBED_ANIME(AnimeToonDubbed), ANIMETOON_MOVIES(AnimeToonMovies);
 
     override val serviceName: String get() = this.name
+
+    companion object {
+        val searchSources get() = listOf(VIDSTREAMING, PUTLOCKERTV, WCO_SUBBED)
+    }
 }
 
 internal fun String.toJsoup() = Jsoup.connect(this).get()

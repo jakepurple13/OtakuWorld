@@ -43,7 +43,6 @@ class ExampleUnitTest {
         println(list?.link)*/
 
         val search = PutlockerTV.searchList("the mask", list = emptyList()).blockingGet()
-        //println(search.joinToString("\n"))
         println(search.first().toInfoModel().blockingGet())
 
         //println(list?.link?.toJsoup())
@@ -226,14 +225,17 @@ class ExampleUnitTest {
     @Test
     fun animekisaTest() {
 
-        val f = AnimeKisaSubbed.getList().blockingGet().take(10)
+        /*val f = AnimeKisaSubbed.getList().blockingGet().take(10)
         println(f.joinToString("\n"))
 
         val e = f.first().toInfoModel().blockingGet()
         println(e)
 
         val c = e.chapters.first().getChapterInfo().blockingGet()
-        println(c)
+        println(c)*/
+
+        val f = AnimeKisaSubbed.searchList("mushi", list = emptyList()).blockingGet().take(10)
+        println(f.joinToString("\n"))
 
         //val v = c.first().link?.toJsoup()
         //println(v)
