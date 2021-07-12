@@ -42,7 +42,7 @@ buildscript {
     ext.constraintlayout = 'androidx.constraintlayout:constraintlayout:2.0.4'
     ext.swiperefresh = 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
-    ext.jsoup = 'org.jsoup:jsoup:1.13.1'
+    ext.jsoup = 'org.jsoup:jsoup:1.14.1'
 
     ext.room_version = "2.3.0"
 
