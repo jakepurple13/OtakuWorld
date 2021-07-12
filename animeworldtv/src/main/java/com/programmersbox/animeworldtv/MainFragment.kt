@@ -69,7 +69,7 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun setupUIElements() {
-        title = getString(R.string.browse_title)
+        title = getString(R.string.app_name)
         // over title
         headersState = BrowseSupportFragment.HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true

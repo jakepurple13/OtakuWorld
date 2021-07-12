@@ -2,6 +2,7 @@ package com.programmersbox.anime_sources
 
 import androidx.annotation.WorkerThread
 import com.programmersbox.anime_sources.anime.*
+import com.programmersbox.anime_sources.utilities.ApiResponse
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.header
 import com.programmersbox.models.ChapterModel
@@ -42,7 +43,6 @@ class ExampleUnitTest {
         println(list?.link)*/
 
         val search = PutlockerTV.searchList("the mask", list = emptyList()).blockingGet()
-        //println(search.joinToString("\n"))
         println(search.first().toInfoModel().blockingGet())
 
         //println(list?.link?.toJsoup())
@@ -72,12 +72,81 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun animeflixTest() {
+        val f = com.programmersbox.anime_sources.utilities.getApi("https://animesimple.com/search") {
+            addEncodedQueryParameter("q", "mushishi")
+        }
+
+        //println(f)
+
+        //ww1.animesimple.com/series-list/
+
+        val s = Jsoup.parse((f as ApiResponse.Success).body)
+            .select("div#explore-container")
+            .select("div.card-query")
+            .map {
+                ItemModel(
+                    title = it.select("div.card[title]").attr("title"),
+                    description = "",
+                    imageUrl = it.select("img.card-img-top").attr("abs:src"),
+                    url = "https:${it.select("h6.card-text a[href]").attr("href")}",
+                    source = Sources.VIDSTREAMING
+                )
+            }
+
+        println(s)
+
+        val model = s.first()
+
+        val doc = model.url.toJsoup()
+
+        //println(doc)
+
+        val id2 = com.programmersbox.anime_sources.utilities.getApi("https://animesimple.com/request") {
+            addEncodedQueryParameter("anime-id", doc.select("input#animeid").attr("value"))
+            addEncodedQueryParameter("epi-page", "1")
+            addEncodedQueryParameter("top", "10000")
+            addEncodedQueryParameter("bottom", "0")
+        }.let { (it as? ApiResponse.Success)?.body }
+
+        val id = InfoModel(
+            title = model.title,
+            description = doc.select("p.synopsis").text(),
+            url = model.url,
+            imageUrl = doc.select("img#series-image").attr("abs:src"),
+            chapters = Jsoup.parse(id2).select("a.list-group-item").map {
+                ChapterModel(
+                    name = it.text(),
+                    url = "https:${it.select("a").attr("href")}",
+                    uploaded = "",
+                    sourceUrl = model.url,
+                    source = Sources.VIDSTREAMING
+                )
+            },
+            genres = doc.select("a.badge, a.badge-secondary").select("a").eachText(),
+            alternativeNames = emptyList(),
+            source = Sources.VIDSTREAMING
+        )
+
+        println(id)
+
+        val e = id.chapters.first().url.toJsoup()
+
+        println(e)
+
+    }
+
+    @Test
     fun vidStreamingTest() {
 
         //val f = "https://vidstreaming.io/popular".toJsoup()
         //println(f)
 
-        val f = Vidstreaming.getList().blockingGet().firstOrNull()?.toInfoModel()?.blockingGet()
+        //val f = Vidstreaming.getList().blockingGet().firstOrNull()?.toInfoModel()?.blockingGet()
+
+        //println(f)
+
+        val f = Vidstreaming.searchList("one punch", list = emptyList()).blockingGet().firstOrNull()
 
         println(f)
 
@@ -154,16 +223,30 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun kickassanimeTest() {
+
+        val api = com.programmersbox.anime_sources.utilities.getApi("https://kickassanime.rs/search") {
+            addEncodedQueryParameter("q", "mushi")
+        }
+
+        println(api)
+
+    }
+
+    @Test
     fun animekisaTest() {
 
-        val f = AnimeKisaSubbed.getList().blockingGet().take(10)
+        /*val f = AnimeKisaSubbed.getList().blockingGet().take(10)
         println(f.joinToString("\n"))
 
         val e = f.first().toInfoModel().blockingGet()
         println(e)
 
         val c = e.chapters.first().getChapterInfo().blockingGet()
-        println(c)
+        println(c)*/
+
+        val f = AnimeKisaSubbed.searchList("mushi", list = emptyList()).blockingGet().take(10)
+        println(f.joinToString("\n"))
 
         //val v = c.first().link?.toJsoup()
         //println(v)
@@ -377,7 +460,11 @@ class ExampleUnitTest {
         //println(f1.size)
         //println(f1.joinToString("\n"))
 
-        println(WcoDubbed.getSourceByUrl("https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide"))
+        //println(WcoDubbed.getSourceByUrl("https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide"))
+
+        val f = WcoDubbed.searchList("one", list = emptyList()).blockingGet()
+
+        println(f.joinToString("\n"))
 
     }
 

@@ -9,6 +9,7 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import io.reactivex.Single
+import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -32,7 +33,7 @@ object Vidstreaming : ShowApi(
                     title = it.select("div.name").text(),
                     description = "",
                     imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                    url = it.select("a").first().attr("abs:href"),
+                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
                     source = this
                 )
             }
@@ -47,7 +48,7 @@ object Vidstreaming : ShowApi(
                     title = it.select("div.name").text(),
                     description = "",
                     imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                    url = it.select("a").first().attr("abs:href"),
+                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
                     source = this
                 )
             }
@@ -63,7 +64,7 @@ object Vidstreaming : ShowApi(
             description = doc.select("dic.post-entry").text(),
             imageUrl = source.imageUrl,
             genres = emptyList(),
-            chapters = doc.select("li.video-block").map {
+            chapters = doc.select("div.video-info-left > ul.listing > li.video-block > a").map {
                 ChapterModel(
                     it.select("div.name").text(),
                     it.select("a").attr("abs:href"),
@@ -74,6 +75,25 @@ object Vidstreaming : ShowApi(
             }
         )
             .let(it::onSuccess)
+    }
+
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
+        return Single.create<List<ItemModel>> {
+            "https://streamani.net/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
+                .select("li.video-block")
+                .map {
+                    ItemModel(
+                        title = it.select("div.name").text(),
+                        description = "",
+                        imageUrl = it.select("div.picture").select("img").attr("abs:src"),
+                        url = it.select("a").first()?.attr("abs:href").orEmpty(),
+                        source = this
+                    )
+                }
+                .let(it::onSuccess)
+
+        }
+            .onErrorResumeNext(super.searchList(searchText, page, list))
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> {
@@ -175,6 +195,23 @@ object Vidstreaming : ShowApi(
 
     @WorkerThread
     private fun getApiPost(url: String, builder: okhttp3.Request.Builder.() -> Unit = {}): String? {
+        val request = okhttp3.Request.Builder()
+            .url(url)
+            .apply(builder)
+            .post(object : RequestBody() {
+                override fun contentType(): MediaType? = "application/json".toMediaTypeOrNull()
+
+                override fun writeTo(sink: BufferedSink) {
+                }
+
+            })
+            .build()
+        val response = OkHttpClient().newCall(request).execute()
+        return if (response.code == 200) response.body!!.string() else null
+    }
+
+    @WorkerThread
+    private fun getApiPost(url: HttpUrl, builder: okhttp3.Request.Builder.() -> Unit = {}): String? {
         val request = okhttp3.Request.Builder()
             .url(url)
             .apply(builder)

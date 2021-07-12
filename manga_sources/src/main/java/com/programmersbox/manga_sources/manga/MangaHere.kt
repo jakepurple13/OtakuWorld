@@ -25,10 +25,10 @@ object MangaHere : ApiService {
             .cookie("isAdult", "1").get()
             .select(".manga-list-1-list li").map {
                 ItemModel(
-                    title = it.select("a").first().attr("title"),
+                    title = it.select("a").first()!!.attr("title"),
                     description = "",
-                    url = it.select("a").first().attr("abs:href"),
-                    imageUrl = it.select("img.manga-list-1-cover")?.first()?.attr("src") ?: "",
+                    url = it.select("a").first()!!.attr("abs:href"),
+                    imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
                     source = this
                 )
             }.filter { it.title.isNotEmpty() }
@@ -40,10 +40,10 @@ object MangaHere : ApiService {
             .cookie("isAdult", "1").get()
             .select(".manga-list-1-list li").map {
                 ItemModel(
-                    title = it.select("a").first().attr("title"),
+                    title = it.select("a").first()!!.attr("title"),
                     description = "",
-                    url = it.select("a").first().attr("abs:href"),
-                    imageUrl = it.select("img.manga-list-1-cover")?.first()?.attr("src") ?: "",
+                    url = it.select("a").first()!!.attr("abs:href"),
+                    imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
                     source = this
                 )
             }.filter { it.title.isNotEmpty() }
@@ -76,10 +76,10 @@ object MangaHere : ApiService {
             Jsoup.parse(client.body?.string()).select(".manga-list-4-list > li")
                 .map {
                     ItemModel(
-                        title = it.select("a").first().attr("title"),
-                        description = it.select("p.manga-list-4-item-tip").last().text(),
-                        url = "$baseUrl${it.select(".manga-list-4-item-title > a").first().attr("href")}",
-                        imageUrl = it.select("img.manga-list-4-cover").first().attr("abs:src"),
+                        title = it.select("a").first()!!.attr("title"),
+                        description = it.select("p.manga-list-4-item-tip").last()!!.text(),
+                        url = "$baseUrl${it.select(".manga-list-4-item-title > a").first()!!.attr("href")}",
+                        imageUrl = it.select("img.manga-list-4-cover").first()!!.attr("abs:src"),
                         source = this
                     )
                 }
@@ -202,7 +202,7 @@ object MangaHere : ApiService {
                 html.indexOf(";", chapterIdStartLoc)
             ).trim()
             val chapterPagesElement = document.select(".pager-list-left > span").first()
-            val pagesLinksElements = chapterPagesElement.select("a")
+            val pagesLinksElements = chapterPagesElement!!.select("a")
             val pagesNumber = pagesLinksElements[pagesLinksElements.size - 2].attr("data-page").toInt()
             val pageBase = link.substring(0, link.lastIndexOf("/"))
             IntRange(1, pagesNumber).map { i ->

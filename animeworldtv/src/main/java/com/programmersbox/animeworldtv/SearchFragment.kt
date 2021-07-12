@@ -10,8 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.leanback.app.SearchFragment
 import androidx.leanback.app.SearchSupportFragment
 import androidx.leanback.widget.*
+import com.programmersbox.anime_sources.Sources
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourcePublish
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -63,12 +64,13 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
         super.onCreate(savedInstanceState)
         setSearchResultProvider(this)
         setOnItemViewClickedListener(ItemViewClickedListener())
-        sourcePublish
+        /*Sources.WCO_SUBBED
             .flatMapSingle {
                 it.getList()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-            }
+            }*/
+        Sources.WCO_SUBBED.getList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy { searchList.addAll(it) }
@@ -96,13 +98,49 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
             //delayedLoad.setSearchQuery(query)
             //handler.removeCallbacks(delayedLoad)
             //handler.postDelayed(delayedLoad, SEARCH_DELAY_MS)
-            sourcePublish
+            /*Sources.PUTLOCKERTV
+            Sources.WCO_SUBBED*/
+
+            /*Observable.combineLatest(
+                Sources.PUTLOCKERTV
+                    .searchList(query, list = searchList)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .onErrorReturnItem(emptyList())
+                    .toObservable(),
+                Sources.WCO_SUBBED
+                    .searchList(query, list = searchList)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .onErrorReturnItem(emptyList())
+                    .toObservable(),
+                Sources.VIDSTREAMING
+                    .searchList(query, list = searchList)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .onErrorReturnItem(emptyList())
+                    .toObservable()
+            ) { p, w, v -> listOf(p, w, v).flatten().sortedBy { it.title } }*/
+
+            /*sourcePublish
                 .flatMapSingle {
                     it.searchList(query, list = searchList)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .onErrorReturnItem(emptyList())
-                }
+                }*/
+            Observable.combineLatest(
+                //Sources.values().distinctBy { it.baseUrl }
+                Sources.searchSources
+                    .map {
+                        it
+                            .searchList(query, list = searchList)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .onErrorReturnItem(emptyList())
+                            .toObservable()
+                    }
+            ) { (it as Array<List<ItemModel>>).toList().flatten().sortedBy(ItemModel::title) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .delay(SEARCH_DELAY_MS, TimeUnit.MILLISECONDS)

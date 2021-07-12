@@ -4,14 +4,17 @@ import android.content.Context
 import android.text.format.DateFormat
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.toJsoup
+import com.programmersbox.anime_sources.utilities.ApiResponse
+import com.programmersbox.anime_sources.utilities.getApi
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import io.reactivex.Single
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import org.koin.core.component.get
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,11 +36,11 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
     recentPath = ""
 ), KoinComponent {
 
-    private val context: Context by inject()
+    private fun context(): Context = get()
 
     private val dateFormat by lazy {
         SimpleDateFormat(
-            "${(DateFormat.getTimeFormat(context) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getDateFormat(context) as SimpleDateFormat).toLocalizedPattern()}",
+            "${(DateFormat.getTimeFormat(context()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getDateFormat(context()) as SimpleDateFormat).toLocalizedPattern()}",
             Locale.getDefault()
         )
     }
@@ -74,7 +77,6 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
     }
 
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
-
         InfoModel(
             source = this,
             url = source.url,
@@ -96,6 +98,28 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
             .let(emitter::onSuccess)
     }
 
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
+        return Single.create<List<ItemModel>> {
+            getApi("$baseUrl/search") { addEncodedQueryParameter("q", searchText.toString()) }
+                .let { (it as? ApiResponse.Success)?.body }
+                ?.let { Jsoup.parse(it) }
+                ?.select("div.similarbox > a.an")
+                ?.mapNotNull {
+                    if (it.attr("href") == "/") null
+                    else
+                        ItemModel(
+                            title = it.select("div > div > div > div > div.similardd").text(),
+                            description = "",
+                            imageUrl = "$baseUrl${it.select("img.coveri").attr("src")}",
+                            url = "$baseUrl${it.attr("href")}",
+                            source = this
+                        )
+                }
+                ?.let(it::onSuccess) ?: it.onError(Throwable("Something went wrong"))
+        }
+            .onErrorResumeNext(super.searchList(searchText, page, list))
+    }
+
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         val doc = chapterModel.url.toJsoup()
         val downloadUrl = "var VidStreaming = \"(.*?)\";".toRegex()
@@ -114,7 +138,7 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
                     source = chapterModel.url,
                     quality = "Good",
                     sub = "Yes"
-                )
+                ).apply { headers["referer"] = chapterModel.url }
             )
         )
     }

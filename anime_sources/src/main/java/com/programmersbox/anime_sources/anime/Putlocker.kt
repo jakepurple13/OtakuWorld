@@ -59,7 +59,6 @@ abstract class Putlocker(allPath: String) : ShowApi(
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
         return Single.create<List<ItemModel>> {
-
             "$baseUrl/search-movies/${searchText.split(" ").joinToString("+") { it.trim() }}.html".toJsoup()
                 .select("ul.list")
                 .select("div.item")
@@ -82,7 +81,6 @@ abstract class Putlocker(allPath: String) : ShowApi(
                     )
                 }
                 .let(it::onSuccess)
-
         }
             .onErrorResumeNext(super.searchList(searchText, page, list))
     }
@@ -113,14 +111,15 @@ abstract class Putlocker(allPath: String) : ShowApi(
     }
 
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create {
+        val info = doc.select("div.info")
         InfoModel(
             source = this,
             title = source.title,
             url = source.url,
             alternativeNames = emptyList(),
-            description = doc.select("p").select("strong:contains(Synopsis:)").text(),
+            description = info.select("p").last()?.text().orEmpty(),
             imageUrl = source.imageUrl,
-            genres = doc.select("p").select("strong:contains(Genres:)").text().split(","),
+            genres = info.select("p:eq(2)").text().removePrefix("Genres:").split(","),
             chapters = doc.select("a.episode")
                 .map {
                     ChapterModel(
