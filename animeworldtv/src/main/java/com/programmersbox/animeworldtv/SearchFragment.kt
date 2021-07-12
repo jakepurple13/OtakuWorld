@@ -12,7 +12,6 @@ import androidx.leanback.app.SearchSupportFragment
 import androidx.leanback.widget.*
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourcePublish
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -65,12 +64,13 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
         super.onCreate(savedInstanceState)
         setSearchResultProvider(this)
         setOnItemViewClickedListener(ItemViewClickedListener())
-        sourcePublish
+        /*Sources.WCO_SUBBED
             .flatMapSingle {
                 it.getList()
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-            }
+            }*/
+        Sources.WCO_SUBBED.getList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy { searchList.addAll(it) }
