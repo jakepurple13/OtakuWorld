@@ -33,7 +33,7 @@ object Vidstreaming : ShowApi(
                     title = it.select("div.name").text(),
                     description = "",
                     imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                    url = it.select("a").first().attr("abs:href"),
+                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
                     source = this
                 )
             }
@@ -48,7 +48,7 @@ object Vidstreaming : ShowApi(
                     title = it.select("div.name").text(),
                     description = "",
                     imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                    url = it.select("a").first().attr("abs:href"),
+                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
                     source = this
                 )
             }
@@ -86,7 +86,7 @@ object Vidstreaming : ShowApi(
                         title = it.select("div.name").text(),
                         description = "",
                         imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                        url = it.select("a").first().attr("abs:href"),
+                        url = it.select("a").first()?.attr("abs:href").orEmpty(),
                         source = this
                     )
                 }

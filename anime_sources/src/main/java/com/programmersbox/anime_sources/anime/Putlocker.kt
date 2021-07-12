@@ -117,7 +117,7 @@ abstract class Putlocker(allPath: String) : ShowApi(
             title = source.title,
             url = source.url,
             alternativeNames = emptyList(),
-            description = info.select("p").last().text(),
+            description = info.select("p").last()?.text().orEmpty(),
             imageUrl = source.imageUrl,
             genres = info.select("p:eq(2)").text().removePrefix("Genres:").split(","),
             chapters = doc.select("a.episode")

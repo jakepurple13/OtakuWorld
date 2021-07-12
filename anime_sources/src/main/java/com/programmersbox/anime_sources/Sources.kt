@@ -32,6 +32,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
 }
 
 internal fun String.toJsoup() = Jsoup.connect(this).get()
+internal fun String.asJsoup() = Jsoup.parse(this)
 
 abstract class ShowApi(
     override val baseUrl: String,

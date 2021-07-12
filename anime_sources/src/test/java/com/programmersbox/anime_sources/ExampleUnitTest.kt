@@ -223,6 +223,17 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun kickassanimeTest() {
+
+        val api = com.programmersbox.anime_sources.utilities.getApi("https://kickassanime.rs/search") {
+            addEncodedQueryParameter("q", "mushi")
+        }
+
+        println(api)
+
+    }
+
+    @Test
     fun animekisaTest() {
 
         /*val f = AnimeKisaSubbed.getList().blockingGet().take(10)

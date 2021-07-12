@@ -154,7 +154,7 @@ object MangaFourLife : ApiService {
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
         val document = Jsoup.connect(chapterModel.url).get()
-        val script = document.select("script:containsData(MainFunction)").first().data()
+        val script = document.select("script:containsData(MainFunction)").first()!!.data()
         val curChapter = script.substringAfter("vm.CurChapter = ").substringBefore(";").fromJson<JsonElement>()!!
 
         val pageTotal = curChapter["Page"].string.toInt()

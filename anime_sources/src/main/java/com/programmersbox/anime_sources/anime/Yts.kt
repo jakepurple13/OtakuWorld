@@ -64,11 +64,11 @@ object Yts : ApiService {
             try {
                 val subResponse = OkHttpClient().newCall((Request.Builder().url(url).build())).await()
                 if (!subResponse.isSuccessful) throw Exception("Error")
-                val subDoc = Jsoup.parse(subResponse.body?.string())
+                val subDoc = Jsoup.parse(subResponse.body!!.string())
 
                 subResponse.close() // Always close the response when not needed
 
-                val movieId = subDoc.getElementById("movie-info").attr("data-movie-id").toString().toInt()
+                val movieId = subDoc.getElementById("movie-info")!!.attr("data-movie-id").toString().toInt()
                 var imdbCode = ""
                 var rating = 0.0
                 subDoc.getElementsByClass("rating-row").forEach { row ->
@@ -87,7 +87,7 @@ object Yts : ApiService {
                 var bannerUrl = ""
                 var runtime = 0
 
-                subDoc.getElementById("mobile-movie-info").allElements.forEach {
+                subDoc.getElementById("mobile-movie-info")!!.allElements.forEach {
                     if (it.hasAttr("itemprop"))
                         title = it.ownText()
                     else
@@ -95,13 +95,13 @@ object Yts : ApiService {
                             year = it.ownText().toInt()
                 }
 
-                subDoc.getElementById("movie-poster").allElements.forEach {
+                subDoc.getElementById("movie-poster")!!.allElements.forEach {
                     if (it.hasAttr("itemprop"))
                         bannerUrl = it.attr("src").toString()
                 }
 
                 subDoc.getElementsByClass("icon-clock")[0]?.let {
-                    val runtimeString = it.parent().ownText().trim()
+                    val runtimeString = it.parent()!!.ownText().trim()
                     if (runtimeString.contains("hr")) {
                         runtime = runtimeString.split("hr")[0].trim().toInt() * 60
                         if (runtimeString.contains("min"))

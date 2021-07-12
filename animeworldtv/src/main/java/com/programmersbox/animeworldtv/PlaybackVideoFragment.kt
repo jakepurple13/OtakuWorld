@@ -11,6 +11,7 @@ import androidx.leanback.widget.Action
 import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.PlaybackControlsRow
 import androidx.leanback.widget.PlaybackControlsRow.*
+import com.google.android.exoplayer2.Format
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
@@ -65,6 +66,8 @@ class PlaybackVideoFragment : VideoSupportFragment() {
 
         //playerAdapter.setDataSource(Uri.parse(videoUrl))
 
+        adapter
+
         item.getChapterInfo()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -108,7 +111,30 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                 mTransportControlGlue.play()
             }
             .addTo(disposable)
+
+        /*exoPlayer.addAnalyticsListener(object : AnalyticsListener {
+            override fun onBandwidthEstimate(
+                eventTime: AnalyticsListener.EventTime,
+                totalLoadTimeMs: Int,
+                totalBytesLoaded: Long,
+                bitrateEstimate: Long
+            ) {
+                super.onBandwidthEstimate(eventTime, totalLoadTimeMs, totalBytesLoaded, bitrateEstimate)
+                //bandwidth
+            }
+
+            override fun onVideoSizeChanged(eventTime: AnalyticsListener.EventTime, videoSize: VideoSize) {
+                super.onVideoSizeChanged(eventTime, videoSize)
+                //this is resolution
+                exoPlayer.videoFormat
+                exoPlayer.audioFormat
+            }
+
+        })*/
     }
+
+    private fun getResolution(videoSize: Format): String =
+        "${videoSize.width}x${videoSize.height}${if (videoSize.frameRate > 0) "@${videoSize.frameRate.toInt()}" else ""}"
 
     override fun onDestroy() {
         super.onDestroy()
@@ -135,13 +161,13 @@ class VideoPlayerGlue(
         fun onNext()
     }
 
-    private val mRepeatAction: RepeatAction
-    private val mThumbsUpAction: ThumbsUpAction
-    private val mThumbsDownAction: ThumbsDownAction
-    private val mSkipPreviousAction: SkipPreviousAction
-    private val mSkipNextAction: SkipNextAction
-    private val mFastForwardAction: FastForwardAction
-    private val mRewindAction: RewindAction
+    private val mMoreAction: MoreActions = MoreActions(context)
+    private val mThumbsUpAction: ThumbsUpAction = ThumbsUpAction(context)
+    private val mThumbsDownAction: ThumbsDownAction = ThumbsDownAction(context)
+    private val mSkipPreviousAction: SkipPreviousAction = SkipPreviousAction(context)
+    private val mSkipNextAction: SkipNextAction = SkipNextAction(context)
+    private val mFastForwardAction: FastForwardAction = FastForwardAction(context)
+    private val mRewindAction: RewindAction = RewindAction(context)
     override fun onCreatePrimaryActions(adapter: ArrayObjectAdapter) {
         // Order matters, super.onCreatePrimaryActions() will create the play / pause action.
         // Will display as follows:
@@ -158,7 +184,8 @@ class VideoPlayerGlue(
         super.onCreateSecondaryActions(adapter)
         adapter.add(mThumbsDownAction)
         adapter.add(mThumbsUpAction)
-        adapter.add(mRepeatAction)
+        adapter.add(mMoreAction)
+        //add stats for nerds here
     }
 
     override fun onActionClicked(action: Action) {
@@ -174,7 +201,7 @@ class VideoPlayerGlue(
     private fun shouldDispatchAction(action: Action): Boolean {
         return action === mRewindAction || action === mFastForwardAction ||
                 action === mSkipNextAction ||
-                action === mThumbsDownAction || action === mThumbsUpAction || action === mRepeatAction
+                action === mThumbsDownAction || action === mThumbsUpAction || action === mMoreAction
     }
 
     private fun dispatchAction(action: Action) {
@@ -188,6 +215,9 @@ class VideoPlayerGlue(
             }
             action === mSkipNextAction -> {
                 skipOpening()
+            }
+            action === mMoreAction -> {
+
             }
             action is MultiAction -> {
                 val multiAction = action as MultiAction
@@ -250,15 +280,7 @@ class VideoPlayerGlue(
     }
 
     init {
-        mSkipPreviousAction = SkipPreviousAction(context)
-        mSkipNextAction = SkipNextAction(context)
-        mFastForwardAction = FastForwardAction(context)
-        mRewindAction = RewindAction(context)
-        mThumbsUpAction = ThumbsUpAction(context)
         mThumbsUpAction.index = ThumbsUpAction.INDEX_OUTLINE
-        mThumbsDownAction = ThumbsDownAction(context)
         mThumbsDownAction.index = ThumbsDownAction.INDEX_OUTLINE
-        mRepeatAction = RepeatAction(context)
-
     }
 }

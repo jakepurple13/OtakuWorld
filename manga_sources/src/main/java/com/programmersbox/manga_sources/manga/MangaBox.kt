@@ -146,13 +146,13 @@ abstract class MangaBox(
     protected fun mangaFromElement(element: Element, urlSelector: String = "h3 a"): ItemModel {
 
         val f = element.select(urlSelector).first().let {
-            it.attr("abs:href")/*.substringAfter(baseUrl)*/ to it.text()
+            it!!.attr("abs:href")/*.substringAfter(baseUrl)*/ to it!!.text()
         }
 
         return ItemModel(
             url = f.first, // intentionally not using setUrlWithoutDomain
             title = f.second,
-            imageUrl = element.select("img").first().attr("abs:src"),
+            imageUrl = element.select("img").first()!!.attr("abs:src"),
             source = this,
             description = ""
         )
@@ -257,7 +257,7 @@ abstract class MangaBox(
 
     private fun Element.selectDateFromElement(): Element {
         val defaultChapterDateSelector = "span"
-        return this.select(defaultChapterDateSelector).lastOrNull() ?: this.select(alternateChapterDateSelector).last()
+        return this.select(defaultChapterDateSelector).lastOrNull() ?: this.select(alternateChapterDateSelector).last()!!
     }
 
     private fun chapterFromElement(element: Element, mangaUrl: String): ChapterModel {

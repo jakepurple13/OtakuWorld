@@ -125,6 +125,7 @@ class AllFragment : BaseListFragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .debounce(1000, TimeUnit.MILLISECONDS)
             .flatMapSingle { sourcePublish.value!!.searchList(it, 1, currentList) }
+            .onErrorReturnItem(currentList)
             .subscribe {
                 adapter.setData(it)
                 activity?.runOnUiThread { binding.searchLayout.suffixText = "${it.size}" }

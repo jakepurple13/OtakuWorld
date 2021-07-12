@@ -88,7 +88,7 @@ object MangaPark : ApiService, KoinComponent {
             val genres = mutableListOf<String>()
             val alternateNames = mutableListOf<String>()
             doc.select(".attr > tbody > tr").forEach {
-                when (it.getElementsByTag("th").first().text().trim().lowercase(Locale.getDefault())) {
+                when (it.getElementsByTag("th").first()!!.text().trim().lowercase(Locale.getDefault())) {
                     "genre(s)" -> genres.addAll(it.getElementsByTag("a").map(Element::text))
                     "alternative" -> alternateNames.addAll(it.text().split("l"))
                 }
@@ -208,8 +208,8 @@ object MangaPark : ApiService, KoinComponent {
         fun Float?.orIncrementLastNum() = if (this == null || this < lastNum) lastNum.incremented() else this
 
         return SChapter().apply {
-            url = element.select(".tit > a").first().attr("href").replaceAfterLast("/", "")
-            name = element.select(".tit > a").first().text()
+            url = element.select(".tit > a").first()!!.attr("href").replaceAfterLast("/", "")
+            name = element.select(".tit > a").first()!!.text()
             // Get the chapter number or create a unique one if it's not available
             chapterNumber = Regex("""\b\d+\.?\d?\b""").findAll(name)
                 .toList()

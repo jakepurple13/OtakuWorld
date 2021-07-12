@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = "1.5.20"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "19.0"
+    ext.otakuVersionName = "19.3"
     ext.latestAboutLibsRelease = "+"
 
     ext.coroutinesVersion = "1.5.1"
@@ -42,7 +42,7 @@ buildscript {
     ext.constraintlayout = 'androidx.constraintlayout:constraintlayout:2.0.4'
     ext.swiperefresh = 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
-    ext.jsoup = 'org.jsoup:jsoup:1.13.1'
+    ext.jsoup = 'org.jsoup:jsoup:1.14.1'
 
     ext.room_version = "2.3.0"
 
