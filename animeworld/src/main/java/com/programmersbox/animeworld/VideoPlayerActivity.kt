@@ -231,8 +231,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             //stream
             //fun buildMediaSource(uri: Uri): MediaSource =
             //ProgressiveMediaSource.Factory(DefaultHttpDataSourceFactory("exoplayer-codelab")).createMediaSource(uri)
-
-            getMediaSource(showPath!!.toUri(), false)!!
+            val headers = intent.getStringExtra("referer")
+            getMediaSource(showPath!!.toUri(), false, headers)!!
         }
         player.setMediaSource(source, true)
         player.prepare()
@@ -552,33 +552,34 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val bandwidthMeter by lazy { DefaultBandwidthMeter.Builder(this).build() }
 
-    private fun getMediaSource(url: Uri, preview: Boolean): MediaSource? =
+    private fun getMediaSource(url: Uri, preview: Boolean, header: String?): MediaSource? =
         when (Util.inferContentType(url.lastPathSegment.toString())) {
             C.TYPE_SS -> SsMediaSource.Factory(
                 DefaultDataSourceFactory(
                     this, null,
-                    getHttpDataSourceFactory(preview)
+                    getHttpDataSourceFactory(preview, header)
                 )
             )//.createMediaSource(url)
             C.TYPE_DASH -> DashMediaSource.Factory(
                 DefaultDataSourceFactory(
                     this, null,
-                    getHttpDataSourceFactory(preview)
+                    getHttpDataSourceFactory(preview, header)
                 )
             )//.createMediaSource(url)
-            C.TYPE_HLS -> HlsMediaSource.Factory(getDataSourceFactory(preview))//.createMediaSource(uri)
-            C.TYPE_OTHER -> ProgressiveMediaSource.Factory(getDataSourceFactory(preview))//.createMediaSource(uri)
+            C.TYPE_HLS -> HlsMediaSource.Factory(getDataSourceFactory(preview, header))//.createMediaSource(uri)
+            C.TYPE_OTHER -> ProgressiveMediaSource.Factory(getDataSourceFactory(preview, header))//.createMediaSource(uri)
             else -> null
         }?.createMediaSource(MediaItem.fromUri(url))
 
-    private fun getDataSourceFactory(preview: Boolean): DataSource.Factory = DefaultDataSourceFactory(
+    private fun getDataSourceFactory(preview: Boolean, header: String?): DataSource.Factory = DefaultDataSourceFactory(
         this, if (preview) null else bandwidthMeter,
-        getHttpDataSourceFactory(preview)
+        getHttpDataSourceFactory(preview, header)
     )
 
-    private fun getHttpDataSourceFactory(preview: Boolean): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
+    private fun getHttpDataSourceFactory(preview: Boolean, header: String?): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
         setUserAgent(Util.getUserAgent(this@VideoPlayerActivity, "AnimeWorld"))
         setTransferListener(if (preview) null else bandwidthMeter)
+        header?.let { setDefaultRequestProperties(hashMapOf("Referer" to it)) }
     }
 
 }

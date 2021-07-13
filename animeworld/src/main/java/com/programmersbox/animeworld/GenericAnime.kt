@@ -73,12 +73,13 @@ class GenericAnime(val context: Context) : GenericInfo {
             return
         }
         MainActivity.activity.lifecycleScope.launch(Dispatchers.IO) {
-            val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()?.link
+            val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()
             MainActivity.activity.runOnUiThread {
                 MainActivity.activity.startActivity(
                     Intent(context, VideoPlayerActivity::class.java).apply {
-                        putExtra("showPath", link)
+                        putExtra("showPath", link?.link)
                         putExtra("showName", chapterModel.name)
+                        putExtra("referer", link?.headers?.get("referer"))
                         putExtra("downloadOrStream", false)
                     }
                 )
