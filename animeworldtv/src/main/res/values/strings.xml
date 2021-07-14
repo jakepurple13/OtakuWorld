@@ -16,6 +16,8 @@
     <string name="removeFromFavorites">Remove from Favorites</string>
     <string name="addToFavorites">Add to Favorites</string>
 
+    <string name="source_no_stream">%s cannot stream at the moment</string>
+
     <string name="currentVersion">Version: %s</string>
     <string name="chooseASource">Choose a Source</string>
     <string name="done">Done</string>

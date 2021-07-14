@@ -53,7 +53,8 @@
     <string name="fileNotDeleted">File Not Deleted</string>
     <string name="locked">Locked</string>
     <string name="unlocked">Unlocked</string>
-    <string name="yts_no_stream">Yts cannot stream at the moment</string>
+    <string name="source_no_stream">%s cannot stream at the moment</string>
+    <string name="source_no_download">%s cannot download at the moment</string>
     <string name="video_menu_title">Videos</string>
     <string name="cast_menu_title">Cast</string>
     <string name="downloads_menu_title">Downloads</string>

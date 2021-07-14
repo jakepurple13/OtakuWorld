@@ -11,7 +11,6 @@ import com.programmersbox.uiviews.utils.MainLogo
 interface GenericInfo {
 
     val apkString: AppUpdate.AppUpdates.() -> String?
-    val showMiddleChapterButton: Boolean
 
     fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder>
     fun createLayoutManager(context: Context): RecyclerView.LayoutManager

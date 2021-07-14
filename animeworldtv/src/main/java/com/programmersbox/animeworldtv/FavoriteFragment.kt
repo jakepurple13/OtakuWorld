@@ -132,7 +132,7 @@ class FavoriteFragment : BrowseSupportFragment() {
                     } catch (e: IllegalArgumentException) {
                         null
                     }
-                }
+                }.sortedBy { it.title }
             }
             .map { it.groupBy { it.source } }
             .subscribeBy {

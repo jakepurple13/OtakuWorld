@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -56,7 +55,6 @@ class ChapterAdapter(
                 genericInfo.chapterOnClick(chapterModel, dataList, context)
                 binding.readChapter.isChecked = true
             }
-            binding.downloadChapterButton.visibility = if (genericInfo.showMiddleChapterButton) View.VISIBLE else View.GONE
             binding.downloadChapterButton.setOnClickListener {
                 genericInfo.downloadChapter(chapterModel, title.orEmpty())
                 binding.readChapter.isChecked = true

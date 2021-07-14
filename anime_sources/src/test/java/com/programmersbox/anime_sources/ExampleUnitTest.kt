@@ -2,7 +2,6 @@ package com.programmersbox.anime_sources
 
 import androidx.annotation.WorkerThread
 import com.programmersbox.anime_sources.anime.*
-import com.programmersbox.anime_sources.utilities.ApiResponse
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.header
 import com.programmersbox.models.ChapterModel
@@ -72,8 +71,25 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun animeflixTest() {
-        val f = com.programmersbox.anime_sources.utilities.getApi("https://animesimple.com/search") {
+    fun animesimpleTest() {
+
+        //val f = AnimeSimpleSubbed.getList().blockingGet()
+
+        //println(f.joinToString("\n"))
+
+        //println("https://ww1.animesimple.com/watch/197438-shokugeki-no-souma-shin-no-sara-episode-12-anime.html".toJsoup())
+
+        //println("https://ww1.animesimple.com".toJsoup())
+
+        val f = AnimeSimpleSubbed.searchList("mushi", list = emptyList()).blockingGet()
+        //println(f.joinToString("\n"))
+        val d = f.random().toInfoModel().blockingGet()
+        println(d)
+        val e = d.chapters.first().getChapterInfo().blockingGet().first().link
+        println(e)
+        println(e?.toJsoup())
+
+        /*val f = com.programmersbox.anime_sources.utilities.getApi("https://animesimple.com/search") {
             addEncodedQueryParameter("q", "mushishi")
         }
 
@@ -132,9 +148,85 @@ class ExampleUnitTest {
 
         val e = id.chapters.first().url.toJsoup()
 
-        println(e)
+        //println(e)
+
+        val r = "var json = ([^;]*)".toRegex().find(e.toString())?.groups?.get(1)?.value?.fromJson<List<AnimeSimpleEpisode>>()
+
+        println(r)
+
+        val streamUrls = r?.map {
+
+            val u = "src=['|\\\"]([^\\'|^\\\"]*)".toRegex().find(it.player!!)?.groups?.get(1)?.value
+
+            Storage(
+                link = u,
+                source = it.host,
+                quality = "Good",
+                sub = it.type.toString()
+            )
+        }
+
+        println(streamUrls)
+
+        val url = streamUrls?.first()?.link!!
+
+        val u = Jsoup.connect(url).header("Referer", "https://anistream.xyz").get()
+
+        //println(u)
+
+        val source = "<source src=\"(.*?)\"".toRegex()
+        val token = "token\\s*=\\s*['\\\"|']([^\\\"']*)".toRegex()
+
+        val finalUrl = when {
+            source.containsMatchIn(u.toString()) -> source.find(u.toString())?.groups?.get(1)?.value
+            token.containsMatchIn(u.toString()) -> {
+                val id3 = url.split("/").last()
+                Jsoup.connect("https://mp4.sh/v/$id3")
+                    .header("Referer", url)
+                    .data("token", token.find(u.toString())?.groups?.get(1)?.value)
+                    .ignoreContentType(true)
+                    .post()
+                    .text()
+                    .fromJson<AnimeSimpleFinalUrl>()
+                    ?.file
+            }
+            else -> ""
+        }
+
+        println(finalUrl)*/
 
     }
+
+    @Test
+    fun animeflixTest() {
+
+        val res = com.programmersbox.anime_sources.utilities.getApi("https://animeflix.io/api/search") {
+            addEncodedQueryParameter("q", "Mushi")
+        }
+
+        println(res)
+
+        /*val streamUrl = "https://animeflix.io/api/videos?episode_id"
+        val episodeApi = "https://animeflix.io/api/episode"
+
+        val a = "var episode = (.*?)\\}".toRegex().find(e.toString())?.groups?.get(1)?.value?.let { "$it}" }?.fromJson<AnimeFlixEpisode>()
+
+        println(a)
+
+        *//*val res = com.programmersbox.anime_sources.utilities.getApi(episodeApi) {
+            addEncodedQueryParameter("episode_num", a?.episode?.toString())
+            addEncodedQueryParameter("slug", a?.?.toString())
+        }*/
+    }
+
+    data class AnimeFlixEpisode(
+        val name: String?,
+        val episode: Number?,
+        val anime_id: Number?,
+        val mal_id: Number?,
+        val episode_id: Number?,
+        val next_episode_url: String?
+    )
 
     @Test
     fun vidStreamingTest() {
