@@ -261,8 +261,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-
-
         findPreference<Preference>("view_on_github")?.setOnPreferenceClickListener {
             context?.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/")
             true

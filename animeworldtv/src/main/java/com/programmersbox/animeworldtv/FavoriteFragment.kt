@@ -202,10 +202,10 @@ class FavoriteFragment : BrowseSupportFragment() {
             itemViewHolder: Presenter.ViewHolder?, item: Any?,
             rowViewHolder: RowPresenter.ViewHolder, row: Row
         ) {
-            /*if (item is Movie) {
-                mBackgroundUri = item.backgroundImageUrl
+            if (item is ItemModel) {
+                mBackgroundUri = item.imageUrl
                 startBackgroundTimer()
-            }*/
+            }
         }
     }
 

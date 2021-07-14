@@ -3,6 +3,10 @@ package com.programmersbox.animeworldtv
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.util.Log
+import com.bumptech.glide.GlideBuilder
+import com.bumptech.glide.annotation.GlideModule
+import com.bumptech.glide.module.AppGlideModule
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -15,13 +19,39 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.rxutils.toLatestFlowable
 import io.reactivex.Completable
+import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import org.koin.core.component.KoinComponent
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
+
+val appUpdateCheck = BehaviorSubject.create<AppUpdate.AppUpdates>()
+
+object AppUpdate {
+    private const val url = "https://raw.githubusercontent.com/jakepurple13/OtakuWorld/master/update.json"
+    fun getUpdate() = getJsonApi<AppUpdates>(url)
+    data class AppUpdates(
+        val update_version: Double?,
+        val update_url: String?,
+        val manga_file: String?,
+        val anime_file: String?,
+        val novel_file: String?
+    ) {
+        fun downloadUrl(url: AppUpdates.() -> String?) = "$update_url${url()}"
+    }
+}
+
+@GlideModule
+class AnimeWorldTvGlideModule : AppGlideModule() {
+    override fun applyOptions(context: Context, builder: GlideBuilder) {
+        //super.applyOptions(context, builder)
+        builder.setLogLevel(Log.ERROR)
+    }
+}
 
 object FirebaseAuthentication : KoinComponent {
 

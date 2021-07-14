@@ -19,6 +19,10 @@
     <string name="source_no_stream">%s cannot stream at the moment</string>
 
     <string name="currentVersion">Version: %s</string>
+    <string name="updateVersionAvailable">Update Version: %s is available</string>
+    <string name="update_available">Update Available</string>
+    <string name="press_to_check_for_updates">Press to Check for Updates</string>
+    <string name="about">About</string>
     <string name="chooseASource">Choose a Source</string>
     <string name="done">Done</string>
     <string name="currentSource">Current Source: %s</string>

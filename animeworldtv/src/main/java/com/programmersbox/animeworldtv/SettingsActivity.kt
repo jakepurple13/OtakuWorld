@@ -2,6 +2,7 @@ package com.programmersbox.animeworldtv
 
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.leanback.preference.LeanbackPreferenceFragmentCompat
 import androidx.leanback.preference.LeanbackSettingsFragmentCompat
@@ -15,8 +16,13 @@ import com.google.firebase.auth.FirebaseUser
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.thirdpartyutils.into
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.atomic.AtomicBoolean
 
 class SettingsActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,12 +104,41 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                 accountChanges(FirebaseAuthentication.currentUser)
             }
 
+            findPreference<PreferenceScreen>("prefs_about")?.let { p ->
+                appUpdateCheck
+                    .subscribe {
+                        val appVersion =
+                            context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
+                        p.summary = if (appVersion < it.update_version ?: 0.0)
+                            getString(R.string.updateVersionAvailable, it.update_version?.toString().orEmpty())
+                        else ""
+                    }
+                    .addTo(disposable)
+            }
+
             findPreference<Preference>("about_version")?.let { p ->
-                p.title =
-                    getString(
-                        R.string.currentVersion,
-                        context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
-                    )
+                p.title = getString(
+                    R.string.currentVersion,
+                    context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
+                )
+
+                p.setOnPreferenceClickListener {
+                    updateSetter()
+                    true
+                }
+
+            }
+
+            findPreference<Preference>("updateAvailable")?.let { p ->
+                p.isVisible = false
+                appUpdateCheck
+                    .subscribe {
+                        p.summary = getString(R.string.currentVersion, it.update_version?.toString().orEmpty())
+                        val appVersion =
+                            context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
+                        p.isVisible = appVersion < it.update_version ?: 0.0
+                    }
+                    .addTo(disposable)
             }
 
             findPreference<Preference>("current_source")?.let { p ->
@@ -126,6 +161,26 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                     true
                 }
                 sourcePublish.subscribe { p.title = getString(R.string.currentSource, it.serviceName) }
+                    .addTo(disposable)
+            }
+        }
+
+        private val checker = AtomicBoolean(false)
+
+        private fun updateSetter() {
+            if (!checker.get()) {
+                Single.create<AppUpdate.AppUpdates> {
+                    checker.set(true)
+                    AppUpdate.getUpdate()?.let { d -> it.onSuccess(d) } ?: it.onError(Exception("Something went wrong"))
+                }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError {}
+                    .subscribeBy {
+                        appUpdateCheck.onNext(it)
+                        checker.set(false)
+                        context?.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() }
+                    }
                     .addTo(disposable)
             }
         }
