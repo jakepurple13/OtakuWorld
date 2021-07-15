@@ -33,6 +33,16 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/s12.png" width="32%"/>
 </p>
 
+### AnimeWorldTV
+<p align="center">
+  <img src="/ss/tv_ss_homescreen.png" width="32%"/>
+  <img src="/ss/tv_ss_details.png" width="32%"/>
+  <img src="/ss/tv_ss_episodes.png" width="32%"/>
+  <img src="/ss/tv_ss_settings.png" width="32%"/>
+  <img src="/ss/tv_ss_search.png" width="32%"/>
+  <img src="/ss/tv_ss_favorites.png" width="32%"/>
+</p>
+
 ### NovelWorld
 <p align="center">
   <img src="/ss/novel_ss13.png" width="32%"/>
@@ -54,6 +64,13 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 - Stream and download Anime from various different video sites
 - Watch in a built-in video player
 - Cast Downloaded Videos to Chromecast Enabled Devices!
+
+### AnimeWorldTV
+- Stream Anime/TV/Movies from various different video sites
+- Watch in a built-in video player
+- Sync favorites with AnimeWorld
+- Includes an opening skipper (just skips ahead 90 seconds)
+- Available only on Android TV devices
 
 ### MangaWorld
 - Read Manga from various different manga sites
