@@ -18,7 +18,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
       * [NovelWorld](#novelworld-1)
    * [AnimeWorldTV Install/Update Instructions](#instructions-to-installupdate-animeworldtv)
    * [Issues](#issues)
-   * [Contributing](#pull-requests]
+   * [Contributing](#pull-requests)
 
 ## [Latest Release](https://github.com/jakepurple13/OtakuWorld/releases/latest)
 
