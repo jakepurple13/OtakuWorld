@@ -4,6 +4,22 @@
  
 A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld) apps. This was created because there were a ton of shared elements between the two apps so I combined them, allowing two separate apps but a lot of the same base logic.
 
+## Contents
+   * [Screenshots](https://github.com/jakepurple13/OtakuWorld#screenshots)
+      * [MangaWorld](https://github.com/jakepurple13/OtakuWorld#mangaworld)
+      * [AnimeWorld](https://github.com/jakepurple13/OtakuWorld#animeworld)
+      * [AnimeWorldTV](https://github.com/jakepurple13/OtakuWorld#animeworldtv)
+      * [NovelWorld](https://github.com/jakepurple13/OtakuWorld#novelworld)
+   * [Features](https://github.com/jakepurple13/OtakuWorld#features)
+      * [Shared](https://github.com/jakepurple13/OtakuWorld#shared)
+      * [MangaWorld](https://github.com/jakepurple13/OtakuWorld#mangaworld-1)
+      * [AnimeWorld](https://github.com/jakepurple13/OtakuWorld#animeworld-1)
+      * [AnimeWorldTV](https://github.com/jakepurple13/OtakuWorld#animeworldtv-1)
+      * [NovelWorld](https://github.com/jakepurple13/OtakuWorld#novelworld-1)
+   * [AnimeWorldTV Install/Update Instructions](https://github.com/jakepurple13/OtakuWorld#instructions)
+   * [Issues](https://github.com/jakepurple13/OtakuWorld#issues)
+   * [Contributing](https://github.com/jakepurple13/OtakuWorld#pull-requests]
+
 ## [Latest Release](https://github.com/jakepurple13/OtakuWorld/releases/latest)
 
 # Screenshots
@@ -78,6 +94,20 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 ### NovelWorld
 - Read Novels from various different novel sites
 
+#### Instructions to Install/Update AnimeWorldTV
+1. Download animeworldtv-release.apk
+
+If using `adb`:
+
+2.
+```sh
+adb install animeworldtv-release.apk
+```
+
+If not using `adb`:
+
+2. Follow [Android Authority][aa]'s steps
+
 # Issues
 
 If you run into any issues, please create an issue request with the following details:
@@ -99,3 +129,6 @@ If you want to add a new source or have a change that might make the app better
 - Make changes
 - Push and create a new PR
 - Add me (@jakepurple13) as a reviewer
+
+[//]: # (Reference Links)
+  [aa]: <https://www.androidauthority.com/sideloading-apps-on-android-tv-1189896/>
