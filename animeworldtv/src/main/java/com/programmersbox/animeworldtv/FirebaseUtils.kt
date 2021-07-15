@@ -203,6 +203,7 @@ object FirebaseDb {
                     ?.let(emitter::onNext)
                 error?.let(emitter::onError)
             }
+            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
         }.toLatestFlowable()
 
@@ -216,6 +217,7 @@ object FirebaseDb {
                     ?.let { emitter.onNext(it.isNotEmpty()) }
                 error?.let(emitter::onError)
             }
+            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(false)
         }.toLatestFlowable()
 
@@ -230,6 +232,7 @@ object FirebaseDb {
                         ?.let(emitter::onNext)
                     error?.let(emitter::onError)
                 }
+            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
         }.toLatestFlowable()
 

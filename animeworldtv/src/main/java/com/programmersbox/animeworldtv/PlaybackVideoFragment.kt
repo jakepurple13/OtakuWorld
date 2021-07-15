@@ -1,29 +1,38 @@
 package com.programmersbox.animeworldtv
 
 import android.content.Context
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.leanback.media.PlaybackTransportControlGlue
-import androidx.leanback.widget.Action
-import androidx.leanback.widget.ArrayObjectAdapter
-import androidx.leanback.widget.PlaybackControlsRow
+import androidx.leanback.widget.*
+import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.PlaybackControlsRow.*
 import com.google.android.exoplayer2.Format
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.google.android.exoplayer2.video.VideoSize
 import com.programmersbox.models.ChapterModel
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -65,8 +74,6 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         mTransportControlGlue.playWhenPrepared()
 
         //playerAdapter.setDataSource(Uri.parse(videoUrl))
-
-        adapter
 
         item.getChapterInfo()
             .subscribeOn(Schedulers.io())
@@ -112,29 +119,88 @@ class PlaybackVideoFragment : VideoSupportFragment() {
             }
             .addTo(disposable)
 
-        /*exoPlayer.addAnalyticsListener(object : AnalyticsListener {
+        setupStatsForNerds(exoPlayer)
+    }
+
+    private fun setupStatsForNerds(exoPlayer: SimpleExoPlayer) {
+
+        val bandwidthSubject = BehaviorSubject.create<Int>()
+        val resolutionSubject = BehaviorSubject.create<String>()
+        val bitrateSubject = BehaviorSubject.create<Double>()
+        val droppedFramesSubject = BehaviorSubject.createDefault(0)
+
+        /*
+        Dropped frames of video - got it
+        Current frames of video per second
+        Video dimensions - got it
+        Stream type
+        Resolution - got it
+         */
+
+        exoPlayer.addAnalyticsListener(object : AnalyticsListener {
             override fun onBandwidthEstimate(
                 eventTime: AnalyticsListener.EventTime,
                 totalLoadTimeMs: Int,
                 totalBytesLoaded: Long,
                 bitrateEstimate: Long
             ) {
-                super.onBandwidthEstimate(eventTime, totalLoadTimeMs, totalBytesLoaded, bitrateEstimate)
                 //bandwidth
+                bitrateSubject.onNext((bitrateEstimate * 8).toDouble() / (totalLoadTimeMs / 1000))
             }
 
             override fun onVideoSizeChanged(eventTime: AnalyticsListener.EventTime, videoSize: VideoSize) {
                 super.onVideoSizeChanged(eventTime, videoSize)
                 //this is resolution
+                //exoPlayer.videoFormat
+                //exoPlayer.audioFormat
                 exoPlayer.videoFormat
-                exoPlayer.audioFormat
+                    ?.let(this@PlaybackVideoFragment::getResolution)
+                    ?.let(resolutionSubject::onNext)
             }
 
-        })*/
+            override fun onDroppedVideoFrames(eventTime: AnalyticsListener.EventTime, droppedFrames: Int, elapsedMs: Long) {
+                droppedFramesSubject.onNext(droppedFramesSubject.value!! + droppedFrames)
+            }
+
+        })
+
+        val presenterSelector = ClassPresenterSelector()
+        presenterSelector.addClassPresenter(mTransportControlGlue.controlsRow::class.java, mTransportControlGlue.playbackRowPresenter)
+        presenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
+
+        val rowsAdapter = ArrayObjectAdapter(presenterSelector)
+
+        rowsAdapter.add(mTransportControlGlue.controlsRow)
+
+        val statsAdapter = ArrayObjectAdapter(GridItemPresenter())
+
+        listOf(
+            Stats("Bandwidth", bandwidthSubject),
+            Stats("Bitrate", bitrateSubject),
+            Stats("Total Dropped Frames", droppedFramesSubject),
+            Stats("Resolution", resolutionSubject)
+        )
+            .forEach(statsAdapter::add)
+
+        val header = HeaderItem("Stats for Nerds")
+        val row = ListRow(header, statsAdapter)
+        rowsAdapter.add(row)
+
+        adapter = rowsAdapter
     }
+
+    class Stats<T : Any>(val type: String, val subject: Observable<T>)
 
     private fun getResolution(videoSize: Format): String =
         "${videoSize.width}x${videoSize.height}${if (videoSize.frameRate > 0) "@${videoSize.frameRate.toInt()}" else ""}"
+
+    private fun toHumanReadable(bitrate: Int): String {
+        if (bitrate < 0) {
+            return "none"
+        }
+        val mbit = bitrate.toFloat() / 1000000
+        return String.format(Locale.ENGLISH, "%.2fMbit", mbit)
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -144,6 +210,45 @@ class PlaybackVideoFragment : VideoSupportFragment() {
     override fun onPause() {
         super.onPause()
         mTransportControlGlue.pause()
+    }
+
+    private inner class GridItemPresenter : Presenter() {
+
+        private val GRID_ITEM_WIDTH = 200
+        private val GRID_ITEM_HEIGHT = 200
+
+        override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
+            val view = TextView(parent.context)
+            view.layoutParams = ViewGroup.LayoutParams(GRID_ITEM_WIDTH, GRID_ITEM_HEIGHT)
+            view.isFocusable = true
+            view.isFocusableInTouchMode = true
+            view.setBackgroundColor(ContextCompat.getColor(context!!, R.color.default_background))
+            view.setTextColor(Color.WHITE)
+            view.gravity = Gravity.CENTER
+            return Presenter.ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+            //(viewHolder.view as TextView).text = item as String
+
+            val textView = viewHolder.view as? TextView
+
+            when (item) {
+                is Stats<*> -> {
+                    textView?.text = item.type
+                    item
+                        .subject
+                        .subscribe { textView?.text = "${item.type}: $it" }
+                        .addTo(disposable)
+                }
+                is String -> {
+                    textView?.text = item
+                }
+            }
+
+        }
+
+        override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {}
     }
 }
 
