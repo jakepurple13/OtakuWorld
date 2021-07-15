@@ -1,6 +1,7 @@
 package com.programmersbox.anime_sources.anime
 
 import androidx.core.text.isDigitsOnly
+import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.*
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import retrofit2.Retrofit
 import retrofit2.create
 import retrofit2.http.GET
@@ -20,13 +22,17 @@ import retrofit2.http.QueryMap
 import java.io.IOException
 import kotlin.coroutines.resumeWithException
 
-object Yts : ApiService {
+object Yts : ShowApi(
+    baseUrl = "https://yts.mx",
+    allPath = "",
+    recentPath = "recently-added.html"
+) {
 
     private val service by lazy { YtsService.build() }
 
-    override val baseUrl: String get() = "https://yts.mx"
     override val serviceName: String get() = "YTS"
     override val canScroll: Boolean get() = true
+    override val canStream: Boolean get() = false
 
     private val movieToModel: (Movies) -> ItemModel = {
         ItemModel(
@@ -163,6 +169,10 @@ object Yts : ApiService {
             )
         } ?: emitter.onError(Exception("Something went wrong"))
     }
+
+    override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.never<InfoModel>()
+    override fun getList(doc: Document): Single<List<ItemModel>> = Single.never<List<ItemModel>>()
+    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.never<List<ItemModel>>()
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         it.onSuccess(listOf(Storage(link = chapterModel.url, source = chapterModel.url, quality = chapterModel.name, sub = "Yes")))

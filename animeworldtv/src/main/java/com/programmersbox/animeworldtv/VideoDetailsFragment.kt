@@ -14,6 +14,7 @@ import androidx.leanback.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.models.ChapterModel
@@ -355,6 +356,14 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             }*/
 
             if (item is ChapterModel) {
+                if ((item.source as? ShowApi)?.canStream == false) {
+                    Toast.makeText(
+                        context,
+                        requireContext().getString(R.string.source_no_stream, item.source.serviceName),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return
+                }
                 val intent = Intent(requireContext(), PlaybackActivity::class.java)
                 intent.putExtra(DetailsActivity.MOVIE, item)
                 startActivity(intent)

@@ -6,14 +6,23 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okio.BufferedSink
 import java.util.concurrent.TimeUnit
 
-fun getApi(url: String, block: HttpUrl.Builder.() -> Unit): ApiResponse = apiAccess(url, block) { get() }
+fun getApi(url: String, block: HttpUrl.Builder.() -> Unit = {}): ApiResponse = apiAccess(url, block) { get() }
 
-fun postApi(url: String, block: HttpUrl.Builder.() -> Unit): ApiResponse = apiAccess(url, block) {
+fun postApi(url: String, block: HttpUrl.Builder.() -> Unit = {}): ApiResponse = apiAccess(url, block) {
     post(object : RequestBody() {
         override fun contentType(): MediaType? = "application/json".toMediaTypeOrNull()
         override fun writeTo(sink: BufferedSink) {}
     })
 }
+
+fun postApi(url: String, built: Request.Builder.() -> Request.Builder = { this }, block: HttpUrl.Builder.() -> Unit = {}): ApiResponse =
+    apiAccess(url, block) {
+        post(object : RequestBody() {
+            override fun contentType(): MediaType? = "application/json".toMediaTypeOrNull()
+            override fun writeTo(sink: BufferedSink) {}
+        })
+            .built()
+    }
 
 private fun apiAccess(url: String, block: HttpUrl.Builder.() -> Unit, method: Request.Builder.() -> Request.Builder): ApiResponse {
     val request = Request.Builder()

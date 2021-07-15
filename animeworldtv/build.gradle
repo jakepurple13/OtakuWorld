@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
 }
@@ -41,6 +42,7 @@ dependencies {
     implementation 'androidx.leanback:leanback:1.1.0-rc01'
     implementation 'androidx.leanback:leanback-preference:1.1.0-rc01'
     implementation glide
+    kapt glideCompiler
 
     implementation rxkotlin
     implementation rxandroid

@@ -16,7 +16,6 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
@@ -70,11 +69,11 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
             }*/
-        Sources.WCO_SUBBED.getList()
+        /*Sources.WCO_SUBBED.getList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy { searchList.addAll(it) }
-            .addTo(disposable)
+            .addTo(disposable)*/
     }
 
     override fun onDestroy() {

@@ -3,5 +3,6 @@
   "update_url": "https://github.com/jakepurple13/OtakuWorld/releases/download/v19.3/",
   "manga_file": "mangaworld-release.apk",
   "anime_file": "animeworld-release.apk",
-  "novel_file": "novelworld-release.apk"
+  "novel_file": "novelworld-release.apk",
+  "animetv_file": "animeworldtv-release.apk"
 }

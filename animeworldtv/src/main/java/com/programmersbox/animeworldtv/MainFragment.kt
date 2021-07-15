@@ -112,6 +112,9 @@ class MainFragment : BrowseSupportFragment() {
             rowsAdapter.add(ListRow(header, listRowAdapter))
         }*/
 
+        val mGridPresenter = GridItemPresenter()
+        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
+
         sourcePublish
             .flatMapSingle {
                 it.getList()
@@ -143,12 +146,12 @@ class MainFragment : BrowseSupportFragment() {
 
                 val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
 
-                val mGridPresenter = GridItemPresenter()
+                /*val mGridPresenter = GridItemPresenter()
                 val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
                 gridRowAdapter.add(resources.getString(R.string.favorites))
                 //gridRowAdapter.add(resources.getString(R.string.grid_view))
                 //gridRowAdapter.add(getString(R.string.error_fragment))
-                gridRowAdapter.add(resources.getString(R.string.personal_settings))
+                gridRowAdapter.add(resources.getString(R.string.personal_settings))*/
                 rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
                 it.entries.forEach {
@@ -177,13 +180,24 @@ class MainFragment : BrowseSupportFragment() {
 
         val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
 
-        val mGridPresenter = GridItemPresenter()
-        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
+        /*val mGridPresenter = GridItemPresenter()
+        val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)*/
         gridRowAdapter.add(resources.getString(R.string.favorites))
         //gridRowAdapter.add(resources.getString(R.string.grid_view))
         //gridRowAdapter.add(getString(R.string.error_fragment))
         gridRowAdapter.add(resources.getString(R.string.personal_settings))
         rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
+
+        appUpdateCheck
+            .map {
+                val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
+                appVersion < it.update_version ?: 0.0
+            }
+            .subscribe {
+                if (it) gridRowAdapter.add(resources.getString(R.string.update_available))
+                else gridRowAdapter.remove(resources.getString(R.string.update_available))
+            }
+            .addTo(disposable)
 
         adapter = rowsAdapter
     }
@@ -224,7 +238,8 @@ class MainFragment : BrowseSupportFragment() {
                         val intent = Intent(context!!, BrowseErrorActivity::class.java)
                         startActivity(intent)
                     }
-                    item.contains(getString(R.string.personal_settings)) -> {
+                    item.contains(getString(R.string.update_available)) ||
+                            item.contains(getString(R.string.personal_settings)) -> {
                         val intent = Intent(context!!, SettingsActivity::class.java)
                         startActivity(intent)
                     }
@@ -248,10 +263,10 @@ class MainFragment : BrowseSupportFragment() {
             itemViewHolder: Presenter.ViewHolder?, item: Any?,
             rowViewHolder: RowPresenter.ViewHolder, row: Row
         ) {
-            /*if (item is Movie) {
-                mBackgroundUri = item.backgroundImageUrl
+            if (item is ItemModel) {
+                mBackgroundUri = item.imageUrl
                 startBackgroundTimer()
-            }*/
+            }
         }
     }
 

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
+import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.anime.Movies
 import com.programmersbox.anime_sources.anime.Torrents
@@ -58,8 +59,6 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private val disposable = CompositeDisposable()
 
-    override val showMiddleChapterButton: Boolean get() = true
-
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
 
     override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
@@ -68,17 +67,22 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
-        if (chapterModel.source == Yts) {
-            Toast.makeText(context, R.string.yts_no_stream, Toast.LENGTH_SHORT).show()
+        if ((chapterModel.source as? ShowApi)?.canStream == false) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.source_no_stream, chapterModel.source.serviceName),
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
         MainActivity.activity.lifecycleScope.launch(Dispatchers.IO) {
-            val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()?.link
+            val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()
             MainActivity.activity.runOnUiThread {
                 MainActivity.activity.startActivity(
                     Intent(context, VideoPlayerActivity::class.java).apply {
-                        putExtra("showPath", link)
+                        putExtra("showPath", link?.link)
                         putExtra("showName", chapterModel.name)
+                        putExtra("referer", link?.headers?.get("referer"))
                         putExtra("downloadOrStream", false)
                     }
                 )
@@ -89,6 +93,14 @@ class GenericAnime(val context: Context) : GenericInfo {
     private val fetch = Fetch.getDefaultInstance()
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
+        if ((model.source as? ShowApi)?.canDownload == false) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.source_no_download, model.source.serviceName),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
         MainActivity.activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()

@@ -14,6 +14,8 @@ enum class Sources(private val api: ApiService) : ApiService by api {
 
     YTS(Yts),
 
+    //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
+
     VIDSTREAMING(Vidstreaming),
 
     PUTLOCKERTV(PutlockerTV), PUTLOCKERANIME(PutlockerAnime), PUTLOCKERCARTOONS(PutlockerCartoons), PUTLOCKERMOVIES(PutlockerMovies),
@@ -39,6 +41,10 @@ abstract class ShowApi(
     internal val allPath: String,
     internal val recentPath: String
 ) : ApiService {
+
+    open val canStream: Boolean = true
+    open val canDownload: Boolean = true
+
     private fun recent(page: Int = 1) = "$baseUrl/$recentPath${recentPage(page)}".toJsoup()
     private fun all(page: Int = 1) = "$baseUrl/$allPath${allPage(page)}".toJsoup()
 

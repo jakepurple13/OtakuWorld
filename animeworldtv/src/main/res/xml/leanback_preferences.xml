@@ -22,10 +22,15 @@
     <PreferenceScreen
         android:icon="@mipmap/ic_launcher"
         android:key="prefs_about"
-        android:title="About">
+        android:title="@string/about">
         <Preference
             app:key="about_version"
+            app:summary="@string/press_to_check_for_updates"
             app:title="Version: " />
+
+        <Preference
+            app:key="updateAvailable"
+            app:title="@string/update_available" />
 
     </PreferenceScreen>
     <!--<PreferenceScreen

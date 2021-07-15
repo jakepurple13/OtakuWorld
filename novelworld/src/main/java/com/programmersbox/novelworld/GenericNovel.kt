@@ -57,5 +57,4 @@ class GenericNovel(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 
-    override val showMiddleChapterButton: Boolean get() = false
 }

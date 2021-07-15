@@ -45,38 +45,26 @@ abstract class WcoStream(allPath: String) : ShowApi(
 
     override val canScroll: Boolean get() = false
 
-    /*override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
         return Single.create<List<ItemModel>> {
-
-            val request = getApi("$baseUrl/search") {
-                addEncodedQueryParameter("keyword", searchText.toString())
-            }
-            if(request is ApiResponse.Failed) it.onError(Throwable("Error ${request.code}"))
-            else if(request is ApiResponse.Success) {
-                Jsoup.parse(request.body)
-                    //"$baseUrl/search?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
-                    .also { println(it) }
-                    .select("div.menulaststyle")
-                    .select("li")
-                    .select("a")
-                    //.alsoPrint()
-                    .map {
-                        ItemModel(
-                            title = it.text(),
-                            description = "",
-                            imageUrl = it.select("div.img").select("img").attr("abs:src"),
-                            url = if (RECENT_TYPE)
-                                it.attr("abs:href")
-                            else
-                                Jsoup.connect(it.attr("abs:href")).get().select("div.ildate").select("a").attr("abs:href"),
-                            source = this
-                        )
-                    }
-                    .let(it::onSuccess)
-            }
+            Jsoup.connect("$baseUrl/search")
+                .data("catara", searchText.toString())
+                .data("konuara", "series")
+                .post()
+                .select("div.cerceve")
+                .map {
+                    ItemModel(
+                        title = it.select("a").attr("title"),
+                        description = "",
+                        imageUrl = it.select("img").attr("abs:src"),
+                        url = it.select("a").attr("abs:href"),
+                        source = this
+                    )
+                }
+                .let(it::onSuccess)
         }
             .onErrorResumeNext(super.searchList(searchText, page, list))
-    }*/
+    }
 
     override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
         //https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide

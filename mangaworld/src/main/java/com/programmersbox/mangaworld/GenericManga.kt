@@ -50,8 +50,6 @@ class GenericManga(val context: Context) : GenericInfo {
 
     private val disposable = CompositeDisposable()
 
-    override val showMiddleChapterButton: Boolean get() = true
-
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { manga_file }
 
     override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
