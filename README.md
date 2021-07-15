@@ -5,20 +5,20 @@
 A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld) apps. This was created because there were a ton of shared elements between the two apps so I combined them, allowing two separate apps but a lot of the same base logic.
 
 ## Contents
-   * [Screenshots](https://github.com/jakepurple13/OtakuWorld#screenshots)
-      * [MangaWorld](https://github.com/jakepurple13/OtakuWorld#mangaworld)
-      * [AnimeWorld](https://github.com/jakepurple13/OtakuWorld#animeworld)
-      * [AnimeWorldTV](https://github.com/jakepurple13/OtakuWorld#animeworldtv)
-      * [NovelWorld](https://github.com/jakepurple13/OtakuWorld#novelworld)
-   * [Features](https://github.com/jakepurple13/OtakuWorld#features)
-      * [Shared](https://github.com/jakepurple13/OtakuWorld#shared)
-      * [MangaWorld](https://github.com/jakepurple13/OtakuWorld#mangaworld-1)
-      * [AnimeWorld](https://github.com/jakepurple13/OtakuWorld#animeworld-1)
-      * [AnimeWorldTV](https://github.com/jakepurple13/OtakuWorld#animeworldtv-1)
-      * [NovelWorld](https://github.com/jakepurple13/OtakuWorld#novelworld-1)
-   * [AnimeWorldTV Install/Update Instructions](https://github.com/jakepurple13/OtakuWorld#instructions)
-   * [Issues](https://github.com/jakepurple13/OtakuWorld#issues)
-   * [Contributing](https://github.com/jakepurple13/OtakuWorld#pull-requests]
+   * [Screenshots](#screenshots)
+      * [MangaWorld](#mangaworld)
+      * [AnimeWorld](#animeworld)
+      * [AnimeWorldTV](#animeworldtv)
+      * [NovelWorld](#novelworld)
+   * [Features](#features)
+      * [Shared](#shared)
+      * [MangaWorld](#mangaworld-1)
+      * [AnimeWorld](#animeworld-1)
+      * [AnimeWorldTV](#animeworldtv-1)
+      * [NovelWorld](#novelworld-1)
+   * [AnimeWorldTV Install/Update Instructions](#instructions-to-installupdate-animeworldtv)
+   * [Issues](#issues)
+   * [Contributing](#pull-requests]
 
 ## [Latest Release](https://github.com/jakepurple13/OtakuWorld/releases/latest)
 
