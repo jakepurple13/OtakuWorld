@@ -92,7 +92,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                 fun accountChanges(user: FirebaseUser?) {
                     activity?.let {
                         Glide.with(this@PrefFragment)
-                            .load(user?.photoUrl)
+                            .load(user?.photoUrl ?: R.mipmap.ic_launcher)
                             .placeholder(R.mipmap.ic_launcher)
                             .error(R.mipmap.ic_launcher)
                             .fallback(R.mipmap.ic_launcher)
@@ -193,7 +193,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                 // Open an AuthenticationActivity
                 //startActivity(Intent(activity, AuthenticationActivity::class.java))
                 FirebaseAuthentication.currentUser?.let {
-                    MaterialAlertDialogBuilder(this@PrefFragment.requireContext())
+                    MaterialAlertDialogBuilder(this@PrefFragment.requireContext(), R.style.Theme_MaterialComponents)
                         .setTitle("Log Out")
                         .setMessage("Are you sure?")
                         .setPositiveButton("Yes") { d, _ ->

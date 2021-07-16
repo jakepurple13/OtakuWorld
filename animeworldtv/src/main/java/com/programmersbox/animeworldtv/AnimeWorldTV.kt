@@ -9,6 +9,7 @@ import com.programmersbox.sharedutils.MainLogo
 import io.reactivex.plugins.RxJavaPlugins
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
@@ -36,10 +37,12 @@ class AnimeWorldTV : Application() {
         startKoin {
             androidLogger()
             androidContext(this@AnimeWorldTV)
-            module {
-                single { MainLogo(R.mipmap.ic_launcher) }
-                single { FirebaseUIStyle(R.style.Theme_OtakuWorld) }
-            }
+            loadKoinModules(
+                module {
+                    single { MainLogo(R.mipmap.ic_launcher) }
+                    single { FirebaseUIStyle(R.style.Theme_OtakuWorld) }
+                }
+            )
         }
     }
 
