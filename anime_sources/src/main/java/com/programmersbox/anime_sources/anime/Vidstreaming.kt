@@ -78,7 +78,8 @@ object Vidstreaming : ShowApi(
     }
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
-        return Single.create<List<ItemModel>> {
+        return if (searchText.isEmpty()) super.searchList(searchText, page, list)
+        else Single.create<List<ItemModel>> {
             "https://streamani.net/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
                 .select("li.video-block")
                 .map {
