@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.appUpdateCheck
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -40,7 +42,7 @@ class MainActivity : FragmentActivity() {
             .addTo(disposable)
 
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
+            supportFragmentManager.beginTransaction()
                 .replace(R.id.main_browse_fragment, MainFragment())
                 .commitNow()
         }

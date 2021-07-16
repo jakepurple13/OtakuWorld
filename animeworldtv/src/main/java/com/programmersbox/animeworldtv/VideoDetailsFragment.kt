@@ -20,6 +20,8 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
+import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.MainLogo
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -27,6 +29,7 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import org.koin.android.ext.android.inject
 
 /**
  * A wrapper fragment for leanback details screens.
@@ -35,6 +38,8 @@ import io.reactivex.schedulers.Schedulers
 class VideoDetailsFragment : DetailsSupportFragment() {
 
     private var mSelectedMovie: ItemModel? = null
+
+    private val logo: MainLogo by inject()
 
     private lateinit var mDetailsBackground: DetailsSupportFragmentBackgroundController
     private lateinit var mPresenterSelector: ClassPresenterSelector
@@ -113,6 +118,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         Glide.with(requireContext())
             .load(movie?.imageUrl)
             .centerCrop()
+            .placeholder(logo.logoId)
             .error(R.drawable.default_background)
             .into<SimpleTarget<Drawable>>(object : SimpleTarget<Drawable>(width, height) {
                 override fun onResourceReady(

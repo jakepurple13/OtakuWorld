@@ -32,12 +32,12 @@ import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
-import com.programmersbox.uiviews.utils.AppUpdate
-import com.programmersbox.uiviews.utils.MainLogo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.tonyodev.fetch2.*
 import io.reactivex.disposables.CompositeDisposable

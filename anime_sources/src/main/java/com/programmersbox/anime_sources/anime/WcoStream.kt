@@ -41,12 +41,14 @@ abstract class WcoStream(allPath: String) : ShowApi(
 
     companion object {
         var RECENT_TYPE = true
+        var USE_NORMAL_SEARCH = true
     }
 
     override val canScroll: Boolean get() = false
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
-        return Single.create<List<ItemModel>> {
+        return if (USE_NORMAL_SEARCH) super.searchList(searchText, page, list)
+        else Single.create<List<ItemModel>> {
             Jsoup.connect("$baseUrl/search")
                 .data("catara", searchText.toString())
                 .data("konuara", "series")

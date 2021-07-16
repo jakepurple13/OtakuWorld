@@ -26,11 +26,15 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
+import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.NotificationLogo
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo

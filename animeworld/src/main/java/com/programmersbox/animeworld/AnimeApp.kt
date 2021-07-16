@@ -13,8 +13,8 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.icon
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.loggingutils.Loged
+import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.utils.FirebaseDb
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2.Fetch.Impl.setDefaultInstanceConfiguration
 import com.tonyodev.fetch2core.Downloader

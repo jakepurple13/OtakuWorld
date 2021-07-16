@@ -13,8 +13,8 @@ android {
 
     defaultConfig {
         applicationId "com.programmersbox.animeworld"
-        minSdkVersion 23
-        targetSdkVersion 29
+        minSdkVersion minimumSdk
+        targetSdkVersion targetSdk
         versionCode 1
         versionName otakuVersionName
 
@@ -49,7 +49,7 @@ dependencies {
     implementation appCompat
     implementation material
     implementation constraintlayout
-    implementation 'androidx.preference:preference-ktx:1.1.1'
+    implementation preference
     implementation 'com.google.firebase:firebase-crashlytics:18.1.0'
     implementation 'com.google.firebase:firebase-analytics:19.0.0'
     implementation recyclerview
@@ -89,6 +89,7 @@ dependencies {
     implementation project(':Models')
     implementation project(':favoritesdatabase')
     implementation project(':anime_sources')
+    implementation project(':sharedutils')
 
     implementation room.room
     // For Kotlin use kapt instead of annotationProcessor
@@ -99,7 +100,7 @@ dependencies {
     kapt "io.github.kaustubhpatange:autobindings-compiler:$autoBinding"
 
     implementation "com.google.android.gms:play-services-cast-framework:20.0.0"
-    implementation "androidx.mediarouter:mediarouter:1.2.3"
+
     implementation "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 
     implementation glide

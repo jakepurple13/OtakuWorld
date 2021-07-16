@@ -12,11 +12,14 @@ import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
+import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.utils.shouldCheck
 import io.reactivex.plugins.RxJavaPlugins
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
+import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application() {
@@ -44,6 +47,7 @@ abstract class OtakuApp : Application() {
         startKoin {
             androidLogger()
             androidContext(this@OtakuApp)
+            loadKoinModules(module { single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) } })
         }
 
         onCreated()

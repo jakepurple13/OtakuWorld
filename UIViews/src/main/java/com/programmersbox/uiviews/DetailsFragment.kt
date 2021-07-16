@@ -35,14 +35,14 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.rxutils.invoke
+import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.thirdpartyutils.changeTint
 import com.programmersbox.thirdpartyutils.check
 import com.programmersbox.thirdpartyutils.getPalette
 import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
 import com.programmersbox.uiviews.utils.ChromeCustomTabTransformationMethod
-import com.programmersbox.uiviews.utils.FirebaseDb
-import com.programmersbox.uiviews.utils.MainLogo
 import com.programmersbox.uiviews.utils.openInCustomChromeBrowser
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers

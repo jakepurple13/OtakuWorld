@@ -12,8 +12,8 @@ android {
 
     defaultConfig {
         applicationId "com.programmersbox.animeworldtv"
-        minSdkVersion 23
-        targetSdkVersion 29
+        minSdkVersion minimumSdk
+        targetSdkVersion targetSdk
         versionCode 1
         versionName otakuVersionName
 
@@ -79,6 +79,7 @@ dependencies {
     implementation project(':Models')
     implementation project(':anime_sources')
     implementation project(':favoritesdatabase')
+    implementation project(':sharedutils')
 
     implementation room.room
 

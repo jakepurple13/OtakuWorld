@@ -1,11 +1,16 @@
 package com.programmersbox.animeworldtv
 
 import android.app.Application
+import com.programmersbox.anime_sources.anime.WcoStream
 import com.programmersbox.loggingutils.Loged
+import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.FirebaseUIStyle
+import com.programmersbox.sharedutils.MainLogo
 import io.reactivex.plugins.RxJavaPlugins
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
+import org.koin.dsl.module
 
 class AnimeWorldTV : Application() {
 
@@ -21,6 +26,8 @@ class AnimeWorldTV : Application() {
         FirebaseDb.ITEM_ID = "showUrl"
         FirebaseDb.READ_OR_WATCHED_ID = "numEpisodes"
 
+        WcoStream.USE_NORMAL_SEARCH = false
+
         RxJavaPlugins.setErrorHandler {
             it.printStackTrace()
             //FirebaseCrashlytics.getInstance().recordException(it)
@@ -29,10 +36,10 @@ class AnimeWorldTV : Application() {
         startKoin {
             androidLogger()
             androidContext(this@AnimeWorldTV)
-            /*module {
+            module {
                 single { MainLogo(R.mipmap.ic_launcher) }
-                single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
-            }*/
+                single { FirebaseUIStyle(R.style.Theme_OtakuWorld) }
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils
+package com.programmersbox.sharedutils
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -15,7 +15,6 @@ import com.google.firebase.firestore.ktx.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.rxutils.toLatestFlowable
-import com.programmersbox.uiviews.R
 import io.reactivex.Completable
 import io.reactivex.subjects.PublishSubject
 import org.koin.core.component.KoinComponent
@@ -28,6 +27,7 @@ object FirebaseAuthentication : KoinComponent {
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     private val logo: MainLogo by inject()
+    private val style: FirebaseUIStyle by inject()
 
     fun signIn(activity: Activity) {
         //val signInIntent = googleSignInClient!!.signInIntent
@@ -41,7 +41,7 @@ object FirebaseAuthentication : KoinComponent {
         activity.startActivityForResult(
             AuthUI.getInstance()
                 .createSignInIntentBuilder()
-                .setTheme(R.style.Theme_OtakuWorldBase)
+                .setTheme(style.style)
                 //.setLogo(R.mipmap.big_logo)
                 .setLogo(logo.logoId)
                 .setAvailableProviders(providers)

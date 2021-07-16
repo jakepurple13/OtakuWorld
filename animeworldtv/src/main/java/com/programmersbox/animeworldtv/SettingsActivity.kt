@@ -15,6 +15,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.FirebaseAuthentication
+import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.thirdpartyutils.into
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -29,7 +32,7 @@ class SettingsActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_fragment)
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
+            supportFragmentManager.beginTransaction()
                 .replace(R.id.settings_fragment, SettingsFragment())
                 .commitNow()
         }

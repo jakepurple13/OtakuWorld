@@ -12,8 +12,8 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.SwatchInfo
+import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.databinding.ChapterItemBinding
-import com.programmersbox.uiviews.utils.FirebaseDb
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers

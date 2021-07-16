@@ -5,8 +5,8 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.uiviews.utils.AppUpdate
-import com.programmersbox.uiviews.utils.MainLogo
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.MainLogo
 
 interface GenericInfo {
 
