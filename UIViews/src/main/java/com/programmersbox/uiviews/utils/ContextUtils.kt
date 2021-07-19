@@ -41,11 +41,6 @@ val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 
 var Context.batteryAlertPercent: Int by sharedPrefNotNullDelegate(20)
 
-val appUpdateCheck = BehaviorSubject.create<AppUpdate.AppUpdates>()
-
-@JvmInline
-value class MainLogo(val logoId: Int)
-
 @JvmInline
 value class NotificationLogo(val notificationId: Int)
 

@@ -37,8 +37,9 @@ class MainActivity : BaseMainActivity() {
         }
 
         if (currentService == null) {
-            sourcePublish.onNext(Sources.GOGOANIME)
-            currentService = Sources.GOGOANIME.serviceName
+            val s = Sources.values().random()
+            sourcePublish.onNext(s)
+            currentService = s.serviceName
         }
 
     }

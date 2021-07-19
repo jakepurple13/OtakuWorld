@@ -12,8 +12,8 @@ android {
 
     defaultConfig {
         applicationId "com.programmersbox.animeworldtv"
-        minSdkVersion 23
-        targetSdkVersion 29
+        minSdkVersion minimumSdk
+        targetSdkVersion targetSdk
         versionCode 1
         versionName otakuVersionName
 
@@ -23,6 +23,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            ext.enableCrashlytics = false
         }
     }
     compileOptions {
@@ -57,9 +60,6 @@ dependencies {
 
     implementation 'com.google.firebase:firebase-auth:21.0.1'
     implementation 'com.google.android.gms:play-services-auth:19.0.0'
-    implementation 'com.firebaseui:firebase-ui-auth:7.1.1'
-    implementation 'com.google.firebase:firebase-firestore-ktx:23.0.2'
-    implementation 'com.google.firebase:firebase-database-ktx:20.0.0'
 
     //implementation project(':UIViews')
 
@@ -76,6 +76,7 @@ dependencies {
     implementation project(':Models')
     implementation project(':anime_sources')
     implementation project(':favoritesdatabase')
+    implementation project(':sharedutils')
 
     implementation room.room
 

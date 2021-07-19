@@ -29,6 +29,10 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.FirebaseAuthentication
+import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.thirdpartyutils.openInCustomChromeBrowser
 import com.programmersbox.uiviews.utils.*
@@ -147,7 +151,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("view_source")?.let { p ->
             p.setOnPreferenceClickListener {
                 requireContext().openInCustomChromeBrowser(sourcePublish.value!!.baseUrl) {
-                    setStartAnimations(requireContext(), R.anim.fui_slide_in_right, R.anim.fui_slide_out_left)
+                    setStartAnimations(requireContext(), R.anim.slide_in_right, R.anim.slide_out_left)
                 }
                 true
             }
@@ -155,6 +159,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("view_favorites")?.setOnPreferenceClickListener {
             findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
+            true
+        }
+
+        findPreference<Preference>("view_global_search")?.setOnPreferenceClickListener {
+            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToGlobalSearchFragment())
             true
         }
 

@@ -26,11 +26,11 @@ import com.programmersbox.helpfulutils.visible
 import com.programmersbox.models.ApiService
 import com.programmersbox.rxutils.behaviorDelegate
 import com.programmersbox.rxutils.toLatestFlowable
+import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.databinding.FavoriteItemBinding
 import com.programmersbox.uiviews.databinding.FragmentFavoriteBinding
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
-import com.programmersbox.uiviews.utils.FirebaseDb
-import com.programmersbox.uiviews.utils.MainLogo
 import com.programmersbox.uiviews.utils.toolTipText
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable

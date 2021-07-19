@@ -21,6 +21,7 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.appUpdateCheck
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo

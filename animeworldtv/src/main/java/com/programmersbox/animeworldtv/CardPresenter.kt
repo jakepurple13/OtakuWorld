@@ -46,16 +46,15 @@ class CardPresenter : Presenter() {
         val cardView = viewHolder.view as ImageCardView
 
         Log.d(TAG, "onBindViewHolder")
-        if (movie.imageUrl != null) {
-            cardView.titleText = movie.title
-            cardView.contentText = movie.source.serviceName
-            cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
-            Glide.with(viewHolder.view.context)
-                .load(movie.imageUrl)
-                .centerCrop()
-                .error(mDefaultCardImage)
-                .into(cardView.mainImageView)
-        }
+        cardView.titleText = movie.title
+        cardView.contentText = movie.source.serviceName
+        cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
+        Glide.with(viewHolder.view.context)
+            .load(movie.imageUrl)
+            .centerCrop()
+            .placeholder(mDefaultCardImage)
+            .error(mDefaultCardImage)
+            .into(cardView.mainImageView)
     }
 
     override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {

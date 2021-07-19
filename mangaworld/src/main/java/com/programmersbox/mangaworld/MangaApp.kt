@@ -5,8 +5,8 @@ import androidx.core.content.FileProvider
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
+import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.utils.FirebaseDb
 import org.koin.core.context.loadKoinModules
 
 class MangaApp : OtakuApp() {

@@ -1,7 +1,7 @@
 package com.programmersbox.novelworld
 
+import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.utils.FirebaseDb
 import org.koin.core.context.loadKoinModules
 
 class NovelApp : OtakuApp() {

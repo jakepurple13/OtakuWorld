@@ -49,7 +49,6 @@ import java.io.File
 import java.util.*
 import kotlin.math.roundToInt
 
-
 class ReadActivity : AppCompatActivity() {
 
     private val disposable = CompositeDisposable()

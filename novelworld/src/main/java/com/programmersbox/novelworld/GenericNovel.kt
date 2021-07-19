@@ -11,12 +11,12 @@ import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.novel_sources.Sources
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
-import com.programmersbox.uiviews.utils.AppUpdate
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.MainLogo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import org.koin.dsl.module
 

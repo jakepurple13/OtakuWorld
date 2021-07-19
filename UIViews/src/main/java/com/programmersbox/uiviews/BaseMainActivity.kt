@@ -7,8 +7,8 @@ import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.models.sourcePublish
-import com.programmersbox.uiviews.utils.AppUpdate
-import com.programmersbox.uiviews.utils.appUpdateCheck
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.setupWithNavController
 import io.reactivex.Single

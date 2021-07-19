@@ -13,8 +13,8 @@ android {
 
     defaultConfig {
         applicationId "com.programmersbox.otakuworld"
-        minSdkVersion 23
-        targetSdkVersion 30
+        minSdkVersion minimumSdk
+        targetSdkVersion targetSdk
         versionCode 1
         versionName otakuVersionName
 

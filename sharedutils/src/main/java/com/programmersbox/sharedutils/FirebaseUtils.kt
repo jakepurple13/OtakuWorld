@@ -1,4 +1,4 @@
-package com.programmersbox.animeworldtv
+package com.programmersbox.sharedutils
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -18,6 +18,7 @@ import com.programmersbox.rxutils.toLatestFlowable
 import io.reactivex.Completable
 import io.reactivex.subjects.PublishSubject
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 object FirebaseAuthentication : KoinComponent {
 
@@ -25,7 +26,8 @@ object FirebaseAuthentication : KoinComponent {
 
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    //private val logo: MainLogo by inject()
+    private val logo: MainLogo by inject()
+    private val style: FirebaseUIStyle by inject()
 
     fun signIn(activity: Activity) {
         //val signInIntent = googleSignInClient!!.signInIntent
@@ -39,9 +41,9 @@ object FirebaseAuthentication : KoinComponent {
         activity.startActivityForResult(
             AuthUI.getInstance()
                 .createSignInIntentBuilder()
-                //.setTheme(R.style.Theme_OtakuWorld)
+                .setTheme(style.style)
                 //.setLogo(R.mipmap.big_logo)
-                //.setLogo(logo.logoId)
+                .setLogo(logo.logoId)
                 .setAvailableProviders(providers)
                 .build(),
             RC_SIGN_IN
@@ -203,6 +205,7 @@ object FirebaseDb {
                     ?.let(emitter::onNext)
                 error?.let(emitter::onError)
             }
+            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
         }.toLatestFlowable()
 
@@ -216,6 +219,7 @@ object FirebaseDb {
                     ?.let { emitter.onNext(it.isNotEmpty()) }
                 error?.let(emitter::onError)
             }
+            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(false)
         }.toLatestFlowable()
 
@@ -230,6 +234,7 @@ object FirebaseDb {
                         ?.let(emitter::onNext)
                     error?.let(emitter::onError)
                 }
+            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
         }.toLatestFlowable()
 

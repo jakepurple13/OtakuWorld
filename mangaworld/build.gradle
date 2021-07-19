@@ -14,8 +14,8 @@ android {
 
     defaultConfig {
         applicationId "com.programmersbox.mangaworld"
-        minSdkVersion 23
-        targetSdkVersion 30
+        minSdkVersion minimumSdk
+        targetSdkVersion targetSdk
         versionCode 1
         versionName otakuVersionName
 
@@ -58,7 +58,7 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    implementation 'androidx.preference:preference-ktx:1.1.1'
+    implementation preference
 
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
 
@@ -66,6 +66,7 @@ dependencies {
     implementation project(':Models')
     implementation project(':favoritesdatabase')
     implementation project(':manga_sources')
+    implementation project(':sharedutils')
 
     implementation glide
     kapt glideCompiler
