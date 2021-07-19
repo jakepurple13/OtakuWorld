@@ -58,7 +58,8 @@ abstract class Putlocker(allPath: String) : ShowApi(
     }
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
-        return Single.create<List<ItemModel>> {
+        return if (searchText.isEmpty()) super.searchList(searchText, page, list)
+        else Single.create<List<ItemModel>> {
             "$baseUrl/search-movies/${searchText.split(" ").joinToString("+") { it.trim() }}.html".toJsoup()
                 .select("ul.list")
                 .select("div.item")

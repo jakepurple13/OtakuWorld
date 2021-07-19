@@ -83,6 +83,11 @@
             app:key="view_source"
             app:title="@string/view_source_in_browser" />
 
+        <Preference
+            app:icon="@android:drawable/ic_menu_search"
+            app:key="view_global_search"
+            app:title="@string/global_search" />
+
         <ListPreference
             app:defaultValue="system"
             app:dialogIcon="@drawable/ic_baseline_settings_brightness_24"

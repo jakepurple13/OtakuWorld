@@ -179,6 +179,8 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     override fun sourceList(): List<ApiService> = Sources.values().toList()
 
+    override fun searchList(): List<ApiService> = Sources.searchSources
+
     override fun toSource(s: String): ApiService? = try {
         Sources.valueOf(s)
     } catch (e: IllegalArgumentException) {

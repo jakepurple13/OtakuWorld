@@ -151,7 +151,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("view_source")?.let { p ->
             p.setOnPreferenceClickListener {
                 requireContext().openInCustomChromeBrowser(sourcePublish.value!!.baseUrl) {
-                    setStartAnimations(requireContext(), R.anim.fui_slide_in_right, R.anim.fui_slide_out_left)
+                    setStartAnimations(requireContext(), R.anim.slide_in_right, R.anim.slide_out_left)
                 }
                 true
             }
@@ -159,6 +159,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("view_favorites")?.setOnPreferenceClickListener {
             findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
+            true
+        }
+
+        findPreference<Preference>("view_global_search")?.setOnPreferenceClickListener {
+            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToGlobalSearchFragment())
             true
         }
 

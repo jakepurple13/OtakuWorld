@@ -38,6 +38,13 @@
             app:popExitAnim="@anim/slide_out"
             android:id="@+id/action_settingsFragment_to_notificationFragment"
             app:destination="@id/notificationFragment" />
+        <action
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out"
+            android:id="@+id/action_settingsFragment_to_globalSearchFragment"
+            app:destination="@id/globalSearchFragment" />
     </fragment>
     <fragment
         android:id="@+id/favoriteFragment"
@@ -73,6 +80,19 @@
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out"
             android:id="@+id/action_notificationFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/globalSearchFragment"
+        android:name="com.programmersbox.uiviews.GlobalSearchFragment"
+        android:label="fragment_global_search"
+        tools:layout="@layout/fragment_global_search">
+        <action
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out"
+            android:id="@+id/action_globalSearchFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />
     </fragment>
 </navigation>

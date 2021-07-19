@@ -16,6 +16,7 @@ interface GenericInfo {
     fun createLayoutManager(context: Context): RecyclerView.LayoutManager
     fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context)
     fun sourceList(): List<ApiService>
+    fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
     fun customPreferences(preferenceScreen: SettingsDsl) = Unit
     fun downloadChapter(chapterModel: ChapterModel, title: String)

@@ -1,7 +1,6 @@
 package com.programmersbox.animeworldtv
 
 import android.app.Application
-import com.programmersbox.anime_sources.anime.WcoStream
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.FirebaseUIStyle
@@ -26,8 +25,6 @@ class AnimeWorldTV : Application() {
         FirebaseDb.COLLECTION_ID = "animeworld"
         FirebaseDb.ITEM_ID = "showUrl"
         FirebaseDb.READ_OR_WATCHED_ID = "numEpisodes"
-
-        WcoStream.USE_NORMAL_SEARCH = false
 
         RxJavaPlugins.setErrorHandler {
             it.printStackTrace()
