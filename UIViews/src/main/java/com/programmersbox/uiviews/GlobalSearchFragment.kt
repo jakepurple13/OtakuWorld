@@ -75,10 +75,10 @@ class GlobalSearchFragment : BaseFragment() {
 
         binding.searchInfo
             .textChanges()
-            .doOnNext { activity?.runOnUiThread { binding.searchRefresh.isRefreshing = true } }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .debounce(1000, TimeUnit.MILLISECONDS)
+            .distinct()
             .onErrorReturnItem("")
             .flatMap { s ->
                 Observable.combineLatest(
@@ -93,6 +93,7 @@ class GlobalSearchFragment : BaseFragment() {
                                 .toObservable()
                         }
                 ) { (it as Array<List<ItemModel>>).toList().flatten().sortedBy(ItemModel::title) }
+                    .doOnSubscribe { activity?.runOnUiThread { binding.searchRefresh.isRefreshing = true } }
             }
             .onErrorReturnItem(emptyList())
             .subscribe {
