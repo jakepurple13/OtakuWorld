@@ -1,10 +1,4 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.OtakuWorld" parent="Theme.OtakuWorldBase">
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/blue_200</item>
-        <item name="colorSecondaryVariant">@color/blue_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Customize your theme here. -->
-    </style>
+    <style name="Theme.OtakuWorld" parent="Theme.OtakuWorldBase" />
 </resources>
