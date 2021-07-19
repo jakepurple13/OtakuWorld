@@ -79,6 +79,7 @@ class GlobalSearchFragment : BaseFragment() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .debounce(1000, TimeUnit.MILLISECONDS)
+            .onErrorReturnItem("")
             .flatMap { s ->
                 Observable.combineLatest(
                     info.searchList()
