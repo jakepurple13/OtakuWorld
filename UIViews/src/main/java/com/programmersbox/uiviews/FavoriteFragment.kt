@@ -14,12 +14,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -128,39 +129,53 @@ class FavoriteFragment : BaseFragment() {
 
         binding.xmlVersion.visibility = View.GONE
 
+        val flowable = Flowables.combineLatest(
+            source1 = dbFire
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread()),
+            source2 = sourcePublisher.toLatestFlowable(),
+            source3 = binding.favSearchInfo
+                .textChanges()
+                .debounce(500, TimeUnit.MILLISECONDS)
+                .toLatestFlowable()
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { pair ->
+                pair.first.sortedBy(DbModel::title)
+                    .filter { it.source in pair.second.map(ApiService::serviceName) && it.title.contains(pair.third, true) }
+            }
+            .map { it.size to it.toGroup() }
+            .distinctUntilChanged()
+
         binding.composeVersion.setContent {
 
-            val list = remember { mutableStateMapOf<String, List<DbModel>>() }
+            /*val list = remember {
+                flowable
+                    .map { it.second }
+                    .subscribeAsState(initial = emptyMap())
+            }*/
 
-            val data = remember {
-                Flowables.combineLatest(
-                    source1 = dbFire
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread()),
-                    source2 = sourcePublisher.toLatestFlowable(),
-                    source3 = binding.favSearchInfo
-                        .textChanges()
-                        .debounce(500, TimeUnit.MILLISECONDS)
-                        .toLatestFlowable()
-                )
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .map { pair ->
-                        pair.first.sortedBy(DbModel::title)
-                            .filter { it.source in pair.second.map(ApiService::serviceName) && it.title.contains(pair.third, true) }
-                    }
-                    .map { it.size to it.toGroup() }
-                    .distinctUntilChanged()
+            val list by flowable
+                .map { it.second }
+                .subscribeAsState(initial = emptyMap())
+
+            //mutableStateMapOf<String, List<DbModel>>() }
+
+            /*remember {
+                flowable
+                    .map { it.second}
+                    .subscribeAsState(initial = emptyMap())
                     .subscribe {
                         binding.favSearchInfo.setAdapter(ArrayAdapter(requireContext(), R.layout.favorite_auto_item, it.second.map { it.key }))
                         list.clear()
                         list.putAll(it.second)
                     }
                     .addTo(disposable)
-            }
+            }*/
 
-            LazyVerticalGrid(cells = GridCells.Adaptive(180.dp)) {
-                items(items = list.values.sortedBy { it.first().title }.toTypedArray()) { FavoriteItem(it, findNavController()) }
+            LazyVerticalGrid(cells = GridCells.Adaptive(with(LocalDensity.current) { 360.toDp() })) {
+                items(items = list.entries.toTypedArray()) { FavoriteItem(it, findNavController()) }
             }
 
         }
@@ -284,10 +299,10 @@ class FavoriteFragment : BaseFragment() {
 
     @ExperimentalMaterialApi
     @Composable
-    private fun FavoriteItem(info: List<DbModel>, navController: NavController) {
+    private fun FavoriteItem(info: Map.Entry<String, List<DbModel>>, navController: NavController) {
         Card(
             onClick = {
-                val item = info.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                val item = info.value.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                 navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
             },
             modifier = Modifier
@@ -296,10 +311,11 @@ class FavoriteFragment : BaseFragment() {
                     with(LocalDensity.current) { 360.toDp() },
                     with(LocalDensity.current) { 480.toDp() }
                 ),
-            interactionSource = MutableInteractionSource()
+            interactionSource = MutableInteractionSource(),
+            onClickLabel = info.key,
         ) {
 
-            val item = info.firstOrNull()
+            val item = info.value.firstOrNull()
 
             val painter = rememberGlidePainter(
                 item?.imageUrl,
@@ -310,7 +326,7 @@ class FavoriteFragment : BaseFragment() {
                 Image(
                     painter = painter,
                     contentDescription = "",
-                    //contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(5.dp))
                         .align(Alignment.Center)
@@ -347,7 +363,7 @@ class FavoriteFragment : BaseFragment() {
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     Text(
-                        item?.title.orEmpty(),
+                        info.key,
                         style = MaterialTheme
                             .typography
                             .body1
