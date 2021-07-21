@@ -40,15 +40,19 @@ fun Context.deleteDialog(video: VideoContent, onCancel: () -> Unit) {
     deleteDialogSet(
         video.videoName.orEmpty(),
         onSlide = {
-            val file = File(video.path!!)
-            if (file.exists()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    video.assetFileStringUri
-                        ?.toUri()
-                        ?.let { it1 -> contentResolver?.delete(it1, "${MediaStore.Video.Media._ID} = ?", arrayOf(video.videoId.toString())) }
-                } else {
-                    Toast.makeText(this, if (file.delete()) R.string.fileDeleted else R.string.fileNotDeleted, Toast.LENGTH_SHORT).show()
+            try {
+                val file = File(video.path!!)
+                if (file.exists()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        video.assetFileStringUri
+                            ?.toUri()
+                            ?.let { it1 -> contentResolver?.delete(it1, "${MediaStore.Video.Media._ID} = ?", arrayOf(video.videoId.toString())) }
+                    } else {
+                        Toast.makeText(this, if (file.delete()) R.string.fileDeleted else R.string.fileNotDeleted, Toast.LENGTH_SHORT).show()
+                    }
                 }
+            } catch (e: Exception) {
+                Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show()
             }
         },
         onCancel

@@ -12,8 +12,6 @@ android {
     defaultConfig {
         minSdkVersion minimumSdk
         targetSdkVersion targetSdk
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -35,11 +33,11 @@ android {
     buildFeatures {
         dataBinding true
         viewBinding true
-        compose true
+        //compose true
     }
-    composeOptions {
+    /*composeOptions {
         kotlinCompilerExtensionVersion '1.0.0-rc02'
-    }
+    }*/
 }
 
 dependencies {
@@ -134,28 +132,8 @@ dependencies {
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools
 
-    def jetpack = "1.0.0-rc02"
-    
-    implementation "androidx.compose.ui:ui:$jetpack"
-    // Tooling support (Previews, etc.)
-    implementation "androidx.compose.ui:ui-tooling:$jetpack"
-    // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
-    implementation "androidx.compose.foundation:foundation:$jetpack"
-    // Material Design
-    implementation "androidx.compose.material:material:$jetpack"
-    // Material design icons
-    implementation "androidx.compose.material:material-icons-core:$jetpack"
-    implementation "androidx.compose.material:material-icons-extended:$jetpack"
-    // Integration with activities
-    implementation 'androidx.activity:activity-compose:1.3.0-rc02'
-    // Integration with ViewModels
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07'
-    // Integration with observables
-    implementation "androidx.compose.runtime:runtime-livedata:$jetpack"
-    implementation "androidx.compose.runtime:runtime-rxjava2:$jetpack"
+    //implementation compose.compose
 
     // UI Tests
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$jetpack"
-
-    implementation "com.google.accompanist:accompanist-glide:0.14.0"
+    //androidTestImplementation "androidx.compose.ui:ui-test-junit4:$jetpack"
 }

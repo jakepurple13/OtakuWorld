@@ -80,7 +80,14 @@ class RecentFragment : BaseListFragment() {
             }
             .addTo(disposable)
 
-        binding.recentRefresh.setOnRefreshListener { sourceLoad(sourcePublish.value!!) }
+        binding.recentRefresh.setOnRefreshListener {
+            binding.shimmerLayout.visible()
+            binding.shimmerLayout.startShimmer()
+            count = 1
+            adapter.setListNotify(emptyList())
+            sourceLoad(sourcePublish.value!!)
+            binding.recentList.scrollToPosition(0)
+        }
 
         binding.shimmerLayout.addView(
             info.shimmerUi(requireContext(), logo),

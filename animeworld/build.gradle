@@ -40,6 +40,10 @@ android {
     buildFeatures {
         dataBinding true
         viewBinding true
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion jetpack
     }
 }
 
@@ -119,4 +123,7 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation koin.koin
+
+    implementation compose.compose
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha08"
 }

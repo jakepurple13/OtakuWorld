@@ -12,6 +12,7 @@ import android.provider.MediaStore
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -131,10 +132,13 @@ class VideoGet private constructor(private val videoContex: Context) {
 
     val videos = PublishSubject.create<List<VideoContent>>()
 
+    val videos2 = MutableStateFlow<List<VideoContent>>(emptyList())
+
     fun loadVideos(scope: CoroutineScope, contentLocation: Uri) {
         scope.launch {
             val imageList = getAllVideoContent(contentLocation)
             videos.onNext(imageList)
+            videos2.tryEmit(imageList)
 
             if (contentObserver == null) {
                 contentObserver = videoContex.contentResolver.registerObserver(contentLocation) {

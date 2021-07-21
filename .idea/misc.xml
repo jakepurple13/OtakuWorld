@@ -7,6 +7,8 @@
         <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
         <entry key="UIViews/src/main/res/layout/favorite_item.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/fragment_favorite.xml" value="0.1305921052631579" />
+        <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
+        <entry key="animeworld/src/main/res/layout/video_layout.xml" value="0.2028688524590164" />
       </map>
     </option>
   </component>
