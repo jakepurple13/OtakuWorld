@@ -12,8 +12,6 @@ android {
     defaultConfig {
         minSdkVersion minimumSdk
         targetSdkVersion targetSdk
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -35,6 +33,10 @@ android {
     buildFeatures {
         dataBinding true
         viewBinding true
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion jetpack
     }
 }
 
@@ -129,4 +131,9 @@ dependencies {
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools
+
+    implementation compose.compose
+
+    // UI Tests
+    //androidTestImplementation "androidx.compose.ui:ui-test-junit4:$jetpack"
 }

@@ -1,5 +1,7 @@
 package com.programmersbox.anime_sources.utilities
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -37,4 +39,13 @@ private fun apiAccess(url: String, block: HttpUrl.Builder.() -> Unit, method: Re
 sealed class ApiResponse {
     data class Success(val body: String) : ApiResponse()
     data class Failed(val code: Int) : ApiResponse()
+}
+
+
+inline fun <reified T> String?.debugJson(): T? = try {
+    Gson().fromJson(this, object : TypeToken<T>() {}.type)
+} catch (e: Exception) {
+    println(this)
+    e.printStackTrace()
+    null
 }

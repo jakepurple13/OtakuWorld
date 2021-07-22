@@ -141,40 +141,46 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private fun fetchIt(ep: ChapterModel) {
 
-        fetch.setGlobalNetworkType(NetworkType.ALL)
+        try {
 
-        fun getNameFromUrl(url: String): String {
-            return Uri.parse(url).lastPathSegment?.let { if (it.isNotEmpty()) it else ep.name } ?: ep.name
+            fetch.setGlobalNetworkType(NetworkType.ALL)
+
+            fun getNameFromUrl(url: String): String {
+                return Uri.parse(url).lastPathSegment?.let { if (it.isNotEmpty()) it else ep.name } ?: ep.name
+            }
+
+            val requestList = arrayListOf<Request>()
+            val url = ep.getChapterInfo()
+                .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
+                .onErrorReturnItem(emptyList())
+                .blockingGet()
+
+            for (i in url) {
+
+                val filePath = context.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
+                val request = Request(i.link!!, filePath)
+                request.priority = Priority.HIGH
+                request.networkType = NetworkType.ALL
+                request.enqueueAction = EnqueueAction.REPLACE_EXISTING
+                request.extras.map.toProperties()["URL_INTENT"] = ep.url
+                request.extras.map.toProperties()["NAME_INTENT"] = ep.name
+
+                request.addHeader("Accept-Language", "en-US,en;q=0.5")
+                request.addHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
+                request.addHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                request.addHeader("Access-Control-Allow-Origin", "*")
+                request.addHeader("Referer", i.headers["referer"] ?: "http://thewebsite.com")
+                request.addHeader("Connection", "keep-alive")
+
+                i.headers.entries.forEach { request.headers[it.key] = it.value }
+
+                requestList.add(request)
+
+            }
+            fetch.enqueue(requestList) {}
+        } catch (e: Exception) {
+            MainActivity.activity.runOnUiThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
         }
-
-        val requestList = arrayListOf<Request>()
-        val url = ep.getChapterInfo()
-            .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
-            .onErrorReturnItem(emptyList())
-            .blockingGet()
-        for (i in url) {
-
-            val filePath = context.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
-            val request = Request(i.link!!, filePath)
-            request.priority = Priority.HIGH
-            request.networkType = NetworkType.ALL
-            request.enqueueAction = EnqueueAction.REPLACE_EXISTING
-            request.extras.map.toProperties()["URL_INTENT"] = ep.url
-            request.extras.map.toProperties()["NAME_INTENT"] = ep.name
-
-            request.addHeader("Accept-Language", "en-US,en;q=0.5")
-            request.addHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
-            request.addHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-            request.addHeader("Access-Control-Allow-Origin", "*")
-            request.addHeader("Referer", i.headers["referer"] ?: "http://thewebsite.com")
-            request.addHeader("Connection", "keep-alive")
-
-            i.headers.entries.forEach { request.headers[it.key] = it.value }
-
-            requestList.add(request)
-
-        }
-        fetch.enqueue(requestList) {}
     }
 
     override fun sourceList(): List<ApiService> = Sources.values().toList()

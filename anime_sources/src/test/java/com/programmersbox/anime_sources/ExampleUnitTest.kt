@@ -238,9 +238,11 @@ class ExampleUnitTest {
 
         //println(f)
 
-        val f = Vidstreaming.searchList("one punch", list = emptyList()).blockingGet().firstOrNull()
-
+        val f = Vidstreaming.searchList("cheat kusushi", list = emptyList()).blockingGet().firstOrNull()
         println(f)
+
+        val e = f?.toInfoModel()?.blockingGet()?.chapters?.firstOrNull()?.getChapterInfo()?.blockingGet()
+        println(e)
 
         /*val e = "https://vidstreaming.io/videos/tensei-shitara-slime-datta-ken-episode-24-9".toJsoup()
         //println(e)

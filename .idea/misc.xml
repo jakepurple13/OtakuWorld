@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="../../../../layout/compose-model-1626794721649.xml" value="0.33" />
+        <entry key="../../../../layout/compose-model-1626894912260.xml" value="0.25" />
+        <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
+        <entry key="UIViews/src/main/res/layout/favorite_item.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/layout/fragment_favorite.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/layout/fragment_global_search.xml" value="0.1" />
+        <entry key="UIViews/src/main/res/layout/fragment_notification.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/layout/notification_item.xml" value="0.1305921052631579" />
+        <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
+        <entry key="animeworld/src/main/res/layout/video_layout.xml" value="0.2028688524590164" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">
