@@ -33,11 +33,11 @@ android {
     buildFeatures {
         dataBinding true
         viewBinding true
-        //compose true
+        compose true
     }
-    /*composeOptions {
-        kotlinCompilerExtensionVersion '1.0.0-rc02'
-    }*/
+    composeOptions {
+        kotlinCompilerExtensionVersion jetpack
+    }
 }
 
 dependencies {
@@ -132,7 +132,7 @@ dependencies {
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools
 
-    //implementation compose.compose
+    implementation compose.compose
 
     // UI Tests
     //androidTestImplementation "androidx.compose.ui:ui-test-junit4:$jetpack"

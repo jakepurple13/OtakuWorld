@@ -246,9 +246,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         }
                     )
                 } else if (it == DismissValue.DismissedToStart) {
-                    context?.deleteDialog(item) {
-
-                    }
+                    context?.deleteDialog(item) {}
                 }
                 false
             }

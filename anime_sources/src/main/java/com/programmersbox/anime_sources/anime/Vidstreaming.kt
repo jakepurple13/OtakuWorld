@@ -129,7 +129,7 @@ object Vidstreaming : ShowApi(
         }
     }
 
-    data class Xstream(val success: Boolean?, val player: Player?, val data: List<XstreamData>?, val captions: List<Any>?, val is_vr: Boolean?)
+    data class Xstream(val success: Boolean?, val player: Any?, val data: List<XstreamData>?, val captions: Any?, val is_vr: Boolean?)
 
     data class XstreamData(val file: String?, val label: String?, val type: String?)
 
