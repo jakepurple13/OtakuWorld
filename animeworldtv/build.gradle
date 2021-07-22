@@ -43,7 +43,7 @@ dependencies {
     implementation androidCore
     implementation appCompat
     implementation 'androidx.leanback:leanback:1.1.0-rc01'
-    implementation 'androidx.leanback:leanback-preference:1.1.0-rc01'
+    implementation 'androidx.leanback:leanback-preference:1.2.0-alpha01'
     implementation glide
     kapt glideCompiler
 
