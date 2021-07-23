@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -47,7 +46,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class NotificationFragment : BaseBottomSheetDialogFragment() {
@@ -173,21 +171,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private fun NotificationItem(item: NotificationItem, navController: NavController) {
 
         var showPopup by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
-
-        val dismissState = rememberDismissState(
-            confirmStateChange = {
-                if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) showPopup = true
-                true
-            }
-        )
 
         if (showPopup) {
 
-            val onDismiss = {
-                scope.launch { dismissState.reset() }
-                showPopup = false
-            }
+            val onDismiss = { showPopup = false }
 
             AlertDialog(
                 onDismissRequest = onDismiss,
@@ -209,64 +196,69 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
         }
 
-        SwipeToDismiss(
-            state = dismissState,
-            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-            dismissThresholds = { FractionalThreshold(0.5f) },
-            background = {}
+        Card(
+            onClick = {
+                genericInfo.toSource(item.source)?.getSourceByUrl(item.url)
+                    ?.subscribeOn(Schedulers.io())
+                    ?.observeOn(AndroidSchedulers.mainThread())
+                    ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
+                    ?.addTo(disposable)
+            },
+            elevation = 5.dp,
+            interactionSource = MutableInteractionSource(),
+            indication = rememberRipple(),
+            onClickLabel = item.notiTitle,
+            modifier = Modifier.padding(5.dp)
         ) {
-            Card(
-                onClick = {
-                    genericInfo.toSource(item.source)?.getSourceByUrl(item.url)
-                        ?.subscribeOn(Schedulers.io())
-                        ?.observeOn(AndroidSchedulers.mainThread())
-                        ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
-                        ?.addTo(disposable)
-                },
-                elevation = animateDpAsState(if (dismissState.dismissDirection != null) 5.dp else 2.dp).value,
-                interactionSource = MutableInteractionSource(),
-                indication = rememberRipple(),
-                onClickLabel = item.notiTitle,
-                modifier = Modifier.padding(5.dp)
-            ) {
 
-                Column(modifier = Modifier.padding(5.dp)) {
+            Column {
 
-                    Text(item.notiTitle, style = MaterialTheme.typography.h6)
-                    Text(item.source, style = MaterialTheme.typography.subtitle2)
+                Text(item.notiTitle, style = MaterialTheme.typography.h6, modifier = Modifier.padding(top = 5.dp, start = 5.dp, end = 5.dp))
+                Text(item.source, style = MaterialTheme.typography.subtitle2, modifier = Modifier.padding(horizontal = 5.dp))
 
-                    GlideImage(
-                        imageModel = item.imageUrl.orEmpty(),
-                        contentDescription = "",
-                        contentScale = ContentScale.Crop,
-                        requestBuilder = Glide.with(LocalView.current)
-                            .asBitmap()
-                            .override(360, 480)
-                            .placeholder(logo.notificationId)
-                            .error(logo.notificationId)
-                            .fallback(logo.notificationId)
-                            .transform(RoundedCorners(15)),
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(5.dp)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                        failure = {
-                            Image(
-                                painter = painterResource(logo.notificationId),
-                                contentDescription = item.notiTitle,
-                                modifier = Modifier
-                                    .align(Alignment.CenterHorizontally)
-                                    .padding(5.dp)
-                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            )
-                        }
-                    )
+                GlideImage(
+                    imageModel = item.imageUrl.orEmpty(),
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    requestBuilder = Glide.with(LocalView.current)
+                        .asBitmap()
+                        .override(360, 480)
+                        .placeholder(logo.notificationId)
+                        .error(logo.notificationId)
+                        .fallback(logo.notificationId)
+                        .transform(RoundedCorners(15)),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(5.dp)
+                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                    failure = {
+                        Image(
+                            painter = painterResource(logo.notificationId),
+                            contentDescription = item.notiTitle,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(5.dp)
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    }
+                )
 
-                    Text(item.summaryText, style = MaterialTheme.typography.body2)
+                Text(
+                    item.summaryText,
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp)
+                        .padding(bottom = 5.dp)
+                )
 
-                }
+                Button(
+                    onClick = { showPopup = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(0.dp, 0.dp, 4.dp, 4.dp)
+                ) { Text(stringResource(R.string.remove), style = MaterialTheme.typography.button) }
 
             }
+
         }
 
     }
