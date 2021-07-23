@@ -54,7 +54,7 @@ dependencies {
     implementation material
     implementation constraintlayout
     implementation preference
-    implementation 'com.google.firebase:firebase-crashlytics:18.1.0'
+    implementation 'com.google.firebase:firebase-crashlytics:18.2.0'
     implementation 'com.google.firebase:firebase-analytics:19.0.0'
     implementation recyclerview
     implementation swiperefresh
