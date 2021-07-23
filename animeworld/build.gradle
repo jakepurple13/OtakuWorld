@@ -125,5 +125,5 @@ dependencies {
     implementation koin.koin
 
     implementation compose.compose
-    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha08"
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta01"
 }
