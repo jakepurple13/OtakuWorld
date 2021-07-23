@@ -104,7 +104,7 @@ class FavoriteFragment : BaseFragment() {
 
         //binding.xmlVersion.visibility = View.GONE
 
-        val flowable = Flowables.combineLatest(
+        /*val flowable = Flowables.combineLatest(
             source1 = dbFire
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread()),
@@ -124,7 +124,7 @@ class FavoriteFragment : BaseFragment() {
             .distinctUntilChanged()
             .share()
 
-        /*binding.composeVersion.setContent {
+        binding.composeVersion.setContent {
 
             *//*val list = remember {
                 flowable
@@ -272,7 +272,7 @@ class FavoriteFragment : BaseFragment() {
 
     }
 
-    private val logo: MainLogo by inject()
+    //private val logo: MainLogo by inject()
 
     /* @ExperimentalMaterialApi
      @Composable
