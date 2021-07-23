@@ -30,7 +30,7 @@
             android:theme="@style/Theme.OtakuWorld.LeanbackPreferences" />
         <activity
             android:name=".MainActivity"
-            android:banner="@drawable/app_icon_your_company"
+            android:banner="@drawable/animeworldtv_banner"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:logo="@mipmap/ic_launcher"

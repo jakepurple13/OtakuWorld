@@ -133,7 +133,4 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation compose.compose
-
-    // UI Tests
-    //androidTestImplementation "androidx.compose.ui:ui-test-junit4:$jetpack"
 }

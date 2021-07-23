@@ -48,6 +48,9 @@ buildscript {
 
     ext.jsoup = 'org.jsoup:jsoup:1.14.1'
 
+    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.0'
+    ext.analytics = 'com.google.firebase:firebase-analytics:19.0.0'
+
     ext.room_version = "2.3.0"
 
     def koin_version = "3.0.2"
@@ -78,6 +81,7 @@ buildscript {
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:$jetpack"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.2.8"
+    ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta01"
 
     ext {
         jakepurple13Tools = [
@@ -100,9 +104,12 @@ buildscript {
                         composeActivity, composeLifecycle,
                         composeRuntimeLivedata, composeRuntimeRxjava2,
                         composeMaterialThemeAdapter,
-                        landscapistGlide
+                        landscapistGlide,
+                        composeConstraintLayout
                 ]
         ]
+
+        firebaseCrash = [ crash: [crashlytics, analytics] ]
     }
 
     repositories {
