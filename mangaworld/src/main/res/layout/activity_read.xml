@@ -42,7 +42,7 @@
         app:layout_anchorGravity="end|top"
         app:layout_behavior=".CustomHideBottomViewOnScrollBehavior"
         android:src="@drawable/ic_baseline_vertical_align_top_24"
-        app:backgroundTint="@color/colorAccent"
+        app:backgroundTint="?attr/colorPrimary"
         tools:ignore="ContentDescription" />
 
     <androidx.constraintlayout.widget.ConstraintLayout

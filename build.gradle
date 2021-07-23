@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = "1.5.21"
+    ext.kotlin_version = "1.5.10"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "20.0"
+    ext.otakuVersionName = "20.5"
     ext.latestAboutLibsRelease = "+"
 
     ext.coroutinesVersion = "1.5.1"
@@ -32,14 +32,14 @@ buildscript {
     ext.rxbindingKotlin = 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0'
 
     ext.androidCore = 'androidx.core:core-ktx:1.6.0'
-    ext.appCompat = 'androidx.appcompat:appcompat:1.3.0'
+    ext.appCompat = 'androidx.appcompat:appcompat:1.3.1'
     ext.material = 'com.google.android.material:material:1.4.0'
 
     ext.preference = "androidx.preference:preference-ktx:1.1.1"
 
-    ext.compileVersion = 30
+    ext.compileVersion = 31
     ext.minimumSdk = 23
-    ext.targetSdk = 30
+    ext.targetSdk = 31
     ext.buildVersion = "30.0.2"
 
     ext.recyclerview = 'androidx.recyclerview:recyclerview:1.2.1'
@@ -47,6 +47,9 @@ buildscript {
     ext.swiperefresh = 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
     ext.jsoup = 'org.jsoup:jsoup:1.14.1'
+
+    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.0'
+    ext.analytics = 'com.google.firebase:firebase-analytics:19.0.0'
 
     ext.room_version = "2.3.0"
 
@@ -56,6 +59,29 @@ buildscript {
     ext.koinAndroid = "io.insert-koin:koin-android:$koin_version"
     // Koin Android - experimental builder extensions
     ext.koinAndroidExt = "io.insert-koin:koin-android-ext:$koin_version"
+
+    ext.jetpack = "1.0.0-rc02"
+
+    ext.composeUi = "androidx.compose.ui:ui:$jetpack"
+    // Tooling support (Previews, etc.)
+    ext.composeUiTooling = "androidx.compose.ui:ui-tooling:$jetpack"
+    // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
+    ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
+    // Material Design
+    ext.composeMaterial = "androidx.compose.material:material:$jetpack"
+    // Material design icons
+    ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
+    ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
+    // Integration with activities
+    ext.composeActivity = 'androidx.activity:activity-compose:1.3.0-rc02'
+    // Integration with ViewModels
+    ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07'
+    // Integration with observables
+    ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
+    ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:$jetpack"
+    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.2.8"
+    ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta01"
 
     ext {
         jakepurple13Tools = [
@@ -70,6 +96,20 @@ buildscript {
         ]
 
         koin = [koin: [koinAndroid, koinAndroidExt]]
+
+        compose = [
+                compose: [
+                        composeUi, composeUiTooling, composeFoundation, composeMaterial,
+                        composeMaterialIconsCore, composeMaterialIconsExtended,
+                        composeActivity, composeLifecycle,
+                        composeRuntimeLivedata, composeRuntimeRxjava2,
+                        composeMaterialThemeAdapter,
+                        landscapistGlide,
+                        composeConstraintLayout
+                ]
+        ]
+
+        firebaseCrash = [ crash: [crashlytics, analytics] ]
     }
 
     repositories {
@@ -78,7 +118,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2'
+        classpath 'com.android.tools.build:gradle:7.0.0-rc01'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.8'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.7.1'
@@ -97,7 +137,7 @@ allprojects {
         gradlePluginPortal()
         mavenCentral()
         maven { url "https://jitpack.io" }
-        maven { url "http://dl.bintray.com/piasy/maven" }
+        maven { url "https://dl.bintray.com/piasy/maven" }
     }
 }
 

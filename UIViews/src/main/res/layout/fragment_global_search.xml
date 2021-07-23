@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
             app:spanCount="3"
             tools:itemCount="10"
             tools:listitem="@layout/search_item" />
@@ -79,7 +79,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="15dp"
         android:src="@drawable/ic_baseline_vertical_align_top_24"
-        app:backgroundTint="@color/colorAccent"
+        app:backgroundTint="?attr/colorPrimaryVariant"
         app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior" />
 
     <RelativeLayout

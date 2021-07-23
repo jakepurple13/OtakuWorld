@@ -171,6 +171,7 @@ abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 val sheet = findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
                 val bottomSheet = BottomSheetBehavior.from(sheet)
                 bottomSheet.skipCollapsed = true
+                bottomSheet.isDraggable = false
                 bottomSheet.open()
             }
         }

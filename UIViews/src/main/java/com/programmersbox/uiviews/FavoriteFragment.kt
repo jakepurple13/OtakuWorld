@@ -102,6 +102,61 @@ class FavoriteFragment : BaseFragment() {
             }
             .addTo(disposable)
 
+        //binding.xmlVersion.visibility = View.GONE
+
+        /*val flowable = Flowables.combineLatest(
+            source1 = dbFire
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread()),
+            source2 = sourcePublisher.toLatestFlowable(),
+            source3 = binding.favSearchInfo
+                .textChanges()
+                .debounce(500, TimeUnit.MILLISECONDS)
+                .toLatestFlowable()
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { pair ->
+                pair.first.sortedBy(DbModel::title)
+                    .filter { it.source in pair.second.map(ApiService::serviceName) && it.title.contains(pair.third, true) }
+            }
+            .map { it.size to it.toGroup() }
+            .distinctUntilChanged()
+            .share()
+
+        binding.composeVersion.setContent {
+
+            *//*val list = remember {
+                flowable
+                    .map { it.second }
+                    .subscribeAsState(initial = emptyMap())
+            }*//*
+
+            val list by flowable
+                .map { it.second }
+                .doOnCancel { println("Cancelled") }
+                .subscribeAsState(initial = emptyMap())
+
+            //mutableStateMapOf<String, List<DbModel>>() }
+
+            *//*remember {
+                flowable
+                    .map { it.second}
+                    .subscribeAsState(initial = emptyMap())
+                    .subscribe {
+                        binding.favSearchInfo.setAdapter(ArrayAdapter(requireContext(), R.layout.favorite_auto_item, it.second.map { it.key }))
+                        list.clear()
+                        list.putAll(it.second)
+                    }
+                    .addTo(disposable)
+            }*//*
+
+            LazyVerticalGrid(cells = GridCells.Adaptive(with(LocalDensity.current) { 360.toDp() })) {
+                items(items = list.entries.toTypedArray()) { FavoriteItem(it, findNavController()) }
+            }
+
+        }*/
+
         binding.viewRecentList.setOnClickListener { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) }
 
         dbFire
@@ -216,6 +271,87 @@ class FavoriteFragment : BaseFragment() {
         }
 
     }
+
+    //private val logo: MainLogo by inject()
+
+    /* @ExperimentalMaterialApi
+     @Composable
+     private fun FavoriteItem(info: Map.Entry<String, List<DbModel>>, navController: NavController) {
+         Card(
+             onClick = {
+                 val item = info.value.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                 navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
+             },
+             modifier = Modifier
+                 .padding(5.dp)
+                 .size(
+                     with(LocalDensity.current) { 360.toDp() },
+                     with(LocalDensity.current) { 480.toDp() }
+                 ),
+             interactionSource = MutableInteractionSource(),
+             indication = rememberRipple(),
+             onClickLabel = info.key,
+         ) {
+
+             val item = info.value.firstOrNull()
+
+             Box {
+                 Image(
+                     painter = rememberImagePainter(
+                         data = item?.imageUrl,
+                         builder = {
+                             crossfade(true)
+                             placeholder(logo.logoId)
+                             error(logo.logoId)
+                             //transformations(RoundedCornersTransformation(15f))
+                         }
+                     ),
+                     contentDescription = "",
+                     contentScale = ContentScale.Crop,
+                     modifier = Modifier
+                         //.border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(5.dp))
+                         .align(Alignment.Center)
+                         .size(
+                             with(LocalDensity.current) { 360.toDp() },
+                             with(LocalDensity.current) { 480.toDp() }
+                         )
+                 )
+
+                 Box(
+                     modifier = Modifier
+                         .fillMaxSize()
+                         .background(
+                             brush = Brush.verticalGradient(
+                                 colors = listOf(
+                                     Color.Transparent,
+                                     Color.Black
+                                 ),
+                                 startY = 50f
+                             )
+                         )
+                 )
+
+                 Box(
+                     modifier = Modifier
+                         .fillMaxSize()
+                         .padding(12.dp),
+                     contentAlignment = Alignment.BottomCenter
+                 ) {
+                     Text(
+                         info.key,
+                         style = MaterialTheme
+                             .typography
+                             .body1
+                             .copy(textAlign = TextAlign.Center, color = Color.White),
+                         modifier = Modifier
+                             .fillMaxWidth()
+                             .align(Alignment.BottomCenter)
+                     )
+                 }
+             }
+
+         }
+     }*/
 
     companion object {
         @JvmStatic

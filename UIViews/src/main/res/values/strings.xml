@@ -111,6 +111,7 @@
     <string name="delete_multiple">Delete Multiple</string>
 
     <string name="removeNotification">Remove Notification</string>
+    <string name="remove">Remove</string>
 
     <string name="removeNoti">Remove %s?</string>
     <string name="notify">Notify</string>
