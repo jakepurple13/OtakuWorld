@@ -37,9 +37,9 @@ buildscript {
 
     ext.preference = "androidx.preference:preference-ktx:1.1.1"
 
-    ext.compileVersion = 30
+    ext.compileVersion = 31
     ext.minimumSdk = 23
-    ext.targetSdk = 30
+    ext.targetSdk = 31
     ext.buildVersion = "30.0.2"
 
     ext.recyclerview = 'androidx.recyclerview:recyclerview:1.2.1'
