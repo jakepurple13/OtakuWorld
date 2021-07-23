@@ -220,6 +220,11 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <!--<androidx.compose.ui.platform.ComposeView
+                android:id="@+id/composeChapterList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />-->
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/infoChapterList"
                 android:layout_width="match_parent"

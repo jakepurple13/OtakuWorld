@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
@@ -71,7 +72,9 @@ class DetailsFragment : Fragment() {
 
     private val disposable = CompositeDisposable()
 
-    private val adapter by lazy { ChapterAdapter(requireContext(), inject<GenericInfo>().value, dao) }
+    private val adapter by lazy { ChapterAdapter(requireContext(), inject<GenericInfo>().value, dao, disposable) }
+
+    //private val genericInfo by inject<GenericInfo>()
 
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
@@ -90,6 +93,7 @@ class DetailsFragment : Fragment() {
         return binding.root
     }
 
+    @ExperimentalMaterialApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         NavigationUI.setupWithNavController(binding.collapsingBar, binding.toolbar, findNavController())
@@ -141,6 +145,8 @@ class DetailsFragment : Fragment() {
                                         binding.collapsingBar.setContentScrimColor(it)
                                     }
 
+                                    //swatchInfo = swatch
+
                                     ShowMoreLess.Builder(requireContext())
                                         .expandAnimation(true)
                                         .showMoreLabel(getString(R.string.showMore))
@@ -177,6 +183,33 @@ class DetailsFragment : Fragment() {
                             binding.executePendingBindings()
                         }
                     }
+
+                /*binding.composeChapterList.setContent {
+
+                    var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
+
+                    LazyColumn {
+                        items(info.chapters) {
+                            ComposeChapterItem(
+                                model = it,
+                                watchedList = Flowables.combineLatest(
+                                    chapterListener.getAllEpisodesByShow(info.url),
+                                    dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
+                                ) { f, d -> (f + d).distinctBy { it.url } }
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeAsState(initial = emptyList()),
+                                dao = dao,
+                                disposable = CompositeDisposable(),
+                                itemUrl = info.url,
+                                info = genericInfo,
+                                chapterList = info.chapters,
+                                title = info.title,
+                                swatchInfo = swatchInfo
+                            )
+                        }
+                    }
+                }*/
 
                 binding.infoUrl.setOnClickListener {
                     requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
