@@ -7,13 +7,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion compileVersion
+    compileSdkVersion 30//compileVersion
     buildToolsVersion buildVersion
 
     defaultConfig {
         applicationId "com.programmersbox.animeworldtv"
         minSdkVersion minimumSdk
-        targetSdkVersion targetSdk
+        targetSdkVersion 30//targetSdk
         versionCode 1
         versionName otakuVersionName
 
