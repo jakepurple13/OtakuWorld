@@ -184,6 +184,56 @@ class DetailsFragment : Fragment() {
                         }
                     }
 
+                /*binding.composeHeader.setContent {
+
+                    var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
+
+                    val favoriteListener by Flowables.combineLatest(
+                        itemListener.findItemByUrl(info.url),
+                        dao.containsItem(info.url)
+                    )
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .map { it.second || it.first }
+                        .subscribeAsState(initial = false)
+
+                    MdcTheme {
+
+                        DetailsHeader(
+                            model = info,
+                            logo = logo,
+                            swatchInfo = swatchInfo,
+                            isFavorite = favoriteListener
+                        ) { b ->
+                            fun addItem(model: InfoModel) {
+                                val db = model.toDbModel(model.chapters.size)
+                                Completable.concatArray(
+                                    FirebaseDb.insertShow(db),
+                                    dao.insertFavorite(db).subscribeOn(Schedulers.io())
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe()
+                                    .addTo(disposable)
+                            }
+
+                            fun removeItem(model: InfoModel) {
+                                val db = model.toDbModel(model.chapters.size)
+                                Completable.concatArray(
+                                    FirebaseDb.removeShow(db),
+                                    dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe()
+                                    .addTo(disposable)
+                            }
+
+                            (if (b) ::removeItem else ::addItem)(info)
+                        }
+                    }
+                }*/
+
                 /*binding.composeChapterList.setContent {
 
                     var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }

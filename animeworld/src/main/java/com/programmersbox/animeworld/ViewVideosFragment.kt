@@ -168,13 +168,13 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         }
                     }
                 ) {
-                    Box(modifier = Modifier.padding(it)) {
+                    Box(modifier = Modifier
+                        .padding(it)
+                        .padding(5.dp)) {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(5.dp),
-                            state = rememberLazyListState()
-                        ) {
-                            items(items = items) { VideoContentView(it) }
-                        }
+                            state = rememberLazyListState(),
+                        ) { items(items = items) { i -> VideoContentView(i) } }
                     }
                 }
             }

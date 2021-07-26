@@ -58,6 +58,13 @@
                     tools:ignore="ContentDescription,PxUsage"
                     tools:src="@tools:sample/avatars" />
 
+                <!--<androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/composeHeader"
+                    android:layout_marginTop="?attr/actionBarSize"
+                    android:layout_marginBottom="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />-->
+
                 <RelativeLayout
                     android:id="@+id/infoHeader"
                     android:layout_width="match_parent"
