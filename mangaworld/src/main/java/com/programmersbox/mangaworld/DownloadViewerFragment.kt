@@ -122,6 +122,8 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
     private fun downloadView() {
         binding.composeDownloadView.setContent {
 
+            val context = LocalContext.current
+
             MdcTheme {
                 val files by PathObservables
                     .watchNonRecursive(Path((pathname ?: defaultPathname).path))
@@ -189,8 +191,8 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                                         d.dismiss()
                                         Completable.create {
                                             list.forEach { f ->
-                                                val b = f.deleteRecursively()
-                                                println("${f.name} - $b")
+                                                DocumentFileCompat.fromFullPath(context, f.path, DocumentFileType.FOLDER)
+                                                    ?.deleteRecursively(context, false)
                                             }
                                             it.onComplete()
                                         }
