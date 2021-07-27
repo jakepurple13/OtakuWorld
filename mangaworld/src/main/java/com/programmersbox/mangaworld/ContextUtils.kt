@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
+import android.os.Environment
 import android.os.Handler
 import android.provider.MediaStore
 import android.util.AttributeSet
@@ -17,6 +18,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 var Context.showAdult by sharedPrefNotNullDelegate(false)
+
+val DOWNLOAD_FILE_PATH get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"
 
 class CustomHideBottomViewOnScrollBehavior<T : View>(context: Context?, attrs: AttributeSet?) :
     HideBottomViewOnScrollBehavior<T>(context, attrs) {

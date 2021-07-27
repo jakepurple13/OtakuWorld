@@ -1,24 +1,44 @@
 package com.programmersbox.mangaworld
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.runtime.*
+import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.anggrayudi.storage.file.DocumentFileCompat
+import com.anggrayudi.storage.file.DocumentFileType
+import com.anggrayudi.storage.file.deleteRecursively
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.dragswipe.*
-import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.mangaworld.databinding.DownloadedItemBinding
 import com.programmersbox.mangaworld.databinding.FragmentDownloadViewerBinding
+import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import de.helmbold.rxfilewatcher.PathObservables
 import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -27,17 +47,10 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import java.io.File
+import kotlin.io.path.Path
 
-class DownloadViewerNavFragment : BaseBottomSheetDialogFragment() {
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(R.layout.download_navigation_fragment, container, false)
-    }
-}
 
-class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
+class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomSheetDialogFragment() {
 
     private lateinit var binding: FragmentDownloadViewerBinding
 
@@ -52,136 +65,329 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
 
     private val disposable = CompositeDisposable()
 
-    private val defaultPathname
-        get() =
-            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + "/MangaWorld/")
+    private val defaultPathname get() = File(DOWNLOAD_FILE_PATH)
 
-    private val navArgs: DownloadViewerFragmentArgs by navArgs()
-
+    @ExperimentalMaterialApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadInformation()
+    }
 
-        val adapter = DownloadedManga(requireContext())
-
-        binding.chapterRv.adapter = adapter
-
-        /*val c = ChaptersGet.getInstance(requireContext())
-
-        c?.chapters
-            ?.subscribeOn(Schedulers.io())
-            ?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribe {
-                println(it.joinToString("\n"))
-            }
-            ?.addTo(disposable)
-
-        c?.loadChapters(lifecycleScope, (navArgs.pathname ?: defaultPathname).toUri())*/
-
+    @ExperimentalMaterialApi
+    private fun loadInformation() {
         activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
-                Single.create<List<File>> {
-                    (navArgs.pathname ?: defaultPathname)
-                        .listFiles()
-                        .also { println(it?.joinToString("\n") { it.name }) }
-                        .orEmpty()
-                        .toList()
-                        .let(it::onSuccess)
+                downloadView()
+            } else {
+                binding.composeDownloadView.setContent {
+                    MdcTheme {
+
+                        Box(modifier = Modifier.fillMaxSize()) {
+
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(5.dp),
+                                elevation = 5.dp,
+                                shape = RoundedCornerShape(5.dp)
+                            ) {
+                                Column(modifier = Modifier) {
+                                    Text(
+                                        text = stringResource(R.string.please_enable_permissions),
+                                        style = MaterialTheme.typography.h4,
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    )
+
+                                    Button(
+                                        onClick = { loadInformation() },
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally)
+                                            .padding(bottom = 5.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.enable),
+                                            style = MaterialTheme.typography.button
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    private fun downloadView() {
+        binding.composeDownloadView.setContent {
+
+            MdcTheme {
+                val files by PathObservables
+                    .watchNonRecursive(Path((pathname ?: defaultPathname).path))
+                    .concatMapSingle {
+                        Single.create<List<File>> {
+                            (pathname ?: defaultPathname)
+                                .listFiles()
+                                .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
+                                .orEmpty()
+                                .toList()
+                                .let(it::onSuccess)
+                        }
+                    }
+                    .startWith(
+                        Single.create<List<File>> {
+                            (pathname ?: defaultPathname)
+                                .listFiles()
+                                .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
+                                .orEmpty()
+                                .toList()
+                                .let(it::onSuccess)
+                        }.toObservable()
+                    )
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(adapter::addItems)
-                    .addTo(disposable)
+                    .subscribeAsState(emptyList())
+
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    stringResource(R.string.downloaded_chapters),
+                                    style = MaterialTheme.typography.h5
+                                )
+                            },
+                            navigationIcon = {
+                                if (pathname != defaultPathname && pathname?.parentFile != null) {
+                                    IconButton(onClick = { dismiss() }) { Icon(Icons.Default.ArrowBack, null) }
+                                }
+                            },
+                            actions = {
+                                IconButton(
+                                    onClick = {
+                                        parentFragmentManager.fragments
+                                            .filterIsInstance<DownloadViewerFragment>()
+                                            .forEach(DownloadViewerFragment::dismiss)
+                                    }
+                                ) { Icon(Icons.Default.Close, null) }
+                            }
+                        )
+                    },
+                    bottomBar = {
+                        Button(
+                            onClick = {
+                                val list = mutableListOf<File>()
+
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setTitle(R.string.delete_multiple)
+                                    .setMultiChoiceItems(files.map(File::getName).toTypedArray(), null) { _, i, b ->
+                                        val action = if (b) list::add else list::remove
+                                        files[i].let(action)
+                                    }
+                                    .setPositiveButton(R.string.delete) { d, _ ->
+                                        d.dismiss()
+                                        Completable.create {
+                                            list.forEach { f ->
+                                                val b = f.deleteRecursively()
+                                                println("${f.name} - $b")
+                                            }
+                                            it.onComplete()
+                                        }
+                                            .subscribeOn(Schedulers.io())
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribeBy {
+                                                Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show()
+                                            }
+                                            .addTo(disposable)
+                                    }
+                                    .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
+                                    .show()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(0f)
+                        ) {
+                            Text(
+                                stringResource(R.string.delete_multiple),
+                                style = MaterialTheme.typography.button
+                            )
+                        }
+                    }
+                ) {
+                    if (files.isEmpty()) EmptyState()
+                    else LazyColumn(contentPadding = it) { items(files) { f -> ChapterItem(f) } }
+                }
+
+            }
+
+        }
+    }
+
+    @Composable
+    private fun EmptyState() {
+
+        Box(modifier = Modifier.fillMaxSize()) {
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp),
+                elevation = 5.dp,
+                shape = RoundedCornerShape(5.dp)
+            ) {
+
+                Column(modifier = Modifier) {
+
+                    Text(
+                        text = stringResource(id = R.string.get_started),
+                        style = MaterialTheme.typography.h4,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    Text(
+                        text = stringResource(id = R.string.download_a_manga),
+                        style = MaterialTheme.typography.body1,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    Button(
+                        onClick = {
+                            dismiss()
+                            (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 5.dp)
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.go_download),
+                            style = MaterialTheme.typography.button
+                        )
+                    }
+
+                }
+
             }
         }
 
-        DragSwipeUtils.setDragSwipeUp(
-            recyclerView = binding.chapterRv,
-            dragSwipeAdapter = adapter,
-            swipeDirs = listOf(Direction.START, Direction.END),
-            dragDirs = listOf(Direction.NOTHING),
-            dragSwipeActions = object : DragSwipeActions<File> {
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Direction, dragSwipeAdapter: DragSwipeAdapter<File, *>) {
+    }
 
-                    val item = dragSwipeAdapter[viewHolder.absoluteAdapterPosition]
+    @ExperimentalMaterialApi
+    @Composable
+    private fun ChapterItem(file: File) {
+        val context = LocalContext.current
 
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(getString(R.string.delete_title, item.name))
-                        .setPositiveButton(R.string.delete) { d, _ ->
-                            d.dismiss()
-                            dragSwipeAdapter.removeItem(viewHolder.absoluteAdapterPosition)
-                            Single.create<Boolean> { it.onSuccess(item.deleteRecursively()) }
+        var showPopup by remember { mutableStateOf(false) }
+
+        if (showPopup) {
+            val onDismiss = { showPopup = false }
+
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = { Text(stringResource(R.string.delete_title, file.name)) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            Single.create<Boolean> {
+                                it.onSuccess(
+                                    DocumentFileCompat.fromFullPath(context, file.path, DocumentFileType.FOLDER)
+                                        ?.deleteRecursively(context, false) ?: false
+                                )
+                            }
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeBy { Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
+                                .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
                                 .addTo(disposable)
+                            onDismiss()
                         }
-                        .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                        .show()
+                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                },
+                dismissButton = { Button(onClick = onDismiss) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) } }
+            )
+        }
 
+        val clickAction: () -> Unit = {
+            if (file.listFiles()?.all(File::isFile) == true)
+                activity?.startActivity(
+                    Intent(context, ReadActivity::class.java).apply {
+                        putExtra("downloaded", true)
+                        putExtra("filePath", file)
+                    }
+                )
+            else DownloadViewerFragment(file).show(parentFragmentManager, null)
+        }
+
+        val dismissState = rememberDismissState(
+            confirmStateChange = {
+                if (it == DismissValue.DismissedToEnd) {
+                    //read
+                    clickAction()
+                } else if (it == DismissValue.DismissedToStart) {
+                    //delete
+                    showPopup = true
                 }
+                false
             }
         )
 
-        binding.multipleMangaDelete.setOnClickListener {
-            val list = mutableListOf<File>()
-
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.delete_multiple)
-                .setMultiChoiceItems(adapter.dataList.map(File::getName).toTypedArray(), null) { _, i, b ->
-                    val action = if (b) list::add else list::remove
-                    adapter.dataList[i].let(action)
-                }
-                .setPositiveButton(R.string.delete) { d, _ ->
-                    d.dismiss()
-                    list.forEach { adapter.removeItem(it) }
-                    Completable.create {
-                        list.forEach { it.deleteRecursively() }
-                        it.onComplete()
+        SwipeToDismiss(
+            state = dismissState,
+            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
+            dismissThresholds = { FractionalThreshold(0.5f) },
+            background = {
+                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                val color by animateColorAsState(
+                    when (dismissState.targetValue) {
+                        DismissValue.Default -> Color.Transparent
+                        DismissValue.DismissedToEnd -> Color.Green
+                        DismissValue.DismissedToStart -> Color.Red
                     }
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeBy { Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
-                        .addTo(disposable)
+                )
+                val alignment = when (direction) {
+                    DismissDirection.StartToEnd -> Alignment.CenterStart
+                    DismissDirection.EndToStart -> Alignment.CenterEnd
                 }
-                .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                .show()
+                val icon = when (direction) {
+                    DismissDirection.StartToEnd -> Icons.Default.Book
+                    DismissDirection.EndToStart -> Icons.Default.Delete
+                }
+                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(color)
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = alignment
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = "Localized description",
+                        modifier = Modifier.scale(scale)
+                    )
+                }
+            }
+        ) {
+            Card(
+                interactionSource = MutableInteractionSource(),
+                indication = rememberRipple(),
+                onClick = clickAction,
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    file.name,
+                    style = MaterialTheme.typography.h5,
+                    modifier = Modifier.padding(5.dp)
+                )
+            }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
-    }
-
-    inner class DownloadedManga(private val context: Context) : DragSwipeAdapter<File, DownloadedHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DownloadedHolder =
-            DownloadedHolder(DownloadedItemBinding.inflate(context.layoutInflater, parent, false))
-
-        override fun DownloadedHolder.onBind(item: File, position: Int) = bind(item)
-
-        fun removeItem(item: File) {
-            val position = dataList.indexOf(item)
-            dataList.remove(item)
-            notifyItemRemoved(position)
-        }
-    }
-
-    inner class DownloadedHolder(private val binding: DownloadedItemBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: File) {
-            binding.root.setOnClickListener {
-                if (item.listFiles()?.all(File::isFile) == true)
-                    activity?.startActivity(
-                        Intent(it.context, ReadActivity::class.java).apply {
-                            putExtra("downloaded", true)
-                            putExtra("filePath", item)
-                        }
-                    )
-                else
-                    findNavController().navigate(DownloadViewerFragmentDirections.actionDownloadViewerFragmentSelf(item))
-            }
-            binding.file = item
-            binding.executePendingBindings()
-        }
     }
 
 }

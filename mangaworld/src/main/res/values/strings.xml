@@ -11,4 +11,8 @@
     <string name="delete_title">Are you sure you want to delete %1$s?</string>
     <string name="delete">Delete</string>
     <string name="finished_deleting">Finished Deleting</string>
+    <string name="download_a_manga">Download a Manga</string>
+    <string name="go_download">GO DOWNLOAD</string>
+    <string name="please_enable_permissions">Please Enable Permissions</string>
+    <string name="enable">Enable</string>
 </resources>

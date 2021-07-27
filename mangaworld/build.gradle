@@ -41,6 +41,10 @@ android {
     buildFeatures {
         dataBinding true
         viewBinding true
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion jetpack
     }
 }
 
@@ -60,6 +64,8 @@ dependencies {
     implementation firebaseCrash.crash
 
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
+    implementation "com.anggrayudi:storage:0.11.1"
+    implementation 'de.helmbold:rxfilewatcher:1.0.0'
 
     implementation project(':UIViews')
     implementation project(':Models')
@@ -97,4 +103,6 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation koin.koin
+
+    implementation compose.compose
 }
