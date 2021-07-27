@@ -15,4 +15,6 @@
     <string name="go_download">GO DOWNLOAD</string>
     <string name="please_enable_permissions">Please Enable Permissions</string>
     <string name="enable">Enable</string>
+    <string name="chapter_count">Chapters: %d</string>
+    <string name="page_count">Pages: %d</string>
 </resources>

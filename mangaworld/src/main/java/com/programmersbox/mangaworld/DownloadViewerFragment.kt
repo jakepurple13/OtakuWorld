@@ -376,11 +376,21 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                     .padding(5.dp)
                     .fillMaxWidth()
             ) {
-                Text(
-                    file.name,
-                    style = MaterialTheme.typography.h5,
-                    modifier = Modifier.padding(5.dp)
-                )
+                Column {
+                    Text(
+                        file.name,
+                        style = MaterialTheme.typography.h5,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                    Text(
+                        stringResource(
+                            if (file.listFiles()?.all(File::isFile) == true) R.string.page_count else R.string.chapter_count,
+                            file.listFiles()?.size ?: 0
+                        ),
+                        style = MaterialTheme.typography.subtitle2,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                }
             }
         }
     }
