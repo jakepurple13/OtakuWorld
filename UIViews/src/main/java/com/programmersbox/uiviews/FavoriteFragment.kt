@@ -73,6 +73,8 @@ class FavoriteFragment : BaseFragment() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
         ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
+            .replay(1)
+            .refCount(1, TimeUnit.SECONDS)
 
         Flowables.combineLatest(
             source1 = dbFire
