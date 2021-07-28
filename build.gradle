@@ -86,7 +86,7 @@ buildscript {
 
     ext {
         jakepurple13Tools = [
-                helpfultools: [flowutils, gsonutils, helpfulutils, loggingutils, dragswipe, funutils, rxutils, thirdpartyutils]
+                helpfultools: [gsonutils, helpfulutils, loggingutils, dragswipe, funutils, rxutils, thirdpartyutils]
         ]
         room = [
                 room: [
