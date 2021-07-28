@@ -250,7 +250,6 @@ class DetailsFragment : Fragment() {
                         .subscribeAsState(initial = false)
 
                     MdcTheme {
-
                         DetailsHeader(
                             model = info,
                             logo = logo,
@@ -470,7 +469,8 @@ class DetailsFragment : Fragment() {
                             CustomChip(
                                 category = it,
                                 textColor = swatchInfo?.rgb?.toComposeColor(),
-                                backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f)
+                                backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f),
+                                modifier = Modifier.fadeInAnimation()
                             )
                         }
                     }

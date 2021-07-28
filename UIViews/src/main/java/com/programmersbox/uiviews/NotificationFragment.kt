@@ -36,10 +36,7 @@ import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.databinding.FragmentNotificationBinding
-import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.StaggeredVerticalGrid
+import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -120,7 +117,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     modifier = Modifier.padding(it)
                 ) { notiList.forEach { NotificationItem(it, binding.root.findNavController()) } }
             }
-
         }
     }
 
@@ -208,7 +204,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
             onClickLabel = item.notiTitle,
-            modifier = Modifier.padding(5.dp)
+            modifier = Modifier
+                .padding(5.dp)
+                .fadeInAnimation()
         ) {
 
             Column {

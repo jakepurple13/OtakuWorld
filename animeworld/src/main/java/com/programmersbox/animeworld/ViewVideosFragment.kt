@@ -10,13 +10,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -45,6 +47,8 @@ import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.animatedItems
+import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.onEach
@@ -67,6 +71,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
     private val disposable = CompositeDisposable()
 
     @ExperimentalMaterialApi
+    @ExperimentalAnimationApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         MainActivity.cast.setMediaRouteMenu(requireContext(), binding.toolbarmenu.menu)
@@ -74,6 +79,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         loadVideos()
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun loadVideos() {
         val permissions = listOfNotNull(
@@ -85,6 +91,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         }
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun getStuff() {
 
@@ -97,6 +104,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
     private fun VideoLoad() {
@@ -168,13 +176,23 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         }
                     }
                 ) {
+
+                    val videos by updateAnimatedItemsState(newList = items)
+
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(5.dp),
                         contentPadding = it,
                         state = rememberLazyListState(),
                         modifier = Modifier
                             .padding(5.dp)
-                    ) { items(items = items) { i -> VideoContentView(i) } }
+                    ) {
+                        animatedItems(
+                            videos,
+                            enterTransition = slideInHorizontally(),
+                            exitTransition = slideOutHorizontally()
+                        ) { i -> VideoContentView(i) }
+                        //items(items = items) { i -> VideoContentView(i) }
+                    }
                 }
             }
         }

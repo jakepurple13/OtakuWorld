@@ -11,8 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/fav_search_info"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
--->
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />-->
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/xml_version"
         android:layout_width="match_parent"
@@ -71,6 +71,7 @@
             android:orientation="vertical"
             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             app:spanCount="3"
+            tools:listitem="@layout/favorite_item"
             tools:itemCount="10" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
