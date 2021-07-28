@@ -60,7 +60,7 @@ buildscript {
     // Koin Android - experimental builder extensions
     ext.koinAndroidExt = "io.insert-koin:koin-android-ext:$koin_version"
 
-    ext.jetpack = "1.0.0-rc02"
+    ext.jetpack = "1.0.0"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
@@ -73,14 +73,14 @@ buildscript {
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
     // Integration with activities
-    ext.composeActivity = 'androidx.activity:activity-compose:1.3.0-rc02'
+    ext.composeActivity = 'androidx.activity:activity-compose:1.3.0'
     // Integration with ViewModels
     ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07'
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:$jetpack"
-    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.2.8"
+    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.3.0"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta01"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
 
@@ -119,7 +119,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.0-rc01'
+        classpath 'com.android.tools.build:gradle:7.0.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.8'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.7.1'
