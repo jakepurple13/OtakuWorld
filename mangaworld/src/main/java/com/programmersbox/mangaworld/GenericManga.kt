@@ -35,7 +35,6 @@ import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
@@ -75,20 +74,20 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     private fun downloadFullChapter(model: ChapterModel, title: String) {
-        val fileLocation = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + "/MangaWorld/"
+        val fileLocation = DOWNLOAD_FILE_PATH
 
         val direct = File("$fileLocation$title/${model.name}/")
         if (!direct.exists()) direct.mkdir()
 
         model.getChapterInfo()
             .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(Schedulers.io())
             .map { it.mapNotNull(Storage::link) }
             .map {
                 it.mapIndexed { index, s ->
                     DownloadManager.Request(s.toUri())
                         .setDestinationInExternalPublicDir(
-                            Environment.DIRECTORY_PICTURES,
+                            Environment.DIRECTORY_DOWNLOADS,
                             "MangaWorld/$title/${model.name}/${String.format("%03d", index)}.png"
                         )
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
@@ -133,7 +132,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 Preference(it.context).apply {
                     title = it.context.getString(R.string.downloaded_manga)
                     setOnPreferenceClickListener {
-                        DownloadViewerNavFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
+                        DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
                         true
                     }
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_library_books_24)

@@ -82,6 +82,7 @@ buildscript {
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:$jetpack"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.2.8"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta01"
+    ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
 
     ext {
         jakepurple13Tools = [

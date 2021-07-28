@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.app.Notification
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -357,12 +356,12 @@ object SavedNotifications {
             }
             showWhen = true
             groupId = "otakuGroup"
-            deleteIntent { context ->
+            /*deleteIntent { context ->
                 val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
                 intent1.action = "NOTIFICATION_DELETED_ACTION"
                 intent1.putExtra("url", n.url)
                 PendingIntent.getBroadcast(context, n.id, intent1, 0)
-            }
+            }*/
             pendingIntent { context ->
                 val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
                     ?.getSourceByUrl(n.url)
@@ -409,12 +408,12 @@ object SavedNotifications {
                         }
                         showWhen = true
                         groupId = "otakuGroup"
-                        deleteIntent { context ->
+                        /*deleteIntent { context ->
                             val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
                             intent1.action = "NOTIFICATION_DELETED_ACTION"
                             intent1.putExtra("url", n.url)
                             PendingIntent.getBroadcast(context, n.id, intent1, 0)
-                        }
+                        }*/
                         pendingIntent { context ->
                             val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
                                 ?.getSourceByUrl(n.url)

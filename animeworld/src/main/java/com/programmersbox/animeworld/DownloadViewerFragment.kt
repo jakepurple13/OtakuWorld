@@ -38,7 +38,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         private const val UNKNOWN_DOWNLOADED_BYTES_PER_SECOND: Long = 0
     }
 
-    private var fetch: Fetch = Fetch.getDefaultInstance()
+    private val fetch: Fetch = Fetch.getDefaultInstance()
     private var fileAdapter: FileAdapter? = null
 
     private val pauseRepository: PauseRepository by lazy { PauseRepository(DownloadDatabase.getInstance(requireContext()).getPauseDao()) }
@@ -60,7 +60,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        fetch = Fetch.getDefaultInstance()
         fileAdapter = FileAdapter(this, requireContext())
 
         jobQueueAdapter = JobQueueAdapter(requireContext())

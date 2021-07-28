@@ -5,12 +5,22 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -225,3 +235,50 @@ private fun shortestColumn(colHeights: IntArray): Int {
     }
     return column
 }
+
+fun Int.toComposeColor() = Color(this)
+
+@Composable
+fun CustomChip(
+    category: String,
+    textColor: Color?,
+    backgroundColor: Color?
+) {
+    Surface(
+        modifier = Modifier.padding(end = 8.dp, bottom = 8.dp),
+        elevation = 8.dp,
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor ?: MaterialTheme.colors.surface
+    ) {
+        Row {
+            Text(
+                text = category,
+                style = MaterialTheme.typography.body2,
+                color = textColor ?: MaterialTheme.colors.onSurface,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .align(Alignment.CenterVertically),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/*
+object TestItems {
+
+    val TEST_SOURCE = object : ApiService {
+        override val baseUrl: String get() = ""
+        override fun getRecent(page: Int): Single<List<ItemModel>> = Single.never()
+        override fun getList(page: Int): Single<List<ItemModel>> = Single.never()
+        override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.never()
+        override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.never()
+    }
+
+    val TEST_SWATCH = SwatchInfo(
+        rgb = Color.Blue.toArgb(),
+        titleColor = Color.Red.toArgb(),
+        bodyColor = Color.Green.toArgb()
+    )
+}
+*/

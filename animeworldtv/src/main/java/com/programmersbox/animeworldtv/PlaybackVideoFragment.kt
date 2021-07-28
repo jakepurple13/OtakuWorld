@@ -111,7 +111,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                     com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
                 )*/
                 val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(Uri.parse(it.firstOrNull()?.link)))
+                    .createMediaSource(MediaItem.fromUri(Uri.parse(link?.link)))
 
                 exoPlayer.setMediaSource(mediaSource)
                 exoPlayer.playWhenReady = true

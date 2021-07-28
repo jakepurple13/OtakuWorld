@@ -263,8 +263,10 @@ class ReadActivity : AppCompatActivity() {
                     .withEndAction { binding.readLoading.gone() }
                     .start()
                 adapter2.setListNotify(it)
+
                 binding.pageChoice.valueTo = try {
-                    it.size.toFloat() + 1
+                    val f = it.size.toFloat() + 1
+                    if (f == 1f) 2f else f
                 } catch (e: Exception) {
                     2f
                 }
