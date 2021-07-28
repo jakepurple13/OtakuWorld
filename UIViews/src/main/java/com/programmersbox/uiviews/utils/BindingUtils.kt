@@ -5,35 +5,22 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.runtime.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.ColorUtils
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -43,11 +30,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
-import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.R
-import com.skydoves.landscapist.glide.GlideImage
 import kotlin.math.ceil
 
 @BindingAdapter("coverImage", "logoId")
@@ -251,145 +234,6 @@ private fun shortestColumn(colHeights: IntArray): Int {
         }
     }
     return column
-}
-
-@ExperimentalMaterialApi
-@Composable
-fun DetailsHeader(
-    model: InfoModel,
-    logo: MainLogo,
-    swatchInfo: SwatchInfo?,
-    isFavorite: Boolean,
-    favoriteClick: (Boolean) -> Unit
-) {
-
-    var descriptionVisibility by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .animateContentSize()
-    ) {
-
-        GlideImage(
-            imageModel = model.imageUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            requestBuilder = Glide.with(LocalView.current)
-                .asBitmap()
-                //.override(360, 480)
-                .placeholder(logo.logoId)
-                .error(logo.logoId)
-                .fallback(logo.logoId),
-            modifier = Modifier.matchParentSize()
-        )
-
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    ColorUtils
-                        .setAlphaComponent(
-                            ColorUtils.blendARGB(
-                                MaterialTheme.colors.primarySurface.toArgb(),
-                                swatchInfo?.rgb ?: Color.Transparent.toArgb(),
-                                0.25f
-                            ),
-                            200//127
-                        )
-                        .toComposeColor()
-                )
-        )
-
-        Row(
-            modifier = Modifier
-                .padding(5.dp)
-                .animateContentSize()
-        ) {
-
-            Card(
-                shape = RoundedCornerShape(5.dp),
-                modifier = Modifier.padding(5.dp)
-            ) {
-                GlideImage(
-                    imageModel = model.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    requestBuilder = Glide.with(LocalView.current)
-                        .asBitmap()
-                        //.override(360, 480)
-                        .placeholder(logo.logoId)
-                        .error(logo.logoId)
-                        .fallback(logo.logoId)
-                        .transform(RoundedCorners(5)),
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                    //.size(ComposableUtils.IMAGE_WIDTH * 0.75f, ComposableUtils.IMAGE_HEIGHT * 0.85f),
-                    failure = {
-                        Image(
-                            painter = painterResource(logo.logoId),
-                            contentDescription = model.title,
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            //.size(ComposableUtils.IMAGE_WIDTH * 0.75f, ComposableUtils.IMAGE_HEIGHT * 0.85f)
-                        )
-                    }
-                )
-            }
-
-            Column(
-                modifier = Modifier.padding(start = 5.dp)
-            ) {
-
-                LazyRow(
-                    modifier = Modifier.padding(vertical = 5.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    items(model.genres) {
-                        CustomChip(
-                            category = it,
-                            textColor = swatchInfo?.rgb?.toComposeColor(),
-                            backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f)
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .clickable { favoriteClick(isFavorite) }
-                        .padding(vertical = 5.dp)
-                        .fillMaxWidth()
-                ) {
-                    Icon(
-                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                        tint = swatchInfo?.rgb?.toComposeColor() ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                    Text(
-                        stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites),
-                        style = MaterialTheme.typography.h6,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                }
-
-                Text(
-                    model.description,
-                    modifier = Modifier
-                        .padding(vertical = 5.dp)
-                        .fillMaxWidth()
-                        .clickable { descriptionVisibility = !descriptionVisibility },
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
-                    style = MaterialTheme.typography.body2,
-                )
-
-            }
-
-        }
-    }
 }
 
 fun Int.toComposeColor() = Color(this)
