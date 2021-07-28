@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -41,7 +42,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.programmersbox.helpfulutils.changeDrawableColor
-import com.programmersbox.helpfulutils.whatIfNotNull
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
@@ -253,6 +253,7 @@ private fun shortestColumn(colHeights: IntArray): Int {
     return column
 }
 
+@ExperimentalMaterialApi
 @Composable
 fun DetailsHeader(
     model: InfoModel,
@@ -265,72 +266,81 @@ fun DetailsHeader(
     var descriptionVisibility by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.fillMaxSize()
-            .whatIfNotNull(swatchInfo?.rgb) {
-                background(
-                    ColorUtils.setAlphaComponent(
-                        ColorUtils.blendARGB(
-                            MaterialTheme.colors.surface.toArgb(),
-                            it,
-                            0.25f
-                        ),
-                        127
-                    ).toComposeColor()
-                )
-            }
+        modifier = Modifier
+            .fillMaxSize()
+            .animateContentSize()
     ) {
+
+        GlideImage(
+            imageModel = model.imageUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            requestBuilder = Glide.with(LocalView.current)
+                .asBitmap()
+                //.override(360, 480)
+                .placeholder(logo.logoId)
+                .error(logo.logoId)
+                .fallback(logo.logoId),
+            modifier = Modifier.matchParentSize()
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    ColorUtils
+                        .setAlphaComponent(
+                            ColorUtils.blendARGB(
+                                MaterialTheme.colors.primarySurface.toArgb(),
+                                swatchInfo?.rgb ?: Color.Transparent.toArgb(),
+                                0.25f
+                            ),
+                            200//127
+                        )
+                        .toComposeColor()
+                )
+        )
 
         Row(
             modifier = Modifier
-                .padding(vertical = 5.dp)
-                .padding(end = 5.dp)
+                .padding(5.dp)
                 .animateContentSize()
-                .whatIfNotNull(swatchInfo?.rgb) {
-                    background(
-                        ColorUtils.setAlphaComponent(
-                            ColorUtils.blendARGB(
-                                MaterialTheme.colors.surface.toArgb(),
-                                it,
-                                0.25f
-                            ),
-                            127
-                        ).toComposeColor()
-                    )
-                }
         ) {
 
             Card(
-                modifier = Modifier.padding(start = 5.dp)
+                shape = RoundedCornerShape(5.dp),
+                modifier = Modifier.padding(5.dp)
             ) {
                 GlideImage(
                     imageModel = model.imageUrl,
-                    contentDescription = "",
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     requestBuilder = Glide.with(LocalView.current)
                         .asBitmap()
-                        .override(360, 480)
+                        //.override(360, 480)
                         .placeholder(logo.logoId)
                         .error(logo.logoId)
                         .fallback(logo.logoId)
-                        .transform(RoundedCorners(15)),
+                        .transform(RoundedCorners(5)),
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
-                        //.padding(5.dp)
                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                    //.size(ComposableUtils.IMAGE_WIDTH * 0.75f, ComposableUtils.IMAGE_HEIGHT * 0.85f),
                     failure = {
                         Image(
                             painter = painterResource(logo.logoId),
                             contentDescription = model.title,
                             modifier = Modifier
                                 .align(Alignment.CenterVertically)
-                                //.padding(5.dp)
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            //.size(ComposableUtils.IMAGE_WIDTH * 0.75f, ComposableUtils.IMAGE_HEIGHT * 0.85f)
                         )
                     }
                 )
             }
+
             Column(
-                modifier = Modifier.padding(horizontal = 5.dp)
+                modifier = Modifier.padding(start = 5.dp)
             ) {
 
                 LazyRow(
@@ -341,7 +351,7 @@ fun DetailsHeader(
                         CustomChip(
                             category = it,
                             textColor = swatchInfo?.rgb?.toComposeColor(),
-                            backgroundColor = swatchInfo?.bodyColor?.toComposeColor()
+                            backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f)
                         )
                     }
                 }
@@ -350,10 +360,11 @@ fun DetailsHeader(
                     modifier = Modifier
                         .clickable { favoriteClick(isFavorite) }
                         .padding(vertical = 5.dp)
+                        .fillMaxWidth()
                 ) {
                     Icon(
                         if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "",
+                        contentDescription = null,
                         tint = swatchInfo?.rgb?.toComposeColor() ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
@@ -368,7 +379,7 @@ fun DetailsHeader(
                     model.description,
                     modifier = Modifier
                         .padding(vertical = 5.dp)
-                        .weight(1f)
+                        .fillMaxWidth()
                         .clickable { descriptionVisibility = !descriptionVisibility },
                     overflow = TextOverflow.Ellipsis,
                     maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
@@ -400,7 +411,10 @@ fun CustomChip(
                 text = category,
                 style = MaterialTheme.typography.body2,
                 color = textColor ?: MaterialTheme.colors.onSurface,
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier
+                    .padding(8.dp)
+                    .align(Alignment.CenterVertically),
+                textAlign = TextAlign.Center
             )
         }
     }

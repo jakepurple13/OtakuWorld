@@ -3,7 +3,6 @@ package com.programmersbox.uiviews
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -13,8 +12,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -22,8 +25,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.NavigationUI
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.noowenz.showmoreless.ShowMoreLess
 import com.programmersbox.dragswipe.get
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -35,15 +38,13 @@ import com.programmersbox.helpfulutils.whatIfNotNull
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
-import com.programmersbox.rxutils.invoke
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.thirdpartyutils.changeTint
-import com.programmersbox.thirdpartyutils.check
 import com.programmersbox.thirdpartyutils.getPalette
 import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
 import com.programmersbox.uiviews.utils.ChromeCustomTabTransformationMethod
+import com.programmersbox.uiviews.utils.DetailsHeader
 import com.programmersbox.uiviews.utils.openInCustomChromeBrowser
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -74,16 +75,12 @@ class DetailsFragment : Fragment() {
 
     private val adapter by lazy { ChapterAdapter(requireContext(), inject<GenericInfo>().value, dao, disposable) }
 
-    //private val genericInfo by inject<GenericInfo>()
-
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
 
     private val logo: MainLogo by inject()
 
     private val isFavorite = BehaviorSubject.createDefault(false)
-
-    private var swatchBarColor: Int? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -100,7 +97,6 @@ class DetailsFragment : Fragment() {
         args.itemInfo
             ?.also {
                 binding.collapsingBar.title = it.title
-                binding.infoDescription.text = it.description
                 binding.toolbar.title = it.title
             }
             ?.toInfoModel()
@@ -116,77 +112,115 @@ class DetailsFragment : Fragment() {
                 adapter.addItems(info.chapters)
                 onInfoGet(info)
 
-                Glide.with(binding.bigInfoCover)
-                    .load(info.imageUrl)
-                    .override(360, 480)
-                    .placeholder(logo.logoId)
-                    .error(logo.logoId)
-                    .fallback(logo.logoId)
-                    .transform(RoundedCorners(15))
-                    .into<Drawable> {
-                        resourceReady { image, _ ->
-                            binding.bigInfoCover.setImageDrawable(image)
-                            binding.infoCover.setImageDrawable(image)
-                            binding.swatch = image.getPalette().vibrantSwatch
-                                ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
-                                .also { swatch ->
-                                    swatch?.rgb?.let {
-                                        binding.infoHeader.setBackgroundColor(
-                                            ColorUtils.setAlphaComponent(
-                                                ColorUtils.blendARGB(
-                                                    requireContext().colorFromTheme(R.attr.colorSurface),
-                                                    it,
-                                                    0.25f
-                                                ),
-                                                127
-                                            )
-                                        )
+                /* Glide.with(binding.bigInfoCover)
+                     .load(info.imageUrl)
+                     .override(360, 480)
+                     .placeholder(logo.logoId)
+                     .error(logo.logoId)
+                     .fallback(logo.logoId)
+                     .transform(RoundedCorners(15))
+                     .into<Drawable> {
+                         resourceReady { image, _ ->
+                             binding.bigInfoCover.setImageDrawable(image)
+                             binding.infoCover.setImageDrawable(image)
+                             binding.swatch = image.getPalette().vibrantSwatch
+                                 ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
+                                 .also { swatch ->
+                                     swatch?.rgb?.let {
+                                         binding.infoHeader.setBackgroundColor(
+                                             ColorUtils.setAlphaComponent(
+                                                 ColorUtils.blendARGB(
+                                                     requireContext().colorFromTheme(R.attr.colorSurface),
+                                                     it,
+                                                     0.25f
+                                                 ),
+                                                 127
+                                             )
+                                         )
 
-                                        binding.collapsingBar.setContentScrimColor(it)
-                                    }
+                                         binding.collapsingBar.setContentScrimColor(it)
+                                     }
 
-                                    //swatchInfo = swatch
+                                     //swatchInfo = swatch
 
-                                    ShowMoreLess.Builder(requireContext())
-                                        .expandAnimation(true)
-                                        .showMoreLabel(getString(R.string.showMore))
-                                        .showLessLabel(getString(R.string.showLess))
-                                        .labelBold(true)
-                                        .textLengthAndLengthType(2, ShowMoreLess.TYPE_LINE)
-                                        .whatIfNotNull(swatch?.rgb) {
-                                            showLessLabelColor(it)
-                                            showMoreLabelColor(it)
-                                        }
-                                        .textClickable(textClickableInExpand = true, textClickableInCollapse = true)
-                                        .labelUnderLine(true)
-                                        .build()
-                                        .addShowMoreLess(binding.infoDescription, binding.infoDescription.text, false)
+                                     ShowMoreLess.Builder(requireContext())
+                                         .expandAnimation(true)
+                                         .showMoreLabel(getString(R.string.showMore))
+                                         .showLessLabel(getString(R.string.showLess))
+                                         .labelBold(true)
+                                         .textLengthAndLengthType(2, ShowMoreLess.TYPE_LINE)
+                                         .whatIfNotNull(swatch?.rgb) {
+                                             showLessLabelColor(it)
+                                             showMoreLabelColor(it)
+                                         }
+                                         .textClickable(textClickableInExpand = true, textClickableInCollapse = true)
+                                         .labelUnderLine(true)
+                                         .build()
+                                         .addShowMoreLess(binding.infoDescription, binding.infoDescription.text, false)
 
-                                    swatch?.rgb?.let { binding.toolbar.setBackgroundColor(it) }
-                                    swatch?.rgb?.let { binding.infoLayout.setBackgroundColor(it) }
-                                    swatch?.rgb?.let { binding.shareButton.backgroundTintList = ColorStateList.valueOf(it) }
-                                    swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
-                                    binding.favoriteItem.changeTint(swatch?.rgb ?: Color.WHITE)
-                                    swatch?.rgb?.let { requireActivity().window.statusBarColor = it }
-                                    swatchBarColor = swatch?.rgb
-                                    adapter.swatchInfo = swatch
+                                     swatch?.rgb?.let { binding.toolbar.setBackgroundColor(it) }
+                                     swatch?.rgb?.let { binding.infoLayout.setBackgroundColor(it) }
+                                     swatch?.rgb?.let { binding.shareButton.backgroundTintList = ColorStateList.valueOf(it) }
+                                     swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
+                                     binding.favoriteItem.changeTint(swatch?.rgb ?: Color.WHITE)
+                                     swatch?.rgb?.let { requireActivity().window.statusBarColor = it }
+                                     swatchBarColor = swatch?.rgb
+                                     adapter.swatchInfo = swatch
 
-                                    FastScrollerBuilder(binding.infoChapterList)
-                                        .useMd2Style()
-                                        .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
-                                            swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
-                                            setThumbDrawable(drawable)
-                                        }
-                                        .build()
-                                }
+                                     FastScrollerBuilder(binding.infoChapterList)
+                                         .useMd2Style()
+                                         .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
+                                             swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
+                                             setThumbDrawable(drawable)
+                                         }
+                                         .build()
+                                 }
 
-                            binding.executePendingBindings()
-                        }
-                    }
+                             binding.executePendingBindings()
+                         }
+                     }*/
 
-                /*binding.composeHeader.setContent {
+                binding.composeHeader.setContent {
 
                     var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
+
+                    Glide.with(this)
+                        .load(info.imageUrl)
+                        .override(360, 480)
+                        .placeholder(logo.logoId)
+                        .error(logo.logoId)
+                        .fallback(logo.logoId)
+                        .transform(RoundedCorners(15))
+                        .into<Drawable> {
+                            resourceReady { image, _ ->
+                                binding.swatch = image.getPalette().vibrantSwatch
+                                    ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
+                                    .also { swatch ->
+
+                                        swatchInfo = swatch
+                                        adapter.swatchInfo = swatch
+
+                                        swatch?.rgb?.let {
+                                            binding.toolbar.setBackgroundColor(it)
+                                            binding.shareButton.backgroundTintList = ColorStateList.valueOf(it)
+                                            binding.collapsingBar.setContentScrimColor(it)
+                                            requireActivity().window.statusBarColor = it
+                                        }
+
+                                        swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
+
+                                        FastScrollerBuilder(binding.infoChapterList)
+                                            .useMd2Style()
+                                            .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
+                                                swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
+                                                setThumbDrawable(drawable)
+                                            }
+                                            .build()
+                                    }
+
+                                binding.executePendingBindings()
+                            }
+                        }
 
                     val favoriteListener by Flowables.combineLatest(
                         itemListener.findItemByUrl(info.url),
@@ -232,7 +266,7 @@ class DetailsFragment : Fragment() {
                             (if (b) ::removeItem else ::addItem)(info)
                         }
                     }
-                }*/
+                }
 
                 /*binding.composeChapterList.setContent {
 
@@ -321,18 +355,6 @@ class DetailsFragment : Fragment() {
         binding.infoUrl.movementMethod = LinkMovementMethod.getInstance()
         binding.infoUrl.paintFlags += Paint.UNDERLINE_TEXT_FLAG
 
-        isFavorite
-            .subscribe {
-                binding.favoriteItem.check(it)
-                binding.favoriteInfo.text = getText(if (it) R.string.removeFromFavorites else R.string.addToFavorites)
-            }
-            .addTo(disposable)
-
-        binding.favoriteItem.changeTint(Color.WHITE)
-
-        binding.favoriteItem.isEnabled = false
-        binding.favoriteInfo.isEnabled = false
-
     }
 
     private fun onInfoGet(infoModel: InfoModel) {
@@ -346,41 +368,6 @@ class DetailsFragment : Fragment() {
             .map { it.second || it.first }
             .subscribe(isFavorite::onNext)
             .addTo(disposable)
-
-        binding.favoriteItem.isEnabled = true
-        binding.favoriteInfo.isEnabled = true
-
-        binding.favoriteItem.setOnClickListener {
-
-            fun addItem(model: InfoModel) {
-                val db = model.toDbModel(model.chapters.size)
-                Completable.concatArray(
-                    FirebaseDb.insertShow(db),
-                    dao.insertFavorite(db).subscribeOn(Schedulers.io())
-                )
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { isFavorite(true) }
-                    .addTo(disposable)
-            }
-
-            fun removeItem(model: InfoModel) {
-                val db = model.toDbModel(model.chapters.size)
-                Completable.concatArray(
-                    FirebaseDb.removeShow(db),
-                    dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
-                )
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { isFavorite(false) }
-                    .addTo(disposable)
-            }
-
-            (if (isFavorite.value!!) ::removeItem else ::addItem)(infoModel)
-
-        }
-
-        binding.favoriteInfo.setOnClickListener { binding.favoriteItem.performClick() }
 
         Flowables.combineLatest(
             chapterListener.getAllEpisodesByShow(infoModel.url),

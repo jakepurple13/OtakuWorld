@@ -41,141 +41,16 @@
                 app:expandedTitleGravity="top|center_horizontal"
                 app:expandedTitleMarginBottom="56dp"
                 app:expandedTitleTextAppearance="?attr/textAppearanceHeadline5"
-                app:layout_scrollFlags="scroll|enterAlways|exitUntilCollapsed|snap"
+                app:layout_scrollFlags="scroll|enterAlways|exitUntilCollapsed"
                 app:title="@{info.title}"
                 app:titleEnabled="false">
 
-                <ImageView
-                    android:id="@+id/bigInfoCover"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_margin="5dp"
-                    android:alpha="0.5"
-                    android:fitsSystemWindows="true"
-                    android:scaleType="centerCrop"
-                    app:layout_collapseMode="parallax"
-                    tools:ignore="ContentDescription,PxUsage"
-                    tools:src="@tools:sample/avatars" />
-
-                <!--<androidx.compose.ui.platform.ComposeView
+                <androidx.compose.ui.platform.ComposeView
                     android:id="@+id/composeHeader"
                     android:layout_marginTop="?attr/actionBarSize"
                     android:layout_marginBottom="5dp"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />-->
-
-                <RelativeLayout
-                    android:id="@+id/infoHeader"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="?attr/actionBarSize"
-                    android:layout_marginBottom="5dp"
-                    android:paddingVertical="5dp"
-                    android:paddingStart="0dp"
-                    android:paddingEnd="5dp">
-
-                    <ImageView
-                        android:id="@+id/infoCover"
-                        android:layout_width="360px"
-                        android:layout_height="480px"
-                        android:layout_marginStart="5dp"
-                        android:paddingHorizontal="5dp"
-                        tools:ignore="ContentDescription,PxUsage"
-                        tools:src="@tools:sample/avatars" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/infoCover"
-                        android:orientation="vertical">
-
-                        <HorizontalScrollView
-                            android:id="@+id/genreListLayout"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="5dp"
-                            android:fadingEdge="horizontal"
-                            android:fadingEdgeLength="10dp"
-                            android:requiresFadingEdge="horizontal">
-
-                            <com.google.android.material.chip.ChipGroup
-                                android:id="@+id/genreList"
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                app:genreList="@{info.genres}"
-                                app:singleLine="true"
-                                app:swatch="@{swatch}">
-
-                                <com.google.android.material.chip.Chip
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:visibility="gone"
-                                    tools:chipBackgroundColor="@sample/sample_colors"
-                                    tools:text="Comedy"
-                                    tools:textColor="@sample/sample_colors"
-                                    tools:visibility="visible" />
-
-                            </com.google.android.material.chip.ChipGroup>
-
-                        </HorizontalScrollView>
-
-                        <TextView
-                            android:id="@+id/infoUrl"
-                            style="@style/TextAppearance.MaterialComponents.Headline5"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:autoLink="web"
-                            android:linksClickable="true"
-                            android:text="@{info.title}"
-                            android:visibility="gone"
-                            tools:text="@tools:sample/cities"
-                            tools:textColorLink="@sample/sample_colors" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <com.airbnb.lottie.LottieAnimationView
-                                android:id="@+id/favoriteItem"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical"
-                                android:layout_marginEnd="5dp"
-                                app:lottie_loop="true"
-                                app:lottie_rawRes="@raw/heart"
-                                app:tint="?android:textColorPrimary" />
-
-                            <TextView
-                                android:id="@+id/favoriteInfo"
-                                style="@style/TextAppearance.MaterialComponents.Headline6"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="5dp"
-                                android:gravity="center_vertical"
-                                android:minLines="2"
-                                android:textColor="?android:textColorPrimary"
-                                tools:ignore="HardcodedText"
-                                tools:text="@string/addToFavorites" />
-
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/infoDescription"
-                            style="@style/TextAppearance.MaterialComponents.Body2"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:text="@{info.description}"
-                            app:layout_constraintTop_toTopOf="parent"
-                            tools:maxLines="2"
-                            tools:text="@tools:sample/lorem/random"
-                            tools:textColor="@sample/sample_colors" />
-
-                    </LinearLayout>
-
-                </RelativeLayout>
+                    android:layout_height="wrap_content" />
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
@@ -213,6 +88,18 @@
                     android:layout_margin="5dp"
                     android:orientation="vertical"
                     app:layout_constraintBottom_toBottomOf="parent">
+
+                    <TextView
+                        android:id="@+id/infoUrl"
+                        style="@style/TextAppearance.MaterialComponents.Headline5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:autoLink="web"
+                        android:linksClickable="true"
+                        android:text="@{info.title}"
+                        android:visibility="gone"
+                        tools:text="@tools:sample/cities"
+                        tools:textColorLink="@sample/sample_colors" />
 
                     <TextView
                         android:id="@+id/alternateNames"
