@@ -382,7 +382,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         LibsBuilder()
                             .withSortEnabled(true)
                             .customUtils("loggingutils", "LoggingUtils")
-                            .customUtils("flowutils", "FlowUtils")
+                            //.customUtils("flowutils", "FlowUtils")
                             .customUtils("gsonutils", "GsonUtils")
                             .customUtils("helpfulutils", "HelpfulUtils")
                             .customUtils("dragswipe", "DragSwipe")
