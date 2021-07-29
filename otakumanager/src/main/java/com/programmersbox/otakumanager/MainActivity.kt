@@ -3,6 +3,7 @@ package com.programmersbox.otakumanager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.otakumanager.ui.theme.OtakuWorldTheme
 import com.programmersbox.sharedutils.FirebaseAuthentication
@@ -39,6 +41,9 @@ import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.koin.android.ext.android.inject
+import com.programmersbox.anime_sources.Sources as ASources
+import com.programmersbox.manga_sources.Sources as MSources
+import com.programmersbox.novel_sources.Sources as NSources
 
 class MainActivity : ComponentActivity() {
 
@@ -53,6 +58,10 @@ class MainActivity : ComponentActivity() {
             .sourceList()
             .sortedBy { it.serviceName }
     }
+
+    private val animeSources = ASources.values().map { it.serviceName }
+    private val mangaSources = MSources.values().map { it.serviceName }
+    private val novelSources = NSources.values().map { it.serviceName }
 
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
@@ -116,12 +125,32 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         LazyRow {
+
+                            item {
+                                CustomChip(
+                                    "ALL",
+                                    modifier = Modifier
+                                        .combinedClickable(
+                                            onClick = {
+                                                selectedSources.clear()
+                                                selectedSources.addAll(allSources.map { it.serviceName })
+                                            },
+                                            onLongClick = {
+                                                selectedSources.clear()
+                                            }
+                                        ),
+                                    backgroundColor = MaterialTheme.colors.primary,
+                                    textColor = MaterialTheme.colors.onPrimary
+                                )
+                            }
+
                             items(
                                 (allSources.map { it.serviceName } + showing.map { it.source })
                                     .groupBy { it }
                                     .toList()
                                     .sortedBy { it.first }
                             ) {
+
                                 CustomChip(
                                     "${it.first}: ${it.second.size - 1}",
                                     modifier = Modifier
@@ -135,7 +164,8 @@ class MainActivity : ComponentActivity() {
                                                 selectedSources.add(it.first)
                                             }
                                         ),
-                                    backgroundColor = if (it.first in selectedSources) MaterialTheme.colors.primaryVariant else MaterialTheme.colors.surface
+                                    backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
+                                    textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
                                 )
                             }
                         }
@@ -167,12 +197,20 @@ class MainActivity : ComponentActivity() {
             ) {
                 items(
                     showing
-                        .groupBy { it.title }
+                        .groupBy(DbModel::title)
                         .entries
                         .toTypedArray()
                 ) { info ->
-                    //TODO: See if you can make the placeholder match the sources original app
-                    CoverCard(imageUrl = info.value.random().imageUrl, name = info.key, placeHolder = R.mipmap.ic_launcher) {
+                    CoverCard(
+                        imageUrl = info.value.random().imageUrl,
+                        name = info.key,
+                        placeHolder = when (info.value.first().source) {
+                            in animeSources -> R.drawable.animeworld_logo
+                            in mangaSources -> R.drawable.mangaworld_logo
+                            in novelSources -> R.drawable.novelworld_logo
+                            else -> R.drawable.ic_launcher_foreground
+                        }
+                    ) {
 
                         if (info.value.size == 1) {
                             //TODO: Open a modified details view here
