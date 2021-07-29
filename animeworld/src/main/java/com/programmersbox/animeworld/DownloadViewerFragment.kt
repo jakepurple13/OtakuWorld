@@ -1,35 +1,54 @@
 package com.programmersbox.animeworld
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
+import android.os.Parcel
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupMenu
-import androidx.lifecycle.lifecycleScope
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
-import com.github.se_bastiaan.torrentstream.utils.FileUtils
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.net.toUri
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.programmersbox.animeworld.adapters.JobQueueAdapter
-import com.programmersbox.animeworld.adapters.PauseAdapter
 import com.programmersbox.animeworld.databinding.DownloadViewerFragmentBinding
 import com.programmersbox.animeworld.ytsdatabase.*
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
+import com.programmersbox.helpfulutils.sizedListOf
+import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
-import com.tonyodev.fetch2.AbstractFetchListener
-import com.tonyodev.fetch2.Download
-import com.tonyodev.fetch2.Error
-import com.tonyodev.fetch2.Fetch
-import kotlinx.coroutines.launch
-import java.io.File
+import com.tonyodev.fetch2.*
+import com.tonyodev.fetch2core.Extras
+import java.text.DecimalFormat
+import kotlin.random.Random
 
 class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
@@ -39,14 +58,10 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     }
 
     private val fetch: Fetch = Fetch.getDefaultInstance()
-    private var fileAdapter: FileAdapter? = null
-
-    private val pauseRepository: PauseRepository by lazy { PauseRepository(DownloadDatabase.getInstance(requireContext()).getPauseDao()) }
-
-    private var jobQueueAdapter: JobQueueAdapter? = null
-    private var pauseAdapter: PauseAdapter? = null
 
     private lateinit var binding: DownloadViewerFragmentBinding
+
+    private val downloadSubject = mutableStateListOf<DownloadData>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -57,60 +72,15 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         return binding.root
     }
 
+    @ExperimentalMaterialApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        fileAdapter = FileAdapter(this, requireContext())
+        binding.downloadCompose.setContent {
 
-        jobQueueAdapter = JobQueueAdapter(requireContext())
-        pauseAdapter = PauseAdapter(requireContext())
-
-        pauseRepository.getAllPauseJob().observe(this) { pauseAdapter?.updateModels(it) }
-
-        pauseAdapter?.setOnMoreListener = { v, model, i ->
-            val popupMenu = PopupMenu(v.context, v)
-            popupMenu.inflate(R.menu.torrent_pause_menu)
-            popupMenu.setOnMenuItemClickListener {
-                handlePauseMenu(it, model, i)
-                return@setOnMenuItemClickListener true
+            MdcTheme {
+                ScaffoldUi()
             }
-            popupMenu.show()
-        }
-
-        jobQueueAdapter?.setCloseClickListener { _, pos -> jobQueueAdapter?.removeItem(pos) }
-
-        registerLocalBroadcast()
-
-        val downloadsAdapter = ConcatAdapter(fileAdapter!!, jobQueueAdapter!!, pauseAdapter!!)
-
-        binding.downloadList.adapter = downloadsAdapter
-
-        ItemTouchHelper(itemCallback).attachToRecyclerView(binding.downloadList)
-
-        /*DragSwipeUtils.setDragSwipeUp(
-            fileAdapter!!,
-            downloadList,
-            listOf(Direction.NOTHING),
-            listOf(Direction.START, Direction.END),
-            DragSwipeActionBuilder {
-                onSwiped { viewHolder, direction, dragSwipeAdapter ->
-                    (dragSwipeAdapter as? FileAdapter)?.onItemDismiss(viewHolder.absoluteAdapterPosition, direction.value)
-                }
-            }
-        )*/
-
-        binding.multipleDownloadDelete.setOnClickListener {
-            val downloadItems = mutableListOf<FileAdapter.DownloadData>()
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.delete)
-                .setMultiChoiceItems(fileAdapter!!.dataList.map { it.download?.file }.toTypedArray(), null) { _, i, b ->
-                    if (b) downloadItems.add(fileAdapter!!.dataList[i]) else downloadItems.remove(fileAdapter!!.dataList[i])
-                }
-                .setPositiveButton(R.string.delete) { d, _ ->
-                    Fetch.getDefaultInstance().delete(downloadItems.map { it.id })
-                    d.dismiss()
-                }
-                .show()
         }
 
     }
@@ -120,9 +90,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         fetch.getDownloads { downloads ->
             val list = ArrayList(downloads)
             list.sortWith { first, second -> first.created.compareTo(second.created) }
-            for (download in list) {
-                fileAdapter!!.addDownload(download)
-            }
+            downloadSubject.addAll(list.map { DownloadData(it) })
         }.addListener(fetchListener)
     }
 
@@ -131,84 +99,73 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         fetch.removeListener(fetchListener)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        //fetch!!.close()
-        //LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(receiver)
-    }
+    private fun updateUI(
+        download: Download,
+        etaTime: Long = UNKNOWN_REMAINING_TIME,
+        downloadPs: Long = UNKNOWN_DOWNLOADED_BYTES_PER_SECOND,
+        addOrRemove: Boolean = true
+    ) {
+        val d = downloadSubject.withIndex().find { it.value.id == download.id }
 
-    private val itemCallback = object : ItemTouchHelper.SimpleCallback(Direction.NOTHING.value, Direction.START + Direction.END) {
+        if (addOrRemove) {
 
-        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            when (viewHolder.bindingAdapter) {
-                is FileAdapter -> {
-                    fileAdapter?.onItemDismiss(viewHolder.absoluteAdapterPosition, direction)
-                }
-                is PauseAdapter -> {
-                    lifecycleScope.launch {
-                        pauseAdapter?.get(viewHolder.absoluteAdapterPosition)?.let {
-                            it.saveLocation?.let { FileUtils.recursiveDelete(File(it)) }
-                            pauseRepository.deletePause(it.hash)
-                        }
-                    }
-                }
-                is JobQueueAdapter -> {
-                    jobQueueAdapter?.removeItem(viewHolder.absoluteAdapterPosition)
-                    //t?.saveLocation?.let { FileUtils.recursiveDelete(File(it)) }
-                    //t?.hash?.let { pauseRepository.deletePause(it) }
-                }
+            val item = DownloadData(download).apply {
+                eta = etaTime
+                downloadedBytesPerSecond = downloadPs
             }
-            //dragSwipeActions.onSwiped(viewHolder, Direction.getDirectionFromValue(direction), dragSwipeAdapter)
+
+            if (d == null) {
+                downloadSubject.add(item)
+            } else {
+                downloadSubject[d.index] = item
+            }
+        } else {
+            if (download.status == Status.REMOVED || download.status == Status.DELETED) {
+                downloadSubject.removeAt(d!!.index)
+            }
         }
-
-        override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-            return true
-        }
-
-        override fun isLongPressDragEnabled(): Boolean = false//dragSwipeActions.isLongPressDragEnabled()
-        override fun isItemViewSwipeEnabled(): Boolean = true//dragSwipeActions.isItemViewSwipeEnabled()
-
     }
 
     private val fetchListener = object : AbstractFetchListener() {
         override fun onQueued(download: Download, waitingOnNetwork: Boolean) {
-            fileAdapter!!.addDownload(download)
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            updateUI(download)
         }
 
         override fun onCompleted(download: Download) {
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            updateUI(download)
             context?.notificationManager?.cancel(download.id)
         }
 
         override fun onError(download: Download, error: Error, throwable: Throwable?) {
             super.onError(download, error, throwable)
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            updateUI(download)
         }
 
         override fun onProgress(download: Download, etaInMilliSeconds: Long, downloadedBytesPerSecond: Long) {
-            fileAdapter!!.update(download, etaInMilliSeconds, downloadedBytesPerSecond)
+            updateUI(download, etaInMilliSeconds, downloadedBytesPerSecond)
         }
 
         override fun onPaused(download: Download) {
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            updateUI(download)
         }
 
         override fun onResumed(download: Download) {
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            updateUI(download)
         }
 
         override fun onCancelled(download: Download) {
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            updateUI(download)
             context?.notificationManager?.cancel(download.id)
         }
 
         override fun onRemoved(download: Download) {
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            //updateUI(download)
+            downloadSubject.removeAll { it.id == download.id }
         }
 
         override fun onDeleted(download: Download) {
-            fileAdapter!!.update(download, UNKNOWN_REMAINING_TIME, UNKNOWN_DOWNLOADED_BYTES_PER_SECOND)
+            //updateUI(download)
+            downloadSubject.removeAll { it.id == download.id }
             context?.notificationManager?.cancel(download.id)
         }
     }
@@ -229,86 +186,408 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         fetch.retry(id)
     }
 
-    private fun handlePauseMenu(it: MenuItem, model: Model.response_pause, i: Int) {
-        when (it.itemId) {
-            R.id.action_unpause -> {
-                pauseRepository.deletePause(model.hash)
-
-                val intent = Intent(this.requireActivity(), CommonBroadCast::class.java)
-                intent.action = UNPAUSE_JOB
-                intent.putExtra("model", model.torrent!!)
-                activity?.sendBroadcast(intent)
-            }
-            R.id.action_deleteJob -> {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.do_you_want_to_delete)
-                    .setMessage(R.string.delete)
-                    .setPositiveButton(getString(R.string.yes)) { d, _ ->
-                        model.saveLocation?.let { FileUtils.recursiveDelete(File(it)) }
-                        pauseRepository.deletePause(model.hash)
-                        d.dismiss()
+    @ExperimentalMaterialApi
+    @Composable
+    private fun ScaffoldUi() {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    actions = {
+                        IconButton(onClick = { dismiss() }) { Icon(Icons.Default.Close, null) }
+                    },
+                    title = {
+                        Text(
+                            stringResource(id = R.string.in_progress_downloads),
+                            style = MaterialTheme.typography.h5
+                        )
                     }
-                    .setNegativeButton(getString(R.string.no)) { d, _ ->
-                        pauseRepository.deletePause(model.hash)
-                        d.dismiss()
-                    }
-                    .show()
-            }
-        }
-    }
-
-    private fun registerLocalBroadcast() {
-        val filter = IntentFilter(MODEL_UPDATE)
-        filter.addAction(PENDING_JOB_UPDATE)
-        filter.addAction(EMPTY_QUEUE)
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(receiver, filter)
-    }
-
-    private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            handleReceiver(intent?.action, intent)
-        }
-    }
-
-    private fun handleReceiver(action: String?, intent: Intent?) {
-        when (action) {
-            MODEL_UPDATE -> {
-                try {
-                    jobQueueAdapter?.setListNotify(emptyList())
-                    val currentModels = intent?.getSerializableExtra("currentModel")
-                    if (currentModels is Torrent) jobQueueAdapter?.addItem(currentModels)
-                    /** Update pending models */
-                    val torrents = intent?.getSerializableExtra("pendingModels")
-                    if (torrents is ArrayList<*>) jobQueueAdapter?.addItems(torrents as ArrayList<Torrent>)
-
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                )
+            },
+            bottomBar = {
+                Button(
+                    onClick = {
+                        val downloadItems = mutableListOf<DownloadData>()
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.delete)
+                            .setMultiChoiceItems(downloadSubject.map { it.download.file }.toTypedArray(), null) { _, i, b ->
+                                if (b) downloadItems.add(downloadSubject[i]) else downloadItems.remove(downloadSubject[i])
+                            }
+                            .setPositiveButton(R.string.delete) { d, _ ->
+                                fetch.delete(downloadItems.map { it.id })
+                                d.dismiss()
+                            }
+                            .show()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(0f)
+                ) {
+                    Text(
+                        stringResource(R.string.delete_multiple),
+                        style = MaterialTheme.typography.button
+                    )
                 }
             }
-            PENDING_JOB_UPDATE -> {
-
-                //DA_LOG("--- PENDING_JOB_UPDATE ---")
-                jobQueueAdapter?.setListNotify(emptyList())
-                pendingJobUpdate(intent)
-            }
-            EMPTY_QUEUE -> {
-
-                //DA_LOG("--- EMPTY_QUEUE ---")
-
-                //emptyQueue()
-                jobQueueAdapter?.setListNotify(emptyList())
+        ) {
+            if (downloadSubject.isEmpty()) {
+                EmptyState()
+            } else {
+                LazyColumn(
+                    modifier = Modifier.padding(top = 5.dp),
+                    contentPadding = it,
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) { items(downloadSubject) { d -> DownloadItem(d, this@DownloadViewerFragment) } }
             }
         }
     }
 
-    private fun pendingJobUpdate(intent: Intent?) {
-        val jobs = intent?.getSerializableExtra("models") ?: return
-        val models: ArrayList<Torrent> = jobs as ArrayList<Torrent>
-        pendingJobUpdate(models)
+    @Composable
+    private fun EmptyState() {
+        Box(modifier = Modifier.fillMaxSize()) {
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp),
+                elevation = 5.dp,
+                shape = RoundedCornerShape(5.dp)
+            ) {
+
+                Column(modifier = Modifier) {
+
+                    Text(
+                        text = stringResource(id = R.string.get_started),
+                        style = MaterialTheme.typography.h4,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    Text(
+                        text = stringResource(id = R.string.download_a_video),
+                        style = MaterialTheme.typography.body1,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    Button(
+                        onClick = {
+                            dismiss()
+                            (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 5.dp)
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.go_download),
+                            style = MaterialTheme.typography.button
+                        )
+                    }
+
+                }
+
+            }
+        }
     }
 
-    private fun pendingJobUpdate(models: ArrayList<Torrent>) {
-        jobQueueAdapter?.setListNotify(models)
+    @ExperimentalMaterialApi
+    @Composable
+    private fun DownloadItem(download: DownloadData, actionListener: ActionListener) {
+
+        val context = LocalContext.current
+
+        val dismissState = rememberDismissState(
+            confirmStateChange = {
+                if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+                    context.deleteDialog(download.download)
+                }
+                false
+            }
+        )
+
+        SwipeToDismiss(
+            state = dismissState,
+            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
+            dismissThresholds = { FractionalThreshold(0.5f) },
+            background = {
+                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                val color by animateColorAsState(
+                    when (dismissState.targetValue) {
+                        DismissValue.Default -> Color.Transparent
+                        DismissValue.DismissedToEnd -> Color.Red
+                        DismissValue.DismissedToStart -> Color.Red
+                    }
+                )
+                val alignment = when (direction) {
+                    DismissDirection.StartToEnd -> Alignment.CenterStart
+                    DismissDirection.EndToStart -> Alignment.CenterEnd
+                }
+                val icon = when (direction) {
+                    DismissDirection.StartToEnd -> Icons.Default.Delete
+                    DismissDirection.EndToStart -> Icons.Default.Delete
+                }
+                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(color)
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = alignment
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.scale(scale),
+                        tint = MaterialTheme.colors.onSurface
+                    )
+                }
+            }
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 5.dp)
+            ) {
+
+                ConstraintLayout {
+
+                    val (title, progress, action, progressText, speed, remaining, status) = createRefs()
+
+                    Text(
+                        download.download.url.toUri().lastPathSegment.orEmpty(),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .constrainAs(title) {
+                                start.linkTo(parent.start)
+                                top.linkTo(parent.top)
+                            }
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 8.dp)
+                    )
+
+                    var prog = download.download.progress
+                    if (prog == -1) { // Download progress is undermined at the moment.
+                        prog = 0
+                    }
+
+                    LinearProgressIndicator(
+                        progress = prog.toFloat() / 100f,
+                        modifier = Modifier
+                            .constrainAs(progress) {
+                                start.linkTo(parent.start)
+                                bottom.linkTo(action.bottom)
+                                end.linkTo(action.start)
+                                top.linkTo(action.top)
+                            }
+                            .padding(8.dp)
+                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            when (download.download.status) {
+                                Status.FAILED -> actionListener.onRetryDownload(download.download.id)
+                                Status.PAUSED -> actionListener.onResumeDownload(download.download.id)
+                                Status.DOWNLOADING, Status.QUEUED -> actionListener.onPauseDownload(download.download.id)
+                                Status.ADDED -> actionListener.onResumeDownload(download.download.id)
+                                else -> {
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .constrainAs(action) {
+                                end.linkTo(parent.end)
+                                top.linkTo(title.bottom)
+                            }
+                            .padding(top = 8.dp, end = 8.dp)
+                    ) {
+                        Text(
+                            stringResource(
+                                id =
+                                when (download.download.status) {
+                                    Status.COMPLETED -> R.string.view
+                                    Status.FAILED -> R.string.retry
+                                    Status.PAUSED -> R.string.resume
+                                    Status.DOWNLOADING, Status.QUEUED -> R.string.pause
+                                    Status.ADDED -> R.string.download
+                                    else -> R.string.error_text
+                                }
+                            ),
+                            style = MaterialTheme.typography.button
+                        )
+                    }
+
+                    Text(
+                        stringResource(R.string.percent_progress, prog),
+                        modifier = Modifier
+                            .constrainAs(progressText) {
+                                top.linkTo(progress.bottom)
+                                start.linkTo(progress.start)
+                            }
+                            .padding(horizontal = 8.dp)
+                    )
+
+                    Text(
+                        if (download.downloadedBytesPerSecond == 0L) "" else getDownloadSpeedString(download.downloadedBytesPerSecond),
+                        modifier = Modifier
+                            .constrainAs(speed) {
+                                top.linkTo(progress.bottom)
+                                end.linkTo(progress.end)
+                            }
+                            .padding(horizontal = 8.dp)
+                            .padding(bottom = 8.dp)
+                    )
+
+                    Text(
+                        if (download.eta == -1L) "" else getETAString(download.eta, true),
+                        modifier = Modifier
+                            .constrainAs(remaining) {
+                                bottom.linkTo(parent.bottom)
+                                baseline.linkTo(parent.baseline)
+                                top.linkTo(progressText.bottom)
+                                start.linkTo(parent.start)
+                            }
+                            .padding(8.dp)
+                    )
+
+                    Text(
+                        stringResource(id = getStatusString(download.download.status)),
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .constrainAs(status) {
+                                bottom.linkTo(parent.bottom)
+                                baseline.linkTo(parent.baseline)
+                                top.linkTo(remaining.top)
+                                start.linkTo(remaining.end)
+                                end.linkTo(parent.end)
+                            }
+                            .padding(8.dp)
+                    )
+
+                }
+
+            }
+        }
     }
 
+    private fun getStatusString(status: Status): Int = when (status) {
+        Status.COMPLETED -> R.string.done
+        Status.DOWNLOADING -> R.string.downloading_no_dots
+        Status.FAILED -> R.string.error_text
+        Status.PAUSED -> R.string.paused_text
+        Status.QUEUED -> R.string.waiting_in_queue
+        Status.REMOVED -> R.string.removed_text
+        Status.NONE -> R.string.not_queued
+        else -> R.string.unknown
+    }
+
+    private fun getDownloadSpeedString(downloadedBytesPerSecond: Long): String {
+        if (downloadedBytesPerSecond < 0) {
+            return ""
+        }
+        val kb = downloadedBytesPerSecond.toDouble() / 1000.toDouble()
+        val mb = kb / 1000.toDouble()
+        val gb = mb / 1000
+        val tb = gb / 1000
+        val decimalFormat = DecimalFormat(".##")
+        return when {
+            tb >= 1 -> "${decimalFormat.format(tb)} tb/s"
+            gb >= 1 -> "${decimalFormat.format(gb)} gb/s"
+            mb >= 1 -> "${decimalFormat.format(mb)} mb/s"
+            kb >= 1 -> "${decimalFormat.format(kb)} kb/s"
+            else -> "$downloadedBytesPerSecond b/s"
+        }
+    }
+
+    private fun getETAString(etaInMilliSeconds: Long, needLeft: Boolean = true): String {
+        if (etaInMilliSeconds < 0) {
+            return ""
+        }
+        var seconds = (etaInMilliSeconds / 1000).toInt()
+        val hours = (seconds / 3600).toLong()
+        seconds -= (hours * 3600).toInt()
+        val minutes = (seconds / 60).toLong()
+        seconds -= (minutes * 60).toInt()
+        return when {
+            hours > 0 -> String.format("%02d:%02d:%02d hours", hours, minutes, seconds)
+            minutes > 0 -> String.format("%02d:%02d mins", minutes, seconds)
+            else -> "$seconds secs"
+        } + (if (needLeft) " left" else "")
+    }
+
+    @ExperimentalMaterialApi
+    @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true, device = Devices.PIXEL_2, name = "Light")
+    @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true, device = Devices.PIXEL_2, name = "Dark")
+    @Composable
+    fun PreviewDownloadItem() {
+        MaterialTheme { ScaffoldUi() }
+
+        val list = sizedListOf(5) {
+            DownloadData(
+                object : Download {
+                    override val autoRetryAttempts: Int get() = 1
+                    override val autoRetryMaxAttempts: Int get() = 1
+                    override val created: Long get() = 1L
+                    override val downloadOnEnqueue: Boolean get() = true
+                    override val downloaded: Long get() = 1L
+                    override val downloadedBytesPerSecond: Long get() = 60
+                    override val enqueueAction: EnqueueAction get() = EnqueueAction.REPLACE_EXISTING
+                    override val error: Error get() = Error.UNKNOWN
+                    override val etaInMilliSeconds: Long get() = 60000
+                    override val extras: Extras get() = Extras.emptyExtras
+                    override val file: String get() = ""
+                    override val fileUri: Uri get() = Uri.parse("")
+                    override val group: Int get() = 1
+                    override val headers: Map<String, String> get() = emptyMap()
+                    override val id: Int get() = 1
+                    override val identifier: Long get() = 0L
+                    override val namespace: String get() = ""
+                    override val networkType: NetworkType get() = NetworkType.ALL
+                    override val priority: Priority get() = Priority.HIGH
+                    override val progress: Int get() = Random.nextInt(1, 100)
+                    override val request: Request get() = Request("", "")
+                    override val status: Status get() = Status.DOWNLOADING
+                    override val tag: String get() = "tag"
+                    override val total: Long get() = 0L
+                    override val url: String get() = "https://raw.githubusercontent.com/jakepurple13/OtakuWorld/master/update.json"
+
+                    override fun copy(): Download = this
+
+                    override fun describeContents(): Int = 0
+
+                    override fun writeToParcel(p0: Parcel?, p1: Int) {
+
+                    }
+
+                }
+            ).apply {
+                eta = 100000L
+                downloadedBytesPerSecond = 13245674L
+            }
+        }
+
+        downloadSubject.addAll(list)
+    }
+
+}
+
+interface ActionListener {
+    fun onPauseDownload(id: Int)
+    fun onResumeDownload(id: Int)
+    fun onRemoveDownload(id: Int)
+    fun onRetryDownload(id: Int)
+}
+
+class DownloadData(val download: Download, val id: Int = download.id) {
+    var eta: Long = -1
+    var downloadedBytesPerSecond: Long = 0
+    override fun hashCode(): Int {
+        return id
+    }
+
+    override fun toString(): String = download.toString()
+
+    override fun equals(other: Any?): Boolean {
+        return other === this || other is DownloadData && other.id == id
+    }
 }

@@ -130,7 +130,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             if (items.isEmpty()) {
                 EmptyState()
             } else {
-
                 Scaffold(
                     bottomBar = {
                         Button(

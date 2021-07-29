@@ -152,9 +152,9 @@ fun Int.toComposeColor() = Color(this)
 @Composable
 fun CustomChip(
     category: String,
-    textColor: Color?,
-    backgroundColor: Color?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color? = MaterialTheme.colors.onSurface,
+    backgroundColor: Color? = MaterialTheme.colors.surface
 ) {
     Surface(
         modifier = Modifier
@@ -307,21 +307,3 @@ suspend fun calculateDiff(
     }
 }
 
-/*
-object TestItems {
-
-    val TEST_SOURCE = object : ApiService {
-        override val baseUrl: String get() = ""
-        override fun getRecent(page: Int): Single<List<ItemModel>> = Single.never()
-        override fun getList(page: Int): Single<List<ItemModel>> = Single.never()
-        override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.never()
-        override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.never()
-    }
-
-    val TEST_SWATCH = SwatchInfo(
-        rgb = Color.Blue.toArgb(),
-        titleColor = Color.Red.toArgb(),
-        bodyColor = Color.Green.toArgb()
-    )
-}
-*/

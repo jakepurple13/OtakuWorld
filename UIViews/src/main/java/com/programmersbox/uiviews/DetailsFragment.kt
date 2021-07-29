@@ -3,6 +3,7 @@ package com.programmersbox.uiviews
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -28,10 +29,10 @@ import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -447,7 +448,7 @@ class DetailsFragment : Fragment() {
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                         failure = {
                             Image(
-                                painter = painterResource(logo.logoId),
+                                bitmap = BitmapFactory.decodeResource(resources, logo.logoId).asImageBitmap(),
                                 contentDescription = model.title,
                                 modifier = Modifier
                                     .align(Alignment.CenterVertically)
@@ -481,6 +482,21 @@ class DetailsFragment : Fragment() {
                             .padding(vertical = 5.dp)
                             .fillMaxWidth()
                     ) {
+
+                        /*val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.heart))
+                        val p by animateLottieCompositionAsState(composition = composition)
+
+                        *//*
+                        fun LottieAnimationView.changeTint(@ColorInt newColor: Int) =
+        addValueCallback(KeyPath("**"), LottieProperty.COLOR_FILTER) { PorterDuffColorFilter(newColor, PorterDuff.Mode.SRC_ATOP) }
+                         *//*
+
+                        LottieAnimation(
+                            composition = composition,
+                            progress = animateFloatAsState(targetValue = ),
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )*/
+
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
