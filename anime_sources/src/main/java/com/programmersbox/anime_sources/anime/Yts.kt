@@ -5,8 +5,6 @@ import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.*
-import com.programmersbox.thirdpartyutils.gsonConverter
-import com.programmersbox.thirdpartyutils.rx2FactoryAsync
 import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -186,8 +184,8 @@ object Yts : ShowApi(
 object YtsService {
     fun build(): YTSApi = Retrofit.Builder()
         .baseUrl("https://yts.mx/api/v2/")
-        .gsonConverter()
-        .rx2FactoryAsync()
+        //.gsonConverter()
+        //.rx2FactoryAsync()
         .build()
         .create()
 }

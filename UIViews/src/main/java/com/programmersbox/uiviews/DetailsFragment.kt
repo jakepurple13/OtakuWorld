@@ -60,8 +60,6 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.thirdpartyutils.getPalette
-import com.programmersbox.thirdpartyutils.into
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
