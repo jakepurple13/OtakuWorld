@@ -1,31 +1,42 @@
 package com.programmersbox.uiviews.utils
 
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
@@ -307,3 +318,92 @@ suspend fun calculateDiff(
     }
 }
 
+@ExperimentalMaterialApi
+@Composable
+fun CoverCard(imageUrl: String, name: String, placeHolder: Int, error: Int = placeHolder, onClick: () -> Unit = {}) {
+
+    val context = LocalContext.current
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .padding(5.dp)
+            .size(
+                ComposableUtils.IMAGE_WIDTH,
+                ComposableUtils.IMAGE_HEIGHT
+            ),
+        interactionSource = MutableInteractionSource(),
+        indication = rememberRipple(),
+        onClickLabel = name,
+    ) {
+
+        Box {
+            GlideImage(
+                imageModel = imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                requestBuilder = Glide.with(LocalView.current)
+                    .asBitmap()
+                    //.override(360, 480)
+                    .placeholder(placeHolder)
+                    .error(error)
+                    .fallback(placeHolder)
+                    .transform(RoundedCorners(5)),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                loading = {
+                    Image(
+                        bitmap = AppCompatResources.getDrawable(context, placeHolder)!!.toBitmap().asImageBitmap(),
+                        contentDescription = name,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                },
+                failure = {
+                    Image(
+                        bitmap = AppCompatResources.getDrawable(context, error)!!.toBitmap().asImageBitmap(),
+                        contentDescription = name,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 50f
+                        )
+                    )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Text(
+                    name,
+                    style = MaterialTheme
+                        .typography
+                        .body1
+                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                )
+            }
+        }
+
+    }
+}

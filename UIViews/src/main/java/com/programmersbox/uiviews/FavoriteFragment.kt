@@ -5,7 +5,12 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.children
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
@@ -31,6 +36,8 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.databinding.FavoriteItemBinding
 import com.programmersbox.uiviews.databinding.FragmentFavoriteBinding
 import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
+import com.programmersbox.uiviews.utils.CoverCard
+import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.toolTipText
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -54,12 +61,17 @@ class FavoriteFragment : BaseFragment() {
     private var sourcesList by behaviorDelegate(sourcePublisher)
     private val adapter by lazy { FavoriteAdapter() }
 
+    private val logo: MainLogo by inject()
+    private val logo2: NotificationLogo by inject()
+
     private val fireListener = FirebaseDb.FirebaseListener()
 
     override val layoutId: Int get() = R.layout.fragment_favorite
 
     private lateinit var binding: FragmentFavoriteBinding
 
+    @ExperimentalMaterialApi
+    @ExperimentalFoundationApi
     @SuppressLint("SetTextI18n")
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
 
@@ -106,55 +118,24 @@ class FavoriteFragment : BaseFragment() {
 
         //binding.xmlVersion.visibility = View.GONE
 
-        /*val flowable = Flowables.combineLatest(
-            source1 = dbFire
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread()),
-            source2 = sourcePublisher.toLatestFlowable(),
-            source3 = binding.favSearchInfo
-                .textChanges()
-                .debounce(500, TimeUnit.MILLISECONDS)
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { pair ->
-                pair.first.sortedBy(DbModel::title)
-                    .filter { it.source in pair.second.map(ApiService::serviceName) && it.title.contains(pair.third, true) }
-            }
-            .map { it.size to it.toGroup() }
-            .distinctUntilChanged()
-            .share()
-
+        /*binding.composeVersion.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         binding.composeVersion.setContent {
 
-            *//*val list = remember {
-                flowable
-                    .map { it.second }
-                    .subscribeAsState(initial = emptyMap())
-            }*//*
-
-            val list by flowable
+            *//*val list by flowable
                 .map { it.second }
                 .doOnCancel { println("Cancelled") }
-                .subscribeAsState(initial = emptyMap())
+                .subscribeAsState(initial = emptyMap())*//*
 
-            //mutableStateMapOf<String, List<DbModel>>() }
+            MdcTheme {
 
-            *//*remember {
-                flowable
-                    .map { it.second}
-                    .subscribeAsState(initial = emptyMap())
-                    .subscribe {
-                        binding.favSearchInfo.setAdapter(ArrayAdapter(requireContext(), R.layout.favorite_auto_item, it.second.map { it.key }))
-                        list.clear()
-                        list.putAll(it.second)
-                    }
-                    .addTo(disposable)
-            }*//*
+                val list by fl.subscribeAsState(initial = emptyMap())
 
-            LazyVerticalGrid(cells = GridCells.Adaptive(with(LocalDensity.current) { 360.toDp() })) {
-                items(items = list.entries.toTypedArray()) { FavoriteItem(it, findNavController()) }
+                println(list.size)
+
+                LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH)) {
+                    items(items = list.entries.toTypedArray()) { FavoriteItem(it, findNavController(), logo.logoId) }
+                }
+
             }
 
         }*/
@@ -274,86 +255,32 @@ class FavoriteFragment : BaseFragment() {
 
     }
 
-    //private val logo: MainLogo by inject()
+    @ExperimentalMaterialApi
+    @Composable
+    private fun FavoriteItem(info: Map.Entry<String, List<DbModel>>, navController: NavController, logoId: Int) {
 
-    /* @ExperimentalMaterialApi
-     @Composable
-     private fun FavoriteItem(info: Map.Entry<String, List<DbModel>>, navController: NavController) {
-         Card(
-             onClick = {
-                 val item = info.value.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                 navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
-             },
-             modifier = Modifier
-                 .padding(5.dp)
-                 .size(
-                     with(LocalDensity.current) { 360.toDp() },
-                     with(LocalDensity.current) { 480.toDp() }
-                 ),
-             interactionSource = MutableInteractionSource(),
-             indication = rememberRipple(),
-             onClickLabel = info.key,
-         ) {
+        val context = LocalContext.current
 
-             val item = info.value.firstOrNull()
-
-             Box {
-                 Image(
-                     painter = rememberImagePainter(
-                         data = item?.imageUrl,
-                         builder = {
-                             crossfade(true)
-                             placeholder(logo.logoId)
-                             error(logo.logoId)
-                             //transformations(RoundedCornersTransformation(15f))
-                         }
-                     ),
-                     contentDescription = "",
-                     contentScale = ContentScale.Crop,
-                     modifier = Modifier
-                         //.border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(5.dp))
-                         .align(Alignment.Center)
-                         .size(
-                             with(LocalDensity.current) { 360.toDp() },
-                             with(LocalDensity.current) { 480.toDp() }
-                         )
-                 )
-
-                 Box(
-                     modifier = Modifier
-                         .fillMaxSize()
-                         .background(
-                             brush = Brush.verticalGradient(
-                                 colors = listOf(
-                                     Color.Transparent,
-                                     Color.Black
-                                 ),
-                                 startY = 50f
-                             )
-                         )
-                 )
-
-                 Box(
-                     modifier = Modifier
-                         .fillMaxSize()
-                         .padding(12.dp),
-                     contentAlignment = Alignment.BottomCenter
-                 ) {
-                     Text(
-                         info.key,
-                         style = MaterialTheme
-                             .typography
-                             .body1
-                             .copy(textAlign = TextAlign.Center, color = Color.White),
-                         modifier = Modifier
-                             .fillMaxWidth()
-                             .align(Alignment.BottomCenter)
-                     )
-                 }
-             }
-
-         }
-     }*/
+        CoverCard(
+            imageUrl = info.value.random().imageUrl,
+            name = info.key,
+            placeHolder = logoId
+        ) {
+            if (info.value.size == 1) {
+                val item = info.value.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
+            } else {
+                MaterialAlertDialogBuilder(context)
+                    .setTitle(R.string.chooseASource)
+                    .setItems(info.value.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
+                        val item = info.value[i].let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                        navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
+                        d.dismiss()
+                    }
+                    .show()
+            }
+        }
+    }
 
     companion object {
         @JvmStatic
