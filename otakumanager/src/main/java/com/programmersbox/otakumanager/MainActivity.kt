@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
 
     private val animeListener = FirebaseDb2("favoriteShows", "episodesWatched", "animeworld", "showUrl", "numEpisodes").FirebaseListener()
     private val mangaListener = FirebaseDb2("favoriteManga", "chaptersRead", "mangaworld", "mangaUrl", "chapterCount").FirebaseListener()
+    private val novelListener = FirebaseDb2("favoriteNovels", "novelsChaptersRead", "novelworld", "novelUrl", "novelNumChapters").FirebaseListener()
 
     private val genericInfo by inject<GenericInfo>()
 
@@ -200,6 +201,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         animeListener.unregister()
         mangaListener.unregister()
+        novelListener.unregister()
     }
 }
 

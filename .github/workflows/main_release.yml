@@ -198,7 +198,7 @@ jobs:
             Signed Anime App/animeworld-release.apk
             Signed Novel App/novelworld-release.apk
             Signed AnimeTV App/animeworldtv-release.apk
-           Signed OtakuManager App/otakumanager-release.apk
+            Signed OtakuManager App/otakumanager-release.apk
 
      - name: Discord notification
        env:
