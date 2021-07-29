@@ -36,7 +36,10 @@ jobs:
       - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
         env:
           ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
-          
+      - run: echo OTAKU_MANAGER_GOOGLE_SERVICES_JSON > otakumanager/google-services.json
+        env:
+          OTAKU_MANAGER_GOOGLE_SERVICES_JSON: ${{ secrets.OTAKU_MANAGER_SERVICES }}
+
       - name: Setup JDK
         uses: actions/setup-java@v1
         with:
@@ -53,15 +56,19 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: apk
-          path: mangaworld/build/outputs/apk/debug/mangaworld-debug.apk 
+          path: mangaworld/build/outputs/apk/debug/mangaworld-debug.apk
       - name: Upload APK
         uses: actions/upload-artifact@v1
         with:
           name: apk
-          path: novelworld/build/outputs/apk/debug/novelworld-debug.apk 
+          path: novelworld/build/outputs/apk/debug/novelworld-debug.apk
       - name: Upload APK
         uses: actions/upload-artifact@v1
         with:
           name: apk
-          path: animeworldtv/build/outputs/apk/debug/animeworldtv-debug.apk 
-          
+          path: animeworldtv/build/outputs/apk/debug/animeworldtv-debug.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: otakumanager/build/outputs/apk/debug/otakumanager-debug.apk
