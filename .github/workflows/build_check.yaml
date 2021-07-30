@@ -45,7 +45,7 @@ jobs:
         with:
           java-version: 11
       - name: Build APK
-        run: bash ./gradlew assembleDebug --stacktrace --continue
+        run: bash ./gradlew assembleDebug --stacktrace --scan
 
       - name: Upload APK
         uses: actions/upload-artifact@v1
