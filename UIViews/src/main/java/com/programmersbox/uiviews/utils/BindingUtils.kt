@@ -1,37 +1,38 @@
 package com.programmersbox.uiviews.utils
 
+import android.animation.ValueAnimator
 import android.content.res.ColorStateList
+import android.graphics.*
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.ColorInt
+import androidx.annotation.NonNull
 import androidx.appcompat.widget.Toolbar
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.Placeable
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.databinding.BindingAdapter
+import androidx.palette.graphics.Palette
+import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
+import com.airbnb.lottie.LottieProperty
+import com.airbnb.lottie.model.KeyPath
 import com.bumptech.glide.Glide
+import com.bumptech.glide.ListPreloader
+import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.programmersbox.dragswipe.DragSwipeAdapter
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.SwatchInfo
-import kotlin.math.ceil
+import kotlin.properties.Delegates
 
 @BindingAdapter("coverImage", "logoId")
 fun loadImage(view: ImageView, imageUrl: String?, logoId: Int) {
@@ -130,155 +131,70 @@ fun uploadedText(view: TextView, chapterModel: ChapterModel) {
     view.text = chapterModel.uploaded
 }
 
-object ComposableUtils {
+@DslMarker
+annotation class GlideMarker
 
-    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
-    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { 480.toDp() }
+fun <T> RequestBuilder<T>.into(target: CustomTargetBuilder<T>.() -> Unit) = into(CustomTargetBuilder<T>().apply(target).build())
 
-}
+class CustomTargetBuilder<T> internal constructor() {
 
-@Composable
-fun StaggeredVerticalGrid(
-    modifier: Modifier = Modifier,
-    maxColumnWidth: Dp,
-    content: @Composable () -> Unit
-) {
-    Layout(
-        content = content,
-        modifier = modifier
-    ) { measurables, constraints ->
-        val placeableXY: MutableMap<Placeable, Pair<Int, Int>> = mutableMapOf()
+    private var resourceReady: (T, Transition<in T>?) -> Unit by Delegates.notNull()
 
-        check(constraints.hasBoundedWidth) {
-            "Unbounded width not supported"
-        }
-        val columns = ceil(constraints.maxWidth / maxColumnWidth.toPx()).toInt()
-        val columnWidth = constraints.maxWidth / columns
-        val itemConstraints = constraints.copy(maxWidth = columnWidth)
-        val colHeights = IntArray(columns) { 0 } // track each column's height
-        val placeables = measurables.map { measurable ->
-            val column = shortestColumn(colHeights)
-            val placeable = measurable.measure(itemConstraints)
-            placeableXY[placeable] = Pair(columnWidth * column, colHeights[column])
-            colHeights[column] += placeable.height
-            placeable
-        }
+    @GlideMarker
+    fun resourceReady(block: (image: T, transition: Transition<in T>?) -> Unit) = run { resourceReady = block }
 
-        val height = colHeights.maxOrNull()
-            ?.coerceIn(constraints.minHeight, constraints.maxHeight)
-            ?: constraints.minHeight
-        layout(
-            width = constraints.maxWidth,
-            height = height
-        ) {
-            placeables.forEach { placeable ->
-                placeable.place(
-                    x = placeableXY.getValue(placeable).first,
-                    y = placeableXY.getValue(placeable).second
-                )
-            }
-        }
-    }
-}
+    private var loadCleared: (Drawable?) -> Unit = {}
 
-@Composable
-fun StaggeredVerticalGrid(
-    modifier: Modifier = Modifier,
-    columns: Int,
-    content: @Composable () -> Unit
-) {
-    Layout(
-        content = content,
-        modifier = modifier
-    ) { measurables, constraints ->
-        val placeableXY: MutableMap<Placeable, Pair<Int, Int>> = mutableMapOf()
+    @GlideMarker
+    fun loadCleared(block: (placeHolder: Drawable?) -> Unit) = run { loadCleared = block }
 
-        check(constraints.hasBoundedWidth) {
-            "Unbounded width not supported"
-        }
-        val columnWidth = constraints.maxWidth / columns
-        val itemConstraints = constraints.copy(maxWidth = columnWidth)
-        val colHeights = IntArray(columns) { 0 } // track each column's height
-        val placeables = measurables.map { measurable ->
-            val column = shortestColumn(colHeights)
-            val placeable = measurable.measure(itemConstraints)
-            placeableXY[placeable] = Pair(columnWidth * column, colHeights[column])
-            colHeights[column] += placeable.height
-            placeable
-        }
-
-        val height = colHeights.maxOrNull()
-            ?.coerceIn(constraints.minHeight, constraints.maxHeight)
-            ?: constraints.minHeight
-        layout(
-            width = constraints.maxWidth,
-            height = height
-        ) {
-            placeables.forEach { placeable ->
-                placeable.place(
-                    x = placeableXY.getValue(placeable).first,
-                    y = placeableXY.getValue(placeable).second
-                )
-            }
-        }
-    }
-}
-
-private fun shortestColumn(colHeights: IntArray): Int {
-    var minHeight = Int.MAX_VALUE
-    var column = 0
-    colHeights.forEachIndexed { index, height ->
-        if (height < minHeight) {
-            minHeight = height
-            column = index
-        }
-    }
-    return column
-}
-
-fun Int.toComposeColor() = Color(this)
-
-@Composable
-fun CustomChip(
-    category: String,
-    textColor: Color?,
-    backgroundColor: Color?
-) {
-    Surface(
-        modifier = Modifier.padding(end = 8.dp, bottom = 8.dp),
-        elevation = 8.dp,
-        shape = RoundedCornerShape(16.dp),
-        color = backgroundColor ?: MaterialTheme.colors.surface
-    ) {
-        Row {
-            Text(
-                text = category,
-                style = MaterialTheme.typography.body2,
-                color = textColor ?: MaterialTheme.colors.onSurface,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.CenterVertically),
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-/*
-object TestItems {
-
-    val TEST_SOURCE = object : ApiService {
-        override val baseUrl: String get() = ""
-        override fun getRecent(page: Int): Single<List<ItemModel>> = Single.never()
-        override fun getList(page: Int): Single<List<ItemModel>> = Single.never()
-        override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.never()
-        override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.never()
+    fun build() = object : CustomTarget<T>() {
+        override fun onLoadCleared(placeholder: Drawable?) = loadCleared(placeholder)
+        override fun onResourceReady(resource: T, transition: Transition<in T>?) = resourceReady(resource, transition)
     }
 
-    val TEST_SWATCH = SwatchInfo(
-        rgb = Color.Blue.toArgb(),
-        titleColor = Color.Red.toArgb(),
-        bodyColor = Color.Green.toArgb()
-    )
 }
-*/
+
+abstract class DragSwipeGlideAdapter<T, VH : RecyclerView.ViewHolder, Model>(
+    dataList: MutableList<T> = mutableListOf()
+) : DragSwipeAdapter<T, VH>(dataList), ListPreloader.PreloadModelProvider<Model> {
+
+    protected abstract val fullRequest: RequestBuilder<Drawable>
+    protected abstract val thumbRequest: RequestBuilder<Drawable>
+    protected abstract val itemToModel: (T) -> Model
+
+    @NonNull
+    override fun getPreloadItems(position: Int): List<Model> = dataList.subList(position, position + 1).map(itemToModel).toList()
+
+    @NonNull
+    override fun getPreloadRequestBuilder(item: Model): RequestBuilder<Drawable?>? = fullRequest.thumbnail(thumbRequest.load(item)).load(item)
+}
+
+fun Drawable.getPalette() = Palette.from(toBitmap()).generate()
+fun Bitmap.getPalette() = Palette.from(this).generate()
+
+fun Int.getPaletteFromColor(): Palette {
+    val b = Bitmap.createBitmap(5, 5, Bitmap.Config.ARGB_8888)
+    Canvas(b).drawColor(this@getPaletteFromColor)
+    return b.getPalette()
+}
+
+fun String.getPaletteFromHexColor(): Palette = Color.parseColor(this@getPaletteFromHexColor).getPaletteFromColor()
+
+fun Int.toColorDrawable() = ColorDrawable(this)
+fun String.toColorDrawable() = ColorDrawable(Color.parseColor(this))
+
+var LottieAnimationView.checked: Boolean
+    get() = progress == 1f
+    set(value) = check(value)
+
+fun LottieAnimationView.check(checked: Boolean) {
+    val endProgress = if (checked) 1f else 0f
+    val animator = ValueAnimator.ofFloat(progress, endProgress).apply {
+        addUpdateListener { animation: ValueAnimator -> progress = animation.animatedValue as Float }
+    }
+    animator.start()
+}
+
+fun LottieAnimationView.changeTint(@ColorInt newColor: Int) =
+    addValueCallback(KeyPath("**"), LottieProperty.COLOR_FILTER) { PorterDuffColorFilter(newColor, PorterDuff.Mode.SRC_ATOP) }

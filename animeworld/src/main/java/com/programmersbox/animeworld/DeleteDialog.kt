@@ -36,7 +36,7 @@ private fun Context.deleteDialogSet(title: CharSequence, onSlide: () -> Unit, on
     dialog.show()
 }
 
-fun Context.deleteDialog(video: VideoContent, onCancel: () -> Unit) {
+fun Context.deleteDialog(video: VideoContent, onCancel: () -> Unit = {}) {
     deleteDialogSet(
         video.videoName.orEmpty(),
         onSlide = {
@@ -59,7 +59,7 @@ fun Context.deleteDialog(video: VideoContent, onCancel: () -> Unit) {
     )
 }
 
-fun Context.deleteDialog(download: Download, onCancel: () -> Unit) {
+fun Context.deleteDialog(download: Download, onCancel: () -> Unit = {}) {
     deleteDialogSet(
         getString(R.string.delete_title, Uri.parse(download.url).lastPathSegment),
         onSlide = { Fetch.getDefaultInstance().delete(download.id) },

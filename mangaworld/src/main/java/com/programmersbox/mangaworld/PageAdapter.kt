@@ -21,7 +21,7 @@ import com.programmersbox.mangaworld.databinding.PageItemBinding
 import com.programmersbox.mangaworld.databinding.PageNextChapterItemBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.thirdpartyutils.DragSwipeGlideAdapter
+import com.programmersbox.uiviews.utils.DragSwipeGlideAdapter
 import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
 import java.util.*

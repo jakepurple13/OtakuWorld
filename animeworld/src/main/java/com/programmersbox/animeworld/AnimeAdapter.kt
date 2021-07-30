@@ -7,10 +7,10 @@ import com.programmersbox.animeworld.databinding.AnimeListItemBinding
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ItemModel
-import com.programmersbox.thirdpartyutils.changeTint
-import com.programmersbox.thirdpartyutils.check
 import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.ItemListAdapter
+import com.programmersbox.uiviews.utils.changeTint
+import com.programmersbox.uiviews.utils.check
 import com.programmersbox.uiviews.utils.toolTipText
 
 class AnimeAdapter(

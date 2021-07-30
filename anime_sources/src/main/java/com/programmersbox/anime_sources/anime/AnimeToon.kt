@@ -1,7 +1,6 @@
 package com.programmersbox.anime_sources.anime
 
 import com.programmersbox.anime_sources.ShowApi
-import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.models.*
@@ -20,7 +19,6 @@ abstract class AnimeToon(allPath: String, recentPath: String) : ShowApi(
     allPath = allPath,
     recentPath = recentPath
 ) {
-    protected abstract val sources: Sources
     private fun toShowInfo(element: Element) = ItemModel(
         title = element.text(),
         description = "",
@@ -176,7 +174,6 @@ object AnimeToonApi : AnimeToon(
     allPath = "cartoon",
     recentPath = "updates"
 ) {
-    override val sources: Sources get() = Sources.ANIMETOON
     override val serviceName: String get() = "ANIMETOON"
 }
 
@@ -184,7 +181,6 @@ object AnimeToonDubbed : AnimeToon(
     allPath = "dubbed-anime",
     recentPath = "updates"
 ) {
-    override val sources: Sources get() = Sources.DUBBED_ANIME
     override val serviceName: String get() = "DUBBED_ANIME"
 }
 
@@ -192,6 +188,5 @@ object AnimeToonMovies : AnimeToon(
     allPath = "movies",
     recentPath = "updates"
 ) {
-    override val sources: Sources get() = Sources.ANIMETOON_MOVIES
     override val serviceName: String get() = "ANIMETOON_MOVIES"
 }

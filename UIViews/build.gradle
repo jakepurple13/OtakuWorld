@@ -86,7 +86,7 @@ dependencies {
 
     implementation recyclerview
     implementation 'androidx.palette:palette-ktx:1.0.0'
-    implementation 'com.airbnb.android:lottie:3.7.2'
+    implementation "com.airbnb.android:lottie:$lottieVersion"
     implementation "androidx.room:room-runtime:2.3.0"
     implementation 'com.github.anzaizai:EasySwipeMenuLayout:1.1.4'
 
@@ -133,4 +133,5 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation compose.compose
+    implementation "com.airbnb.android:lottie-compose:$lottieVersion"
 }

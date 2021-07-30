@@ -12,7 +12,8 @@ object AppUpdate {
         val manga_file: String?,
         val anime_file: String?,
         val novel_file: String?,
-        val animetv_file: String?
+        val animetv_file: String?,
+        val otakumanager_file: String?
     ) {
         fun downloadUrl(url: AppUpdates.() -> String?) = "$update_url${url()}"
     }

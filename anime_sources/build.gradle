@@ -49,7 +49,6 @@ dependencies {
     implementation gsonutils
     implementation helpfulutils
     implementation rxutils
-    implementation thirdpartyutils
 
     implementation rxkotlin
     implementation rxandroid

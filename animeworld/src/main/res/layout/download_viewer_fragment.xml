@@ -1,48 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DownloadViewerFragment">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/download_appbar"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/downloadCompose"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:layout_width="match_parent"
-            android:id="@+id/toolbarmenu"
-            android:layout_height="wrap_content">
-
-            <TextView
-                style="@style/TextAppearance.MaterialComponents.Headline5"
-                android:text="@string/in_progress_downloads"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-        </com.google.android.material.appbar.MaterialToolbar>
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/download_list"
-        android:layout_width="match_parent"
-        android:layout_below="@id/download_appbar"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:orientation="vertical"
-        android:nestedScrollingEnabled="false"
-        tools:listitem="@layout/download_item"
-        android:layout_height="match_parent"
-        android:layout_above="@id/multiple_download_delete" />
-
-    <com.google.android.material.button.MaterialButton
-        android:insetBottom="0dp"
-        app:cornerRadius="0dp"
-        android:layout_alignParentBottom="true"
-        android:id="@+id/multiple_download_delete"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/delete_multiple" />
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

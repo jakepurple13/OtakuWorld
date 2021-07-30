@@ -29,13 +29,16 @@ jobs:
       - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
         env:
           ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
-          
+      - run: echo OTAKU_MANAGER_GOOGLE_SERVICES_JSON > otakumanager/google-services.json
+        env:
+          OTAKU_MANAGER_GOOGLE_SERVICES_JSON: ${{ secrets.OTAKU_MANAGER_SERVICES }}
+
       - name: Setup JDK
         uses: actions/setup-java@v1
         with:
           java-version: 11
-#       - name: Build APK
-#         run: bash ./gradlew assembleRelease --stacktrace
+      #       - name: Build APK
+      #         run: bash ./gradlew assembleRelease --stacktrace
 
       - name: Build all artifacts
         id: buildAllApks
@@ -75,8 +78,8 @@ jobs:
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}   
-       
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
       - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: animetv_sign
@@ -85,8 +88,18 @@ jobs:
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}   
-          
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        id: otakumanager_sign
+        with:
+          releaseDirectory: otakumanager/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
       # ${{steps.sign_app.outputs.signedReleaseFile}}
       - name: Clean up build artifacts
         run: |
@@ -94,8 +107,9 @@ jobs:
           cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
           cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
-          
-       
+          cp ${{ steps.otakumanager_sign.outputs.signedReleaseFile }} otakumanager-release.apk
+
+
       - uses: actions/upload-artifact@v2
         with:
           name: Signed Manga App
@@ -105,27 +119,31 @@ jobs:
         with:
           name: Signed Anime App
           path: animeworld-release.apk
-          
+
       - uses: actions/upload-artifact@v2
         with:
           name: Signed Novel App
           path: novelworld-release.apk
-         
+
       - uses: actions/upload-artifact@v2
         with:
           name: Signed AnimeTV App
           path: animeworldtv-release.apk
-          
 
-#       - name: Upload APK
-#         uses: actions/upload-artifact@v1
-#         with:
-#           name: apk
-#           path: animeworld/build/outputs/apk/debug/animeworld-debug.apk 
-#       - name: Upload APK
-#         uses: actions/upload-artifact@v1
-#         with:
-#           name: apk
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Signed OtakuManager App
+          path: otakumanager-release.apk
+
+          #       - name: Upload APK
+          #         uses: actions/upload-artifact@v1
+          #         with:
+          #           name: apk
+          #           path: animeworld/build/outputs/apk/debug/animeworld-debug.apk
+          #       - name: Upload APK
+          #         uses: actions/upload-artifact@v1
+          #         with:
+          #           name: apk
 #           path: mangaworld/build/outputs/apk/debug/mangaworld-debug.apk 
 #       - name: Upload APK
 #         uses: actions/upload-artifact@v1
@@ -151,12 +169,16 @@ jobs:
      - name: Download APK from build
        uses: actions/download-artifact@v1
        with:
-         name: Signed Novel App  
+         name: Signed Novel App
      - name: Download APK from build
        uses: actions/download-artifact@v1
        with:
-         name: Signed AnimeTV App 
-         
+         name: Signed AnimeTV App
+     - name: Download APK from build
+       uses: actions/download-artifact@v1
+       with:
+         name: Signed OtakuManager App
+
      - name: Get tag name
        id: get_tag_name
        run: |
@@ -176,6 +198,7 @@ jobs:
             Signed Anime App/animeworld-release.apk
             Signed Novel App/novelworld-release.apk
             Signed AnimeTV App/animeworldtv-release.apk
+            Signed OtakuManager App/otakumanager-release.apk
 
      - name: Discord notification
        env:

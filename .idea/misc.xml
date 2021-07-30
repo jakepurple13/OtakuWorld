@@ -7,22 +7,46 @@
         <entry key="../../../../layout/compose-model-1626894912260.xml" value="0.25" />
         <entry key="../../../../layout/compose-model-1627052823322.xml" value="0.25" />
         <entry key="../../../../layout/compose-model-1627300777540.xml" value="0.33" />
+        <entry key="../../../../layout/compose-model-1627497066566.xml" value="0.31925675675675674" />
+        <entry key="../../../../layout/compose-model-1627497106608.xml" value="0.14" />
+        <entry key="../../../../layout/compose-model-1627497888612.xml" value="0.12" />
+        <entry key="../../../../layout/compose-model-1627497888748.xml" value="0.25" />
+        <entry key="../../../../layout/compose-model-1627498077442.xml" value="0.14" />
+        <entry key="../../../../layout/compose-model-1627556140465.xml" value="0.25" />
+        <entry key="../../../../layout/compose-model-1627560581741.xml" value="0.16" />
+        <entry key="../../../../layout/compose-model-1627562361915.xml" value="0.33" />
+        <entry key="../../../../layout/compose-model-1627562502342.xml" value="0.22" />
+        <entry key="../../../../layout/compose-model-1627565157849.xml" value="0.22" />
+        <entry key="../../../../layout/compose-model-1627645852383.xml" value="0.1" />
+        <entry key="../../../../layout/compose-model-1627650115484.xml" value="0.1" />
         <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
         <entry key="UIViews/src/main/res/layout/chapter_item.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/details_fragment.xml" value="0.175" />
         <entry key="UIViews/src/main/res/layout/details_shimmer.xml" value="0.2325657894736842" />
+        <entry key="UIViews/src/main/res/layout/favorite_auto_item.xml" value="0.2325657894736842" />
         <entry key="UIViews/src/main/res/layout/favorite_item.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/layout/fragment_all.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/fragment_favorite.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/fragment_global_search.xml" value="0.18" />
         <entry key="UIViews/src/main/res/layout/fragment_notification.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/notification_item.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/xml/root_preferences.xml" value="0.2325657894736842" />
+        <entry key="animeworld/src/main/res/drawable/progress_bar.xml" value="0.24039087947882737" />
+        <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
         <entry key="animeworld/src/main/res/layout/download_viewer_fragment.xml" value="0.21736111111111112" />
         <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
         <entry key="animeworld/src/main/res/layout/video_layout.xml" value="0.2028688524590164" />
+        <entry key="animeworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
+        <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.13941368078175895" />
         <entry key="mangaworld/src/main/res/layout/activity_read.xml" value="0.1305921052631579" />
         <entry key="mangaworld/src/main/res/layout/download_navigation_fragment.xml" value="0.22430555555555556" />
         <entry key="mangaworld/src/main/res/layout/downloaded_item.xml" value="0.20555555555555555" />
         <entry key="mangaworld/src/main/res/layout/fragment_download_viewer.xml" value="0.21319444444444444" />
+        <entry key="novelworld/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.14078947368421052" />
+        <entry key="novelworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
+        <entry key="novelworld/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.14078947368421052" />
+        <entry key="otakumanager/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.24039087947882737" />
+        <entry key="otakumanager/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.24039087947882737" />
       </map>
     </option>
   </component>
@@ -31,5 +55,8 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="SuppressKotlinCodeStyleNotification">
+    <option name="disableForAll" value="true" />
   </component>
 </project>

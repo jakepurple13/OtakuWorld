@@ -7,13 +7,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -38,6 +37,8 @@ import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.mangaworld.databinding.FragmentDownloadViewerBinding
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.animatedItems
+import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import de.helmbold.rxfilewatcher.PathObservables
 import io.reactivex.Completable
 import io.reactivex.Single
@@ -67,12 +68,14 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
 
     private val defaultPathname get() = File(DOWNLOAD_FILE_PATH)
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadInformation()
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun loadInformation() {
         activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
@@ -118,6 +121,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
         }
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun downloadView() {
         binding.composeDownloadView.setContent {
@@ -136,6 +140,8 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                                 .toList()
                                 .let(it::onSuccess)
                         }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
                     }
                     .startWith(
                         Single.create<List<File>> {
@@ -145,7 +151,10 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                                 .orEmpty()
                                 .toList()
                                 .let(it::onSuccess)
-                        }.toObservable()
+                        }
+                            .toObservable()
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
                     )
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -216,8 +225,18 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                         }
                     }
                 ) {
+
+                    val f by updateAnimatedItemsState(newList = files)
+
                     if (files.isEmpty()) EmptyState()
-                    else LazyColumn(contentPadding = it) { items(files) { f -> ChapterItem(f) } }
+                    else LazyColumn(contentPadding = it) {
+                        //items(files) { f -> ChapterItem(f) }
+                        animatedItems(
+                            f,
+                            enterTransition = slideInHorizontally(),
+                            exitTransition = slideOutHorizontally()
+                        ) { file -> ChapterItem(file) }
+                    }
                 }
 
             }
