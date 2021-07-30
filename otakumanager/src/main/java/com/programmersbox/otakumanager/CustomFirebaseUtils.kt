@@ -15,7 +15,7 @@ import com.programmersbox.sharedutils.FirebaseAuthentication
 import io.reactivex.Completable
 import io.reactivex.subjects.PublishSubject
 
-class FirebaseDb2(
+data class FirebaseDb2(
     val DOCUMENT_ID: String,
     val CHAPTERS_ID: String,
     val COLLECTION_ID: String,

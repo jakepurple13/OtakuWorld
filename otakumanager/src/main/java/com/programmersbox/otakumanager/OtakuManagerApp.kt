@@ -39,8 +39,7 @@ val appModule = module {
     single { NotificationLogo(R.drawable.ic_launcher_foreground) }
     single<GenericInfo> {
         object : GenericInfo {
-            override val apkString: AppUpdate.AppUpdates.() -> String?
-                get() = { anime_file }
+            override val apkString: AppUpdate.AppUpdates.() -> String? get() = { otakumanager_file }
 
             override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> {
                 throw Exception("This should not be seen")

@@ -3,6 +3,8 @@ package com.programmersbox.otakumanager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.StringRes
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -14,31 +16,48 @@ import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
+import androidx.navigation.compose.*
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.otakumanager.ui.theme.OtakuWorldTheme
-import com.programmersbox.sharedutils.FirebaseAuthentication
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.CoverCard
 import com.programmersbox.uiviews.utils.CustomChip
 import io.reactivex.Flowable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import org.koin.android.ext.android.inject
 import com.programmersbox.anime_sources.Sources as ASources
@@ -47,9 +66,13 @@ import com.programmersbox.novel_sources.Sources as NSources
 
 class MainActivity : ComponentActivity() {
 
-    private val animeListener = FirebaseDb2("favoriteShows", "episodesWatched", "animeworld", "showUrl", "numEpisodes").FirebaseListener()
-    private val mangaListener = FirebaseDb2("favoriteManga", "chaptersRead", "mangaworld", "mangaUrl", "chapterCount").FirebaseListener()
-    private val novelListener = FirebaseDb2("favoriteNovels", "novelsChaptersRead", "novelworld", "novelUrl", "novelNumChapters").FirebaseListener()
+    private val animeFire = FirebaseDb2("favoriteShows", "episodesWatched", "animeworld", "showUrl", "numEpisodes")
+    private val mangaFire = FirebaseDb2("favoriteManga", "chaptersRead", "mangaworld", "mangaUrl", "chapterCount")
+    private val novelFire = FirebaseDb2("favoriteNovels", "novelsChaptersRead", "novelworld", "novelUrl", "novelNumChapters")
+
+    private val animeListener = animeFire.FirebaseListener()
+    private val mangaListener = mangaFire.FirebaseListener()
+    private val novelListener = novelFire.FirebaseListener()
 
     private val genericInfo by inject<GenericInfo>()
 
@@ -63,16 +86,116 @@ class MainActivity : ComponentActivity() {
     private val mangaSources = MSources.values().map { it.serviceName }
     private val novelSources = NSources.values().map { it.serviceName }
 
+    sealed class Screen(val route: String, @StringRes val resourceId: Int, val icon: ImageVector) {
+        object Favorites : Screen("mainUi", R.string.viewFavoritesMenu, Icons.Filled.Favorite)
+        object Settings : Screen("settings", R.string.settings, Icons.Filled.Menu)
+        object Details : Screen("details?info={item}", R.string.app_name, Icons.Filled.Book)
+    }
+
+    private val disposable = CompositeDisposable()
+
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Single.create<AppUpdate.AppUpdates> {
+            AppUpdate.getUpdate()?.let { d -> it.onSuccess(d) } ?: it.onError(Exception("Something went wrong"))
+        }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnError { }
+            .subscribe(appUpdateCheck::onNext)
+            .addTo(disposable)
+
+        val screenList = listOf(
+            Screen.Favorites,
+            Screen.Settings
+        )
+
         setContent {
             MdcTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    MainUi()
+
+                    val navController = rememberNavController()
+
+                    Scaffold(
+                        bottomBar = {
+                            BottomNavigation {
+                                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                                val currentDestination = navBackStackEntry?.destination
+                                screenList.forEach { screen ->
+                                    BottomNavigationItem(
+                                        icon = { Icon(screen.icon, contentDescription = null) },
+                                        label = { Text(stringResource(id = screen.resourceId)) },
+                                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                        onClick = {
+                                            navController.navigate(screen.route) {
+                                                // Pop up to the start destination of the graph to
+                                                // avoid building up a large stack of destinations
+                                                // on the back stack as users select items
+                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                    saveState = true
+                                                }
+                                                // Avoid multiple copies of the same destination when
+                                                // reselecting the same item
+                                                launchSingleTop = true
+                                                // Restore state when reselecting a previously selected item
+                                                restoreState = true
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    ) { p ->
+
+                        NavHost(navController = navController, startDestination = Screen.Favorites.route, modifier = Modifier.padding(p)) {
+                            composable(Screen.Favorites.route) { MainUi(navController) }
+                            composable(Screen.Settings.route) { OtakuSettings(this@MainActivity, genericInfo) }
+                            composable(
+                                Screen.Details.route,
+                                arguments = listOf(
+                                    navArgument("item") {
+                                        type = NavType.StringType
+                                    }
+                                )
+                            ) {
+                                val i = it.arguments?.getString("item")?.fromJson<DbModel>()
+                                    ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                DetailsScreen(
+                                    info = i!!,
+                                    logoId = when (i.source.serviceName) {
+                                        in animeSources -> R.drawable.animeworld_logo
+                                        in mangaSources -> R.drawable.mangaworld_logo
+                                        in novelSources -> R.drawable.novelworld_logo
+                                        else -> R.drawable.ic_launcher_foreground
+                                    },
+                                    firebase = when (i.source.serviceName) {
+                                        in animeSources -> animeFire
+                                        in mangaSources -> mangaFire
+                                        in novelSources -> novelFire
+                                        else -> null
+                                    },
+                                    itemListener = when (i.source.serviceName) {
+                                        in animeSources -> animeFire
+                                        in mangaSources -> mangaFire
+                                        in novelSources -> novelFire
+                                        else -> null
+                                    }?.copy()?.FirebaseListener(),
+                                    chapterListener = when (i.source.serviceName) {
+                                        in animeSources -> animeFire
+                                        in mangaSources -> mangaFire
+                                        in novelSources -> novelFire
+                                        else -> null
+                                    }?.copy()?.FirebaseListener(),
+                                    navController = navController
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -81,7 +204,10 @@ class MainActivity : ComponentActivity() {
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
-    fun MainUi() {
+    fun MainUi(navController: NavController) {
+
+        val systemUi = rememberSystemUiController()
+        systemUi.setStatusBarColor(animateColorAsState(MaterialTheme.colors.primaryVariant).value)
 
         val focusManager = LocalFocusManager.current
 
@@ -174,20 +300,7 @@ class MainActivity : ComponentActivity() {
                 }
             },
             bottomBar = {
-                if (FirebaseAuthentication.currentUser == null) {
-                    Button(
-                        onClick = {
-                            //if (FirebaseAuthentication.currentUser == null) {
-                            //TODO: if not logged in, show empty state for needing to login
-                            FirebaseAuthentication.signIn(this@MainActivity)
-                            //}
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(0f)
-                    ) {
-                        Text("Login")
-                    }
-                }
+                //TODO: if not logged in, show empty state for needing to login
             }
         ) {
 
@@ -213,16 +326,15 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         if (info.value.size == 1) {
-                            //TODO: Open a modified details view here
-                            //val item = info.value.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                            //navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
+                            val item = info.value.firstOrNull()
+                            navController.navigate(MainActivity.Screen.Details.route.replace("{item}", item.toJson()))
                         } else {
                             MaterialAlertDialogBuilder(this@MainActivity)
                                 .setTitle(R.string.chooseASource)
                                 .setItems(info.value.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
-                                    //val item = info.value[i].let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                    //navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
+                                    val item = info.value[i]
                                     d.dismiss()
+                                    navController.navigate(MainActivity.Screen.Details.route.replace("{item}", item.toJson()))
                                 }
                                 .show()
                         }
@@ -240,6 +352,7 @@ class MainActivity : ComponentActivity() {
         animeListener.unregister()
         mangaListener.unregister()
         novelListener.unregister()
+        disposable.dispose()
     }
 }
 
