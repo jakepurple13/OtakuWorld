@@ -10,12 +10,14 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
       * [AnimeWorld](#animeworld)
       * [AnimeWorldTV](#animeworldtv)
       * [NovelWorld](#novelworld)
+      * [Otaku Manager](#otaku-manager)
    * [Features](#features)
       * [Shared](#shared)
       * [MangaWorld](#mangaworld-1)
       * [AnimeWorld](#animeworld-1)
       * [AnimeWorldTV](#animeworldtv-1)
       * [NovelWorld](#novelworld-1)
+      * [Otaku Manager](#otaku-manager-1)
    * [AnimeWorldTV Install/Update Instructions](#instructions-to-installupdate-animeworldtv)
    * [Issues](#issues)
    * [Contributing](#pull-requests)
@@ -24,9 +26,10 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 
 # Screenshots
 <p align="center">
-  <img src="https://github.com/jakepurple13/OtakuWorld/blob/master/mangaworld/src/main/ic_launcher-playstore.png" width="32%"/>
-  <img src="https://github.com/jakepurple13/OtakuWorld/blob/master/animeworld/src/main/ic_launcher-playstore.png" width="32%"/>
-  <img src="https://github.com/jakepurple13/OtakuWorld/blob/master/novelworld/src/main/ic_launcher-playstore.png" width="32%"/>
+  <img src="/mangaworld/src/main/ic_launcher-playstore.png" width="32%"/>
+  <img src="/animeworld/src/main/ic_launcher-playstore.png" width="32%"/>
+  <img src="/novelworld/src/main/ic_launcher-playstore.png" width="32%"/>
+  <img src="/otakumanager/src/main/ic_launcher-playstore.png" width="32%"/>
 </p>
 
 ### MangaWorld
@@ -69,6 +72,13 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/novel_ss18.png" width="32%"/>
 </p>
 
+### Otaku Manager
+<p align="center">
+  <img src="/ss/otakumanager_ss_1.png" width="32%"/>
+  <img src="/ss/otakumanager_ss_2.png" width="32%"/>
+  <img src="/ss/otakumanager_ss_3.png" width="32%"/>
+</p>
+
 # Features
 
 ### Shared Features
@@ -93,6 +103,10 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 
 ### NovelWorld
 - Read Novels from various different novel sites
+
+### Otaku Manager
+- View all favorites across all OtakuWorld applications. Requires you to login.
+- Made using pure Jetpack Compose. No Xml for any views.
 
 #### Instructions to Install/Update AnimeWorldTV
 1. Download animeworldtv-release.apk

@@ -3,6 +3,7 @@ package com.programmersbox.otakumanager
 import android.content.Context
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.AppUpdate
@@ -35,6 +36,7 @@ class OtakuManagerApp : OtakuApp() {
 }
 
 val appModule = module {
+    single { NetworkHelper(get()) }
     single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.drawable.otakumanager_logo) }
     single<GenericInfo> {
