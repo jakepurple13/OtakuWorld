@@ -36,7 +36,7 @@ class OtakuManagerApp : OtakuApp() {
 
 val appModule = module {
     single { MainLogo(R.mipmap.ic_launcher) }
-    single { NotificationLogo(R.drawable.ic_launcher_foreground) }
+    single { NotificationLogo(R.drawable.otakumanager_logo) }
     single<GenericInfo> {
         object : GenericInfo {
             override val apkString: AppUpdate.AppUpdates.() -> String? get() = { otakumanager_file }

@@ -92,10 +92,10 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
             SettingsMenuLink(
                 icon = {
                     GlideImage(
-                        imageModel = accountInfo?.photoUrl ?: R.mipmap.ic_launcher,
+                        imageModel = accountInfo?.photoUrl ?: R.drawable.otakumanager_logo,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        requestBuilder = Glide.with(LocalView.current).asBitmap().circleCrop()
+                        requestBuilder = Glide.with(LocalView.current).asBitmap().circleCrop(),
                     )
                 },
                 title = { Text(text = accountInfo?.displayName ?: "User", modifier = Modifier.padding(start = 5.dp)) },

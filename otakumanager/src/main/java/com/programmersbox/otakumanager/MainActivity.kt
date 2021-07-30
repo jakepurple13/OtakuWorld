@@ -171,7 +171,7 @@ class MainActivity : ComponentActivity() {
                                         in animeSources -> R.drawable.animeworld_logo
                                         in mangaSources -> R.drawable.mangaworld_logo
                                         in novelSources -> R.drawable.novelworld_logo
-                                        else -> R.drawable.ic_launcher_foreground
+                                        else -> R.drawable.otakumanager_logo
                                     },
                                     firebase = when (i.source.serviceName) {
                                         in animeSources -> animeFire
@@ -321,7 +321,7 @@ class MainActivity : ComponentActivity() {
                             in animeSources -> R.drawable.animeworld_logo
                             in mangaSources -> R.drawable.mangaworld_logo
                             in novelSources -> R.drawable.novelworld_logo
-                            else -> R.drawable.ic_launcher_foreground
+                            else -> R.drawable.otakumanager_logo
                         }
                     ) {
 
