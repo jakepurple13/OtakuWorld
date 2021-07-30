@@ -36,7 +36,7 @@ jobs:
       - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
         env:
           ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
-      - run: echo OTAKU_MANAGER_GOOGLE_SERVICES_JSON > otakumanager/src/google-services.json
+      - run: echo OTAKU_MANAGER_GOOGLE_SERVICES_JSON > otakumanager/google-services.json
         env:
           OTAKU_MANAGER_GOOGLE_SERVICES_JSON: ${{ secrets.OTAKU_MANAGER_SERVICES }}
 
