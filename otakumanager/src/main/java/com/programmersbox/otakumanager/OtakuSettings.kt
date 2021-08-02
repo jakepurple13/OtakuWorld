@@ -284,7 +284,6 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                 title = { Text(text = stringResource(id = R.string.theme_choice_title), modifier = Modifier.padding(start = 5.dp)) },
                 subtitle = { Text(text = theme, modifier = Modifier.padding(start = 5.dp)) },
                 onClick = {
-
                     MaterialAlertDialogBuilder(activity)
                         .setTitle(R.string.choose_a_theme)
                         .setIcon(R.drawable.ic_baseline_settings_brightness_24)

@@ -22,6 +22,11 @@
         <item quantity="other">Search %d Favorites</item>
     </plurals>
 
+    <plurals name="areYouSureRemove">
+        <item quantity="one">Are you sure you want to delete %d item?</item>
+        <item quantity="other">Are you sure you want to delete %d items?</item>
+    </plurals>
+
     <string name="removeSourceFromFavorites">Remove Source from Favorites</string>
     <string name="selectSource">Select %s Source</string>
     <string name="downloadPage">Download Page?</string>
@@ -112,6 +117,7 @@
 
     <string name="removeNotification">Remove Notification</string>
     <string name="remove">Remove</string>
+    <string name="areYouSureRemoveNoti">Are you sure you want to remove these Notifications?</string>
 
     <string name="removeNoti">Remove %s?</string>
     <string name="notify">Notify</string>

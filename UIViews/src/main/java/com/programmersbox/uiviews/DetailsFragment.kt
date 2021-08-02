@@ -53,7 +53,6 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.helpfulutils.colorFromTheme
-import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.whatIfNotNull
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -248,10 +247,12 @@ class DetailsFragment : Fragment() {
                         .map { it.second || it.first }
                         .subscribeAsState(initial = false)
 
+                    val logoRemember = remember { logo }
+
                     MdcTheme {
                         DetailsHeader(
                             model = info,
-                            logo = logo,
+                            logo = logoRemember,
                             swatchInfo = swatchInfo,
                             isFavorite = favoriteListener
                         ) { b ->
