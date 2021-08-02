@@ -8,11 +8,9 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -24,6 +22,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
@@ -46,6 +45,7 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.otakumanager.ui.theme.OtakuWorldTheme
 import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -293,54 +293,116 @@ class MainActivity : ComponentActivity() {
 
                     }
                 }
-            },
-            bottomBar = {
-                //TODO: if not logged in, show empty state for needing to login
             }
         ) {
 
-            LazyVerticalGrid(
-                cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                contentPadding = it,
-                state = rememberLazyListState()
-            ) {
-                items(
-                    showing
-                        .groupBy(DbModel::title)
-                        .entries
-                        .toTypedArray()
-                ) { info ->
-                    CoverCard(
-                        imageUrl = info.value.random().imageUrl,
-                        name = info.key,
-                        placeHolder = when (info.value.first().source) {
-                            in animeSources -> R.drawable.animeworld_logo
-                            in mangaSources -> R.drawable.mangaworld_logo
-                            in novelSources -> R.drawable.novelworld_logo
-                            else -> R.drawable.otakumanager_logo
-                        }
+            when {
+                FirebaseAuthentication.currentUser == null -> NotLoggedInState(it)
+                showing.isEmpty() -> EmptyState(navController = navController, paddingValues = it)
+                else -> {
+
+                    LazyVerticalGrid(
+                        cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                        contentPadding = it,
+                        state = rememberLazyListState()
                     ) {
-
-                        if (info.value.size == 1) {
-                            val item = info.value.firstOrNull()
-                            navController.navigate(Screen.Details.route.replace("{item}", item.toJson()))
-                        } else {
-                            MaterialAlertDialogBuilder(this@MainActivity)
-                                .setTitle(R.string.chooseASource)
-                                .setItems(info.value.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
-                                    val item = info.value[i]
-                                    d.dismiss()
-                                    navController.navigate(Screen.Details.route.replace("{item}", item.toJson()))
+                        items(
+                            showing
+                                .groupBy(DbModel::title)
+                                .entries
+                                .toTypedArray()
+                        ) { info ->
+                            CoverCard(
+                                imageUrl = info.value.random().imageUrl,
+                                name = info.key,
+                                placeHolder = when (info.value.first().source) {
+                                    in animeSources -> R.drawable.animeworld_logo
+                                    in mangaSources -> R.drawable.mangaworld_logo
+                                    in novelSources -> R.drawable.novelworld_logo
+                                    else -> R.drawable.otakumanager_logo
                                 }
-                                .show()
-                        }
+                            ) {
 
+                                if (info.value.size == 1) {
+                                    val item = info.value.firstOrNull()
+                                    navController.navigate(Screen.Details.route.replace("{item}", item.toJson()))
+                                } else {
+                                    MaterialAlertDialogBuilder(this@MainActivity)
+                                        .setTitle(R.string.chooseASource)
+                                        .setItems(info.value.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
+                                            val item = info.value[i]
+                                            d.dismiss()
+                                            navController.navigate(Screen.Details.route.replace("{item}", item.toJson()))
+                                        }
+                                        .show()
+                                }
+
+                            }
+                        }
                     }
                 }
-            }
 
+            }
         }
 
+    }
+
+    @Composable
+    private fun NotLoggedInState(paddingValues: PaddingValues) {
+        InvalidState(R.string.login_info, R.string.login_button_text, paddingValues) { FirebaseAuthentication.signIn(this@MainActivity) }
+    }
+
+    @Composable
+    private fun EmptyState(navController: NavController, paddingValues: PaddingValues) {
+        InvalidState(R.string.no_favorites, R.string.goto_app_for_fav, paddingValues) { navController.navigate(Screen.Settings.route) }
+    }
+
+    @Composable
+    private fun InvalidState(bodyText: Int, buttonText: Int, paddingValues: PaddingValues, onClick: () -> Unit) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp),
+                elevation = 5.dp,
+                shape = RoundedCornerShape(5.dp)
+            ) {
+
+                Column(modifier = Modifier) {
+
+                    Text(
+                        text = stringResource(id = R.string.get_started),
+                        style = MaterialTheme.typography.h4,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    Text(
+                        text = stringResource(bodyText),
+                        style = MaterialTheme.typography.body1,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    Button(
+                        onClick = onClick,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = stringResource(buttonText),
+                            style = MaterialTheme.typography.button
+                        )
+                    }
+
+                }
+
+            }
+        }
     }
 
     override fun onDestroy() {
