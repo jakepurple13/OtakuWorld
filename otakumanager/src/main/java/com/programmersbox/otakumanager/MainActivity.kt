@@ -12,10 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -26,6 +23,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
@@ -157,11 +155,7 @@ class MainActivity : ComponentActivity() {
                             composable(Screen.Settings.route) { OtakuSettings(this@MainActivity, genericInfo) }
                             composable(
                                 Screen.Details.route,
-                                arguments = listOf(
-                                    navArgument("item") {
-                                        type = NavType.StringType
-                                    }
-                                )
+                                arguments = listOf(navArgument("item") { type = NavType.StringType })
                             ) {
                                 val i = it.arguments?.getString("item")?.fromJson<DbModel>()
                                     ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
@@ -211,13 +205,14 @@ class MainActivity : ComponentActivity() {
 
         val focusManager = LocalFocusManager.current
 
-        var searchText by remember { mutableStateOf("") }
+        var searchText by rememberSaveable { mutableStateOf("") }
 
         val favorites by Flowable.combineLatest(
             animeListener.getAllShowsFlowable(),
-            mangaListener.getAllShowsFlowable()
-        ) { a, m -> (a + m).sortedBy { it.title } }
-            .map { it.filter { it.source in allSources.map { it.serviceName } } }
+            mangaListener.getAllShowsFlowable(),
+            novelListener.getAllShowsFlowable()
+        ) { a, m, n -> (a + m + n).sortedBy { it.title } }
+            .map { it.filter { it.source in allSources.map(ApiService::serviceName) } }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(initial = emptyList())
@@ -306,7 +301,8 @@ class MainActivity : ComponentActivity() {
 
             LazyVerticalGrid(
                 cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                contentPadding = it
+                contentPadding = it,
+                state = rememberLazyListState()
             ) {
                 items(
                     showing
@@ -327,14 +323,14 @@ class MainActivity : ComponentActivity() {
 
                         if (info.value.size == 1) {
                             val item = info.value.firstOrNull()
-                            navController.navigate(MainActivity.Screen.Details.route.replace("{item}", item.toJson()))
+                            navController.navigate(Screen.Details.route.replace("{item}", item.toJson()))
                         } else {
                             MaterialAlertDialogBuilder(this@MainActivity)
                                 .setTitle(R.string.chooseASource)
                                 .setItems(info.value.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
                                     val item = info.value[i]
                                     d.dismiss()
-                                    navController.navigate(MainActivity.Screen.Details.route.replace("{item}", item.toJson()))
+                                    navController.navigate(Screen.Details.route.replace("{item}", item.toJson()))
                                 }
                                 .show()
                         }
