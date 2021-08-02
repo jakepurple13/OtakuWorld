@@ -5,4 +5,5 @@
     <string name="no_favorites">No Favorites</string>
     <string name="login_info">Please Log In to use this App</string>
     <string name="login_button_text">Log In</string>
+    <string name="share">Share</string>
 </resources>

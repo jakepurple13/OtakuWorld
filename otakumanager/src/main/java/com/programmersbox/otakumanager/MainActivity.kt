@@ -15,10 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -86,7 +83,7 @@ class MainActivity : ComponentActivity() {
 
     sealed class Screen(val route: String, @StringRes val resourceId: Int, val icon: ImageVector) {
         object Favorites : Screen("mainUi", R.string.viewFavoritesMenu, Icons.Filled.Favorite)
-        object Settings : Screen("settings", R.string.settings, Icons.Filled.Menu)
+        object Settings : Screen("settings", R.string.settings, Icons.Filled.Settings)
         object Details : Screen("details?info={item}", R.string.app_name, Icons.Filled.Book)
     }
 
