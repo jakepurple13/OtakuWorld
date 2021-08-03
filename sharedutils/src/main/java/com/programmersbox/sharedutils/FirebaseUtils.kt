@@ -17,6 +17,9 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.rxutils.toLatestFlowable
 import io.reactivex.Completable
 import io.reactivex.subjects.PublishSubject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -209,6 +212,19 @@ object FirebaseDb {
             if (listener == null) emitter.onNext(emptyList())
         }.toLatestFlowable()
 
+        @ExperimentalCoroutinesApi
+        fun getAllShowsFlow() = callbackFlow<List<DbModel>> {
+            listener?.remove()
+            listener = showDoc2?.addSnapshotListener { value, error ->
+                value?.toObjects<FirebaseDbModel>()
+                    ?.map { it.toDbModel() }
+                    ?.let { trySend(it) }
+                error?.let(this::close)
+            }
+            awaitClose { listener?.remove() }
+            if (listener == null) trySend(emptyList())
+        }
+
         fun findItemByUrl(url: String?) = PublishSubject.create<Boolean> { emitter ->
             //assert(listener == null)
             listener?.remove()
@@ -222,6 +238,20 @@ object FirebaseDb {
             emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(false)
         }.toLatestFlowable()
+
+        @ExperimentalCoroutinesApi
+        fun findItemByUrlFlow(url: String?) = callbackFlow<Boolean> {
+            listener?.remove()
+            listener = showDoc2?.whereEqualTo(ITEM_ID, url)?.addSnapshotListener { value, error ->
+                value?.toObjects<FirebaseDbModel>()
+                    .also { println(it) }
+                    ?.map { it.toDbModel() }
+                    ?.let { trySend(it.isNotEmpty()) }
+                error?.let(this::close)
+            }
+            awaitClose { listener?.remove() }
+            if (listener == null) trySend(false)
+        }
 
         fun getAllEpisodesByShow(showUrl: String) = PublishSubject.create<List<ChapterWatched>> { emitter ->
             //assert(listener == null)

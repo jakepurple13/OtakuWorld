@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -70,8 +70,9 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import me.zhanghai.android.fastscroll.FastScrollerBuilder
 import org.koin.android.ext.android.inject
@@ -96,8 +97,6 @@ class DetailsFragment : Fragment() {
     private val chapterListener = FirebaseDb.FirebaseListener()
 
     private val logo: MainLogo by inject()
-
-    private val isFavorite = BehaviorSubject.createDefault(false)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -239,14 +238,13 @@ class DetailsFragment : Fragment() {
                             }
                         }
 
-                    val favoriteListener by Flowables.combineLatest(
-                        itemListener.findItemByUrl(info.url),
-                        dao.containsItem(info.url)
-                    )
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .map { it.second || it.first }
-                        .subscribeAsState(initial = false)
+                    val favoriteListener by combine(
+                        itemListener.findItemByUrlFlow(info.url),
+                        dao.containsItemFlow(info.url)
+                    ) { f, d -> f || d }
+                        .flowOn(Dispatchers.IO)
+                        .flowWithLifecycle(lifecycle)
+                        .collectAsState(initial = false)
 
                     val logoRemember = remember { logo }
 
@@ -528,16 +526,6 @@ class DetailsFragment : Fragment() {
     }
 
     private fun onInfoGet(infoModel: InfoModel) {
-
-        Flowables.combineLatest(
-            itemListener.findItemByUrl(infoModel.url),
-            dao.containsItem(infoModel.url)
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { it.second || it.first }
-            .subscribe(isFavorite::onNext)
-            .addTo(disposable)
 
         Flowables.combineLatest(
             chapterListener.getAllEpisodesByShow(infoModel.url),

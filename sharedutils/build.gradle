@@ -48,6 +48,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx:23.0.3'
     implementation 'com.google.firebase:firebase-database-ktx:20.0.1'
 
+    implementation coroutinesCore
+    implementation coroutinesAndroid
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutinesVersion"
+
     implementation project(':Models')
     implementation project(':favoritesdatabase')
     implementation rxkotlin

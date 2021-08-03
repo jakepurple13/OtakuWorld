@@ -14,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -22,6 +21,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -41,6 +42,11 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class NotificationFragment : BaseBottomSheetDialogFragment() {
@@ -62,12 +68,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         binding.composeView.setContent {
             MdcTheme {
 
-                val items by db.getAllNotificationsFlowable()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeAsState(emptyList())
-
-                //NotificationLayout(items)
+                val items by db.getAllNotificationsFlow()
+                    .flowOn(Dispatchers.IO)
+                    .collectAsState(emptyList())
 
                 BottomSheetDeleteScaffold(
                     listOfItems = items,
@@ -139,12 +142,12 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             }
         }
 
-        db.getAllNotificationCount()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .filter { it == 0 }
-            .subscribeBy { findNavController().popBackStack() }
-            .addTo(disposable)
+        lifecycleScope.launch {
+            db.getAllNotificationCountFlow()
+                .flowWithLifecycle(lifecycle)
+                .filter { it == 0 }
+                .collect { findNavController().popBackStack() }
+        }
     }
 
     private fun cancelNotification(item: NotificationItem) {
