@@ -85,9 +85,10 @@ dependencies {
     implementation rxbinding
     implementation rxbindingKotlin
 
-    implementation 'com.github.piasy:BigImageViewer:1.8.0'
-    implementation 'com.github.piasy:GlideImageLoader:1.8.0'
-    implementation 'com.github.piasy:ProgressPieIndicator:1.8.0'
+    def piasy = "1.8.1"
+    implementation "com.github.piasy:BigImageViewer:$piasy"
+    implementation "com.github.piasy:GlideImageLoader:$piasy"
+    implementation "com.github.piasy:ProgressPieIndicator:$piasy"
 
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'

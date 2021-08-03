@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id 'com.google.gms.google-services' //TODO: figure out why this is failing on the github builds
+    //id 'com.google.gms.google-services' //TODO: figure out why this is failing on the github builds
     id 'com.google.firebase.crashlytics'
 }
 

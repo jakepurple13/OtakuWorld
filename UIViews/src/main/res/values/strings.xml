@@ -56,6 +56,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="done">Done</string>
+    <string name="cancel">Cancel</string>
 
     <string name="ok">OK</string>
     <string name="something_went_wrong">Something Went Wrong</string>

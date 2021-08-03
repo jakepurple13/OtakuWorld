@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.net.toUri
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.animeworld.databinding.DownloadViewerFragmentBinding
 import com.programmersbox.animeworld.ytsdatabase.*
 import com.programmersbox.dragswipe.*
@@ -45,6 +44,7 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.sizedListOf
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.Extras
 import java.text.DecimalFormat
@@ -189,7 +189,16 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     @ExperimentalMaterialApi
     @Composable
     private fun ScaffoldUi() {
-        Scaffold(
+
+        BottomSheetDeleteScaffold(
+            listOfItems = downloadSubject,
+            multipleTitle = stringResource(id = R.string.delete),
+            onRemove = { download -> context?.deleteDialog(download.download) },
+            customSingleRemoveDialog = { download ->
+                context?.deleteDialog(download.download)
+                false
+            },
+            onMultipleRemove = { downloadItems -> fetch.delete(downloadItems.map { it.id }) },
             topBar = {
                 TopAppBar(
                     actions = {
@@ -203,28 +212,14 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                     }
                 )
             },
-            bottomBar = {
-                Button(
-                    onClick = {
-                        val downloadItems = mutableListOf<DownloadData>()
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle(R.string.delete)
-                            .setMultiChoiceItems(downloadSubject.map { it.download.file }.toTypedArray(), null) { _, i, b ->
-                                if (b) downloadItems.add(downloadSubject[i]) else downloadItems.remove(downloadSubject[i])
-                            }
-                            .setPositiveButton(R.string.delete) { d, _ ->
-                                fetch.delete(downloadItems.map { it.id })
-                                d.dismiss()
-                            }
-                            .show()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(0f)
-                ) {
-                    Text(
-                        stringResource(R.string.delete_multiple),
-                        style = MaterialTheme.typography.button
-                    )
+            itemUi = { download ->
+                Column(modifier = Modifier.padding(5.dp)) {
+                    Text(download.download.url.toUri().lastPathSegment.orEmpty())
+                    var prog = download.download.progress
+                    if (prog == -1) { // Download progress is undermined at the moment.
+                        prog = 0
+                    }
+                    Text(stringResource(R.string.percent_progress, prog))
                 }
             }
         ) {
