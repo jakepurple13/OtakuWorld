@@ -85,7 +85,7 @@ dependencies {
     implementation rxbinding
     implementation rxbindingKotlin
 
-    implementation 'com.github.piasy:BigImageViewer:1.8.0'
+    implementation 'com.github.piasy:BigImageViewer:1.8.1'
     implementation 'com.github.piasy:GlideImageLoader:1.8.0'
     implementation 'com.github.piasy:ProgressPieIndicator:1.8.0'
 
