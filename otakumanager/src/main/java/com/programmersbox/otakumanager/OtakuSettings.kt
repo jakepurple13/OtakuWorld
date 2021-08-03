@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -125,7 +126,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeAsState(initial = null)
 
-            val currentAppInfo = remember { packageManager?.getPackageInfo(activity.packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 }
+            val currentAppInfo = rememberSaveable { packageManager?.getPackageInfo(activity.packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 }
 
             SettingsMenuLink(
                 title = { Text(text = stringResource(id = R.string.currentVersion, currentAppInfo), modifier = Modifier.padding(start = 5.dp)) },
@@ -283,7 +284,6 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                 title = { Text(text = stringResource(id = R.string.theme_choice_title), modifier = Modifier.padding(start = 5.dp)) },
                 subtitle = { Text(text = theme, modifier = Modifier.padding(start = 5.dp)) },
                 onClick = {
-
                     MaterialAlertDialogBuilder(activity)
                         .setTitle(R.string.choose_a_theme)
                         .setIcon(R.drawable.ic_baseline_settings_brightness_24)

@@ -41,12 +41,12 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.animeworld.databinding.FragmentViewVideosBinding
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.animatedItems
 import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import com.skydoves.landscapist.glide.GlideImage
@@ -130,69 +130,139 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             if (items.isEmpty()) {
                 EmptyState()
             } else {
-                Scaffold(
-                    bottomBar = {
-                        Button(
-                            onClick = {
-                                val downloadItems = mutableListOf<VideoContent>()
-                                MaterialAlertDialogBuilder(requireContext())
-                                    .setTitle(R.string.delete)
-                                    .setMultiChoiceItems(items.map { it.videoName }.toTypedArray(), null) { _, i, b ->
-                                        if (b) downloadItems.add(items[i]) else downloadItems.remove(items[i])
+                BottomSheetDeleteScaffold(
+                    listOfItems = items,
+                    multipleTitle = stringResource(id = R.string.delete),
+                    onRemove = { context?.deleteDialog(it) {} },
+                    customSingleRemoveDialog = {
+                        context?.deleteDialog(it) {}
+                        false
+                    },
+                    onMultipleRemove = { downloadedItems ->
+                        downloadedItems.forEach {
+                            try {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                    it.assetFileStringUri?.toUri()?.let { it1 ->
+                                        context?.contentResolver?.delete(
+                                            it1,
+                                            "${MediaStore.Video.Media._ID} = ?",
+                                            arrayOf(it.videoId.toString())
+                                        )
                                     }
-                                    .setPositiveButton(R.string.delete) { d, _ ->
-                                        downloadItems.forEach {
-                                            try {
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                                    it.assetFileStringUri?.toUri()?.let { it1 ->
-                                                        context?.contentResolver?.delete(
-                                                            it1,
-                                                            "${MediaStore.Video.Media._ID} = ?",
-                                                            arrayOf(it.videoId.toString())
-                                                        )
-                                                    }
-                                                } else {
-                                                    File(it.path!!).delete()
-                                                }
-                                            } catch (e: Exception) {
-                                                Toast.makeText(requireContext(), "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT)
-                                                    .show()
-                                            }
-                                        }
-                                        d.dismiss()
-                                    }
+                                } else {
+                                    File(it.path!!).delete()
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(requireContext(), "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT)
                                     .show()
+                            }
+                        }
+                        downloadedItems.clear()
+                    },
+                    itemUi = { item ->
+                        Row {
 
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(0f)
-                        ) {
+                            Box {
+
+                                /*convert millis to appropriate time*/
+                                val runTimeString = remember {
+                                    val duration = item.videoDuration
+                                    if (duration > TimeUnit.HOURS.toMillis(1)) {
+                                        String.format(
+                                            "%02d:%02d:%02d",
+                                            TimeUnit.MILLISECONDS.toHours(duration),
+                                            TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(
+                                                TimeUnit.MILLISECONDS.toHours(
+                                                    duration
+                                                )
+                                            ),
+                                            TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                                TimeUnit.MILLISECONDS.toMinutes(
+                                                    duration
+                                                )
+                                            )
+                                        )
+                                    } else {
+                                        String.format(
+                                            "%02d:%02d",
+                                            TimeUnit.MILLISECONDS.toMinutes(duration),
+                                            TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                                TimeUnit.MILLISECONDS.toMinutes(
+                                                    duration
+                                                )
+                                            )
+                                        )
+                                    }
+                                }
+
+                                GlideImage(
+                                    imageModel = item.assetFileStringUri.orEmpty(),
+                                    contentDescription = "",
+                                    contentScale = ContentScale.Crop,
+                                    requestBuilder = Glide.with(LocalView.current)
+                                        .asBitmap()
+                                        .override(360, 270)
+                                        .thumbnail(0.5f)
+                                        .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(
+                                            with(LocalDensity.current) { 360.toDp() },
+                                            with(LocalDensity.current) { 270.toDp() }
+                                        ),
+                                    failure = {
+                                        Text(text = "image request failed.")
+                                    }
+                                )
+
+                                Text(
+                                    runTimeString,
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .background(Color(0x99000000))
+                                        .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 5.dp))
+                                )
+
+                            }
+
+                            val name = remember {
+                                "${item.videoName} ${
+                                    if (requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) "\nat ${
+                                        requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()
+                                    }" else ""
+                                }"
+                            }
+
                             Text(
-                                stringResource(R.string.delete_multiple),
-                                style = MaterialTheme.typography.button
+                                name,
+                                Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .padding(start = 5.dp)
                             )
+
                         }
                     }
                 ) {
+                    Scaffold(modifier = Modifier.padding(it)) { p ->
+                        val videos by updateAnimatedItemsState(newList = items)
 
-                    val videos by updateAnimatedItemsState(newList = items)
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(5.dp),
-                        contentPadding = it,
-                        state = rememberLazyListState(),
-                        modifier = Modifier
-                            .padding(5.dp)
-                    ) {
-                        animatedItems(
-                            videos,
-                            enterTransition = slideInHorizontally(),
-                            exitTransition = slideOutHorizontally()
-                        ) { i -> VideoContentView(i) }
-                        //items(items = items) { i -> VideoContentView(i) }
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                            contentPadding = p,
+                            state = rememberLazyListState(),
+                            modifier = Modifier
+                                .padding(5.dp)
+                        ) {
+                            animatedItems(
+                                videos,
+                                enterTransition = slideInHorizontally({ x -> x / 2 }),
+                                exitTransition = slideOutHorizontally()
+                            ) { i -> VideoContentView(i) }
+                        }
                     }
                 }
+
             }
         }
 

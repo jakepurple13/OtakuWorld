@@ -31,12 +31,12 @@ import com.anggrayudi.storage.file.DocumentFileCompat
 import com.anggrayudi.storage.file.DocumentFileType
 import com.anggrayudi.storage.file.deleteRecursively
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.mangaworld.databinding.FragmentDownloadViewerBinding
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.animatedItems
 import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import de.helmbold.rxfilewatcher.PathObservables
@@ -160,7 +160,37 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeAsState(emptyList())
 
-                Scaffold(
+                BottomSheetDeleteScaffold(
+                    listOfItems = files,
+                    multipleTitle = stringResource(id = R.string.delete),
+                    onRemove = { file ->
+                        Single.create<Boolean> {
+                            it.onSuccess(
+                                DocumentFileCompat.fromFullPath(context, file.path, DocumentFileType.FOLDER)
+                                    ?.deleteRecursively(context, false) ?: false
+                            )
+                        }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
+                            .addTo(disposable)
+                    },
+                    onMultipleRemove = { list ->
+                        Completable.create {
+                            list.forEach { f ->
+                                DocumentFileCompat.fromFullPath(context, f.path, DocumentFileType.FOLDER)
+                                    ?.deleteRecursively(context, false)
+                            }
+                            it.onComplete()
+                        }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeBy {
+                                Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show()
+                                list.clear()
+                            }
+                            .addTo(disposable)
+                    },
                     topBar = {
                         TopAppBar(
                             title = {
@@ -185,57 +215,27 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                             }
                         )
                     },
-                    bottomBar = {
-                        Button(
-                            onClick = {
-                                val list = mutableListOf<File>()
-
-                                MaterialAlertDialogBuilder(requireContext())
-                                    .setTitle(R.string.delete_multiple)
-                                    .setMultiChoiceItems(files.map(File::getName).toTypedArray(), null) { _, i, b ->
-                                        val action = if (b) list::add else list::remove
-                                        files[i].let(action)
-                                    }
-                                    .setPositiveButton(R.string.delete) { d, _ ->
-                                        d.dismiss()
-                                        Completable.create {
-                                            list.forEach { f ->
-                                                DocumentFileCompat.fromFullPath(context, f.path, DocumentFileType.FOLDER)
-                                                    ?.deleteRecursively(context, false)
-                                            }
-                                            it.onComplete()
-                                        }
-                                            .subscribeOn(Schedulers.io())
-                                            .observeOn(AndroidSchedulers.mainThread())
-                                            .subscribeBy {
-                                                Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show()
-                                            }
-                                            .addTo(disposable)
-                                    }
-                                    .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                                    .show()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(0f)
-                        ) {
+                    itemUi = { file ->
+                        Column {
                             Text(
-                                stringResource(R.string.delete_multiple),
-                                style = MaterialTheme.typography.button
+                                file.name,
+                                style = MaterialTheme.typography.h5,
+                                modifier = Modifier.padding(5.dp)
                             )
                         }
                     }
                 ) {
+                    Scaffold(modifier = Modifier.padding(it)) { p ->
+                        val f by updateAnimatedItemsState(newList = files)
 
-                    val f by updateAnimatedItemsState(newList = files)
-
-                    if (files.isEmpty()) EmptyState()
-                    else LazyColumn(contentPadding = it) {
-                        //items(files) { f -> ChapterItem(f) }
-                        animatedItems(
-                            f,
-                            enterTransition = slideInHorizontally(),
-                            exitTransition = slideOutHorizontally()
-                        ) { file -> ChapterItem(file) }
+                        if (files.isEmpty()) EmptyState()
+                        else LazyColumn(contentPadding = p) {
+                            animatedItems(
+                                f,
+                                enterTransition = slideInHorizontally(),
+                                exitTransition = slideOutHorizontally()
+                            ) { file -> ChapterItem(file) }
+                        }
                     }
                 }
 

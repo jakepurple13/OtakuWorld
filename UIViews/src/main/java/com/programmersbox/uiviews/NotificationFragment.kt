@@ -7,10 +7,7 @@ import android.view.ViewGroup
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,15 +26,16 @@ import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.databinding.FragmentNotificationBinding
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
+import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -69,7 +67,74 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeAsState(emptyList())
 
-                NotificationLayout(items)
+                //NotificationLayout(items)
+
+                BottomSheetDeleteScaffold(
+                    listOfItems = items,
+                    multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
+                    onRemove = { item ->
+                        db.deleteNotification(item)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe()
+                            .addTo(disposable)
+                        cancelNotification(item)
+                    },
+                    onMultipleRemove = { d ->
+                        Completable.merge(
+                            d.map {
+                                cancelNotification(it)
+                                db.deleteNotification(it)
+                            }
+                        )
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe { d.clear() }
+                            .addTo(disposable)
+                    },
+                    itemUi = { item ->
+                        Row {
+                            GlideImage(
+                                imageModel = item.imageUrl.orEmpty(),
+                                contentDescription = "",
+                                contentScale = ContentScale.Crop,
+                                requestBuilder = Glide.with(LocalView.current)
+                                    .asBitmap()
+                                    .override(360, 480)
+                                    .thumbnail(0.5f)
+                                    .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                failure = {
+                                    Image(
+                                        painter = painterResource(logo.notificationId),
+                                        contentDescription = item.notiTitle,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterVertically)
+                                            .padding(5.dp)
+                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                    )
+                                }
+                            )
+
+                            Column(modifier = Modifier.padding(start = 5.dp)) {
+                                Text(item.notiTitle)
+                                Text(item.source)
+                            }
+
+                        }
+                    }
+                ) {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    ) {
+                        StaggeredVerticalGrid(
+                            columns = 2,
+                            modifier = Modifier.padding(it)
+                        ) { items.forEach { NotificationItem(it, binding.root.findNavController()) } }
+                    }
+                }
 
             }
         }
@@ -100,64 +165,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
-    }
-
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
-    @Composable
-    private fun NotificationLayout(notiList: List<NotificationItem>) {
-        Scaffold(
-            bottomBar = { MultiDeleteBottomButton(notiList) }
-        ) {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
-            ) {
-                StaggeredVerticalGrid(
-                    columns = 2,
-                    modifier = Modifier.padding(it)
-                ) { notiList.forEach { NotificationItem(it, binding.root.findNavController()) } }
-            }
-        }
-    }
-
-    @Composable
-    private fun MultiDeleteBottomButton(notiList: List<NotificationItem>) {
-        Button(
-            onClick = {
-                val items = mutableListOf<NotificationItem>()
-
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.removeNotification)
-                    .setMultiChoiceItems(
-                        notiList.map { i -> "${i.source} - ${i.notiTitle}" }.toTypedArray(),
-                        null
-                    ) { _, i, b ->
-                        val item = notiList[i]
-                        if (b) items.add(item) else items.remove(item)
-                    }
-                    .setPositiveButton(R.string.yes) { d, _ ->
-                        items.forEach {
-                            db.deleteNotification(it)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe()
-                                .addTo(disposable)
-                            cancelNotification(it)
-                        }
-                        d.dismiss()
-                    }
-                    .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                    .show()
-            },
-            modifier = Modifier
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(0f)
-        ) {
-            Text(
-                stringResource(R.string.delete_multiple),
-                style = MaterialTheme.typography.button
-            )
-        }
     }
 
     private val logo: NotificationLogo by inject()

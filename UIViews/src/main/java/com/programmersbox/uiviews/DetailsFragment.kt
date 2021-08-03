@@ -248,10 +248,12 @@ class DetailsFragment : Fragment() {
                         .map { it.second || it.first }
                         .subscribeAsState(initial = false)
 
+                    val logoRemember = remember { logo }
+
                     MdcTheme {
                         DetailsHeader(
                             model = info,
-                            logo = logo,
+                            logo = logoRemember,
                             swatchInfo = swatchInfo,
                             isFavorite = favoriteListener
                         ) { b ->
