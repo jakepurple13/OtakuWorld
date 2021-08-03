@@ -87,7 +87,7 @@ dependencies {
 
     implementation 'com.github.piasy:BigImageViewer:1.8.0'
     implementation 'com.github.piasy:GlideImageLoader:1.8.0'
-    implementation 'com.github.piasy:ProgressPieIndicator:1.8.0'
+    implementation 'com.github.piasy:ProgressPieIndicator:1.8.1'
 
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
