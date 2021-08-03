@@ -5,6 +5,7 @@ import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
@@ -19,6 +20,9 @@ interface ItemDao {
     fun getAllFavorites(): Flowable<List<DbModel>>
 
     @Query("SELECT * FROM FavoriteItem")
+    fun getAllFavoritesFlow(): Flow<List<DbModel>>
+
+    @Query("SELECT * FROM FavoriteItem")
     fun getAllFavoritesSync(): List<DbModel>
 
     @Query("SELECT COUNT(*) FROM FavoriteItem WHERE url = :url")
@@ -26,6 +30,9 @@ interface ItemDao {
 
     @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
     fun containsItem(url: String): Flowable<Boolean>
+
+    @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
+    fun containsItemFlow(url: String): Flow<Boolean>
 
     @Query("SELECT * FROM FavoriteItem WHERE url = :url")
     fun getItemByUrl(url: String): Maybe<DbModel>
@@ -65,5 +72,11 @@ interface ItemDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM Notifications WHERE url = :url)")
     fun doesNotificationExist(url: String): Flowable<Boolean>
+
+    @Query("SELECT * FROM Notifications")
+    fun getAllNotificationsFlow(): Flow<List<NotificationItem>>
+
+    @Query("SELECT COUNT(id) FROM Notifications")
+    fun getAllNotificationCountFlow(): Flow<Int>
 
 }
