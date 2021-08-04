@@ -1,12 +1,11 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
-import android.view.View
+import androidx.compose.runtime.Composable
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 
 interface GenericInfo {
 
@@ -20,6 +19,8 @@ interface GenericInfo {
     fun toSource(s: String): ApiService?
     fun customPreferences(preferenceScreen: SettingsDsl) = Unit
     fun downloadChapter(chapterModel: ChapterModel, title: String)
-    fun shimmerUi(context: Context, logo: MainLogo): View
+
+    @Composable
+    fun ComposeShimmerItem()
 
 }

@@ -94,8 +94,6 @@ dependencies {
     implementation "com.mikepenz:aboutlibraries-core:${latestAboutLibsRelease}"
     implementation "com.mikepenz:aboutlibraries:${latestAboutLibsRelease}"
 
-    implementation 'com.facebook.shimmer:shimmer:0.5.0'
-
     implementation glide
     kapt glideCompiler
     implementation("com.github.bumptech.glide:recyclerview-integration:$glideVersion") {

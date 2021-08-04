@@ -1,12 +1,24 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.view.View
 import android.widget.Toast
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteDialogFactory
@@ -14,6 +26,9 @@ import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.accompanist.placeholder.PlaceholderHighlight
+import com.google.accompanist.placeholder.material.placeholder
+import com.google.accompanist.placeholder.material.shimmer
 import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
@@ -25,7 +40,6 @@ import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.ytsdatabase.Torrent
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -309,7 +323,39 @@ class GenericAnime(val context: Context) : GenericInfo {
         ViewVideosFragment().show(MainActivity.activity.supportFragmentManager, "videoViewer")
     }
 
-    @SuppressLint("InflateParams")
-    override fun shimmerUi(context: Context, logo: MainLogo): View = context.layoutInflater.inflate(R.layout.shimmer_item, null)
+    @ExperimentalMaterialApi
+    @Composable
+    override fun ComposeShimmerItem() {
+        LazyColumn {
+            items(10) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                ) {
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .placeholder(true, highlight = PlaceholderHighlight.shimmer())
+                    ) {
+
+                        Icon(
+                            Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+
+                        Text(
+                            "",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(5.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 
 }

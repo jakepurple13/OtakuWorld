@@ -1,13 +1,20 @@
 package com.programmersbox.novelworld
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.view.View
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.novel_sources.Sources
@@ -52,9 +59,28 @@ class GenericNovel(val context: Context) : GenericInfo {
 
     }
 
-    @SuppressLint("InflateParams")
-    override fun shimmerUi(context: Context, logo: MainLogo): View = context.layoutInflater.inflate(R.layout.shimmer_item, null)
-
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
+
+    @ExperimentalMaterialApi
+    @Composable
+    override fun ComposeShimmerItem() {
+        LazyColumn {
+            items(10) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                ) {
+                    Text(
+                        "",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .placeholder(true)
+                            .padding(5.dp)
+                    )
+                }
+            }
+        }
+    }
 
 }

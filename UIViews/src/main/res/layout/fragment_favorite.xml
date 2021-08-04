@@ -75,6 +75,11 @@
             tools:listitem="@layout/favorite_item"
             tools:itemCount="10" />
 
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/compose_placeholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.appbar.AppBarLayout

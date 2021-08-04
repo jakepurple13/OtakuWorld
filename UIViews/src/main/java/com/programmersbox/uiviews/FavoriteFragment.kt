@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.chip.Chip
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.jakewharton.rxbinding2.widget.textChanges
 import com.programmersbox.dragswipe.DragSwipeAdapter
@@ -35,10 +38,7 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.databinding.FavoriteItemBinding
 import com.programmersbox.uiviews.databinding.FragmentFavoriteBinding
-import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
-import com.programmersbox.uiviews.utils.CoverCard
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.toolTipText
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -107,6 +107,7 @@ class FavoriteFragment : BaseFragment() {
             .map { it.size to it.toGroup() }
             .distinctUntilChanged()
             .subscribe {
+                binding.composePlaceholder.gone()
                 binding.favSearchInfo.setAdapter(ArrayAdapter(requireContext(), R.layout.favorite_auto_item, it.second.map { it.key }))
                 adapter.setData(it.second.toList())
                 binding.favSearchLayout.hint = resources.getQuantityString(R.plurals.numFavorites, it.first, it.first)
@@ -115,6 +116,14 @@ class FavoriteFragment : BaseFragment() {
                 else binding.emptyState.visible()
             }
             .addTo(disposable)
+
+        binding.composePlaceholder.setContent {
+            MdcTheme {
+                LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH)) {
+                    items(10) { PlaceHolderCoverCard(placeHolder = logo2.notificationId) }
+                }
+            }
+        }
 
         //binding.xmlVersion.visibility = View.GONE
 

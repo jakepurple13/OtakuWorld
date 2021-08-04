@@ -20,11 +20,6 @@
         android:layout_height="match_parent"
         tools:context=".DetailsFragment">
 
-        <include
-            tools:visibility="gone"
-            android:id="@+id/shimmer"
-            layout="@layout/details_shimmer" />
-
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar"
             android:layout_width="match_parent"

@@ -12,11 +12,8 @@
         android:layout_below="@+id/search_info"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.facebook.shimmer.ShimmerFrameLayout
-            android:id="@+id/shimmerLayout"
-            app:shimmer_auto_start="true"
-            app:shimmer_shape="linear"
-            app:shimmer_repeat_mode="restart"
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/composeShimmer"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
