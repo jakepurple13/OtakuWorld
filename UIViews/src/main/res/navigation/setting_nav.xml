@@ -12,62 +12,63 @@
         android:name="com.programmersbox.uiviews.SettingsFragment"
         android:label="SettingsFragment">
         <action
+            android:id="@+id/action_settingsFragment_to_favoriteFragment"
+            app:destination="@id/favoriteFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
-            android:id="@+id/action_settingsFragment_to_favoriteFragment"
-            app:destination="@id/favoriteFragment" />
+            app:popExitAnim="@anim/slide_out" />
 
         <action
+            android:id="@+id/action_x_to_about_libs"
+            app:destination="@id/about_libraries"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
-            android:id="@+id/action_x_to_about_libs"
-            app:destination="@id/about_libraries">
+            app:popExitAnim="@anim/slide_out">
             <argument
                 android:name="data"
                 app:argType="java.io.Serializable"
                 app:nullable="true" />
         </action>
         <action
-            app:enterAnim="@anim/slide_in"
-            app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
             android:id="@+id/action_settingsFragment_to_notificationFragment"
-            app:destination="@id/notificationFragment" />
-        <action
+            app:destination="@id/notificationFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
+            app:popExitAnim="@anim/slide_out" />
+        <action
             android:id="@+id/action_settingsFragment_to_globalSearchFragment"
-            app:destination="@id/globalSearchFragment" />
+            app:destination="@id/globalSearchFragment"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/favoriteFragment"
         android:name="com.programmersbox.uiviews.FavoriteFragment"
         android:label="fragment_favorite"
-        tools:layout="@layout/fragment_favorite" >
+        tools:layout="@layout/fragment_favorite">
         <action
+            android:id="@+id/action_favoriteFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
-            android:id="@+id/action_favoriteFragment_to_detailsFragment"
-            app:destination="@id/detailsFragment" />
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/detailsFragment"
         android:name="com.programmersbox.uiviews.DetailsFragment"
-        android:label="DetailsFragment">
+        android:label="DetailsFragment"
+        tools:layout="@layout/details_fragment">
         <argument
             android:name="itemInfo"
+            android:defaultValue="@null"
             app:argType="com.programmersbox.models.ItemModel"
-            app:nullable="true"
-            android:defaultValue="@null" />
+            app:nullable="true" />
     </fragment>
     <fragment
         android:id="@+id/notificationFragment"
@@ -75,12 +76,12 @@
         android:label="fragment_notification"
         tools:layout="@layout/fragment_notification">
         <action
+            android:id="@+id/action_notificationFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
-            android:id="@+id/action_notificationFragment_to_detailsFragment"
-            app:destination="@id/detailsFragment" />
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/globalSearchFragment"
@@ -88,11 +89,11 @@
         android:label="fragment_global_search"
         tools:layout="@layout/fragment_global_search">
         <action
+            android:id="@+id/action_globalSearchFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
-            android:id="@+id/action_globalSearchFragment_to_detailsFragment"
-            app:destination="@id/detailsFragment" />
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
 </navigation>

@@ -9,23 +9,24 @@
         android:id="@+id/recentFragment2"
         android:name="com.programmersbox.uiviews.RecentFragment"
         android:label="fragment_recent"
-        tools:layout="@layout/fragment_recent" >
+        tools:layout="@layout/fragment_recent">
         <action
+            android:id="@+id/action_recentFragment2_to_detailsFragment2"
+            app:destination="@id/detailsFragment2"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out"
-            android:id="@+id/action_recentFragment2_to_detailsFragment2"
-            app:destination="@id/detailsFragment2" />
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/detailsFragment2"
         android:name="com.programmersbox.uiviews.DetailsFragment"
-        android:label="DetailsFragment" >
+        android:label="DetailsFragment"
+        tools:layout="@layout/details_fragment">
         <argument
             android:name="itemInfo"
+            android:defaultValue="@null"
             app:argType="com.programmersbox.models.ItemModel"
-            app:nullable="true"
-            android:defaultValue="@null" />
+            app:nullable="true" />
     </fragment>
 </navigation>
