@@ -473,17 +473,9 @@ class DetailsFragment : Fragment() {
     @Composable
     private fun PlaceHolderHeader(logo: Int) {
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .animateContentSize()
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
 
-            Row(
-                modifier = Modifier
-                    .padding(5.dp)
-                    .animateContentSize()
-            ) {
+            Row(modifier = Modifier.padding(5.dp)) {
 
                 Card(
                     shape = RoundedCornerShape(5.dp),
@@ -537,9 +529,7 @@ class DetailsFragment : Fragment() {
                             .padding(vertical = 5.dp)
                             .fillMaxWidth()
                             .placeholder(true),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 2,
-                        style = MaterialTheme.typography.body2,
+                        maxLines = 2
                     )
 
                 }
@@ -549,7 +539,6 @@ class DetailsFragment : Fragment() {
     }
 
     private fun onInfoGet(infoModel: InfoModel) {
-
         Flowables.combineLatest(
             chapterListener.getAllEpisodesByShow(infoModel.url),
             dao.getAllChapters(infoModel.url).subscribeOn(Schedulers.io())
