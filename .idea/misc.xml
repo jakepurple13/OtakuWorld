@@ -30,13 +30,17 @@
         <entry key="UIViews/src/main/res/layout/fragment_favorite.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/fragment_global_search.xml" value="0.18" />
         <entry key="UIViews/src/main/res/layout/fragment_notification.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/layout/fragment_recent.xml" value="0.21805555555555556" />
         <entry key="UIViews/src/main/res/layout/notification_item.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/layout/search_item.xml" value="0.2325657894736842" />
         <entry key="UIViews/src/main/res/menu/details_menu.xml" value="0.225" />
         <entry key="UIViews/src/main/res/xml/root_preferences.xml" value="0.2325657894736842" />
         <entry key="animeworld/src/main/res/drawable/progress_bar.xml" value="0.24039087947882737" />
         <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
         <entry key="animeworld/src/main/res/layout/download_viewer_fragment.xml" value="0.21736111111111112" />
         <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
+        <entry key="animeworld/src/main/res/layout/shimmer_item.xml" value="0.21805555555555556" />
+        <entry key="animeworld/src/main/res/layout/shimmer_row.xml" value="0.2325657894736842" />
         <entry key="animeworld/src/main/res/layout/video_layout.xml" value="0.2028688524590164" />
         <entry key="animeworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.13941368078175895" />

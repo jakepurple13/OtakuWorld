@@ -20,11 +20,6 @@
         android:layout_height="match_parent"
         tools:context=".DetailsFragment">
 
-        <include
-            tools:visibility="gone"
-            android:id="@+id/shimmer"
-            layout="@layout/details_shimmer" />
-
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar"
             android:layout_width="match_parent"
@@ -135,7 +130,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:background="?attr/colorPrimary"
             android:contentDescription="@string/fallback_menu_item_share_link"
             android:src="@android:drawable/ic_menu_share"
             android:textColor="#ffffff"

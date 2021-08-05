@@ -2,10 +2,10 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
-import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.gone
@@ -13,7 +13,6 @@ import com.programmersbox.helpfulutils.visible
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.databinding.FragmentRecentBinding
 import com.programmersbox.uiviews.utils.EndlessScrollingListener
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -22,7 +21,6 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import org.koin.android.ext.android.inject
 
 /**
  * A simple [Fragment] subclass.
@@ -39,8 +37,6 @@ class RecentFragment : BaseListFragment() {
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
-
-    private val logo: MainLogo by inject()
 
     private lateinit var binding: FragmentRecentBinding
 
@@ -81,28 +77,20 @@ class RecentFragment : BaseListFragment() {
             .addTo(disposable)
 
         binding.recentRefresh.setOnRefreshListener {
-            binding.shimmerLayout.visible()
-            binding.shimmerLayout.startShimmer()
+            binding.composeShimmer.visible()
             count = 1
             adapter.setListNotify(emptyList())
             sourceLoad(sourcePublish.value!!)
             binding.recentList.scrollToPosition(0)
         }
 
-        binding.shimmerLayout.addView(
-            info.shimmerUi(requireContext(), logo),
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT
-        )
-
-        binding.shimmerLayout.startShimmer()
+        binding.composeShimmer.setContent { MdcTheme { info.ComposeShimmerItem() } }
 
         sourcePublish
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
-                binding.shimmerLayout.visible()
-                binding.shimmerLayout.startShimmer()
+                binding.composeShimmer.visible()
                 count = 1
                 adapter.setListNotify(emptyList())
                 sourceLoad(it)
@@ -120,8 +108,7 @@ class RecentFragment : BaseListFragment() {
             .subscribeBy {
                 adapter.addItems(it)
                 binding.recentRefresh.isRefreshing = false
-                binding.shimmerLayout.stopShimmer()
-                binding.shimmerLayout.gone()
+                binding.composeShimmer.gone()
             }
             .addTo(disposable)
     }

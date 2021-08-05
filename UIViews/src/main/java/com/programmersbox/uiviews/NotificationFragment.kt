@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,23 +17,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.uiviews.databinding.FragmentNotificationBinding
+import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Completable
@@ -52,20 +54,19 @@ import org.koin.android.ext.android.inject
 class NotificationFragment : BaseBottomSheetDialogFragment() {
 
     private val genericInfo: GenericInfo by inject()
-
     private val db by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val disposable = CompositeDisposable()
-
     private val notificationManager by lazy { requireContext().notificationManager }
-
-    private lateinit var binding: FragmentNotificationBinding
+    private val logo: MainLogo by inject()
 
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.composeView.setContent {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+        setContent {
             MdcTheme {
 
                 val items by db.getAllNotificationsFlow()
@@ -111,7 +112,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                                 failure = {
                                     Image(
-                                        painter = painterResource(logo.notificationId),
+                                        painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
                                         contentDescription = item.notiTitle,
                                         modifier = Modifier
                                             .align(Alignment.CenterVertically)
@@ -135,7 +136,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         StaggeredVerticalGrid(
                             columns = 2,
                             modifier = Modifier.padding(it)
-                        ) { items.forEach { NotificationItem(it, binding.root.findNavController()) } }
+                        ) { items.forEach { NotificationItem(it, findNavController()) } }
                     }
                 }
 
@@ -148,7 +149,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                 .filter { it == 0 }
                 .collect { findNavController().popBackStack() }
         }
-    }
+        }
 
     private fun cancelNotification(item: NotificationItem) {
         notificationManager.cancel(item.id)
@@ -156,21 +157,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         if (g.size == 1) notificationManager.cancel(42)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Inflate the layout for this fragment
-        binding = FragmentNotificationBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
     }
-
-    private val logo: NotificationLogo by inject()
 
     @ExperimentalMaterialApi
     @Composable
@@ -211,7 +201,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     ?.addTo(disposable)
             },
             elevation = 5.dp,
-            interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
             onClickLabel = item.notiTitle,
             modifier = Modifier
@@ -231,9 +220,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     requestBuilder = Glide.with(LocalView.current)
                         .asBitmap()
                         .override(360, 480)
-                        .placeholder(logo.notificationId)
-                        .error(logo.notificationId)
-                        .fallback(logo.notificationId)
+                        .placeholder(logo.logoId)
+                        .error(logo.logoId)
+                        .fallback(logo.logoId)
                         .transform(RoundedCorners(15)),
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -241,7 +230,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                     failure = {
                         Image(
-                            painter = painterResource(logo.notificationId),
+                            painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
                             contentDescription = item.notiTitle,
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)

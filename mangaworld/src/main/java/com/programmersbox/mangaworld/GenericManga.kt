@@ -1,24 +1,23 @@
 package com.programmersbox.mangaworld
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.os.Environment
-import android.view.View
-import android.widget.GridLayout
-import android.widget.ImageView
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.core.view.setPadding
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
-import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
@@ -32,9 +31,7 @@ import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
-import com.programmersbox.uiviews.utils.AutoFitGridLayoutManager
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
@@ -150,19 +147,13 @@ class GenericManga(val context: Context) : GenericInfo {
         null
     }
 
-    @SuppressLint("InflateParams")
-    override fun shimmerUi(context: Context, logo: MainLogo): View =
-        context.layoutInflater.inflate(R.layout.shimmer_item, null)
-            .apply {
-                repeat(9) {
-                    (this as? GridLayout)?.addView(
-                        ImageView(context).apply {
-                            setImageResource(logo.logoId)
-                            setBackgroundColor(0xB3B3B3)
-                            setPadding(5)
-                        },
-                        360, 480
-                    )
-                }
-            }
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    @Composable
+    override fun ComposeShimmerItem() {
+        LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH)) {
+            items(10) { PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) }
+        }
+    }
+
 }

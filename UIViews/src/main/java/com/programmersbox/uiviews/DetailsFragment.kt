@@ -3,7 +3,6 @@ package com.programmersbox.uiviews
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -13,9 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -28,11 +25,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -45,6 +43,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.NavigationUI
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.accompanist.placeholder.material.placeholder
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.dragswipe.get
@@ -53,7 +52,6 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.helpfulutils.colorFromTheme
-import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.whatIfNotNull
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -97,6 +95,7 @@ class DetailsFragment : Fragment() {
     private val chapterListener = FirebaseDb.FirebaseListener()
 
     private val logo: MainLogo by inject()
+    private val logo2: NotificationLogo by inject()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -106,10 +105,14 @@ class DetailsFragment : Fragment() {
         return binding.root
     }
 
+    @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         NavigationUI.setupWithNavController(binding.collapsingBar, binding.toolbar, findNavController())
+
+        binding.composeHeader.setContent { MdcTheme { PlaceHolderHeader() } }
+
         args.itemInfo
             ?.also {
                 binding.collapsingBar.title = it.title
@@ -119,82 +122,12 @@ class DetailsFragment : Fragment() {
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeBy { info ->
-                binding.shimmer.shimmerLayout.stopShimmer()
-                binding.shimmer.shimmerLayout.gone()
                 adapter.title = info.title
                 adapter.itemUrl = info.url
                 binding.info = info
                 binding.executePendingBindings()
                 adapter.addItems(info.chapters)
                 onInfoGet(info)
-
-                /* Glide.with(binding.bigInfoCover)
-                     .load(info.imageUrl)
-                     .override(360, 480)
-                     .placeholder(logo.logoId)
-                     .error(logo.logoId)
-                     .fallback(logo.logoId)
-                     .transform(RoundedCorners(15))
-                     .into<Drawable> {
-                         resourceReady { image, _ ->
-                             binding.bigInfoCover.setImageDrawable(image)
-                             binding.infoCover.setImageDrawable(image)
-                             binding.swatch = image.getPalette().vibrantSwatch
-                                 ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
-                                 .also { swatch ->
-                                     swatch?.rgb?.let {
-                                         binding.infoHeader.setBackgroundColor(
-                                             ColorUtils.setAlphaComponent(
-                                                 ColorUtils.blendARGB(
-                                                     requireContext().colorFromTheme(R.attr.colorSurface),
-                                                     it,
-                                                     0.25f
-                                                 ),
-                                                 127
-                                             )
-                                         )
-
-                                         binding.collapsingBar.setContentScrimColor(it)
-                                     }
-
-                                     //swatchInfo = swatch
-
-                                     ShowMoreLess.Builder(requireContext())
-                                         .expandAnimation(true)
-                                         .showMoreLabel(getString(R.string.showMore))
-                                         .showLessLabel(getString(R.string.showLess))
-                                         .labelBold(true)
-                                         .textLengthAndLengthType(2, ShowMoreLess.TYPE_LINE)
-                                         .whatIfNotNull(swatch?.rgb) {
-                                             showLessLabelColor(it)
-                                             showMoreLabelColor(it)
-                                         }
-                                         .textClickable(textClickableInExpand = true, textClickableInCollapse = true)
-                                         .labelUnderLine(true)
-                                         .build()
-                                         .addShowMoreLess(binding.infoDescription, binding.infoDescription.text, false)
-
-                                     swatch?.rgb?.let { binding.toolbar.setBackgroundColor(it) }
-                                     swatch?.rgb?.let { binding.infoLayout.setBackgroundColor(it) }
-                                     swatch?.rgb?.let { binding.shareButton.backgroundTintList = ColorStateList.valueOf(it) }
-                                     swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
-                                     binding.favoriteItem.changeTint(swatch?.rgb ?: Color.WHITE)
-                                     swatch?.rgb?.let { requireActivity().window.statusBarColor = it }
-                                     swatchBarColor = swatch?.rgb
-                                     adapter.swatchInfo = swatch
-
-                                     FastScrollerBuilder(binding.infoChapterList)
-                                         .useMd2Style()
-                                         .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
-                                             swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
-                                             setThumbDrawable(drawable)
-                                         }
-                                         .build()
-                                 }
-
-                             binding.executePendingBindings()
-                         }
-                     }*/
 
                 binding.composeHeader.setContent {
 
@@ -246,12 +179,10 @@ class DetailsFragment : Fragment() {
                         .flowWithLifecycle(lifecycle)
                         .collectAsState(initial = false)
 
-                    val logoRemember = remember { logo }
-
                     MdcTheme {
                         DetailsHeader(
                             model = info,
-                            logo = logoRemember,
+                            logo = painterResource(id = logo2.notificationId),
                             swatchInfo = swatchInfo,
                             isFavorite = favoriteListener
                         ) { b ->
@@ -373,15 +304,39 @@ class DetailsFragment : Fragment() {
 
     }
 
+    @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
     private fun DetailsHeader(
         model: InfoModel,
-        logo: MainLogo,
+        logo: Any?,
         swatchInfo: SwatchInfo?,
         isFavorite: Boolean,
         favoriteClick: (Boolean) -> Unit
     ) {
+
+        var imagePopup by remember { mutableStateOf(false) }
+
+        if (imagePopup) {
+
+            AlertDialog(
+                onDismissRequest = { imagePopup = false },
+                title = { Text(model.title, modifier = Modifier.padding(5.dp)) },
+                text = {
+                    GlideImage(
+                        imageModel = model.imageUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.None,
+                        requestBuilder = Glide.with(LocalView.current).asBitmap().transform(RoundedCorners(5)),
+                        modifier = Modifier
+                            .scaleRotateOffset()
+                            .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                },
+                confirmButton = { TextButton(onClick = { imagePopup = false }) { Text(stringResource(R.string.done)) } }
+            )
+
+        }
 
         var descriptionVisibility by remember { mutableStateOf(false) }
 
@@ -395,11 +350,7 @@ class DetailsFragment : Fragment() {
                 imageModel = model.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                requestBuilder = Glide.with(LocalView.current)
-                    .asBitmap()
-                    .placeholder(logo.logoId)
-                    .error(logo.logoId)
-                    .fallback(logo.logoId),
+                requestBuilder = Glide.with(LocalView.current).asBitmap(),
                 modifier = Modifier.matchParentSize()
             )
 
@@ -437,22 +388,16 @@ class DetailsFragment : Fragment() {
                         requestBuilder = Glide.with(LocalView.current)
                             .asBitmap()
                             //.override(360, 480)
-                            .placeholder(logo.logoId)
-                            .error(logo.logoId)
-                            .fallback(logo.logoId)
                             .transform(RoundedCorners(5)),
+                        error = logo,
+                        placeHolder = logo,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                        failure = {
-                            Image(
-                                bitmap = BitmapFactory.decodeResource(resources, logo.logoId).asImageBitmap(),
-                                contentDescription = model.title,
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            .combinedClickable(
+                                onClick = {},
+                                onDoubleClick = { imagePopup = true }
                             )
-                        }
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                     )
                 }
 
@@ -477,23 +422,10 @@ class DetailsFragment : Fragment() {
                     Row(
                         modifier = Modifier
                             .clickable { favoriteClick(isFavorite) }
+                            .semantics(true) {}
                             .padding(vertical = 5.dp)
                             .fillMaxWidth()
                     ) {
-
-                        /*val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.heart))
-                        val p by animateLottieCompositionAsState(composition = composition)
-
-                        *//*
-                        fun LottieAnimationView.changeTint(@ColorInt newColor: Int) =
-        addValueCallback(KeyPath("**"), LottieProperty.COLOR_FILTER) { PorterDuffColorFilter(newColor, PorterDuff.Mode.SRC_ATOP) }
-                         *//*
-
-                        LottieAnimation(
-                            composition = composition,
-                            progress = animateFloatAsState(targetValue = ),
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )*/
 
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -525,8 +457,77 @@ class DetailsFragment : Fragment() {
         }
     }
 
-    private fun onInfoGet(infoModel: InfoModel) {
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    @Composable
+    private fun PlaceHolderHeader() {
 
+        Box(modifier = Modifier.fillMaxSize()) {
+
+            Row(modifier = Modifier.padding(5.dp)) {
+
+                Card(
+                    shape = RoundedCornerShape(5.dp),
+                    modifier = Modifier.padding(5.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_baseline_cloud_off_24),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .placeholder(true)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.padding(start = 5.dp)
+                ) {
+
+                    Row(
+                        modifier = Modifier
+                            .padding(vertical = 5.dp)
+                            .placeholder(true)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) { Text("") }
+
+                    Row(
+                        modifier = Modifier
+                            .placeholder(true)
+                            .semantics(true) {}
+                            .padding(vertical = 5.dp)
+                            .fillMaxWidth()
+                    ) {
+
+                        Icon(
+                            Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Text(
+                            stringResource(R.string.addToFavorites),
+                            style = MaterialTheme.typography.h6,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+
+                    Text(
+                        "Otaku".repeat(50),
+                        modifier = Modifier
+                            .padding(vertical = 5.dp)
+                            .fillMaxWidth()
+                            .placeholder(true),
+                        maxLines = 2
+                    )
+
+                }
+
+            }
+        }
+    }
+
+    private fun onInfoGet(infoModel: InfoModel) {
         Flowables.combineLatest(
             chapterListener.getAllEpisodesByShow(infoModel.url),
             dao.getAllChapters(infoModel.url).subscribeOn(Schedulers.io())

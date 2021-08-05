@@ -1,7 +1,7 @@
 package com.programmersbox.otakumanager
 
 import android.content.Context
-import android.view.View
+import androidx.compose.runtime.Composable
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
@@ -72,8 +72,9 @@ val appModule = module {
                 throw Exception("This should not be seen")
             }
 
-            override fun shimmerUi(context: Context, logo: MainLogo): View {
-                throw Exception("This should not be seen")
+            @Composable
+            override fun ComposeShimmerItem() {
+
             }
 
         }

@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = "1.5.10"
+    ext.kotlin_version = "1.5.21"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "21.0"
+    ext.otakuVersionName = "21.5"
     ext.latestAboutLibsRelease = "+"
 
     ext.coroutinesVersion = "1.5.1"
@@ -62,7 +62,9 @@ buildscript {
 
     ext.lottieVersion = "4.0.0"
 
-    ext.jetpack = "1.0.0"
+    ext.jetpack = "1.0.1"
+
+    ext.accompanist = "0.16.0"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
@@ -75,16 +77,18 @@ buildscript {
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
     // Integration with activities
-    ext.composeActivity = 'androidx.activity:activity-compose:1.3.0'
+    ext.composeActivity = 'androidx.activity:activity-compose:1.3.1'
     // Integration with ViewModels
     ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07'
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
-    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:$jetpack"
-    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.3.0"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.0.1"
+    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.3.1"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta02"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
+    ext.materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"
+    ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
 
     ext {
         jakepurple13Tools = [
@@ -108,7 +112,8 @@ buildscript {
                         composeRuntimeLivedata, composeRuntimeRxjava2,
                         composeMaterialThemeAdapter,
                         landscapistGlide,
-                        composeConstraintLayout
+                        composeConstraintLayout,
+                        materialPlaceholder, drawablePainter
                 ]
         ]
 

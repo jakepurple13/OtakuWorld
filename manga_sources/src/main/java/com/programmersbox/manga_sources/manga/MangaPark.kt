@@ -35,7 +35,6 @@ object MangaPark : ApiService, KoinComponent {
             Single.create { emitter ->
                 emitter.onSuccess(
                     cloudflare(helper, "$baseUrl/search?word=$searchText&page=$page").execute().asJsoup()
-                        .also { println(it) }
                         .browseToItemModel("div#search-list div.col")
                 )
             }

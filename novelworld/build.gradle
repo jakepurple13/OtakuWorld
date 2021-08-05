@@ -74,6 +74,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
 
     implementation firebaseCrash.crash
+    implementation compose.compose
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools

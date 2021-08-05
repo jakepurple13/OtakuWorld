@@ -9,7 +9,7 @@
         android:id="@+id/allFragment2"
         android:name="com.programmersbox.uiviews.AllFragment"
         android:label="fragment_all"
-        tools:layout="@layout/fragment_all" >
+        tools:layout="@layout/fragment_all">
         <action
             android:id="@+id/action_allFragment2_to_detailsFragment3"
             app:destination="@id/detailsFragment3"
@@ -21,12 +21,13 @@
     <fragment
         android:id="@+id/detailsFragment3"
         android:name="com.programmersbox.uiviews.DetailsFragment"
-        android:label="DetailsFragment" >
+        android:label="DetailsFragment"
+        tools:layout="@layout/details_fragment">
         <argument
             android:name="itemInfo"
+            android:defaultValue="@null"
             app:argType="com.programmersbox.models.ItemModel"
-            app:nullable="true"
-            android:defaultValue="@null" />
+            app:nullable="true" />
     </fragment>
     <include app:graph="@navigation/setting_nav" />
 </navigation>
