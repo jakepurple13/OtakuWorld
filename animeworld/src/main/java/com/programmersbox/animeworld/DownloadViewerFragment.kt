@@ -25,7 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -37,7 +39,6 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.net.toUri
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.animeworld.databinding.DownloadViewerFragmentBinding
 import com.programmersbox.animeworld.ytsdatabase.*
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
@@ -58,31 +59,18 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     }
 
     private val fetch: Fetch = Fetch.getDefaultInstance()
-
-    private lateinit var binding: DownloadViewerFragmentBinding
-
     private val downloadSubject = mutableStateListOf<DownloadData>()
 
+    @ExperimentalMaterialApi
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
-        binding = DownloadViewerFragmentBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    @ExperimentalMaterialApi
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.downloadCompose.setContent {
-
-            MdcTheme {
-                ScaffoldUi()
-            }
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+            setContent { MdcTheme { ScaffoldUi() } }
         }
-
     }
 
     override fun onResume() {
