@@ -59,7 +59,7 @@ dependencies {
     implementation material
     implementation compose.compose
     implementation "androidx.navigation:navigation-compose:2.4.0-alpha06"
-    implementation "com.google.accompanist:accompanist-systemuicontroller:0.16.0"
+    implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
     implementation 'com.github.alorma:compose-settings:0.3.0'
     implementation jakepurple13Tools.helpfultools
     implementation firebaseCrash.crash

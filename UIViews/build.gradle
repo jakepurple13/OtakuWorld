@@ -132,4 +132,5 @@ dependencies {
 
     implementation compose.compose
     implementation "com.airbnb.android:lottie-compose:$lottieVersion"
+    implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
 }

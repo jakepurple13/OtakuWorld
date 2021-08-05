@@ -3,7 +3,6 @@ package com.programmersbox.uiviews
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -26,7 +25,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalView
@@ -113,7 +111,7 @@ class DetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         NavigationUI.setupWithNavController(binding.collapsingBar, binding.toolbar, findNavController())
 
-        binding.composeHeader.setContent { MdcTheme { PlaceHolderHeader(logo = logo2.notificationId) } }
+        binding.composeHeader.setContent { MdcTheme { PlaceHolderHeader() } }
 
         args.itemInfo
             ?.also {
@@ -181,12 +179,10 @@ class DetailsFragment : Fragment() {
                         .flowWithLifecycle(lifecycle)
                         .collectAsState(initial = false)
 
-                    val logoRemember = remember { logo2.notificationId }
-
                     MdcTheme {
                         DetailsHeader(
                             model = info,
-                            logo = logoRemember,
+                            logo = painterResource(id = logo2.notificationId),
                             swatchInfo = swatchInfo,
                             isFavorite = favoriteListener
                         ) { b ->
@@ -313,7 +309,7 @@ class DetailsFragment : Fragment() {
     @Composable
     private fun DetailsHeader(
         model: InfoModel,
-        logo: Int,
+        logo: Any?,
         swatchInfo: SwatchInfo?,
         isFavorite: Boolean,
         favoriteClick: (Boolean) -> Unit
@@ -354,11 +350,7 @@ class DetailsFragment : Fragment() {
                 imageModel = model.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                requestBuilder = Glide.with(LocalView.current)
-                    .asBitmap()
-                    .placeholder(logo)
-                    .error(logo)
-                    .fallback(logo),
+                requestBuilder = Glide.with(LocalView.current).asBitmap(),
                 modifier = Modifier.matchParentSize()
             )
 
@@ -396,12 +388,9 @@ class DetailsFragment : Fragment() {
                         requestBuilder = Glide.with(LocalView.current)
                             .asBitmap()
                             //.override(360, 480)
-                            .placeholder(logo)
-                            .error(logo)
-                            .fallback(logo)
                             .transform(RoundedCorners(5)),
-                        error = BitmapFactory.decodeResource(resources, logo).asImageBitmap(),
-                        placeHolder = BitmapFactory.decodeResource(resources, logo).asImageBitmap(),
+                        error = logo,
+                        placeHolder = logo,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
                             .combinedClickable(
@@ -471,7 +460,7 @@ class DetailsFragment : Fragment() {
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun PlaceHolderHeader(logo: Int) {
+    private fun PlaceHolderHeader() {
 
         Box(modifier = Modifier.fillMaxSize()) {
 
@@ -482,7 +471,7 @@ class DetailsFragment : Fragment() {
                     modifier = Modifier.padding(5.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = logo),
+                        painter = painterResource(id = R.drawable.ic_baseline_cloud_off_24),
                         contentDescription = null,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)

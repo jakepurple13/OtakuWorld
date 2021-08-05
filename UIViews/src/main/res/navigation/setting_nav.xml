@@ -73,8 +73,7 @@
     <fragment
         android:id="@+id/notificationFragment"
         android:name="com.programmersbox.uiviews.NotificationFragment"
-        android:label="fragment_notification"
-        tools:layout="@layout/fragment_notification">
+        android:label="fragment_notification">
         <action
             android:id="@+id/action_notificationFragment_to_detailsFragment"
             app:destination="@id/detailsFragment"
@@ -86,8 +85,7 @@
     <fragment
         android:id="@+id/globalSearchFragment"
         android:name="com.programmersbox.uiviews.GlobalSearchFragment"
-        android:label="fragment_global_search"
-        tools:layout="@layout/fragment_global_search">
+        android:label="fragment_global_search">
         <action
             android:id="@+id/action_globalSearchFragment_to_detailsFragment"
             app:destination="@id/detailsFragment"
