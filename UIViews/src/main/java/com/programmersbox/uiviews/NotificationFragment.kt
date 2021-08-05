@@ -27,6 +27,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -142,14 +143,20 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
             }
         }
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         lifecycleScope.launch {
             db.getAllNotificationCountFlow()
                 .flowWithLifecycle(lifecycle)
                 .filter { it == 0 }
-                .collect { findNavController().popBackStack() }
+                .collect {
+                    notificationManager.cancel(42)
+                    findNavController().popBackStack()
+                }
         }
-        }
+    }
 
     private fun cancelNotification(item: NotificationItem) {
         notificationManager.cancel(item.id)
