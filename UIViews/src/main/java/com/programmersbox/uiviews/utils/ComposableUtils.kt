@@ -346,7 +346,6 @@ fun CoverCard(imageUrl: String, name: String, placeHolder: Int, error: Int = pla
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             ),
-        interactionSource = MutableInteractionSource(),
         indication = rememberRipple(),
         onClickLabel = name,
     ) {

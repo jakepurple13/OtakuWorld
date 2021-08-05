@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -202,7 +201,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     ?.addTo(disposable)
             },
             elevation = 5.dp,
-            interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
             onClickLabel = item.notiTitle,
             modifier = Modifier

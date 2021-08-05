@@ -9,7 +9,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
@@ -94,10 +93,7 @@ class GlobalSearchFragment : Fragment() {
 
                     Scaffold(
                         topBar = {
-                            Column(
-                                modifier = Modifier.padding(5.dp)
-                            ) {
-
+                            Column(modifier = Modifier.padding(5.dp)) {
                                 OutlinedTextField(
                                     value = searchText,
                                     onValueChange = { searchText = it },
@@ -188,7 +184,6 @@ class GlobalSearchFragment : Fragment() {
                                         swipeRefreshState.isRefreshing = false
                                     }
                                     .addTo(disposable)
-
                             }
                     }
                 }
@@ -203,9 +198,6 @@ class GlobalSearchFragment : Fragment() {
     @ExperimentalMaterialApi
     @Composable
     fun SearchCoverCard(model: ItemModel, placeHolder: Drawable?, error: Drawable? = placeHolder, onClick: () -> Unit = {}) {
-
-        val context = LocalContext.current
-
         Card(
             onClick = onClick,
             modifier = Modifier
@@ -214,7 +206,6 @@ class GlobalSearchFragment : Fragment() {
                     ComposableUtils.IMAGE_WIDTH,
                     ComposableUtils.IMAGE_HEIGHT
                 ),
-            interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
             onClickLabel = model.title,
         ) {
