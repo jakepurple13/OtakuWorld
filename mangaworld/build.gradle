@@ -106,4 +106,5 @@ dependencies {
     implementation koin.koin
 
     implementation compose.compose
+    implementation "com.google.accompanist:accompanist-pager:$accompanist"
 }

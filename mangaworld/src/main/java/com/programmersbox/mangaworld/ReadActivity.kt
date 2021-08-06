@@ -10,7 +10,37 @@ import android.os.Environment
 import android.view.View
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +51,11 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
@@ -36,6 +71,7 @@ import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.batteryAlertPercent
+import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -44,10 +80,300 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.io.File
-import java.util.*
 import kotlin.math.roundToInt
+
+class ReadActivity1 : ComponentActivity() {
+
+    private val genericInfo by inject<GenericInfo>()
+
+    private val list by lazy {
+        intent.getStringExtra("allChapters")
+            ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+            .orEmpty().also(::println)
+    }
+
+    private val model by lazy {
+        intent.getStringExtra("currentChapter")
+            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+            ?.getChapterInfo()
+            ?.map { it.mapNotNull(Storage::link) }
+            ?.subscribeOn(Schedulers.io())
+            ?.observeOn(AndroidSchedulers.mainThread())
+            ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }!!
+    }
+
+    private var batteryInfo: BroadcastReceiver? = null
+
+    private val batteryLevelAlert = PublishSubject.create<Float>()
+    private val batteryInfoItem = PublishSubject.create<Battery>()
+
+    enum class BatteryViewType(val icon: ImageVector) {
+        CHARGING_FULL(Icons.Default.BatteryChargingFull),
+        DEFAULT(Icons.Default.BatteryStd),
+        FULL(Icons.Default.BatteryFull),
+        ALERT(Icons.Default.BatteryAlert),
+        UNKNOWN(Icons.Default.BatteryUnknown)
+    }
+
+    @ExperimentalAnimationApi
+    @ExperimentalFoundationApi
+    @ExperimentalPagerApi
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //val normalBatteryColor = colorFromTheme(R.attr.colorOnBackground, Color.WHITE)
+
+        /*binding.batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
+            colorInt = normalBatteryColor
+            sizePx = binding.batteryInformation.textSize.roundToInt()
+        }*/
+
+        batteryInfo = battery {
+            //binding.batteryInformation.text = "${it.percent.toInt()}%"
+            batteryLevelAlert(it.percent)
+            batteryInfoItem(it)
+        }
+
+        enableImmersiveMode()
+
+        setContent {
+            MdcTheme {
+
+                val scope = rememberCoroutineScope()
+
+                var currentPage by remember { mutableStateOf(0) }
+                val pages by model.subscribeAsState(initial = emptyList())
+
+                val batteryImage by batteryInfoItem
+                    .map {
+                        when {
+                            it.isCharging -> BatteryViewType.CHARGING_FULL
+                            it.percent <= batteryAlertPercent -> BatteryViewType.ALERT
+                            it.percent >= 95 -> BatteryViewType.FULL
+                            it.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
+                            else -> BatteryViewType.DEFAULT
+                        }
+                    }
+                    .distinctUntilChanged { t1, t2 -> t1 != t2 }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeAsState(BatteryViewType.UNKNOWN)
+
+                val batteryLevel by batteryLevelAlert
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeAsState(0f)
+
+                val listState = rememberLazyListState()
+
+                //val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+                val showButton by remember { derivedStateOf { false } }
+
+                Scaffold(
+                    topBar = {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    batteryImage.icon,
+                                    contentDescription = null,
+                                    tint = if (batteryLevel <= batteryAlertPercent) androidx.compose.ui.graphics.Color.Red
+                                    else MaterialTheme.colors.onBackground
+                                )
+                                Text("${batteryLevel.toInt()}%", style = MaterialTheme.typography.body1)
+                            }
+
+                            Text(
+                                "12:00 PM",
+                                style = MaterialTheme.typography.body1,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            Text(
+                                "${currentPage + 1}/${pages.size}",
+                                style = MaterialTheme.typography.body1,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    },
+                    floatingActionButton = {
+                        AnimatedVisibility(
+                            visible = showButton,
+                            enter = slideInVertically(),
+                            exit = slideOutVertically()
+                        ) {
+                            FloatingActionButton(
+                                onClick = { scope.launch { listState.animateScrollToItem(0) } }
+                            ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                        }
+                    },
+                    floatingActionButtonPosition = FabPosition.End
+                ) {
+
+                    if (pages.isNotEmpty()) {
+                        LazyColumn(
+                            state = listState,
+                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                            contentPadding = it
+                        ) {
+
+                            items(pages) {
+                                Box {
+                                    GlideImage(
+                                        imageModel = it,
+                                        contentScale = ContentScale.None,
+                                        loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .align(Alignment.Center)
+                                            .scaleRotateOffset(
+                                                canRotate = false,
+                                                onClick = {},
+                                                onLongClick = {}
+                                            )
+                                    )
+                                }
+                            }
+
+                            item { EndPage() }
+
+                        }
+
+                        /*val pagerState = rememberPagerState(pageCount = pages.size + 1, initialOffscreenLimit = 3)
+
+                        VerticalPager(
+                            state = pagerState,
+                            itemSpacing = 5.dp,
+                            flingBehavior = ScrollableDefaults.flingBehavior(),
+                            modifier = Modifier
+                                .padding(it)
+                                .fillMaxSize()
+                        ) { page ->
+                            Box {
+                                if (page >= pages.size)
+                                    EndPage()
+                                else
+                                    GlideImage(
+                                        imageModel = pages[page],
+                                        contentScale = ContentScale.None,
+                                        loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .align(Alignment.Center)
+                                            .scaleRotateOffset(
+                                                canRotate = false,
+                                                onClick = {},
+                                                onLongClick = {}
+                                            )
+                                    )
+                            }
+                        }*/
+
+                        LaunchedEffect(listState) {
+                            //snapshotFlow { pagerState.currentPage }.collect { currentPage = it }
+                            snapshotFlow { listState.firstVisibleItemIndex }.collect { currentPage = it }
+                        }
+                    } else {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(it)
+                                .fillMaxSize()
+                        )
+                    }
+
+                }
+
+            }
+        }
+    }
+
+    private val ad by lazy { AdRequest.Builder().build() }
+
+    @Composable
+    private fun EndPage() {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 5.dp)
+                .wrapContentHeight()
+        ) {
+            AndroidView(
+                modifier = Modifier.fillMaxWidth(),
+                factory = { context ->
+                    AdView(context).apply {
+                        adSize = AdSize.SMART_BANNER
+                        adUnitId = getString(R.string.ad_unit_id)
+                    }
+                },
+                update = { view -> view.loadAd(ad) }
+            )
+
+            Text(
+                stringResource(id = R.string.reachedLastChapter),
+                style = MaterialTheme.typography.h6,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedButton(
+                onClick = { finish() },
+                modifier = Modifier.fillMaxWidth(),
+                border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
+            ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
+
+        }
+    }
+
+    @ExperimentalFoundationApi
+    @Composable
+    private fun Modifier.scaleRotateOffset(
+        canScale: Boolean = true,
+        canRotate: Boolean = true,
+        canOffset: Boolean = true,
+        onClick: () -> Unit = {},
+        onLongClick: () -> Unit = {}
+    ): Modifier {
+        var scale by remember { mutableStateOf(1f) }
+        var rotation by remember { mutableStateOf(0f) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+        val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
+            if (canScale) scale *= zoomChange
+            if (canRotate) rotation += rotationChange
+            if (canOffset) offset += offsetChange
+        }
+        return graphicsLayer(
+            scaleX = scale,
+            scaleY = scale,
+            rotationZ = rotation,
+            translationX = offset.x,
+            translationY = offset.y
+        )
+            // add transformable to listen to multitouch transformation events
+            // after offset
+            .transformable(state = state)
+            .combinedClickable(
+                onClick = onClick,
+                onDoubleClick = {
+                    scale = 1f
+                    rotation = 0f
+                    offset = Offset.Zero
+                },
+                onLongClick = onLongClick
+            )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(batteryInfo)
+    }
+}
 
 class ReadActivity : AppCompatActivity() {
 
@@ -133,7 +459,7 @@ class ReadActivity : AppCompatActivity() {
                     .asDrawable()
                     .diskCacheStrategy(DiskCacheStrategy.DATA)
                     .transition(withCrossFade()),
-                activity = this@ReadActivity,
+                activity = this,
                 dataList = mutableListOf(),
                 onTap = {
                     menuToggle = !menuToggle

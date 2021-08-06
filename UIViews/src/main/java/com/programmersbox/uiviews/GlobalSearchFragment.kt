@@ -115,7 +115,6 @@ class GlobalSearchFragment : Fragment() {
                         },
                         floatingActionButtonPosition = FabPosition.End
                     ) {
-
                         if (networkState) {
                             SwipeRefresh(
                                 state = swipeRefreshState,
