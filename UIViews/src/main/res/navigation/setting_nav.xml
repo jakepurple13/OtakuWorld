@@ -6,6 +6,7 @@
     app:startDestination="@id/settingsFragment">
 
     <include app:graph="@navigation/aboutlibs_navigation" />
+    <include app:graph="@navigation/global_nav" />
 
     <fragment
         android:id="@+id/settingsFragment"
@@ -45,6 +46,14 @@
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out" />
+
+        <action
+            android:id="@+id/show_global_search"
+            app:destination="@id/global_nav"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/favoriteFragment"
@@ -69,6 +78,9 @@
             android:defaultValue="@null"
             app:argType="com.programmersbox.models.ItemModel"
             app:nullable="true" />
+        <action
+            android:id="@+id/action_detailsFragment_to_globalSearchFragment"
+            app:destination="@id/globalSearchFragment" />
     </fragment>
     <fragment
         android:id="@+id/notificationFragment"
@@ -86,6 +98,11 @@
         android:id="@+id/globalSearchFragment"
         android:name="com.programmersbox.uiviews.GlobalSearchFragment"
         android:label="fragment_global_search">
+        <argument
+            android:name="searchFor"
+            app:argType="string"
+            app:nullable="false"
+            android:defaultValue="" />
         <action
             android:id="@+id/action_globalSearchFragment_to_detailsFragment"
             app:destination="@id/detailsFragment"

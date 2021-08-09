@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -72,6 +73,8 @@ class GlobalSearchFragment : Fragment() {
     private val mainLogo: MainLogo by inject()
     private val searchPublisher = BehaviorSubject.createDefault<List<ItemModel>>(emptyList())
 
+    private val args: GlobalSearchFragmentArgs by navArgs()
+
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
@@ -80,7 +83,7 @@ class GlobalSearchFragment : Fragment() {
             setContent {
                 MdcTheme {
 
-                    var searchText by rememberSaveable { mutableStateOf("") }
+                    var searchText by rememberSaveable { mutableStateOf(args.searchFor) }
                     val focusManager = LocalFocusManager.current
                     val listState = rememberLazyListState()
                     val scope = rememberCoroutineScope()
@@ -131,8 +134,7 @@ class GlobalSearchFragment : Fragment() {
                                                 model = m,
                                                 placeHolder = AppCompatResources.getDrawable(LocalContext.current, mainLogo.logoId)
                                             ) {
-                                                findNavController()
-                                                    .navigate(GlobalSearchFragmentDirections.actionGlobalSearchFragmentToDetailsFragment(m))
+                                                findNavController().navigate(GlobalSearchFragmentDirections.showDetails(m))
                                             }
                                         }
                                     }

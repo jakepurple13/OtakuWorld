@@ -23,10 +23,13 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.DragSwipeGlideAdapter
 import io.reactivex.Completable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import java.util.*
 
 class PageAdapter(
+    private val disposable: CompositeDisposable,
     override val fullRequest: RequestBuilder<Drawable>,
     override val thumbRequest: RequestBuilder<Drawable>,
     private val activity: AppCompatActivity,
@@ -88,6 +91,7 @@ class PageAdapter(
                                         Snackbar.LENGTH_SHORT
                                     ).show()
                                 }
+                                .addTo(disposable)
                         }
                 }
             }

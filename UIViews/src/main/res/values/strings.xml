@@ -131,5 +131,6 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="global_search">Global Search</string>
     <string name="search">Search</string>
+    <string name="global_search_by_name">Global Search by Name</string>
 
 </resources>

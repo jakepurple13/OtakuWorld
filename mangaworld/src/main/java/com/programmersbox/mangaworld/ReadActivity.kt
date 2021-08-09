@@ -217,6 +217,7 @@ class ReadActivity1 : ComponentActivity() {
                 ) {
 
                     if (pages.isNotEmpty()) {
+
                         LazyColumn(
                             state = listState,
                             verticalArrangement = Arrangement.spacedBy(5.dp),
@@ -258,8 +259,35 @@ class ReadActivity1 : ComponentActivity() {
                             Box {
                                 if (page >= pages.size)
                                     EndPage()
-                                else
-                                    GlideImage(
+                                else {
+                                    AndroidView(
+                                        factory = {
+                                            BigImageView(it).apply {
+                                                setTapToRetry(false)
+                                                setOptimizeDisplay(true)
+                                                *//*isPanEnabled = false
+                                                isZoomEnabled = false
+                                                isQuickScaleEnabled = false*//*
+                                                setOnTouchListener { view, motionEvent -> true }
+                                            }
+                                        },
+                                        update = {
+                                            //it.setProgressIndicator(ProgressPieIndicator())
+                                            it.showImage(Uri.parse(pages[page]))
+                                            *//*Glide.with(it)
+                                                .asBitmap()
+                                                .load(pages[page])
+                                                .into<Bitmap> { resourceReady { image, _ -> it.setImage(ImageSource.bitmap(image)) } }*//*
+                                        },
+                                        modifier = Modifier
+                                            .scaleRotateOffset(
+                                                canRotate = false,
+                                                onClick = {},
+                                                onLongClick = {}
+                                            )
+                                    )
+
+                                    *//*GlideImage(
                                         imageModel = pages[page],
                                         contentScale = ContentScale.None,
                                         loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
@@ -271,7 +299,8 @@ class ReadActivity1 : ComponentActivity() {
                                                 onClick = {},
                                                 onLongClick = {}
                                             )
-                                    )
+                                    )*//*
+                                }
                             }
                         }*/
 
@@ -450,6 +479,7 @@ class ReadActivity : AppCompatActivity() {
             val url = intent.getStringExtra("mangaUrl") ?: ""
             val mangaUrl = intent.getStringExtra("mangaInfoUrl") ?: ""
             PageAdapter(
+                disposable = disposable,
                 fullRequest = it
                     .asDrawable()
                     .skipMemoryCache(true)

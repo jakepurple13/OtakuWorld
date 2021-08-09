@@ -287,6 +287,9 @@ class DetailsFragment : Fragment() {
                                 ).subscribe()
                             }
                         }
+                        R.id.globalSearchByName -> {
+                            findNavController().navigate(DetailsFragmentDirections.showGlobalSearch(info.title))
+                        }
                     }
                     true
                 }
