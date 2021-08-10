@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,6 +29,7 @@ import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -37,6 +40,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
@@ -46,11 +51,11 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.material.composethemeadapter.MdcTheme
+import com.programmersbox.favoritesdatabase.HistoryDatabase
+import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.PlaceHolderCoverCard
+import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -58,23 +63,31 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
 class GlobalSearchFragment : Fragment() {
 
+    companion object {
+        @JvmStatic
+        fun newInstance() = GlobalSearchFragment()
+    }
+
     private val disposable: CompositeDisposable = CompositeDisposable()
     private val info: GenericInfo by inject()
     private val logo: NotificationLogo by inject()
     private val mainLogo: MainLogo by inject()
     private val searchPublisher = BehaviorSubject.createDefault<List<ItemModel>>(emptyList())
-
+    private val dao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
     private val args: GlobalSearchFragmentArgs by navArgs()
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
@@ -93,21 +106,77 @@ class GlobalSearchFragment : Fragment() {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeAsState(initial = true)
+                    val history by dao
+                        .searchHistory("%$searchText%")
+                        .flowOn(Dispatchers.IO)
+                        .flowWithLifecycle(lifecycle)
+                        .collectAsState(emptyList())
 
                     Scaffold(
                         topBar = {
                             Column(modifier = Modifier.padding(5.dp)) {
-                                OutlinedTextField(
-                                    value = searchText,
-                                    onValueChange = { searchText = it },
-                                    label = { Text(stringResource(id = R.string.search)) },
-                                    trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
-                                    modifier = Modifier
-                                        .padding(5.dp)
-                                        .fillMaxWidth(),
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                                AutoCompleteBox(
+                                    items = history.asAutoCompleteEntities { _, _ -> true },
+                                    itemContent = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = it.value.searchText,
+                                                style = MaterialTheme.typography.subtitle2,
+                                                modifier = Modifier
+                                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                                    .weight(.9f)
+                                            )
+                                            IconButton(
+                                                onClick = { scope.launch { dao.deleteHistory(it.value) } },
+                                                modifier = Modifier.weight(.1f)
+                                            ) { Icon(Icons.Default.Cancel, null) }
+                                        }
+                                    },
+                                    content = {
+
+                                        boxWidthPercentage = 1f
+                                        boxBorderStroke =
+                                            BorderStroke(2.dp, Color.Transparent)//MaterialTheme.colors.primary.copy(alpha = ContentAlpha.high))
+
+                                        onItemSelected {
+                                            searchText = it.value.searchText
+                                            filter(searchText)
+                                            focusManager.clearFocus()
+                                        }
+
+                                        OutlinedTextField(
+                                            value = searchText,
+                                            onValueChange = {
+                                                searchText = it
+                                                filter(it)
+                                            },
+                                            label = { Text(stringResource(id = R.string.search)) },
+                                            trailingIcon = {
+                                                IconButton(
+                                                    onClick = {
+                                                        searchText = ""
+                                                        filter("")
+                                                    }
+                                                ) { Icon(Icons.Default.Cancel, null) }
+                                            },
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .fillMaxWidth()
+                                                .onFocusChanged { isSearching = it.isFocused },
+                                            singleLine = true,
+                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                            keyboardActions = KeyboardActions(onSearch = {
+                                                focusManager.clearFocus()
+                                                if (searchText.isNotEmpty())
+                                                    lifecycleScope.launch(Dispatchers.IO) {
+                                                        dao.insertHistory(HistoryItem(System.currentTimeMillis(), searchText))
+                                                    }
+                                            })
+                                        )
+                                    }
                                 )
                             }
                         },
@@ -163,31 +232,38 @@ class GlobalSearchFragment : Fragment() {
                             .distinctUntilChanged()
                             .collect { s ->
                                 println("Searching for $s")
-
-                                Observable.combineLatest(
-                                    info.searchList()
-                                        .map {
-                                            it
-                                                .searchList(s, list = emptyList())
-                                                .timeout(5, TimeUnit.SECONDS)
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .onErrorReturnItem(emptyList())
-                                                .toObservable()
-                                        }
-                                ) { (it as Array<List<ItemModel>>).toList().flatten().sortedBy(ItemModel::title) }
-                                    .doOnSubscribe { swipeRefreshState.isRefreshing = true }
-                                    .onErrorReturnItem(emptyList())
-                                    .subscribe {
-                                        searchPublisher.onNext(it)
-                                        swipeRefreshState.isRefreshing = false
-                                    }
-                                    .addTo(disposable)
+                                searchForItems(
+                                    searchText = searchText,
+                                    onSubscribe = { swipeRefreshState.isRefreshing = true },
+                                    subscribe = { swipeRefreshState.isRefreshing = false }
+                                )
                             }
                     }
                 }
             }
         }
+
+    private fun searchForItems(searchText: String, onSubscribe: () -> Unit, subscribe: () -> Unit) {
+        Observable.combineLatest(
+            info.searchList()
+                .map {
+                    it
+                        .searchList(searchText, list = emptyList())
+                        .timeout(5, TimeUnit.SECONDS)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .onErrorReturnItem(emptyList())
+                        .toObservable()
+                }
+        ) { (it as Array<List<ItemModel>>).toList().flatten().sortedBy(ItemModel::title) }
+            .doOnSubscribe { onSubscribe() }
+            .onErrorReturnItem(emptyList())
+            .subscribe {
+                searchPublisher.onNext(it)
+                subscribe()
+            }
+            .addTo(disposable)
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -293,10 +369,5 @@ class GlobalSearchFragment : Fragment() {
             }
 
         }
-    }
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = GlobalSearchFragment()
     }
 }
