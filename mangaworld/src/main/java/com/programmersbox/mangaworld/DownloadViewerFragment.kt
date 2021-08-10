@@ -78,7 +78,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun loadInformation() {
-        activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
+        activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
                 downloadView()
             } else {

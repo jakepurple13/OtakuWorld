@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = "1.5.21"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "21.5"
+    ext.otakuVersionName = "22.0"
     ext.latestAboutLibsRelease = "+"
 
     ext.coroutinesVersion = "1.5.1"
@@ -48,7 +48,7 @@ buildscript {
 
     ext.jsoup = 'org.jsoup:jsoup:1.14.1'
 
-    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.0'
+    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.1'
     ext.analytics = 'com.google.firebase:firebase-analytics:19.0.0'
 
     ext.room_version = "2.3.0"
@@ -64,7 +64,7 @@ buildscript {
 
     ext.jetpack = "1.0.1"
 
-    ext.accompanist = "0.16.0"
+    ext.accompanist = "0.16.1"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
@@ -128,7 +128,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:7.0.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.gms:google-services:4.3.8'
+        classpath 'com.google.gms:google-services:4.3.10'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.7.1'
         classpath "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:8.8.5"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"

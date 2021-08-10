@@ -161,7 +161,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("view_global_search")?.setOnPreferenceClickListener {
-            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToGlobalSearchFragment())
+            findNavController().navigate(SettingsFragmentDirections.showGlobalSearch())
             true
         }
 

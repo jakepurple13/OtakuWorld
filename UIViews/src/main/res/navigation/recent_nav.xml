@@ -5,6 +5,8 @@
     android:id="@+id/recent_nav"
     app:startDestination="@id/recentFragment2">
 
+    <include app:graph="@navigation/global_nav" />
+
     <fragment
         android:id="@+id/recentFragment2"
         android:name="com.programmersbox.uiviews.RecentFragment"
@@ -28,5 +30,13 @@
             android:defaultValue="@null"
             app:argType="com.programmersbox.models.ItemModel"
             app:nullable="true" />
+
+        <action
+            android:id="@+id/show_global_search"
+            app:destination="@id/global_nav"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
 </navigation>

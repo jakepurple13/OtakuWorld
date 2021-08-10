@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -287,6 +288,7 @@ class DetailsFragment : Fragment() {
                                 ).subscribe()
                             }
                         }
+                        R.id.globalSearchByName -> findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
                     }
                     true
                 }

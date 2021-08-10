@@ -13,4 +13,8 @@
         android:id="@+id/saveForLater"
         android:title="@string/save_for_later" />
 
+    <item
+        android:id="@+id/globalSearchByName"
+        android:title="@string/global_search_by_name" />
+
 </menu>
