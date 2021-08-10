@@ -81,6 +81,13 @@
         <action
             android:id="@+id/action_detailsFragment_to_globalSearchFragment"
             app:destination="@id/globalSearchFragment" />
+        <action
+            android:id="@+id/show_global_search"
+            app:destination="@id/global_nav"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/notificationFragment"
