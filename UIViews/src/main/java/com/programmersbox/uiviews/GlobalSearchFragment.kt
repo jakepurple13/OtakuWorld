@@ -138,8 +138,7 @@ class GlobalSearchFragment : Fragment() {
                                     content = {
 
                                         boxWidthPercentage = 1f
-                                        boxBorderStroke =
-                                            BorderStroke(2.dp, Color.Transparent)//MaterialTheme.colors.primary.copy(alpha = ContentAlpha.high))
+                                        boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
 
                                         onItemSelected {
                                             searchText = it.value.searchText
