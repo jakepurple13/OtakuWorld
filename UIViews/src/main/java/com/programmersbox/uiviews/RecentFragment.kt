@@ -2,6 +2,8 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -84,7 +86,16 @@ class RecentFragment : BaseListFragment() {
             binding.recentList.scrollToPosition(0)
         }
 
-        binding.composeShimmer.setContent { MdcTheme { info.ComposeShimmerItem() } }
+        binding.composeShimmer.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+            setContent { MdcTheme { info.ComposeShimmerItem() } }
+            //TODO: right now, when going to the detail screen from recent, this disposes
+            //TODO: ...which means that when it shows up again, it wont compose again
+            //TODO: found out what's causing the compose not reloading issue.
+            //TODO: Its due to the BaseFragment and how it doesn't get started again. This is an issue.
+            //TODO: It is needed so the api calls don't get refreshed when returning to the screen.
+            //TODO: We will see how we can fix this going forward.
+        }
 
         sourcePublish
             .subscribeOn(Schedulers.io())

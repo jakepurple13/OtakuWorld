@@ -62,6 +62,7 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.databinding.DetailsFragmentBinding
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
+import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -130,47 +131,44 @@ class DetailsFragment : Fragment() {
                 adapter.addItems(info.chapters)
                 onInfoGet(info)
 
-                binding.composeHeader.setContent {
+                Glide.with(this)
+                    .load(info.imageUrl)
+                    .override(360, 480)
+                    .placeholder(logo.logoId)
+                    .error(logo.logoId)
+                    .fallback(logo.logoId)
+                    .transform(RoundedCorners(15))
+                    .into<Drawable> {
+                        resourceReady { image, _ ->
+                            binding.swatch = image.getPalette().vibrantSwatch
+                                ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
+                                .also { swatch ->
 
-                    var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
+                                    adapter.swatchInfo = swatch
 
-                    Glide.with(this)
-                        .load(info.imageUrl)
-                        .override(360, 480)
-                        .placeholder(logo.logoId)
-                        .error(logo.logoId)
-                        .fallback(logo.logoId)
-                        .transform(RoundedCorners(15))
-                        .into<Drawable> {
-                            resourceReady { image, _ ->
-                                binding.swatch = image.getPalette().vibrantSwatch
-                                    ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
-                                    .also { swatch ->
-
-                                        swatchInfo = swatch
-                                        adapter.swatchInfo = swatch
-
-                                        swatch?.rgb?.let {
-                                            binding.toolbar.setBackgroundColor(it)
-                                            binding.shareButton.backgroundTintList = ColorStateList.valueOf(it)
-                                            binding.collapsingBar.setContentScrimColor(it)
-                                            requireActivity().window.statusBarColor = it
-                                        }
-
-                                        swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
-
-                                        FastScrollerBuilder(binding.infoChapterList)
-                                            .useMd2Style()
-                                            .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
-                                                swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
-                                                setThumbDrawable(drawable)
-                                            }
-                                            .build()
+                                    swatch?.rgb?.let {
+                                        binding.toolbar.setBackgroundColor(it)
+                                        binding.shareButton.backgroundTintList = ColorStateList.valueOf(it)
+                                        binding.collapsingBar.setContentScrimColor(it)
+                                        requireActivity().window.statusBarColor = it
                                     }
 
-                                binding.executePendingBindings()
-                            }
+                                    swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
+
+                                    FastScrollerBuilder(binding.infoChapterList)
+                                        .useMd2Style()
+                                        .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
+                                            swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
+                                            setThumbDrawable(drawable)
+                                        }
+                                        .build()
+                                }
+
+                            binding.executePendingBindings()
                         }
+                    }
+
+                binding.composeHeader.setContent {
 
                     val favoriteListener by combine(
                         itemListener.findItemByUrlFlow(info.url),
@@ -184,7 +182,6 @@ class DetailsFragment : Fragment() {
                         DetailsHeader(
                             model = info,
                             logo = painterResource(id = logo2.notificationId),
-                            swatchInfo = swatchInfo,
                             isFavorite = favoriteListener
                         ) { b ->
                             fun addItem(model: InfoModel) {
@@ -312,10 +309,11 @@ class DetailsFragment : Fragment() {
     private fun DetailsHeader(
         model: InfoModel,
         logo: Any?,
-        swatchInfo: SwatchInfo?,
         isFavorite: Boolean,
         favoriteClick: (Boolean) -> Unit
     ) {
+
+        var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
 
         var imagePopup by remember { mutableStateOf(false) }
 
@@ -393,6 +391,9 @@ class DetailsFragment : Fragment() {
                             .transform(RoundedCorners(5)),
                         error = logo,
                         placeHolder = logo,
+                        bitmapPalette = BitmapPalette { p ->
+                            swatchInfo = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
+                        },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
                             .combinedClickable(
