@@ -46,7 +46,7 @@ buildscript {
     ext.constraintlayout = 'androidx.constraintlayout:constraintlayout:2.1.0'
     ext.swiperefresh = 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
-    ext.jsoup = 'org.jsoup:jsoup:1.14.1'
+    ext.jsoup = 'org.jsoup:jsoup:1.14.2'
 
     ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.1'
     ext.analytics = 'com.google.firebase:firebase-analytics:19.0.0'
