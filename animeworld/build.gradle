@@ -98,7 +98,7 @@ dependencies {
     // For Kotlin use kapt instead of annotationProcessor
     kapt "androidx.room:room-compiler:$room_version"
 
-    def autoBinding = "1.1-beta03"
+    def autoBinding = "1.1-beta04"
     implementation "io.github.kaustubhpatange:autobindings:$autoBinding"
     kapt "io.github.kaustubhpatange:autobindings-compiler:$autoBinding"
 
