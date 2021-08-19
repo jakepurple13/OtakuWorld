@@ -139,10 +139,6 @@ buildscript {
     }
 }
 
-plugins {
-    id("com.diffplug.spotless") version "5.14.2"
-}
-
 allprojects {
     repositories {
         google()
@@ -153,24 +149,6 @@ allprojects {
     }
 }
 
-/*task clean(type: Delete) {
+task clean(type: Delete) {
     delete rootProject.buildDir
-}*/
-
-subprojects {
-    // spotless
-    apply plugin: "com.diffplug.spotless"
-    spotless {
-        kotlin {
-            target("**/*.kt")
-            targetExclude("$buildDir/**/*.kt")
-            targetExclude("bin/**/*.kt")
-
-            ratchetFrom("origin/develop")
-
-            ktlint("0.42.1").userData(["disabled_rules": "no-wildcard-imports"])
-            indentWithTabs()
-            trimTrailingWhitespace()
-        }
-    }
 }
