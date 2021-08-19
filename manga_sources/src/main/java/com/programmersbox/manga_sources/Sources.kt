@@ -13,6 +13,7 @@ enum class Sources(
     //MANGA_EDEN(domain = "mangaeden", filterOutOfUpdate = true, source = MangaEden),
     //MANGANELO(domain = "manganelo", source = Manganelo),
     MANGA_HERE(domain = "mangahere", source = MangaHere),
+    ASURA_SCANS(domain = "asurascans", source = AsuraScans),
 
     MANGA_4_LIFE(domain = "manga4life", source = MangaFourLife),
     MANGA_PARK(domain = "mangapark", source = MangaPark),
