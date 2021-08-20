@@ -64,9 +64,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -112,6 +109,16 @@ class GlobalSearchFragment : Fragment() {
                         .flowWithLifecycle(lifecycle)
                         .collectAsState(emptyList())
 
+                    LaunchedEffect(Unit) {
+                        if (args.searchFor.isNotEmpty()) {
+                            searchForItems(
+                                searchText = args.searchFor,
+                                onSubscribe = { swipeRefreshState.isRefreshing = true },
+                                subscribe = { swipeRefreshState.isRefreshing = false }
+                            )
+                        }
+                    }
+
                     Scaffold(
                         topBar = {
                             Column(modifier = Modifier.padding(5.dp)) {
@@ -144,6 +151,11 @@ class GlobalSearchFragment : Fragment() {
                                             searchText = it.value.searchText
                                             filter(searchText)
                                             focusManager.clearFocus()
+                                            searchForItems(
+                                                searchText = searchText,
+                                                onSubscribe = { swipeRefreshState.isRefreshing = true },
+                                                subscribe = { swipeRefreshState.isRefreshing = false }
+                                            )
                                         }
 
                                         OutlinedTextField(
@@ -169,10 +181,16 @@ class GlobalSearchFragment : Fragment() {
                                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                             keyboardActions = KeyboardActions(onSearch = {
                                                 focusManager.clearFocus()
-                                                if (searchText.isNotEmpty())
+                                                if (searchText.isNotEmpty()) {
                                                     lifecycleScope.launch(Dispatchers.IO) {
                                                         dao.insertHistory(HistoryItem(System.currentTimeMillis(), searchText))
                                                     }
+                                                }
+                                                searchForItems(
+                                                    searchText = searchText,
+                                                    onSubscribe = { swipeRefreshState.isRefreshing = true },
+                                                    subscribe = { swipeRefreshState.isRefreshing = false }
+                                                )
                                             })
                                         )
                                     }
@@ -225,7 +243,7 @@ class GlobalSearchFragment : Fragment() {
                         }
                     }
 
-                    LaunchedEffect(key1 = searchText) {
+                    /*LaunchedEffect(key1 = searchText) {
                         snapshotFlow { searchText }
                             .debounce(1000)
                             .distinctUntilChanged()
@@ -237,7 +255,7 @@ class GlobalSearchFragment : Fragment() {
                                     subscribe = { swipeRefreshState.isRefreshing = false }
                                 )
                             }
-                    }
+                    }*/
                 }
             }
         }
