@@ -20,11 +20,11 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +50,11 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
+import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
+import com.github.piasy.biv.view.BigImageView
 import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.VerticalPager
+import com.google.accompanist.pager.rememberPagerState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -71,7 +74,6 @@ import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.batteryAlertPercent
-import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -147,6 +149,8 @@ class ReadActivity1 : ComponentActivity() {
                 var currentPage by remember { mutableStateOf(0) }
                 val pages by model.subscribeAsState(initial = emptyList())
 
+                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
+
                 val batteryImage by batteryInfoItem
                     .map {
                         when {
@@ -175,7 +179,8 @@ class ReadActivity1 : ComponentActivity() {
                 Scaffold(
                     topBar = {
                         Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier.weight(1f)
@@ -218,7 +223,7 @@ class ReadActivity1 : ComponentActivity() {
 
                     if (pages.isNotEmpty()) {
 
-                        LazyColumn(
+                        /*LazyColumn(
                             state = listState,
                             verticalArrangement = Arrangement.spacedBy(5.dp),
                             contentPadding = it
@@ -244,9 +249,9 @@ class ReadActivity1 : ComponentActivity() {
 
                             item { EndPage() }
 
-                        }
+                        }*/
 
-                        /*val pagerState = rememberPagerState(pageCount = pages.size + 1, initialOffscreenLimit = 3)
+                        val pagerState = rememberPagerState(pageCount = pages.size + 1, initialOffscreenLimit = 3)
 
                         VerticalPager(
                             state = pagerState,
@@ -265,19 +270,12 @@ class ReadActivity1 : ComponentActivity() {
                                             BigImageView(it).apply {
                                                 setTapToRetry(false)
                                                 setOptimizeDisplay(true)
-                                                *//*isPanEnabled = false
-                                                isZoomEnabled = false
-                                                isQuickScaleEnabled = false*//*
                                                 setOnTouchListener { view, motionEvent -> true }
                                             }
                                         },
                                         update = {
-                                            //it.setProgressIndicator(ProgressPieIndicator())
+                                            it.setProgressIndicator(ProgressPieIndicator())
                                             it.showImage(Uri.parse(pages[page]))
-                                            *//*Glide.with(it)
-                                                .asBitmap()
-                                                .load(pages[page])
-                                                .into<Bitmap> { resourceReady { image, _ -> it.setImage(ImageSource.bitmap(image)) } }*//*
                                         },
                                         modifier = Modifier
                                             .scaleRotateOffset(
@@ -286,27 +284,13 @@ class ReadActivity1 : ComponentActivity() {
                                                 onLongClick = {}
                                             )
                                     )
-
-                                    *//*GlideImage(
-                                        imageModel = pages[page],
-                                        contentScale = ContentScale.None,
-                                        loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .align(Alignment.Center)
-                                            .scaleRotateOffset(
-                                                canRotate = false,
-                                                onClick = {},
-                                                onLongClick = {}
-                                            )
-                                    )*//*
                                 }
                             }
-                        }*/
+                        }
 
                         LaunchedEffect(listState) {
-                            //snapshotFlow { pagerState.currentPage }.collect { currentPage = it }
-                            snapshotFlow { listState.firstVisibleItemIndex }.collect { currentPage = it }
+                            snapshotFlow { pagerState.currentPage }.collect { currentPage = it }
+                            //snapshotFlow { listState.firstVisibleItemIndex }.collect { currentPage = it }
                         }
                     } else {
                         CircularProgressIndicator(
@@ -394,7 +378,9 @@ class ReadActivity1 : ComponentActivity() {
                     rotation = 0f
                     offset = Offset.Zero
                 },
-                onLongClick = onLongClick
+                onLongClick = onLongClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
             )
     }
 

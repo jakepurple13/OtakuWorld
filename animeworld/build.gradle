@@ -66,7 +66,7 @@ dependencies {
 
     implementation "com.ncorti:slidetoact:0.9.0"
 
-    def exoplayer_version = "2.14.2"
+    def exoplayer_version = "2.15.0"
 
     implementation "com.google.android.exoplayer:exoplayer:$exoplayer_version"
     implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"
@@ -98,7 +98,7 @@ dependencies {
     // For Kotlin use kapt instead of annotationProcessor
     kapt "androidx.room:room-compiler:$room_version"
 
-    def autoBinding = "1.1-beta03"
+    def autoBinding = "1.1-beta04"
     implementation "io.github.kaustubhpatange:autobindings:$autoBinding"
     kapt "io.github.kaustubhpatange:autobindings-compiler:$autoBinding"
 

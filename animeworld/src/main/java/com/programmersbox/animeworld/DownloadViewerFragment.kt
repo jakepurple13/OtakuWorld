@@ -177,7 +177,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     @ExperimentalMaterialApi
     @Composable
     private fun ScaffoldUi() {
-
         BottomSheetDeleteScaffold(
             listOfItems = downloadSubject,
             multipleTitle = stringResource(id = R.string.delete),

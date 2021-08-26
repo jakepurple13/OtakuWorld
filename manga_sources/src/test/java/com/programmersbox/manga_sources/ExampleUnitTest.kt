@@ -7,6 +7,7 @@ import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.manga_sources.manga.MangaFourLife
 import com.programmersbox.manga_sources.manga.MangaPark
 import com.programmersbox.manga_sources.manga.NineAnime
+import com.programmersbox.manga_sources.utilities.toJsoup
 import com.programmersbox.models.ItemModel
 import org.jsoup.Jsoup
 import org.junit.Test
@@ -19,6 +20,17 @@ import java.io.File
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun asuraScansTest() {
+
+        val url = "https://www.asurascans.com/"
+
+        val f = url.toJsoup()
+
+        println(f)
+
+    }
 
     @Test
     fun mangaboxTest() {

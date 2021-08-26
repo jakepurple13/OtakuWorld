@@ -63,7 +63,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                 it.onSuccess(Result.success())
             }
         } catch (e: Exception) {
-            it.onSuccess(Result.failure())
+            it.onSuccess(Result.success())
         }
     }
 
@@ -163,7 +163,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
             .onErrorReturn {
                 println(it)
                 update.sendFinishedNotification()
-                Result.failure()
+                Result.success()
             }
     }
 

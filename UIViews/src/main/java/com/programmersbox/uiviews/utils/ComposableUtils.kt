@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
@@ -786,15 +787,16 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         autoCompleteState.content()
-        AnimatedVisibility(visible = autoCompleteState.isSearching) {
-            LazyColumn(
-                modifier = Modifier.autoComplete(autoCompleteState),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                items(items) { item ->
-                    Box(modifier = Modifier.clickable { autoCompleteState.selectItem(item) }) {
-                        itemContent(item)
-                    }
+
+        DropdownMenu(
+            expanded = autoCompleteState.isSearching,
+            onDismissRequest = { },
+            modifier = Modifier.autoComplete(autoCompleteState),
+            properties = PopupProperties(focusable = false)
+        ) {
+            items.forEach { item ->
+                DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) {
+                    itemContent(item)
                 }
             }
         }
