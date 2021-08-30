@@ -56,7 +56,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation "com.mikepenz:iconics-core:5.2.8"
-    implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
+    implementation 'com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar'
 
     implementation project(':UIViews')
     implementation project(':Models')

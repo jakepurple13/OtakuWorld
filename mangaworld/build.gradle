@@ -93,7 +93,7 @@ dependencies {
     implementation 'com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0'
 
     implementation "com.mikepenz:iconics-core:5.2.8"
-    implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
+    implementation 'com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar'
 
     implementation coroutinesCore
     implementation coroutinesAndroid
