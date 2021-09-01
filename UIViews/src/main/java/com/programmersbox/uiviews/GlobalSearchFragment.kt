@@ -321,7 +321,7 @@ class GlobalSearchFragment : Fragment() {
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         requestBuilder = Glide.with(LocalView.current)
-                            .asBitmap()
+                            .asDrawable()
                             //.override(360, 480)
                             .placeholder(placeHolder)
                             .error(error)

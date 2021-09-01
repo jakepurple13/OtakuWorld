@@ -200,7 +200,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                                     contentDescription = "",
                                     contentScale = ContentScale.Crop,
                                     requestBuilder = Glide.with(LocalView.current)
-                                        .asBitmap()
+                                        .asDrawable()
                                         .override(360, 270)
                                         .thumbnail(0.5f)
                                         .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
@@ -427,7 +427,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             contentDescription = "",
                             contentScale = ContentScale.Crop,
                             requestBuilder = Glide.with(LocalView.current)
-                                .asBitmap()
+                                .asDrawable()
                                 .override(360, 270)
                                 .thumbnail(0.5f)
                                 .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),

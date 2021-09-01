@@ -223,16 +223,23 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("delete_notifications")?.let { p ->
             p.setOnPreferenceClickListener {
-                itemDao
-                    .deleteAllNotifications()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .map { getString(R.string.deleted_notifications, it) }
-                    .subscribeBy {
-                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-                        requireContext().notificationManager.cancel(42)
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.are_you_sure_delete_notifications)
+                    .setPositiveButton(R.string.yes) { d, _ ->
+                        itemDao
+                            .deleteAllNotifications()
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .map { getString(R.string.deleted_notifications, it) }
+                            .subscribeBy {
+                                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                                requireContext().notificationManager.cancel(42)
+                            }
+                            .addTo(disposable)
+                        d.dismiss()
                     }
-                    .addTo(disposable)
+                    .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
+                    .show()
                 true
             }
         }

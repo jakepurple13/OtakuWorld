@@ -327,7 +327,7 @@ class DetailsFragment : Fragment() {
                         imageModel = model.imageUrl,
                         contentDescription = null,
                         contentScale = ContentScale.None,
-                        requestBuilder = Glide.with(LocalView.current).asBitmap().transform(RoundedCorners(5)),
+                        requestBuilder = Glide.with(LocalView.current).asDrawable().transform(RoundedCorners(5)),
                         modifier = Modifier
                             .scaleRotateOffset()
                             .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -350,7 +350,6 @@ class DetailsFragment : Fragment() {
                 imageModel = model.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                requestBuilder = Glide.with(LocalView.current).asBitmap(),
                 modifier = Modifier.matchParentSize()
             )
 
@@ -385,10 +384,7 @@ class DetailsFragment : Fragment() {
                         imageModel = model.imageUrl,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        requestBuilder = Glide.with(LocalView.current)
-                            .asBitmap()
-                            //.override(360, 480)
-                            .transform(RoundedCorners(5)),
+                        requestBuilder = Glide.with(LocalView.current).asDrawable().transform(RoundedCorners(5)),
                         error = logo,
                         placeHolder = logo,
                         bitmapPalette = BitmapPalette { p ->
