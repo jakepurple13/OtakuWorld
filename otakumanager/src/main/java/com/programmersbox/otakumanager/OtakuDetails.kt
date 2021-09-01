@@ -285,7 +285,7 @@ fun DetailsHeader(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             requestBuilder = Glide.with(LocalView.current)
-                .asBitmap()
+                .asDrawable()
                 .placeholder(logoId)
                 .error(logoId)
                 .fallback(logoId),
@@ -324,7 +324,7 @@ fun DetailsHeader(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     requestBuilder = Glide.with(LocalView.current)
-                        .asBitmap()
+                        .asDrawable()
                         //.override(360, 480)
                         .placeholder(logoId)
                         .error(logoId)

@@ -353,7 +353,7 @@ fun CoverCard(imageUrl: String, name: String, placeHolder: Int, error: Int = pla
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 requestBuilder = Glide.with(LocalView.current)
-                    .asBitmap()
+                    .asDrawable()
                     //.override(360, 480)
                     .placeholder(placeHolder)
                     .error(error)

@@ -5,17 +5,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +34,6 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -104,7 +107,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 contentDescription = "",
                                 contentScale = ContentScale.Crop,
                                 requestBuilder = Glide.with(LocalView.current)
-                                    .asBitmap()
+                                    .asDrawable()
                                     .override(360, 480)
                                     .thumbnail(0.5f)
                                     .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
@@ -127,18 +130,18 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 Text(item.notiTitle)
                                 Text(item.source)
                             }
-
                         }
                     }
-                ) {
-                    Column(
+                ) { p ->
+                    LazyColumn(contentPadding = p) { items(items) { NotificationItem(item = it, navController = findNavController()) } }
+                    /*Column(
                         modifier = Modifier.verticalScroll(rememberScrollState())
                     ) {
                         StaggeredVerticalGrid(
                             columns = 2,
                             modifier = Modifier.padding(it)
                         ) { items.forEach { NotificationItem(it, findNavController()) } }
-                    }
+                    }*/
                 }
 
             }
@@ -199,23 +202,117 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
         }
 
-        Card(
-            onClick = {
-                genericInfo.toSource(item.source)?.getSourceByUrl(item.url)
-                    ?.subscribeOn(Schedulers.io())
-                    ?.observeOn(AndroidSchedulers.mainThread())
-                    ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
-                    ?.addTo(disposable)
-            },
-            elevation = 5.dp,
-            indication = rememberRipple(),
-            onClickLabel = item.notiTitle,
-            modifier = Modifier
-                .padding(5.dp)
-                .fadeInAnimation()
+        val dismissState = rememberDismissState(
+            confirmStateChange = {
+                if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+                    showPopup = true
+                }
+                false
+            }
+        )
+
+        SwipeToDismiss(
+            state = dismissState,
+            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
+            dismissThresholds = { FractionalThreshold(0.5f) },
+            background = {
+                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                val color by animateColorAsState(
+                    when (dismissState.targetValue) {
+                        DismissValue.Default -> Color.Transparent
+                        DismissValue.DismissedToEnd -> Color.Red
+                        DismissValue.DismissedToStart -> Color.Red
+                    }
+                )
+                val alignment = when (direction) {
+                    DismissDirection.StartToEnd -> Alignment.CenterStart
+                    DismissDirection.EndToStart -> Alignment.CenterEnd
+                }
+                val icon = when (direction) {
+                    DismissDirection.StartToEnd -> Icons.Default.Delete
+                    DismissDirection.EndToStart -> Icons.Default.Delete
+                }
+                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(color)
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = alignment
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.scale(scale)
+                    )
+                }
+            }
         ) {
 
-            Column {
+            Card(
+                onClick = {
+                    genericInfo.toSource(item.source)?.getSourceByUrl(item.url)
+                        ?.subscribeOn(Schedulers.io())
+                        ?.observeOn(AndroidSchedulers.mainThread())
+                        ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
+                        ?.addTo(disposable)
+                },
+                elevation = 5.dp,
+                indication = rememberRipple(),
+                onClickLabel = item.notiTitle,
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fadeInAnimation()
+            ) {
+
+                Column {
+
+                    Row {
+                        GlideImage(
+                            imageModel = item.imageUrl.orEmpty(),
+                            contentDescription = "",
+                            contentScale = ContentScale.Crop,
+                            requestBuilder = Glide.with(LocalView.current)
+                                .asDrawable()
+                                .override(360, 480)
+                                .thumbnail(0.5f)
+                                .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                            failure = {
+                                Image(
+                                    painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
+                                    contentDescription = item.notiTitle,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .padding(5.dp)
+                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            }
+                        )
+
+                        Column(modifier = Modifier.padding(start = 5.dp)) {
+                            Text(item.notiTitle, style = MaterialTheme.typography.h6)
+                            Divider()
+                            Text(item.source, style = MaterialTheme.typography.subtitle2)
+                            Divider()
+                            Text(item.summaryText, style = MaterialTheme.typography.body2)
+                        }
+
+                    }
+
+                    /*Button(
+                        onClick = { showPopup = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(0.dp, 0.dp, 4.dp, 4.dp)
+                    ) { Text(stringResource(R.string.remove), style = MaterialTheme.typography.button) }*/
+
+                }
+
+                //TODO: Below is for a LazyStaggeredVerticalGrid when its finally officially supported
+                /*Column {
 
                 Text(item.notiTitle, style = MaterialTheme.typography.h6, modifier = Modifier.padding(top = 5.dp, start = 5.dp, end = 5.dp))
                 Text(item.source, style = MaterialTheme.typography.subtitle2, modifier = Modifier.padding(horizontal = 5.dp))
@@ -260,6 +357,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(0.dp, 0.dp, 4.dp, 4.dp)
                 ) { Text(stringResource(R.string.remove), style = MaterialTheme.typography.button) }
+
+            }*/
 
             }
 

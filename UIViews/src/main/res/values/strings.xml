@@ -132,5 +132,6 @@
     <string name="global_search">Global Search</string>
     <string name="search">Search</string>
     <string name="global_search_by_name">Global Search by Name</string>
+    <string name="are_you_sure_delete_notifications">Are you sure you want to delete all notifications?</string>
 
 </resources>
