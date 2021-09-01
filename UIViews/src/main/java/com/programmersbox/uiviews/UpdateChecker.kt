@@ -1,20 +1,19 @@
 package com.programmersbox.uiviews
 
 import android.app.Notification
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.Bundle
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.RxWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.favoritesdatabase.*
-import com.programmersbox.helpfulutils.GroupBehavior
-import com.programmersbox.helpfulutils.NotificationDslBuilder
-import com.programmersbox.helpfulutils.intersect
-import com.programmersbox.helpfulutils.notificationManager
+import com.programmersbox.helpfulutils.*
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.loggingutils.fd
 import com.programmersbox.models.InfoModel
@@ -225,6 +224,18 @@ class UpdateNotification(private val context: Context) : KoinComponent {
             }
             showWhen = true
             groupId = "otakuGroup"
+            +actionAction {
+                actionTitle = "Mark Read"
+                actionIcon = icon.notificationId
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ
+                pendingActionIntent {
+                    val intent = Intent(context, DeleteNotificationReceiver::class.java)
+                    intent.action = "NOTIFICATION_DELETED_ACTION"
+                    intent.putExtra("url", pair.second.url)
+                    intent.putExtra("id", pair.second.hashCode())
+                    PendingIntent.getBroadcast(context, pair.second.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE)
+                }
+            }
             /*deleteIntent { context ->
                 val intent = Intent(context, DeleteNotificationReceiver::class.java)
                 intent.action = "NOTIFICATION_DELETED_ACTION"
@@ -310,11 +321,13 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val dao by lazy { context?.let { ItemDatabase.getInstance(it).itemDao() } }
         val url = intent?.getStringExtra("url")
+        val id = intent?.getIntExtra("id", -1)
         println(url)
         GlobalScope.launch {
             url?.let { dao?.getNotificationItem(it) }
                 .also { println(it) }
                 ?.let { dao?.deleteNotification(it)?.subscribe() }
+            id?.let { if (it != -1) context?.notificationManager?.cancel(it) }
         }
     }
 }
