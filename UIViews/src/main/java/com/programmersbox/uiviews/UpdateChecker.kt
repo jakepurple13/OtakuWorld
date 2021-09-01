@@ -328,6 +328,8 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
                 .also { println(it) }
                 ?.let { dao?.deleteNotification(it)?.subscribe() }
             id?.let { if (it != -1) context?.notificationManager?.cancel(it) }
+            val g = context?.notificationManager?.activeNotifications?.map { it.notification }?.filter { it.group == "otakuGroup" }.orEmpty()
+            if (g.size == 1) context?.notificationManager?.cancel(42)
         }
     }
 }

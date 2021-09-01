@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -14,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +37,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -77,9 +81,30 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     .flowOn(Dispatchers.IO)
                     .collectAsState(emptyList())
 
+                val state = rememberBottomSheetScaffoldState()
+                val scope = rememberCoroutineScope()
+
+                val backCallBack = remember {
+                    object : OnBackPressedCallback(true) {
+                        override fun handleOnBackPressed() {
+                            when {
+                                state.bottomSheetState.isExpanded -> scope.launch { state.bottomSheetState.collapse() }
+                                else -> findNavController().popBackStack()
+                            }
+                        }
+                    }
+                }
+
+                DisposableEffect(key1 = requireActivity().onBackPressedDispatcher) {
+                    requireActivity().onBackPressedDispatcher.addCallback(backCallBack)
+                    onDispose { backCallBack.remove() }
+                }
+
                 BottomSheetDeleteScaffold(
                     listOfItems = items,
+                    state = state,
                     multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
+                    topBar = { TopAppBar(title = { Text(stringResource(id = R.string.current_notification_count, items.size)) }) },
                     onRemove = { item ->
                         db.deleteNotification(item)
                             .subscribeOn(Schedulers.io())
@@ -101,7 +126,66 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             .addTo(disposable)
                     },
                     itemUi = { item ->
-                        Row {
+                        ListItem(
+                            icon = {
+                                GlideImage(
+                                    imageModel = item.imageUrl.orEmpty(),
+                                    contentDescription = "",
+                                    contentScale = ContentScale.Crop,
+                                    requestBuilder = Glide.with(LocalView.current)
+                                        .asDrawable()
+                                        .override(360, 480)
+                                        .thumbnail(0.5f)
+                                        .transform(RoundedCorners(15)),//GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                                    modifier = Modifier
+                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                    failure = {
+                                        Image(
+                                            painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
+                                            contentDescription = item.notiTitle,
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                        )
+                                    }
+                                )
+                            },
+                            overlineText = { Text(item.source) },
+                            text = { Text(item.notiTitle) },
+                            secondaryText = { Text(item.summaryText) },
+                            trailing = {
+                                var showDropDown by remember { mutableStateOf(false) }
+
+                                DropdownMenu(
+                                    expanded = showDropDown,
+                                    onDismissRequest = { showDropDown = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            Completable.merge(
+                                                items
+                                                    .filter { it.notiTitle == item.notiTitle }
+                                                    .map {
+                                                        cancelNotification(it)
+                                                        db.deleteNotification(it)
+                                                    }
+                                            )
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe {
+                                                    showDropDown = false
+                                                    Toast.makeText(requireContext(), R.string.done, Toast.LENGTH_SHORT).show()
+                                                }
+                                                .addTo(disposable)
+                                        }
+                                    ) { Text(stringResource(id = R.string.remove_same_name)) }
+                                }
+
+                                IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                            }
+                        )
+
+                        /*Row {
                             GlideImage(
                                 imageModel = item.imageUrl.orEmpty(),
                                 contentDescription = "",
@@ -130,7 +214,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 Text(item.notiTitle)
                                 Text(item.source)
                             }
-                        }
+                        }*/
                     }
                 ) { p ->
                     LazyColumn(contentPadding = p) { items(items) { NotificationItem(item = it, navController = findNavController()) } }
@@ -293,11 +377,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             }
                         )
 
-                        Column(modifier = Modifier.padding(start = 5.dp)) {
-                            Text(item.notiTitle, style = MaterialTheme.typography.h6)
-                            Divider()
-                            Text(item.source, style = MaterialTheme.typography.subtitle2)
-                            Divider()
+                        Column(modifier = Modifier.padding(start = 16.dp, top = 2.dp)) {
+                            Text(item.source, style = MaterialTheme.typography.overline)
+                            Text(item.notiTitle, style = MaterialTheme.typography.subtitle2)
                             Text(item.summaryText, style = MaterialTheme.typography.body2)
                         }
 

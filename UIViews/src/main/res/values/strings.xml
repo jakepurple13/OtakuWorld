@@ -118,7 +118,10 @@
 
     <string name="removeNotification">Remove Notification</string>
     <string name="remove">Remove</string>
+    <string name="remove_same_name">Remove all with same name</string>
     <string name="areYouSureRemoveNoti">Are you sure you want to remove these Notifications?</string>
+
+    <string name="current_notification_count">Current Notifications: %d</string>
 
     <string name="removeNoti">Remove %s?</string>
     <string name="notify">Notify</string>

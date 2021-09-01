@@ -2,10 +2,7 @@ package com.programmersbox.uiviews.utils
 
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -483,6 +480,7 @@ fun PlaceHolderCoverCard(placeHolder: Int) {
 @Composable
 fun <T> BottomSheetDeleteScaffold(
     listOfItems: List<T>,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
@@ -491,7 +489,6 @@ fun <T> BottomSheetDeleteScaffold(
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues) -> Unit
 ) {
-    val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -678,12 +675,12 @@ private fun <T> DeleteItemView(
             modifier = Modifier.fillMaxSize(),
             interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
-            /*border = BorderStroke(
+            border = BorderStroke(
                 animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
                 animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
-            ),*/
+            ),
             onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
-            backgroundColor = animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colors.surface).value
+            //backgroundColor = animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colors.surface).value
         ) { itemUi(item) }
     }
 
