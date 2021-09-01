@@ -224,7 +224,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
             }
             showWhen = true
             groupId = "otakuGroup"
-            +actionAction {
+            addAction {
                 actionTitle = "Mark Read"
                 actionIcon = icon.notificationId
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ

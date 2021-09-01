@@ -425,7 +425,6 @@ class DetailsFragment : Fragment() {
                             .padding(vertical = 5.dp)
                             .fillMaxWidth()
                     ) {
-
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,

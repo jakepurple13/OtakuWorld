@@ -678,6 +678,10 @@ private fun <T> DeleteItemView(
             modifier = Modifier.fillMaxSize(),
             interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
+            /*border = BorderStroke(
+                animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
+                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
+            ),*/
             onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
             backgroundColor = animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colors.surface).value
         ) { itemUi(item) }

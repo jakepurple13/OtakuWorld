@@ -322,7 +322,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
                     requestBuilder = Glide.with(LocalView.current)
-                        .asBitmap()
+                        .asDrawable()
                         .override(360, 480)
                         .placeholder(logo.logoId)
                         .error(logo.logoId)
