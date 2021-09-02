@@ -33,6 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastMap
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.os.bundleOf
@@ -257,8 +259,8 @@ class DetailsFragment : Fragment() {
                             MaterialAlertDialogBuilder(requireContext())
                                 .setTitle(R.string.markAs)
                                 .setMultiChoiceItems(
-                                    adapter.dataList.map(ChapterModel::name).toTypedArray(),
-                                    BooleanArray(adapter.itemCount) { i -> checked.any { it1 -> it1.url == adapter[i].url } }
+                                    adapter.dataList.fastMap(ChapterModel::name).toTypedArray(),
+                                    BooleanArray(adapter.itemCount) { i -> checked.fastAny { it1 -> it1.url == adapter[i].url } }
                                 ) { _, i, _ ->
                                     (binding.infoChapterList.findViewHolderForAdapterPosition(i) as? ChapterAdapter.ChapterHolder)
                                         ?.binding?.readChapter?.performClick()

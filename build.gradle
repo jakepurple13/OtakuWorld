@@ -89,6 +89,7 @@ buildscript {
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
     ext.materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"
     ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
+    ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
 
     ext {
         jakepurple13Tools = [
@@ -113,7 +114,7 @@ buildscript {
                         composeMaterialThemeAdapter,
                         landscapistGlide,
                         composeConstraintLayout,
-                        materialPlaceholder, drawablePainter
+                        materialPlaceholder, drawablePainter, uiUtil
                 ]
         ]
 

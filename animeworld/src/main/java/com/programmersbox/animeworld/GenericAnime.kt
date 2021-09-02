@@ -82,11 +82,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
         if ((chapterModel.source as? ShowApi)?.canStream == false) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.source_no_stream, chapterModel.source.serviceName),
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(context, context.getString(R.string.source_no_stream, chapterModel.source.serviceName), Toast.LENGTH_SHORT).show()
             return
         }
         MainActivity.activity.lifecycleScope.launch(Dispatchers.IO) {

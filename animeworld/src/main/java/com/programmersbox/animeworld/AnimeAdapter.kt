@@ -2,6 +2,7 @@ package com.programmersbox.animeworld
 
 import android.content.Context
 import android.view.ViewGroup
+import androidx.compose.ui.util.fastAny
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.animeworld.databinding.AnimeListItemBinding
 import com.programmersbox.favoritesdatabase.DbModel
@@ -34,7 +35,7 @@ class AnimeHolder(private val binding: AnimeListItemBinding) : RecyclerView.View
         binding.root.toolTipText(info.title)
         binding.favoriteHeart.changeTint(binding.animeTitle.currentTextColor)
         binding.favoriteHeart.check(false)
-        binding.favoriteHeart.check(list.any { it.url == info.url })
+        binding.favoriteHeart.check(list.fastAny { it.url == info.url })
         binding.executePendingBindings()
     }
 

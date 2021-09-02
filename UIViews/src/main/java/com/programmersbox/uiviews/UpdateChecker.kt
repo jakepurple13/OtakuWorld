@@ -9,6 +9,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMaxBy
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.RxWorker
 import androidx.work.WorkerParameters
@@ -93,7 +97,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
             val list = listOf(
                 dao.getAllFavoritesSync(),
                 FirebaseDb.getAllShows().requireNoNulls()
-            ).flatten().groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! }
+            ).flatten().groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! }
             //applicationContext.dbAndFireMangaSync3(dao)
             /*val sourceList = Sources.getUpdateSearches()
                 .filter { s -> list.any { m -> m.source == s } }
@@ -102,7 +106,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
             val newList = list.intersect(
                 //sourcesList
                 genericInfo.sourceList()
-                    .filter { s -> list.any { m -> m.source == s.serviceName } }
+                    .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
                     .mapNotNull { m ->
                         try {
                             m.getRecent()
@@ -176,7 +180,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
     private val icon: NotificationLogo by inject()
 
     fun updateManga(dao: ItemDao, triple: List<Pair<InfoModel?, DbModel>>) {
-        triple.forEach {
+        triple.fastForEach {
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
             dao.updateItem(item).subscribe()
@@ -257,8 +261,8 @@ class UpdateNotification(private val context: Context) : KoinComponent {
 
     fun onEnd(list: List<Pair<Int, Notification>>, notificationId: Int = 42) {
         val n = context.notificationManager
-        val currentNotificationSize = n.activeNotifications.filterNot { list.any { l -> l.first == it.id } }.size - 1
-        list.forEach { pair -> n.notify(pair.first, pair.second) }
+        val currentNotificationSize = n.activeNotifications.filterNot { list.fastAny { l -> l.first == it.id } }.size - 1
+        list.fastForEach { pair -> n.notify(pair.first, pair.second) }
         if (list.isNotEmpty()) n.notify(
             notificationId,
             NotificationDslBuilder.builder(context, "otakuChannel", icon.notificationId) {
@@ -415,7 +419,7 @@ object SavedNotifications {
         GlobalScope.launch {
             dao.getAllNotifications()
                 .blockingGet()
-                .map { n ->
+                .fastMap { n ->
                     println(n)
                     n.id to NotificationDslBuilder.builder(
                         context,
