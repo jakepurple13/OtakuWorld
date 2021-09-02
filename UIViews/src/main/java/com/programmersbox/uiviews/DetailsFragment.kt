@@ -118,9 +118,16 @@ class DetailsFragment : Fragment() {
         binding.composeHeader.setContent { MdcTheme { PlaceHolderHeader() } }
 
         args.itemInfo
-            ?.also {
-                binding.collapsingBar.title = it.title
-                binding.toolbar.title = it.title
+            ?.also { item ->
+                binding.collapsingBar.title = item.title
+                binding.toolbar.title = item.title
+                binding.shareButton.setOnClickListener {
+                    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, item.url)
+                        putExtra(Intent.EXTRA_TITLE, item.title)
+                    }, "Share ${item.title}"))
+                }
             }
             ?.toInfoModel()
             ?.subscribeOn(Schedulers.io())
@@ -537,14 +544,6 @@ class DetailsFragment : Fragment() {
             //.distinct { it }
             .subscribe { adapter.update(it) { c, m -> c.url == m.url } }
             .addTo(disposable)
-
-        binding.shareButton.setOnClickListener {
-            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, infoModel.url)
-                putExtra(Intent.EXTRA_TITLE, infoModel.title)
-            }, "Share ${infoModel.title}"))
-        }
     }
 
     override fun onDestroy() {
