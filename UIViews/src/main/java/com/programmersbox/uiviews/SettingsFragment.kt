@@ -278,6 +278,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("reset_checker")?.let { p ->
             p.setOnPreferenceClickListener {
                 WorkManager.getInstance(this.requireContext()).pruneWork()
+                OtakuApp.updateSetup(requireContext())
                 Toast.makeText(requireContext(), R.string.cleared, Toast.LENGTH_SHORT).show()
                 true
             }
