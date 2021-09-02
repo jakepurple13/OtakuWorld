@@ -35,7 +35,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
 
     private val logo: NotificationLogo by inject()
 
-    override fun createWork(): Single<Result> = Single.create {
+    override fun createWork(): Single<Result> = Single.create<Result> {
         try {
             val f = AppUpdate.getUpdate()?.update_version ?: 0.0
             if (
@@ -65,6 +65,8 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
             it.onSuccess(Result.success())
         }
     }
+        .onErrorReturn { Result.success() }
+        .timeout(1, TimeUnit.MINUTES)
 
 }
 
@@ -164,6 +166,7 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                 update.sendFinishedNotification()
                 Result.success()
             }
+            .timeout(5, TimeUnit.MINUTES)
     }
 
 }
@@ -225,7 +228,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
             showWhen = true
             groupId = "otakuGroup"
             addAction {
-                actionTitle = "Mark Read"
+                actionTitle = context.getString(R.string.mark_read)
                 actionIcon = icon.notificationId
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ
                 pendingActionIntent {
@@ -371,6 +374,18 @@ object SavedNotifications {
             }
             showWhen = true
             groupId = "otakuGroup"
+            addAction {
+                actionTitle = context.getString(R.string.mark_read)
+                actionIcon = notificationLogo.notificationId
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ
+                pendingActionIntent {
+                    val intent = Intent(context, DeleteNotificationReceiver::class.java)
+                    intent.action = "NOTIFICATION_DELETED_ACTION"
+                    intent.putExtra("url", n.url)
+                    intent.putExtra("id", n.id)
+                    PendingIntent.getBroadcast(context, n.id, intent, PendingIntent.FLAG_IMMUTABLE)
+                }
+            }
             /*deleteIntent { context ->
                 val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
                 intent1.action = "NOTIFICATION_DELETED_ACTION"
@@ -423,6 +438,18 @@ object SavedNotifications {
                         }
                         showWhen = true
                         groupId = "otakuGroup"
+                        addAction {
+                            actionTitle = context.getString(R.string.mark_read)
+                            actionIcon = logo.notificationId
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ
+                            pendingActionIntent {
+                                val intent = Intent(context, DeleteNotificationReceiver::class.java)
+                                intent.action = "NOTIFICATION_DELETED_ACTION"
+                                intent.putExtra("url", n.url)
+                                intent.putExtra("id", n.id)
+                                PendingIntent.getBroadcast(context, n.id, intent, PendingIntent.FLAG_IMMUTABLE)
+                            }
+                        }
                         /*deleteIntent { context ->
                             val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
                             intent1.action = "NOTIFICATION_DELETED_ACTION"

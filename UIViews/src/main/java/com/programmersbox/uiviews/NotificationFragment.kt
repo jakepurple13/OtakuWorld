@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.ripple.rememberRipple
@@ -35,7 +36,6 @@ import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -65,6 +65,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val disposable = CompositeDisposable()
     private val notificationManager by lazy { requireContext().notificationManager }
     private val logo: MainLogo by inject()
+    private val notificationLogo: NotificationLogo by inject()
 
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
@@ -81,10 +82,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     .collectAsState(emptyList())
 
                 val state = rememberBottomSheetScaffoldState()
-                /*val scope = rememberCoroutineScope()
+                val scope = rememberCoroutineScope()
                 //TODO: Put this in for all scaffolds
                 //TODO: Maaaybe not, this also takes over even when not on the screen
-                val backCallBack = remember {
+                /*val backCallBack = remember {
                     object : OnBackPressedCallback(state.bottomSheetState.isExpanded) {
                         override fun handleOnBackPressed() {
                             when {
@@ -105,7 +106,17 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     listOfItems = items,
                     state = state,
                     multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
-                    topBar = { TopAppBar(title = { Text(stringResource(id = R.string.current_notification_count, items.size)) }) },
+                    topBar = {
+                        TopAppBar(
+                            title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                            actions = {
+                                IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) }
+                            }
+                        )
+                    },
                     onRemove = { item ->
                         db.deleteNotification(item)
                             .subscribeOn(Schedulers.io())
@@ -352,47 +363,72 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     .fadeInAnimation()
             ) {
 
-                Column {
-
-                    Row {
-                        GlideImage(
-                            imageModel = item.imageUrl.orEmpty(),
-                            contentDescription = "",
-                            contentScale = ContentScale.Crop,
-                            requestBuilder = Glide.with(LocalView.current)
-                                .asDrawable()
-                                .override(360, 480)
-                                .thumbnail(0.5f)
-                                .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                            failure = {
-                                Image(
-                                    painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                                    contentDescription = item.notiTitle,
-                                    modifier = Modifier
-                                        .align(Alignment.CenterVertically)
-                                        .padding(5.dp)
-                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                )
-                            }
-                        )
-
-                        Column(modifier = Modifier.padding(start = 16.dp, top = 2.dp)) {
-                            Text(item.source, style = MaterialTheme.typography.overline)
-                            Text(item.notiTitle, style = MaterialTheme.typography.subtitle2)
-                            Text(item.summaryText, style = MaterialTheme.typography.body2)
+                Row {
+                    GlideImage(
+                        imageModel = item.imageUrl.orEmpty(),
+                        contentDescription = "",
+                        contentScale = ContentScale.Crop,
+                        requestBuilder = Glide.with(LocalView.current)
+                            .asDrawable()
+                            .override(360, 480)
+                            .thumbnail(0.5f),
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                        failure = {
+                            Image(
+                                painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
+                                contentDescription = item.notiTitle,
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .padding(5.dp)
+                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            )
                         }
+                    )
 
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp, top = 4.dp)
+                    ) {
+                        Text(item.source, style = MaterialTheme.typography.overline)
+                        Text(item.notiTitle, style = MaterialTheme.typography.subtitle2)
+                        Text(item.summaryText, style = MaterialTheme.typography.body2)
                     }
 
-                    /*Button(
-                        onClick = { showPopup = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(0.dp, 0.dp, 4.dp, 4.dp)
-                    ) { Text(stringResource(R.string.remove), style = MaterialTheme.typography.button) }*/
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Top)
+                            .padding(horizontal = 2.dp)
+                    ) {
 
+                        var showDropDown by remember { mutableStateOf(false) }
+
+                        val dropDownDismiss = { showDropDown = false }
+
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss
+                        ) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    lifecycleScope.launch(Dispatchers.IO) {
+                                        SavedNotifications.viewNotificationFromDb(requireContext(), item, notificationLogo, genericInfo)
+                                    }
+                                }
+                            ) { Text(stringResource(R.string.notify)) }
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    showPopup = true
+                                }
+                            ) { Text(stringResource(R.string.remove)) }
+                        }
+
+                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                    }
                 }
 
                 //TODO: Below is for a LazyStaggeredVerticalGrid when its finally officially supported

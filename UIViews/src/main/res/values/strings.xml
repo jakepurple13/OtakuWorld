@@ -139,5 +139,6 @@
     <string name="clear_update_queue">Clear Update Queue</string>
     <string name="clear_update_queue_summary">Clear queue if the update checker seems to not run consistently.</string>
     <string name="cleared">Cleared</string>
+    <string name="mark_read">Mark Read</string>
 
 </resources>
