@@ -27,6 +27,11 @@
             app:key="sync_time"
             app:title="@string/last_update_check_time" />
 
+        <Preference
+            app:key="reset_checker"
+            app:title="@string/clear_update_queue"
+            app:summary="@string/clear_update_queue_summary" />
+
         <SwitchPreferenceCompat
             app:key="sync"
             app:title="@string/check_for_periodic_updates" />

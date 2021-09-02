@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -82,8 +81,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     .collectAsState(emptyList())
 
                 val state = rememberBottomSheetScaffoldState()
-                val scope = rememberCoroutineScope()
-
+                /*val scope = rememberCoroutineScope()
+                //TODO: Put this in for all scaffolds
+                //TODO: Maaaybe not, this also takes over even when not on the screen
                 val backCallBack = remember {
                     object : OnBackPressedCallback(true) {
                         override fun handleOnBackPressed() {
@@ -98,7 +98,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                 DisposableEffect(key1 = requireActivity().onBackPressedDispatcher) {
                     requireActivity().onBackPressedDispatcher.addCallback(backCallBack)
                     onDispose { backCallBack.remove() }
-                }
+                }*/
 
                 BottomSheetDeleteScaffold(
                     listOfItems = items,

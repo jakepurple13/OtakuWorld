@@ -136,5 +136,8 @@
     <string name="search">Search</string>
     <string name="global_search_by_name">Global Search by Name</string>
     <string name="are_you_sure_delete_notifications">Are you sure you want to delete all notifications?</string>
+    <string name="clear_update_queue">Clear Update Queue</string>
+    <string name="clear_update_queue_summary">Clear queue if the update checker seems to not run consistently.</string>
+    <string name="cleared">Cleared</string>
 
 </resources>

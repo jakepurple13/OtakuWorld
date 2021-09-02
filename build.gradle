@@ -5,7 +5,7 @@ buildscript {
     ext.otakuVersionName = "23.0"
     ext.latestAboutLibsRelease = "+"
 
-    ext.coroutinesVersion = "1.5.1"
+    ext.coroutinesVersion = "1.5.2"
 
     ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
     ext.coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
@@ -62,7 +62,7 @@ buildscript {
 
     ext.lottieVersion = "4.1.0"
 
-    ext.jetpack = "1.0.1"
+    ext.jetpack = "1.0.2"
 
     ext.accompanist = "0.17.0"
 
