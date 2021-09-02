@@ -85,15 +85,16 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                 //TODO: Put this in for all scaffolds
                 //TODO: Maaaybe not, this also takes over even when not on the screen
                 val backCallBack = remember {
-                    object : OnBackPressedCallback(true) {
+                    object : OnBackPressedCallback(state.bottomSheetState.isExpanded) {
                         override fun handleOnBackPressed() {
                             when {
                                 state.bottomSheetState.isExpanded -> scope.launch { state.bottomSheetState.collapse() }
-                                else -> findNavController().popBackStack()
                             }
                         }
                     }
                 }
+
+                backCallBack.isEnabled = state.bottomSheetState.isExpanded
 
                 DisposableEffect(key1 = requireActivity().onBackPressedDispatcher) {
                     requireActivity().onBackPressedDispatcher.addCallback(backCallBack)
@@ -127,6 +128,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     },
                     itemUi = { item ->
                         ListItem(
+                            modifier = Modifier.padding(5.dp),
                             icon = {
                                 GlideImage(
                                     imageModel = item.imageUrl.orEmpty(),
