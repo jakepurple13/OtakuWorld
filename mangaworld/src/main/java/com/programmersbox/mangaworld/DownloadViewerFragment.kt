@@ -47,6 +47,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.io.path.Path
 
@@ -160,8 +161,12 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeAsState(emptyList())
 
+                val state = rememberBottomSheetScaffoldState()
+                val scope = rememberCoroutineScope()
+
                 BottomSheetDeleteScaffold(
                     listOfItems = files,
+                    state = state,
                     multipleTitle = stringResource(id = R.string.delete),
                     onRemove = { file ->
                         Single.create<Boolean> {
@@ -193,17 +198,10 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                     },
                     topBar = {
                         TopAppBar(
-                            title = {
-                                Text(
-                                    stringResource(R.string.downloaded_chapters),
-                                    style = MaterialTheme.typography.h5
-                                )
-                            },
-                            navigationIcon = {
-                                if (pathname != defaultPathname && pathname?.parentFile != null) {
-                                    IconButton(onClick = { dismiss() }) { Icon(Icons.Default.ArrowBack, null) }
-                                }
-                            },
+                            title = { Text(stringResource(R.string.downloaded_chapters)) },
+                            navigationIcon = if (pathname != defaultPathname && pathname?.parentFile != null) {
+                                { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.ArrowBack, null) } }
+                            } else null,
                             actions = {
                                 IconButton(
                                     onClick = {
@@ -212,11 +210,13 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                                             .forEach(DownloadViewerFragment::dismiss)
                                     }
                                 ) { Icon(Icons.Default.Close, null) }
+
+                                IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                             }
                         )
                     },
                     itemUi = { file ->
-                        Column {
+                        ListItem(modifier = Modifier.padding(5.dp)) {
                             Text(
                                 file.name,
                                 style = MaterialTheme.typography.h5,
@@ -397,21 +397,19 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                     .padding(5.dp)
                     .fillMaxWidth()
             ) {
-                Column {
-                    Text(
-                        file.name,
-                        style = MaterialTheme.typography.h5,
-                        modifier = Modifier.padding(5.dp)
-                    )
-                    Text(
-                        stringResource(
-                            if (file.listFiles()?.all(File::isFile) == true) R.string.page_count else R.string.chapter_count,
-                            file.listFiles()?.size ?: 0
-                        ),
-                        style = MaterialTheme.typography.subtitle2,
-                        modifier = Modifier.padding(5.dp)
-                    )
-                }
+                ListItem(
+                    modifier = Modifier.padding(5.dp),
+                    text = { Text(file.name) },
+                    secondaryText = {
+                        Text(
+                            stringResource(
+                                if (file.listFiles()?.all(File::isFile) == true) R.string.page_count else R.string.chapter_count,
+                                file.listFiles()?.size ?: 0
+                            )
+                        )
+                    },
+                    trailing = { IconButton(onClick = clickAction) { Icon(Icons.Default.ChevronRight, null) } }
+                )
             }
         }
     }
