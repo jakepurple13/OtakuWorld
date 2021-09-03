@@ -35,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
@@ -45,6 +46,9 @@ import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.uiviews.R
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
@@ -501,6 +505,13 @@ fun <T> BottomSheetDeleteScaffold(
 
             val itemsToDelete = remember { mutableStateListOf<T>() }
 
+            LaunchedEffect(state) {
+                snapshotFlow { state.bottomSheetState.isCollapsed }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { itemsToDelete.clear() }
+            }
+
             var showPopup by remember { mutableStateOf(false) }
 
             if (showPopup) {
@@ -532,7 +543,6 @@ fun <T> BottomSheetDeleteScaffold(
                             scope.launch {
                                 if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
                                 else state.bottomSheetState.collapse()
-                                itemsToDelete.clear()
                             }
                         },
                         modifier = Modifier
@@ -548,13 +558,10 @@ fun <T> BottomSheetDeleteScaffold(
                 },
                 bottomBar = {
                     BottomAppBar(
-                        contentPadding = PaddingValues(0.dp)//Modifier.padding(0.dp)
+                        contentPadding = PaddingValues(0.dp)
                     ) {
                         Button(
-                            onClick = {
-                                scope.launch { state.bottomSheetState.collapse() }
-                                itemsToDelete.clear()
-                            },
+                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 5.dp)
@@ -795,7 +802,7 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
             modifier = Modifier.autoComplete(autoCompleteState),
             properties = PopupProperties(focusable = false)
         ) {
-            items.forEach { item ->
+            items.fastForEach { item ->
                 DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) {
                     itemContent(item)
                 }
