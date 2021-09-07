@@ -2,9 +2,7 @@ package com.programmersbox.mangaworld
 
 import android.Manifest
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,16 +31,11 @@ import com.anggrayudi.storage.file.DocumentFileCompat
 import com.anggrayudi.storage.file.DocumentFileType
 import com.anggrayudi.storage.file.deleteRecursively
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionsRequired
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.dragswipe.*
 import com.programmersbox.mangaworld.databinding.FragmentDownloadViewerBinding
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
-import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
-import com.programmersbox.uiviews.utils.animatedItems
-import com.programmersbox.uiviews.utils.updateAnimatedItemsState
+import com.programmersbox.uiviews.utils.*
 import de.helmbold.rxfilewatcher.PathObservables
 import io.reactivex.Completable
 import io.reactivex.Single
@@ -85,62 +78,9 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun loadInformation() {
-
         binding.composeDownloadView.setContent {
             MdcTheme {
-
-                val storagePermissions = rememberMultiplePermissionsState(
-                    listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
-                )
-
-                PermissionsRequired(
-                    multiplePermissionsState = storagePermissions,
-                    permissionsNotGrantedContent = { NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() } },
-                    permissionsNotAvailableContent = {
-                        NeedsPermissions {
-                            startActivity(
-                                Intent().apply {
-                                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                    data = Uri.fromParts("package", requireActivity().packageName, null)
-                                }
-                            )
-                        }
-                    }
-                ) { DownloadViewer() }
-
-            }
-        }
-    }
-
-    @Composable
-    fun NeedsPermissions(onClick: () -> Unit) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp),
-                elevation = 5.dp,
-                shape = RoundedCornerShape(5.dp)
-            ) {
-                Column(modifier = Modifier) {
-                    Text(
-                        text = stringResource(R.string.please_enable_permissions),
-                        style = MaterialTheme.typography.h4,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-
-                    Button(
-                        onClick = onClick,
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(bottom = 5.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.enable),
-                            style = MaterialTheme.typography.button
-                        )
-                    }
-                }
+                PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) { DownloadViewer() }
             }
         }
     }

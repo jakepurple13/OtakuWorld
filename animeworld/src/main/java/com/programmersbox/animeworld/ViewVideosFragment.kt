@@ -44,6 +44,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.animeworld.databinding.FragmentViewVideosBinding
 import com.programmersbox.dragswipe.*
@@ -71,38 +72,32 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     private val disposable = CompositeDisposable()
 
+    @ExperimentalPermissionsApi
     @ExperimentalMaterialApi
     @ExperimentalAnimationApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         MainActivity.cast.setMediaRouteMenu(requireContext(), binding.toolbarmenu.menu)
-
-        loadVideos()
+        getStuff()
     }
 
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    private fun loadVideos() {
-        val permissions = listOfNotNull(
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-        )
-        activity?.requestPermissions(*permissions.toTypedArray()) {
-            if (it.isGranted) getStuff()
-        }
-    }
-
+    @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun getStuff() {
 
         binding.composeLayout.setContent {
-            VideoLoad()
+            MdcTheme {
+                PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    LaunchedEffect(Unit) {
+                        val v = VideoGet.getInstance(requireContext())
+                        v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
+                    }
+
+                    VideoLoad()
+                }
+            }
         }
-
-        val v = VideoGet.getInstance(requireContext())
-
-        v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
     }
 
     @ExperimentalAnimationApi
@@ -126,125 +121,122 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             }
             .collectAsState(emptyList())
 
-        MdcTheme {
+        if (items.isEmpty()) {
+            EmptyState()
+        } else {
+            BottomSheetDeleteScaffold(
+                listOfItems = items,
+                multipleTitle = stringResource(id = R.string.delete),
+                onRemove = { context?.deleteDialog(it) {} },
+                customSingleRemoveDialog = {
+                    context?.deleteDialog(it) {}
+                    false
+                },
+                onMultipleRemove = { downloadedItems ->
+                    downloadedItems.forEach {
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                it.assetFileStringUri?.toUri()?.let { it1 ->
+                                    context?.contentResolver?.delete(
+                                        it1,
+                                        "${MediaStore.Video.Media._ID} = ?",
+                                        arrayOf(it.videoId.toString())
+                                    )
+                                }
+                            } else {
+                                File(it.path!!).delete()
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(requireContext(), "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                    downloadedItems.clear()
+                },
+                itemUi = { item ->
 
-            if (items.isEmpty()) {
-                EmptyState()
-            } else {
-                BottomSheetDeleteScaffold(
-                    listOfItems = items,
-                    multipleTitle = stringResource(id = R.string.delete),
-                    onRemove = { context?.deleteDialog(it) {} },
-                    customSingleRemoveDialog = {
-                        context?.deleteDialog(it) {}
-                        false
-                    },
-                    onMultipleRemove = { downloadedItems ->
-                        downloadedItems.forEach {
-                            try {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    it.assetFileStringUri?.toUri()?.let { it1 ->
-                                        context?.contentResolver?.delete(
-                                            it1,
-                                            "${MediaStore.Video.Media._ID} = ?",
-                                            arrayOf(it.videoId.toString())
+                    ListItem(
+                        modifier = Modifier.padding(5.dp),
+                        icon = {
+
+                            Box {
+
+                                /*convert millis to appropriate time*/
+                                val runTimeString = remember {
+                                    val duration = item.videoDuration
+                                    if (duration > TimeUnit.HOURS.toMillis(1)) {
+                                        String.format(
+                                            "%02d:%02d:%02d",
+                                            TimeUnit.MILLISECONDS.toHours(duration),
+                                            TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(
+                                                TimeUnit.MILLISECONDS.toHours(duration)
+                                            ),
+                                            TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                                TimeUnit.MILLISECONDS.toMinutes(duration)
+                                            )
+                                        )
+                                    } else {
+                                        String.format(
+                                            "%02d:%02d",
+                                            TimeUnit.MILLISECONDS.toMinutes(duration),
+                                            TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                                TimeUnit.MILLISECONDS.toMinutes(duration)
+                                            )
                                         )
                                     }
-                                } else {
-                                    File(it.path!!).delete()
                                 }
-                            } catch (e: Exception) {
-                                Toast.makeText(requireContext(), "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT)
-                                    .show()
+
+                                GlideImage(
+                                    imageModel = item.assetFileStringUri.orEmpty(),
+                                    contentDescription = item.videoName,
+                                    contentScale = ContentScale.Crop,
+                                    requestBuilder = Glide.with(LocalView.current)
+                                        .asDrawable()
+                                        .override(360, 480)
+                                        .thumbnail(0.5f)
+                                        .transform(RoundedCorners(15)),
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+
+                                Text(
+                                    runTimeString,
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .background(Color(0x99000000))
+                                        .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(5.dp))
+                                )
+
                             }
-                        }
-                        downloadedItems.clear()
-                    },
-                    itemUi = { item ->
+                        },
+                        overlineText = if (requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
+                            { Text(requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()) }
+                        } else null,
+                        text = { Text(item.videoName.orEmpty()) },
+                        secondaryText = { Text(item.path.orEmpty()) }
+                    )
+                }
+            ) {
+                Scaffold(modifier = Modifier.padding(it)) { p ->
+                    val videos by updateAnimatedItemsState(newList = items)
 
-                        ListItem(
-                            modifier = Modifier.padding(5.dp),
-                            icon = {
-
-                                Box {
-
-                                    /*convert millis to appropriate time*/
-                                    val runTimeString = remember {
-                                        val duration = item.videoDuration
-                                        if (duration > TimeUnit.HOURS.toMillis(1)) {
-                                            String.format(
-                                                "%02d:%02d:%02d",
-                                                TimeUnit.MILLISECONDS.toHours(duration),
-                                                TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(
-                                                    TimeUnit.MILLISECONDS.toHours(duration)
-                                                ),
-                                                TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
-                                                    TimeUnit.MILLISECONDS.toMinutes(duration)
-                                                )
-                                            )
-                                        } else {
-                                            String.format(
-                                                "%02d:%02d",
-                                                TimeUnit.MILLISECONDS.toMinutes(duration),
-                                                TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
-                                                    TimeUnit.MILLISECONDS.toMinutes(duration)
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    GlideImage(
-                                        imageModel = item.assetFileStringUri.orEmpty(),
-                                        contentDescription = item.videoName,
-                                        contentScale = ContentScale.Crop,
-                                        requestBuilder = Glide.with(LocalView.current)
-                                            .asDrawable()
-                                            .override(360, 480)
-                                            .thumbnail(0.5f)
-                                            .transform(RoundedCorners(15)),
-                                        modifier = Modifier
-                                            .align(Alignment.Center)
-                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                    )
-
-                                    Text(
-                                        runTimeString,
-                                        color = Color.White,
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .background(Color(0x99000000))
-                                            .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(5.dp))
-                                    )
-
-                                }
-                            },
-                            overlineText = if (requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
-                                { Text(requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()) }
-                            } else null,
-                            text = { Text(item.videoName.orEmpty()) },
-                            secondaryText = { Text(item.path.orEmpty()) }
-                        )
-                    }
-                ) {
-                    Scaffold(modifier = Modifier.padding(it)) { p ->
-                        val videos by updateAnimatedItemsState(newList = items)
-
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                            contentPadding = p,
-                            state = rememberLazyListState(),
-                            modifier = Modifier.padding(5.dp)
-                        ) {
-                            animatedItems(
-                                videos,
-                                enterTransition = slideInHorizontally({ x -> x / 2 }),
-                                exitTransition = slideOutHorizontally()
-                            ) { i -> VideoContentView(i) }
-                        }
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                        contentPadding = p,
+                        state = rememberLazyListState(),
+                        modifier = Modifier.padding(5.dp)
+                    ) {
+                        animatedItems(
+                            videos,
+                            enterTransition = slideInHorizontally({ x -> x / 2 }),
+                            exitTransition = slideOutHorizontally()
+                        ) { i -> VideoContentView(i) }
                     }
                 }
-
             }
+
         }
 
     }

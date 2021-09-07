@@ -1,5 +1,8 @@
 package com.programmersbox.uiviews.utils
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -42,6 +45,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionsRequired
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.uiviews.R
 import com.skydoves.landscapist.glide.GlideImage
@@ -883,4 +889,65 @@ fun CustomSwipeToDelete(
         dismissThresholds = dismissThresholds,
         background = { backgroundInfo(dismissState) }
     ) { content() }
+}
+
+@ExperimentalPermissionsApi
+@Composable
+fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> Unit) {
+    val storagePermissions = rememberMultiplePermissionsState(permissionsList)
+    val context = LocalContext.current
+    PermissionsRequired(
+        multiplePermissionsState = storagePermissions,
+        permissionsNotGrantedContent = { NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() } },
+        permissionsNotAvailableContent = {
+            NeedsPermissions {
+                context.startActivity(
+                    Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                )
+            }
+        },
+        content = content
+    )
+}
+
+@Composable
+fun NeedsPermissions(onClick: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            elevation = 5.dp,
+            shape = RoundedCornerShape(5.dp)
+        ) {
+            Column(modifier = Modifier) {
+                Text(
+                    text = stringResource(R.string.please_enable_permissions),
+                    style = MaterialTheme.typography.h5,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+
+                Text(
+                    text = stringResource(R.string.need_permissions_to_work),
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+
+                Button(
+                    onClick = onClick,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 5.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.enable),
+                        style = MaterialTheme.typography.button
+                    )
+                }
+            }
+        }
+    }
 }

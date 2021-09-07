@@ -140,5 +140,8 @@
     <string name="clear_update_queue_summary">Clear queue if the update checker seems to not run consistently.</string>
     <string name="cleared">Cleared</string>
     <string name="mark_read">Mark Read</string>
+    <string name="please_enable_permissions">Please Enable Permissions</string>
+    <string name="need_permissions_to_work">These permissions are needed in order for this functionality to work</string>
+    <string name="enable">Enable</string>
 
 </resources>
