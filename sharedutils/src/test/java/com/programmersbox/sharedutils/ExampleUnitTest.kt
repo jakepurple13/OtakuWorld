@@ -21,11 +21,11 @@ class ExampleUnitTest {
         val root = File(File("..").absolutePath.removeSuffix("/sharedutils/.."))
         val q = shellRun(root) { git.gitCommand(listOf("ls-files")) }
             .split("\n")
-            .filter { it.endsWith(".kt") }
+            .filter { it.endsWith(".kt") || it.endsWith(".xml") }
 
         val f = q
             .fastMap { it to File("$root/$it") }
-            .fastMap { it.first to it.second.readLines().size }
+            .fastMap { it.second.absolutePath to it.second.readLines().size }
             .sortedBy { it.second }
 
         val tableList = table {
@@ -35,9 +35,9 @@ class ExampleUnitTest {
                 paddingRight = 1
             }
 
-            header { row("Size", "From") }
+            header { row("Size", "Path") }
             f.fastForEach { row(it.second, it.first) }
-            row(f.sumOf { it.second }, "Files: ${q.size}")
+            footer { row(f.sumOf { it.second }, "Files: ${q.size}") }
         }
 
         println(tableList)
