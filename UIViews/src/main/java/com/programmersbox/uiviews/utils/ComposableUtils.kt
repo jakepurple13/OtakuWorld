@@ -826,3 +826,61 @@ private fun Modifier.autoComplete(
             shape = autoCompleteItemScope.boxShape
         )
 }
+
+private class SwipeToDismissBackground @ExperimentalMaterialApi constructor(
+    val background: @Composable (DismissState) -> Unit
+)
+
+@ExperimentalMaterialApi
+private val DEFAULT_SWIPE_TO_DISMISS_BACKGROUND
+    get() = SwipeToDismissBackground { dismissState ->
+        val direction = dismissState.dismissDirection ?: return@SwipeToDismissBackground
+        val color by animateColorAsState(
+            when (dismissState.targetValue) {
+                DismissValue.Default -> Color.Transparent
+                DismissValue.DismissedToEnd -> Color.Red
+                DismissValue.DismissedToStart -> Color.Red
+            }
+        )
+        val alignment = when (direction) {
+            DismissDirection.StartToEnd -> Alignment.CenterStart
+            DismissDirection.EndToStart -> Alignment.CenterEnd
+        }
+        val icon = when (direction) {
+            DismissDirection.StartToEnd -> Icons.Default.Delete
+            DismissDirection.EndToStart -> Icons.Default.Delete
+        }
+        val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(color)
+                .padding(horizontal = 20.dp),
+            contentAlignment = alignment
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.scale(scale)
+            )
+        }
+    }
+
+@ExperimentalMaterialApi
+@Composable
+fun CustomSwipeToDelete(
+    modifier: Modifier = Modifier,
+    dismissState: DismissState,
+    dismissThresholds: (DismissDirection) -> ThresholdConfig = { FractionalThreshold(0.5f) },
+    dismissDirections: Set<DismissDirection> = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
+    backgroundInfo: @Composable (DismissState) -> Unit = DEFAULT_SWIPE_TO_DISMISS_BACKGROUND.background,
+    content: @Composable () -> Unit
+) {
+    SwipeToDismiss(
+        modifier = modifier,
+        state = dismissState,
+        directions = dismissDirections,
+        dismissThresholds = dismissThresholds,
+        background = { backgroundInfo(dismissState) }
+    ) { content() }
+}
