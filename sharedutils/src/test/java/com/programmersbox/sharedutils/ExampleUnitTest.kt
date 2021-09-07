@@ -1,7 +1,11 @@
 package com.programmersbox.sharedutils
 
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
 import com.jakewharton.picnic.table
+import com.lordcodes.turtle.shellRun
 import com.programmersbox.helpfulutils.containsDuplicates
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.io.File
 
@@ -11,6 +15,33 @@ import java.io.File
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun lineCountTest() = runBlocking {
+        val root = File(File("..").absolutePath.removeSuffix("/sharedutils/.."))
+        val q = shellRun(root) { git.gitCommand(listOf("ls-files")) }
+            .split("\n")
+            .filter { it.endsWith(".kt") }
+
+        val f = q
+            .fastMap { it to File("$root/$it") }
+            .fastMap { it.first to it.second.readLines().size }
+            .sortedBy { it.second }
+
+        val tableList = table {
+            cellStyle {
+                border = true
+                paddingLeft = 1
+                paddingRight = 1
+            }
+
+            header { row("Size", "From") }
+            f.fastForEach { row(it.second, it.first) }
+            row(f.sumOf { it.second }, "Files: ${q.size}")
+        }
+
+        println(tableList)
+    }
 
     class GradleHolder(val from: String, val library: String)
 
@@ -29,8 +60,8 @@ class ExampleUnitTest {
             .map {
                 it.first to it.second
                     .readLines()
-                    .filter { it.contains("implementation", true) }
-                    .map { it.replace("implementation", "").trim() }
+                    .filter { i -> i.contains("implementation", true) }
+                    .map { i -> i.replace("implementation", "").trim() }
                     .map { l -> GradleHolder(it.first, l) }
             }
             .sortedByDescending { it.second.size }
@@ -60,7 +91,7 @@ class ExampleUnitTest {
                 .sortedWith(compareByDescending<Map.Entry<String, List<GradleHolder>>> { it.value.size }.thenBy { it.key })
                 .forEach {
                     val (t, u) = it
-                    row(u.size, u.containsDuplicates(), t, u.map { it.from })
+                    row(u.size, u.containsDuplicates(), t, u.map { i -> i.from })
                 }
         }
 
