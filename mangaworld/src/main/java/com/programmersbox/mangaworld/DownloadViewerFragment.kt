@@ -2,7 +2,9 @@ package com.programmersbox.mangaworld
 
 import android.Manifest
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,9 +32,11 @@ import androidx.compose.ui.unit.dp
 import com.anggrayudi.storage.file.DocumentFileCompat
 import com.anggrayudi.storage.file.DocumentFileType
 import com.anggrayudi.storage.file.deleteRecursively
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionsRequired
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.dragswipe.*
-import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.mangaworld.databinding.FragmentDownloadViewerBinding
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
@@ -69,6 +73,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
 
     private val defaultPathname get() = File(DOWNLOAD_FILE_PATH)
 
+    @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -76,46 +81,64 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
         loadInformation()
     }
 
+    @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun loadInformation() {
-        activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
-            if (p.isGranted) {
-                downloadView()
-            } else {
-                binding.composeDownloadView.setContent {
-                    MdcTheme {
 
-                        Box(modifier = Modifier.fillMaxSize()) {
+        binding.composeDownloadView.setContent {
+            MdcTheme {
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(5.dp),
-                                elevation = 5.dp,
-                                shape = RoundedCornerShape(5.dp)
-                            ) {
-                                Column(modifier = Modifier) {
-                                    Text(
-                                        text = stringResource(R.string.please_enable_permissions),
-                                        style = MaterialTheme.typography.h4,
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                                    )
+                val storagePermissions = rememberMultiplePermissionsState(
+                    listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+                )
 
-                                    Button(
-                                        onClick = { loadInformation() },
-                                        modifier = Modifier
-                                            .align(Alignment.CenterHorizontally)
-                                            .padding(bottom = 5.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.enable),
-                                            style = MaterialTheme.typography.button
-                                        )
-                                    }
+                PermissionsRequired(
+                    multiplePermissionsState = storagePermissions,
+                    permissionsNotGrantedContent = { NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() } },
+                    permissionsNotAvailableContent = {
+                        NeedsPermissions {
+                            startActivity(
+                                Intent().apply {
+                                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    data = Uri.fromParts("package", requireActivity().packageName, null)
                                 }
-                            }
+                            )
                         }
+                    }
+                ) { DownloadViewer() }
+
+            }
+        }
+    }
+
+    @Composable
+    fun NeedsPermissions(onClick: () -> Unit) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(5.dp),
+                elevation = 5.dp,
+                shape = RoundedCornerShape(5.dp)
+            ) {
+                Column(modifier = Modifier) {
+                    Text(
+                        text = stringResource(R.string.please_enable_permissions),
+                        style = MaterialTheme.typography.h4,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    Button(
+                        onClick = onClick,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 5.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.enable),
+                            style = MaterialTheme.typography.button
+                        )
                     }
                 }
             }
@@ -124,121 +147,118 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
 
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
-    private fun downloadView() {
-        binding.composeDownloadView.setContent {
+    @Composable
+    fun DownloadViewer() {
+        val context = LocalContext.current
 
-            val context = LocalContext.current
-
-            MdcTheme {
-                val files by PathObservables
-                    .watchNonRecursive(Path((pathname ?: defaultPathname).path))
-                    .concatMapSingle {
-                        Single.create<List<File>> {
-                            (pathname ?: defaultPathname)
-                                .listFiles()
-                                .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
-                                .orEmpty()
-                                .toList()
-                                .let(it::onSuccess)
-                        }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
+        MdcTheme {
+            val files by PathObservables
+                .watchNonRecursive(Path((pathname ?: defaultPathname).path))
+                .concatMapSingle {
+                    Single.create<List<File>> {
+                        (pathname ?: defaultPathname)
+                            .listFiles()
+                            .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
+                            .orEmpty()
+                            .toList()
+                            .let(it::onSuccess)
                     }
-                    .startWith(
-                        Single.create<List<File>> {
-                            (pathname ?: defaultPathname)
-                                .listFiles()
-                                .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
-                                .orEmpty()
-                                .toList()
-                                .let(it::onSuccess)
-                        }
-                            .toObservable()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                    )
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeAsState(emptyList())
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(Schedulers.io())
+                }
+                .startWith(
+                    Single.create<List<File>> {
+                        (pathname ?: defaultPathname)
+                            .listFiles()
+                            .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
+                            .orEmpty()
+                            .toList()
+                            .let(it::onSuccess)
+                    }
+                        .toObservable()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(Schedulers.io())
+                )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeAsState(emptyList())
 
-                val state = rememberBottomSheetScaffoldState()
-                val scope = rememberCoroutineScope()
+            val state = rememberBottomSheetScaffoldState()
+            val scope = rememberCoroutineScope()
 
-                BottomSheetDeleteScaffold(
-                    listOfItems = files,
-                    state = state,
-                    multipleTitle = stringResource(id = R.string.delete),
-                    onRemove = { file ->
-                        Single.create<Boolean> {
-                            it.onSuccess(
-                                DocumentFileCompat.fromFullPath(context, file.path, DocumentFileType.FOLDER)
-                                    ?.deleteRecursively(context, false) ?: false
-                            )
-                        }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
-                            .addTo(disposable)
-                    },
-                    onMultipleRemove = { list ->
-                        Completable.create {
-                            list.forEach { f ->
-                                DocumentFileCompat.fromFullPath(context, f.path, DocumentFileType.FOLDER)
-                                    ?.deleteRecursively(context, false)
-                            }
-                            it.onComplete()
-                        }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeBy {
-                                Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show()
-                                list.clear()
-                            }
-                            .addTo(disposable)
-                    },
-                    topBar = {
-                        TopAppBar(
-                            title = { Text(stringResource(R.string.downloaded_chapters)) },
-                            navigationIcon = if (pathname != defaultPathname && pathname?.parentFile != null) {
-                                { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.ArrowBack, null) } }
-                            } else null,
-                            actions = {
-                                IconButton(
-                                    onClick = {
-                                        parentFragmentManager.fragments
-                                            .filterIsInstance<DownloadViewerFragment>()
-                                            .forEach(DownloadViewerFragment::dismiss)
-                                    }
-                                ) { Icon(Icons.Default.Close, null) }
-
-                                IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
-                            }
+            BottomSheetDeleteScaffold(
+                listOfItems = files,
+                state = state,
+                multipleTitle = stringResource(id = R.string.delete),
+                onRemove = { file ->
+                    Single.create<Boolean> {
+                        it.onSuccess(
+                            DocumentFileCompat.fromFullPath(context, file.path, DocumentFileType.FOLDER)
+                                ?.deleteRecursively(context, false) ?: false
                         )
-                    },
-                    itemUi = { file ->
-                        ListItem(modifier = Modifier.padding(5.dp)) {
-                            Text(
-                                file.name,
-                                style = MaterialTheme.typography.h5,
-                                modifier = Modifier.padding(5.dp)
-                            )
-                        }
                     }
-                ) {
-                    Scaffold(modifier = Modifier.padding(it)) { p ->
-                        val f by updateAnimatedItemsState(newList = files)
-
-                        if (files.isEmpty()) EmptyState()
-                        else LazyColumn(contentPadding = p) {
-                            animatedItems(
-                                f,
-                                enterTransition = slideInHorizontally(),
-                                exitTransition = slideOutHorizontally()
-                            ) { file -> ChapterItem(file) }
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
+                        .addTo(disposable)
+                },
+                onMultipleRemove = { list ->
+                    Completable.create {
+                        list.forEach { f ->
+                            DocumentFileCompat.fromFullPath(context, f.path, DocumentFileType.FOLDER)
+                                ?.deleteRecursively(context, false)
                         }
+                        it.onComplete()
+                    }
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeBy {
+                            Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show()
+                            list.clear()
+                        }
+                        .addTo(disposable)
+                },
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.downloaded_chapters)) },
+                        navigationIcon = if (pathname != defaultPathname && pathname?.parentFile != null) {
+                            { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.ArrowBack, null) } }
+                        } else null,
+                        actions = {
+                            IconButton(
+                                onClick = {
+                                    parentFragmentManager.fragments
+                                        .filterIsInstance<DownloadViewerFragment>()
+                                        .forEach(DownloadViewerFragment::dismiss)
+                                }
+                            ) { Icon(Icons.Default.Close, null) }
+
+                            IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                        }
+                    )
+                },
+                itemUi = { file ->
+                    ListItem(modifier = Modifier.padding(5.dp)) {
+                        Text(
+                            file.name,
+                            style = MaterialTheme.typography.h5,
+                            modifier = Modifier.padding(5.dp)
+                        )
                     }
                 }
+            ) {
+                Scaffold(modifier = Modifier.padding(it)) { p ->
+                    val f by updateAnimatedItemsState(newList = files)
 
+                    if (files.isEmpty()) EmptyState()
+                    else LazyColumn(contentPadding = p) {
+                        animatedItems(
+                            f,
+                            enterTransition = slideInHorizontally(),
+                            exitTransition = slideOutHorizontally()
+                        ) { file -> ChapterItem(file) }
+                    }
+                }
             }
 
         }
