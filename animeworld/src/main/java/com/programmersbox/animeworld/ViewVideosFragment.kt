@@ -85,7 +85,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     private fun getStuff() {
-
         binding.composeLayout.setContent {
             MdcTheme {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -147,8 +146,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                                 File(it.path!!).delete()
                             }
                         } catch (e: Exception) {
-                            Toast.makeText(requireContext(), "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(requireContext(), "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT).show()
                         }
                     }
                     downloadedItems.clear()
