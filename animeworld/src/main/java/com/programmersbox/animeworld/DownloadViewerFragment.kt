@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -48,6 +49,7 @@ import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
 import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.Extras
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import kotlin.random.Random
 
@@ -177,7 +179,12 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     @ExperimentalMaterialApi
     @Composable
     private fun ScaffoldUi() {
+
+        val state = rememberBottomSheetScaffoldState()
+        val scope = rememberCoroutineScope()
+
         BottomSheetDeleteScaffold(
+            state = state,
             listOfItems = downloadSubject,
             multipleTitle = stringResource(id = R.string.delete),
             onRemove = { download -> context?.deleteDialog(download.download) },
@@ -190,6 +197,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                 TopAppBar(
                     actions = {
                         IconButton(onClick = { dismiss() }) { Icon(Icons.Default.Close, null) }
+                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
                     title = {
                         Text(

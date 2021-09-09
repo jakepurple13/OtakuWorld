@@ -33,6 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastMap
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.os.bundleOf
@@ -116,9 +118,16 @@ class DetailsFragment : Fragment() {
         binding.composeHeader.setContent { MdcTheme { PlaceHolderHeader() } }
 
         args.itemInfo
-            ?.also {
-                binding.collapsingBar.title = it.title
-                binding.toolbar.title = it.title
+            ?.also { item ->
+                binding.collapsingBar.title = item.title
+                binding.toolbar.title = item.title
+                binding.shareButton.setOnClickListener {
+                    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, item.url)
+                        putExtra(Intent.EXTRA_TITLE, item.title)
+                    }, "Share ${item.title}"))
+                }
             }
             ?.toInfoModel()
             ?.subscribeOn(Schedulers.io())
@@ -257,8 +266,8 @@ class DetailsFragment : Fragment() {
                             MaterialAlertDialogBuilder(requireContext())
                                 .setTitle(R.string.markAs)
                                 .setMultiChoiceItems(
-                                    adapter.dataList.map(ChapterModel::name).toTypedArray(),
-                                    BooleanArray(adapter.itemCount) { i -> checked.any { it1 -> it1.url == adapter[i].url } }
+                                    adapter.dataList.fastMap(ChapterModel::name).toTypedArray(),
+                                    BooleanArray(adapter.itemCount) { i -> checked.fastAny { it1 -> it1.url == adapter[i].url } }
                                 ) { _, i, _ ->
                                     (binding.infoChapterList.findViewHolderForAdapterPosition(i) as? ChapterAdapter.ChapterHolder)
                                         ?.binding?.readChapter?.performClick()
@@ -425,7 +434,6 @@ class DetailsFragment : Fragment() {
                             .padding(vertical = 5.dp)
                             .fillMaxWidth()
                     ) {
-
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
@@ -536,14 +544,6 @@ class DetailsFragment : Fragment() {
             //.distinct { it }
             .subscribe { adapter.update(it) { c, m -> c.url == m.url } }
             .addTo(disposable)
-
-        binding.shareButton.setOnClickListener {
-            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, infoModel.url)
-                putExtra(Intent.EXTRA_TITLE, infoModel.title)
-            }, "Share ${infoModel.title}"))
-        }
     }
 
     override fun onDestroy() {

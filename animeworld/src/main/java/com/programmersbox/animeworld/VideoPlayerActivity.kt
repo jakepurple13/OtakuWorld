@@ -12,10 +12,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.View
-import android.view.Window
+import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -91,7 +88,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             window!!.addFlags(16)
             window!!.setLayout(-2, -2)
             val params = window!!.attributes
-            params.gravity = 49
+            params.gravity = Gravity.CENTER or Gravity.TOP
             params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
             params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
             window!!.attributes = params
@@ -107,7 +104,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             window!!.addFlags(16)
             window!!.setLayout(-2, -2)
             val params = window!!.attributes
-            params.gravity = 49
+            params.gravity = Gravity.CENTER or Gravity.TOP
             params.y = resources.getDimensionPixelOffset(R.dimen.mx_volume_dialog_margin_top)
             params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
             window!!.attributes = params
@@ -124,7 +121,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             window!!.setLayout(-2, -2)
 
             val params = window!!.attributes
-            params.gravity = 49
+            params.gravity = Gravity.CENTER or Gravity.TOP
             params.y = resources.getDimensionPixelOffset(R.dimen.mx_progress_dialog_margin_top)
             params.width = resources.getDimensionPixelOffset(R.dimen.mx_mobile_dialog_width)
             window!!.attributes = params
@@ -140,6 +137,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val playerView: PlayerView by lazy { videoBinding.playerView }
 
     private val retriever = MediaMetadataRetriever()
+    private var showPath: String? = null
 
     private lateinit var videoBinding: ActivityVideoPlayerBinding
     private lateinit var exoBinding: ExoControlsBinding
@@ -170,7 +168,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             finish()
         }*/
 
-        val showPath = intent.getStringExtra("showPath")
+        showPath = intent.getStringExtra("showPath")
         val showName = intent.getStringExtra("showName")
         val downloadOrStream = intent.getBooleanExtra("downloadOrStream", true)
 
@@ -324,8 +322,10 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        val position = currentPos
-        getSharedPreferences("videos", Context.MODE_PRIVATE).edit().putLong(intent.getStringExtra("showPath"), position).apply()
+        playerView.player?.currentPosition?.also {
+            currentPos = it
+            showPath?.let { path -> getSharedPreferences("videos", Context.MODE_PRIVATE).edit().putLong(path, it).apply() }
+        }
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume, 0)
         disposable.dispose()
         unregisterReceiver(batteryInfo)

@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.preference.Preference
@@ -96,7 +97,7 @@ class GenericManga(val context: Context) : GenericInfo {
                         .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
                 }
             }
-            .subscribeBy { it.forEach(context.downloadManager::enqueue) }
+            .subscribeBy { it.fastForEach(context.downloadManager::enqueue) }
             .addTo(disposable)
     }
 

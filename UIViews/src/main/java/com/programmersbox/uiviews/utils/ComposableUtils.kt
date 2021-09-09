@@ -1,11 +1,11 @@
 package com.programmersbox.uiviews.utils
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -38,16 +38,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionsRequired
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.uiviews.R
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
@@ -483,6 +490,7 @@ fun PlaceHolderCoverCard(placeHolder: Int) {
 @Composable
 fun <T> BottomSheetDeleteScaffold(
     listOfItems: List<T>,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
@@ -491,7 +499,6 @@ fun <T> BottomSheetDeleteScaffold(
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues) -> Unit
 ) {
-    val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -503,6 +510,13 @@ fun <T> BottomSheetDeleteScaffold(
         sheetContent = {
 
             val itemsToDelete = remember { mutableStateListOf<T>() }
+
+            LaunchedEffect(state) {
+                snapshotFlow { state.bottomSheetState.isCollapsed }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { itemsToDelete.clear() }
+            }
 
             var showPopup by remember { mutableStateOf(false) }
 
@@ -535,7 +549,6 @@ fun <T> BottomSheetDeleteScaffold(
                             scope.launch {
                                 if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
                                 else state.bottomSheetState.collapse()
-                                itemsToDelete.clear()
                             }
                         },
                         modifier = Modifier
@@ -551,13 +564,10 @@ fun <T> BottomSheetDeleteScaffold(
                 },
                 bottomBar = {
                     BottomAppBar(
-                        contentPadding = PaddingValues(0.dp)//Modifier.padding(0.dp)
+                        contentPadding = PaddingValues(0.dp)
                     ) {
                         Button(
-                            onClick = {
-                                scope.launch { state.bottomSheetState.collapse() }
-                                itemsToDelete.clear()
-                            },
+                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 5.dp)
@@ -678,8 +688,12 @@ private fun <T> DeleteItemView(
             modifier = Modifier.fillMaxSize(),
             interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
+            border = BorderStroke(
+                animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
+                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
+            ),
             onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
-            backgroundColor = animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colors.surface).value
+            //backgroundColor = animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colors.surface).value
         ) { itemUi(item) }
     }
 
@@ -794,7 +808,7 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
             modifier = Modifier.autoComplete(autoCompleteState),
             properties = PopupProperties(focusable = false)
         ) {
-            items.forEach { item ->
+            items.fastForEach { item ->
                 DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) {
                     itemContent(item)
                 }
@@ -817,4 +831,123 @@ private fun Modifier.autoComplete(
             border = autoCompleteItemScope.boxBorderStroke,
             shape = autoCompleteItemScope.boxShape
         )
+}
+
+private class SwipeToDismissBackground @ExperimentalMaterialApi constructor(
+    val background: @Composable (DismissState) -> Unit
+)
+
+@ExperimentalMaterialApi
+private val DEFAULT_SWIPE_TO_DISMISS_BACKGROUND
+    get() = SwipeToDismissBackground { dismissState ->
+        val direction = dismissState.dismissDirection ?: return@SwipeToDismissBackground
+        val color by animateColorAsState(
+            when (dismissState.targetValue) {
+                DismissValue.Default -> Color.Transparent
+                DismissValue.DismissedToEnd -> Color.Red
+                DismissValue.DismissedToStart -> Color.Red
+            }
+        )
+        val alignment = when (direction) {
+            DismissDirection.StartToEnd -> Alignment.CenterStart
+            DismissDirection.EndToStart -> Alignment.CenterEnd
+        }
+        val icon = when (direction) {
+            DismissDirection.StartToEnd -> Icons.Default.Delete
+            DismissDirection.EndToStart -> Icons.Default.Delete
+        }
+        val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(color)
+                .padding(horizontal = 20.dp),
+            contentAlignment = alignment
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.scale(scale)
+            )
+        }
+    }
+
+@ExperimentalMaterialApi
+@Composable
+fun CustomSwipeToDelete(
+    modifier: Modifier = Modifier,
+    dismissState: DismissState,
+    dismissThresholds: (DismissDirection) -> ThresholdConfig = { FractionalThreshold(0.5f) },
+    dismissDirections: Set<DismissDirection> = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
+    backgroundInfo: @Composable (DismissState) -> Unit = DEFAULT_SWIPE_TO_DISMISS_BACKGROUND.background,
+    content: @Composable () -> Unit
+) {
+    SwipeToDismiss(
+        modifier = modifier,
+        state = dismissState,
+        directions = dismissDirections,
+        dismissThresholds = dismissThresholds,
+        background = { backgroundInfo(dismissState) }
+    ) { content() }
+}
+
+@ExperimentalPermissionsApi
+@Composable
+fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> Unit) {
+    val storagePermissions = rememberMultiplePermissionsState(permissionsList)
+    val context = LocalContext.current
+    PermissionsRequired(
+        multiplePermissionsState = storagePermissions,
+        permissionsNotGrantedContent = { NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() } },
+        permissionsNotAvailableContent = {
+            NeedsPermissions {
+                context.startActivity(
+                    Intent().apply {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                )
+            }
+        },
+        content = content
+    )
+}
+
+@Composable
+fun NeedsPermissions(onClick: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            elevation = 5.dp,
+            shape = RoundedCornerShape(5.dp)
+        ) {
+            Column(modifier = Modifier) {
+                Text(
+                    text = stringResource(R.string.please_enable_permissions),
+                    style = MaterialTheme.typography.h5,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+
+                Text(
+                    text = stringResource(R.string.need_permissions_to_work),
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+
+                Button(
+                    onClick = onClick,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 5.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.enable),
+                        style = MaterialTheme.typography.button
+                    )
+                }
+            }
+        }
+    }
 }

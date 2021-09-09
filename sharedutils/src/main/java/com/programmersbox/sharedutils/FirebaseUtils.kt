@@ -2,6 +2,7 @@ package com.programmersbox.sharedutils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import androidx.compose.ui.util.fastMap
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -145,7 +146,7 @@ object FirebaseDb {
         ?.get()
         ?.await()
         ?.toObjects<FirebaseDbModel>()
-        ?.map { it.toDbModel() }
+        ?.fastMap { it.toDbModel() }
         .orEmpty()
 
     fun insertShow(showDbModel: DbModel) = Completable.create { emitter ->
@@ -204,7 +205,7 @@ object FirebaseDb {
             listener?.remove()
             listener = showDoc2?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
-                    ?.map { it.toDbModel() }
+                    ?.fastMap { it.toDbModel() }
                     ?.let(emitter::onNext)
                 error?.let(emitter::onError)
             }
@@ -213,11 +214,11 @@ object FirebaseDb {
         }.toLatestFlowable()
 
         @ExperimentalCoroutinesApi
-        fun getAllShowsFlow() = callbackFlow<List<DbModel>> {
+        fun getAllShowsFlow() = callbackFlow {
             listener?.remove()
             listener = showDoc2?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
-                    ?.map { it.toDbModel() }
+                    ?.fastMap { it.toDbModel() }
                     ?.let { trySend(it) }
                 error?.let(this::close)
             }
@@ -231,7 +232,7 @@ object FirebaseDb {
             listener = showDoc2?.whereEqualTo(ITEM_ID, url)?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
                     .also { println(it) }
-                    ?.map { it.toDbModel() }
+                    ?.fastMap { it.toDbModel() }
                     ?.let { emitter.onNext(it.isNotEmpty()) }
                 error?.let(emitter::onError)
             }
@@ -240,12 +241,12 @@ object FirebaseDb {
         }.toLatestFlowable()
 
         @ExperimentalCoroutinesApi
-        fun findItemByUrlFlow(url: String?) = callbackFlow<Boolean> {
+        fun findItemByUrlFlow(url: String?) = callbackFlow {
             listener?.remove()
             listener = showDoc2?.whereEqualTo(ITEM_ID, url)?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
                     .also { println(it) }
-                    ?.map { it.toDbModel() }
+                    ?.fastMap { it.toDbModel() }
                     ?.let { trySend(it.isNotEmpty()) }
                 error?.let(this::close)
             }
@@ -260,7 +261,7 @@ object FirebaseDb {
                 ?.document(showUrl.urlToPath())
                 ?.addSnapshotListener { value, error ->
                     value?.toObject(Watched::class.java)?.watched
-                        ?.map { it.toChapterWatchedModel() }
+                        ?.fastMap { it.toChapterWatchedModel() }
                         ?.let(emitter::onNext)
                     error?.let(emitter::onError)
                 }

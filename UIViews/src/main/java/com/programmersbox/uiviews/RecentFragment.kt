@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -49,7 +50,7 @@ class RecentFragment : BaseListFragment() {
         Flowables.combineLatest(
             itemListener.getAllShowsFlowable(),
             dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { adapter.update(it) { s, d -> s.url == d.url } }

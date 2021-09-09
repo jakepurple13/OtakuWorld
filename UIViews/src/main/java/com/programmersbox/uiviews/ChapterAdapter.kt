@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.snackbar.Snackbar
@@ -81,7 +82,7 @@ class ChapterAdapter(
                 binding.readChapter.isChecked = true
             }
             binding.readChapter.setOnCheckedChangeListener(null)
-            binding.readChapter.isChecked = currentList.any { it.url == chapterModel.url }
+            binding.readChapter.isChecked = currentList.fastAny { it.url == chapterModel.url }
             binding.readChapter.setOnCheckedChangeListener { _, b ->
                 itemUrl?.let { ChapterWatched(url = chapterModel.url, name = chapterModel.name, favoriteUrl = it) }
                     ?.let {

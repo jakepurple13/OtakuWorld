@@ -118,7 +118,10 @@
 
     <string name="removeNotification">Remove Notification</string>
     <string name="remove">Remove</string>
+    <string name="remove_same_name">Remove all with same name</string>
     <string name="areYouSureRemoveNoti">Are you sure you want to remove these Notifications?</string>
+
+    <string name="current_notification_count">Current Notifications: %d</string>
 
     <string name="removeNoti">Remove %s?</string>
     <string name="notify">Notify</string>
@@ -133,5 +136,12 @@
     <string name="search">Search</string>
     <string name="global_search_by_name">Global Search by Name</string>
     <string name="are_you_sure_delete_notifications">Are you sure you want to delete all notifications?</string>
+    <string name="clear_update_queue">Clear Update Queue</string>
+    <string name="clear_update_queue_summary">Clear queue if the update checker seems to not run consistently.</string>
+    <string name="cleared">Cleared</string>
+    <string name="mark_read">Mark Read</string>
+    <string name="please_enable_permissions">Please Enable Permissions</string>
+    <string name="need_permissions_to_work">These permissions are needed in order for this functionality to work</string>
+    <string name="enable">Enable</string>
 
 </resources>

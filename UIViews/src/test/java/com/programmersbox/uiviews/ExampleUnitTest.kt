@@ -7,10 +7,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
 import com.programmersbox.uiviews.utils.CustomChip
 import io.reactivex.Single
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
+import kotlin.system.measureNanoTime
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -19,7 +22,23 @@ import org.junit.Test
  */
 class ExampleUnitTest {
     @Test
-    fun addition_isCorrect() {
+    fun addition_isCorrect() = runBlocking {
+
+        val list = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9)
+
+        val timeNormal = measureNanoTime {
+            val f = list.map { "#$it" }
+            println(f)
+        }
+
+        println(timeNormal)
+
+        val timeFast = measureNanoTime {
+            val f = list.fastMap { "#$it" }
+            println(f)
+        }
+
+        println(timeFast)
 
     }
 }

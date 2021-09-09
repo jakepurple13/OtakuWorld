@@ -32,6 +32,12 @@
             app:title="@string/check_for_periodic_updates" />
 
         <Preference
+            app:dependency="sync"
+            app:key="reset_checker"
+            app:title="@string/clear_update_queue"
+            app:summary="@string/clear_update_queue_summary" />
+
+        <Preference
             app:icon="@drawable/ic_baseline_library_books_24"
             app:key="used_libraries"
             app:title="@string/view_libraries_used" />

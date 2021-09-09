@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMaxBy
 import androidx.core.view.children
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -84,7 +86,7 @@ class FavoriteFragment : BaseFragment() {
             dao.getAllFavorites()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
+        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
             .replay(1)
             .refCount(1, TimeUnit.SECONDS)
 
@@ -102,7 +104,7 @@ class FavoriteFragment : BaseFragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .map { pair ->
                 pair.first.sortedBy(DbModel::title)
-                    .filter { it.source in pair.second.map(ApiService::serviceName) && it.title.contains(pair.third, true) }
+                    .filter { it.source in pair.second.fastMap(ApiService::serviceName) && it.title.contains(pair.third, true) }
             }
             .map { it.size to it.toGroup() }
             .distinctUntilChanged()
@@ -251,7 +253,7 @@ class FavoriteFragment : BaseFragment() {
                 } else {
                     MaterialAlertDialogBuilder(itemView.context)
                         .setTitle(R.string.chooseASource)
-                        .setItems(info.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
+                        .setItems(info.fastMap { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
                             val item = info[i].let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                             binding.root.findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
                             d.dismiss()
@@ -281,7 +283,7 @@ class FavoriteFragment : BaseFragment() {
             } else {
                 MaterialAlertDialogBuilder(context)
                     .setTitle(R.string.chooseASource)
-                    .setItems(info.value.map { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
+                    .setItems(info.value.fastMap { "${it.source} - ${it.title}" }.toTypedArray()) { d, i ->
                         val item = info.value[i].let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                         navController.navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
                         d.dismiss()

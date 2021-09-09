@@ -2,6 +2,7 @@ package com.programmersbox.uiviews
 
 import android.os.Bundle
 import android.view.View
+import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
@@ -59,7 +60,7 @@ class AllFragment : BaseListFragment() {
         Flowables.combineLatest(
             itemListener.getAllShowsFlowable(),
             dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { adapter.update(it) { s, d -> s.url == d.url } }
