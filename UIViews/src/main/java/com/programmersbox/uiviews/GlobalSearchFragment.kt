@@ -227,7 +227,7 @@ class GlobalSearchFragment : Fragment() {
                                                 SearchCoverCard(
                                                     model = m,
                                                     placeHolder = AppCompatResources.getDrawable(LocalContext.current, mainLogo.logoId)
-                                                ) { findNavController().navigate(GlobalSearchFragmentDirections.showDetails(m)) }
+                                                ) {} //findNavController().navigate(GlobalSearchFragmentDirections.showDetails(m)) }
                                             }
                                         }
                                     }
