@@ -124,7 +124,7 @@ class DetailsFragment : Fragment() {
         return binding.root
     }
 
-    private val COMPOSE_ONLY = true
+    private val COMPOSE_ONLY = false
 
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi

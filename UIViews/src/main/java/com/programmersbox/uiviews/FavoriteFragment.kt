@@ -74,7 +74,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
 
-class FavoriteFragment : Fragment() {
+class FavoriteFragment : BaseFragment() {
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val disposable = CompositeDisposable()
@@ -90,21 +90,21 @@ class FavoriteFragment : Fragment() {
 
     private val fireListener = FirebaseDb.FirebaseListener()
 
-    //override val layoutId: Int get() = R.layout.fragment_favorite
+    override val layoutId: Int get() = R.layout.fragment_favorite
 
-    private val COMPOSE_ONLY = true
+    private val COMPOSE_ONLY = false
 
     private lateinit var binding: FragmentFavoriteBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    /*override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_favorite, container, false)
-    }
+    }*/
 
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @SuppressLint("SetTextI18n")
-    //override fun viewCreated(view: View, savedInstanceState: Bundle?) {
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun viewCreated(view: View, savedInstanceState: Bundle?) {
+    //override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentFavoriteBinding.bind(view)
@@ -127,11 +127,7 @@ class FavoriteFragment : Fragment() {
             .refCount(1, TimeUnit.SECONDS)
 
         if (COMPOSE_ONLY) {
-            binding.composeVersion.setContent {
-                MdcTheme {
-                    MainUi(favoriteItems = dbFire, allSources = genericInfo.sourceList())
-                }
-            }
+            binding.composeVersion.setContent { MdcTheme { MainUi(favoriteItems = dbFire, allSources = genericInfo.sourceList()) } }
         }
 
         if (!COMPOSE_ONLY) {
