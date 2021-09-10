@@ -20,6 +20,11 @@
         android:layout_height="match_parent"
         tools:context=".DetailsFragment">
 
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/fullComposeTest"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/app_bar"
             android:layout_width="match_parent"
@@ -65,6 +70,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:id="@+id/chapter_layout"
             android:layout_below="@+id/app_bar"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 

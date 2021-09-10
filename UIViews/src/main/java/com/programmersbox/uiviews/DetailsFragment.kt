@@ -11,22 +11,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -35,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.os.bundleOf
@@ -47,14 +53,17 @@ import androidx.navigation.ui.NavigationUI
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.dragswipe.get
+import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.helpfulutils.changeDrawableColor
 import com.programmersbox.helpfulutils.colorFromTheme
+import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.whatIfNotNull
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -76,7 +85,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import me.onebone.toolbar.CollapsingToolbarScaffold
+import me.onebone.toolbar.ScrollStrategy
+import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import me.zhanghai.android.fastscroll.FastScrollerBuilder
+import my.nanihadesuka.compose.LazyColumnScrollbar
 import org.koin.android.ext.android.inject
 
 class DetailsFragment : Fragment() {
@@ -95,6 +108,8 @@ class DetailsFragment : Fragment() {
 
     private val adapter by lazy { ChapterAdapter(requireContext(), inject<GenericInfo>().value, dao, disposable) }
 
+    private val genericInfo by inject<GenericInfo>()
+
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
 
@@ -109,6 +124,9 @@ class DetailsFragment : Fragment() {
         return binding.root
     }
 
+    private val COMPOSE_ONLY = false
+
+    @ExperimentalAnimationApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -133,121 +151,108 @@ class DetailsFragment : Fragment() {
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeBy { info ->
+                if (COMPOSE_ONLY) {
+                    binding.appBar.gone()
+                    binding.chapterLayout.gone()
+                    binding.shareButton.gone()
+                }
                 adapter.title = info.title
                 adapter.itemUrl = info.url
                 binding.info = info
                 binding.executePendingBindings()
                 adapter.addItems(info.chapters)
-                onInfoGet(info)
+                if (!COMPOSE_ONLY) {
+                    onInfoGet(info)
 
-                Glide.with(this)
-                    .load(info.imageUrl)
-                    .override(360, 480)
-                    .placeholder(logo.logoId)
-                    .error(logo.logoId)
-                    .fallback(logo.logoId)
-                    .transform(RoundedCorners(15))
-                    .into<Drawable> {
-                        resourceReady { image, _ ->
-                            binding.swatch = image.getPalette().vibrantSwatch
-                                ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
-                                .also { swatch ->
+                    Glide.with(this)
+                        .load(info.imageUrl)
+                        .override(360, 480)
+                        .placeholder(logo.logoId)
+                        .error(logo.logoId)
+                        .fallback(logo.logoId)
+                        .transform(RoundedCorners(15))
+                        .into<Drawable> {
+                            resourceReady { image, _ ->
+                                binding.swatch = image.getPalette().vibrantSwatch
+                                    ?.let { SwatchInfo(it.rgb, it.titleTextColor, it.bodyTextColor) }
+                                    .also { swatch ->
 
-                                    adapter.swatchInfo = swatch
+                                        adapter.swatchInfo = swatch
 
-                                    swatch?.rgb?.let {
-                                        binding.toolbar.setBackgroundColor(it)
-                                        binding.shareButton.backgroundTintList = ColorStateList.valueOf(it)
-                                        binding.collapsingBar.setContentScrimColor(it)
-                                        requireActivity().window.statusBarColor = it
+                                        swatch?.rgb?.let {
+                                            binding.toolbar.setBackgroundColor(it)
+                                            binding.shareButton.backgroundTintList = ColorStateList.valueOf(it)
+                                            binding.collapsingBar.setContentScrimColor(it)
+                                            requireActivity().window.statusBarColor = it
+                                        }
+
+                                        swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
+
+                                        FastScrollerBuilder(binding.infoChapterList)
+                                            .useMd2Style()
+                                            .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
+                                                swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
+                                                setThumbDrawable(drawable)
+                                            }
+                                            .build()
                                     }
 
-                                    swatch?.titleColor?.let { binding.shareButton.setColorFilter(it) }
+                                binding.executePendingBindings()
+                            }
+                        }
 
-                                    FastScrollerBuilder(binding.infoChapterList)
-                                        .useMd2Style()
-                                        .whatIfNotNull(ContextCompat.getDrawable(requireContext(), R.drawable.afs_md2_thumb)) { drawable ->
-                                            swatch?.bodyColor?.let { drawable.changeDrawableColor(it) }
-                                            setThumbDrawable(drawable)
-                                        }
-                                        .build()
+                    binding.composeHeader.setContent {
+
+                        val favoriteListener by combine(
+                            itemListener.findItemByUrlFlow(info.url),
+                            dao.containsItemFlow(info.url)
+                        ) { f, d -> f || d }
+                            .flowOn(Dispatchers.IO)
+                            .flowWithLifecycle(lifecycle)
+                            .collectAsState(initial = false)
+
+                        val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
+
+                        MdcTheme {
+                            DetailsHeader(
+                                model = info,
+                                logo = painterResource(id = logo2.notificationId),
+                                swatchInfo = swatchInfo,
+                                isFavorite = favoriteListener
+                            ) { b ->
+                                fun addItem(model: InfoModel) {
+                                    val db = model.toDbModel(model.chapters.size)
+                                    Completable.concatArray(
+                                        FirebaseDb.insertShow(db),
+                                        dao.insertFavorite(db).subscribeOn(Schedulers.io())
+                                    )
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe()
+                                        .addTo(disposable)
                                 }
 
-                            binding.executePendingBindings()
-                        }
-                    }
+                                fun removeItem(model: InfoModel) {
+                                    val db = model.toDbModel(model.chapters.size)
+                                    Completable.concatArray(
+                                        FirebaseDb.removeShow(db),
+                                        dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
+                                    )
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe()
+                                        .addTo(disposable)
+                                }
 
-                binding.composeHeader.setContent {
-
-                    val favoriteListener by combine(
-                        itemListener.findItemByUrlFlow(info.url),
-                        dao.containsItemFlow(info.url)
-                    ) { f, d -> f || d }
-                        .flowOn(Dispatchers.IO)
-                        .flowWithLifecycle(lifecycle)
-                        .collectAsState(initial = false)
-
-                    MdcTheme {
-                        DetailsHeader(
-                            model = info,
-                            logo = painterResource(id = logo2.notificationId),
-                            isFavorite = favoriteListener
-                        ) { b ->
-                            fun addItem(model: InfoModel) {
-                                val db = model.toDbModel(model.chapters.size)
-                                Completable.concatArray(
-                                    FirebaseDb.insertShow(db),
-                                    dao.insertFavorite(db).subscribeOn(Schedulers.io())
-                                )
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe()
-                                    .addTo(disposable)
+                                (if (b) ::removeItem else ::addItem)(info)
                             }
-
-                            fun removeItem(model: InfoModel) {
-                                val db = model.toDbModel(model.chapters.size)
-                                Completable.concatArray(
-                                    FirebaseDb.removeShow(db),
-                                    dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
-                                )
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe()
-                                    .addTo(disposable)
-                            }
-
-                            (if (b) ::removeItem else ::addItem)(info)
                         }
                     }
                 }
 
-                /*binding.composeChapterList.setContent {
-
-                    var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
-
-                    LazyColumn {
-                        items(info.chapters) {
-                            ComposeChapterItem(
-                                model = it,
-                                watchedList = Flowables.combineLatest(
-                                    chapterListener.getAllEpisodesByShow(info.url),
-                                    dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
-                                ) { f, d -> (f + d).distinctBy { it.url } }
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribeAsState(initial = emptyList()),
-                                dao = dao,
-                                disposable = CompositeDisposable(),
-                                itemUrl = info.url,
-                                info = genericInfo,
-                                chapterList = info.chapters,
-                                title = info.title,
-                                swatchInfo = swatchInfo
-                            )
-                        }
-                    }
-                }*/
+                if (COMPOSE_ONLY) {
+                    composeView(info)
+                }
 
                 binding.infoUrl.setOnClickListener {
                     requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
@@ -312,6 +317,379 @@ class DetailsFragment : Fragment() {
 
     }
 
+    @ExperimentalAnimationApi
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    private fun composeView(info: InfoModel) {
+        val chaptersRead = Flowables.combineLatest(
+            chapterListener.getAllEpisodesByShow(info.url),
+            dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
+        ) { f, d -> (f + d).distinctBy { it.url } }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
+        binding.fullComposeTest.setContent {
+            val favoriteListener by combine(
+                itemListener.findItemByUrlFlow(info.url),
+                dao.containsItemFlow(info.url)
+            ) { f, d -> f || d }
+                .flowOn(Dispatchers.IO)
+                .flowWithLifecycle(lifecycle)
+                .collectAsState(initial = false)
+
+            val chapters by chaptersRead.subscribeAsState(initial = emptyList())
+
+            val isSaved by dao.doesNotificationExist(info.url)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeAsState(false)
+
+            MdcTheme {
+
+                val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
+
+                val systemUiController = rememberSystemUiController()
+
+                swatchInfo.value?.rgb?.toComposeColor()?.let { s ->
+                    systemUiController.setStatusBarColor(
+                        color = s,
+                        darkIcons = s.luminance() > .5f
+                    )
+                }
+
+                val scope = rememberCoroutineScope()
+                val scaffoldState = rememberScaffoldState()
+
+                fun showSnackBar(text: Int, duration: SnackbarDuration = SnackbarDuration.Short) {
+                    scope.launch {
+                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                        scaffoldState.snackbarHostState.showSnackbar(getString(text), null, duration)
+                    }
+                }
+
+                Scaffold(
+                    scaffoldState = scaffoldState,
+                    topBar = {
+                        val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()
+                            ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+
+                        TopAppBar(
+                            modifier = Modifier.zIndex(2f),
+                            title = { Text(info.title, color = topBarColor) },
+                            navigationIcon = {
+                                IconButton(onClick = { findNavController().popBackStack() }) {
+                                    Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                                }
+                            },
+                            actions = {
+                                var showDropDown by remember { mutableStateOf(false) }
+
+                                val dropDownDismiss = { showDropDown = false }
+
+                                DropdownMenu(
+                                    expanded = showDropDown,
+                                    onDismissRequest = dropDownDismiss,
+                                ) {
+
+                                    //TODO: Don't forget to add the mark as dialog
+
+                                    /*DropdownMenuItem(
+                                        onClick = {
+                                            dropDownDismiss()
+
+                                        }
+                                    ) { Text(stringResource(id = R.string.markAs)) }*/
+
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            dropDownDismiss()
+                                            requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                        }
+                                    ) { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) }
+
+                                    if (!isSaved) {
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                dropDownDismiss()
+                                                lifecycleScope.launch(Dispatchers.IO) {
+                                                    dao.insertNotification(
+                                                        NotificationItem(
+                                                            id = info.hashCode(),
+                                                            url = info.url,
+                                                            summaryText = requireContext()
+                                                                .getString(
+                                                                    R.string.hadAnUpdate,
+                                                                    info.title,
+                                                                    info.chapters.firstOrNull()?.name ?: ""
+                                                                ),
+                                                            notiTitle = info.title,
+                                                            imageUrl = info.imageUrl,
+                                                            source = info.source.serviceName,
+                                                            contentTitle = info.title
+                                                        )
+                                                    ).subscribe()
+                                                }
+                                            }
+                                        ) { Text(stringResource(id = R.string.save_for_later)) }
+                                    }
+
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            dropDownDismiss()
+                                            findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
+                                        }
+                                    ) { Text(stringResource(id = R.string.global_search_by_name)) }
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, info.url)
+                                            putExtra(Intent.EXTRA_TITLE, info.title)
+                                        }, "Share ${info.title}"))
+                                    }
+                                ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+                                IconButton(onClick = { showDropDown = true }) {
+                                    Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+                                }
+                            },
+                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor() ?: MaterialTheme.colors.primarySurface,
+                        )
+                    },
+                    snackbarHost = {
+                        SnackbarHost(it) { data ->
+                            val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
+                            val font = swatchInfo.value?.titleColor?.toComposeColor() ?: MaterialTheme.colors.surface
+                            Snackbar(
+                                elevation = 15.dp,
+                                backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colors.onSurface.toArgb(), .25f)),
+                                contentColor = font,
+                                snackbarData = data
+                            )
+                        }
+                    }
+                ) { p ->
+
+                    val header: @Composable () -> Unit = {
+                        DetailsHeader(
+                            model = info,
+                            logo = painterResource(id = logo2.notificationId),
+                            isFavorite = favoriteListener,
+                            swatchInfo = swatchInfo
+                        ) { b ->
+                            fun addItem(model: InfoModel) {
+                                val db = model.toDbModel(model.chapters.size)
+                                Completable.concatArray(
+                                    FirebaseDb.insertShow(db),
+                                    dao.insertFavorite(db).subscribeOn(Schedulers.io())
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe()
+                                    .addTo(disposable)
+                            }
+
+                            fun removeItem(model: InfoModel) {
+                                val db = model.toDbModel(model.chapters.size)
+                                Completable.concatArray(
+                                    FirebaseDb.removeShow(db),
+                                    dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe()
+                                    .addTo(disposable)
+                            }
+
+                            (if (b) ::removeItem else ::addItem)(info)
+                        }
+                    }
+
+                    val state = rememberCollapsingToolbarScaffoldState()
+
+                    CollapsingToolbarScaffold(
+                        modifier = Modifier.padding(p),
+                        state = state,
+                        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                        toolbar = { header() }
+                    ) {
+                        val listState = rememberLazyListState()
+
+                        LazyColumnScrollbar(
+                            thickness = 8.dp,
+                            padding = 2.dp,
+                            listState = listState,
+                            thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
+                            thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary)
+                                .copy(alpha = .6f),
+                        ) {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(5.dp),
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .padding(vertical = 5.dp),
+                                state = listState
+                            ) {
+                                items(info.chapters) { c ->
+                                    ChapterItem(
+                                        infoModel = info,
+                                        c = c,
+                                        read = chapters,
+                                        chapters = info.chapters,
+                                        swatchInfo = swatchInfo,
+                                        snackbar = ::showSnackBar
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @Composable
+    private fun ChapterItem(
+        infoModel: InfoModel,
+        c: ChapterModel,
+        read: List<ChapterWatched>,
+        chapters: List<ChapterModel>,
+        swatchInfo: MutableState<SwatchInfo?>,
+        snackbar: (Int) -> Unit
+    ) {
+        val context = LocalContext.current
+
+        Card(
+            onClick = {
+                genericInfo.chapterOnClick(c, chapters, context)
+                ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                    .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { snackbar(R.string.addedChapterItem) }
+                    .addTo(disposable)
+            },
+            shape = RoundedCornerShape(0.dp),
+            modifier = Modifier
+                .padding(vertical = 5.dp)
+                .fillMaxWidth(),
+            backgroundColor = swatchInfo.value?.rgb?.toComposeColor() ?: MaterialTheme.colors.surface
+        ) {
+
+            Column(modifier = Modifier.padding(16.dp)) {
+
+                Row {
+                    Checkbox(
+                        checked = read.fastAny { it.url == c.url },
+                        onCheckedChange = { b ->
+                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                                .let {
+                                    Completable.mergeArray(
+                                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                    )
+                                }
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
+                                .addTo(disposable)
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.secondary,
+                            uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor() ?: MaterialTheme.colors.surface
+                        )
+                    )
+
+                    Text(
+                        c.name,
+                        style = MaterialTheme.typography.body1
+                            .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it)) } ?: b },
+                        modifier = Modifier.padding(start = 5.dp)
+                    )
+
+                }
+
+                Text(
+                    c.uploaded,
+                    style = MaterialTheme.typography.subtitle2
+                        .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it)) } ?: b },
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(5.dp)
+                )
+
+                Row {
+
+                    OutlinedButton(
+                        onClick = {
+                            genericInfo.chapterOnClick(c, chapters, context)
+                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                                .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe { snackbar(R.string.addedChapterItem) }
+                                .addTo(disposable)
+                        },
+                        modifier = Modifier
+                            .weight(1f, true)
+                            .padding(horizontal = 5.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
+                        border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor() ?: Color.White)
+                    ) {
+                        Column {
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                "Play",
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                tint = swatchInfo.value?.bodyColor?.toComposeColor()
+                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                            )
+                            Text(
+                                stringResource(R.string.read),
+                                style = MaterialTheme.typography.button
+                                    .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it)) } ?: b },
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = { genericInfo.downloadChapter(c, infoModel.title) },
+                        modifier = Modifier
+                            .weight(1f, true)
+                            .padding(horizontal = 5.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
+                        border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor() ?: Color.White)
+                    ) {
+                        Column {
+                            Icon(
+                                Icons.Default.Download,
+                                "Download",
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                tint = swatchInfo.value?.bodyColor?.toComposeColor()
+                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                            )
+                            Text(
+                                stringResource(R.string.download_chapter),
+                                style = MaterialTheme.typography.button
+                                    .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it)) } ?: b },
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
@@ -319,10 +697,11 @@ class DetailsFragment : Fragment() {
         model: InfoModel,
         logo: Any?,
         isFavorite: Boolean,
+        swatchInfo: MutableState<SwatchInfo?>,
         favoriteClick: (Boolean) -> Unit
     ) {
 
-        var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
+        //var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
 
         var imagePopup by remember { mutableStateOf(false) }
 
@@ -370,7 +749,7 @@ class DetailsFragment : Fragment() {
                             .setAlphaComponent(
                                 ColorUtils.blendARGB(
                                     MaterialTheme.colors.primarySurface.toArgb(),
-                                    swatchInfo?.rgb ?: Color.Transparent.toArgb(),
+                                    swatchInfo.value?.rgb ?: Color.Transparent.toArgb(),
                                     0.25f
                                 ),
                                 200//127
@@ -397,7 +776,7 @@ class DetailsFragment : Fragment() {
                         error = logo,
                         placeHolder = logo,
                         bitmapPalette = BitmapPalette { p ->
-                            swatchInfo = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
+                            swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
                         },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
@@ -420,8 +799,8 @@ class DetailsFragment : Fragment() {
                         items(model.genres) {
                             CustomChip(
                                 category = it,
-                                textColor = swatchInfo?.rgb?.toComposeColor(),
-                                backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f),
+                                textColor = swatchInfo.value?.rgb?.toComposeColor(),
+                                backgroundColor = swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f),
                                 modifier = Modifier.fadeInAnimation()
                             )
                         }
@@ -437,7 +816,7 @@ class DetailsFragment : Fragment() {
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
-                            tint = swatchInfo?.rgb?.toComposeColor() ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
+                            tint = swatchInfo.value?.rgb?.toComposeColor() ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Text(
