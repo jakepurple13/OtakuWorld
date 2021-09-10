@@ -10,6 +10,8 @@ object WuxiaWorld : ApiService {
 
     override val baseUrl: String get() = "https://wuxiaworld.online"
 
+    override val serviceName: String get() = "WUXIAWORLD"
+
     override val canScroll: Boolean get() = true
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
         if (searchText.isBlank()) throw Exception("No search necessary")
