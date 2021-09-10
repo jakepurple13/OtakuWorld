@@ -526,7 +526,7 @@ class DetailsFragment : Fragment() {
                                 .copy(alpha = .6f),
                         ) {
                             LazyColumn(
-                                verticalArrangement = Arrangement.SpaceBetween,
+                                verticalArrangement = Arrangement.spacedBy(5.dp),
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .padding(vertical = 5.dp),

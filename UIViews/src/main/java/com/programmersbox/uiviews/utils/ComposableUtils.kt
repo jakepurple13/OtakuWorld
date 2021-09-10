@@ -19,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -951,3 +953,11 @@ fun NeedsPermissions(onClick: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun <T : Any> rememberMutableStateListOf(vararg elements: T): SnapshotStateList<T> = rememberSaveable(
+    saver = listSaver(
+        save = { it.toList() },
+        restore = { it.toMutableStateList() }
+    )
+) { elements.toList().toMutableStateList() }

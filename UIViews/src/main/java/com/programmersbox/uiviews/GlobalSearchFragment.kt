@@ -66,6 +66,9 @@ import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import me.onebone.toolbar.CollapsingToolbarScaffold
+import me.onebone.toolbar.ScrollStrategy
+import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
@@ -119,8 +122,11 @@ class GlobalSearchFragment : Fragment() {
                         }
                     }
 
-                    Scaffold(
-                        topBar = {
+                    CollapsingToolbarScaffold(
+                        modifier = Modifier,
+                        state = rememberCollapsingToolbarScaffoldState(),
+                        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                        toolbar = {
                             Column(modifier = Modifier.padding(5.dp)) {
                                 AutoCompleteBox(
                                     items = history.asAutoCompleteEntities { _, _ -> true },
@@ -196,49 +202,52 @@ class GlobalSearchFragment : Fragment() {
                                     }
                                 )
                             }
-                        },
-                        floatingActionButton = {
-                            FloatingActionButton(
-                                onClick = { scope.launch { listState.animateScrollToItem(0) } }
-                            ) { Icon(Icons.Default.VerticalAlignTop, null) }
-                        },
-                        floatingActionButtonPosition = FabPosition.End
+                        }
                     ) {
-                        if (networkState) {
-                            SwipeRefresh(
-                                state = swipeRefreshState,
-                                onRefresh = {},
-                                swipeEnabled = false,
-                                modifier = Modifier.padding(it)
-                            ) {
-                                LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH), state = listState) {
-                                    if (swipeRefreshState.isRefreshing) {
-                                        items(9) { PlaceHolderCoverCard(placeHolder = logo.notificationId) }
-                                    } else if (list.isNotEmpty()) {
-                                        items(list) { m ->
-                                            SearchCoverCard(
-                                                model = m,
-                                                placeHolder = AppCompatResources.getDrawable(LocalContext.current, mainLogo.logoId)
-                                            ) { findNavController().navigate(GlobalSearchFragmentDirections.showDetails(m)) }
+                        Scaffold(
+                            floatingActionButton = {
+                                FloatingActionButton(
+                                    onClick = { scope.launch { listState.animateScrollToItem(0) } }
+                                ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                            },
+                            floatingActionButtonPosition = FabPosition.End
+                        ) {
+                            if (networkState) {
+                                SwipeRefresh(
+                                    state = swipeRefreshState,
+                                    onRefresh = {},
+                                    swipeEnabled = false,
+                                    modifier = Modifier.padding(it)
+                                ) {
+                                    LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH), state = listState) {
+                                        if (swipeRefreshState.isRefreshing) {
+                                            items(9) { PlaceHolderCoverCard(placeHolder = logo.notificationId) }
+                                        } else if (list.isNotEmpty()) {
+                                            items(list) { m ->
+                                                SearchCoverCard(
+                                                    model = m,
+                                                    placeHolder = AppCompatResources.getDrawable(LocalContext.current, mainLogo.logoId)
+                                                ) { findNavController().navigate(GlobalSearchFragmentDirections.showDetails(m)) }
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        } else {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(it),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Image(
-                                    Icons.Default.CloudOff,
-                                    null,
-                                    modifier = Modifier.size(50.dp, 50.dp),
-                                    colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
-                                )
-                                Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                            } else {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(it),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Image(
+                                        Icons.Default.CloudOff,
+                                        null,
+                                        modifier = Modifier.size(50.dp, 50.dp),
+                                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                                    )
+                                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                                }
                             }
                         }
                     }
