@@ -124,7 +124,7 @@ class DetailsFragment : Fragment() {
         return binding.root
     }
 
-    private val COMPOSE_ONLY = false
+    private val COMPOSE_ONLY = true
 
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -357,9 +357,19 @@ class DetailsFragment : Fragment() {
                     )
                 }
 
-                Scaffold(
-                    topBar = {
+                val scope = rememberCoroutineScope()
+                val scaffoldState = rememberScaffoldState()
 
+                fun showSnackBar(text: Int, duration: SnackbarDuration = SnackbarDuration.Short) {
+                    scope.launch {
+                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                        scaffoldState.snackbarHostState.showSnackbar(getString(text), null, duration)
+                    }
+                }
+
+                Scaffold(
+                    scaffoldState = scaffoldState,
+                    topBar = {
                         val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()
                             ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
 
@@ -380,6 +390,16 @@ class DetailsFragment : Fragment() {
                                     expanded = showDropDown,
                                     onDismissRequest = dropDownDismiss,
                                 ) {
+
+                                    //TODO: Don't forget to add the mark as dialog
+
+                                    /*DropdownMenuItem(
+                                        onClick = {
+                                            dropDownDismiss()
+
+                                        }
+                                    ) { Text(stringResource(id = R.string.markAs)) }*/
+
                                     DropdownMenuItem(
                                         onClick = {
                                             dropDownDismiss()
@@ -437,54 +457,69 @@ class DetailsFragment : Fragment() {
                             },
                             backgroundColor = swatchInfo.value?.rgb?.toComposeColor() ?: MaterialTheme.colors.primarySurface,
                         )
+                    },
+                    snackbarHost = {
+                        SnackbarHost(it) { data ->
+                            val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
+                            val font = swatchInfo.value?.titleColor?.toComposeColor() ?: MaterialTheme.colors.surface
+                            Snackbar(
+                                elevation = 15.dp,
+                                backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colors.onSurface.toArgb(), .25f)),
+                                contentColor = font,
+                                snackbarData = data
+                            )
+                        }
                     }
                 ) { p ->
+
+                    val header: @Composable () -> Unit = {
+                        DetailsHeader(
+                            model = info,
+                            logo = painterResource(id = logo2.notificationId),
+                            isFavorite = favoriteListener,
+                            swatchInfo = swatchInfo
+                        ) { b ->
+                            fun addItem(model: InfoModel) {
+                                val db = model.toDbModel(model.chapters.size)
+                                Completable.concatArray(
+                                    FirebaseDb.insertShow(db),
+                                    dao.insertFavorite(db).subscribeOn(Schedulers.io())
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe()
+                                    .addTo(disposable)
+                            }
+
+                            fun removeItem(model: InfoModel) {
+                                val db = model.toDbModel(model.chapters.size)
+                                Completable.concatArray(
+                                    FirebaseDb.removeShow(db),
+                                    dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe()
+                                    .addTo(disposable)
+                            }
+
+                            (if (b) ::removeItem else ::addItem)(info)
+                        }
+                    }
+
                     val state = rememberCollapsingToolbarScaffoldState()
 
                     CollapsingToolbarScaffold(
                         modifier = Modifier.padding(p),
                         state = state,
                         scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-                        toolbar = {
-                            DetailsHeader(
-                                model = info,
-                                logo = painterResource(id = logo2.notificationId),
-                                isFavorite = favoriteListener,
-                                swatchInfo = swatchInfo
-                            ) { b ->
-                                fun addItem(model: InfoModel) {
-                                    val db = model.toDbModel(model.chapters.size)
-                                    Completable.concatArray(
-                                        FirebaseDb.insertShow(db),
-                                        dao.insertFavorite(db).subscribeOn(Schedulers.io())
-                                    )
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe()
-                                        .addTo(disposable)
-                                }
-
-                                fun removeItem(model: InfoModel) {
-                                    val db = model.toDbModel(model.chapters.size)
-                                    Completable.concatArray(
-                                        FirebaseDb.removeShow(db),
-                                        dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
-                                    )
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe()
-                                        .addTo(disposable)
-                                }
-
-                                (if (b) ::removeItem else ::addItem)(info)
-                            }
-                        }
+                        toolbar = { header() }
                     ) {
-
                         val listState = rememberLazyListState()
 
                         LazyColumnScrollbar(
                             thickness = 8.dp,
+                            padding = 2.dp,
                             listState = listState,
                             thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
                             thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary)
@@ -492,7 +527,9 @@ class DetailsFragment : Fragment() {
                         ) {
                             LazyColumn(
                                 verticalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.padding(vertical = 5.dp),
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .padding(vertical = 5.dp),
                                 state = listState
                             ) {
                                 items(info.chapters) { c ->
@@ -501,7 +538,8 @@ class DetailsFragment : Fragment() {
                                         c = c,
                                         read = chapters,
                                         chapters = info.chapters,
-                                        swatchInfo = swatchInfo
+                                        swatchInfo = swatchInfo,
+                                        snackbar = ::showSnackBar
                                     )
                                 }
                             }
@@ -519,19 +557,20 @@ class DetailsFragment : Fragment() {
         c: ChapterModel,
         read: List<ChapterWatched>,
         chapters: List<ChapterModel>,
-        swatchInfo: MutableState<SwatchInfo?>
+        swatchInfo: MutableState<SwatchInfo?>,
+        snackbar: (Int) -> Unit
     ) {
         val context = LocalContext.current
 
         Card(
             onClick = {
-                /*genericInfo.chapterOnClick(c, chapters, context)
+                genericInfo.chapterOnClick(c, chapters, context)
                 ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                     .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe {}
-                    .addTo(disposable)*/
+                    .subscribe { snackbar(R.string.addedChapterItem) }
+                    .addTo(disposable)
             },
             shape = RoundedCornerShape(0.dp),
             modifier = Modifier
@@ -555,13 +594,7 @@ class DetailsFragment : Fragment() {
                                 }
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe {
-                                    com.google.android.material.snackbar.Snackbar.make(
-                                        binding.fullComposeTest,
-                                        if (b) R.string.addedChapterItem else R.string.removedChapterItem,
-                                        com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
-                                    ).show()
-                                }
+                                .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
                                 .addTo(disposable)
                         },
                         colors = CheckboxDefaults.colors(
@@ -598,7 +631,7 @@ class DetailsFragment : Fragment() {
                                 .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe {}
+                                .subscribe { snackbar(R.string.addedChapterItem) }
                                 .addTo(disposable)
                         },
                         modifier = Modifier
