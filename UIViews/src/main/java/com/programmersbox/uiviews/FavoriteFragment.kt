@@ -74,7 +74,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
 
-class FavoriteFragment : BaseFragment() {
+class FavoriteFragment : Fragment() {
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val disposable = CompositeDisposable()
@@ -90,21 +90,21 @@ class FavoriteFragment : BaseFragment() {
 
     private val fireListener = FirebaseDb.FirebaseListener()
 
-    override val layoutId: Int get() = R.layout.fragment_favorite
+    //override val layoutId: Int get() = R.layout.fragment_favorite
 
-    private val COMPOSE_ONLY = false
+    private val COMPOSE_ONLY = true
 
     private lateinit var binding: FragmentFavoriteBinding
 
-    /*override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_favorite, container, false)
-    }*/
+    }
 
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @SuppressLint("SetTextI18n")
-    override fun viewCreated(view: View, savedInstanceState: Bundle?) {
-    //override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    //override fun viewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentFavoriteBinding.bind(view)
@@ -512,7 +512,7 @@ class FavoriteFragment : BaseFragment() {
                             CoverCard(
                                 imageUrl = info.value.random().imageUrl,
                                 name = info.key,
-                                placeHolder = logo2.notificationId
+                                placeHolder = logo.logoId
                             ) {
                                 if (info.value.size == 1) {
                                     val item = info.value.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
