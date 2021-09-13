@@ -251,20 +251,6 @@ class GlobalSearchFragment : Fragment() {
                             }
                         }
                     }
-
-                    /*LaunchedEffect(key1 = searchText) {
-                        snapshotFlow { searchText }
-                            .debounce(1000)
-                            .distinctUntilChanged()
-                            .collect { s ->
-                                println("Searching for $s")
-                                searchForItems(
-                                    searchText = searchText,
-                                    onSubscribe = { swipeRefreshState.isRefreshing = true },
-                                    subscribe = { swipeRefreshState.isRefreshing = false }
-                                )
-                            }
-                    }*/
                 }
             }
         }

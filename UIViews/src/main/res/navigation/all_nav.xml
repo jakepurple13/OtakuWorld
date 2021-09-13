@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/all_nav"
     app:startDestination="@id/allFragment2">
 
     <fragment
         android:id="@+id/allFragment2"
         android:name="com.programmersbox.uiviews.AllFragment"
-        android:label="fragment_all"
-        tools:layout="@layout/fragment_all">
+        android:label="fragment_all">
         <action
             android:id="@+id/action_allFragment2_to_detailsFragment3"
             app:destination="@id/detailsFragment3"

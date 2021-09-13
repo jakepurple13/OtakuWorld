@@ -2,7 +2,6 @@ package com.programmersbox.uiviews
 
 import android.content.Context
 import android.view.View
-import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.dragswipe.CheckAdapter
 import com.programmersbox.dragswipe.CheckAdapterInterface
@@ -20,8 +19,8 @@ abstract class ItemListAdapter<VH : RecyclerView.ViewHolder>(
     }
 
     protected fun onClick(v: View, itemModel: ItemModel) {
-        val direction = if (baseListFragment is RecentFragment) RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(itemModel)
-        else AllFragmentDirections.actionAllFragment2ToDetailsFragment3(itemModel)
-        v.findNavController().navigate(direction)
+//        val direction = if (baseListFragment is RecentFragment) RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(itemModel)
+//        else AllFragmentDirections.actionAllFragment2ToDetailsFragment3(itemModel)
+//        v.findNavController().navigate(direction)
     }
 }

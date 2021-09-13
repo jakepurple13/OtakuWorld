@@ -5,20 +5,22 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteDialogFactory
@@ -39,12 +41,14 @@ import com.programmersbox.anime_sources.anime.WcoStream
 import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.ytsdatabase.Torrent
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
@@ -329,7 +333,6 @@ class GenericAnime(val context: Context) : GenericInfo {
                         .fillMaxWidth()
                         .padding(5.dp)
                 ) {
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -349,6 +352,42 @@ class GenericAnime(val context: Context) : GenericInfo {
                                 .padding(5.dp)
                         )
                     }
+                }
+            }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @ExperimentalFoundationApi
+    @Composable
+    override fun ItemListView(
+        list: List<ItemModel>,
+        favorites: List<DbModel>,
+        listState: LazyListState,
+        onClick: (ItemModel) -> Unit
+    ) {
+        LazyColumn(state = listState) {
+            items(list) {
+                Card(
+                    onClick = { onClick(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    elevation = 5.dp
+                ) {
+                    ListItem(
+                        icon = {
+                            Icon(
+                                if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                            )
+                        },
+                        text = { Text(it.title) },
+                        overlineText = { Text(it.source.serviceName) },
+                        secondaryText = if (it.description.isNotEmpty()) {
+                            { Text(it.description) }
+                        } else null
+                    )
                 }
             }
         }

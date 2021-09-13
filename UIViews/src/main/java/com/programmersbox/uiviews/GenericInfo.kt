@@ -1,10 +1,13 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.recyclerview.widget.RecyclerView
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 
 interface GenericInfo {
@@ -22,5 +25,13 @@ interface GenericInfo {
 
     @Composable
     fun ComposeShimmerItem()
+
+    @Composable
+    fun ItemListView(
+        list: List<ItemModel>,
+        favorites: List<DbModel>,
+        listState: LazyListState,
+        onClick: (ItemModel) -> Unit
+    )
 
 }

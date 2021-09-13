@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/recent_nav"
     app:startDestination="@id/recentFragment2">
 
@@ -10,8 +9,7 @@
     <fragment
         android:id="@+id/recentFragment2"
         android:name="com.programmersbox.uiviews.RecentFragment"
-        android:label="fragment_recent"
-        tools:layout="@layout/fragment_recent">
+        android:label="fragment_recent">
         <action
             android:id="@+id/action_recentFragment2_to_detailsFragment2"
             app:destination="@id/detailsFragment2"
