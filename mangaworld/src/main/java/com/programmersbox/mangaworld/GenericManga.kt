@@ -16,8 +16,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -27,9 +25,7 @@ import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
@@ -51,12 +47,6 @@ class GenericManga(val context: Context) : GenericInfo {
     private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { manga_file }
-
-    override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
-        (MangaGalleryAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)
-
-    override fun createLayoutManager(context: Context): RecyclerView.LayoutManager =
-        AutoFitGridLayoutManager(context, 360).apply { orientation = GridLayoutManager.VERTICAL }
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
         context.startActivity(

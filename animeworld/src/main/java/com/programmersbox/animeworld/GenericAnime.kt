@@ -26,8 +26,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -52,9 +50,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.tonyodev.fetch2.*
@@ -78,11 +74,6 @@ class GenericAnime(val context: Context) : GenericInfo {
     private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
-
-    override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
-        (AnimeAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)
-
-    override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
         if ((chapterModel.source as? ShowApi)?.canStream == false) {

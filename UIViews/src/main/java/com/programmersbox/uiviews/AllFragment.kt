@@ -118,8 +118,6 @@ class AllFragment : BaseFragmentCompose() {
             .addTo(disposable)
     }
 
-    //TODO: After converting this to compose, don't forget to go remove the item list adapters that aren't needed anymore
-
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
