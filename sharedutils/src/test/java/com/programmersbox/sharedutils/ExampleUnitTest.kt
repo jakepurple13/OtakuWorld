@@ -16,6 +16,44 @@ import java.io.File
  */
 class ExampleUnitTest {
 
+    private fun getFreqMap(chars: String): Map<Char, Int> {
+        val freq: MutableMap<Char, Int> = HashMap()
+        for (c in chars) {
+            freq.putIfAbsent(c, 0)
+            freq[c] = freq[c]!! + 1
+        }
+        return freq
+    }
+
+    @Test
+    fun letterCountTest() = runBlocking {
+        val root = File(File("..").absolutePath.removeSuffix("/sharedutils/.."))
+        val f = shellRun(root) { git.gitCommand(listOf("ls-files")) }
+            .split("\n")
+            .filter { it.endsWith(".kt") }
+            .fastMap { it to File("$root/$it") }
+            .fastMap { it.second.readText() }
+            .joinToString("")
+            .let { getFreqMap(it) }
+            .toList()
+            .sortedByDescending { it.second }
+
+        val tableList = table {
+            cellStyle {
+                border = true
+                paddingLeft = 1
+                paddingRight = 1
+            }
+
+            header { row("Count", "Path") }
+            f.fastForEach { row(it.first, it.second) }
+            footer { row("Total: ${f.sumOf { it.second }}") }
+        }
+
+        println(tableList)
+
+    }
+
     @Test
     fun lineCountTest() = runBlocking {
         val root = File(File("..").absolutePath.removeSuffix("/sharedutils/.."))
@@ -26,7 +64,7 @@ class ExampleUnitTest {
         val f = q
             .fastMap { it to File("$root/$it") }
             .fastMap { it.second.absolutePath to it.second.readLines().size }
-            .sortedBy { it.second }
+            .sortedByDescending { it.second }
 
         val tableList = table {
             cellStyle {

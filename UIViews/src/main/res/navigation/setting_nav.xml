@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/setting_nav"
     app:startDestination="@id/settingsFragment">
 
@@ -58,8 +57,7 @@
     <fragment
         android:id="@+id/favoriteFragment"
         android:name="com.programmersbox.uiviews.FavoriteFragment"
-        android:label="fragment_favorite"
-        tools:layout="@layout/fragment_favorite">
+        android:label="fragment_favorite">
         <action
             android:id="@+id/action_favoriteFragment_to_detailsFragment"
             app:destination="@id/detailsFragment"
@@ -71,8 +69,7 @@
     <fragment
         android:id="@+id/detailsFragment"
         android:name="com.programmersbox.uiviews.DetailsFragment"
-        android:label="DetailsFragment"
-        tools:layout="@layout/details_fragment">
+        android:label="DetailsFragment">
         <argument
             android:name="itemInfo"
             android:defaultValue="@null"
