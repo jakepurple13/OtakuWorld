@@ -71,8 +71,7 @@
     <fragment
         android:id="@+id/detailsFragment"
         android:name="com.programmersbox.uiviews.DetailsFragment"
-        android:label="DetailsFragment"
-        tools:layout="@layout/details_fragment">
+        android:label="DetailsFragment">
         <argument
             android:name="itemInfo"
             android:defaultValue="@null"

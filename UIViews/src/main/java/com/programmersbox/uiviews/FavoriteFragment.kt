@@ -416,7 +416,6 @@ class FavoriteFragment : Fragment() {
             Scaffold { p ->
 
                 if (showing.isEmpty()) {
-
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -461,9 +460,7 @@ class FavoriteFragment : Fragment() {
 
                         }
                     }
-
                 } else {
-
                     LazyVerticalGrid(
                         cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                         contentPadding = p,
@@ -503,9 +500,7 @@ class FavoriteFragment : Fragment() {
                                         }
                                     },
                                     title = { Text(stringResource(R.string.chooseASource)) },
-                                    confirmButton = {
-                                        TextButton(onClick = { chooseSource = false }) { Text(stringResource(R.string.ok)) }
-                                    }
+                                    confirmButton = { TextButton(onClick = { chooseSource = false }) { Text(stringResource(R.string.ok)) } }
                                 )
                             }
 
@@ -528,6 +523,5 @@ class FavoriteFragment : Fragment() {
         }
 
     }
-
 
 }
