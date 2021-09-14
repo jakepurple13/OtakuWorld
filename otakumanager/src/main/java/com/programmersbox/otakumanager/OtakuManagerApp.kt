@@ -1,17 +1,17 @@
 package com.programmersbox.otakumanager
 
 import android.content.Context
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.recyclerview.widget.RecyclerView
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.shouldCheck
@@ -43,14 +43,6 @@ val appModule = module {
         object : GenericInfo {
             override val apkString: AppUpdate.AppUpdates.() -> String? get() = { otakumanager_file }
 
-            override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> {
-                throw Exception("This should not be seen")
-            }
-
-            override fun createLayoutManager(context: Context): RecyclerView.LayoutManager {
-                throw Exception("This should not be seen")
-            }
-
             override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
                 throw Exception("This should not be seen")
             }
@@ -75,6 +67,15 @@ val appModule = module {
             @Composable
             override fun ComposeShimmerItem() {
 
+            }
+
+            @Composable
+            override fun ItemListView(
+                list: List<ItemModel>,
+                favorites: List<DbModel>,
+                listState: LazyListState,
+                onClick: (ItemModel) -> Unit
+            ) {
             }
 
         }

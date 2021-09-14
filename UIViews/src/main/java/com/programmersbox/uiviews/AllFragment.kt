@@ -1,61 +1,101 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.runtime.*
+import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.RecyclerView
+import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshState
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.jakewharton.rxbinding2.widget.textChanges
-import com.programmersbox.dragswipe.DragSwipeAdapter
-import com.programmersbox.dragswipe.DragSwipeDiffUtil
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.helpfulutils.gone
-import com.programmersbox.helpfulutils.runOnUIThread
-import com.programmersbox.helpfulutils.visible
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.databinding.FragmentAllBinding
-import com.programmersbox.uiviews.utils.EndlessScrollingListener
+import com.programmersbox.uiviews.utils.InfiniteListHandler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.delay
+import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
+import org.koin.android.ext.android.inject
 
 /**
  * A simple [Fragment] subclass.
  * Use the [AllFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class AllFragment : BaseListFragment() {
+class AllFragment : BaseFragmentCompose() {
 
     private val disposable: CompositeDisposable = CompositeDisposable()
     private var count = 1
 
-    override val layoutId: Int get() = R.layout.fragment_all
+    private val info: GenericInfo by inject()
 
-    private val currentList = mutableListOf<ItemModel>()
+    private val searchPublisher = BehaviorSubject.createDefault<List<ItemModel>>(emptyList())
+
+    private val sourceList = mutableStateListOf<ItemModel>()
+    private val favoriteList = mutableStateListOf<DbModel>()
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
 
-    private lateinit var binding: FragmentAllBinding
+    @ExperimentalAnimationApi
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
+        .apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+            setContent { AllView() }
+        }
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
-        super.viewCreated(view, savedInstanceState)
-
-        binding = FragmentAllBinding.bind(view)
+        sourcePublish
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                count = 1
+                sourceList.clear()
+                searchPublisher.onNext(emptyList())
+                sourceLoadCompose(it)
+            }
+            .addTo(disposable)
 
         Flowables.combineLatest(
             itemListener.getAllShowsFlowable(),
@@ -63,97 +103,176 @@ class AllFragment : BaseListFragment() {
         ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { adapter.update(it) { s, d -> s.url == d.url } }
+            .subscribe {
+                favoriteList.clear()
+                favoriteList.addAll(it)
+            }
             .addTo(disposable)
+    }
 
-        binding.allList.apply {
-            adapter = this@AllFragment.adapter
-            layoutManager = info.createLayoutManager(this@AllFragment.requireContext())
-            addOnScrollListener(object : EndlessScrollingListener(layoutManager!!) {
-                override fun onLoadMore(page: Int, totalItemsCount: Int, view: RecyclerView?) {
-                    if (sourcePublish.value!!.canScroll && binding.searchInfo.text.isNullOrEmpty()) {
-                        count++
-                        binding.allRefresh.isRefreshing = true
-                        sourceLoad(sourcePublish.value!!, count)
+    private fun sourceLoadCompose(sources: ApiService, page: Int = 1, refreshState: SwipeRefreshState? = null) {
+        sources
+            .getList(page)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { refreshState?.isRefreshing = true }
+            .subscribeBy {
+                sourceList.addAll(it)
+                refreshState?.isRefreshing = false
+            }
+            .addTo(disposable)
+    }
+
+    @ExperimentalAnimationApi
+    @ExperimentalMaterialApi
+    @ExperimentalFoundationApi
+    @Composable
+    private fun AllView() {
+        MdcTheme {
+            val isConnected by ReactiveNetwork.observeInternetConnectivity()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeAsState(initial = true)
+
+            when {
+                !isConnected -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            Icons.Default.CloudOff,
+                            null,
+                            modifier = Modifier.size(50.dp, 50.dp),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                        )
+                        Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
                     }
                 }
-            })
-        }
+                else -> {
+                    val state = rememberLazyListState()
+                    val refresh = rememberSwipeRefreshState(isRefreshing = false)
+                    val source by sourcePublish.subscribeAsState(initial = null)
+                    val focusManager = LocalFocusManager.current
+                    val scaffoldState = rememberBottomSheetScaffoldState()
+                    val scope = rememberCoroutineScope()
+                    val searchList by searchPublisher.subscribeAsState(initial = emptyList())
+                    var searchText by rememberSaveable { mutableStateOf("") }
+                    val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
-        binding.composeShimmer.setContent { MdcTheme { info.ComposeShimmerItem() } }
+                    BottomSheetScaffold(
+                        scaffoldState = scaffoldState,
+                        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+                        sheetContent = {
+                            Scaffold(
+                                topBar = {
+                                    Column {
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                                    else scaffoldState.bottomSheetState.collapse()
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                                            shape = RoundedCornerShape(0f)
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.search),
+                                                style = MaterialTheme.typography.button
+                                            )
+                                        }
 
-        ReactiveNetwork.observeInternetConnectivity()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                binding.offlineView.visibility = if (it) View.GONE else View.VISIBLE
-                binding.allRefresh.visibility = if (it) View.VISIBLE else View.GONE
-            }
-            .addTo(disposable)
+                                        OutlinedTextField(
+                                            value = searchText,
+                                            onValueChange = { searchText = it },
+                                            label = { Text(stringResource(R.string.searchFor, source?.serviceName.orEmpty())) },
+                                            trailingIcon = {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(searchList.size.toString())
+                                                    IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) }
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .fillMaxWidth(),
+                                            singleLine = true,
+                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                            keyboardActions = KeyboardActions(onSearch = {
+                                                focusManager.clearFocus()
+                                                sourcePublish.value!!.searchList(searchText, 1, sourceList)
+                                                    .subscribeOn(Schedulers.io())
+                                                    .observeOn(AndroidSchedulers.mainThread())
+                                                    .onErrorReturnItem(sourceList)
+                                                    .subscribe(searchPublisher::onNext)
+                                                    .addTo(disposable)
+                                            })
+                                        )
+                                    }
+                                }
+                            ) { p ->
+                                Box(modifier = Modifier.padding(p)) {
+                                    info.ItemListView(list = searchList, listState = rememberLazyListState(), favorites = favoriteList) {
+                                        findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                                    }
+                                }
+                            }
+                        },
+                        floatingActionButton = {
+                            AnimatedVisibility(
+                                visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
+                                enter = slideInVertically({ it / 2 })
+                            ) {
+                                FloatingActionButton(
+                                    onClick = { scope.launch { state.animateScrollToItem(0) } },
+                                    backgroundColor = MaterialTheme.colors.primary
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowUp,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(5.dp),
+                                    )
+                                }
+                            }
+                        },
+                        floatingActionButtonPosition = FabPosition.End
+                    ) { p ->
+                        SwipeRefresh(
+                            modifier = Modifier.padding(p),
+                            state = refresh,
+                            onRefresh = {
+                                source?.let {
+                                    count = 1
+                                    sourceList.clear()
+                                    sourceLoadCompose(it, count, refresh)
+                                }
+                            }
+                        ) {
+                            if (sourceList.isEmpty()) {
+                                info.ComposeShimmerItem()
+                            } else {
+                                info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
+                                    findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                                }
+                            }
+                        }
 
-        sourcePublish
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                binding.composeShimmer.visible()
-                count = 1
-                adapter.setListNotify(emptyList())
-                sourceLoad(it)
-                binding.allList.scrollToPosition(0)
-            }
-            .addTo(disposable)
+                        if (source?.canScroll == true) {
+                            InfiniteListHandler(listState = state, buffer = 1) {
+                                source?.let {
+                                    count++
+                                    sourceLoadCompose(it, count, refresh)
+                                }
+                            }
+                        }
 
-        binding.scrollToTop.setOnClickListener {
-            lifecycleScope.launch {
-                activity?.runOnUiThread { binding.allList.smoothScrollToPosition(0) }
-                delay(500)
-                activity?.runOnUiThread { binding.allList.scrollToPosition(0) }
-            }
-        }
-
-        binding.searchInfo
-            .textChanges()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .debounce(1000, TimeUnit.MILLISECONDS)
-            .flatMapSingle { sourcePublish.value!!.searchList(it, 1, currentList) }
-            .onErrorReturnItem(currentList)
-            .subscribe {
-                adapter.setData(it)
-                activity?.runOnUiThread { binding.searchLayout.suffixText = "${it.size}" }
-            }
-            .addTo(disposable)
-
-    }
-
-    private fun DragSwipeAdapter<ItemModel, *>.setData(newList: List<ItemModel>) {
-        val diffCallback = object : DragSwipeDiffUtil<ItemModel>(dataList, newList) {
-            override fun areContentsTheSame(oldItem: ItemModel, newItem: ItemModel): Boolean = oldItem.url == newItem.url
-            override fun areItemsTheSame(oldItem: ItemModel, newItem: ItemModel): Boolean = oldItem.url === newItem.url
-        }
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        dataList.clear()
-        dataList.addAll(newList)
-        runOnUIThread { diffResult.dispatchUpdatesTo(this) }
-    }
-
-    private fun sourceLoad(sources: ApiService, page: Int = 1) {
-        sources.getList(page)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeBy {
-                adapter.addItems(it)
-                currentList.clear()
-                currentList.addAll(it)
-                binding.allRefresh.isRefreshing = false
-                activity?.runOnUiThread {
-                    binding.searchLayout.editText?.setText("")
-                    binding.searchLayout.suffixText = "${adapter.dataList.size}"
-                    binding.searchLayout.hint = getString(R.string.searchFor, sourcePublish.value?.serviceName.orEmpty())
+                    }
                 }
-                binding.composeShimmer.gone()
             }
-            .addTo(disposable)
+        }
     }
 
     override fun onDestroy() {

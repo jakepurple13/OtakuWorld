@@ -43,3 +43,18 @@ abstract class BaseFragment : Fragment() {
 
     abstract fun viewCreated(view: View, savedInstanceState: Bundle?)
 }
+
+abstract class BaseFragmentCompose : Fragment() {
+
+    private var hasInitializedRootView = false
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        if (!hasInitializedRootView) {
+            hasInitializedRootView = true
+            viewCreated(view, savedInstanceState)
+        }
+    }
+
+    abstract fun viewCreated(view: View, savedInstanceState: Bundle?)
+}

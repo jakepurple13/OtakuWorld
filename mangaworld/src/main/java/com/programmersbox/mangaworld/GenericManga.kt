@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Environment
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
@@ -15,22 +16,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.Storage
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
@@ -52,12 +47,6 @@ class GenericManga(val context: Context) : GenericInfo {
     private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { manga_file }
-
-    override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
-        (MangaGalleryAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)
-
-    override fun createLayoutManager(context: Context): RecyclerView.LayoutManager =
-        AutoFitGridLayoutManager(context, 360).apply { orientation = GridLayoutManager.VERTICAL }
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
         context.startActivity(
@@ -154,6 +143,27 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH)) {
             items(10) { PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @ExperimentalFoundationApi
+    @Composable
+    override fun ItemListView(
+        list: List<ItemModel>,
+        favorites: List<DbModel>,
+        listState: LazyListState,
+        onClick: (ItemModel) -> Unit
+    ) {
+        LazyVerticalGrid(
+            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+            state = listState
+        ) {
+            items(list.size) { i ->
+                list.getOrNull(i)?.let {
+                    CoverCard(imageUrl = it.imageUrl, name = it.title, placeHolder = R.drawable.manga_world_round_logo) { onClick(it) }
+                }
+            }
         }
     }
 

@@ -74,10 +74,12 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
         } else {
             null
         }
-        if (channel == null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val channelName = context.getString(R.string.fetch_notification_default_channel_name)
-            channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT)
-            notificationManager.createNotificationChannel(channel)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (channel == null) {
+                val channelName = context.getString(R.string.fetch_notification_default_channel_name)
+                channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT)
+                notificationManager.createNotificationChannel(channel)
+            }
         }
     }
 

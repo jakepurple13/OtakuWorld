@@ -2,27 +2,29 @@ package com.programmersbox.novelworld
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.accompanist.placeholder.material.placeholder
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.novel_sources.Sources
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
 import org.koin.dsl.module
@@ -34,10 +36,6 @@ val appModule = module {
 }
 
 class GenericNovel(val context: Context) : GenericInfo {
-    override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
-        (NovelAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)
-
-    override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
         context.startActivity(
@@ -80,6 +78,20 @@ class GenericNovel(val context: Context) : GenericInfo {
                     )
                 }
             }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @ExperimentalFoundationApi
+    @Composable
+    override fun ItemListView(
+        list: List<ItemModel>,
+        favorites: List<DbModel>,
+        listState: LazyListState,
+        onClick: (ItemModel) -> Unit
+    ) {
+        LazyColumn(state = listState) {
+            items(list) { ListItem(text = { Text(it.title) }) }
         }
     }
 

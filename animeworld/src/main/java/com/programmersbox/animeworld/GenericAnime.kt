@@ -5,27 +5,27 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -39,18 +39,18 @@ import com.programmersbox.anime_sources.anime.WcoStream
 import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.ytsdatabase.Torrent
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.BaseListFragment
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.ItemListAdapter
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.tonyodev.fetch2.*
@@ -74,11 +74,6 @@ class GenericAnime(val context: Context) : GenericInfo {
     private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
-
-    override fun createAdapter(context: Context, baseListFragment: BaseListFragment): ItemListAdapter<RecyclerView.ViewHolder> =
-        (AnimeAdapter(context, baseListFragment) as ItemListAdapter<RecyclerView.ViewHolder>)
-
-    override fun createLayoutManager(context: Context): RecyclerView.LayoutManager = LinearLayoutManager(context)
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
         if ((chapterModel.source as? ShowApi)?.canStream == false) {
@@ -329,7 +324,6 @@ class GenericAnime(val context: Context) : GenericInfo {
                         .fillMaxWidth()
                         .padding(5.dp)
                 ) {
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -349,6 +343,42 @@ class GenericAnime(val context: Context) : GenericInfo {
                                 .padding(5.dp)
                         )
                     }
+                }
+            }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @ExperimentalFoundationApi
+    @Composable
+    override fun ItemListView(
+        list: List<ItemModel>,
+        favorites: List<DbModel>,
+        listState: LazyListState,
+        onClick: (ItemModel) -> Unit
+    ) {
+        LazyColumn(state = listState) {
+            items(list) {
+                Card(
+                    onClick = { onClick(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    elevation = 5.dp
+                ) {
+                    ListItem(
+                        icon = {
+                            Icon(
+                                if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                            )
+                        },
+                        text = { Text(it.title) },
+                        overlineText = { Text(it.source.serviceName) },
+                        secondaryText = if (it.description.isNotEmpty()) {
+                            { Text(it.description) }
+                        } else null
+                    )
                 }
             }
         }
