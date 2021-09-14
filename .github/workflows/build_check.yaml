@@ -44,19 +44,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-
-      - name: Build all artifacts
-        id: buildAllApks
-        uses: eskatos/gradle-command-action@v1.3.3
-        with:
-          gradle-version: 7.0.2
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: assembleDebug
-
-      #- name: Build APK
-      # run: bash ./gradlew assembleDebug --stacktrace
+      - name: Build APK
+        run: bash ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v1
