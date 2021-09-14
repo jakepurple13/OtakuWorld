@@ -74,7 +74,6 @@ import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
-import com.programmersbox.uiviews.GlobalSearchFragmentDirections
 
 class GlobalSearchFragment : Fragment() {
 
