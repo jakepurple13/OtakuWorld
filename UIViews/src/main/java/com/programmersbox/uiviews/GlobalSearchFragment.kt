@@ -6,7 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -22,7 +25,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.VerticalAlignTop
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
@@ -99,6 +102,7 @@ class GlobalSearchFragment : Fragment() {
                     var searchText by rememberSaveable { mutableStateOf(args.searchFor) }
                     val focusManager = LocalFocusManager.current
                     val listState = rememberLazyListState()
+                    val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
                     val scope = rememberCoroutineScope()
                     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
                     val list by searchPublisher.subscribeAsState(initial = emptyList())
@@ -206,9 +210,15 @@ class GlobalSearchFragment : Fragment() {
                     ) {
                         Scaffold(
                             floatingActionButton = {
-                                FloatingActionButton(
-                                    onClick = { scope.launch { listState.animateScrollToItem(0) } }
-                                ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                                AnimatedVisibility(
+                                    visible = showButton && searchText.isNotEmpty(),
+                                    enter = slideInVertically({ it / 2 }),
+                                    exit = slideOutVertically({ it / 2 })
+                                ) {
+                                    FloatingActionButton(
+                                        onClick = { scope.launch { listState.animateScrollToItem(0) } }
+                                    ) { Icon(Icons.Default.KeyboardArrowUp, null) }
+                                }
                             },
                             floatingActionButtonPosition = FabPosition.End
                         ) {

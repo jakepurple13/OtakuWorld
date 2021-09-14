@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -15,6 +18,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -72,6 +76,7 @@ class AllFragment : BaseFragmentCompose() {
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
 
+    @ExperimentalAnimationApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
@@ -118,21 +123,16 @@ class AllFragment : BaseFragmentCompose() {
             .addTo(disposable)
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
     private fun AllView() {
         MdcTheme {
-            val state = rememberLazyListState()
-            val source by sourcePublish.subscribeAsState(initial = null)
-            val refresh = rememberSwipeRefreshState(isRefreshing = false)
-
             val isConnected by ReactiveNetwork.observeInternetConnectivity()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeAsState(initial = true)
-
-            val focusManager = LocalFocusManager.current
 
             when {
                 !isConnected -> {
@@ -150,12 +150,16 @@ class AllFragment : BaseFragmentCompose() {
                         Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
                     }
                 }
-                sourceList.isEmpty() -> info.ComposeShimmerItem()
                 else -> {
+                    val state = rememberLazyListState()
+                    val refresh = rememberSwipeRefreshState(isRefreshing = false)
+                    val source by sourcePublish.subscribeAsState(initial = null)
+                    val focusManager = LocalFocusManager.current
                     val scaffoldState = rememberBottomSheetScaffoldState()
                     val scope = rememberCoroutineScope()
                     val searchList by searchPublisher.subscribeAsState(initial = emptyList())
                     var searchText by rememberSaveable { mutableStateOf("") }
+                    val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
@@ -207,7 +211,6 @@ class AllFragment : BaseFragmentCompose() {
                                                     .addTo(disposable)
                                             })
                                         )
-
                                     }
                                 }
                             ) { p ->
@@ -217,7 +220,25 @@ class AllFragment : BaseFragmentCompose() {
                                     }
                                 }
                             }
-                        }
+                        },
+                        floatingActionButton = {
+                            AnimatedVisibility(
+                                visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
+                                enter = slideInVertically({ it / 2 })
+                            ) {
+                                FloatingActionButton(
+                                    onClick = { scope.launch { state.animateScrollToItem(0) } },
+                                    backgroundColor = MaterialTheme.colors.primary
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowUp,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(5.dp),
+                                    )
+                                }
+                            }
+                        },
+                        floatingActionButtonPosition = FabPosition.End
                     ) { p ->
                         SwipeRefresh(
                             modifier = Modifier.padding(p),
@@ -230,8 +251,12 @@ class AllFragment : BaseFragmentCompose() {
                                 }
                             }
                         ) {
-                            info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
-                                findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                            if (sourceList.isEmpty()) {
+                                info.ComposeShimmerItem()
+                            } else {
+                                info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
+                                    findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                                }
                             }
                         }
 
