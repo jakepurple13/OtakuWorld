@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Environment
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
@@ -181,17 +179,13 @@ class GenericManga(val context: Context) : GenericInfo {
                                     Icons.Default.Favorite,
                                     contentDescription = null,
                                     tint = MaterialTheme.colors.primary,
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(5.dp)
+                                    modifier = Modifier.align(Alignment.TopStart)
                                 )
                                 Icon(
                                     Icons.Default.FavoriteBorder,
                                     contentDescription = null,
                                     tint = MaterialTheme.colors.onPrimary,
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(5.dp)
+                                    modifier = Modifier.align(Alignment.TopStart)
                                 )
                             }
                         }
