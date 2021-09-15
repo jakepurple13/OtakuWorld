@@ -6,11 +6,21 @@ import android.content.Context
 import android.content.Intent
 import android.os.Environment
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -161,7 +171,31 @@ class GenericManga(val context: Context) : GenericInfo {
         ) {
             items(list.size) { i ->
                 list.getOrNull(i)?.let {
-                    CoverCard(imageUrl = it.imageUrl, name = it.title, placeHolder = R.drawable.manga_world_round_logo) { onClick(it) }
+                    CoverCard(
+                        imageUrl = it.imageUrl,
+                        name = it.title,
+                        placeHolder = R.drawable.manga_world_round_logo,
+                        favoriteIcon = {
+                            if (favorites.fastAny { f -> f.url == it.url }) {
+                                Icon(
+                                    Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colors.primary,
+                                    modifier = Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(5.dp)
+                                )
+                                Icon(
+                                    Icons.Default.FavoriteBorder,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colors.onPrimary,
+                                    modifier = Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(5.dp)
+                                )
+                            }
+                        }
+                    ) { onClick(it) }
                 }
             }
         }

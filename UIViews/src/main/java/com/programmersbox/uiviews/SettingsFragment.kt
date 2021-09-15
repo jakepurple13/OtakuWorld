@@ -160,6 +160,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
+        findPreference<Preference>("view_history")?.setOnPreferenceClickListener {
+            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToRecentlyViewedFragment())
+            true
+        }
+
         findPreference<Preference>("view_global_search")?.setOnPreferenceClickListener {
             findNavController().navigate(SettingsFragmentDirections.showGlobalSearch())
             true

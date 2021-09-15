@@ -341,7 +341,14 @@ suspend fun calculateDiff(
 
 @ExperimentalMaterialApi
 @Composable
-fun CoverCard(imageUrl: String, name: String, placeHolder: Int, error: Int = placeHolder, onClick: () -> Unit = {}) {
+fun CoverCard(
+    imageUrl: String,
+    name: String,
+    placeHolder: Int,
+    error: Int = placeHolder,
+    favoriteIcon: @Composable BoxScope.() -> Unit = {},
+    onClick: () -> Unit = {}
+) {
 
     val context = LocalContext.current
 
@@ -424,6 +431,8 @@ fun CoverCard(imageUrl: String, name: String, placeHolder: Int, error: Int = pla
                         .align(Alignment.BottomCenter)
                 )
             }
+
+            favoriteIcon()
         }
 
     }

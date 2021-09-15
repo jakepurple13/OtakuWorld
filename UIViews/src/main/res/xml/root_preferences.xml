@@ -73,6 +73,11 @@
             app:key="view_favorites"
             app:title="@string/viewFavoritesMenu" />
 
+        <Preference
+            app:icon="@drawable/ic_baseline_update_24"
+            app:key="view_history"
+            app:title="@string/history" />
+
     </PreferenceCategory>
 
     <PreferenceCategory

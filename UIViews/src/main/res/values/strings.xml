@@ -143,5 +143,6 @@
     <string name="please_enable_permissions">Please Enable Permissions</string>
     <string name="need_permissions_to_work">These permissions are needed in order for this functionality to work</string>
     <string name="enable">Enable</string>
+    <string name="history">History</string>
 
 </resources>

@@ -8,13 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ListItem
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
@@ -91,7 +92,21 @@ class GenericNovel(val context: Context) : GenericInfo {
         onClick: (ItemModel) -> Unit
     ) {
         LazyColumn(state = listState) {
-            items(list) { ListItem(text = { Text(it.title) }) }
+            items(list) {
+                ListItem(
+                    icon = {
+                        Icon(
+                            if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                        )
+                    },
+                    text = { Text(it.title) },
+                    overlineText = { Text(it.source.serviceName) },
+                    secondaryText = if (it.description.isNotEmpty()) {
+                        { Text(it.description) }
+                    } else null
+                )
+            }
         }
     }
 

@@ -51,10 +51,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.favoritesdatabase.NotificationItem
-import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -87,6 +84,7 @@ class DetailsFragment : Fragment() {
     }
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
+    private val historyDao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
 
     private val args: DetailsFragmentArgs by navArgs()
 
@@ -420,10 +418,28 @@ class DetailsFragment : Fragment() {
         snackbar: (Int) -> Unit
     ) {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+
+        fun insertRecent() {
+            scope.launch(Dispatchers.IO) {
+                historyDao.insertRecentlyViewed(
+                    RecentModel(
+                        title = infoModel.title,
+                        url = infoModel.url,
+                        imageUrl = infoModel.url,
+                        description = infoModel.description,
+                        source = infoModel.source.serviceName,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+                historyDao.removeOldData()
+            }
+        }
 
         Card(
             onClick = {
                 genericInfo.chapterOnClick(c, chapters, context)
+                insertRecent()
                 ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                     .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
                     .subscribeOn(Schedulers.io())
@@ -487,6 +503,7 @@ class DetailsFragment : Fragment() {
                     OutlinedButton(
                         onClick = {
                             genericInfo.chapterOnClick(c, chapters, context)
+                            insertRecent()
                             ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                                 .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
                                 .subscribeOn(Schedulers.io())
