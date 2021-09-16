@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
@@ -327,7 +328,17 @@ class DetailsFragment : Fragment() {
                             snackbarData = data
                         )
                     }
-                }
+                },
+                backgroundColor = Color.Transparent,
+                modifier = Modifier
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.background,
+                                MaterialTheme.colors.background
+                            )
+                        )
+                    )
             ) { p ->
 
                 val header: @Composable () -> Unit = {
@@ -380,11 +391,10 @@ class DetailsFragment : Fragment() {
                         padding = 2.dp,
                         listState = listState,
                         thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
-                        thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary)
-                            .copy(alpha = .6f),
+                        thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary).copy(alpha = .6f),
                     ) {
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalArrangement = Arrangement.spacedBy(1.dp),
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .padding(vertical = 5.dp),
