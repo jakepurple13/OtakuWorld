@@ -28,19 +28,6 @@
 
         <service android:name=".cast.WebService" />
 
-        <service android:name=".DownloadService" />
-
-        <receiver
-            android:name=".CommonBroadCast"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.kpstv.yts.STOP_SERVICE" />
-                <action android:name="com.kpstv.yts.TORRENT_NOT_SUPPORTED" />
-                <action android:name="com.kpstv.yts.ADD_ONLY_JOB" />
-            </intent-filter>
-        </receiver>
-
         <activity android:name=".cast.ExpandedControlsActivity" />
 
         <activity

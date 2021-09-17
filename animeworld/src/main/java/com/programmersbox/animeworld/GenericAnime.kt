@@ -36,14 +36,9 @@ import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.anime.Movies
-import com.programmersbox.anime_sources.anime.Torrents
 import com.programmersbox.anime_sources.anime.WcoStream
-import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
-import com.programmersbox.animeworld.ytsdatabase.Torrent
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -116,34 +111,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
 
                 when (model.source) {
-                    Yts -> {
-                        val f = model.extras["torrents"].toString().fromJson<Torrents>()?.let {
-                            val m = model.extras["info"].toString().fromJson<Movies>()
-                            Torrent(
-                                title = m?.title.orEmpty(),
-                                banner_url = m?.background_image.orEmpty(),
-                                url = it.url.orEmpty(),
-                                hash = it.hash.orEmpty(),
-                                quality = it.quality.orEmpty(),
-                                type = it.type.orEmpty(),
-                                seeds = it.seeds?.toInt() ?: 0,
-                                peers = it.peers?.toInt() ?: 0,
-                                size_pretty = it.size.orEmpty(),
-                                size = it.size_bytes?.toLong() ?: 0L,
-                                date_uploaded = it.date_uploaded.orEmpty(),
-                                date_uploaded_unix = it.date_uploaded_unix.toString(),
-                                movieId = m?.id?.toInt() ?: 0,
-                                imdbCode = m?.imdb_code.orEmpty(),
-                            )
-                        }
-
-                        val serviceIntent = Intent(context, DownloadService::class.java)
-                        serviceIntent.putExtra(DownloadService.TORRENT_JOB, f)
-                        context.startService(serviceIntent)
-                    }
-                    else -> {
-                        GlobalScope.launch { fetchIt(model) }
-                    }
+                    else -> GlobalScope.launch { fetchIt(model) }
                 }
             }
         }

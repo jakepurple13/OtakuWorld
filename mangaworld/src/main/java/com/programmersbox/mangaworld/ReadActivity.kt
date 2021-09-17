@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
@@ -591,14 +592,14 @@ class ReadActivity : AppCompatActivity() {
         Single.create<List<String>> {
             file.listFiles()
                 ?.sortedBy { f -> f.name.split(".").first().toInt() }
-                ?.map(File::toUri)
-                ?.map(Uri::toString)
+                ?.fastMap(File::toUri)
+                ?.fastMap(Uri::toString)
                 ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
         }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy {
-                BigImageViewer.prefetch(*it.map(Uri::parse).toTypedArray())
+                BigImageViewer.prefetch(*it.fastMap(Uri::parse).toTypedArray())
                 binding.readLoading
                     .animate()
                     .alpha(0f)
@@ -630,7 +631,7 @@ class ReadActivity : AppCompatActivity() {
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }
             ?.subscribeBy { pages: List<String> ->
-                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
+                BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray())
                 binding.readLoading
                     .animate()
                     .alpha(0f)
