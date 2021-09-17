@@ -113,7 +113,6 @@ class DetailsFragment : Fragment() {
                     MdcTheme {
                         Scaffold(
                             topBar = {
-
                                 TopAppBar(
                                     modifier = Modifier.zIndex(2f),
                                     title = { Text(info.title) },
@@ -588,8 +587,6 @@ class DetailsFragment : Fragment() {
         favoriteClick: (Boolean) -> Unit
     ) {
 
-        //var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
-
         var imagePopup by remember { mutableStateOf(false) }
 
         if (imagePopup) {
@@ -639,7 +636,7 @@ class DetailsFragment : Fragment() {
                                     swatchInfo.value?.rgb ?: Color.Transparent.toArgb(),
                                     0.25f
                                 ),
-                                200//127
+                                200
                             )
                             .toComposeColor()
                             .animate().value

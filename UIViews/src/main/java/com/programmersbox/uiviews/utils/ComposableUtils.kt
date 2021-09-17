@@ -252,7 +252,6 @@ inline fun <T> LazyListScope.animatedItemsIndexed(
 fun <T> updateAnimatedItemsState(
     newList: List<T>
 ): State<List<AnimatedItem<T>>> {
-
     val state = remember { mutableStateOf(emptyList<AnimatedItem<T>>()) }
     LaunchedEffect(newList) {
         if (state.value == newList) {

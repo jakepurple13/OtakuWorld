@@ -47,6 +47,8 @@ dependencies {
 
     implementation jsoup
 
+    implementation uiUtil
+
     implementation rxkotlin
     implementation rxandroid
 

@@ -2,6 +2,7 @@ package com.programmersbox.anime_sources.anime
 
 import android.content.Context
 import android.text.format.DateFormat
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.anime_sources.utilities.ApiResponse
@@ -49,7 +50,7 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
         doc
             .select("div.listAnimes")
             .select("div.episode-box-2")
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it.select("div.title-box").text(),
                     description = "",
@@ -64,7 +65,7 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
         doc
             .select("a.an")
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it.text(),
                     description = "",
@@ -84,7 +85,7 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
             description = "",
             imageUrl = doc.select("div.infopicbox").select("img").attr("abs:src"),
             genres = emptyList(),
-            chapters = doc.select("a.infovan").map {
+            chapters = doc.select("a.infovan").fastMap {
                 ChapterModel(
                     name = it.text(),
                     url = it.attr("abs:href"),

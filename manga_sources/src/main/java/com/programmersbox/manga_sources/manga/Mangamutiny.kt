@@ -1,5 +1,6 @@
 package com.programmersbox.manga_sources.manga
 
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.gsonutils.header
 import com.programmersbox.models.*
@@ -34,7 +35,7 @@ object Mangamutiny : ApiService {
                         "$baseUrl$mangaApiPath?sort=-titles&limit=20&text=$searchText${if (page != 1) "&skip=${page * 20}" else ""}",
                         header
                     )
-                        ?.items?.map {
+                        ?.items?.fastMap {
                             ItemModel(
                                 title = it.title.orEmpty(),
                                 description = "",
@@ -58,7 +59,7 @@ object Mangamutiny : ApiService {
                 header
             )
                 ?.items
-                ?.map {
+                ?.fastMap {
                     ItemModel(
                         title = it.title.orEmpty(),
                         description = "",
@@ -77,7 +78,7 @@ object Mangamutiny : ApiService {
                 header
             )
                 ?.items
-                ?.map {
+                ?.fastMap {
                     ItemModel(
                         title = it.title.orEmpty(),
                         description = "",
@@ -96,7 +97,7 @@ object Mangamutiny : ApiService {
                 description = it.summary.orEmpty(),
                 url = model.url,
                 imageUrl = model.imageUrl,
-                chapters = it.chapters?.map { c ->
+                chapters = it.chapters?.fastMap { c ->
                     ChapterModel(
                         name = chapterTitleBuilder(c),
                         url = "$baseUrl$chapterApiPath/${c.slug}",
@@ -145,9 +146,9 @@ object Mangamutiny : ApiService {
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
         getJsonApi<MunityPage>(chapterModel.url, header)?.let {
             val chapterUrl = "${it.storage}/${it.manga}/${it.id}/"
-            it.images?.map { i -> "$chapterUrl$i" }
+            it.images?.fastMap { i -> "$chapterUrl$i" }
         }
-            ?.map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            ?.fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
             .orEmpty()
             .let { emitter.onSuccess(it) }
     }

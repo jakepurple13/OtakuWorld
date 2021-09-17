@@ -150,8 +150,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                         .override(360, 480)
                                         .thumbnail(0.5f)
                                         .transform(RoundedCorners(15)),//GranularRoundedCorners(0f, 15f, 15f, 0f)),
-                                    modifier = Modifier
-                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                                     failure = {
                                         Image(
                                             painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
@@ -197,37 +196,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                             }
                         )
-
-                        /*Row {
-                            GlideImage(
-                                imageModel = item.imageUrl.orEmpty(),
-                                contentDescription = "",
-                                contentScale = ContentScale.Crop,
-                                requestBuilder = Glide.with(LocalView.current)
-                                    .asDrawable()
-                                    .override(360, 480)
-                                    .thumbnail(0.5f)
-                                    .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                failure = {
-                                    Image(
-                                        painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                                        contentDescription = item.notiTitle,
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .padding(5.dp)
-                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                    )
-                                }
-                            )
-
-                            Column(modifier = Modifier.padding(start = 5.dp)) {
-                                Text(item.notiTitle)
-                                Text(item.source)
-                            }
-                        }*/
                     }
                 ) { p ->
                     LazyColumn(contentPadding = p) { items(items) { NotificationItem(item = it, navController = findNavController()) } }

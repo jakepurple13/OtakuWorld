@@ -105,11 +105,14 @@ class GlobalSearchFragment : Fragment() {
                     val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
                     val scope = rememberCoroutineScope()
                     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
+
                     val list by searchPublisher.subscribeAsState(initial = emptyList())
+
                     val networkState by ReactiveNetwork.observeInternetConnectivity()
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeAsState(initial = true)
+
                     val history by dao
                         .searchHistory("%$searchText%")
                         .flowOn(Dispatchers.IO)

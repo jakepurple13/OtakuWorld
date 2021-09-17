@@ -1,6 +1,8 @@
 package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMaxBy
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.*
 import com.programmersbox.models.*
@@ -78,7 +80,7 @@ object MangaPark : ApiService, KoinComponent {
                     url = model.url,
                     imageUrl = model.imageUrl,
                     chapters = chapterListParse(helper.cloudflareClient.newCall(chapterListRequest(model)).execute(), model.url),
-                    genres = infoElement.select("div.attr-item:contains(genres) span span").map { it.text().trim() },
+                    genres = infoElement.select("div.attr-item:contains(genres) span span").fastMap { it.text().trim() },
                     alternativeNames = emptyList(),
                     source = this
                 )
@@ -88,7 +90,7 @@ object MangaPark : ApiService, KoinComponent {
             val alternateNames = mutableListOf<String>()
             doc.select(".attr > tbody > tr").forEach {
                 when (it.getElementsByTag("th").first()!!.text().trim().lowercase(Locale.getDefault())) {
-                    "genre(s)" -> genres.addAll(it.getElementsByTag("a").map(Element::text))
+                    "genre(s)" -> genres.addAll(it.getElementsByTag("a").fastMap(Element::text))
                     "alternative" -> alternateNames.addAll(it.text().split("l"))
                 }
             }
@@ -137,8 +139,8 @@ object MangaPark : ApiService, KoinComponent {
     private fun chapterListParse(response: Response, mangaUrl: String): List<ChapterModel> {
         val resToJson = Json.parseToJsonElement(response.body!!.string()).jsonObject
         val document = Jsoup.parse(resToJson["html"]!!.jsonPrimitive.content)
-        return document.select("div.episode-item").map { chapterFromElement(it) }
-            .map {
+        return document.select("div.episode-item").fastMap { chapterFromElement(it) }
+            .fastMap {
                 ChapterModel(
                     name = it.name,
                     url = it.url,
@@ -159,25 +161,25 @@ object MangaPark : ApiService, KoinComponent {
 
     private fun chapterListParse(response: Document, mangaUrl: String): List<ChapterModel> {
         fun List<SChapter>.getMissingChapters(allChapters: List<SChapter>): List<SChapter> {
-            val chapterNums = this.map { it.chapterNumber }
+            val chapterNums = this.fastMap { it.chapterNumber }
             return allChapters.filter { it.chapterNumber !in chapterNums }.distinctBy { it.chapterNumber }
         }
 
         val mangaBySource = response.select("div[id^=stream]")
-            .map { sourceElement ->
+            .fastMap { sourceElement ->
                 var lastNum = 0F
 
                 sourceElement.select(".volume .chapter li")
                     .reversed() // so incrementing lastNum works
-                    .map { chapterElement ->
+                    .fastMap { chapterElement ->
                         chapterFromElement(chapterElement, lastNum)
                             .also { lastNum = it.chapterNumber }
                     }
                     .distinctBy { it.chapterNumber } // there's even duplicate chapters within a source ( -.- )
             }
 
-        val chapters = mangaBySource.maxByOrNull { it.count() }!!
-        return (chapters + chapters.getMissingChapters(mangaBySource.flatten())).sortedByDescending { it.chapterNumber }.map {
+        val chapters = mangaBySource.fastMaxBy { it.count() }!!
+        return (chapters + chapters.getMissingChapters(mangaBySource.flatten())).sortedByDescending { it.chapterNumber }.fastMap {
             ChapterModel(
                 name = it.name,
                 url = "${baseUrl}${it.url}",
@@ -212,7 +214,7 @@ object MangaPark : ApiService, KoinComponent {
             // Get the chapter number or create a unique one if it's not available
             chapterNumber = Regex("""\b\d+\.?\d?\b""").findAll(name)
                 .toList()
-                .map { it.value.toFloatOrNull() }
+                .fastMap { it.value.toFloatOrNull() }
                 .let { nums ->
                     when {
                         nums.count() == 1 -> nums[0].orIncrementLastNum()
@@ -334,7 +336,7 @@ object MangaPark : ApiService, KoinComponent {
             val imgWord = imgWordE.jsonPrimitive.content
             "$imgCdnHost$imgPath?$imgWord"
         }
-            .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
             .let { emitter.onSuccess(it) }
     }
 
