@@ -84,7 +84,7 @@ dependencies {
 
     implementation gson
 
-    implementation "com.mikepenz:iconics-core:5.2.8"
+    implementation "com.mikepenz:iconics-core:5.3.1"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
     //Google Material Icons
     implementation 'com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar'
