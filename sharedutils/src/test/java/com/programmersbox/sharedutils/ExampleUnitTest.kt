@@ -71,11 +71,11 @@ class ExampleUnitTest {
 
         val f = q
             .fastMap { File("$root/$it") }
-            .fastMap { it.absolutePath to it.readLines() }
+            .fastMap { it to it.readLines() }
             .sortedWith(
-                compareByDescending<Pair<String, List<String>>> { it.second.size }
+                compareByDescending<Pair<File, List<String>>> { it.second.size }
                     .thenBy { it.second.joinToString("\n").length }
-                    .thenBy { it.first }
+                    .thenBy { it.first.absolutePath }
             )
 
         val tableList = table {
@@ -90,22 +90,22 @@ class ExampleUnitTest {
                 row(
                     it.second.size,
                     it.second.joinToString("\n").length,
-                    File(it.first).name,
-                    it.first
+                    it.first.name,
+                    it.first.absolutePath
                 )
             }
 
-            f.groupBy { it.first.substring(it.first.lastIndexOf(".")) }
+            f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }
                 .toList()
                 .fastForEach { g ->
                     row(
                         g.second.fastSumBy { it.second.size },
                         g.second.fastSumBy { it.second.joinToString("\n").length },
-                        "${
-                            g.first.removePrefix(".")
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                        } Files: ${g.second.size}",
-                        "Largest: ${File(g.second.fastMaxBy { it.second.size }!!.first).name} => ${g.second.maxOf { it.second.size }}",
+                        "%s Files: %d".format(
+                            g.first.removePrefix(".").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                            g.second.size
+                        ),
+                        "Largest: ${g.second.fastMaxBy { it.second.size }!!.first.name} => ${g.second.maxOf { it.second.size }}",
                     )
                 }
 
