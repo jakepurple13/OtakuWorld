@@ -24,7 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.anggrayudi.storage.file.DocumentFileCompat
@@ -33,7 +35,6 @@ import com.anggrayudi.storage.file.deleteRecursively
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.dragswipe.*
-import com.programmersbox.mangaworld.databinding.FragmentDownloadViewerBinding
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import de.helmbold.rxfilewatcher.PathObservables
@@ -48,19 +49,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.io.path.Path
 
-
 class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomSheetDialogFragment() {
-
-    private lateinit var binding: FragmentDownloadViewerBinding
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Inflate the layout for this fragment
-        binding = FragmentDownloadViewerBinding.inflate(inflater, container, false)
-        return binding.root
-    }
 
     private val disposable = CompositeDisposable()
 
@@ -69,18 +58,16 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
     @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        loadInformation()
-    }
-
-    @ExperimentalPermissionsApi
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    private fun loadInformation() {
-        binding.composeDownloadView.setContent {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+        setContent {
             MdcTheme {
-                PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) { DownloadViewer() }
+                PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    DownloadViewer()
+                }
             }
         }
     }
@@ -88,7 +75,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
-    fun DownloadViewer() {
+    private fun DownloadViewer() {
         val context = LocalContext.current
         val files by PathObservables
             .watchNonRecursive(Path((pathname ?: defaultPathname).path))
