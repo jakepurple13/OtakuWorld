@@ -2,17 +2,20 @@ package com.programmersbox.novelworld
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
@@ -28,6 +31,8 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.animatedItems
+import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import org.koin.dsl.module
 
 val appModule = module {
@@ -82,6 +87,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         }
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
@@ -91,21 +97,34 @@ class GenericNovel(val context: Context) : GenericInfo {
         listState: LazyListState,
         onClick: (ItemModel) -> Unit
     ) {
+        val animated by updateAnimatedItemsState(newList = list)
         LazyColumn(state = listState) {
-            items(list) {
-                ListItem(
-                    icon = {
-                        Icon(
-                            if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = null,
-                        )
-                    },
-                    text = { Text(it.title) },
-                    overlineText = { Text(it.source.serviceName) },
-                    secondaryText = if (it.description.isNotEmpty()) {
-                        { Text(it.description) }
-                    } else null
-                )
+            animatedItems(
+                animated,
+                enterTransition = fadeIn(),
+                exitTransition = fadeOut()
+            ) {
+                Card(
+                    onClick = { onClick(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    elevation = 5.dp
+                ) {
+                    ListItem(
+                        icon = {
+                            Icon(
+                                if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                            )
+                        },
+                        text = { Text(it.title) },
+                        overlineText = { Text(it.source.serviceName) },
+                        secondaryText = if (it.description.isNotEmpty()) {
+                            { Text(it.description) }
+                        } else null
+                    )
+                }
             }
         }
     }

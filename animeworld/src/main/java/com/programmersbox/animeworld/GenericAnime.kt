@@ -5,18 +5,21 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -53,6 +56,8 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.animatedItems
+import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import com.tonyodev.fetch2.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -348,6 +353,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
@@ -357,8 +363,13 @@ class GenericAnime(val context: Context) : GenericInfo {
         listState: LazyListState,
         onClick: (ItemModel) -> Unit
     ) {
+        val animated by updateAnimatedItemsState(newList = list)
         LazyColumn(state = listState) {
-            items(list) {
+            animatedItems(
+                animated,
+                enterTransition = fadeIn(),
+                exitTransition = fadeOut()
+            ) {
                 Card(
                     onClick = { onClick(it) },
                     modifier = Modifier

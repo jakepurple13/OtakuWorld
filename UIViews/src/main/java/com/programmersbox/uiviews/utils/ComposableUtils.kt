@@ -74,10 +74,8 @@ fun Modifier.fadeInAnimation(): Modifier = composed {
 }
 
 object ComposableUtils {
-
     val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
     val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { 480.toDp() }
-
 }
 
 @Composable
@@ -732,8 +730,7 @@ fun Modifier.scaleRotateOffset(
         translationX = offset.x,
         translationY = offset.y
     )
-        // add transformable to listen to multitouch transformation events
-        // after offset
+        // add transformable to listen to multitouch transformation events after offset
         .transformable(state = state)
 }
 
