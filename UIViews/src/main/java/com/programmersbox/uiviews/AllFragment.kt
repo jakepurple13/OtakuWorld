@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
@@ -46,6 +47,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.InfiniteListHandler
+import com.programmersbox.uiviews.utils.currentScreen
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -133,6 +135,13 @@ class AllFragment : BaseFragmentCompose() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(initial = true)
 
+        val scaffoldState = rememberBottomSheetScaffoldState()
+        val scope = rememberCoroutineScope()
+
+        BackHandler(scaffoldState.bottomSheetState.isExpanded && isConnected && currentScreen.value == R.id.all_nav) {
+            scope.launch { scaffoldState.bottomSheetState.collapse() }
+        }
+
         when {
             !isConnected -> {
                 Column(
@@ -154,8 +163,6 @@ class AllFragment : BaseFragmentCompose() {
                 val refresh = rememberSwipeRefreshState(isRefreshing = false)
                 val source by sourcePublish.subscribeAsState(initial = null)
                 val focusManager = LocalFocusManager.current
-                val scaffoldState = rememberBottomSheetScaffoldState()
-                val scope = rememberCoroutineScope()
                 val searchList by searchPublisher.subscribeAsState(initial = emptyList())
                 var searchText by rememberSaveable { mutableStateOf("") }
                 val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }

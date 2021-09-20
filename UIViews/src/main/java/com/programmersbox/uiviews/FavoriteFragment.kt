@@ -294,5 +294,4 @@ class FavoriteFragment : Fragment() {
             }
         }
     }
-
 }
