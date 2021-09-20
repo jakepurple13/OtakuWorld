@@ -82,7 +82,7 @@ class AllFragment : BaseFragmentCompose() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent { AllView() }
+            setContent { MdcTheme { AllView() } }
         }
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
@@ -128,148 +128,146 @@ class AllFragment : BaseFragmentCompose() {
     @ExperimentalFoundationApi
     @Composable
     private fun AllView() {
-        MdcTheme {
-            val isConnected by ReactiveNetwork.observeInternetConnectivity()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeAsState(initial = true)
+        val isConnected by ReactiveNetwork.observeInternetConnectivity()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeAsState(initial = true)
 
-            when {
-                !isConnected -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            Icons.Default.CloudOff,
-                            null,
-                            modifier = Modifier.size(50.dp, 50.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
-                        )
-                        Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
-                    }
+        when {
+            !isConnected -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        Icons.Default.CloudOff,
+                        null,
+                        modifier = Modifier.size(50.dp, 50.dp),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                    )
+                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
                 }
-                else -> {
-                    val state = rememberLazyListState()
-                    val refresh = rememberSwipeRefreshState(isRefreshing = false)
-                    val source by sourcePublish.subscribeAsState(initial = null)
-                    val focusManager = LocalFocusManager.current
-                    val scaffoldState = rememberBottomSheetScaffoldState()
-                    val scope = rememberCoroutineScope()
-                    val searchList by searchPublisher.subscribeAsState(initial = emptyList())
-                    var searchText by rememberSaveable { mutableStateOf("") }
-                    val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+            }
+            else -> {
+                val state = rememberLazyListState()
+                val refresh = rememberSwipeRefreshState(isRefreshing = false)
+                val source by sourcePublish.subscribeAsState(initial = null)
+                val focusManager = LocalFocusManager.current
+                val scaffoldState = rememberBottomSheetScaffoldState()
+                val scope = rememberCoroutineScope()
+                val searchList by searchPublisher.subscribeAsState(initial = emptyList())
+                var searchText by rememberSaveable { mutableStateOf("") }
+                val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
-                    BottomSheetScaffold(
-                        scaffoldState = scaffoldState,
-                        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
-                        sheetContent = {
-                            Scaffold(
-                                topBar = {
-                                    Column {
-                                        Button(
-                                            onClick = {
-                                                scope.launch {
-                                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
-                                                    else scaffoldState.bottomSheetState.collapse()
-                                                }
-                                            },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                                            shape = RoundedCornerShape(0f)
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.search),
-                                                style = MaterialTheme.typography.button
-                                            )
-                                        }
-
-                                        OutlinedTextField(
-                                            value = searchText,
-                                            onValueChange = { searchText = it },
-                                            label = { Text(stringResource(R.string.searchFor, source?.serviceName.orEmpty())) },
-                                            trailingIcon = {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Text(searchList.size.toString())
-                                                    IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) }
-                                                }
-                                            },
-                                            modifier = Modifier
-                                                .padding(5.dp)
-                                                .fillMaxWidth(),
-                                            singleLine = true,
-                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                            keyboardActions = KeyboardActions(onSearch = {
-                                                focusManager.clearFocus()
-                                                sourcePublish.value!!.searchList(searchText, 1, sourceList)
-                                                    .subscribeOn(Schedulers.io())
-                                                    .observeOn(AndroidSchedulers.mainThread())
-                                                    .onErrorReturnItem(sourceList)
-                                                    .subscribe(searchPublisher::onNext)
-                                                    .addTo(disposable)
-                                            })
+                BottomSheetScaffold(
+                    scaffoldState = scaffoldState,
+                    sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+                    sheetContent = {
+                        Scaffold(
+                            topBar = {
+                                Column {
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                                else scaffoldState.bottomSheetState.collapse()
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                                        shape = RoundedCornerShape(0f)
+                                    ) {
+                                        Text(
+                                            stringResource(R.string.search),
+                                            style = MaterialTheme.typography.button
                                         )
                                     }
-                                }
-                            ) { p ->
-                                Box(modifier = Modifier.padding(p)) {
-                                    info.ItemListView(list = searchList, listState = rememberLazyListState(), favorites = favoriteList) {
-                                        findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
-                                    }
-                                }
-                            }
-                        },
-                        floatingActionButton = {
-                            AnimatedVisibility(
-                                visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
-                                enter = slideInVertically({ it / 2 })
-                            ) {
-                                FloatingActionButton(
-                                    onClick = { scope.launch { state.animateScrollToItem(0) } },
-                                    backgroundColor = MaterialTheme.colors.primary
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowUp,
-                                        contentDescription = null,
-                                        modifier = Modifier.padding(5.dp),
+
+                                    OutlinedTextField(
+                                        value = searchText,
+                                        onValueChange = { searchText = it },
+                                        label = { Text(stringResource(R.string.searchFor, source?.serviceName.orEmpty())) },
+                                        trailingIcon = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(searchList.size.toString())
+                                                IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .fillMaxWidth(),
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                        keyboardActions = KeyboardActions(onSearch = {
+                                            focusManager.clearFocus()
+                                            sourcePublish.value!!.searchList(searchText, 1, sourceList)
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .onErrorReturnItem(sourceList)
+                                                .subscribe(searchPublisher::onNext)
+                                                .addTo(disposable)
+                                        })
                                     )
                                 }
                             }
-                        },
-                        floatingActionButtonPosition = FabPosition.End
-                    ) { p ->
-                        SwipeRefresh(
-                            modifier = Modifier.padding(p),
-                            state = refresh,
-                            onRefresh = {
-                                source?.let {
-                                    count = 1
-                                    sourceList.clear()
-                                    sourceLoadCompose(it, count, refresh)
-                                }
-                            }
-                        ) {
-                            if (sourceList.isEmpty()) {
-                                info.ComposeShimmerItem()
-                            } else {
-                                info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
+                        ) { p ->
+                            Box(modifier = Modifier.padding(p)) {
+                                info.ItemListView(list = searchList, listState = rememberLazyListState(), favorites = favoriteList) {
                                     findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
                                 }
                             }
                         }
-
-                        if (source?.canScroll == true) {
-                            InfiniteListHandler(listState = state, buffer = 1) {
-                                source?.let {
-                                    count++
-                                    sourceLoadCompose(it, count, refresh)
-                                }
+                    },
+                    floatingActionButton = {
+                        AnimatedVisibility(
+                            visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
+                            enter = slideInVertically({ it / 2 })
+                        ) {
+                            FloatingActionButton(
+                                onClick = { scope.launch { state.animateScrollToItem(0) } },
+                                backgroundColor = MaterialTheme.colors.primary
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowUp,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(5.dp),
+                                )
                             }
                         }
-
+                    },
+                    floatingActionButtonPosition = FabPosition.End
+                ) { p ->
+                    SwipeRefresh(
+                        modifier = Modifier.padding(p),
+                        state = refresh,
+                        onRefresh = {
+                            source?.let {
+                                count = 1
+                                sourceList.clear()
+                                sourceLoadCompose(it, count, refresh)
+                            }
+                        }
+                    ) {
+                        if (sourceList.isEmpty()) {
+                            info.ComposeShimmerItem()
+                        } else {
+                            info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
+                                findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                            }
+                        }
                     }
+
+                    if (source?.canScroll == true) {
+                        InfiniteListHandler(listState = state, buffer = 1) {
+                            source?.let {
+                                count++
+                                sourceLoadCompose(it, count, refresh)
+                            }
+                        }
+                    }
+
                 }
             }
         }
