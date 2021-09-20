@@ -97,6 +97,8 @@ class GlobalSearchFragment : Fragment() {
                     val listState = rememberLazyListState()
                     val scope = rememberCoroutineScope()
                     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
+                    val context = LocalContext.current
+                    val mainLogo = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
                     val networkState by ReactiveNetwork.observeInternetConnectivity()
                         .subscribeOn(Schedulers.io())
@@ -224,7 +226,7 @@ class GlobalSearchFragment : Fragment() {
                                             items(s.data) { m ->
                                                 SearchCoverCard(
                                                     model = m,
-                                                    placeHolder = AppCompatResources.getDrawable(LocalContext.current, mainLogo.logoId)
+                                                    placeHolder = mainLogo
                                                 ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
                                             }
                                         }
@@ -281,10 +283,7 @@ class GlobalSearchFragment : Fragment() {
                                                             items(i.data) { m ->
                                                                 SearchCoverCard(
                                                                     model = m,
-                                                                    placeHolder = AppCompatResources.getDrawable(
-                                                                        LocalContext.current,
-                                                                        mainLogo.logoId
-                                                                    )
+                                                                    placeHolder = mainLogo
                                                                 ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
                                                             }
                                                         }
