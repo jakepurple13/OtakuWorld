@@ -144,5 +144,6 @@
     <string name="need_permissions_to_work">These permissions are needed in order for this functionality to work</string>
     <string name="enable">Enable</string>
     <string name="history">History</string>
+    <string name="search_found">%d Found</string>
 
 </resources>

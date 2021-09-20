@@ -49,6 +49,8 @@
         <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
         <entry key="animeworld/src/main/res/layout/download_viewer_fragment.xml" value="0.21736111111111112" />
         <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
+        <entry key="animeworld/src/main/res/layout/item_torrent_download.xml" value="0.12894736842105264" />
+        <entry key="animeworld/src/main/res/layout/item_torrent_download_1.xml" value="0.12894736842105264" />
         <entry key="animeworld/src/main/res/layout/shimmer_item.xml" value="0.21805555555555556" />
         <entry key="animeworld/src/main/res/layout/shimmer_row.xml" value="0.2325657894736842" />
         <entry key="animeworld/src/main/res/layout/video_layout.xml" value="0.2028688524590164" />

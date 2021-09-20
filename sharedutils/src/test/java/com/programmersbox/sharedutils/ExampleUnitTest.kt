@@ -61,7 +61,9 @@ class ExampleUnitTest {
             ".kt",
             ".xml",
             ".gradle",
-            ".json"
+            ".json",
+            ".pro",
+            ".properties",
         )
 
         val q = shellRun(root) { git.gitCommand(listOf("ls-files")) }

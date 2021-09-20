@@ -42,6 +42,22 @@ object MangaFourLife : ApiService {
         return mangaList.subList((pageNumber - 1) * 24, endRange)
     }
 
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create<List<ItemModel>> {
+        if (mangaList.isEmpty()) {
+            mangaList.addAll(
+                ("vm\\.Directory = (.*?.*;)".toRegex()
+                    .find(getApi("https://manga4life.com/search/?sort=lt&desc=true").toString())
+                    ?.groupValues?.get(1)?.dropLast(1)
+                    ?.fromJson<List<LifeBase>>()
+                    ?.sortedByDescending { m -> m.lt?.let { 1000 * it.toDouble() } }
+                    ?.fastMap(toMangaModel) ?: getApiVersion())
+                    .orEmpty()
+            )
+        }
+        it.onSuccess(mangaList)
+    }
+        .flatMap { super.searchList(searchText, page, it) }
+
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         try {
             getManga(page).let(emitter::onSuccess)
