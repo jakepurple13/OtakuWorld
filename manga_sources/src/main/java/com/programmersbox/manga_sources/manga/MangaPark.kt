@@ -178,7 +178,7 @@ object MangaPark : ApiService, KoinComponent {
                     .distinctBy { it.chapterNumber } // there's even duplicate chapters within a source ( -.- )
             }
 
-        val chapters = mangaBySource.fastMaxBy { it.count() }!!
+        val chapters = mangaBySource.fastMaxBy { it.count() }.orEmpty()
         return (chapters + chapters.getMissingChapters(mangaBySource.flatten())).sortedByDescending { it.chapterNumber }.fastMap {
             ChapterModel(
                 name = it.name,

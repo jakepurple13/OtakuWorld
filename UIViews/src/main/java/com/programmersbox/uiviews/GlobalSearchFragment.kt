@@ -248,7 +248,12 @@ class GlobalSearchFragment : Fragment() {
                                             items(9) { PlaceHolderCoverCard(placeHolder = logo.notificationId) }
                                         } else if (searchListPublisher.isNotEmpty()) {
                                             items(searchListPublisher) { i ->
-                                                Card {
+                                                Card(
+                                                    onClick = {
+                                                        searchModelBottom = i
+                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                    }
+                                                ) {
                                                     Column {
                                                         Box(
                                                             modifier = Modifier
