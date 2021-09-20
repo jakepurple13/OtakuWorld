@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -111,6 +112,10 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
         val state = rememberBottomSheetScaffoldState()
         val scope = rememberCoroutineScope()
 
+        BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
+            scope.launch { state.bottomSheetState.collapse() }
+        }
+
         BottomSheetDeleteScaffold(
             listOfItems = files,
             state = state,
@@ -158,7 +163,9 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                             }
                         ) { Icon(Icons.Default.Close, null) }
 
-                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) {
+                            Icon(Icons.Default.Delete, null)
+                        }
                     }
                 )
             },

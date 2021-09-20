@@ -23,7 +23,6 @@ import com.google.android.gms.cast.framework.media.RemoteMediaClient
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.images.WebImage
-import com.programmersbox.animeworld.ytsdatabase.Model
 import io.github.dkbai.tinyhttpd.nanohttpd.webserver.SimpleWebServer
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -37,7 +36,7 @@ import java.net.InetAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-typealias SessionCallback = (Model.response_download?, Int) -> Unit
+typealias SessionCallback = (Int) -> Unit
 typealias SimpleCallback = () -> Unit
 
 class CastOptions : OptionsProvider {
@@ -99,8 +98,6 @@ class CastHelper {
     private lateinit var mActivity: WeakReference<Activity>
     private lateinit var mApplicationContext: Context
 
-    private var model: Model.response_download? = null
-
     private var onSessionDisconnected: SessionCallback? = null
     private var onNeedToShowIntroductoryOverlay: SimpleCallback? = null
     private var onSessionConnected: () -> Unit = {}
@@ -141,7 +138,7 @@ class CastHelper {
         activity: Activity,
         /** Use this to save last play position, Integer value returns the last
          *  played position. */
-        onSessionDisconnected: SessionCallback = { _, _ -> },
+        onSessionDisconnected: SessionCallback = {},
         onNeedToShowIntroductoryOverlay: SimpleCallback? = null,
         onSessionConnected: () -> Unit = {}
     ) {
@@ -173,7 +170,6 @@ class CastHelper {
         if (state != CastState.NO_DEVICES_AVAILABLE) this.onNeedToShowIntroductoryOverlay?.invoke()
         if (state == CastState.NOT_CONNECTED) {
             /** When casting is disconnected we post updateLastModel */
-            postUpdateLastModel()
             SimpleWebServer.stopServer()
             //sessionConnected.onNext(false)
         }
@@ -190,85 +186,6 @@ class CastHelper {
 
     fun setMediaRouteMenu(context: Context, button: MediaRouteButton) =
         CastButtonFactory.setUpMediaRouteButton(context, button)
-
-    /**
-     * Should be used only in [LibraryFragment]
-     */
-    fun loadMedia(
-        downloadModel: Model.response_download,
-        playFromLastPosition: Boolean,
-        srtFile: File?,
-        onLoadComplete: (Exception?) -> Unit?
-    ) {
-        /**
-         * Suppose if a media is already casting and user decided to cast another media,
-         * in such case we still've last [Model.response_download] model which needs to
-         * be updated.
-         *
-         * Here we post such a similar update.
-         */
-        postUpdateLastModel()
-
-        this.model = downloadModel
-
-        val mediaFile = downloadModel.videoPath.toFile()!!
-        val bannerImage = downloadModel.imagePath.toFile()
-
-        /** Get the remote names of the file */
-        val remoteFileName = Utils.getRemoteFileName(deviceIpAddress, mediaFile)
-            ?.replace(" ", "%20")
-        val remoteImageFileName =
-            if (bannerImage != null) Utils.getRemoteFileName(deviceIpAddress, bannerImage)?.replace(" ", "%20")
-            else ""//APP_IMAGE_URL
-
-        /** Generate media metadata */
-        val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE)
-        movieMetadata.putString(MediaMetadata.KEY_TITLE, mediaFile.nameWithoutExtension)
-        movieMetadata.addImage(WebImage(Uri.parse(remoteImageFileName)))
-        movieMetadata.addImage(WebImage(Uri.parse(remoteImageFileName)))
-
-        buildSubtitle(srtFile) { mediaTracks ->
-            val mediaInfo = MediaInfo.Builder(remoteFileName)
-                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                .setContentType("videos/mp4")
-                .setMetadata(movieMetadata)
-                .setStreamDuration(downloadModel.total_video_length)
-                .setMediaTracks(mediaTracks)
-                .build()
-
-            /** Start a local HTTP server */
-            mApplicationContext.startService(Intent(mApplicationContext, WebService::class.java))
-
-            /** Play the file on the device. */
-            if (mCastSession?.remoteMediaClient == null) {
-                onLoadComplete.invoke(Exception("Client is null"))
-                return@buildSubtitle
-            }
-            val remoteMediaClient = mCastSession?.remoteMediaClient ?: return@buildSubtitle
-
-            remoteMediaClient.registerCallback(object : RemoteMediaClient.Callback() {
-                override fun onStatusUpdated() {
-                    /** OnLoaded */
-                    onLoadComplete.invoke(null)
-
-                    /** When media loaded we will start the fullscreen player activity. */
-                    val intent =
-                        Intent(mApplicationContext, ExpandedControlsActivity::class.java)
-                    mActivity.get()?.startActivity(intent)
-                    remoteMediaClient.unregisterCallback(this)
-                }
-            })
-            remoteMediaClient.load(
-                MediaLoadRequestData.Builder()
-                    .setMediaInfo(mediaInfo)
-                    .setAutoplay(true)
-                    .setCurrentTime(
-                        if (playFromLastPosition) model?.lastSavedPosition?.toLong() ?: 0L else 0L
-                    )
-                    .build()
-            )
-        }
-    }
 
     /**
      * This is loadMedia is made to work will all activities/fragments
@@ -333,20 +250,6 @@ class CastHelper {
     fun stopCast() {
         mCastSession?.remoteMediaClient?.stop()
         SimpleWebServer.stopServer()
-    }
-
-    /**
-     * This will post a callback to the subscriber when session is disconnected along
-     * with the [Model.response_download] and last saved position [Long].
-     */
-    private fun postUpdateLastModel() {
-        mCastSession?.remoteMediaClient?.approximateStreamPosition?.let {
-            onSessionDisconnected?.invoke(
-                model,
-                it.toInt()
-            )
-            this@CastHelper.model = null
-        }
     }
 
     private fun buildSubtitle(srtFile: File?, onComplete: (List<MediaTrack>) -> Unit) {

@@ -27,6 +27,8 @@ import androidx.compose.ui.util.fastAny
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteDialogFactory
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import com.google.accompanist.placeholder.PlaceholderHighlight
@@ -173,13 +175,14 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     override fun customPreferences(preferenceScreen: SettingsDsl) {
 
-        preferenceScreen.viewSettings {
+        preferenceScreen.viewSettings { s, it ->
             it.addPreference(
                 Preference(it.context).apply {
                     title = context.getString(R.string.video_menu_title)
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_video_library_24)
                     setOnPreferenceClickListener {
-                        openVideos()
+                        s.findNavController()
+                            .navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
                         true
                     }
                 }
@@ -216,14 +219,15 @@ class GenericAnime(val context: Context) : GenericInfo {
                     title = context.getString(R.string.downloads_menu_title)
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
                     setOnPreferenceClickListener {
-                        openDownloads()
+                        s.findNavController()
+                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
                         true
                     }
                 }
             )
         }
 
-        preferenceScreen.generalSettings {
+        preferenceScreen.generalSettings { _, it ->
 
             it.addPreference(
                 SwitchPreference(it.context).apply {
@@ -277,14 +281,27 @@ class GenericAnime(val context: Context) : GenericInfo {
             )
         }
 
-    }
+        preferenceScreen.navigationSetup {
+            it.findNavController()
+                .graph
+                .addDestination(
+                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = DownloadViewerFragment::class.java.hashCode()
+                        className = DownloadViewerFragment::class.java.name
+                    }
+                )
 
-    private fun openDownloads() {
-        DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
-    }
+            it.findNavController()
+                .graph
+                .addDestination(
+                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = ViewVideosFragment::class.java.hashCode()
+                        className = ViewVideosFragment::class.java.name
+                    }
+                )
 
-    private fun openVideos() {
-        ViewVideosFragment().show(MainActivity.activity.supportFragmentManager, "videoViewer")
+        }
+
     }
 
     @ExperimentalMaterialApi

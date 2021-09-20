@@ -22,6 +22,8 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import com.programmersbox.favoritesdatabase.DbModel
@@ -105,7 +107,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     override fun customPreferences(preferenceScreen: SettingsDsl) {
-        preferenceScreen.generalSettings {
+        preferenceScreen.generalSettings { _, it ->
             it.addPreference(
                 SwitchPreference(it.context).apply {
                     title = it.context.getString(R.string.showAdultSources)
@@ -122,17 +124,29 @@ class GenericManga(val context: Context) : GenericInfo {
             )
         }
 
-        preferenceScreen.viewSettings {
+        preferenceScreen.viewSettings { s, it ->
             it.addPreference(
                 Preference(it.context).apply {
                     title = it.context.getString(R.string.downloaded_manga)
                     setOnPreferenceClickListener {
-                        DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
+                        s.findNavController()
+                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
                         true
                     }
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_library_books_24)
                 }
             )
+        }
+
+        preferenceScreen.navigationSetup {
+            it.findNavController()
+                .graph
+                .addDestination(
+                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = DownloadViewerFragment::class.java.hashCode()
+                        className = DownloadViewerFragment::class.java.name
+                    }
+                )
         }
     }
 

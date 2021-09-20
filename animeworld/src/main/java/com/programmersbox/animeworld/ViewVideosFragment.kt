@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -54,6 +55,7 @@ import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -120,10 +122,18 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             }
             .collectAsState(emptyList())
 
+        val state = rememberBottomSheetScaffoldState()
+        val scope = rememberCoroutineScope()
+
+        BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
+            scope.launch { state.bottomSheetState.collapse() }
+        }
+
         if (items.isEmpty()) {
             EmptyState()
         } else {
             BottomSheetDeleteScaffold(
+                state = state,
                 listOfItems = items,
                 multipleTitle = stringResource(id = R.string.delete),
                 onRemove = { context?.deleteDialog(it) {} },

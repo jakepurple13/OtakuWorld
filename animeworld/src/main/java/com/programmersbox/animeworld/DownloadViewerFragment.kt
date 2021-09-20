@@ -7,6 +7,7 @@ import android.os.Parcel
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -40,13 +41,13 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.net.toUri
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.animeworld.ytsdatabase.*
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.sizedListOf
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
 import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.currentScreen
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.Extras
 import kotlinx.coroutines.launch
@@ -182,6 +183,10 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         val state = rememberBottomSheetScaffoldState()
         val scope = rememberCoroutineScope()
+
+        BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
+            scope.launch { state.bottomSheetState.collapse() }
+        }
 
         BottomSheetDeleteScaffold(
             state = state,
@@ -339,7 +344,12 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
                 ConstraintLayout {
 
-                    val (title, progress, action, progressText, speed, remaining, status) = createRefs()
+                    val (
+                        title, progress,
+                        action, progressText,
+                        speed, remaining,
+                        status
+                    ) = createRefs()
 
                     Text(
                         download.download.url.toUri().lastPathSegment.orEmpty(),
