@@ -55,6 +55,8 @@ class ExampleUnitTest {
 
     @Test
     fun fileInfoTest() = runBlocking {
+        val grouped = true
+
         val root = File(File("..").absolutePath.removeSuffix("/sharedutils/.."))
 
         val fileType = listOf(
@@ -77,6 +79,7 @@ class ExampleUnitTest {
             .sortedWith(
                 compareByDescending<Pair<File, List<String>>> { it.second.size }
                     .thenBy { it.second.joinToString("\n").length }
+                    .thenBy { it.first.name }
                     .thenBy { it.first.absolutePath }
             )
 
@@ -88,13 +91,28 @@ class ExampleUnitTest {
             }
 
             header { row("Size", "Letters", "Name", "Path") }
-            f.fastForEach {
-                row(
-                    it.second.size,
-                    it.second.joinToString("\n").length,
-                    it.first.name,
-                    it.first.absolutePath
-                )
+            if (grouped) {
+                f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }.toList()
+                    .fastForEach {
+                        row(it.first.removePrefix(".").replaceFirstChar { s -> if (s.isLowerCase()) s.titlecase() else s.toString() })
+                        it.second.fastForEach { s ->
+                            row(
+                                s.second.size,
+                                s.second.joinToString("\n").length,
+                                s.first.name,
+                                s.first.absolutePath
+                            )
+                        }
+                    }
+            } else {
+                f.fastForEach {
+                    row(
+                        it.second.size,
+                        it.second.joinToString("\n").length,
+                        it.first.name,
+                        it.first.absolutePath
+                    )
+                }
             }
 
             f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }
