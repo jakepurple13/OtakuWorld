@@ -684,8 +684,9 @@ class DetailsFragment : Fragment() {
                         items(model.genres) {
                             CustomChip(
                                 category = it,
-                                textColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value,
-                                backgroundColor = swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f)?.animate()?.value,
+                                textColor = (swatchInfo.value?.rgb?.toComposeColor() ?: MaterialTheme.colors.onSurface).animate().value,
+                                backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: MaterialTheme.colors.surface)
+                                    .animate().value,
                                 modifier = Modifier.fadeInAnimation()
                             )
                         }

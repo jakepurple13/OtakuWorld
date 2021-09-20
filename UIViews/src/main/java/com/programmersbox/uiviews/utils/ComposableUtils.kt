@@ -183,8 +183,8 @@ fun Int.toComposeColor() = Color(this)
 fun CustomChip(
     category: String,
     modifier: Modifier = Modifier,
-    textColor: Color? = MaterialTheme.colors.onSurface,
-    backgroundColor: Color? = MaterialTheme.colors.surface
+    textColor: Color = MaterialTheme.colors.onSurface,
+    backgroundColor: Color = MaterialTheme.colors.surface
 ) {
     Surface(
         modifier = Modifier
@@ -192,13 +192,13 @@ fun CustomChip(
             .then(modifier),
         elevation = 8.dp,
         shape = RoundedCornerShape(16.dp),
-        color = backgroundColor ?: MaterialTheme.colors.surface
+        color = backgroundColor
     ) {
         Row {
             Text(
                 text = category,
                 style = MaterialTheme.typography.body2,
-                color = textColor ?: MaterialTheme.colors.onSurface,
+                color = textColor,
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.CenterVertically),
