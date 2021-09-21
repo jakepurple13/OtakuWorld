@@ -34,15 +34,9 @@ import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.animeworld.databinding.*
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.rxutils.invoke
-import com.programmersbox.rxutils.toLatestFlowable
-import com.programmersbox.uiviews.utils.batteryAlertPercent
+import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.toolTipText
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -266,16 +260,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private var batteryInfo: BroadcastReceiver? = null
 
-    private val batteryLevelAlert = PublishSubject.create<Float>()
-    private val batteryInfoItem = PublishSubject.create<Battery>()
-
-    enum class BatteryViewType(val icon: GoogleMaterial.Icon) {
-        CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full),
-        DEFAULT(GoogleMaterial.Icon.gmd_battery_std),
-        FULL(GoogleMaterial.Icon.gmd_battery_full),
-        ALERT(GoogleMaterial.Icon.gmd_battery_alert),
-        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown)
-    }
+    private val batteryInformation by lazy { BatteryInformation(this) }
 
     @SuppressLint("SetTextI18n")
     private fun batterySetup() {
@@ -285,39 +270,21 @@ class VideoPlayerActivity : AppCompatActivity() {
             sizePx = exoBinding.batteryInformation.textSize.roundToInt()
         }
 
-        Flowables.combineLatest(
-            batteryLevelAlert
-                .map { it <= batteryAlertPercent }
-                .map { if (it) Color.RED else Color.WHITE }
-                .toLatestFlowable(),
-            batteryInfoItem
-                .map {
-                    when {
-                        it.isCharging -> BatteryViewType.CHARGING_FULL
-                        it.percent <= batteryAlertPercent -> BatteryViewType.ALERT
-                        it.percent >= 95 -> BatteryViewType.FULL
-                        it.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                        else -> BatteryViewType.DEFAULT
-                    }
-                }
-                .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(this, it.icon).apply { sizePx = exoBinding.batteryInformation.textSize.roundToInt() } }
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                it.second.colorInt = it.first
-                exoBinding.batteryInformation.startDrawable = it.second
-                exoBinding.batteryInformation.setTextColor(it.first)
-                exoBinding.batteryInformation.startDrawable?.setTint(it.first)
-            }
-            .addTo(disposable)
+        batteryInformation.setup(
+            disposable = disposable,
+            size = exoBinding.batteryInformation.textSize.roundToInt(),
+            normalBatteryColor = Color.WHITE
+        ) {
+            it.second.colorInt = it.first
+            exoBinding.batteryInformation.startDrawable = it.second
+            exoBinding.batteryInformation.setTextColor(it.first)
+            exoBinding.batteryInformation.startDrawable?.setTint(it.first)
+        }
 
         batteryInfo = battery {
             exoBinding.batteryInformation.text = "${it.percent.toInt()}%"
-            batteryLevelAlert(it.percent)
-            batteryInfoItem(it)
+            batteryInformation.batteryLevelAlert(it.percent)
+            batteryInformation.batteryInfoItem(it)
         }
     }
 

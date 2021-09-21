@@ -17,16 +17,34 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.gson.*
+import com.mikepenz.iconics.IconicsDrawable
+import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
+import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
+import com.programmersbox.helpfulutils.Battery
+import com.programmersbox.helpfulutils.BatteryHealth
 import com.programmersbox.helpfulutils.sharedPrefDelegate
-import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.GenericInfo
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.Flowables
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.rx2.asObservable
 import java.lang.reflect.Type
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
@@ -39,7 +57,9 @@ var Context.lastUpdateCheckEnd: Long? by sharedPrefDelegate(null)
 val updateCheckPublish = BehaviorSubject.create<Long>()
 val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 
-var Context.batteryAlertPercent: Int by sharedPrefNotNullDelegate(20)
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore("otakuworld")
+
+val BATTERY_PERCENT = intPreferencesKey("battery_percent")
 
 @JvmInline
 value class NotificationLogo(val notificationId: Int)
@@ -175,4 +195,59 @@ abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
                 bottomSheet.open()
             }
         }
+}
+
+class BatteryInformation(val context: Context) {
+
+    val batteryLevelAlert = PublishSubject.create<Float>()
+    val batteryInfoItem = PublishSubject.create<Battery>()
+
+    enum class BatteryViewType(val icon: GoogleMaterial.Icon) {
+        CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full),
+        DEFAULT(GoogleMaterial.Icon.gmd_battery_std),
+        FULL(GoogleMaterial.Icon.gmd_battery_full),
+        ALERT(GoogleMaterial.Icon.gmd_battery_alert),
+        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown)
+    }
+
+    fun setup(
+        disposable: CompositeDisposable,
+        normalBatteryColor: Int = Color.WHITE,
+        size: Int,
+        subscribe: (Pair<Int, IconicsDrawable>) -> Unit
+    ) {
+        Flowables.combineLatest(
+            Observable.combineLatest(
+                batteryLevelAlert,
+                context.dataStore.data
+                    .map { s -> s[BATTERY_PERCENT] ?: 20 }
+                    .asObservable()
+            ) { b, d -> b <= d }
+                .map { if (it) Color.RED else normalBatteryColor }
+                .toLatestFlowable(),
+            Observable.combineLatest(
+                batteryInfoItem,
+                context.dataStore.data
+                    .map { s -> s[BATTERY_PERCENT] ?: 20 }
+                    .asObservable()
+            ) { b, d -> b to d }
+                .map {
+                    when {
+                        it.first.isCharging -> BatteryViewType.CHARGING_FULL
+                        it.first.percent <= it.second -> BatteryViewType.ALERT
+                        it.first.percent >= 95 -> BatteryViewType.FULL
+                        it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
+                        else -> BatteryViewType.DEFAULT
+                    }
+                }
+                .distinctUntilChanged { t1, t2 -> t1 != t2 }
+                .map { IconicsDrawable(context, it.icon).apply { sizePx = size } }
+                .toLatestFlowable()
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(subscribe)
+            .addTo(disposable)
+    }
+
 }

@@ -13,6 +13,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.FileProvider
+import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.preference.*
@@ -28,6 +31,7 @@ import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
@@ -43,6 +47,8 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -193,12 +199,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<SeekBarPreference>("battery_alert")?.let { s ->
             s.showSeekBarValue = true
-            s.setDefaultValue(requireContext().batteryAlertPercent)
-            s.value = requireContext().batteryAlertPercent
+            s.setDefaultValue(20)
             s.max = 100
             s.setOnPreferenceChangeListener { _, newValue ->
-                if (newValue is Int) requireContext().batteryAlertPercent = newValue
+                if (newValue is Int) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        requireContext().dataStore.edit { s -> s[BATTERY_PERCENT] = newValue }
+                    }
+                }
                 true
+            }
+            lifecycleScope.launch {
+                requireContext().dataStore.data
+                    .map { s -> s[BATTERY_PERCENT] ?: 20 }
+                    .flowWithLifecycle(lifecycle)
+                    .collect { runOnUIThread { s.value = it } }
             }
         }
 

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:padding="5dp"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/batterySliderIcon"
+            android:src="@drawable/ic_baseline_battery_alert_24"
+            android:layout_centerVertical="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="10dp"
+            android:padding="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/batterySliderTitle"
+            app:layout_constraintStart_toEndOf="@id/batterySliderIcon"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/battery_alert_percentage"
+            style="@style/TextAppearance.MaterialComponents.Body1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/batterySliderSummary"
+            app:layout_constraintTop_toBottomOf="@id/batterySliderTitle"
+            app:layout_constraintStart_toEndOf="@id/batterySliderIcon"
+            android:layout_marginStart="10dp"
+            android:text="@string/battery_default"
+            style="@style/TextAppearance.MaterialComponents.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/batterySlider"
+            android:valueFrom="1"
+            android:valueTo="100"
+            android:value="20"
+            android:stepSize="1"
+            app:layout_constraintEnd_toStartOf="@id/batterySliderValue"
+            app:layout_constraintTop_toBottomOf="@id/batterySliderSummary"
+            app:layout_constraintStart_toEndOf="@id/batterySliderIcon"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            tools:text="20"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:id="@+id/batterySliderValue"
+            android:gravity="center_vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/batterySlider"
+            app:layout_constraintBottom_toBottomOf="@id/batterySlider"
+            app:layout_constraintStart_toEndOf="@id/batterySlider"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/sliderIcon"
+            android:src="@drawable/ic_baseline_format_line_spacing_24"
+            android:layout_centerVertical="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="10dp"
+            android:padding="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/sliderTitle"
+            app:layout_constraintStart_toEndOf="@id/sliderIcon"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/reader_padding_between_pages"
+            style="@style/TextAppearance.MaterialComponents.Body1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/sliderSummary"
+            app:layout_constraintTop_toBottomOf="@id/sliderTitle"
+            app:layout_constraintStart_toEndOf="@id/sliderIcon"
+            android:layout_marginStart="10dp"
+            android:text="@string/default_padding_summary"
+            style="@style/TextAppearance.MaterialComponents.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/pagePaddingSlider"
+            android:valueFrom="0"
+            android:valueTo="10"
+            android:value="4"
+            android:stepSize="1"
+            app:layout_constraintEnd_toStartOf="@id/sliderValue"
+            app:layout_constraintTop_toBottomOf="@id/sliderSummary"
+            app:layout_constraintStart_toEndOf="@id/sliderIcon"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            tools:text="4"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:id="@+id/sliderValue"
+            android:gravity="center_vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/pagePaddingSlider"
+            app:layout_constraintBottom_toBottomOf="@id/pagePaddingSlider"
+            app:layout_constraintStart_toEndOf="@id/pagePaddingSlider"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

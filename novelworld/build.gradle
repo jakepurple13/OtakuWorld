@@ -73,6 +73,7 @@ dependencies {
     implementation rxandroid
     implementation rxbinding
     implementation rxbindingKotlin
+    implementation coroutinesRX
 
     implementation room.room
     // For Kotlin use kapt instead of annotationProcessor

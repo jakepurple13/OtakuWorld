@@ -145,5 +145,6 @@
     <string name="enable">Enable</string>
     <string name="history">History</string>
     <string name="search_found">%d Found</string>
+    <string name="battery_default">Default is 20</string>
 
 </resources>

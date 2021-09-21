@@ -92,6 +92,9 @@ buildscript {
     ext.permissions = "com.google.accompanist:accompanist-permissions:$accompanist"
     ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
 
+    ext.datastore = "androidx.datastore:datastore:1.0.0"
+    ext.datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
+
     ext {
         jakepurple13Tools = [
                 helpfultools: [gsonutils, helpfulutils, loggingutils, dragswipe, funutils, rxutils]
@@ -120,6 +123,8 @@ buildscript {
         ]
 
         firebaseCrash = [ crash: [crashlytics, analytics] ]
+
+        datastore = [ datastore: [datastore, datastorePref] ]
     }
 
     repositories {

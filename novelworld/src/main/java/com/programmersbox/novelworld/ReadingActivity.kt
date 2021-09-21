@@ -11,21 +11,21 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.helpfulutils.*
+import com.programmersbox.helpfulutils.battery
+import com.programmersbox.helpfulutils.colorFromTheme
+import com.programmersbox.helpfulutils.enableImmersiveMode
+import com.programmersbox.helpfulutils.startDrawable
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.novelworld.databinding.ActivityReadingBinding
 import com.programmersbox.rxutils.invoke
-import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import com.programmersbox.uiviews.utils.batteryAlertPercent
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import org.koin.android.ext.android.inject
 import kotlin.math.roundToInt
 
@@ -36,16 +36,7 @@ class ReadingActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReadingBinding
 
-    private val batteryLevelAlert = PublishSubject.create<Float>()
-    private val batteryInfoItem = PublishSubject.create<Battery>()
-
-    enum class BatteryViewType(val icon: GoogleMaterial.Icon) {
-        CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full),
-        DEFAULT(GoogleMaterial.Icon.gmd_battery_std),
-        FULL(GoogleMaterial.Icon.gmd_battery_full),
-        ALERT(GoogleMaterial.Icon.gmd_battery_alert),
-        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown)
-    }
+    private val batteryInformation by lazy { BatteryInformation(this) }
 
     private val genericInfo by inject<GenericInfo>()
 
@@ -70,48 +61,28 @@ class ReadingActivity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun batterySetup() {
-        val batteryInformation = binding.batteryInformation
-
         val normalBatteryColor = colorFromTheme(R.attr.colorOnBackground, Color.WHITE)
 
-        batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
+        binding.batteryInformation.startDrawable = IconicsDrawable(this, GoogleMaterial.Icon.gmd_battery_std).apply {
             colorInt = normalBatteryColor
-            sizePx = batteryInformation.textSize.roundToInt()
+            sizePx = binding.batteryInformation.textSize.roundToInt()
         }
 
-        Flowables.combineLatest(
-            batteryLevelAlert
-                .map { it <= batteryAlertPercent }
-                .map { if (it) Color.RED else normalBatteryColor }
-                .toLatestFlowable(),
-            batteryInfoItem
-                .map {
-                    when {
-                        it.isCharging -> BatteryViewType.CHARGING_FULL
-                        it.percent <= batteryAlertPercent -> BatteryViewType.ALERT
-                        it.percent >= 95 -> BatteryViewType.FULL
-                        it.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                        else -> BatteryViewType.DEFAULT
-                    }
-                }
-                .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(this, it.icon).apply { sizePx = batteryInformation.textSize.roundToInt() } }
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                it.second.colorInt = it.first
-                batteryInformation.startDrawable = it.second
-                batteryInformation.setTextColor(it.first)
-                batteryInformation.startDrawable?.setTint(it.first)
-            }
-            .addTo(disposable)
+        batteryInformation.setup(
+            disposable = disposable,
+            size = binding.batteryInformation.textSize.roundToInt(),
+            normalBatteryColor = colorFromTheme(R.attr.colorOnBackground, Color.WHITE)
+        ) {
+            it.second.colorInt = it.first
+            binding.batteryInformation.startDrawable = it.second
+            binding.batteryInformation.setTextColor(it.first)
+            binding.batteryInformation.startDrawable?.setTint(it.first)
+        }
 
         batteryInfo = battery {
-            batteryInformation.text = "${it.percent.toInt()}%"
-            batteryLevelAlert(it.percent)
-            batteryInfoItem(it)
+            binding.batteryInformation.text = "${it.percent.toInt()}%"
+            batteryInformation.batteryLevelAlert(it.percent)
+            batteryInformation.batteryInfoItem(it)
         }
     }
 

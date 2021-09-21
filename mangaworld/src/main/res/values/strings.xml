@@ -15,4 +15,6 @@
     <string name="go_download">GO DOWNLOAD</string>
     <string name="chapter_count">Chapters: %d</string>
     <string name="page_count">Pages: %d</string>
+    <string name="reader_padding_between_pages">Reader Padding Between Pages</string>
+    <string name="default_padding_summary">Default is 4</string>
 </resources>

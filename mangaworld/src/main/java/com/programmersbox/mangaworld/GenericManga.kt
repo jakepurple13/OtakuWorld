@@ -22,14 +22,19 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
+import androidx.preference.SeekBarPreference
 import androidx.preference.SwitchPreference
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.*
@@ -42,6 +47,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import java.io.File
 
@@ -107,7 +116,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     override fun customPreferences(preferenceScreen: SettingsDsl) {
-        preferenceScreen.generalSettings { _, it ->
+        preferenceScreen.generalSettings { fragment, it ->
             it.addPreference(
                 SwitchPreference(it.context).apply {
                     title = it.context.getString(R.string.showAdultSources)
@@ -120,6 +129,32 @@ class GenericManga(val context: Context) : GenericInfo {
                         true
                     }
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_text_format_24)
+                }
+            )
+
+            it.addPreference(
+                SeekBarPreference(it.context).apply {
+                    title = it.context.getString(R.string.reader_padding_between_pages)
+                    summary = it.context.getString(R.string.default_padding_summary)
+                    setOnPreferenceChangeListener { _, newValue ->
+                        if (newValue is Int) {
+                            fragment.lifecycleScope.launch(Dispatchers.IO) {
+                                it.context.dataStore.edit { s -> s[PAGE_PADDING] = newValue }
+                            }
+                        }
+                        true
+                    }
+                    setDefaultValue(4)
+                    showSeekBarValue = true
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_format_line_spacing_24)
+                    min = 0
+                    max = 10
+                    fragment.lifecycleScope.launch {
+                        it.context.dataStore.data
+                            .map { s -> s[PAGE_PADDING] ?: 4 }
+                            .flowWithLifecycle(fragment.lifecycle)
+                            .collect { runOnUIThread { value = it } }
+                    }
                 }
             )
         }

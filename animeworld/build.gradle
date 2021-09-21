@@ -118,6 +118,7 @@ dependencies {
     implementation rxandroid
     implementation rxbinding
     implementation rxbindingKotlin
+    implementation coroutinesRX
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools

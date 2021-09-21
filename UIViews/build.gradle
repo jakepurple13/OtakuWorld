@@ -137,4 +137,6 @@ dependencies {
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
     implementation "me.onebone:toolbar-compose:2.2.0"
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:1.0.3'
+
+    implementation datastore.datastore
 }

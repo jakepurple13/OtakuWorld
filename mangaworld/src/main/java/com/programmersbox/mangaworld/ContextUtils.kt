@@ -11,6 +11,7 @@ import android.os.Handler
 import android.provider.MediaStore
 import android.util.AttributeSet
 import android.view.View
+import androidx.datastore.preferences.core.intPreferencesKey
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import io.reactivex.subjects.PublishSubject
@@ -135,3 +136,5 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
         }
     }
 }
+
+val PAGE_PADDING = intPreferencesKey("page_padding")

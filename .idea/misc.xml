@@ -43,7 +43,7 @@
         <entry key="UIViews/src/main/res/layout/notification_item.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/search_item.xml" value="0.2325657894736842" />
         <entry key="UIViews/src/main/res/menu/details_menu.xml" value="0.225" />
-        <entry key="UIViews/src/main/res/xml/root_preferences.xml" value="0.2325657894736842" />
+        <entry key="UIViews/src/main/res/xml/root_preferences.xml" value="0.25" />
         <entry key="animeworld/src/main/res/drawable/progress_bar.xml" value="0.24039087947882737" />
         <entry key="animeworld/src/main/res/layout/anime_list_item.xml" value="0.23029315960912053" />
         <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
@@ -57,13 +57,14 @@
         <entry key="animeworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
         <entry key="animeworldtv/src/main/res/layout/tv_item.xml" value="0.12894736842105264" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.13941368078175895" />
-        <entry key="mangaworld/src/main/res/layout/activity_read.xml" value="0.1" />
+        <entry key="mangaworld/src/main/res/layout/activity_read.xml" value="0.18" />
         <entry key="mangaworld/src/main/res/layout/download_navigation_fragment.xml" value="0.22430555555555556" />
         <entry key="mangaworld/src/main/res/layout/downloaded_item.xml" value="0.20555555555555555" />
         <entry key="mangaworld/src/main/res/layout/fragment_download_viewer.xml" value="0.21319444444444444" />
         <entry key="mangaworld/src/main/res/layout/page_end_chapter_item.xml" value="0.1" />
         <entry key="mangaworld/src/main/res/layout/page_item.xml" value="0.1" />
         <entry key="mangaworld/src/main/res/layout/page_next_chapter_item.xml" value="0.21805555555555556" />
+        <entry key="mangaworld/src/main/res/layout/reader_settings_dialog.xml" value="0.2299342105263158" />
         <entry key="novelworld/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.14078947368421052" />
         <entry key="novelworld/src/main/res/layout/novel_list_item.xml" value="0.23029315960912053" />
         <entry key="novelworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
