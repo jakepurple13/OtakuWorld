@@ -3,7 +3,9 @@ package com.programmersbox.mangaworld
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.graphics.Color
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -39,9 +41,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
+import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -59,6 +65,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.material.composethemeadapter.MdcTheme
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
@@ -67,23 +74,28 @@ import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
+import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.rxutils.invoke
-import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.BATTERY_PERCENT
+import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import com.programmersbox.uiviews.utils.batteryAlertPercent
+import com.programmersbox.uiviews.utils.dataStore
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
@@ -151,7 +163,7 @@ class ReadActivity1 : ComponentActivity() {
 
                 BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
 
-                val batteryImage by batteryInfoItem
+                /*val batteryImage by batteryInfoItem
                     .map {
                         when {
                             it.isCharging -> BatteryViewType.CHARGING_FULL
@@ -169,7 +181,7 @@ class ReadActivity1 : ComponentActivity() {
                 val batteryLevel by batteryLevelAlert
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeAsState(0f)
+                    .subscribeAsState(0f)*/
 
                 val listState = rememberLazyListState()
 
@@ -185,13 +197,13 @@ class ReadActivity1 : ComponentActivity() {
                             Row(
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Icon(
+                                /*Icon(
                                     batteryImage.icon,
                                     contentDescription = null,
                                     tint = if (batteryLevel <= batteryAlertPercent) androidx.compose.ui.graphics.Color.Red
                                     else MaterialTheme.colors.onBackground
                                 )
-                                Text("${batteryLevel.toInt()}%", style = MaterialTheme.typography.body1)
+                                Text("${batteryLevel.toInt()}%", style = MaterialTheme.typography.body1)*/
                             }
 
                             Text(
@@ -497,16 +509,7 @@ class ReadActivity : AppCompatActivity() {
 
     private var batteryInfo: BroadcastReceiver? = null
 
-    private val batteryLevelAlert = PublishSubject.create<Float>()
-    private val batteryInfoItem = PublishSubject.create<Battery>()
-
-    enum class BatteryViewType(val icon: GoogleMaterial.Icon) {
-        CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full),
-        DEFAULT(GoogleMaterial.Icon.gmd_battery_std),
-        FULL(GoogleMaterial.Icon.gmd_battery_full),
-        ALERT(GoogleMaterial.Icon.gmd_battery_alert),
-        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown)
-    }
+    private val batteryInformation by lazy { BatteryInformation(this) }
 
     private lateinit var binding: ActivityReadBinding
 
@@ -584,6 +587,72 @@ class ReadActivity : AppCompatActivity() {
         binding.pageChoice.addOnChangeListener { _, value, fromUser ->
             if (fromUser) binding.readView.scrollToPosition(value.toInt() - 1)
         }
+
+        var decor = VerticalSpaceItemDecoration(4)
+        binding.readView.addItemDecoration(decor)
+        lifecycleScope.launch {
+            dataStore.data
+                .map { s -> s[PAGE_PADDING] ?: 4 }
+                .flowWithLifecycle(lifecycle)
+                .collect {
+                    runOnUiThread {
+                        binding.readView.removeItemDecoration(decor)
+                        decor = VerticalSpaceItemDecoration(it)
+                        binding.readView.addItemDecoration(decor)
+                    }
+                }
+        }
+
+        binding.readerSettings.setOnClickListener {
+
+            val readerBinding = ReaderSettingsDialogBinding.inflate(layoutInflater)
+
+            val padding = runBlocking { dataStore.data.first()[PAGE_PADDING] ?: 4 }
+            readerBinding.pagePaddingSlider.value = padding.toFloat()
+            readerBinding.sliderValue.text = padding.toString()
+            readerBinding.pagePaddingSlider.addOnChangeListener { _, value, fromUser ->
+                if (fromUser) {
+                    lifecycleScope.launch(Dispatchers.IO) { dataStore.edit { s -> s[PAGE_PADDING] = value.toInt() } }
+                }
+                readerBinding.sliderValue.text = value.toInt().toString()
+            }
+
+            val battery = runBlocking { dataStore.data.first()[BATTERY_PERCENT] ?: 20 }
+            readerBinding.batterySlider.value = battery.toFloat()
+            readerBinding.batterySliderValue.text = battery.toString()
+            readerBinding.batterySlider.addOnChangeListener { _, value, fromUser ->
+                if (fromUser) {
+                    lifecycleScope.launch(Dispatchers.IO) { dataStore.edit { s -> s[BATTERY_PERCENT] = value.toInt() } }
+                }
+                readerBinding.batterySliderValue.text = value.toInt().toString()
+            }
+
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.settings)
+                .setView(readerBinding.root)
+                /*.setView(
+                    ComposeView(this).apply {
+                        setContent {
+
+
+
+                        }
+                    }
+                )*/
+                .setPositiveButton(R.string.ok) { d, _ -> d.dismiss() }
+                .show()
+        }
+    }
+
+    class VerticalSpaceItemDecoration(private val verticalSpaceHeight: Int) : RecyclerView.ItemDecoration() {
+        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+            if (parent.getChildAdapterPosition(view) != parent.adapter!!.itemCount - 1) {
+                outRect.bottom = view.context.dpToPx(verticalSpaceHeight)
+                outRect.top = view.context.dpToPx(verticalSpaceHeight)
+            }
+        }
+
+        private fun Context.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun loadFileImages(file: File) {
@@ -591,14 +660,14 @@ class ReadActivity : AppCompatActivity() {
         Single.create<List<String>> {
             file.listFiles()
                 ?.sortedBy { f -> f.name.split(".").first().toInt() }
-                ?.map(File::toUri)
-                ?.map(Uri::toString)
+                ?.fastMap(File::toUri)
+                ?.fastMap(Uri::toString)
                 ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
         }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy {
-                BigImageViewer.prefetch(*it.map(Uri::parse).toTypedArray())
+                BigImageViewer.prefetch(*it.fastMap(Uri::parse).toTypedArray())
                 binding.readLoading
                     .animate()
                     .alpha(0f)
@@ -630,7 +699,7 @@ class ReadActivity : AppCompatActivity() {
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }
             ?.subscribeBy { pages: List<String> ->
-                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
+                BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray())
                 binding.readLoading
                     .animate()
                     .alpha(0f)
@@ -661,39 +730,21 @@ class ReadActivity : AppCompatActivity() {
             sizePx = binding.batteryInformation.textSize.roundToInt()
         }
 
-        Flowables.combineLatest(
-            batteryLevelAlert
-                .map { it <= batteryAlertPercent }
-                .map { if (it) Color.RED else normalBatteryColor }
-                .toLatestFlowable(),
-            batteryInfoItem
-                .map {
-                    when {
-                        it.isCharging -> BatteryViewType.CHARGING_FULL
-                        it.percent <= batteryAlertPercent -> BatteryViewType.ALERT
-                        it.percent >= 95 -> BatteryViewType.FULL
-                        it.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                        else -> BatteryViewType.DEFAULT
-                    }
-                }
-                .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(this, it.icon).apply { sizePx = binding.batteryInformation.textSize.roundToInt() } }
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                it.second.colorInt = it.first
-                binding.batteryInformation.startDrawable = it.second
-                binding.batteryInformation.setTextColor(it.first)
-                binding.batteryInformation.startDrawable?.setTint(it.first)
-            }
-            .addTo(disposable)
+        batteryInformation.setup(
+            disposable = disposable,
+            size = binding.batteryInformation.textSize.roundToInt(),
+            normalBatteryColor = normalBatteryColor
+        ) {
+            it.second.colorInt = it.first
+            binding.batteryInformation.startDrawable = it.second
+            binding.batteryInformation.setTextColor(it.first)
+            binding.batteryInformation.startDrawable?.setTint(it.first)
+        }
 
         batteryInfo = battery {
             binding.batteryInformation.text = "${it.percent.toInt()}%"
-            batteryLevelAlert(it.percent)
-            batteryInfoItem(it)
+            batteryInformation.batteryLevelAlert(it.percent)
+            batteryInformation.batteryInfoItem(it)
         }
     }
 

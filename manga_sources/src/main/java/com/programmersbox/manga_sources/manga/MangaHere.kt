@@ -1,5 +1,6 @@
 package com.programmersbox.manga_sources.manga
 
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
 import com.squareup.duktape.Duktape
 import io.reactivex.Single
@@ -23,7 +24,7 @@ object MangaHere : ApiService {
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         Jsoup.connect("$baseUrl/directory/$page.htm?latest")
             .cookie("isAdult", "1").get()
-            .select(".manga-list-1-list li").map {
+            .select(".manga-list-1-list li").fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
                     description = "",
@@ -38,7 +39,7 @@ object MangaHere : ApiService {
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         Jsoup.connect("$baseUrl/directory/$page.htm")
             .cookie("isAdult", "1").get()
-            .select(".manga-list-1-list li").map {
+            .select(".manga-list-1-list li").fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
                     description = "",
@@ -74,7 +75,7 @@ object MangaHere : ApiService {
                 .build()
             val client = OkHttpClient().newCall(request).execute()
             Jsoup.parse(client.body?.string()).select(".manga-list-4-list > li")
-                .map {
+                .fastMap {
                     ItemModel(
                         title = it.select("a").first()!!.attr("title"),
                         description = it.select("p.manga-list-4-item-tip").last()!!.text(),
@@ -158,7 +159,8 @@ object MangaHere : ApiService {
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         it.onSuccess(
-            pageListParse(Jsoup.connect(chapterModel.url).get()).map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            pageListParse(Jsoup.connect(chapterModel.url).get())
+                .fastMap { p -> Storage(link = p, source = chapterModel.url, quality = "Good", sub = "Yes") }
         )
     }
 
@@ -171,7 +173,7 @@ object MangaHere : ApiService {
             the last two isn't 1 or doesn't have an Int at the end of the last imageUrl's filename, drop last Page
         */
         fun List<String>.dropLastIfBroken(): List<String> {
-            val list = this.takeLast(2).map { page ->
+            val list = this.takeLast(2).fastMap { page ->
                 try {
                     page.substringBeforeLast(".").substringAfterLast("/").takeLast(2).toInt()
                 } catch (_: NumberFormatException) {
@@ -191,7 +193,7 @@ object MangaHere : ApiService {
             val deobfuscatedScript = duktape.evaluate(script).toString()
             val urls = deobfuscatedScript.substringAfter("newImgs=['").substringBefore("'];").split("','")
             duktape.close()
-            urls.map { s -> "https:$s" }
+            urls.fastMap { s -> "https:$s" }
         } else {
             val html = document.html()
             val link = document.location()

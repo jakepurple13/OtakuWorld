@@ -95,20 +95,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             .doOnError { }
             .subscribeBy { appUpdateCheck.onNext(it) }
             .addTo(disposable)
-
-        /*sourcePublish.onNext(currentSource)
-
-        sourcePublish
-            .subscribe { currentSource = it }
-            .addTo(disposable)
-
-        downloadOrStreamPublish
-            .subscribe { downloadOrStream = it }
-            .addTo(disposable)
-
-        updateCheckPublish
-            .subscribe { lastUpdateCheck = it }
-            .addTo(disposable)*/
     }
 
     override fun onSupportNavigateUp(): Boolean = currentNavController?.value?.navigateUp() ?: false

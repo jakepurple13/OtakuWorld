@@ -1,5 +1,6 @@
 package com.programmersbox.manga_sources.manga
 
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.asJsoup
@@ -24,8 +25,7 @@ object AsuraScans : ApiService, KoinComponent {
             "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
         ).execute().asJsoup()
             .select("div.bs")
-            .map {
-
+            .fastMap {
                 val s = it.select("div.bsx > a")
 
                 ItemModel(
@@ -48,7 +48,7 @@ object AsuraScans : ApiService, KoinComponent {
             "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
         ).execute().asJsoup()
             .select("div.bs")
-            .map {
+            .fastMap {
 
                 val s = it.select("div.bsx > a")
 
@@ -85,7 +85,7 @@ object AsuraScans : ApiService, KoinComponent {
         val i = request.select("div.bigcontent, div.animefull, div.main-info")
 
         val c = request.select("div.bxcl ul li, div.cl ul li, ul li:has(div.chbox):has(div.eph-num)")
-            .map {
+            .fastMap {
                 val urlElement = it.select(".lchx > a, span.leftoff a, div.eph-num > a").first()!!
                 ChapterModel(
                     url = urlElement.attr("abs:href"),
@@ -102,7 +102,7 @@ object AsuraScans : ApiService, KoinComponent {
             url = model.url,
             imageUrl = model.imageUrl,
             chapters = c,
-            genres = i.select("span:contains(Genre) a, .mgen a").map { element -> element.text() }.distinct(),
+            genres = i.select("span:contains(Genre) a, .mgen a").fastMap { element -> element.text() }.distinct(),
             alternativeNames = emptyList(),
             source = Sources.ASURA_SCANS
         )
@@ -144,8 +144,8 @@ object AsuraScans : ApiService, KoinComponent {
         ).execute().asJsoup()
             .select("div.rdminimal img[loading*=lazy]")
             .filterNot { it.attr("abs:src").isNullOrEmpty() }
-            .map { it.attr("abs:src") }
-            .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            .fastMap { it.attr("abs:src") }
+            .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
 
         it.onSuccess(request)
 

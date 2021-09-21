@@ -1,5 +1,6 @@
 package com.programmersbox.novel_sources.novels
 
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
 import com.programmersbox.novel_sources.Sources
 import com.programmersbox.novel_sources.toJsoup
@@ -18,7 +19,7 @@ object WuxiaWorld : ApiService {
         Single.create { emitter ->
             Jsoup.connect("$baseUrl/search.ajax?type=&query=$searchText").followRedirects(true).post()
                 //.also { println(it) }
-                .select("li.option").map {
+                .select("li.option").fastMap {
                     ItemModel(
                         title = it.select("a").text(),
                         description = "",
@@ -38,7 +39,7 @@ object WuxiaWorld : ApiService {
         val pop = "/wuxia-list?view=list&page=$page"
         "$baseUrl$pop".toJsoup()
             .select("div.update_item")
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it
                         .select("h3")
@@ -60,7 +61,7 @@ object WuxiaWorld : ApiService {
         val pop = "/wuxia-list?view=list&sort=popularity&page=$page"
         "$baseUrl$pop".toJsoup()
             .select("div.update_item")
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it
                         .select("h3")
@@ -94,7 +95,7 @@ object WuxiaWorld : ApiService {
                 .select("div.row")
                 .select("span")
                 .select("a")
-                .map {
+                .fastMap {
                     ChapterModel(
                         name = it.attr("title"),
                         url = it.attr("abs:href"),

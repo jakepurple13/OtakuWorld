@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
@@ -51,10 +52,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.favoritesdatabase.NotificationItem
-import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -87,6 +85,7 @@ class DetailsFragment : Fragment() {
     }
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
+    private val historyDao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
 
     private val args: DetailsFragmentArgs by navArgs()
 
@@ -114,7 +113,6 @@ class DetailsFragment : Fragment() {
                     MdcTheme {
                         Scaffold(
                             topBar = {
-
                                 TopAppBar(
                                     modifier = Modifier.zIndex(2f),
                                     title = { Text(info.title) },
@@ -169,7 +167,7 @@ class DetailsFragment : Fragment() {
             ?.toInfoModel()
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribeBy { info -> setContent { DetailsView(info) } }
+            ?.subscribeBy { info -> setContent { MdcTheme { DetailsView(info) } } }
             ?.addTo(disposable)
     }
 
@@ -202,206 +200,212 @@ class DetailsFragment : Fragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(false)
 
-        MdcTheme {
+        val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
 
-            val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
+        val systemUiController = rememberSystemUiController()
 
-            val systemUiController = rememberSystemUiController()
+        swatchInfo.value?.rgb?.toComposeColor()
+            ?.animate()?.value
+            ?.let { s ->
+                systemUiController.setStatusBarColor(
+                    color = s,
+                    darkIcons = s.luminance() > .5f
+                )
+            }
 
-            swatchInfo.value?.rgb?.toComposeColor()
-                ?.animate()?.value
-                ?.let { s ->
-                    systemUiController.setStatusBarColor(
-                        color = s,
-                        darkIcons = s.luminance() > .5f
+        val scope = rememberCoroutineScope()
+        val scaffoldState = rememberScaffoldState()
+
+        fun showSnackBar(text: Int, duration: SnackbarDuration = SnackbarDuration.Short) {
+            scope.launch {
+                scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                scaffoldState.snackbarHostState.showSnackbar(getString(text), null, duration)
+            }
+        }
+
+        Scaffold(
+            scaffoldState = scaffoldState,
+            topBar = {
+                val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+
+                TopAppBar(
+                    modifier = Modifier.zIndex(2f),
+                    title = { Text(info.title, color = topBarColor) },
+                    navigationIcon = {
+                        IconButton(onClick = { findNavController().popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                        }
+                    },
+                    actions = {
+                        var showDropDown by remember { mutableStateOf(false) }
+
+                        val dropDownDismiss = { showDropDown = false }
+
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss,
+                        ) {
+
+                            //TODO: Don't forget to add the mark as dialog
+
+                            /*DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+
+                                }
+                            ) { Text(stringResource(id = R.string.markAs)) }*/
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                }
+                            ) { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) }
+
+                            if (!isSaved) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        lifecycleScope.launch(Dispatchers.IO) {
+                                            dao.insertNotification(
+                                                NotificationItem(
+                                                    id = info.hashCode(),
+                                                    url = info.url,
+                                                    summaryText = requireContext()
+                                                        .getString(
+                                                            R.string.hadAnUpdate,
+                                                            info.title,
+                                                            info.chapters.firstOrNull()?.name ?: ""
+                                                        ),
+                                                    notiTitle = info.title,
+                                                    imageUrl = info.imageUrl,
+                                                    source = info.source.serviceName,
+                                                    contentTitle = info.title
+                                                )
+                                            ).subscribe()
+                                        }
+                                    }
+                                ) { Text(stringResource(id = R.string.save_for_later)) }
+                            }
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
+                                }
+                            ) { Text(stringResource(id = R.string.global_search_by_name)) }
+                        }
+
+                        IconButton(
+                            onClick = {
+                                startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, info.url)
+                                    putExtra(Intent.EXTRA_TITLE, info.title)
+                                }, "Share ${info.title}"))
+                            }
+                        ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+                        IconButton(onClick = { showDropDown = true }) {
+                            Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+                        }
+                    },
+                    backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface,
+                )
+            },
+            snackbarHost = {
+                SnackbarHost(it) { data ->
+                    val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
+                    val font = swatchInfo.value?.titleColor?.toComposeColor() ?: MaterialTheme.colors.surface
+                    Snackbar(
+                        elevation = 15.dp,
+                        backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colors.onSurface.toArgb(), .25f)),
+                        contentColor = font,
+                        snackbarData = data
                     )
                 }
+            },
+            backgroundColor = Color.Transparent,
+            modifier = Modifier
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.background,
+                            MaterialTheme.colors.background
+                        )
+                    )
+                )
+        ) { p ->
 
-            val scope = rememberCoroutineScope()
-            val scaffoldState = rememberScaffoldState()
+            val header: @Composable () -> Unit = {
+                DetailsHeader(
+                    model = info,
+                    logo = painterResource(id = logo.notificationId),
+                    isFavorite = favoriteListener,
+                    swatchInfo = swatchInfo
+                ) { b ->
+                    fun addItem(model: InfoModel) {
+                        val db = model.toDbModel(model.chapters.size)
+                        Completable.concatArray(
+                            FirebaseDb.insertShow(db),
+                            dao.insertFavorite(db).subscribeOn(Schedulers.io())
+                        )
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe()
+                            .addTo(disposable)
+                    }
 
-            fun showSnackBar(text: Int, duration: SnackbarDuration = SnackbarDuration.Short) {
-                scope.launch {
-                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                    scaffoldState.snackbarHostState.showSnackbar(getString(text), null, duration)
+                    fun removeItem(model: InfoModel) {
+                        val db = model.toDbModel(model.chapters.size)
+                        Completable.concatArray(
+                            FirebaseDb.removeShow(db),
+                            dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
+                        )
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe()
+                            .addTo(disposable)
+                    }
+
+                    (if (b) ::removeItem else ::addItem)(info)
                 }
             }
 
-            Scaffold(
-                scaffoldState = scaffoldState,
-                topBar = {
-                    val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+            val state = rememberCollapsingToolbarScaffoldState()
 
-                    TopAppBar(
-                        modifier = Modifier.zIndex(2f),
-                        title = { Text(info.title, color = topBarColor) },
-                        navigationIcon = {
-                            IconButton(onClick = { findNavController().popBackStack() }) {
-                                Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
-                            }
-                        },
-                        actions = {
-                            var showDropDown by remember { mutableStateOf(false) }
+            CollapsingToolbarScaffold(
+                modifier = Modifier.padding(p),
+                state = state,
+                scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                toolbar = { header() }
+            ) {
+                val listState = rememberLazyListState()
 
-                            val dropDownDismiss = { showDropDown = false }
-
-                            DropdownMenu(
-                                expanded = showDropDown,
-                                onDismissRequest = dropDownDismiss,
-                            ) {
-
-                                //TODO: Don't forget to add the mark as dialog
-
-                                /*DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-
-                                    }
-                                ) { Text(stringResource(id = R.string.markAs)) }*/
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                                    }
-                                ) { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) }
-
-                                if (!isSaved) {
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            dropDownDismiss()
-                                            lifecycleScope.launch(Dispatchers.IO) {
-                                                dao.insertNotification(
-                                                    NotificationItem(
-                                                        id = info.hashCode(),
-                                                        url = info.url,
-                                                        summaryText = requireContext()
-                                                            .getString(
-                                                                R.string.hadAnUpdate,
-                                                                info.title,
-                                                                info.chapters.firstOrNull()?.name ?: ""
-                                                            ),
-                                                        notiTitle = info.title,
-                                                        imageUrl = info.imageUrl,
-                                                        source = info.source.serviceName,
-                                                        contentTitle = info.title
-                                                    )
-                                                ).subscribe()
-                                            }
-                                        }
-                                    ) { Text(stringResource(id = R.string.save_for_later)) }
-                                }
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
-                                    }
-                                ) { Text(stringResource(id = R.string.global_search_by_name)) }
-                            }
-
-                            IconButton(
-                                onClick = {
-                                    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, info.url)
-                                        putExtra(Intent.EXTRA_TITLE, info.title)
-                                    }, "Share ${info.title}"))
-                                }
-                            ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
-
-                            IconButton(onClick = { showDropDown = true }) {
-                                Icon(Icons.Default.MoreVert, null, tint = topBarColor)
-                            }
-                        },
-                        backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface,
-                    )
-                },
-                snackbarHost = {
-                    SnackbarHost(it) { data ->
-                        val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
-                        val font = swatchInfo.value?.titleColor?.toComposeColor() ?: MaterialTheme.colors.surface
-                        Snackbar(
-                            elevation = 15.dp,
-                            backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colors.onSurface.toArgb(), .25f)),
-                            contentColor = font,
-                            snackbarData = data
-                        )
-                    }
-                }
-            ) { p ->
-
-                val header: @Composable () -> Unit = {
-                    DetailsHeader(
-                        model = info,
-                        logo = painterResource(id = logo.notificationId),
-                        isFavorite = favoriteListener,
-                        swatchInfo = swatchInfo
-                    ) { b ->
-                        fun addItem(model: InfoModel) {
-                            val db = model.toDbModel(model.chapters.size)
-                            Completable.concatArray(
-                                FirebaseDb.insertShow(db),
-                                dao.insertFavorite(db).subscribeOn(Schedulers.io())
-                            )
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe()
-                                .addTo(disposable)
-                        }
-
-                        fun removeItem(model: InfoModel) {
-                            val db = model.toDbModel(model.chapters.size)
-                            Completable.concatArray(
-                                FirebaseDb.removeShow(db),
-                                dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
-                            )
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe()
-                                .addTo(disposable)
-                        }
-
-                        (if (b) ::removeItem else ::addItem)(info)
-                    }
-                }
-
-                val state = rememberCollapsingToolbarScaffoldState()
-
-                CollapsingToolbarScaffold(
-                    modifier = Modifier.padding(p),
-                    state = state,
-                    scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-                    toolbar = { header() }
+                LazyColumnScrollbar(
+                    thickness = 8.dp,
+                    padding = 2.dp,
+                    listState = listState,
+                    thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
+                    thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary).copy(alpha = .6f),
                 ) {
-                    val listState = rememberLazyListState()
-
-                    LazyColumnScrollbar(
-                        thickness = 8.dp,
-                        padding = 2.dp,
-                        listState = listState,
-                        thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
-                        thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary)
-                            .copy(alpha = .6f),
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 5.dp),
+                        state = listState
                     ) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(vertical = 5.dp),
-                            state = listState
-                        ) {
-                            items(info.chapters) { c ->
-                                ChapterItem(
-                                    infoModel = info,
-                                    c = c,
-                                    read = chapters,
-                                    chapters = info.chapters,
-                                    swatchInfo = swatchInfo,
-                                    snackbar = ::showSnackBar
-                                )
-                            }
+                        items(info.chapters) { c ->
+                            ChapterItem(
+                                infoModel = info,
+                                c = c,
+                                read = chapters,
+                                chapters = info.chapters,
+                                swatchInfo = swatchInfo,
+                                snackbar = ::showSnackBar
+                            )
                         }
                     }
                 }
@@ -420,10 +424,28 @@ class DetailsFragment : Fragment() {
         snackbar: (Int) -> Unit
     ) {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+
+        fun insertRecent() {
+            scope.launch(Dispatchers.IO) {
+                historyDao.insertRecentlyViewed(
+                    RecentModel(
+                        title = infoModel.title,
+                        url = infoModel.url,
+                        imageUrl = infoModel.url,
+                        description = infoModel.description,
+                        source = infoModel.source.serviceName,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+                historyDao.removeOldData()
+            }
+        }
 
         Card(
             onClick = {
                 genericInfo.chapterOnClick(c, chapters, context)
+                insertRecent()
                 ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                     .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
                     .subscribeOn(Schedulers.io())
@@ -440,7 +462,22 @@ class DetailsFragment : Fragment() {
 
             Column(modifier = Modifier.padding(16.dp)) {
 
-                Row {
+                Row(
+                    modifier = Modifier.clickable {
+                        val b = read.fastAny { it.url == c.url }
+                        ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                            .let {
+                                Completable.mergeArray(
+                                    if (!b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                    if (!b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                )
+                            }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe { snackbar(if (!b) R.string.addedChapterItem else R.string.removedChapterItem) }
+                            .addTo(disposable)
+                    }
+                ) {
                     Checkbox(
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b ->
@@ -487,6 +524,7 @@ class DetailsFragment : Fragment() {
                     OutlinedButton(
                         onClick = {
                             genericInfo.chapterOnClick(c, chapters, context)
+                            insertRecent()
                             ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                                 .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
                                 .subscribeOn(Schedulers.io())
@@ -561,8 +599,6 @@ class DetailsFragment : Fragment() {
         favoriteClick: (Boolean) -> Unit
     ) {
 
-        //var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
-
         var imagePopup by remember { mutableStateOf(false) }
 
         if (imagePopup) {
@@ -612,7 +648,7 @@ class DetailsFragment : Fragment() {
                                     swatchInfo.value?.rgb ?: Color.Transparent.toArgb(),
                                     0.25f
                                 ),
-                                200//127
+                                200
                             )
                             .toComposeColor()
                             .animate().value
@@ -660,8 +696,9 @@ class DetailsFragment : Fragment() {
                         items(model.genres) {
                             CustomChip(
                                 category = it,
-                                textColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value,
-                                backgroundColor = swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f)?.animate()?.value,
+                                textColor = (swatchInfo.value?.rgb?.toComposeColor() ?: MaterialTheme.colors.onSurface).animate().value,
+                                backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: MaterialTheme.colors.surface)
+                                    .animate().value,
                                 modifier = Modifier.fadeInAnimation()
                             )
                         }

@@ -5,18 +5,21 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,6 +27,8 @@ import androidx.compose.ui.util.fastAny
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteDialogFactory
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import com.google.accompanist.placeholder.PlaceholderHighlight
@@ -33,14 +38,9 @@ import com.google.android.gms.cast.framework.CastContext
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.anime.Movies
-import com.programmersbox.anime_sources.anime.Torrents
 import com.programmersbox.anime_sources.anime.WcoStream
-import com.programmersbox.anime_sources.anime.Yts
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
-import com.programmersbox.animeworld.ytsdatabase.Torrent
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -53,6 +53,8 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.animatedItems
+import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import com.tonyodev.fetch2.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -111,34 +113,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
 
                 when (model.source) {
-                    Yts -> {
-                        val f = model.extras["torrents"].toString().fromJson<Torrents>()?.let {
-                            val m = model.extras["info"].toString().fromJson<Movies>()
-                            Torrent(
-                                title = m?.title.orEmpty(),
-                                banner_url = m?.background_image.orEmpty(),
-                                url = it.url.orEmpty(),
-                                hash = it.hash.orEmpty(),
-                                quality = it.quality.orEmpty(),
-                                type = it.type.orEmpty(),
-                                seeds = it.seeds?.toInt() ?: 0,
-                                peers = it.peers?.toInt() ?: 0,
-                                size_pretty = it.size.orEmpty(),
-                                size = it.size_bytes?.toLong() ?: 0L,
-                                date_uploaded = it.date_uploaded.orEmpty(),
-                                date_uploaded_unix = it.date_uploaded_unix.toString(),
-                                movieId = m?.id?.toInt() ?: 0,
-                                imdbCode = m?.imdb_code.orEmpty(),
-                            )
-                        }
-
-                        val serviceIntent = Intent(context, DownloadService::class.java)
-                        serviceIntent.putExtra(DownloadService.TORRENT_JOB, f)
-                        context.startService(serviceIntent)
-                    }
-                    else -> {
-                        GlobalScope.launch { fetchIt(model) }
-                    }
+                    else -> GlobalScope.launch { fetchIt(model) }
                 }
             }
         }
@@ -200,13 +175,14 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     override fun customPreferences(preferenceScreen: SettingsDsl) {
 
-        preferenceScreen.viewSettings {
+        preferenceScreen.viewSettings { s, it ->
             it.addPreference(
                 Preference(it.context).apply {
                     title = context.getString(R.string.video_menu_title)
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_video_library_24)
                     setOnPreferenceClickListener {
-                        openVideos()
+                        s.findNavController()
+                            .navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
                         true
                     }
                 }
@@ -243,14 +219,15 @@ class GenericAnime(val context: Context) : GenericInfo {
                     title = context.getString(R.string.downloads_menu_title)
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
                     setOnPreferenceClickListener {
-                        openDownloads()
+                        s.findNavController()
+                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
                         true
                     }
                 }
             )
         }
 
-        preferenceScreen.generalSettings {
+        preferenceScreen.generalSettings { _, it ->
 
             it.addPreference(
                 SwitchPreference(it.context).apply {
@@ -304,14 +281,27 @@ class GenericAnime(val context: Context) : GenericInfo {
             )
         }
 
-    }
+        preferenceScreen.navigationSetup {
+            it.findNavController()
+                .graph
+                .addDestination(
+                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = DownloadViewerFragment::class.java.hashCode()
+                        className = DownloadViewerFragment::class.java.name
+                    }
+                )
 
-    private fun openDownloads() {
-        DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
-    }
+            it.findNavController()
+                .graph
+                .addDestination(
+                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = ViewVideosFragment::class.java.hashCode()
+                        className = ViewVideosFragment::class.java.name
+                    }
+                )
 
-    private fun openVideos() {
-        ViewVideosFragment().show(MainActivity.activity.supportFragmentManager, "videoViewer")
+        }
+
     }
 
     @ExperimentalMaterialApi
@@ -348,6 +338,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
@@ -357,8 +348,13 @@ class GenericAnime(val context: Context) : GenericInfo {
         listState: LazyListState,
         onClick: (ItemModel) -> Unit
     ) {
+        val animated by updateAnimatedItemsState(newList = list)
         LazyColumn(state = listState) {
-            items(list) {
+            animatedItems(
+                animated,
+                enterTransition = fadeIn(),
+                exitTransition = fadeOut()
+            ) {
                 Card(
                     onClick = { onClick(it) },
                     modifier = Modifier

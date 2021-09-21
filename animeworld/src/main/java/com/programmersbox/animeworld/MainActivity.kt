@@ -27,8 +27,6 @@ class MainActivity : BaseMainActivity() {
 
         cast.init(this)
 
-        Notifications.setup(this)
-
         WcoStream.RECENT_TYPE = wcoRecent
 
         when (intent.data) {

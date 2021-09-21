@@ -74,10 +74,8 @@ fun Modifier.fadeInAnimation(): Modifier = composed {
 }
 
 object ComposableUtils {
-
     val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
     val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { 480.toDp() }
-
 }
 
 @Composable
@@ -185,8 +183,8 @@ fun Int.toComposeColor() = Color(this)
 fun CustomChip(
     category: String,
     modifier: Modifier = Modifier,
-    textColor: Color? = MaterialTheme.colors.onSurface,
-    backgroundColor: Color? = MaterialTheme.colors.surface
+    textColor: Color = MaterialTheme.colors.onSurface,
+    backgroundColor: Color = MaterialTheme.colors.surface
 ) {
     Surface(
         modifier = Modifier
@@ -194,13 +192,13 @@ fun CustomChip(
             .then(modifier),
         elevation = 8.dp,
         shape = RoundedCornerShape(16.dp),
-        color = backgroundColor ?: MaterialTheme.colors.surface
+        color = backgroundColor
     ) {
         Row {
             Text(
                 text = category,
                 style = MaterialTheme.typography.body2,
-                color = textColor ?: MaterialTheme.colors.onSurface,
+                color = textColor,
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.CenterVertically),
@@ -254,7 +252,6 @@ inline fun <T> LazyListScope.animatedItemsIndexed(
 fun <T> updateAnimatedItemsState(
     newList: List<T>
 ): State<List<AnimatedItem<T>>> {
-
     val state = remember { mutableStateOf(emptyList<AnimatedItem<T>>()) }
     LaunchedEffect(newList) {
         if (state.value == newList) {
@@ -341,7 +338,14 @@ suspend fun calculateDiff(
 
 @ExperimentalMaterialApi
 @Composable
-fun CoverCard(imageUrl: String, name: String, placeHolder: Int, error: Int = placeHolder, onClick: () -> Unit = {}) {
+fun CoverCard(
+    imageUrl: String,
+    name: String,
+    placeHolder: Int,
+    error: Int = placeHolder,
+    favoriteIcon: @Composable BoxScope.() -> Unit = {},
+    onClick: () -> Unit = {}
+) {
 
     val context = LocalContext.current
 
@@ -424,6 +428,8 @@ fun CoverCard(imageUrl: String, name: String, placeHolder: Int, error: Int = pla
                         .align(Alignment.BottomCenter)
                 )
             }
+
+            favoriteIcon()
         }
 
     }
@@ -723,8 +729,7 @@ fun Modifier.scaleRotateOffset(
         translationX = offset.x,
         translationY = offset.y
     )
-        // add transformable to listen to multitouch transformation events
-        // after offset
+        // add transformable to listen to multitouch transformation events after offset
         .transformable(state = state)
 }
 

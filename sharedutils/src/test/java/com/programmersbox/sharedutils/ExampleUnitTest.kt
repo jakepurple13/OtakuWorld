@@ -1,7 +1,6 @@
 package com.programmersbox.sharedutils
 
-import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.*
 import com.jakewharton.picnic.table
 import com.lordcodes.turtle.shellRun
 import com.programmersbox.helpfulutils.containsDuplicates
@@ -55,16 +54,34 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun lineCountTest() = runBlocking {
+    fun fileInfoTest() = runBlocking {
+        val grouped = true
+
         val root = File(File("..").absolutePath.removeSuffix("/sharedutils/.."))
+
+        val fileType = listOf(
+            ".kt",
+            ".xml",
+            ".gradle",
+            ".json",
+            ".pro",
+            ".properties",
+        )
+
         val q = shellRun(root) { git.gitCommand(listOf("ls-files")) }
             .split("\n")
-            .filter { it.endsWith(".kt") || it.endsWith(".xml") }
+            .filter { s -> fileType.fastAny(s::endsWith) }
+            .filter { !it.contains("ExampleInstrumentedTest.kt") && !it.contains("ExampleUnitTest.kt") }
 
         val f = q
-            .fastMap { it to File("$root/$it") }
-            .fastMap { it.second.absolutePath to it.second.readLines().size }
-            .sortedByDescending { it.second }
+            .fastMap { File("$root/$it") }
+            .fastMap { it to it.readLines() }
+            .sortedWith(
+                compareByDescending<Pair<File, List<String>>> { it.second.size }
+                    .thenBy { it.second.joinToString("\n").length }
+                    .thenBy { it.first.name }
+                    .thenBy { it.first.absolutePath }
+            )
 
         val tableList = table {
             cellStyle {
@@ -73,9 +90,53 @@ class ExampleUnitTest {
                 paddingRight = 1
             }
 
-            header { row("Size", "Path") }
-            f.fastForEach { row(it.second, it.first) }
-            footer { row(f.sumOf { it.second }, "Files: ${q.size}") }
+            header { row("Size", "Letters", "Name", "Path") }
+            if (grouped) {
+                f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }.toList()
+                    .fastForEach {
+                        row(it.first.removePrefix(".").replaceFirstChar { s -> if (s.isLowerCase()) s.titlecase() else s.toString() })
+                        it.second.fastForEach { s ->
+                            row(
+                                s.second.size,
+                                s.second.joinToString("\n").length,
+                                s.first.name,
+                                s.first.absolutePath
+                            )
+                        }
+                    }
+            } else {
+                f.fastForEach {
+                    row(
+                        it.second.size,
+                        it.second.joinToString("\n").length,
+                        it.first.name,
+                        it.first.absolutePath
+                    )
+                }
+            }
+
+            f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }
+                .toList()
+                .fastForEach { g ->
+                    row(
+                        g.second.fastSumBy { it.second.size },
+                        g.second.fastSumBy { it.second.joinToString("\n").length },
+                        "%s Files: %d".format(
+                            g.first.removePrefix(".").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                            g.second.size
+                        ),
+                        "Largest: ${g.second.fastMaxBy { it.second.size }!!.first.name} => ${g.second.maxOf { it.second.size }}",
+                    )
+                }
+
+            footer {
+                row(
+                    f.fastSumBy { it.second.size },
+                    f.fastSumBy { it.second.joinToString("\n").length },
+                    "Total Files: ${q.size}",
+                    root.absolutePath
+                )
+            }
         }
 
         println(tableList)
@@ -84,7 +145,7 @@ class ExampleUnitTest {
     class GradleHolder(val from: String, val library: String)
 
     @Test
-    fun addition_isCorrect() {
+    fun dependencyInfo() {
         val toLibrary = GradleHolder::library
         val rootFolder = File("..").absolutePath.removeSuffix("/sharedutils/..")
         val l = listOf(

@@ -10,16 +10,31 @@ import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
+import androidx.preference.SeekBarPreference
 import androidx.preference.SwitchPreference
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.*
@@ -32,6 +47,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import java.io.File
 
@@ -97,7 +116,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     override fun customPreferences(preferenceScreen: SettingsDsl) {
-        preferenceScreen.generalSettings {
+        preferenceScreen.generalSettings { fragment, it ->
             it.addPreference(
                 SwitchPreference(it.context).apply {
                     title = it.context.getString(R.string.showAdultSources)
@@ -112,19 +131,57 @@ class GenericManga(val context: Context) : GenericInfo {
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_text_format_24)
                 }
             )
+
+            it.addPreference(
+                SeekBarPreference(it.context).apply {
+                    title = it.context.getString(R.string.reader_padding_between_pages)
+                    summary = it.context.getString(R.string.default_padding_summary)
+                    setOnPreferenceChangeListener { _, newValue ->
+                        if (newValue is Int) {
+                            fragment.lifecycleScope.launch(Dispatchers.IO) {
+                                it.context.dataStore.edit { s -> s[PAGE_PADDING] = newValue }
+                            }
+                        }
+                        true
+                    }
+                    setDefaultValue(4)
+                    showSeekBarValue = true
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_format_line_spacing_24)
+                    min = 0
+                    max = 10
+                    fragment.lifecycleScope.launch {
+                        it.context.dataStore.data
+                            .map { s -> s[PAGE_PADDING] ?: 4 }
+                            .flowWithLifecycle(fragment.lifecycle)
+                            .collect { runOnUIThread { value = it } }
+                    }
+                }
+            )
         }
 
-        preferenceScreen.viewSettings {
+        preferenceScreen.viewSettings { s, it ->
             it.addPreference(
                 Preference(it.context).apply {
                     title = it.context.getString(R.string.downloaded_manga)
                     setOnPreferenceClickListener {
-                        DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
+                        s.findNavController()
+                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
                         true
                     }
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_library_books_24)
                 }
             )
+        }
+
+        preferenceScreen.navigationSetup {
+            it.findNavController()
+                .graph
+                .addDestination(
+                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = DownloadViewerFragment::class.java.hashCode()
+                        className = DownloadViewerFragment::class.java.name
+                    }
+                )
         }
     }
 
@@ -161,7 +218,27 @@ class GenericManga(val context: Context) : GenericInfo {
         ) {
             items(list.size) { i ->
                 list.getOrNull(i)?.let {
-                    CoverCard(imageUrl = it.imageUrl, name = it.title, placeHolder = R.drawable.manga_world_round_logo) { onClick(it) }
+                    CoverCard(
+                        imageUrl = it.imageUrl,
+                        name = it.title,
+                        placeHolder = R.drawable.manga_world_round_logo,
+                        favoriteIcon = {
+                            if (favorites.fastAny { f -> f.url == it.url }) {
+                                Icon(
+                                    Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colors.primary,
+                                    modifier = Modifier.align(Alignment.TopStart)
+                                )
+                                Icon(
+                                    Icons.Default.FavoriteBorder,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colors.onPrimary,
+                                    modifier = Modifier.align(Alignment.TopStart)
+                                )
+                            }
+                        }
+                    ) { onClick(it) }
                 }
             }
         }

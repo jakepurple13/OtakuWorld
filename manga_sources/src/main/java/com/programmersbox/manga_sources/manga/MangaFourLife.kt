@@ -1,6 +1,7 @@
 package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
+import androidx.compose.ui.util.fastMap
 import com.github.salomonbrys.kotson.get
 import com.github.salomonbrys.kotson.string
 import com.google.gson.JsonElement
@@ -33,13 +34,29 @@ object MangaFourLife : ApiService {
                     ?.groupValues?.get(1)?.dropLast(1)
                     ?.fromJson<List<LifeBase>>()
                     ?.sortedByDescending { m -> m.lt?.let { 1000 * it.toDouble() } }
-                    ?.map(toMangaModel) ?: getApiVersion())
+                    ?.fastMap(toMangaModel) ?: getApiVersion())
                     .orEmpty()
             )
         }
         val endRange = ((pageNumber * 24) - 1).let { if (it <= mangaList.lastIndex) it else mangaList.lastIndex }
         return mangaList.subList((pageNumber - 1) * 24, endRange)
     }
+
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create<List<ItemModel>> {
+        if (mangaList.isEmpty()) {
+            mangaList.addAll(
+                ("vm\\.Directory = (.*?.*;)".toRegex()
+                    .find(getApi("https://manga4life.com/search/?sort=lt&desc=true").toString())
+                    ?.groupValues?.get(1)?.dropLast(1)
+                    ?.fromJson<List<LifeBase>>()
+                    ?.sortedByDescending { m -> m.lt?.let { 1000 * it.toDouble() } }
+                    ?.fastMap(toMangaModel) ?: getApiVersion())
+                    .orEmpty()
+            )
+        }
+        it.onSuccess(mangaList)
+    }
+        .flatMap { super.searchList(searchText, page, it) }
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         try {
@@ -57,7 +74,7 @@ object MangaFourLife : ApiService {
         }
     }
 
-    private fun getApiVersion() = getJsonApi<List<Life>>("https://manga4life.com/_search.php")?.map {
+    private fun getApiVersion() = getJsonApi<List<Life>>("https://manga4life.com/_search.php")?.fastMap {
         ItemModel(
             title = it.s.toString(),
             description = "",
@@ -96,7 +113,7 @@ object MangaFourLife : ApiService {
                 imageUrl = model.imageUrl,
                 chapters = "vm.Chapters = (.*?);".toRegex().find(doc.html())
                     ?.groupValues?.get(0)?.removePrefix("vm.Chapters = ")?.removeSuffix(";")
-                    ?.fromJson<List<LifeChapter>>()?.map {
+                    ?.fromJson<List<LifeChapter>>()?.fastMap {
                         ChapterModel(
                             name = chapterImage(it.Chapter!!),
                             url = "https://manga4life.com/read-online/${
@@ -171,7 +188,7 @@ object MangaFourLife : ApiService {
             val imageNum = (i + 1).toString().let { "000$it" }.let { it.substring(it.length - 3) }
             "$path$chNum-$imageNum.png"
         }
-            .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
             .let(emitter::onSuccess)
     }
 

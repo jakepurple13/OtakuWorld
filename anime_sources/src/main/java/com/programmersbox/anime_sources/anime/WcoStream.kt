@@ -1,6 +1,8 @@
 package com.programmersbox.anime_sources.anime
 
 import androidx.annotation.WorkerThread
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.models.ChapterModel
@@ -53,7 +55,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
                 .data("konuara", "series")
                 .post()
                 .select("div.cerceve")
-                .map {
+                .fastMap {
                     ItemModel(
                         title = it.select("a").attr("title"),
                         description = "",
@@ -77,7 +79,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
             .select("li")
             .select("a")
             //.alsoPrint()
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it.text(),
                     description = "",
@@ -96,7 +98,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
         doc
             .select("div.ddmcc")
             .select("li")
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it.select("a").text(),
                     description = "",
@@ -117,7 +119,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
             imageUrl = doc.select("div#cat-img-desc").select("img").attr("abs:src"),
             genres = doc.select("div#cat-genre").select("div.wcobtn").eachText(),
             chapters = doc.select("div#catlist-listview").select("ul").select("li")
-                .map {
+                .fastMap {
                     ChapterModel(
                         name = it.select("a").text(),
                         url = it.select("a").attr("abs:href"),
@@ -167,7 +169,7 @@ abstract class WcoStream(allPath: String) : ShowApi(
                         "var (.*?) = \\[(.*?)\\];".toRegex().find(it)?.groups?.get(2)?.value
                             ?.replace("\"", "")
                             ?.split(",")
-                            ?.forEach {
+                            ?.fastForEach {
                                 it.trim()
                                     .decodeBase64()
                                     ?.utf8()

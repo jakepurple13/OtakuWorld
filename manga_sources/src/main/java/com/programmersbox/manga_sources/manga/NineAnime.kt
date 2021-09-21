@@ -1,5 +1,6 @@
 package com.programmersbox.manga_sources.manga
 
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
 import io.reactivex.Single
 import org.jsoup.Jsoup
@@ -22,7 +23,7 @@ object NineAnime : ApiService {
         if (searchText.isBlank()) throw Exception("No search necessary")
         Single.create { emitter ->
             Jsoup.connect("$baseUrl/search/?name=$searchText&page=$page.html").followRedirects(true).get()
-                .select("div.post").map {
+                .select("div.post").fastMap {
                     ItemModel(
                         title = it.select("p.title a").text(),
                         description = "",
@@ -41,7 +42,7 @@ object NineAnime : ApiService {
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create {
         it.onSuccess(
             Jsoup.connect("$baseUrl/category/index_$page.html").followRedirects(true).get()
-                .select("div.post").map {
+                .select("div.post").fastMap {
                     ItemModel(
                         title = it.select("p.title a").text(),
                         description = "",
@@ -67,7 +68,7 @@ object NineAnime : ApiService {
                 description = genreAndDescription.select("p.mobile-none").text(),
                 url = model.url,
                 imageUrl = model.imageUrl,
-                chapters = doc.select("ul.detail-chlist li").map {
+                chapters = doc.select("ul.detail-chlist li").fastMap {
                     ChapterModel(
                         name = it.select("a").select("span").firstOrNull()?.text() ?: it.text() ?: it.select("a").text(),
                         url = it.select("a").attr("abs:href"),
@@ -76,7 +77,7 @@ object NineAnime : ApiService {
                         source = this
                     ).apply { uploadedTime = uploaded.toDate() }
                 },
-                genres = genreAndDescription.select("p:has(span:contains(Genre)) a").map { it.text() },
+                genres = genreAndDescription.select("p:has(span:contains(Genre)) a").fastMap { it.text() },
                 alternativeNames = doc.select("div.detail-info").select("p:has(span:contains(Alternative))").text()
                     .removePrefix("Alternative(s):").split(";"),
                 source = this
@@ -128,7 +129,7 @@ object NineAnime : ApiService {
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create {
         it.onSuccess(
             Jsoup.connect("$baseUrl/category/index_$page.html?sort=updated").followRedirects(true).get()
-                .select("div.post").map {
+                .select("div.post").fastMap {
                     ItemModel(
                         title = it.select("p.title a").text(),
                         description = "",

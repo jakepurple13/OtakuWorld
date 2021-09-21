@@ -1,6 +1,7 @@
 package com.programmersbox.manga_sources.manga
 
 import androidx.annotation.WorkerThread
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.models.*
@@ -29,7 +30,7 @@ object Tsumino : ApiService {
                 .build()
             getJsonApiPost<Base>("$baseUrl/Search/Operate/", body)
                 ?.data
-                ?.map {
+                ?.fastMap {
                     ItemModel(
                         title = it.entry?.title.toString(),
                         description = "${it.entry?.duration}",
@@ -47,7 +48,7 @@ object Tsumino : ApiService {
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         getJsonApi<Base>("$baseUrl/Search/Operate/?PageNumber=$page&Sort=Newest")
             ?.data
-            ?.map {
+            ?.fastMap {
                 ItemModel(
                     title = it.entry?.title.toString(),
                     description = "${it.entry?.duration}",
@@ -62,7 +63,7 @@ object Tsumino : ApiService {
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         getJsonApi<Base>("$baseUrl/Search/Operate/?PageNumber=$page&Sort=Popularity")
             ?.data
-            ?.map {
+            ?.fastMap {
                 ItemModel(
                     title = it.entry?.title.toString(),
                     description = "${it.entry?.duration}",
@@ -102,7 +103,7 @@ object Tsumino : ApiService {
         chapterModel.name.toIntOrNull()?.let { 1..it }
             ?.map { "https://content.tsumino.com/thumbs/${chapterModel.url}/$it" }
             .orEmpty()
-            .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
             .let(emitter::onSuccess)
     }
 

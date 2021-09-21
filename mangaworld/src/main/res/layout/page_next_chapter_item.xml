@@ -26,6 +26,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/loadNextChapter"
         android:text="@string/goBack"
-        app:strokeColor="@color/colorPrimary" />
+        app:strokeColor="?colorPrimary" />
 
 </RelativeLayout>

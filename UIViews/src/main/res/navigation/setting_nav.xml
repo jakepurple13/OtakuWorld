@@ -53,6 +53,13 @@
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out" />
+        <action
+            android:id="@+id/action_settingsFragment_to_recentlyViewedFragment"
+            app:destination="@id/recentlyViewedFragment"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/favoriteFragment"
@@ -104,11 +111,23 @@
         android:label="fragment_global_search">
         <argument
             android:name="searchFor"
+            android:defaultValue=""
             app:argType="string"
-            app:nullable="false"
-            android:defaultValue="" />
+            app:nullable="false" />
         <action
             android:id="@+id/action_globalSearchFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out" />
+    </fragment>
+    <fragment
+        android:id="@+id/recentlyViewedFragment"
+        android:name="com.programmersbox.uiviews.RecentlyViewedFragment"
+        android:label="RecentlyViewedFragment">
+        <action
+            android:id="@+id/action_recentlyViewedFragment_to_detailsFragment"
             app:destination="@id/detailsFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"

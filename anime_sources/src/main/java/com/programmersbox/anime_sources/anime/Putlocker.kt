@@ -1,6 +1,7 @@
 package com.programmersbox.anime_sources.anime
 
 import android.util.Base64
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.models.ChapterModel
@@ -36,10 +37,8 @@ abstract class Putlocker(allPath: String) : ShowApi(
         doc
             .select("ul.list")
             .select("div.item")
-            .map {
-
-                val des = it.select("a.thumb").attr("onmouseover")
-                    .orEmpty()
+            .fastMap {
+                val des = it.select("a.thumb").attr("onmouseover").orEmpty()
 
                 val regex = "Tip\\('(.*)'\\)".toRegex()
                     .find(des)
@@ -63,10 +62,8 @@ abstract class Putlocker(allPath: String) : ShowApi(
             "$baseUrl/search-movies/${searchText.split(" ").joinToString("+") { it.trim() }}.html".toJsoup()
                 .select("ul.list")
                 .select("div.item")
-                .map {
-
-                    val des = it.select("a.thumb").attr("onmouseover")
-                        .orEmpty()
+                .fastMap {
+                    val des = it.select("a.thumb").attr("onmouseover").orEmpty()
 
                     val regex = "Tip\\('(.*)'\\)".toRegex()
                         .find(des)
@@ -90,10 +87,8 @@ abstract class Putlocker(allPath: String) : ShowApi(
         doc
             .select("ul.list")
             .select("div.item")
-            .map {
-
-                val des = it.select("a.thumb").attr("onmouseover")
-                    .orEmpty()
+            .fastMap {
+                val des = it.select("a.thumb").attr("onmouseover").orEmpty()
 
                 val regex = "Tip\\('(.*)'\\)".toRegex()
                     .find(des)
@@ -122,7 +117,7 @@ abstract class Putlocker(allPath: String) : ShowApi(
             imageUrl = source.imageUrl,
             genres = info.select("p:eq(2)").text().removePrefix("Genres:").split(","),
             chapters = doc.select("a.episode")
-                .map {
+                .fastMap {
                     ChapterModel(
                         it.text(),
                         it.select("a").attr("abs:href"),

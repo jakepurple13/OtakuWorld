@@ -13,7 +13,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.FileProvider
+import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import androidx.preference.*
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -27,6 +31,7 @@ import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
@@ -42,6 +47,8 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -74,9 +81,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val settingsDsl = SettingsDsl()
 
         genericInfo.customPreferences(settingsDsl)
-
-        findPreference<PreferenceCategory>("generalCategory")?.let { settingsDsl.generalSettings(it) }
-        findPreference<PreferenceCategory>("viewCategory")?.let { settingsDsl.viewSettings(it) }
+        settingsDsl.navigationSetup(this)
+        findPreference<PreferenceCategory>("generalCategory")?.let { settingsDsl.generalSettings(this, it) }
+        findPreference<PreferenceCategory>("viewCategory")?.let { settingsDsl.viewSettings(this, it) }
     }
 
     private fun accountPreferences() {
@@ -160,6 +167,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
+        findPreference<Preference>("view_history")?.setOnPreferenceClickListener {
+            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToRecentlyViewedFragment())
+            true
+        }
+
         findPreference<Preference>("view_global_search")?.setOnPreferenceClickListener {
             findNavController().navigate(SettingsFragmentDirections.showGlobalSearch())
             true
@@ -187,12 +199,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<SeekBarPreference>("battery_alert")?.let { s ->
             s.showSeekBarValue = true
-            s.setDefaultValue(requireContext().batteryAlertPercent)
-            s.value = requireContext().batteryAlertPercent
+            s.setDefaultValue(20)
             s.max = 100
             s.setOnPreferenceChangeListener { _, newValue ->
-                if (newValue is Int) requireContext().batteryAlertPercent = newValue
+                if (newValue is Int) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        requireContext().dataStore.edit { s -> s[BATTERY_PERCENT] = newValue }
+                    }
+                }
                 true
+            }
+            lifecycleScope.launch {
+                requireContext().dataStore.data
+                    .map { s -> s[BATTERY_PERCENT] ?: 20 }
+                    .flowWithLifecycle(lifecycle)
+                    .collect { runOnUIThread { s.value = it } }
             }
         }
 
@@ -432,16 +453,33 @@ class SettingsFragment : PreferenceFragmentCompat() {
 }
 
 class SettingsDsl {
-    internal var generalSettings: (PreferenceCategory) -> Unit = {}
+    internal var generalSettings: (SettingsFragment, PreferenceCategory) -> Unit = { _, _ -> }
 
-    fun generalSettings(block: (PreferenceCategory) -> Unit) {
+    fun generalSettings(block: (SettingsFragment, PreferenceCategory) -> Unit) {
         generalSettings = block
     }
 
-    internal var viewSettings: (PreferenceCategory) -> Unit = {}
+    internal var viewSettings: (SettingsFragment, PreferenceCategory) -> Unit = { _, _ -> }
 
-    fun viewSettings(block: (PreferenceCategory) -> Unit) {
+    fun viewSettings(block: (SettingsFragment, PreferenceCategory) -> Unit) {
         viewSettings = block
+    }
+
+    internal var navigationSetup: (SettingsFragment) -> Unit = {}
+
+    fun navigationSetup(block: (SettingsFragment) -> Unit) {
+        navigationSetup = block
+    }
+
+    companion object {
+        val customAnimationOptions = navOptions {
+            anim {
+                enter = R.anim.slide_in
+                exit = R.anim.fade_out
+                popEnter = R.anim.fade_in
+                popExit = R.anim.slide_out
+            }
+        }
     }
 }
 

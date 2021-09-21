@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -83,24 +84,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                 val state = rememberBottomSheetScaffoldState()
                 val scope = rememberCoroutineScope()
-                //TODO: Put this in for all scaffolds
-                //TODO: Maaaybe not, this also takes over even when not on the screen
-                /*val backCallBack = remember {
-                    object : OnBackPressedCallback(state.bottomSheetState.isExpanded) {
-                        override fun handleOnBackPressed() {
-                            when {
-                                state.bottomSheetState.isExpanded -> scope.launch { state.bottomSheetState.collapse() }
-                            }
-                        }
-                    }
+
+                BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
+                    scope.launch { state.bottomSheetState.collapse() }
                 }
-
-                backCallBack.isEnabled = state.bottomSheetState.isExpanded
-
-                DisposableEffect(key1 = requireActivity().onBackPressedDispatcher) {
-                    requireActivity().onBackPressedDispatcher.addCallback(backCallBack)
-                    onDispose { backCallBack.remove() }
-                }*/
 
                 BottomSheetDeleteScaffold(
                     listOfItems = items,
@@ -110,7 +97,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         TopAppBar(
                             title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
                             actions = {
-                                IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                                IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) {
+                                    Icon(Icons.Default.Delete, null)
+                                }
                             },
                             navigationIcon = {
                                 IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) }
@@ -150,8 +139,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                         .override(360, 480)
                                         .thumbnail(0.5f)
                                         .transform(RoundedCorners(15)),//GranularRoundedCorners(0f, 15f, 15f, 0f)),
-                                    modifier = Modifier
-                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                                     failure = {
                                         Image(
                                             painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
@@ -197,50 +185,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                             }
                         )
-
-                        /*Row {
-                            GlideImage(
-                                imageModel = item.imageUrl.orEmpty(),
-                                contentDescription = "",
-                                contentScale = ContentScale.Crop,
-                                requestBuilder = Glide.with(LocalView.current)
-                                    .asDrawable()
-                                    .override(360, 480)
-                                    .thumbnail(0.5f)
-                                    .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                failure = {
-                                    Image(
-                                        painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                                        contentDescription = item.notiTitle,
-                                        modifier = Modifier
-                                            .align(Alignment.CenterVertically)
-                                            .padding(5.dp)
-                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                    )
-                                }
-                            )
-
-                            Column(modifier = Modifier.padding(start = 5.dp)) {
-                                Text(item.notiTitle)
-                                Text(item.source)
-                            }
-                        }*/
                     }
                 ) { p ->
                     LazyColumn(contentPadding = p) { items(items) { NotificationItem(item = it, navController = findNavController()) } }
-                    /*Column(
-                        modifier = Modifier.verticalScroll(rememberScrollState())
-                    ) {
-                        StaggeredVerticalGrid(
-                            columns = 2,
-                            modifier = Modifier.padding(it)
-                        ) { items.forEach { NotificationItem(it, findNavController()) } }
-                    }*/
                 }
-
             }
         }
     }
@@ -430,60 +378,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                     }
                 }
-
-                //TODO: Below is for a LazyStaggeredVerticalGrid when its finally officially supported
-                /*Column {
-
-                Text(item.notiTitle, style = MaterialTheme.typography.h6, modifier = Modifier.padding(top = 5.dp, start = 5.dp, end = 5.dp))
-                Text(item.source, style = MaterialTheme.typography.subtitle2, modifier = Modifier.padding(horizontal = 5.dp))
-
-                GlideImage(
-                    imageModel = item.imageUrl.orEmpty(),
-                    contentDescription = "",
-                    contentScale = ContentScale.Crop,
-                    requestBuilder = Glide.with(LocalView.current)
-                        .asDrawable()
-                        .override(360, 480)
-                        .placeholder(logo.logoId)
-                        .error(logo.logoId)
-                        .fallback(logo.logoId)
-                        .transform(RoundedCorners(15)),
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(5.dp)
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                    failure = {
-                        Image(
-                            painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                            contentDescription = item.notiTitle,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(5.dp)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    }
-                )
-
-                Text(
-                    item.summaryText,
-                    style = MaterialTheme.typography.body2,
-                    modifier = Modifier
-                        .padding(horizontal = 5.dp)
-                        .padding(bottom = 5.dp)
-                )
-
-                Button(
-                    onClick = { showPopup = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(0.dp, 0.dp, 4.dp, 4.dp)
-                ) { Text(stringResource(R.string.remove), style = MaterialTheme.typography.button) }
-
-            }*/
-
             }
-
         }
-
     }
-
 }

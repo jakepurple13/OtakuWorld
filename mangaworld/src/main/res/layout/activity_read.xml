@@ -24,11 +24,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/reader_settings"
             android:stepSize="1"
             android:valueFrom="1"
             android:valueTo="2"
             tools:value="5"
             tools:valueTo="10" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/reader_settings"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_baseline_settings_24"
+            android:layout_height="wrap_content" />
 
     </RelativeLayout>
 

@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory app:title="@string/account_category_title">
 
@@ -73,6 +74,11 @@
             app:key="view_favorites"
             app:title="@string/viewFavoritesMenu" />
 
+        <Preference
+            app:icon="@drawable/ic_baseline_update_24"
+            app:key="view_history"
+            app:title="@string/history" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -110,7 +116,12 @@
             app:icon="@drawable/ic_baseline_battery_alert_24"
             app:key="battery_alert"
             app:min="1"
+            android:max="100"
+            android:defaultValue="20"
+            app:defaultValue="20"
             app:seekBarIncrement="1"
+            app:showSeekBarValue="true"
+            app:summary="@string/battery_default"
             app:title="@string/battery_alert_percentage" />
 
     </PreferenceCategory>

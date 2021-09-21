@@ -2,8 +2,8 @@ package com.programmersbox.uiviews.utils
 
 import android.content.Intent
 import android.util.SparseArray
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.util.forEach
-import androidx.core.util.set
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
@@ -14,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.uiviews.R
 
+val currentScreen = mutableStateOf<Int?>(null)
 
 fun BottomNavigationView.setupWithNavController(
     navGraphIds: List<Int>,
@@ -63,6 +64,7 @@ fun BottomNavigationView.setupWithNavController(
 
     // When a navigation item is selected
     setOnNavigationItemSelectedListener { item ->
+        currentScreen.value = item.itemId
         // Don't do anything if the state is state has already been saved.
         if (fragmentManager.isStateSaved) {
             false
@@ -163,13 +165,11 @@ private fun BottomNavigationView.setupItemReselected(
 ) {
     setOnNavigationItemReselectedListener { item ->
         val newlySelectedItemTag = graphIdToTagMap[item.itemId]
-        val selectedFragment = fragmentManager.findFragmentByTag(newlySelectedItemTag)
-                as NavHostFragment
+        val selectedFragment = fragmentManager.findFragmentByTag(newlySelectedItemTag) as NavHostFragment
         val navController = selectedFragment.navController
         // Pop the back stack to the start destination of the current navController graph
-        navController.popBackStack(
-            navController.graph.startDestination, false
-        )
+        navController.popBackStack(navController.graph.startDestination, false)
+        currentScreen.value = item.itemId
     }
 }
 

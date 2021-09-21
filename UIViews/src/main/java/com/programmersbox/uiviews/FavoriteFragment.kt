@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -106,10 +107,9 @@ class FavoriteFragment : Fragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(initial = emptyList())
 
-        val selectedSources = rememberMutableStateListOf(*allSources.map { it.serviceName }.toTypedArray())
+        val selectedSources = rememberMutableStateListOf(*allSources.fastMap(ApiService::serviceName).toTypedArray())
 
-        val showing = favorites
-            .filter { it.title.contains(searchText, true) && it.source in selectedSources }
+        val showing = favorites.filter { it.title.contains(searchText, true) && it.source in selectedSources }
 
         CollapsingToolbarScaffold(
             modifier = Modifier,
@@ -146,7 +146,7 @@ class FavoriteFragment : Fragment() {
                                         .combinedClickable(
                                             onClick = {
                                                 selectedSources.clear()
-                                                selectedSources.addAll(allSources.map { it.serviceName })
+                                                selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
                                             },
                                             onLongClick = {
                                                 selectedSources.clear()
@@ -158,7 +158,7 @@ class FavoriteFragment : Fragment() {
                             }
 
                             items(
-                                (allSources.map { it.serviceName } + showing.map { it.source })
+                                (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
                                     .groupBy { it }
                                     .toList()
                                     .sortedBy { it.first }
@@ -186,9 +186,7 @@ class FavoriteFragment : Fragment() {
                 }
             }
         ) {
-
             Scaffold { p ->
-
                 if (showing.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -295,7 +293,5 @@ class FavoriteFragment : Fragment() {
                 }
             }
         }
-
     }
-
 }

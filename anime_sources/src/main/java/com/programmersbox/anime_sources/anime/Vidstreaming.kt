@@ -1,6 +1,7 @@
 package com.programmersbox.anime_sources.anime
 
 import androidx.annotation.WorkerThread
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.gsonutils.fromJson
@@ -28,7 +29,7 @@ object Vidstreaming : ShowApi(
     override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create {
         doc
             .select("li.video-block")
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it.select("div.name").text(),
                     description = "",
@@ -43,7 +44,7 @@ object Vidstreaming : ShowApi(
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create {
         doc
             .select("li.video-block")
-            .map {
+            .fastMap {
                 ItemModel(
                     title = it.select("div.name").text(),
                     description = "",
@@ -64,7 +65,7 @@ object Vidstreaming : ShowApi(
             description = doc.select("dic.post-entry").text(),
             imageUrl = source.imageUrl,
             genres = emptyList(),
-            chapters = doc.select("div.video-info-left > ul.listing > li.video-block > a").map {
+            chapters = doc.select("div.video-info-left > ul.listing > li.video-block > a").fastMap {
                 ChapterModel(
                     it.select("div.name").text(),
                     it.select("a").attr("abs:href"),
@@ -82,7 +83,7 @@ object Vidstreaming : ShowApi(
         else Single.create<List<ItemModel>> {
             "https://streamani.net/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
                 .select("li.video-block")
-                .map {
+                .fastMap {
                     ItemModel(
                         title = it.select("div.name").text(),
                         description = "",
