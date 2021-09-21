@@ -45,7 +45,6 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
-import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -79,10 +78,7 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.BATTERY_PERCENT
-import com.programmersbox.uiviews.utils.BatteryInformation
-import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import com.programmersbox.uiviews.utils.dataStore
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -93,7 +89,6 @@ import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
@@ -591,8 +586,7 @@ class ReadActivity : AppCompatActivity() {
         var decor = VerticalSpaceItemDecoration(4)
         binding.readView.addItemDecoration(decor)
         lifecycleScope.launch {
-            dataStore.data
-                .map { s -> s[PAGE_PADDING] ?: 4 }
+            pagePadding
                 .flowWithLifecycle(lifecycle)
                 .collect {
                     runOnUiThread {
@@ -612,7 +606,7 @@ class ReadActivity : AppCompatActivity() {
             readerBinding.sliderValue.text = padding.toString()
             readerBinding.pagePaddingSlider.addOnChangeListener { _, value, fromUser ->
                 if (fromUser) {
-                    lifecycleScope.launch(Dispatchers.IO) { dataStore.edit { s -> s[PAGE_PADDING] = value.toInt() } }
+                    lifecycleScope.launch(Dispatchers.IO) { updatePref(PAGE_PADDING, value.toInt()) }
                 }
                 readerBinding.sliderValue.text = value.toInt().toString()
             }
@@ -622,7 +616,7 @@ class ReadActivity : AppCompatActivity() {
             readerBinding.batterySliderValue.text = battery.toString()
             readerBinding.batterySlider.addOnChangeListener { _, value, fromUser ->
                 if (fromUser) {
-                    lifecycleScope.launch(Dispatchers.IO) { dataStore.edit { s -> s[BATTERY_PERCENT] = value.toInt() } }
+                    lifecycleScope.launch(Dispatchers.IO) { updatePref(BATTERY_PERCENT, value.toInt()) }
                 }
                 readerBinding.batterySliderValue.text = value.toInt().toString()
             }
@@ -630,15 +624,6 @@ class ReadActivity : AppCompatActivity() {
             MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.settings)
                 .setView(readerBinding.root)
-                /*.setView(
-                    ComposeView(this).apply {
-                        setContent {
-
-
-
-                        }
-                    }
-                )*/
                 .setPositiveButton(R.string.ok) { d, _ -> d.dismiss() }
                 .show()
         }
