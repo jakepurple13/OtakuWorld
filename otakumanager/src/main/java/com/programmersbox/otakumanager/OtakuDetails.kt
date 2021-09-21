@@ -356,8 +356,8 @@ fun DetailsHeader(
                     items(model.genres) {
                         CustomChip(
                             category = it,
-                            textColor = swatchInfo?.rgb?.toComposeColor(),
-                            backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f),
+                            textColor = swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colors.onSurface,
+                            backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f) ?: MaterialTheme.colors.surface,
                             modifier = Modifier.fadeInAnimation()
                         )
                     }
