@@ -35,6 +35,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.models.ApiService
+import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -45,7 +46,9 @@ import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.PublishSubject
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -66,6 +69,22 @@ class FavoriteFragment : Fragment() {
     private val logo: MainLogo by inject()
     private val fireListener = FirebaseDb.FirebaseListener()
 
+    private val favoriteList = PublishSubject.create<List<DbModel>>()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Flowables.combineLatest(
+            fireListener.getAllShowsFlowable(),
+            dao.getAllFavorites()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+            .replay(1)
+            .refCount(1, TimeUnit.SECONDS)
+            .subscribe(favoriteList::onNext)
+            .addTo(disposable)
+    }
+
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     override fun onCreateView(
@@ -74,17 +93,7 @@ class FavoriteFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-
-        val dbFire = Flowables.combineLatest(
-            fireListener.getAllShowsFlowable(),
-            dao.getAllFavorites()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-            .replay(1)
-            .refCount(1, TimeUnit.SECONDS)
-
-        setContent { MdcTheme { FavoriteUi(favoriteItems = dbFire, allSources = genericInfo.sourceList()) } }
+        setContent { MdcTheme { FavoriteUi(favoriteItems = favoriteList.toLatestFlowable(), allSources = genericInfo.sourceList()) } }
     }
 
     override fun onDestroy() {
@@ -257,7 +266,8 @@ class FavoriteFragment : Fragment() {
                                                 Card(
                                                     onClick = {
                                                         chooseSource = false
-                                                        val i = item.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                                        val i = item
+                                                            .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                                                         findNavController()
                                                             .navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(i))
                                                     },
@@ -282,7 +292,9 @@ class FavoriteFragment : Fragment() {
                                 placeHolder = logo.logoId
                             ) {
                                 if (info.value.size == 1) {
-                                    val item = info.value.firstOrNull()?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                    val item = info.value
+                                        .firstOrNull()
+                                        ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                                     findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
                                 } else {
                                     chooseSource = true
