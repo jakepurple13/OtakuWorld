@@ -223,7 +223,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("saved_notifications")?.let { p ->
-
             itemDao.getAllNotificationCount()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

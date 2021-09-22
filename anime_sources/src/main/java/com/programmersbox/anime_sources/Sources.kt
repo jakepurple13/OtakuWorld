@@ -10,7 +10,9 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 enum class Sources(private val api: ApiService) : ApiService by api {
-    GOGOANIME(GogoAnimeApi),
+    //GOGOANIME(GogoAnimeApi),
+
+    GOGOANIME_VC(GogoAnimeVC),
 
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 

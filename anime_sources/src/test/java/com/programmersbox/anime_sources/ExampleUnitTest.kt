@@ -27,6 +27,19 @@ import org.junit.Test
 class ExampleUnitTest {
 
     @Test
+    fun gogoanimevcTest() {
+        /*val f = GogoAnimeVC.getRecent().blockingGet()
+        //println(f.joinToString("\n"))
+        val e = f.first().toInfoModel().blockingGet()
+        println(e)
+        val c = e.chapters.first().getChapterInfo().blockingGet()
+        println(c.joinToString("\n"))*/
+
+        val a = GogoAnimeVC.searchList("Mushi", 1, emptyList()).blockingGet()
+        println(a.joinToString("\n"))
+    }
+
+    @Test
     fun putlockerTest() {
 
         //val f = "http://putlockers.fm/recently-added.html".toJsoup()
@@ -559,24 +572,6 @@ class ExampleUnitTest {
         val f = WcoDubbed.searchList("one", list = emptyList()).blockingGet()
 
         println(f.joinToString("\n"))
-
-    }
-
-    @Test
-    fun addition_isCorrect() = runBlocking {
-        /*val f = YtsService.build()//getJsonApi<Base>("https://yts.mx/api/v2/list_movies.json")
-        val f1 = f.listMovies(YTSQuery.ListMoviesBuilder.getDefault().setQuery("big bang").build())
-        val movies = f1?.blockingGet()?.data?.movies
-        println(movies?.joinToString("\n"))
-
-        val m1 = f.getMovie(
-            YTSQuery.MovieBuilder().setMovieId(movies?.first()?.id?.toInt() ?: 30478).build()
-        )
-
-        println(m1.blockingGet())*/
-
-        val f = Yts.getSourceByUrl("https://yts.mx/movies/doing-time-1979")
-        println(f)
 
     }
 
