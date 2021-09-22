@@ -128,7 +128,6 @@ class FavoriteFragment : Fragment() {
                 Column(
                     modifier = Modifier.padding(5.dp)
                 ) {
-
                     OutlinedTextField(
                         value = searchText,
                         onValueChange = { searchText = it },
