@@ -14,8 +14,10 @@ import android.view.View
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
+import com.programmersbox.uiviews.utils.dataStore
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 var Context.showAdult by sharedPrefNotNullDelegate(false)
@@ -138,3 +140,5 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
 }
 
 val PAGE_PADDING = intPreferencesKey("page_padding")
+
+val Context.pagePadding get() = dataStore.data.map { it[PAGE_PADDING] ?: 4 }

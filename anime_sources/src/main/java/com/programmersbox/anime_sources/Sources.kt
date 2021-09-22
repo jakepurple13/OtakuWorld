@@ -10,7 +10,9 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 enum class Sources(private val api: ApiService) : ApiService by api {
-    GOGOANIME(GogoAnimeApi),
+    //GOGOANIME(GogoAnimeApi),
+
+    GOGOANIME_VC(GogoAnimeVC),
 
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
@@ -28,7 +30,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
     override val serviceName: String get() = this.name
 
     companion object {
-        val searchSources get() = listOf(VIDSTREAMING, PUTLOCKERTV, WCO_SUBBED)
+        val searchSources get() = listOf(VIDSTREAMING, PUTLOCKERTV, WCO_SUBBED, GOGOANIME_VC)
     }
 }
 

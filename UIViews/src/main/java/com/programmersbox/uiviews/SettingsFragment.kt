@@ -13,7 +13,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.FileProvider
-import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -48,7 +47,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -173,7 +171,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("view_global_search")?.setOnPreferenceClickListener {
-            findNavController().navigate(SettingsFragmentDirections.showGlobalSearch())
+            findNavController().navigate(GlobalNavDirections.showGlobalSearch())
             true
         }
 
@@ -203,15 +201,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             s.max = 100
             s.setOnPreferenceChangeListener { _, newValue ->
                 if (newValue is Int) {
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        requireContext().dataStore.edit { s -> s[BATTERY_PERCENT] = newValue }
-                    }
+                    lifecycleScope.launch(Dispatchers.IO) { requireContext().updatePref(BATTERY_PERCENT, newValue) }
                 }
                 true
             }
             lifecycleScope.launch {
-                requireContext().dataStore.data
-                    .map { s -> s[BATTERY_PERCENT] ?: 20 }
+                requireContext().batteryPercent
                     .flowWithLifecycle(lifecycle)
                     .collect { runOnUIThread { s.value = it } }
             }
@@ -228,7 +223,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("saved_notifications")?.let { p ->
-
             itemDao.getAllNotificationCount()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

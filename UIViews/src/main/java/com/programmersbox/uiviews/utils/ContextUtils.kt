@@ -19,6 +19,7 @@ import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -60,6 +61,10 @@ val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore("otakuworld")
 
 val BATTERY_PERCENT = intPreferencesKey("battery_percent")
+
+val Context.batteryPercent get() = dataStore.data.map { it[BATTERY_PERCENT] ?: 20 }
+
+suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 
 @JvmInline
 value class NotificationLogo(val notificationId: Int)
@@ -219,17 +224,13 @@ class BatteryInformation(val context: Context) {
         Flowables.combineLatest(
             Observable.combineLatest(
                 batteryLevelAlert,
-                context.dataStore.data
-                    .map { s -> s[BATTERY_PERCENT] ?: 20 }
-                    .asObservable()
+                context.batteryPercent.asObservable()
             ) { b, d -> b <= d }
                 .map { if (it) Color.RED else normalBatteryColor }
                 .toLatestFlowable(),
             Observable.combineLatest(
                 batteryInfoItem,
-                context.dataStore.data
-                    .map { s -> s[BATTERY_PERCENT] ?: 20 }
-                    .asObservable()
+                context.batteryPercent.asObservable()
             ) { b, d -> b to d }
                 .map {
                     when {

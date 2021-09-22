@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
@@ -206,6 +207,10 @@ class GlobalSearchFragment : Fragment() {
 
                         val bottomScaffold = rememberBottomSheetScaffoldState()
                         var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
+
+                        BackHandler(bottomScaffold.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
+                            scope.launch { bottomScaffold.bottomSheetState.collapse() }
+                        }
 
                         BottomSheetScaffold(
                             scaffoldState = bottomScaffold,

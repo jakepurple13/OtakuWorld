@@ -54,6 +54,75 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun importCount() = runBlocking {
+        val root = File(File("..").absolutePath.removeSuffix("/sharedutils/.."))
+
+        val q = shellRun(root) { git.gitCommand(listOf("ls-files")) }
+            .split("\n")
+            .filter { s -> s.endsWith(".kt") }
+            .filter { !it.contains("ExampleInstrumentedTest.kt") && !it.contains("ExampleUnitTest.kt") }
+
+        val f = q
+            .fastMap { File("$root/$it") }
+            .fastMap { it to it.readLines() }
+            .filter { it.second.fastAny { s -> s.contains("import") } }
+            .fastMap { it.first to it.second.filter { s -> s.contains("import") } }
+            .sortedWith(
+                compareByDescending<Pair<File, List<String>>> { it.second.size }
+                    .thenBy { it.second.joinToString("\n").length }
+                    .thenBy { it.first.name }
+                    .thenBy { it.first.absolutePath }
+            )
+
+        val tableList = table {
+            cellStyle {
+                border = true
+                paddingLeft = 1
+                paddingRight = 1
+            }
+
+            header {
+                row("import")
+                row("Size", "Letters", "Name", "Path")
+            }
+
+            f.fastForEach {
+                row(
+                    it.second.size,
+                    it.second.joinToString("\n").length,
+                    it.first.name,
+                    it.first.absolutePath
+                )
+            }
+
+            f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }
+                .toList()
+                .fastForEach { g ->
+                    row(
+                        g.second.fastSumBy { it.second.size },
+                        g.second.fastSumBy { it.second.joinToString("\n").length },
+                        "%s Files: %d".format(
+                            g.first.removePrefix(".").replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                            g.second.size
+                        ),
+                        "Largest: ${g.second.fastMaxBy { it.second.size }!!.first.name} => ${g.second.maxOf { it.second.size }}",
+                    )
+                }
+
+            footer {
+                row(
+                    f.fastSumBy { it.second.size },
+                    f.fastSumBy { it.second.joinToString("\n").length },
+                    "Total Files: ${q.size}",
+                    root.absolutePath
+                )
+            }
+        }
+
+        println(tableList)
+    }
+
+    @Test
     fun fileInfoTest() = runBlocking {
         val grouped = true
 

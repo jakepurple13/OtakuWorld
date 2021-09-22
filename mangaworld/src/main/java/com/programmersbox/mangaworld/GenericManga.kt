@@ -22,7 +22,6 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.FragmentNavigator
@@ -49,7 +48,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import java.io.File
@@ -138,9 +136,7 @@ class GenericManga(val context: Context) : GenericInfo {
                     summary = it.context.getString(R.string.default_padding_summary)
                     setOnPreferenceChangeListener { _, newValue ->
                         if (newValue is Int) {
-                            fragment.lifecycleScope.launch(Dispatchers.IO) {
-                                it.context.dataStore.edit { s -> s[PAGE_PADDING] = newValue }
-                            }
+                            fragment.lifecycleScope.launch(Dispatchers.IO) { it.context.updatePref(PAGE_PADDING, newValue) }
                         }
                         true
                     }
@@ -150,8 +146,7 @@ class GenericManga(val context: Context) : GenericInfo {
                     min = 0
                     max = 10
                     fragment.lifecycleScope.launch {
-                        it.context.dataStore.data
-                            .map { s -> s[PAGE_PADDING] ?: 4 }
+                        it.context.pagePadding
                             .flowWithLifecycle(fragment.lifecycle)
                             .collect { runOnUIThread { value = it } }
                     }
