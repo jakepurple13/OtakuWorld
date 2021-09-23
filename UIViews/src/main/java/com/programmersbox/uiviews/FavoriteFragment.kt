@@ -14,13 +14,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -120,76 +117,94 @@ class FavoriteFragment : Fragment() {
 
         val showing = favorites.filter { it.title.contains(searchText, true) && it.source in selectedSources }
 
+        var sortedBy by remember { mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE) }
+
         CollapsingToolbarScaffold(
             modifier = Modifier,
             state = rememberCollapsingToolbarScaffoldState(),
             scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
             toolbar = {
-                Column(
-                    modifier = Modifier.padding(5.dp)
-                ) {
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
-                        trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
-                        modifier = Modifier
-                            .padding(5.dp)
-                            .fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                Column {
+                    TopAppBar(
+                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                        title = { Text(stringResource(R.string.viewFavoritesMenu)) },
+                        actions = {
+                            GroupButton(
+                                selected = sortedBy,
+                                options = listOf(
+                                    GroupButtonModel(SortFavoritesBy.TITLE, Icons.Default.SortByAlpha),
+                                    GroupButtonModel(SortFavoritesBy.COUNT, Icons.Default.Sort)
+                                )
+                            ) { sortedBy = it }
+                        }
                     )
 
-                    Row(
-                        modifier = Modifier.padding(top = 5.dp)
+                    Column(
+                        modifier = Modifier.padding(5.dp)
                     ) {
 
-                        LazyRow {
+                        OutlinedTextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
+                            trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                        )
 
-                            item {
-                                CustomChip(
-                                    "ALL",
-                                    modifier = Modifier
-                                        .combinedClickable(
-                                            onClick = {
-                                                selectedSources.clear()
-                                                selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
-                                            },
-                                            onLongClick = {
-                                                selectedSources.clear()
-                                            }
-                                        ),
-                                    backgroundColor = MaterialTheme.colors.primary,
-                                    textColor = MaterialTheme.colors.onPrimary
-                                )
-                            }
+                        Row(
+                            modifier = Modifier.padding(top = 5.dp)
+                        ) {
 
-                            items(
-                                (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                    .groupBy { it }
-                                    .toList()
-                                    .sortedBy { it.first }
-                            ) {
-                                CustomChip(
-                                    "${it.first}: ${it.second.size - 1}",
-                                    modifier = Modifier
-                                        .combinedClickable(
-                                            onClick = {
-                                                if (it.first in selectedSources) selectedSources.remove(it.first)
-                                                else selectedSources.add(it.first)
-                                            },
-                                            onLongClick = {
-                                                selectedSources.clear()
-                                                selectedSources.add(it.first)
-                                            }
-                                        ),
-                                    backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
-                                    textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
-                                )
+                            LazyRow {
+
+                                item {
+                                    CustomChip(
+                                        "ALL",
+                                        modifier = Modifier
+                                            .combinedClickable(
+                                                onClick = {
+                                                    selectedSources.clear()
+                                                    selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
+                                                },
+                                                onLongClick = {
+                                                    selectedSources.clear()
+                                                }
+                                            ),
+                                        backgroundColor = MaterialTheme.colors.primary,
+                                        textColor = MaterialTheme.colors.onPrimary
+                                    )
+                                }
+
+                                items(
+                                    (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
+                                        .groupBy { it }
+                                        .toList()
+                                        .sortedBy { it.first }
+                                ) {
+                                    CustomChip(
+                                        "${it.first}: ${it.second.size - 1}",
+                                        modifier = Modifier
+                                            .combinedClickable(
+                                                onClick = {
+                                                    if (it.first in selectedSources) selectedSources.remove(it.first)
+                                                    else selectedSources.add(it.first)
+                                                },
+                                                onLongClick = {
+                                                    selectedSources.clear()
+                                                    selectedSources.add(it.first)
+                                                }
+                                            ),
+                                        backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
+                                        textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
+                                    )
+                                }
                             }
                         }
-
                     }
                 }
             }
@@ -250,13 +265,39 @@ class FavoriteFragment : Fragment() {
                             showing
                                 .groupBy(DbModel::title)
                                 .entries
-                                .sortedBy { it.key }
+                                .let {
+                                    when (val s = sortedBy) {
+                                        is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
+                                        is SortFavoritesBy.COUNT -> it.sortedBy(s.sort)
+                                    }
+                                }
                                 .toTypedArray()
                         ) { info ->
                             CoverCard(
                                 imageUrl = info.value.random().imageUrl,
                                 name = info.key,
-                                placeHolder = logo.logoId
+                                placeHolder = logo.logoId,
+                                favoriteIcon = {
+                                    if (info.value.size > 1) {
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopStart)
+                                                .padding(4.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Circle,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colors.primary,
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                            Text(
+                                                info.value.size.toString(),
+                                                color = MaterialTheme.colors.onPrimary,
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                        }
+                                    }
+                                }
                             ) {
                                 if (info.value.size == 1) {
                                     val item = info.value
@@ -287,4 +328,10 @@ class FavoriteFragment : Fragment() {
             }
         }
     }
+
+    sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> K) {
+        object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
+        object COUNT : SortFavoritesBy<Int>({ 0 - it.value.size })
+    }
+
 }

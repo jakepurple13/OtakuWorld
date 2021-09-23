@@ -20,8 +20,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
@@ -45,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
@@ -1044,4 +1044,37 @@ class ListBottomSheet<T>(
                 }
             }
         }
+}
+
+class GroupButtonModel<T>(val item: T, val icon: ImageVector)
+
+@Composable
+fun <T> GroupButton(
+    modifier: Modifier = Modifier,
+    selected: T,
+    options: List<GroupButtonModel<T>>,
+    onClick: (T) -> Unit
+) {
+    Row(modifier) {
+        val smallShape = MaterialTheme.shapes.small
+        val noCorner = CornerSize(0.dp)
+
+        options.fastForEachIndexed { i, option ->
+            OutlinedButton(
+                modifier = Modifier,
+                onClick = { onClick(option.item) },
+                shape = smallShape.copy(
+                    topStart = if (i == 0) smallShape.topStart else noCorner,
+                    topEnd = if (i == options.size - 1) smallShape.topEnd else noCorner,
+                    bottomStart = if (i == 0) smallShape.bottomStart else noCorner,
+                    bottomEnd = if (i == options.size - 1) smallShape.bottomEnd else noCorner
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    backgroundColor = animateColorAsState(
+                        if (selected == option.item) MaterialTheme.colors.primaryVariant else MaterialTheme.colors.surface
+                    ).value
+                )
+            ) { Icon(option.icon, null) }
+        }
+    }
 }

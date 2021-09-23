@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.google.android.gms.ads.AdRequest
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -125,20 +124,6 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             binding.chapterPage.setProgressIndicator(ProgressPieIndicator())
             binding.chapterPage.setOnClickListener { onTap() }
             binding.chapterPage.showImage(Uri.parse(item), Uri.parse(item))
-            binding.chapterPage.setOnLongClickListener {
-                try {
-                    MaterialAlertDialogBuilder(binding.root.context)
-                        .setTitle(itemView.context.getText(R.string.downloadPage))
-                        .setPositiveButton(binding.root.context.getText(android.R.string.ok)) { d, _ ->
-                            canDownload(item!!)
-                            d.dismiss()
-                        }
-                        .setNegativeButton(itemView.context.getText(R.string.no)) { d, _ -> d.dismiss() }
-                        .show()
-                } catch (e: Exception) {
-                }
-                true
-            }
         }
     }
 

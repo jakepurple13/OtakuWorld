@@ -432,7 +432,7 @@ class DetailsFragment : Fragment() {
                     RecentModel(
                         title = infoModel.title,
                         url = infoModel.url,
-                        imageUrl = infoModel.url,
+                        imageUrl = infoModel.imageUrl,
                         description = infoModel.description,
                         source = infoModel.source.serviceName,
                         timestamp = System.currentTimeMillis()
