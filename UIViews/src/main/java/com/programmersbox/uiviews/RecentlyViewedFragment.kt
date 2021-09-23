@@ -89,7 +89,7 @@ class RecentlyViewedFragment : Fragment() {
 
             AlertDialog(
                 onDismissRequest = onDismissRequest,
-                title = { Text("Clear All History?") },
+                title = { Text(stringResource(R.string.clear_all_history)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
