@@ -64,7 +64,7 @@ dependencies {
 
     implementation 'androidx.palette:palette-ktx:1.0.0'
 
-    def exoplayer_version = "2.15.0"
+    def exoplayer_version = "2.15.1"
 
     implementation "com.google.android.exoplayer:exoplayer:$exoplayer_version"
     implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"

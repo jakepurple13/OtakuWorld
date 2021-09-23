@@ -28,15 +28,18 @@ class ExampleUnitTest {
 
     @Test
     fun gogoanimevcTest() {
-        /*val f = GogoAnimeVC.getRecent().blockingGet()
+
+        println(listOf(-1, -2, 1, 2, 3, 0).sortedByDescending { it })
+
+        val f = GogoAnimeVC.getRecent().blockingGet()
         //println(f.joinToString("\n"))
-        val e = f.first().toInfoModel().blockingGet()
+        val e = f.random().toInfoModel().blockingGet()
         println(e)
         val c = e.chapters.first().getChapterInfo().blockingGet()
-        println(c.joinToString("\n"))*/
+        println(c.joinToString("\n"))
 
-        val a = GogoAnimeVC.searchList("Mushi", 1, emptyList()).blockingGet()
-        println(a.joinToString("\n"))
+        //val a = GogoAnimeVC.searchList("Mushi", 1, emptyList()).blockingGet()
+        //println(a.joinToString("\n"))
     }
 
     @Test

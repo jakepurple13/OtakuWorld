@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.google.android.gms.ads.AdRequest
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -39,8 +38,7 @@ class PageAdapter(
     private val chapterModels: List<ChapterModel>,
     var currentChapter: Int,
     private val mangaUrl: String,
-    private val loadNewPages: (ChapterModel) -> Unit = {},
-    private val canDownload: (String) -> Unit = { }
+    private val loadNewPages: (ChapterModel) -> Unit = {}
 ) : DragSwipeGlideAdapter<String, PageHolder, String>(dataList) {
 
     private val context: Context = activity
@@ -68,7 +66,7 @@ class PageAdapter(
 
     override fun onBindViewHolder(holder: PageHolder, position: Int) {
         when (holder) {
-            is PageHolder.ReadingHolder -> holder.render(dataList[position], onTap, canDownload)
+            is PageHolder.ReadingHolder -> holder.render(dataList[position], onTap)
             is PageHolder.LoadNextChapterHolder -> {
                 holder.render(activity, ad) {
                     //Glide.get(activity).clearMemory()
@@ -121,24 +119,10 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     }
 
     class ReadingHolder(private val binding: PageItemBinding) : PageHolder(binding.root) {
-        fun render(item: String?, onTap: () -> Unit, canDownload: (String) -> Unit) {
+        fun render(item: String?, onTap: () -> Unit) {
             binding.chapterPage.setProgressIndicator(ProgressPieIndicator())
             binding.chapterPage.setOnClickListener { onTap() }
             binding.chapterPage.showImage(Uri.parse(item), Uri.parse(item))
-            binding.chapterPage.setOnLongClickListener {
-                try {
-                    MaterialAlertDialogBuilder(binding.root.context)
-                        .setTitle(itemView.context.getText(R.string.downloadPage))
-                        .setPositiveButton(binding.root.context.getText(android.R.string.ok)) { d, _ ->
-                            canDownload(item!!)
-                            d.dismiss()
-                        }
-                        .setNegativeButton(itemView.context.getText(R.string.no)) { d, _ -> d.dismiss() }
-                        .show()
-                } catch (e: Exception) {
-                }
-                true
-            }
         }
     }
 

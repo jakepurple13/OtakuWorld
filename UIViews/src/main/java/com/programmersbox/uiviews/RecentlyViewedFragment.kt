@@ -14,9 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +26,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -37,12 +36,15 @@ import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.GroupButton
+import com.programmersbox.uiviews.utils.GroupButtonModel
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.text.SimpleDateFormat
@@ -77,23 +79,48 @@ class RecentlyViewedFragment : Fragment() {
         val recentItems by dao.getRecentlyViewed().collectAsState(initial = emptyList())
         val scope = rememberCoroutineScope()
 
-        var sortedChoice by remember { mutableStateOf(SortRecentlyBy.TIMESTAMP) }
+        var sortedChoice by remember { mutableStateOf<SortRecentlyBy<*>>(SortRecentlyBy.TIMESTAMP) }
+
+        var clearAllDialog by remember { mutableStateOf(false) }
+
+        if (clearAllDialog) {
+
+            val onDismissRequest = { clearAllDialog = false }
+
+            AlertDialog(
+                onDismissRequest = onDismissRequest,
+                title = { Text(stringResource(R.string.clear_all_history)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            lifecycleScope.launch(Dispatchers.IO) { println("Deleted " + dao.deleteAllRecentHistory() + " rows") }
+                            onDismissRequest()
+                        }
+                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onDismissRequest() }) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) }
+                }
+            )
+
+        }
 
         Scaffold(
             topBar = {
-
-                var showDropDown by remember { mutableStateOf(false) }
-
-                DropdownMenu(expanded = showDropDown, onDismissRequest = { showDropDown = false }) {
-
-
-                }
-
                 TopAppBar(
                     navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                     title = { Text(stringResource(R.string.history)) },
                     actions = {
-                        //IconButton(onClick = { showDropDown = true }) { Icon(imageVector = Icons.Default.MoreVert, contentDescription = null) }
+
+                        IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
+
+                        GroupButton(
+                            selected = sortedChoice,
+                            options = listOf(
+                                GroupButtonModel(SortRecentlyBy.TITLE, Icons.Default.SortByAlpha),
+                                GroupButtonModel(SortRecentlyBy.TIMESTAMP, Icons.Default.CalendarToday)
+                            )
+                        ) { sortedChoice = it }
                     }
                 )
             }
@@ -102,7 +129,15 @@ class RecentlyViewedFragment : Fragment() {
                 contentPadding = p,
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
-                items(recentItems.sortedBy(sortedChoice.sort)) {
+                items(
+                    recentItems
+                        .let {
+                            when (val s = sortedChoice) {
+                                is SortRecentlyBy.TITLE -> it.sortedBy(s.sort)
+                                is SortRecentlyBy.TIMESTAMP -> it.sortedBy(s.sort)
+                            }
+                        }
+                ) {
                     Card(
                         onClick = {
                             info.toSource(it.source)

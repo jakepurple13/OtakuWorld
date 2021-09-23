@@ -5,6 +5,7 @@ import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.utilities.JsUnpacker
+import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
@@ -209,21 +210,28 @@ object GogoAnimeVC : ShowApi(
             .get()
             .select(".dowload > a[download]")
             .fastMap {
-                println(it.attr("href"))
+                val qual = if (it.text().contains("HDP"))
+                    "1080"
+                else
+                    qualityRegex.find(it.text())?.destructured?.component1().toString()
+
                 Storage(
                     link = it.attr("href"),
                     source = link,
                     filename = "${chapterModel.name}.mp4",
+                    quality = qual,
+                    sub = getQualityFromName(qual).value.toString()
                 )
             }
             .filter { it.link?.endsWith(".mp4") == true }
-            .random()
-            .let { listOf(it) }
+            .sortedByDescending { it.sub?.toIntOrNull() }
             .let(s::onSuccess)
     }
 
     private val packedRegex = Regex("""eval\(function\(p,a,c,k,e,.*\)\)""")
     private fun getPacked(string: String): String? = packedRegex.find(string)?.value
     private fun getAndUnpack(string: String): String? = JsUnpacker(getPacked(string)).unpack()
+
+    private val qualityRegex = Regex("(\\d+)P")
 
 }

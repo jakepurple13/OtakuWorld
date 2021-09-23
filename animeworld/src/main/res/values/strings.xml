@@ -87,4 +87,6 @@
     <string name="videoPlayerLockUnlock">Lock/Unlock</string>
     <string name="download_a_video">Download a Video</string>
     <string name="go_download">GO DOWNLOAD</string>
+
+    <string name="choose_quality_for">Choose Quality for %s</string>
 </resources>

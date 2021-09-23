@@ -46,7 +46,7 @@ interface HistoryDao {
     suspend fun deleteHistory(model: HistoryItem)
 
     /*@Query("DELETE FROM History")
-    fun deleteAllHistory(): Flow<Int>*/
+    suspend fun deleteAllHistory(): Int*/
 
     @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp ASC")
     fun getRecentlyViewed(): Flow<List<RecentModel>>
@@ -59,6 +59,9 @@ interface HistoryDao {
 
     @Query("DELETE FROM RecentlyViewed WHERE url IN (SELECT url FROM RecentlyViewed ORDER BY timestamp DESC LIMIT 1 OFFSET 20)")
     suspend fun removeOldData()
+
+    @Query("DELETE FROM RecentlyViewed")
+    suspend fun deleteAllRecentHistory(): Int
 
 }
 
