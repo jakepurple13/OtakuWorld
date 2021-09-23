@@ -5,6 +5,7 @@ import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.utilities.JsUnpacker
+import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
@@ -218,13 +219,12 @@ object GogoAnimeVC : ShowApi(
                     link = it.attr("href"),
                     source = link,
                     filename = "${chapterModel.name}.mp4",
-                    quality = getQualityFromName(qual).toString()
+                    quality = qual,
+                    sub = getQualityFromName(qual).value.toString()
                 )
             }
             .filter { it.link?.endsWith(".mp4") == true }
-            .sortedByDescending { it.quality?.toIntOrNull() }
-            .firstOrNull()
-            .let { listOfNotNull(it) }
+            .sortedByDescending { it.sub?.toIntOrNull() }
             .let(s::onSuccess)
     }
 
@@ -233,29 +233,5 @@ object GogoAnimeVC : ShowApi(
     private fun getAndUnpack(string: String): String? = JsUnpacker(getPacked(string)).unpack()
 
     private val qualityRegex = Regex("(\\d+)P")
-
-    enum class Qualities(var value: Int) {
-        Unknown(0),
-        P360(-2), // 360p
-        P480(-1), // 480p
-        P720(1), // 720p
-        P1080(2), // 1080p
-        P1440(3), // 1440p
-        P2160(4) // 4k or 2160p
-    }
-
-    private fun getQualityFromName(qualityName: String): Int {
-        return when (qualityName.replace("p", "").replace("P", "")) {
-            "360" -> Qualities.P360
-            "480" -> Qualities.P480
-            "720" -> Qualities.P720
-            "1080" -> Qualities.P1080
-            "1440" -> Qualities.P1440
-            "2160" -> Qualities.P2160
-            "4k" -> Qualities.P2160
-            "4K" -> Qualities.P2160
-            else -> Qualities.Unknown
-        }.value
-    }
 
 }

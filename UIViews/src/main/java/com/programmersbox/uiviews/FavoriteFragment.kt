@@ -15,9 +15,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -38,10 +41,7 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.CoverCard
-import com.programmersbox.uiviews.utils.CustomChip
-import com.programmersbox.uiviews.utils.rememberMutableStateListOf
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -253,38 +253,6 @@ class FavoriteFragment : Fragment() {
                                 .sortedBy { it.key }
                                 .toTypedArray()
                         ) { info ->
-
-                            var chooseSource by remember { mutableStateOf(false) }
-
-                            if (chooseSource) {
-                                AlertDialog(
-                                    onDismissRequest = { chooseSource = false },
-                                    text = {
-                                        LazyColumn {
-                                            items(info.value) { item ->
-                                                Card(
-                                                    onClick = {
-                                                        chooseSource = false
-                                                        val i = item
-                                                            .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                                        findNavController()
-                                                            .navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(i))
-                                                    },
-                                                    modifier = Modifier.padding(vertical = 5.dp)
-                                                ) {
-                                                    ListItem(
-                                                        text = { Text(item.title) },
-                                                        overlineText = { Text(item.source) }
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    },
-                                    title = { Text(stringResource(R.string.chooseASource)) },
-                                    confirmButton = { TextButton(onClick = { chooseSource = false }) { Text(stringResource(R.string.ok)) } }
-                                )
-                            }
-
                             CoverCard(
                                 imageUrl = info.value.random().imageUrl,
                                 name = info.key,
@@ -296,7 +264,21 @@ class FavoriteFragment : Fragment() {
                                         ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                                     findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
                                 } else {
-                                    chooseSource = true
+                                    ListBottomSheet(
+                                        title = getString(R.string.chooseASource),
+                                        list = info.value,
+                                        onClick = { item ->
+                                            val i = item
+                                                .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                            findNavController()
+                                                .navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(i))
+                                        }
+                                    ) {
+                                        ListBottomSheetItemModel(
+                                            primaryText = it.title,
+                                            overlineText = it.source
+                                        )
+                                    }.show(parentFragmentManager, "sourceChooser")
                                 }
                             }
                         }

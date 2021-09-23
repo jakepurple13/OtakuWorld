@@ -2,7 +2,11 @@ package com.programmersbox.uiviews.utils
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.provider.Settings
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -16,6 +20,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
@@ -29,12 +34,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +55,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.placeholder.material.placeholder
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.uiviews.R
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.Dispatchers
@@ -990,4 +996,52 @@ fun InfiniteListHandler(
             .distinctUntilChanged()
             .collect { onLoadMore() }
     }
+}
+
+class ListBottomSheetItemModel(
+    val primaryText: String,
+    val overlineText: String? = null,
+    val secondaryText: String? = null,
+    val icon: ImageVector? = null
+)
+
+class ListBottomSheet<T>(
+    private val title: String,
+    private val list: List<T>,
+    private val onClick: (T) -> Unit,
+    private val itemContent: (T) -> ListBottomSheetItemModel
+) : BottomSheetDialogFragment() {
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
+        .apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+            setContent {
+                MdcTheme {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        stickyHeader {
+                            TopAppBar(
+                                title = { Text(title) },
+                                navigationIcon = { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.Close, null) } }
+                            )
+                        }
+
+                        itemsIndexed(list) { index, it ->
+                            val c = itemContent(it)
+                            ListItem(
+                                modifier = Modifier.clickable {
+                                    dismiss()
+                                    onClick(it)
+                                },
+                                icon = c.icon?.let { i -> { Icon(i, null) } },
+                                text = { Text(c.primaryText) },
+                                secondaryText = c.secondaryText?.let { i -> { Text(i) } },
+                                overlineText = c.overlineText?.let { i -> { Text(i) } }
+                            )
+                            if (index < list.size - 1) Divider()
+                        }
+                    }
+                }
+            }
+        }
 }

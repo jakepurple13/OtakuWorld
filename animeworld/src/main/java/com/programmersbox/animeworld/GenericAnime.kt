@@ -16,8 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,25 +38,25 @@ import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.anime.WcoStream
+import com.programmersbox.anime_sources.utilities.Qualities
+import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.SettingsDsl
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.animatedItems
-import com.programmersbox.uiviews.utils.updateAnimatedItemsState
+import com.programmersbox.uiviews.utils.*
 import com.tonyodev.fetch2.*
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -83,16 +82,50 @@ class GenericAnime(val context: Context) : GenericInfo {
             return
         }
         MainActivity.activity.lifecycleScope.launch(Dispatchers.IO) {
-            val link = chapterModel.getChapterInfo().blockingGet().firstOrNull()
-            MainActivity.activity.runOnUiThread {
-                MainActivity.activity.startActivity(
-                    Intent(context, VideoPlayerActivity::class.java).apply {
-                        putExtra("showPath", link?.link)
-                        putExtra("showName", chapterModel.name)
-                        putExtra("referer", link?.headers?.get("referer"))
-                        putExtra("downloadOrStream", false)
+            val c = chapterModel.getChapterInfo().blockingGet()//.firstOrNull()
+            if (c.size == 1) {
+                MainActivity.activity.runOnUiThread {
+                    val link = c.firstOrNull()
+                    MainActivity.activity.startActivity(
+                        Intent(context, VideoPlayerActivity::class.java).apply {
+                            putExtra("showPath", link?.link)
+                            putExtra("showName", chapterModel.name)
+                            putExtra("referer", link?.headers?.get("referer"))
+                            putExtra("downloadOrStream", false)
+                        }
+                    )
+                }
+            } else {
+                ListBottomSheet(
+                    title = context.getString(R.string.choose_quality_for, chapterModel.name),
+                    list = c,
+                    onClick = {
+                        MainActivity.activity.runOnUiThread {
+                            MainActivity.activity.startActivity(
+                                Intent(context, VideoPlayerActivity::class.java).apply {
+                                    putExtra("showPath", it.link)
+                                    putExtra("showName", chapterModel.name)
+                                    putExtra("referer", it.headers["referer"])
+                                    putExtra("downloadOrStream", false)
+                                }
+                            )
+                        }
                     }
-                )
+                ) {
+                    ListBottomSheetItemModel(
+                        primaryText = it.quality.orEmpty(),
+                        icon = when (getQualityFromName(it.quality.orEmpty())) {
+                            Qualities.Unknown -> Icons.Default.DeviceUnknown
+                            Qualities.P360 -> Icons.Default._360
+                            Qualities.P480 -> Icons.Default._4mp
+                            Qualities.P720 -> Icons.Default._7mp
+                            Qualities.P1080 -> Icons.Default._10mp
+                            Qualities.P1440 -> Icons.Default._1k
+                            Qualities.P2160 -> Icons.Default._4k
+                            else -> Icons.Default.DeviceUnknown
+                        }
+                    )
+                }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
             }
         }
     }
@@ -112,10 +145,79 @@ class GenericAnime(val context: Context) : GenericInfo {
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
 
-                when (model.source) {
-                    else -> GlobalScope.launch { fetchIt(model) }
-                }
+                //DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
+
+                model.getChapterInfo()
+                    .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
+                    .onErrorReturnItem(emptyList())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeBy { c ->
+                        if (c.size == 1) {
+                            when (model.source) {
+                                else -> GlobalScope.launch { fetchIt(model) }
+                            }
+                        } else {
+                            ListBottomSheet(
+                                title = context.getString(R.string.choose_quality_for, model.name),
+                                list = c,
+                                onClick = { fetchIt(it, model) }
+                            ) {
+                                ListBottomSheetItemModel(
+                                    primaryText = it.quality.orEmpty(),
+                                    icon = when (getQualityFromName(it.quality.orEmpty())) {
+                                        Qualities.Unknown -> Icons.Default.DeviceUnknown
+                                        Qualities.P360 -> Icons.Default._360
+                                        Qualities.P480 -> Icons.Default._4mp
+                                        Qualities.P720 -> Icons.Default._7mp
+                                        Qualities.P1080 -> Icons.Default._10mp
+                                        Qualities.P1440 -> Icons.Default._1k
+                                        Qualities.P2160 -> Icons.Default._4k
+                                        else -> Icons.Default.DeviceUnknown
+                                    }
+                                )
+                            }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
+                        }
+                    }
+                    .addTo(disposable)
             }
+        }
+    }
+
+    private fun fetchIt(i: Storage, ep: ChapterModel) {
+
+        try {
+
+            fetch.setGlobalNetworkType(NetworkType.ALL)
+
+            fun getNameFromUrl(url: String): String {
+                return Uri.parse(url).lastPathSegment?.let { if (it.isNotEmpty()) it else ep.name } ?: ep.name
+            }
+
+            val requestList = arrayListOf<Request>()
+
+            val filePath = context.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
+            val request = Request(i.link!!, filePath)
+            request.priority = Priority.HIGH
+            request.networkType = NetworkType.ALL
+            request.enqueueAction = EnqueueAction.REPLACE_EXISTING
+            request.extras.map.toProperties()["URL_INTENT"] = ep.url
+            request.extras.map.toProperties()["NAME_INTENT"] = ep.name
+
+            request.addHeader("Accept-Language", "en-US,en;q=0.5")
+            request.addHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
+            request.addHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            request.addHeader("Access-Control-Allow-Origin", "*")
+            request.addHeader("Referer", i.headers["referer"] ?: "http://thewebsite.com")
+            request.addHeader("Connection", "keep-alive")
+
+            i.headers.entries.forEach { request.headers[it.key] = it.value }
+
+            requestList.add(request)
+
+            fetch.enqueue(requestList) {}
+        } catch (e: Exception) {
+            MainActivity.activity.runOnUiThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
         }
     }
 

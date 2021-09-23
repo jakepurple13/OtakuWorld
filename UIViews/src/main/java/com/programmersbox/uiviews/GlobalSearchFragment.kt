@@ -209,7 +209,13 @@ class GlobalSearchFragment : Fragment() {
                         var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
                         BackHandler(bottomScaffold.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
-                            scope.launch { bottomScaffold.bottomSheetState.collapse() }
+                            scope.launch {
+                                try {
+                                    bottomScaffold.bottomSheetState.collapse()
+                                } catch (e: Exception) {
+                                    findNavController().popBackStack()
+                                }
+                            }
                         }
 
                         BottomSheetScaffold(

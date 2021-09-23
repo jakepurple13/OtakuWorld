@@ -113,19 +113,19 @@ object Vidstreaming : ShowApi(
 
             val xApi = "https://fcdn.stream/api/source/${xstream?.split("/")?.last()}"
             val api = getApiPost(xApi).fromJson<Xstream>()
-            val file = api?.data?.firstOrNull()
-            //println(getApi(file!!))
-
-            it.onSuccess(
-                listOf(
+            val file = api?.data.orEmpty()
+                .fastMap { i ->
                     Storage(
-                        link = file?.file,
+                        link = i.file,
                         source = chapterModel.url,
-                        quality = file?.label,
+                        quality = i.label,
                         sub = "Yes"
                     )
-                )
-            )
+                }
+            //?.firstOrNull()
+            //println(getApi(file!!))
+
+            it.onSuccess(file)
 
         }
     }
