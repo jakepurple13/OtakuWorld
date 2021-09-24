@@ -126,7 +126,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeAsState(initial = null)
 
-            val currentAppInfo = rememberSaveable { packageManager?.getPackageInfo(activity.packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 }
+            val currentAppInfo = rememberSaveable { packageManager?.getPackageInfo(activity.packageName, 0)?.versionName.orEmpty() }
 
             SettingsMenuLink(
                 title = { Text(text = stringResource(id = R.string.currentVersion, currentAppInfo), modifier = Modifier.padding(start = 5.dp)) },
@@ -139,14 +139,14 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                 }
             )
 
-            AnimatedVisibility(visible = currentAppInfo < appUpdate?.update_version ?: 0.0) {
+            AnimatedVisibility(visible = AppUpdate.checkForUpdate(currentAppInfo, appUpdate?.update_real_version.orEmpty())) {
 
                 val update: () -> Unit = {
                     MaterialAlertDialogBuilder(activity)
                         .setTitle(
                             activity.getString(
                                 R.string.updateTo,
-                                activity.getString(R.string.currentVersion, appUpdate?.update_version?.toString().orEmpty())
+                                activity.getString(R.string.currentVersion, appUpdate?.update_real_version.orEmpty())
                             )
                         )
                         .setMessage(R.string.please_update_for_leatest_features)
@@ -185,7 +185,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                         Text(
                             text = stringResource(
                                 id = R.string.currentVersion,
-                                appUpdate?.update_version?.toString().orEmpty()
+                                appUpdate?.update_real_version.orEmpty()
                             ),
                             modifier = Modifier.padding(
                                 start = 5.dp

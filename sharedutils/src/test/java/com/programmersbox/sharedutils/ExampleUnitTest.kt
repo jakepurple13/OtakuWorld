@@ -15,6 +15,16 @@ import java.io.File
  */
 class ExampleUnitTest {
 
+    @Test
+    fun newUpdateCheckTest() {
+
+        val oldVersion = "1.0.1"
+        val newVersion = "1.0.1"
+
+        println(AppUpdate.checkForUpdate(oldVersion, newVersion))
+
+    }
+
     private fun getFreqMap(chars: String): Map<Char, Int> {
         val freq: MutableMap<Char, Int> = HashMap()
         for (c in chars) {

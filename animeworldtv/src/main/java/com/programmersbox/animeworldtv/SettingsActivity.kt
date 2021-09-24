@@ -109,10 +109,9 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
             findPreference<PreferenceScreen>("prefs_about")?.let { p ->
                 appUpdateCheck
                     .subscribe {
-                        val appVersion =
-                            context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
-                        p.summary = if (appVersion < it.update_version ?: 0.0)
-                            getString(R.string.updateVersionAvailable, it.update_version?.toString().orEmpty())
+                        val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
+                        p.summary = if (AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty()))
+                            getString(R.string.updateVersionAvailable, it.update_real_version?.toString().orEmpty())
                         else ""
                     }
                     .addTo(disposable)
