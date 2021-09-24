@@ -194,6 +194,8 @@ class ExampleUnitTest {
                 }
             }
 
+            row("", "", "", "")
+
             f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }
                 .toList()
                 .fastForEach { g ->

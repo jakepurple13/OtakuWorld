@@ -756,7 +756,7 @@ class DetailsFragment : Fragment() {
                     modifier = Modifier.padding(5.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_baseline_cloud_off_24),
+                        imageVector = Icons.Default.CloudOff,
                         contentDescription = null,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)

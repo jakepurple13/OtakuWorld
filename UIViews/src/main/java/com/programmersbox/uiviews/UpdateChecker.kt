@@ -50,7 +50,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                     logo.notificationId
                 ) {
                     title = applicationContext.getString(R.string.theresAnUpdate)
-                    subText = applicationContext.getString(R.string.versionAvailable, f.toString())
+                    subText = applicationContext.getString(R.string.versionAvailable, f)
                     pendingIntent { context ->
                         NavDeepLinkBuilder(context)
                             .setGraph(R.navigation.setting_nav)

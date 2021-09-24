@@ -30,7 +30,17 @@
         <entry key="../../../../layout/compose-model-1631576748951.xml" value="0.1" />
         <entry key="../../../../layout/compose-model-1632230909263.xml" value="0.3158783783783784" />
         <entry key="../../../../layout/compose-model-1632403485327.xml" value="0.67" />
+        <entry key="UIViews/src/main/res/drawable/action_chapter.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_bubble_chart_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_cached_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_desktop_windows_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_done_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_download_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_group_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_palette_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_settings_brightness_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_star_24.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/layout/base_main_activity.xml" value="0.19375" />
         <entry key="UIViews/src/main/res/layout/chapter_item.xml" value="0.22" />
         <entry key="UIViews/src/main/res/layout/details_fragment.xml" value="0.175" />
@@ -46,6 +56,7 @@
         <entry key="UIViews/src/main/res/layout/search_item.xml" value="0.2325657894736842" />
         <entry key="UIViews/src/main/res/menu/details_menu.xml" value="0.225" />
         <entry key="UIViews/src/main/res/xml/root_preferences.xml" value="0.25" />
+        <entry key="animeworld/src/main/res/drawable/ic_baseline_article_24.xml" value="0.23778501628664495" />
         <entry key="animeworld/src/main/res/drawable/progress_bar.xml" value="0.24039087947882737" />
         <entry key="animeworld/src/main/res/layout/anime_list_item.xml" value="0.23029315960912053" />
         <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
