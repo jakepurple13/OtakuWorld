@@ -36,6 +36,11 @@ android {
     }
     buildFeatures {
         dataBinding true
+        viewBinding true
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion jetpack
     }
 }
 
@@ -67,4 +72,6 @@ dependencies {
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools
+
+    implementation compose.compose
 }

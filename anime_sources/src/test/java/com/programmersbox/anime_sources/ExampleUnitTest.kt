@@ -18,6 +18,14 @@ import okio.BufferedSink
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.junit.Test
+import java.security.KeyManagementException
+import java.security.NoSuchAlgorithmException
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -25,6 +33,33 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun allmoviesforyouTest() {
+        val url = "https://allmoviesforyou.co"
+        val f = Jsoup.connect(url)
+            .sslSocketFactory(socketFactory())
+            .get()
+        println(f)
+    }
+
+    private fun socketFactory(): SSLSocketFactory? {
+        val trustAllCerts: Array<TrustManager> = arrayOf<TrustManager>(object : X509TrustManager {
+            override fun getAcceptedIssuers(): Array<X509Certificate?> = arrayOfNulls(0)
+
+            override fun checkClientTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
+            override fun checkServerTrusted(certs: Array<X509Certificate?>?, authType: String?) {}
+        })
+        return try {
+            val sslContext: SSLContext = SSLContext.getInstance("SSL")
+            sslContext.init(null, trustAllCerts, SecureRandom())
+            sslContext.socketFactory
+        } catch (e: NoSuchAlgorithmException) {
+            throw RuntimeException("Failed to create a SSL socket factory", e)
+        } catch (e: KeyManagementException) {
+            throw RuntimeException("Failed to create a SSL socket factory", e)
+        }
+    }
 
     @Test
     fun gogoanimevcTest() {

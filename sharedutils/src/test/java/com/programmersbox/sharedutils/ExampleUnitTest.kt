@@ -194,7 +194,7 @@ class ExampleUnitTest {
                 }
             }
 
-            row("", "", "", "")
+            row("Stats")
 
             f.groupBy { it.first.absolutePath.substring(it.first.absolutePath.lastIndexOf(".")) }
                 .toList()
