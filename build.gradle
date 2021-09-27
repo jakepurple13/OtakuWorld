@@ -43,7 +43,7 @@ buildscript {
     ext.buildVersion = "30.0.2"
 
     ext.recyclerview = 'androidx.recyclerview:recyclerview:1.2.1'
-    ext.constraintlayout = 'androidx.constraintlayout:constraintlayout:2.1.0'
+    ext.constraintlayout = 'androidx.constraintlayout:constraintlayout:2.1.1'
     ext.swiperefresh = 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
     ext.jsoup = 'org.jsoup:jsoup:1.14.2'
