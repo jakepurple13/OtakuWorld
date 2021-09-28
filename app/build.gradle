@@ -60,6 +60,8 @@ dependencies {
     implementation project(':Models')
     implementation project(':favoritesdatabase')
     implementation project(':novel_sources')
+    implementation project(':anime_sources')
+    implementation project(':manga_sources')
 
     implementation rxkotlin
     implementation rxandroid
