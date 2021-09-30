@@ -29,6 +29,7 @@
         </provider>
 
         <activity android:name=".ReadActivity" />
+        <activity android:name=".ReadActivityCompose" />
         <activity
             android:exported="true"
             android:name=".MainActivity">

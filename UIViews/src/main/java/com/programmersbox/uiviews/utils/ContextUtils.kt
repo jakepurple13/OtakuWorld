@@ -17,6 +17,9 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -207,12 +210,46 @@ class BatteryInformation(val context: Context) {
     val batteryLevelAlert = PublishSubject.create<Float>()
     val batteryInfoItem = PublishSubject.create<Battery>()
 
-    enum class BatteryViewType(val icon: GoogleMaterial.Icon) {
-        CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full),
-        DEFAULT(GoogleMaterial.Icon.gmd_battery_std),
-        FULL(GoogleMaterial.Icon.gmd_battery_full),
-        ALERT(GoogleMaterial.Icon.gmd_battery_alert),
-        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown)
+    enum class BatteryViewType(val icon: GoogleMaterial.Icon, val composeIcon: ImageVector) {
+        CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full, Icons.Default.BatteryChargingFull),
+        DEFAULT(GoogleMaterial.Icon.gmd_battery_std, Icons.Default.BatteryStd),
+        FULL(GoogleMaterial.Icon.gmd_battery_full, Icons.Default.BatteryFull),
+        ALERT(GoogleMaterial.Icon.gmd_battery_alert, Icons.Default.BatteryAlert),
+        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.Default.BatteryUnknown)
+    }
+
+    fun composeSetup(
+        disposable: CompositeDisposable,
+        normalBatteryColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White,
+        subscribe: (Pair<androidx.compose.ui.graphics.Color, BatteryViewType>) -> Unit
+    ) {
+        Flowables.combineLatest(
+            Observable.combineLatest(
+                batteryLevelAlert,
+                context.batteryPercent.asObservable()
+            ) { b, d -> b <= d }
+                .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor }
+                .toLatestFlowable(),
+            Observable.combineLatest(
+                batteryInfoItem,
+                context.batteryPercent.asObservable()
+            ) { b, d -> b to d }
+                .map {
+                    when {
+                        it.first.isCharging -> BatteryViewType.CHARGING_FULL
+                        it.first.percent <= it.second -> BatteryViewType.ALERT
+                        it.first.percent >= 95 -> BatteryViewType.FULL
+                        it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
+                        else -> BatteryViewType.DEFAULT
+                    }
+                }
+                .distinctUntilChanged { t1, t2 -> t1 != t2 }
+                .toLatestFlowable()
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(subscribe)
+            .addTo(disposable)
     }
 
     fun setup(

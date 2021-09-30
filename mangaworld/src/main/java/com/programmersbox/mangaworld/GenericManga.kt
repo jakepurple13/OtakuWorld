@@ -67,7 +67,7 @@ class GenericManga(val context: Context) : GenericInfo {
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
         context.startActivity(
-            Intent(context, ReadActivity::class.java).apply {
+            Intent(context, if (context.useNewReader) ReadActivityCompose::class.java else ReadActivity::class.java).apply {
                 putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("mangaTitle", model.name)
@@ -150,6 +150,18 @@ class GenericManga(val context: Context) : GenericInfo {
                             .flowWithLifecycle(fragment.lifecycle)
                             .collect { runOnUIThread { value = it } }
                     }
+                }
+            )
+
+            it.addPreference(
+                SwitchPreference(it.context).apply {
+                    title = it.context.getString(R.string.useNewReader)
+                    isChecked = context.useNewReader
+                    setOnPreferenceChangeListener { _, newValue ->
+                        context.useNewReader = newValue as Boolean
+                        true
+                    }
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_chrome_reader_mode_24)
                 }
             )
         }

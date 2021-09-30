@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 var Context.showAdult by sharedPrefNotNullDelegate(false)
+var Context.useNewReader by sharedPrefNotNullDelegate(false)
 
 val DOWNLOAD_FILE_PATH get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"
 

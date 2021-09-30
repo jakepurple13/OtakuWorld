@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -230,7 +231,8 @@ class AllFragment : BaseFragmentCompose() {
                     floatingActionButton = {
                         AnimatedVisibility(
                             visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
-                            enter = slideInVertically({ it / 2 })
+                            enter = slideInVertically({ it / 2 }),
+                            exit = slideOutVertically({ it / 2 })
                         ) {
                             FloatingActionButton(
                                 onClick = { scope.launch { state.animateScrollToItem(0) } },
