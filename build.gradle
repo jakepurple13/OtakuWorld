@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = "1.5.21"
+    ext.kotlin_version = "1.5.30"
     ext.jakepurple13 = "10.6.5"
     ext.otakuVersionName = "27.0.0"
     ext.latestAboutLibsRelease = "+"
@@ -62,7 +62,7 @@ buildscript {
 
     ext.lottieVersion = "4.1.0"
 
-    ext.jetpack = "1.0.2"
+    ext.jetpack = "1.0.3"
 
     ext.accompanist = "0.18.0"
 
