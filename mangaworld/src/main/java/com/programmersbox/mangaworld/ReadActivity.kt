@@ -256,15 +256,15 @@ class ReadActivity1 : ComponentActivity() {
 
                         }*/
 
-                        val pagerState = rememberPagerState(pageCount = pages.size + 1, initialOffscreenLimit = 3)
+                        val pagerState = rememberPagerState(0)
 
                         VerticalPager(
+                            count = pages.size + 1,
                             state = pagerState,
                             itemSpacing = 5.dp,
                             flingBehavior = ScrollableDefaults.flingBehavior(),
-                            modifier = Modifier
-                                .padding(it)
-                                .fillMaxSize()
+                            contentPadding = it,
+                            modifier = Modifier.fillMaxSize()
                         ) { page ->
                             Box {
                                 if (page >= pages.size)
