@@ -156,6 +156,7 @@ class GenericManga(val context: Context) : GenericInfo {
             it.addPreference(
                 SwitchPreference(it.context).apply {
                     title = it.context.getString(R.string.useNewReader)
+                    summary = it.context.getString(R.string.reader_summary_setting)
                     isChecked = context.useNewReader
                     setOnPreferenceChangeListener { _, newValue ->
                         context.useNewReader = newValue as Boolean
