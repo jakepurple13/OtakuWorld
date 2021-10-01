@@ -43,7 +43,7 @@ dependencies {
     // required if you want to use Mockito for Android tests
     androidTestImplementation 'org.mockito:mockito-android:3.10.0'
 
-    implementation "com.squareup.okhttp3:okhttp:4.9.1"
+    implementation "com.squareup.okhttp3:okhttp:4.9.2"
     implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.1"
     implementation coroutinesCore
     implementation jsoup
