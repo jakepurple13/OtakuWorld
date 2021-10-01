@@ -17,4 +17,6 @@
     <string name="page_count">Pages: %d</string>
     <string name="reader_padding_between_pages">Reader Padding Between Pages</string>
     <string name="default_padding_summary">Default is 4</string>
+    <string name="useNewReader">Use New Reader</string>
+    <string name="reader_summary_setting">If the new reader crashes, please use the old reader. The new reader is still being worked on.</string>
 </resources>

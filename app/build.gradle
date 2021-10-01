@@ -36,6 +36,11 @@ android {
     }
     buildFeatures {
         dataBinding true
+        viewBinding true
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion jetpack
     }
 }
 
@@ -55,6 +60,8 @@ dependencies {
     implementation project(':Models')
     implementation project(':favoritesdatabase')
     implementation project(':novel_sources')
+    implementation project(':anime_sources')
+    implementation project(':manga_sources')
 
     implementation rxkotlin
     implementation rxandroid
@@ -67,4 +74,6 @@ dependencies {
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools
+
+    implementation compose.compose
 }

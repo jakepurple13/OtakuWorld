@@ -280,7 +280,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
         val clickAction: () -> Unit = {
             if (file.listFiles()?.all(File::isFile) == true)
                 activity?.startActivity(
-                    Intent(context, ReadActivity::class.java).apply {
+                    Intent(context, if (context.useNewReader) ReadActivityCompose::class.java else ReadActivity::class.java).apply {
                         putExtra("downloaded", true)
                         putExtra("filePath", file)
                     }

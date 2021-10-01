@@ -110,6 +110,7 @@ dependencies {
 
     implementation compose.compose
     implementation "com.google.accompanist:accompanist-pager:$accompanist"
+    implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
 
     implementation datastore.datastore
 }

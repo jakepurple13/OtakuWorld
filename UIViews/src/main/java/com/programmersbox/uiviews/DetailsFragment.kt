@@ -213,6 +213,8 @@ class DetailsFragment : Fragment() {
                 )
             }
 
+        var reverseChapters by remember { mutableStateOf(false) }
+
         val scope = rememberCoroutineScope()
         val scaffoldState = rememberScaffoldState()
 
@@ -261,7 +263,14 @@ class DetailsFragment : Fragment() {
                                     dropDownDismiss()
                                     requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
                                 }
-                            ) { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) }
+                            ) {
+                                Icon(
+                                    Icons.Default.OpenInBrowser,
+                                    null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(stringResource(id = R.string.fallback_menu_item_open_in_browser))
+                            }
 
                             if (!isSaved) {
                                 DropdownMenuItem(
@@ -286,7 +295,14 @@ class DetailsFragment : Fragment() {
                                             ).subscribe()
                                         }
                                     }
-                                ) { Text(stringResource(id = R.string.save_for_later)) }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Save,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.save_for_later))
+                                }
                             }
 
                             DropdownMenuItem(
@@ -294,7 +310,28 @@ class DetailsFragment : Fragment() {
                                     dropDownDismiss()
                                     findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
                                 }
-                            ) { Text(stringResource(id = R.string.global_search_by_name)) }
+                            ) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(stringResource(id = R.string.global_search_by_name))
+                            }
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    reverseChapters = !reverseChapters
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Sort,
+                                    null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(stringResource(id = R.string.reverseOrder))
+                            }
                         }
 
                         IconButton(
@@ -397,7 +434,7 @@ class DetailsFragment : Fragment() {
                             .padding(vertical = 5.dp),
                         state = listState
                     ) {
-                        items(info.chapters) { c ->
+                        items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
                             ChapterItem(
                                 infoModel = info,
                                 c = c,
@@ -756,7 +793,7 @@ class DetailsFragment : Fragment() {
                     modifier = Modifier.padding(5.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_baseline_cloud_off_24),
+                        imageVector = Icons.Default.CloudOff,
                         contentDescription = null,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)

@@ -58,7 +58,7 @@ dependencies {
     implementation appCompat
     implementation material
     implementation compose.compose
-    implementation "androidx.navigation:navigation-compose:2.4.0-alpha06"
+    implementation "androidx.navigation:navigation-compose:2.4.0-alpha10"
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
     implementation 'com.github.alorma:compose-settings:0.3.0'
     implementation jakepurple13Tools.helpfultools
@@ -70,7 +70,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx:23.0.3'
     implementation 'com.google.firebase:firebase-database-ktx:20.0.1'
     implementation "androidx.compose.ui:ui-tooling-preview:$jetpack"
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-beta01'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-rc01'
     implementation "androidx.datastore:datastore:1.0.0"
     implementation "androidx.datastore:datastore-preferences:1.0.0"
     testImplementation 'junit:junit:4.+'

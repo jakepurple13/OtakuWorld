@@ -41,17 +41,16 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
 
     override fun createWork(): Single<Result> = Single.create<Result> {
         try {
-            val f = AppUpdate.getUpdate()?.update_version ?: 0.0
-            if (
-                applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0 < f
-            ) {
+            val f = AppUpdate.getUpdate()?.update_real_version.orEmpty()
+            val appVersion = applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName.orEmpty()
+            if (AppUpdate.checkForUpdate(f, appVersion)) {
                 val n = NotificationDslBuilder.builder(
                     applicationContext,
                     "appUpdate",
                     logo.notificationId
                 ) {
                     title = applicationContext.getString(R.string.theresAnUpdate)
-                    subText = applicationContext.getString(R.string.versionAvailable, f.toString())
+                    subText = applicationContext.getString(R.string.versionAvailable, f)
                     pendingIntent { context ->
                         NavDeepLinkBuilder(context)
                             .setGraph(R.navigation.setting_nav)

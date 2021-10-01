@@ -310,9 +310,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.isVisible = false
             appUpdateCheck
                 .subscribe {
-                    p.summary = getString(R.string.currentVersion, it.update_version?.toString().orEmpty())
-                    val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
-                    p.isVisible = appVersion < it.update_version ?: 0.0
+                    p.summary = getString(R.string.currentVersion, it.update_real_version.orEmpty())
+                    val appVersion = AppUpdate.checkForUpdate(
+                        context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty(),
+                        it.update_real_version.orEmpty()
+                    )
+                    p.isVisible = appVersion
                 }
                 .addTo(disposable)
 

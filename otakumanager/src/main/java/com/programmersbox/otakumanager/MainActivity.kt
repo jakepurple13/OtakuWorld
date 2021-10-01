@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -152,7 +151,7 @@ class MainActivity : ComponentActivity() {
                             composable(Screen.Settings.route) { OtakuSettings(this@MainActivity, genericInfo) }
                             composable(
                                 Screen.Details.route,
-                                arguments = listOf(navArgument("item") { type = NavType.StringType })
+                                //arguments = listOf(navArgument("item") { type = NavType.StringType })
                             ) {
                                 val i = it.arguments?.getString("item")?.fromJson<DbModel>()
                                     ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
