@@ -200,7 +200,7 @@ class ReadActivityCompose : ComponentActivity() {
                     .subscribeAsState(0f)
 
                 val listState = rememberLazyListState()
-                val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }//mutableStateOf(0) }
+                val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
                 val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
                 var showInfo by remember { mutableStateOf(false) }
 
@@ -251,34 +251,6 @@ class ReadActivityCompose : ComponentActivity() {
                 }
 
                 Scaffold(
-                    topBar = {
-                        //TODO: Try to put this in the toolbar nestedscroll stuff
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                        ) {
-                            Row {
-                                Icon(
-                                    batteryIcon.composeIcon,
-                                    contentDescription = null,
-                                    tint = animateColorAsState(batteryColor).value
-                                )
-                                Text("${batteryLevel.toInt()}%", style = MaterialTheme.typography.body1)
-                            }
-
-                            Text(
-                                DateFormat.format("HH:mm a", time).toString(),
-                                style = MaterialTheme.typography.body1
-                            )
-
-                            Text(
-                                "${currentPage + 1}/${pages.size}",
-                                style = MaterialTheme.typography.body1
-                            )
-                        }
-                    },
                     floatingActionButton = {
                         AnimatedVisibility(
                             visible = showButton && (showInfo || listState.isScrolledToTheEnd()),
@@ -310,6 +282,10 @@ class ReadActivityCompose : ComponentActivity() {
                         modifier = Modifier.padding(p)
                     ) {
 
+                        val topBarHeight = 28.dp
+                        val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+                        val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
+
                         val toolbarHeight = 56.dp
                         val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
                         val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
@@ -319,6 +295,9 @@ class ReadActivityCompose : ComponentActivity() {
                                     val delta = available.y
                                     val newOffset = toolbarOffsetHeightPx.value + delta
                                     toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
+
+                                    val newTopOffset = topBarOffsetHeightPx.value + delta
+                                    topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
                                     return Offset.Zero
                                 }
                             }
@@ -331,7 +310,11 @@ class ReadActivityCompose : ComponentActivity() {
                         ) {
                             LazyColumn(
                                 state = listState,
-                                verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp)
+                                verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp),
+                                contentPadding = PaddingValues(
+                                    top = topBarHeight,
+                                    bottom = toolbarHeight
+                                )
                             ) {
 
                                 items(pages) {
@@ -345,7 +328,13 @@ class ReadActivityCompose : ComponentActivity() {
                                                 .align(Alignment.Center)
                                                 .scaleRotateOffset(
                                                     canRotate = false,
-                                                    onClick = { showInfo = !showInfo },
+                                                    onClick = {
+                                                        showInfo = !showInfo
+                                                        if (!showInfo) {
+                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                                            topBarOffsetHeightPx.value = -topBarHeightPx
+                                                        }
+                                                    },
                                                     onLongClick = {}
                                                 )
                                         )
@@ -353,7 +342,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 }
 
                                 item {
-                                    Column(modifier = Modifier.padding(bottom = toolbarHeight)) {
+                                    Column {
                                         if (currentChapter <= 0) {
                                             Text(
                                                 stringResource(id = R.string.reachedLastChapter),
@@ -376,6 +365,49 @@ class ReadActivityCompose : ComponentActivity() {
                                             }
                                         )
                                     }
+                                }
+                            }
+
+                            val animateTopBar by animateIntAsState(
+                                if (showInfo || listState.isScrolledToTheEnd()) 0 else (topBarOffsetHeightPx.value.roundToInt())
+                            )
+
+                            TopAppBar(
+                                modifier = Modifier
+                                    .height(topBarHeight)
+                                    .align(Alignment.TopCenter)
+                                    .offset {
+                                        IntOffset(
+                                            x = 0,
+                                            y = if (showInfo || listState.isScrolledToTheEnd()) animateTopBar
+                                            else (topBarOffsetHeightPx.value.roundToInt())
+                                        )
+                                    }
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(4.dp)
+                                ) {
+                                    Row {
+                                        Icon(
+                                            batteryIcon.composeIcon,
+                                            contentDescription = null,
+                                            tint = animateColorAsState(batteryColor).value
+                                        )
+                                        Text("${batteryLevel.toInt()}%", style = MaterialTheme.typography.body1)
+                                    }
+
+                                    Text(
+                                        DateFormat.format("HH:mm a", time).toString(),
+                                        style = MaterialTheme.typography.body1
+                                    )
+
+                                    Text(
+                                        "${currentPage + 1}/${pages.size}",
+                                        style = MaterialTheme.typography.body1
+                                    )
                                 }
                             }
 
