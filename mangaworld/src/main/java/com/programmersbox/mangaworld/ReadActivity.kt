@@ -246,18 +246,13 @@ class ReadActivityCompose : ComponentActivity() {
                     )
                 }
 
-                val scaffoldState = rememberScaffoldState()
-
-                fun showSnackBar(duration: SnackbarDuration = SnackbarDuration.Short) {
-                    scope.launch {
-                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                        scaffoldState.snackbarHostState.showSnackbar(getString(R.string.addedChapterItem), null, duration)
-                    }
+                fun showToast() {
+                    Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show()
                 }
 
                 Scaffold(
-                    scaffoldState = scaffoldState,
                     topBar = {
+                        //TODO: Try to put this in the toolbar nestedscroll stuff
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier
@@ -329,94 +324,141 @@ class ReadActivityCompose : ComponentActivity() {
                             }
                         }
 
-                        if (pages.isNotEmpty()) {
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .nestedScroll(nestedScrollConnection)
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .nestedScroll(nestedScrollConnection)
+                        ) {
+                            LazyColumn(
+                                state = listState,
+                                verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp)
                             ) {
-                                LazyColumn(
-                                    state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp)
-                                ) {
 
-                                    items(pages) {
-                                        Box {
-                                            GlideImage(
-                                                imageModel = it,
-                                                contentScale = ContentScale.FillWidth,
-                                                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .align(Alignment.Center)
-                                                    .scaleRotateOffset(
-                                                        canRotate = false,
-                                                        onClick = { showInfo = !showInfo },
-                                                        onLongClick = {}
-                                                    )
-                                            )
-                                        }
-                                    }
-
-                                    item {
-                                        Column(modifier = Modifier.padding(bottom = toolbarHeight)) {
-                                            if (currentChapter <= 0) EndPage()
-                                            AndroidView(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                factory = { context ->
-                                                    AdView(context).apply {
-                                                        adSize = AdSize.SMART_BANNER
-                                                        adUnitId = getString(R.string.ad_unit_id)
-                                                        loadAd(ad)
-                                                    }
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-
-                                val animateBar by animateIntAsState(
-                                    if (showInfo || listState.isScrolledToTheEnd()) 0 else (-toolbarOffsetHeightPx.value.roundToInt())
-                                )
-
-                                BottomAppBar(
-                                    modifier = Modifier
-                                        .height(toolbarHeight)
-                                        .align(Alignment.BottomCenter)
-                                        .offset {
-                                            IntOffset(
-                                                x = 0,
-                                                y = if (showInfo || listState.isScrolledToTheEnd()) animateBar
-                                                else (-toolbarOffsetHeightPx.value.roundToInt())
-                                            )
-                                        }
-                                ) {
-
-                                    GoBackButton(
-                                        modifier = Modifier.weight(animateFloatAsState(targetValue = if (currentChapter > 0) 4f else 8f).value)
-                                    )
-
-                                    AnimatedVisibility(
-                                        visible = currentChapter > 0,
-                                        enter = expandHorizontally(),
-                                        exit = shrinkHorizontally()
-                                    ) {
-                                        NextButton(
+                                items(pages) {
+                                    Box {
+                                        GlideImage(
+                                            imageModel = it,
+                                            contentScale = ContentScale.FillWidth,
+                                            loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                                             modifier = Modifier
-                                                .padding(horizontal = 4.dp)
-                                                .weight(4f),
-                                            nextChapter = ::showSnackBar
+                                                .fillMaxWidth()
+                                                .align(Alignment.Center)
+                                                .scaleRotateOffset(
+                                                    canRotate = false,
+                                                    onClick = { showInfo = !showInfo },
+                                                    onLongClick = {}
+                                                )
                                         )
                                     }
-
-                                    IconButton(
-                                        onClick = { settingsPopup = true },
-                                        modifier = Modifier.weight(2f)
-                                    ) { Icon(Icons.Default.Settings, null) }
                                 }
 
+                                item {
+                                    Column(modifier = Modifier.padding(bottom = toolbarHeight)) {
+                                        if (currentChapter <= 0) {
+                                            Text(
+                                                stringResource(id = R.string.reachedLastChapter),
+                                                style = MaterialTheme.typography.h6,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .align(Alignment.CenterHorizontally)
+                                            )
+                                        }
+                                        GoBackButton(modifier = Modifier.fillMaxWidth())
+                                        AndroidView(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            factory = { context ->
+                                                AdView(context).apply {
+                                                    adSize = AdSize.SMART_BANNER
+                                                    adUnitId = getString(R.string.ad_unit_id)
+                                                    loadAd(ad)
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
                             }
-                        } else {
+
+                            val animateBar by animateIntAsState(
+                                if (showInfo || listState.isScrolledToTheEnd()) 0 else (-toolbarOffsetHeightPx.value.roundToInt())
+                            )
+
+                            BottomAppBar(
+                                modifier = Modifier
+                                    .height(toolbarHeight)
+                                    .align(Alignment.BottomCenter)
+                                    .offset {
+                                        IntOffset(
+                                            x = 0,
+                                            y = if (showInfo || listState.isScrolledToTheEnd()) animateBar
+                                            else (-toolbarOffsetHeightPx.value.roundToInt())
+                                        )
+                                    }
+                            ) {
+
+                                val prevShown = currentChapter < pages.size
+                                val nextShown = currentChapter > 0
+
+                                AnimatedVisibility(
+                                    visible = prevShown,
+                                    enter = expandHorizontally(expandFrom = Alignment.Start),
+                                    exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+                                ) {
+                                    PreviousButton(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .weight(
+                                                when {
+                                                    prevShown && nextShown -> 8f / 3f
+                                                    prevShown -> 4f
+                                                    else -> 4f
+                                                }
+                                            ),
+                                        previousChapter = ::showToast
+                                    )
+                                }
+
+                                GoBackButton(
+                                    modifier = Modifier
+                                        .weight(
+                                            animateFloatAsState(
+                                                when {
+                                                    prevShown && nextShown -> 8f / 3f
+                                                    prevShown || nextShown -> 4f
+                                                    else -> 8f
+                                                }
+                                            ).value
+                                        )
+                                )
+
+                                AnimatedVisibility(
+                                    visible = nextShown,
+                                    enter = expandHorizontally(),
+                                    exit = shrinkHorizontally()
+                                ) {
+                                    NextButton(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .weight(
+                                                when {
+                                                    prevShown && nextShown -> 8f / 3f
+                                                    nextShown -> 4f
+                                                    else -> 4f
+                                                }
+                                            ),
+                                        nextChapter = ::showToast
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = { settingsPopup = true },
+                                    modifier = Modifier.weight(2f)
+                                ) { Icon(Icons.Default.Settings, null) }
+                            }
+
+                        }
+
+                        AnimatedVisibility(visible = pages.isEmpty()) {
                             CircularProgressIndicator(
                                 modifier = Modifier
                                     .padding(p)
@@ -460,43 +502,6 @@ class ReadActivityCompose : ComponentActivity() {
     private val ad by lazy { AdRequest.Builder().build() }
 
     @Composable
-    private fun EndPage() {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(2.dp)
-                .wrapContentHeight()
-        ) {
-            Text(
-                stringResource(id = R.string.reachedLastChapter),
-                style = MaterialTheme.typography.h6,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            GoBackButton(modifier = Modifier.fillMaxWidth())
-        }
-    }
-
-    @Composable
-    private fun NextPage(nextChapter: () -> Unit) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(2.dp)
-                .wrapContentHeight()
-        ) {
-            //NextButton(Modifier.fillMaxWidth().padding(vertical = 4.dp), nextChapter)
-
-            GoBackButton(modifier = Modifier.fillMaxWidth())
-        }
-    }
-
-    @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
         OutlinedButton(
             onClick = { finish() },
@@ -536,6 +541,38 @@ class ReadActivityCompose : ComponentActivity() {
             modifier = modifier,
             border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
         ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.button) }
+    }
+
+    @Composable
+    private fun PreviousButton(modifier: Modifier = Modifier, previousChapter: () -> Unit) {
+        TextButton(
+            onClick = {
+                list.getOrNull(++currentChapter)
+                    ?.let { item ->
+                        ChapterWatched(item.url, item.name, mangaUrl)
+                            .let {
+                                Completable.mergeArray(
+                                    FirebaseDb.insertEpisodeWatched(it),
+                                    dao.insertChapter(it)
+                                )
+                            }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
+                            .subscribe(previousChapter)
+                            .addTo(disposable)
+
+                        item
+                            .getChapterInfo()
+                            .map { it.mapNotNull(Storage::link) }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doOnSubscribe { pageList.clear() }
+                            .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
+                            .addTo(disposable)
+                    }
+            },
+            modifier = modifier
+        ) { Text(stringResource(id = R.string.loadPreviousChapter), style = MaterialTheme.typography.button) }
     }
 
     @Composable
