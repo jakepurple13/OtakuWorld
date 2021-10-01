@@ -17,6 +17,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -122,10 +123,7 @@ class ReadActivityCompose : ComponentActivity() {
 
     private val mangaUrl by lazy { intent.getStringExtra("mangaInfoUrl") ?: "" }
 
-    private val currentChapter = lazy {
-        val url = intent.getStringExtra("mangaUrl") ?: ""
-        mutableStateOf(list.indexOfFirst { l -> l.url == url })
-    }
+    private var currentChapter: Int by mutableStateOf(0)
 
     private val model by lazy {
         intent.getStringExtra("currentChapter")
@@ -158,6 +156,9 @@ class ReadActivityCompose : ComponentActivity() {
     @ExperimentalPagerApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val url = intent.getStringExtra("mangaUrl") ?: ""
+        currentChapter = list.indexOfFirst { l -> l.url == url }
 
         batteryInformation.composeSetup(
             disposable,
@@ -290,13 +291,30 @@ class ReadActivityCompose : ComponentActivity() {
                     },
                     floatingActionButtonPosition = FabPosition.End,
                     bottomBar = {
+                        //TODO: Check to see for another on scroll up to show this
                         AnimatedVisibility(
-                            visible = showInfo || listState.isScrolledToTheEnd(), //TODO: Check to see for another on scroll up to show this
+                            visible = showInfo || listState.isScrolledToTheEnd(),
                             enter = slideInVertically({ it / 2 }) + fadeIn(),
                             exit = slideOutVertically({ it / 2 }) + fadeOut()
                         ) {
                             BottomAppBar {
-                                Spacer(modifier = Modifier.weight(8f))
+                                GoBackButton(
+                                    modifier = Modifier.weight(animateFloatAsState(targetValue = if (currentChapter > 0) 4f else 8f).value)
+                                )
+
+                                AnimatedVisibility(
+                                    visible = currentChapter > 0,
+                                    enter = expandHorizontally(),
+                                    exit = shrinkHorizontally()
+                                ) {
+                                    NextButton(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .weight(4f),
+                                        nextChapter = ::showSnackBar
+                                    )
+                                }
+
                                 IconButton(
                                     onClick = { settingsPopup = true },
                                     modifier = Modifier.weight(2f)
@@ -312,15 +330,14 @@ class ReadActivityCompose : ComponentActivity() {
                         state = swipeState,
                         onRefresh = {
                             loadPages(
-                                list.getOrNull(currentChapter.value.value)
+                                list.getOrNull(currentChapter)
                                     ?.getChapterInfo()
                                     ?.map { it.mapNotNull(Storage::link) }
                                     ?.subscribeOn(Schedulers.io())
                                     ?.observeOn(AndroidSchedulers.mainThread()),
                                 swipeState
                             )
-                        },
-                        modifier = Modifier.padding(p)
+                        }
                     ) {
                         if (pages.isNotEmpty()) {
                             LazyColumn(
@@ -348,6 +365,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 }
 
                                 item {
+                                    if (currentChapter <= 0) EndPage()
                                     AndroidView(
                                         modifier = Modifier.fillMaxWidth(),
                                         factory = { context ->
@@ -357,16 +375,9 @@ class ReadActivityCompose : ComponentActivity() {
                                                 loadAd(ad)
                                             }
                                         }
-
                                     )
-                                    if (currentChapter.value.value <= 0) EndPage() else NextPage(::showSnackBar)
                                 }
-
                             }
-
-                            /*LaunchedEffect(listState) {
-                                snapshotFlow { listState.firstVisibleItemIndex }.collect { currentPage = it }
-                            }*/
                         } else {
                             CircularProgressIndicator(
                                 modifier = Modifier
@@ -417,7 +428,7 @@ class ReadActivityCompose : ComponentActivity() {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp)
+                .padding(2.dp)
                 .wrapContentHeight()
         ) {
             Text(
@@ -427,12 +438,7 @@ class ReadActivityCompose : ComponentActivity() {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedButton(
-                onClick = { finish() },
-                modifier = Modifier.fillMaxWidth(),
-                border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
-            ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
-
+            GoBackButton(modifier = Modifier.fillMaxWidth())
         }
     }
 
@@ -443,48 +449,55 @@ class ReadActivityCompose : ComponentActivity() {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp)
+                .padding(2.dp)
                 .wrapContentHeight()
         ) {
-            Button(
-                onClick = {
-                    list.getOrNull(--currentChapter.value.value)
-                        ?.let { item ->
-                            ChapterWatched(item.url, item.name, mangaUrl)
-                                .let {
-                                    Completable.mergeArray(
-                                        FirebaseDb.insertEpisodeWatched(it),
-                                        dao.insertChapter(it)
-                                    )
-                                }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(Schedulers.io())
-                                .subscribe(nextChapter)
-                                .addTo(disposable)
+            //NextButton(Modifier.fillMaxWidth().padding(vertical = 4.dp), nextChapter)
 
-                            item
-                                .getChapterInfo()
-                                .map { it.mapNotNull(Storage::link) }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .doOnSubscribe { pageList.clear() }
-                                .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                                .addTo(disposable)
-                        }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
-            ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.button) }
-
-            OutlinedButton(
-                onClick = { finish() },
-                modifier = Modifier.fillMaxWidth(),
-                border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
-            ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
-
+            GoBackButton(modifier = Modifier.fillMaxWidth())
         }
+    }
+
+    @Composable
+    private fun GoBackButton(modifier: Modifier = Modifier) {
+        OutlinedButton(
+            onClick = { finish() },
+            modifier = modifier,
+            border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
+        ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
+    }
+
+    @Composable
+    private fun NextButton(modifier: Modifier = Modifier, nextChapter: () -> Unit) {
+        Button(
+            onClick = {
+                list.getOrNull(--currentChapter)
+                    ?.let { item ->
+                        ChapterWatched(item.url, item.name, mangaUrl)
+                            .let {
+                                Completable.mergeArray(
+                                    FirebaseDb.insertEpisodeWatched(it),
+                                    dao.insertChapter(it)
+                                )
+                            }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
+                            .subscribe(nextChapter)
+                            .addTo(disposable)
+
+                        item
+                            .getChapterInfo()
+                            .map { it.mapNotNull(Storage::link) }
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doOnSubscribe { pageList.clear() }
+                            .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
+                            .addTo(disposable)
+                    }
+            },
+            modifier = modifier,
+            border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
+        ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.button) }
     }
 
     @Composable
