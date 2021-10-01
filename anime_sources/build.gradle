@@ -38,8 +38,8 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-    implementation "com.squareup.okhttp3:okhttp:4.9.1"
-    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.1"
+    implementation "com.squareup.okhttp3:okhttp:4.9.2"
+    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.2"
     implementation coroutinesCore
     implementation jsoup
     implementation 'com.squareup.duktape:duktape-android:1.4.0'
