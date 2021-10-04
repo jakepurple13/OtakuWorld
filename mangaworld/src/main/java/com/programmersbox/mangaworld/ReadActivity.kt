@@ -37,7 +37,6 @@ import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -152,6 +151,7 @@ class ReadActivityCompose : ComponentActivity() {
 
     private var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
     private var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
+    private var batteryPercent by mutableStateOf(0f)
 
     private var time by mutableStateOf(System.currentTimeMillis())
 
@@ -176,6 +176,7 @@ class ReadActivityCompose : ComponentActivity() {
         }
 
         batteryInfo = battery {
+            batteryPercent = it.percent
             batteryInformation.batteryLevelAlert(it.percent)
             batteryInformation.batteryInfoItem(it)
         }
@@ -194,11 +195,6 @@ class ReadActivityCompose : ComponentActivity() {
                 val pages = pageList
 
                 BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
-
-                val batteryLevel by batteryInformation.batteryLevelAlert
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeAsState(0f)
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -412,7 +408,7 @@ class ReadActivityCompose : ComponentActivity() {
                                             contentDescription = null,
                                             tint = animateColorAsState(batteryColor).value
                                         )
-                                        Text("${batteryLevel.toInt()}%", style = MaterialTheme.typography.body1)
+                                        Text("${batteryPercent.toInt()}%", style = MaterialTheme.typography.body1)
                                     }
 
                                     Text(
