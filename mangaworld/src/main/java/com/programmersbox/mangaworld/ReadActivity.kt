@@ -488,14 +488,15 @@ class ReadActivityCompose : ComponentActivity() {
                                 ) { Icon(Icons.Default.Settings, null) }
                             }
 
-                        }
+                            if (pages.isEmpty()) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .padding(p)
+                                        .fillMaxSize()
+                                        .align(Alignment.Center)
+                                )
+                            }
 
-                        AnimatedVisibility(visible = pages.isEmpty()) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .padding(p)
-                                    .fillMaxSize()
-                            )
                         }
                     }
                 }
