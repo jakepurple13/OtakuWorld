@@ -349,6 +349,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                         if (!showInfo) {
                                                             toolbarOffsetHeightPx.value = -toolbarHeightPx
                                                             topBarOffsetHeightPx.value = -topBarHeightPx
+                                                            fabOffsetHeightPx.value = -fabHeightPx
                                                         }
                                                     },
                                                     onLongClick = {}
