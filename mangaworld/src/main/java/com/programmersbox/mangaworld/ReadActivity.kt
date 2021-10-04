@@ -41,6 +41,7 @@ import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -391,6 +392,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 modifier = Modifier
                                     .height(topBarHeight)
                                     .align(Alignment.TopCenter)
+                                    .alpha(1f - (-animateTopBar / topBarHeightPx))
                                     .offset {
                                         IntOffset(
                                             x = 0,
@@ -431,6 +433,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 modifier = Modifier
                                     .height(toolbarHeight)
                                     .align(Alignment.BottomCenter)
+                                    .alpha(1f - (animateBar / toolbarHeightPx))
                                     .offset {
                                         IntOffset(
                                             x = 0,
