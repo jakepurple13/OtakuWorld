@@ -553,34 +553,35 @@ class ReadActivityCompose : ComponentActivity() {
         ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
     }
 
+    private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
+        list.getOrNull(chapterNum)?.let { item ->
+            ChapterWatched(item.url, item.name, mangaUrl)
+                .let {
+                    Completable.mergeArray(
+                        FirebaseDb.insertEpisodeWatched(it),
+                        dao.insertChapter(it)
+                    )
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(chapter)
+                .addTo(disposable)
+
+            item
+                .getChapterInfo()
+                .map { it.mapNotNull(Storage::link) }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { pageList.clear() }
+                .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
+                .addTo(disposable)
+        }
+    }
+
     @Composable
     private fun NextButton(modifier: Modifier = Modifier, nextChapter: () -> Unit) {
         Button(
-            onClick = {
-                list.getOrNull(--currentChapter)
-                    ?.let { item ->
-                        ChapterWatched(item.url, item.name, mangaUrl)
-                            .let {
-                                Completable.mergeArray(
-                                    FirebaseDb.insertEpisodeWatched(it),
-                                    dao.insertChapter(it)
-                                )
-                            }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .subscribe(nextChapter)
-                            .addTo(disposable)
-
-                        item
-                            .getChapterInfo()
-                            .map { it.mapNotNull(Storage::link) }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .doOnSubscribe { pageList.clear() }
-                            .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                            .addTo(disposable)
-                    }
-            },
+            onClick = { addChapterToWatched(--currentChapter, nextChapter) },
             modifier = modifier,
             border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
         ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.button) }
@@ -589,31 +590,7 @@ class ReadActivityCompose : ComponentActivity() {
     @Composable
     private fun PreviousButton(modifier: Modifier = Modifier, previousChapter: () -> Unit) {
         TextButton(
-            onClick = {
-                list.getOrNull(++currentChapter)
-                    ?.let { item ->
-                        ChapterWatched(item.url, item.name, mangaUrl)
-                            .let {
-                                Completable.mergeArray(
-                                    FirebaseDb.insertEpisodeWatched(it),
-                                    dao.insertChapter(it)
-                                )
-                            }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .subscribe(previousChapter)
-                            .addTo(disposable)
-
-                        item
-                            .getChapterInfo()
-                            .map { it.mapNotNull(Storage::link) }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .doOnSubscribe { pageList.clear() }
-                            .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                            .addTo(disposable)
-                    }
-            },
+            onClick = { addChapterToWatched(++currentChapter, previousChapter) },
             modifier = modifier
         ) { Text(stringResource(id = R.string.loadPreviousChapter), style = MaterialTheme.typography.button) }
     }
