@@ -162,7 +162,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     downloadedItems.clear()
                 },
                 itemUi = { item ->
-
                     ListItem(
                         modifier = Modifier.padding(5.dp),
                         icon = {

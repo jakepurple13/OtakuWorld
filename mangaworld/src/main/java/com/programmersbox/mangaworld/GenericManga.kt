@@ -146,7 +146,6 @@ class GenericManga(val context: Context) : GenericInfo {
         }
 
         preferenceScreen.playSettings { fragment, it ->
-
             it.addPreference(
                 SeekBarPreference(it.context).apply {
                     title = it.context.getString(R.string.reader_padding_between_pages)

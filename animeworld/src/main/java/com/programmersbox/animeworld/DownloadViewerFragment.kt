@@ -402,8 +402,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                     ) {
                         Text(
                             stringResource(
-                                id =
-                                when (download.download.status) {
+                                id = when (download.download.status) {
                                     Status.COMPLETED -> R.string.view
                                     Status.FAILED -> R.string.retry
                                     Status.PAUSED -> R.string.resume

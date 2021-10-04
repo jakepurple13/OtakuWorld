@@ -196,9 +196,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
 
     @Composable
     private fun EmptyState() {
-
         Box(modifier = Modifier.fillMaxSize()) {
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -206,7 +204,6 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                 elevation = 5.dp,
                 shape = RoundedCornerShape(5.dp)
             ) {
-
                 Column(modifier = Modifier) {
 
                     Text(
@@ -235,12 +232,9 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                             style = MaterialTheme.typography.button
                         )
                     }
-
                 }
-
             }
         }
-
     }
 
     @ExperimentalMaterialApi
@@ -333,7 +327,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                 ) {
                     Icon(
                         icon,
-                        contentDescription = "Localized description",
+                        contentDescription = null,
                         modifier = Modifier.scale(scale)
                     )
                 }
