@@ -114,7 +114,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     override fun customPreferences(preferenceScreen: SettingsDsl) {
-        preferenceScreen.generalSettings { fragment, it ->
+        preferenceScreen.generalSettings { _, it ->
             it.addPreference(
                 SwitchPreference(it.context).apply {
                     title = it.context.getString(R.string.showAdultSources)
@@ -129,6 +129,23 @@ class GenericManga(val context: Context) : GenericInfo {
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_text_format_24)
                 }
             )
+        }
+
+        preferenceScreen.viewSettings { s, it ->
+            it.addPreference(
+                Preference(it.context).apply {
+                    title = it.context.getString(R.string.downloaded_manga)
+                    setOnPreferenceClickListener {
+                        s.findNavController()
+                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
+                        true
+                    }
+                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_library_books_24)
+                }
+            )
+        }
+
+        preferenceScreen.playSettings { fragment, it ->
 
             it.addPreference(
                 SeekBarPreference(it.context).apply {
@@ -165,20 +182,7 @@ class GenericManga(val context: Context) : GenericInfo {
                     icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_chrome_reader_mode_24)
                 }
             )
-        }
 
-        preferenceScreen.viewSettings { s, it ->
-            it.addPreference(
-                Preference(it.context).apply {
-                    title = it.context.getString(R.string.downloaded_manga)
-                    setOnPreferenceClickListener {
-                        s.findNavController()
-                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
-                        true
-                    }
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_library_books_24)
-                }
-            )
         }
 
         preferenceScreen.navigationSetup {

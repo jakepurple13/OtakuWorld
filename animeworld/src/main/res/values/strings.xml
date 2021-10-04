@@ -89,4 +89,6 @@
     <string name="go_download">GO DOWNLOAD</string>
 
     <string name="choose_quality_for">Choose Quality for %s</string>
+
+    <string name="playSettings">Player Settings</string>
 </resources>

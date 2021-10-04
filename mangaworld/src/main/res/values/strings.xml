@@ -19,4 +19,6 @@
     <string name="default_padding_summary">Default is 4</string>
     <string name="useNewReader">Use New Reader</string>
     <string name="reader_summary_setting">If the new reader crashes, please use the old reader. The new reader is still being worked on.</string>
+
+    <string name="playSettings">Reader Settings</string>
 </resources>
