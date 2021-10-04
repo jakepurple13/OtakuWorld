@@ -201,7 +201,6 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
-                val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
                 var showInfo by remember { mutableStateOf(false) }
 
                 val paddingPage by pagePadding.collectAsState(initial = 4)
@@ -250,17 +249,30 @@ class ReadActivityCompose : ComponentActivity() {
                     Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show()
                 }
 
+                val showItems = showInfo || listState.isScrolledToTheEnd()
+
+                //56 is default FabSize
+                //56 is the bottom app bar size
+                //16 is the scaffold padding
+                val fabHeight = 72.dp
+                val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
+                val fabOffsetHeightPx = remember { mutableStateOf(0f) }
+
+                val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
+
                 Scaffold(
                     floatingActionButton = {
-                        AnimatedVisibility(
-                            visible = showButton && (showInfo || listState.isScrolledToTheEnd()),
-                            enter = slideInVertically({ it / 2 }) + fadeIn(),
-                            exit = slideOutVertically({ it / 2 }) + fadeOut()
-                        ) {
-                            FloatingActionButton(
-                                onClick = { scope.launch { listState.animateScrollToItem(0) } }
-                            ) { Icon(Icons.Default.VerticalAlignTop, null) }
-                        }
+                        FloatingActionButton(
+                            onClick = { scope.launch { listState.animateScrollToItem(0) } },
+                            modifier = Modifier
+                                .padding(bottom = 56.dp)
+                                .offset {
+                                    IntOffset(
+                                        x = animateFab,
+                                        y = 0
+                                    )
+                                }
+                        ) { Icon(Icons.Default.VerticalAlignTop, null) }
                     },
                     floatingActionButtonPosition = FabPosition.End,
                 ) { p ->
@@ -293,6 +305,10 @@ class ReadActivityCompose : ComponentActivity() {
                             object : NestedScrollConnection {
                                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                                     val delta = available.y
+
+                                    val newFabOffset = fabOffsetHeightPx.value + delta
+                                    fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
+
                                     val newOffset = toolbarOffsetHeightPx.value + delta
                                     toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
 
@@ -368,9 +384,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 }
                             }
 
-                            val animateTopBar by animateIntAsState(
-                                if (showInfo || listState.isScrolledToTheEnd()) 0 else (topBarOffsetHeightPx.value.roundToInt())
-                            )
+                            val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
 
                             TopAppBar(
                                 modifier = Modifier
@@ -379,8 +393,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     .offset {
                                         IntOffset(
                                             x = 0,
-                                            y = if (showInfo || listState.isScrolledToTheEnd()) animateTopBar
-                                            else (topBarOffsetHeightPx.value.roundToInt())
+                                            y = animateTopBar
                                         )
                                     }
                             ) {
@@ -411,9 +424,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 }
                             }
 
-                            val animateBar by animateIntAsState(
-                                if (showInfo || listState.isScrolledToTheEnd()) 0 else (-toolbarOffsetHeightPx.value.roundToInt())
-                            )
+                            val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
 
                             BottomAppBar(
                                 modifier = Modifier
@@ -422,8 +433,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     .offset {
                                         IntOffset(
                                             x = 0,
-                                            y = if (showInfo || listState.isScrolledToTheEnd()) animateBar
-                                            else (-toolbarOffsetHeightPx.value.roundToInt())
+                                            y = animateBar
                                         )
                                     }
                             ) {
