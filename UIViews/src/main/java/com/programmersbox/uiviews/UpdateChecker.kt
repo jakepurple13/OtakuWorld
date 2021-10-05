@@ -43,7 +43,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
         try {
             val f = AppUpdate.getUpdate()?.update_real_version.orEmpty()
             val appVersion = applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName.orEmpty()
-            if (AppUpdate.checkForUpdate(f, appVersion)) {
+            if (AppUpdate.checkForUpdate(appVersion, f)) {
                 val n = NotificationDslBuilder.builder(
                     applicationContext,
                     "appUpdate",

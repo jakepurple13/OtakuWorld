@@ -263,12 +263,7 @@ class ReadActivityCompose : ComponentActivity() {
                             onClick = { scope.launch { listState.animateScrollToItem(0) } },
                             modifier = Modifier
                                 .padding(bottom = 56.dp)
-                                .offset {
-                                    IntOffset(
-                                        x = animateFab,
-                                        y = 0
-                                    )
-                                }
+                                .offset { IntOffset(x = animateFab, y = 0) }
                         ) { Icon(Icons.Default.VerticalAlignTop, null) }
                     },
                     floatingActionButtonPosition = FabPosition.End,
@@ -389,12 +384,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     .height(topBarHeight)
                                     .align(Alignment.TopCenter)
                                     .alpha(1f - (-animateTopBar / topBarHeightPx))
-                                    .offset {
-                                        IntOffset(
-                                            x = 0,
-                                            y = animateTopBar
-                                        )
-                                    }
+                                    .offset { IntOffset(x = 0, y = animateTopBar) }
                             ) {
                                 Row(
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -430,12 +420,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     .height(toolbarHeight)
                                     .align(Alignment.BottomCenter)
                                     .alpha(1f - (animateBar / toolbarHeightPx))
-                                    .offset {
-                                        IntOffset(
-                                            x = 0,
-                                            y = animateBar
-                                        )
-                                    }
+                                    .offset { IntOffset(x = 0, y = animateBar) }
                             ) {
 
                                 val prevShown = currentChapter < pages.size

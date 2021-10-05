@@ -4,23 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -42,9 +40,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.MaterialCard
-import com.programmersbox.uiviews.utils.toComposeColor
+import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.Single
@@ -53,6 +49,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.random.Random
 import com.programmersbox.anime_sources.Sources as ASources
@@ -133,8 +130,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }*/
 
-                NestedScrollExample()
-
+                //NestedScrollExample()
+                //CustomNestedScrollExample()
+                CustomNestedScrollScaffoldExample()
             }
         }
     }
@@ -554,4 +552,220 @@ fun NestedScrollExample() {
                 .offset { IntOffset(x = 0, y = -toolbarOffsetHeightPx.value.roundToInt()) }
         ) { Text("bottom bar offset is ${toolbarOffsetHeightPx.value}") }
     }
+}
+
+@Composable
+fun CustomNestedScrollExample() {
+
+    val scope = rememberCoroutineScope()
+    val state = rememberLazyListState()
+
+    var showInfo by remember { mutableStateOf(false) }
+
+    val topBar = remember {
+        CoordinatorModel(56.dp) { it, model ->
+            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            TopAppBar(
+                modifier = Modifier
+                    .height(56.dp)
+                    .alpha(1f - (-animateTopBar / model.heightPx))
+                    .align(Alignment.TopCenter)
+                    .offset { IntOffset(x = 0, y = animateTopBar) },
+                title = { Text("toolbar offset is $it") }
+            )
+        }
+    }
+
+    val bottomBar = remember {
+        CoordinatorModel(56.dp) { it, model ->
+            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            BottomAppBar(
+                modifier = Modifier
+                    .height(56.dp)
+                    .alpha(1f - (-animateBottomBar / model.heightPx))
+                    .align(Alignment.BottomCenter)
+                    .offset { IntOffset(x = 0, y = -animateBottomBar) }
+            ) { Text("bottom bar offset is $it") }
+        }
+    }
+
+    val scrollToTop = remember {
+        CoordinatorModel(72.dp) { it, _ ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()))
+            FloatingActionButton(
+                onClick = { scope.launch { state.animateScrollToItem(0) } },
+                modifier = Modifier
+                    .padding(bottom = 56.dp)
+                    .padding(12.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset {
+                        IntOffset(
+                            x = animateFab,
+                            y = 0
+                        )
+                    }
+            ) { Icon(Icons.Default.VerticalAlignTop, null) }
+        }
+    }
+
+    val scrollToBottom = remember {
+        CoordinatorModel(72.dp) { it, _ ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            FloatingActionButton(
+                onClick = { scope.launch { state.animateScrollToItem(100) } },
+                modifier = Modifier
+                    .padding(bottom = 56.dp)
+                    .padding(12.dp)
+                    .align(Alignment.BottomStart)
+                    .offset {
+                        IntOffset(
+                            x = animateFab,
+                            y = 0
+                        )
+                    }
+            ) { Icon(Icons.Default.VerticalAlignBottom, null) }
+        }
+    }
+
+    Coordinator(
+        topBar = topBar,
+        bottomBar = bottomBar,
+        scrollToTop, scrollToBottom
+    ) {
+        LazyColumn(
+            state = state,
+            contentPadding = PaddingValues(
+                top = animateDpAsState(if (showInfo) 56.dp else 0.dp).value,
+                bottom = animateDpAsState(if (showInfo) 56.dp else 0.dp).value
+            )
+        ) {
+            items(100) { index ->
+                Text(
+                    "I'm item $index",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clickable {
+                            showInfo = !showInfo
+                            if (!showInfo) {
+                                topBar.offsetHeightPx.value = -topBar.heightPx
+                                bottomBar.offsetHeightPx.value = -bottomBar.heightPx
+                                scrollToTop.offsetHeightPx.value = -scrollToTop.heightPx
+                                scrollToBottom.offsetHeightPx.value = -scrollToBottom.heightPx
+                            }
+                        }
+                )
+            }
+        }
+    }
+
+}
+
+@Composable
+fun CustomNestedScrollScaffoldExample() {
+
+    val scope = rememberCoroutineScope()
+    val state = rememberLazyListState()
+
+    var showInfo by remember { mutableStateOf(false) }
+
+    val topBar = remember {
+        CoordinatorModel(56.dp, false) { it, model ->
+            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            TopAppBar(
+                modifier = Modifier
+                    .height(56.dp)
+                    .alpha(1f - (-animateTopBar / model.heightPx))
+                    .align(Alignment.TopCenter)
+                    .offset { IntOffset(x = 0, y = animateTopBar) },
+                title = { Text("toolbar offset is $it") }
+            )
+        }
+    }
+
+    //topBar.Setup()
+
+    val bottomBar = remember {
+        CoordinatorModel(56.dp, false) { it, model ->
+            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            BottomAppBar(
+                modifier = Modifier
+                    .height(56.dp)
+                    .alpha(1f - (-animateBottomBar / model.heightPx))
+                    .align(Alignment.BottomCenter)
+                    .offset { IntOffset(x = 0, y = -animateBottomBar) }
+            ) { Text("bottom bar offset is $it") }
+        }
+    }
+
+    //bottomBar.Setup()
+
+    val scrollToTop = remember {
+        CoordinatorModel(72.dp) { it, _ ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()))
+            FloatingActionButton(
+                onClick = { scope.launch { state.animateScrollToItem(0) } },
+                modifier = Modifier
+                    .padding(bottom = 56.dp)
+                    .padding(12.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset {
+                        IntOffset(
+                            x = animateFab,
+                            y = 0
+                        )
+                    }
+            ) { Icon(Icons.Default.VerticalAlignTop, null) }
+        }
+    }
+
+    val scrollToBottom = remember {
+        CoordinatorModel(72.dp) { it, _ ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            FloatingActionButton(
+                onClick = { scope.launch { state.animateScrollToItem(100) } },
+                modifier = Modifier
+                    .padding(bottom = 56.dp)
+                    .padding(12.dp)
+                    .align(Alignment.BottomStart)
+                    .offset {
+                        IntOffset(
+                            x = animateFab,
+                            y = 0
+                        )
+                    }
+            ) { Icon(Icons.Default.VerticalAlignBottom, null) }
+        }
+    }
+
+    Scaffold(
+        topBar = { Box { topBar.Content(this) } },
+        bottomBar = { Box { bottomBar.Content(this) } }
+    ) { p ->
+        Coordinator(topBar = topBar, bottomBar = bottomBar, scrollToTop, scrollToBottom) {
+            LazyColumn(
+                state = state,
+                contentPadding = p
+            ) {
+                items(100) { index ->
+                    Text(
+                        "I'm item $index",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .clickable {
+                                showInfo = !showInfo
+                                if (!showInfo) {
+                                    topBar.offsetHeightPx.value = -topBar.heightPx
+                                    bottomBar.offsetHeightPx.value = -bottomBar.heightPx
+                                    scrollToTop.offsetHeightPx.value = -scrollToTop.heightPx
+                                    scrollToBottom.offsetHeightPx.value = -scrollToBottom.heightPx
+                                }
+                            }
+                    )
+                }
+            }
+        }
+    }
+
 }

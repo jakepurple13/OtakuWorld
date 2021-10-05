@@ -34,6 +34,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
@@ -67,6 +70,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
+import kotlin.properties.Delegates
 
 fun Modifier.fadeInAnimation(): Modifier = composed {
     val animatedProgress = remember { Animatable(initialValue = 0f) }
@@ -1117,5 +1121,72 @@ fun MaterialCard(
             }
             Row(verticalAlignment = Alignment.CenterVertically) { actions?.invoke(this) }
         }
+    }
+}
+
+class CoordinatorModel(
+    val height: Dp,
+    val show: Boolean = true,
+    val content: @Composable BoxScope.(Float, CoordinatorModel) -> Unit
+) {
+    var heightPx by Delegates.notNull<Float>()
+    val offsetHeightPx = mutableStateOf(0f)
+
+    @Composable
+    fun Setup() {
+        heightPx = with(LocalDensity.current) { height.roundToPx().toFloat() }
+    }
+
+    @Composable
+    fun Content(scope: BoxScope) = scope.content(offsetHeightPx.value, this)
+}
+
+@Composable
+fun Coordinator(
+    topBar: CoordinatorModel? = null,
+    bottomBar: CoordinatorModel? = null,
+    vararg otherCoords: CoordinatorModel,
+    content: @Composable BoxScope.() -> Unit
+) {
+    topBar?.Setup()
+    bottomBar?.Setup()
+    otherCoords.forEach { it.Setup() }
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+
+                topBar?.let {
+                    val topBarOffset = it.offsetHeightPx.value + delta
+                    it.offsetHeightPx.value = topBarOffset.coerceIn(-it.heightPx, 0f)
+                }
+
+                bottomBar?.let {
+                    val bottomBarOffset = it.offsetHeightPx.value + delta
+                    it.offsetHeightPx.value = bottomBarOffset.coerceIn(-it.heightPx, 0f)
+                }
+
+                otherCoords.forEach { c ->
+                    c.let {
+                        val offset = it.offsetHeightPx.value + delta
+                        it.offsetHeightPx.value = offset.coerceIn(-it.heightPx, 0f)
+                    }
+                }
+
+                return Offset.Zero
+            }
+        }
+    }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .nestedScroll(nestedScrollConnection)
+    ) {
+        content()
+        otherCoords.filter(CoordinatorModel::show).forEach { it.Content(this) }
+        topBar?.Content(this)
+        bottomBar?.Content(this)
     }
 }
