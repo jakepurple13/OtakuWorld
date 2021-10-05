@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.net.toUri
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
@@ -201,7 +202,14 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             topBar = {
                 TopAppBar(
                     actions = {
-                        IconButton(onClick = { dismiss() }) { Icon(Icons.Default.Close, null) }
+                        IconButton(
+                            onClick = {
+                                dismiss()
+                                try {
+                                    findNavController().popBackStack()
+                                } catch (e: IllegalStateException) {
+                                }
+                            }) { Icon(Icons.Default.Close, null) }
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
                     title = {
