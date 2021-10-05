@@ -48,7 +48,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -70,8 +69,6 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshState
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -254,27 +251,27 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
 
-                val scaffoldState = rememberBottomDrawerState(BottomDrawerValue.Closed)
+                val scaffoldState = rememberBottomSheetScaffoldState()
 
-                BackHandler(scaffoldState.isExpanded) { scope.launch { scaffoldState.close() } }
+                BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
 
-                BottomDrawer(
-                    drawerState = scaffoldState,
-                    drawerContent = {
+                BottomSheetScaffold(
+                    scaffoldState = scaffoldState,
+                    sheetContent = {
                         Scaffold(
                             topBar = {
                                 TopAppBar(
                                     title = { Text(list.getOrNull(currentChapter)?.name.orEmpty()) },
                                     actions = { Text("${currentPage + 1}/${pages.size}") },
                                     navigationIcon = {
-                                        IconButton(onClick = { scope.launch { scaffoldState.close() } }) {
+                                        IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
                                             Icon(Icons.Default.Close, null)
                                         }
                                     }
                                 )
                             }
                         ) { p ->
-                            if (scaffoldState.isExpanded) {
+                            if (scaffoldState.bottomSheetState.isExpanded) {
                                 LazyVerticalGrid(
                                     cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -300,7 +297,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                     )
                                                     .clickable {
                                                         scope.launch {
-                                                            if (currentPage == i) scaffoldState.close()
+                                                            if (currentPage == i) scaffoldState.bottomSheetState.collapse()
                                                             listState.animateScrollToItem(i)
                                                         }
                                                     }
@@ -311,7 +308,8 @@ class ReadActivityCompose : ComponentActivity() {
                             }
                         }
                     },
-                    gesturesEnabled = false
+                    sheetGesturesEnabled = false,
+                    sheetPeekHeight = 0.dp
                 ) {
 
                     Scaffold(
@@ -402,9 +400,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                                 fabOffsetHeightPx.value = -fabHeightPx
                                                             }
                                                         },
-                                                        onLongClick = {
-                                                            scope.launch { scaffoldState.expand() }
-                                                        }
+                                                        onLongClick = { scope.launch { scaffoldState.bottomSheetState.expand() } }
                                                     )
                                             )
                                         }
@@ -423,7 +419,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                 )
                                             }
                                             GoBackButton(modifier = Modifier.fillMaxWidth())
-                                            AndroidView(
+                                            /*AndroidView(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 factory = {
                                                     AdView(it).apply {
@@ -432,7 +428,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                         loadAd(ad)
                                                     }
                                                 }
-                                            )
+                                            )*/
                                         }
                                     }
                                 }

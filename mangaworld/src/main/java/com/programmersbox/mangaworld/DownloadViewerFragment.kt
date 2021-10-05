@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.fragment.findNavController
 import com.anggrayudi.storage.file.DocumentFileCompat
 import com.anggrayudi.storage.file.DocumentFileType
 import com.anggrayudi.storage.file.deleteRecursively
@@ -160,6 +161,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                                 parentFragmentManager.fragments
                                     .filterIsInstance<DownloadViewerFragment>()
                                     .forEach(DownloadViewerFragment::dismiss)
+                                findNavController().popBackStack()
                             }
                         ) { Icon(Icons.Default.Close, null) }
 
