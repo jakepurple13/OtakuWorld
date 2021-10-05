@@ -75,6 +75,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         accountPreferences()
         generalPreferences(genericInfo)
         aboutPreferences(genericInfo)
+        playPreferences()
 
         val settingsDsl = SettingsDsl()
 
@@ -82,6 +83,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         settingsDsl.navigationSetup(this)
         findPreference<PreferenceCategory>("generalCategory")?.let { settingsDsl.generalSettings(this, it) }
         findPreference<PreferenceCategory>("viewCategory")?.let { settingsDsl.viewSettings(this, it) }
+        findPreference<PreferenceCategory>("playCategory")?.let { settingsDsl.playSettings(this, it) }
     }
 
     private fun accountPreferences() {
@@ -195,23 +197,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }?.let(AppCompatDelegate::setDefaultNightMode)
         }
 
-        findPreference<SeekBarPreference>("battery_alert")?.let { s ->
-            s.showSeekBarValue = true
-            s.setDefaultValue(20)
-            s.max = 100
-            s.setOnPreferenceChangeListener { _, newValue ->
-                if (newValue is Int) {
-                    lifecycleScope.launch(Dispatchers.IO) { requireContext().updatePref(BATTERY_PERCENT, newValue) }
-                }
-                true
-            }
-            lifecycleScope.launch {
-                requireContext().batteryPercent
-                    .flowWithLifecycle(lifecycle)
-                    .collect { runOnUIThread { s.value = it } }
-            }
-        }
-
         val itemDao = ItemDatabase.getInstance(requireContext()).itemDao()
 
         findPreference<PreferenceCategory>("notification_category")?.let { p ->
@@ -259,6 +244,25 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+    }
+
+    private fun playPreferences() {
+        findPreference<SeekBarPreference>("battery_alert")?.let { s ->
+            s.showSeekBarValue = true
+            s.setDefaultValue(20)
+            s.max = 100
+            s.setOnPreferenceChangeListener { _, newValue ->
+                if (newValue is Int) {
+                    lifecycleScope.launch(Dispatchers.IO) { requireContext().updatePref(BATTERY_PERCENT, newValue) }
+                }
+                true
+            }
+            lifecycleScope.launch {
+                requireContext().batteryPercent
+                    .flowWithLifecycle(lifecycle)
+                    .collect { runOnUIThread { s.value = it } }
+            }
+        }
     }
 
     private fun aboutPreferences(genericInfo: GenericInfo) {
@@ -466,6 +470,12 @@ class SettingsDsl {
 
     fun navigationSetup(block: (SettingsFragment) -> Unit) {
         navigationSetup = block
+    }
+
+    internal var playSettings: (SettingsFragment, PreferenceCategory) -> Unit = { _, _ -> }
+
+    fun playSettings(block: (SettingsFragment, PreferenceCategory) -> Unit) {
+        playSettings = block
     }
 
     companion object {

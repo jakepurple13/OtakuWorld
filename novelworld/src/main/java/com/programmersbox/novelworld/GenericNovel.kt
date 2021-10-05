@@ -43,10 +43,16 @@ val appModule = module {
 
 class GenericNovel(val context: Context) : GenericInfo {
 
+    override val showDownload: Boolean get() = false
+
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
         context.startActivity(
             Intent(context, ReadingActivity::class.java).apply {
                 putExtra("model", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                putExtra("novelTitle", model.name)
+                putExtra("novelUrl", model.url)
+                putExtra("novelInfoUrl", model.sourceUrl)
             }
         )
     }
@@ -59,9 +65,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         null
     }
 
-    override fun downloadChapter(chapterModel: ChapterModel, title: String) {
-
-    }
+    override fun downloadChapter(chapterModel: ChapterModel, title: String) {}
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 

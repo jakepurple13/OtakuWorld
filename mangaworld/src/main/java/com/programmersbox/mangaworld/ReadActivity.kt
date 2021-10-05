@@ -37,10 +37,10 @@ import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -151,6 +151,7 @@ class ReadActivityCompose : ComponentActivity() {
 
     private var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
     private var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
+    private var batteryPercent by mutableStateOf(0f)
 
     private var time by mutableStateOf(System.currentTimeMillis())
 
@@ -175,6 +176,7 @@ class ReadActivityCompose : ComponentActivity() {
         }
 
         batteryInfo = battery {
+            batteryPercent = it.percent
             batteryInformation.batteryLevelAlert(it.percent)
             batteryInformation.batteryInfoItem(it)
         }
@@ -194,14 +196,8 @@ class ReadActivityCompose : ComponentActivity() {
 
                 BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
 
-                val batteryLevel by batteryInformation.batteryLevelAlert
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeAsState(0f)
-
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
-                val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
                 var showInfo by remember { mutableStateOf(false) }
 
                 val paddingPage by pagePadding.collectAsState(initial = 4)
@@ -250,17 +246,25 @@ class ReadActivityCompose : ComponentActivity() {
                     Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show()
                 }
 
+                val showItems = showInfo || listState.isScrolledToTheEnd()
+
+                //56 is default FabSize
+                //56 is the bottom app bar size
+                //16 is the scaffold padding
+                val fabHeight = 72.dp
+                val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
+                val fabOffsetHeightPx = remember { mutableStateOf(0f) }
+
+                val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
+
                 Scaffold(
                     floatingActionButton = {
-                        AnimatedVisibility(
-                            visible = showButton && (showInfo || listState.isScrolledToTheEnd()),
-                            enter = slideInVertically({ it / 2 }) + fadeIn(),
-                            exit = slideOutVertically({ it / 2 }) + fadeOut()
-                        ) {
-                            FloatingActionButton(
-                                onClick = { scope.launch { listState.animateScrollToItem(0) } }
-                            ) { Icon(Icons.Default.VerticalAlignTop, null) }
-                        }
+                        FloatingActionButton(
+                            onClick = { scope.launch { listState.animateScrollToItem(0) } },
+                            modifier = Modifier
+                                .padding(bottom = 56.dp)
+                                .offset { IntOffset(x = animateFab, y = 0) }
+                        ) { Icon(Icons.Default.VerticalAlignTop, null) }
                     },
                     floatingActionButtonPosition = FabPosition.End,
                 ) { p ->
@@ -293,6 +297,10 @@ class ReadActivityCompose : ComponentActivity() {
                             object : NestedScrollConnection {
                                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                                     val delta = available.y
+
+                                    val newFabOffset = fabOffsetHeightPx.value + delta
+                                    fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
+
                                     val newOffset = toolbarOffsetHeightPx.value + delta
                                     toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
 
@@ -333,6 +341,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                         if (!showInfo) {
                                                             toolbarOffsetHeightPx.value = -toolbarHeightPx
                                                             topBarOffsetHeightPx.value = -topBarHeightPx
+                                                            fabOffsetHeightPx.value = -fabHeightPx
                                                         }
                                                     },
                                                     onLongClick = {}
@@ -368,21 +377,14 @@ class ReadActivityCompose : ComponentActivity() {
                                 }
                             }
 
-                            val animateTopBar by animateIntAsState(
-                                if (showInfo || listState.isScrolledToTheEnd()) 0 else (topBarOffsetHeightPx.value.roundToInt())
-                            )
+                            val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
 
                             TopAppBar(
                                 modifier = Modifier
                                     .height(topBarHeight)
                                     .align(Alignment.TopCenter)
-                                    .offset {
-                                        IntOffset(
-                                            x = 0,
-                                            y = if (showInfo || listState.isScrolledToTheEnd()) animateTopBar
-                                            else (topBarOffsetHeightPx.value.roundToInt())
-                                        )
-                                    }
+                                    .alpha(1f - (-animateTopBar / topBarHeightPx))
+                                    .offset { IntOffset(x = 0, y = animateTopBar) }
                             ) {
                                 Row(
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -396,7 +398,7 @@ class ReadActivityCompose : ComponentActivity() {
                                             contentDescription = null,
                                             tint = animateColorAsState(batteryColor).value
                                         )
-                                        Text("${batteryLevel.toInt()}%", style = MaterialTheme.typography.body1)
+                                        Text("${batteryPercent.toInt()}%", style = MaterialTheme.typography.body1)
                                     }
 
                                     Text(
@@ -411,21 +413,14 @@ class ReadActivityCompose : ComponentActivity() {
                                 }
                             }
 
-                            val animateBar by animateIntAsState(
-                                if (showInfo || listState.isScrolledToTheEnd()) 0 else (-toolbarOffsetHeightPx.value.roundToInt())
-                            )
+                            val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
 
                             BottomAppBar(
                                 modifier = Modifier
                                     .height(toolbarHeight)
                                     .align(Alignment.BottomCenter)
-                                    .offset {
-                                        IntOffset(
-                                            x = 0,
-                                            y = if (showInfo || listState.isScrolledToTheEnd()) animateBar
-                                            else (-toolbarOffsetHeightPx.value.roundToInt())
-                                        )
-                                    }
+                                    .alpha(1f - (animateBar / toolbarHeightPx))
+                                    .offset { IntOffset(x = 0, y = animateBar) }
                             ) {
 
                                 val prevShown = currentChapter < pages.size
@@ -488,14 +483,15 @@ class ReadActivityCompose : ComponentActivity() {
                                 ) { Icon(Icons.Default.Settings, null) }
                             }
 
-                        }
+                            if (pages.isEmpty()) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .padding(p)
+                                        .fillMaxSize()
+                                        .align(Alignment.Center)
+                                )
+                            }
 
-                        AnimatedVisibility(visible = pages.isEmpty()) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .padding(p)
-                                    .fillMaxSize()
-                            )
                         }
                     }
                 }
@@ -542,34 +538,35 @@ class ReadActivityCompose : ComponentActivity() {
         ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
     }
 
+    private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
+        list.getOrNull(chapterNum)?.let { item ->
+            ChapterWatched(item.url, item.name, mangaUrl)
+                .let {
+                    Completable.mergeArray(
+                        FirebaseDb.insertEpisodeWatched(it),
+                        dao.insertChapter(it)
+                    )
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(chapter)
+                .addTo(disposable)
+
+            item
+                .getChapterInfo()
+                .map { it.mapNotNull(Storage::link) }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { pageList.clear() }
+                .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
+                .addTo(disposable)
+        }
+    }
+
     @Composable
     private fun NextButton(modifier: Modifier = Modifier, nextChapter: () -> Unit) {
         Button(
-            onClick = {
-                list.getOrNull(--currentChapter)
-                    ?.let { item ->
-                        ChapterWatched(item.url, item.name, mangaUrl)
-                            .let {
-                                Completable.mergeArray(
-                                    FirebaseDb.insertEpisodeWatched(it),
-                                    dao.insertChapter(it)
-                                )
-                            }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .subscribe(nextChapter)
-                            .addTo(disposable)
-
-                        item
-                            .getChapterInfo()
-                            .map { it.mapNotNull(Storage::link) }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .doOnSubscribe { pageList.clear() }
-                            .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                            .addTo(disposable)
-                    }
-            },
+            onClick = { addChapterToWatched(--currentChapter, nextChapter) },
             modifier = modifier,
             border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
         ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.button) }
@@ -578,31 +575,7 @@ class ReadActivityCompose : ComponentActivity() {
     @Composable
     private fun PreviousButton(modifier: Modifier = Modifier, previousChapter: () -> Unit) {
         TextButton(
-            onClick = {
-                list.getOrNull(++currentChapter)
-                    ?.let { item ->
-                        ChapterWatched(item.url, item.name, mangaUrl)
-                            .let {
-                                Completable.mergeArray(
-                                    FirebaseDb.insertEpisodeWatched(it),
-                                    dao.insertChapter(it)
-                                )
-                            }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .subscribe(previousChapter)
-                            .addTo(disposable)
-
-                        item
-                            .getChapterInfo()
-                            .map { it.mapNotNull(Storage::link) }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .doOnSubscribe { pageList.clear() }
-                            .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                            .addTo(disposable)
-                    }
-            },
+            onClick = { addChapterToWatched(++currentChapter, previousChapter) },
             modifier = modifier
         ) { Text(stringResource(id = R.string.loadPreviousChapter), style = MaterialTheme.typography.button) }
     }

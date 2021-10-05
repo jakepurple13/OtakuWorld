@@ -592,31 +592,32 @@ class DetailsFragment : Fragment() {
                         }
                     }
 
-                    OutlinedButton(
-                        onClick = { genericInfo.downloadChapter(c, infoModel.title) },
-                        modifier = Modifier
-                            .weight(1f, true)
-                            .padding(horizontal = 5.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
-                        border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
-                    ) {
-                        Column {
-                            Icon(
-                                Icons.Default.Download,
-                                "Download",
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
-                                tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-                            )
-                            Text(
-                                stringResource(R.string.download_chapter),
-                                style = MaterialTheme.typography.button
-                                    .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
+                    if (genericInfo.showDownload) {
+                        OutlinedButton(
+                            onClick = { genericInfo.downloadChapter(c, infoModel.title) },
+                            modifier = Modifier
+                                .weight(1f, true)
+                                .padding(horizontal = 5.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
+                            border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
+                        ) {
+                            Column {
+                                Icon(
+                                    Icons.Default.Download,
+                                    "Download",
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                )
+                                Text(
+                                    stringResource(R.string.download_chapter),
+                                    style = MaterialTheme.typography.button
+                                        .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
+                            }
                         }
                     }
-
                 }
 
             }

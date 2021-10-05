@@ -33,6 +33,8 @@
         <entry key="../../../../layout/compose-model-1632929139676.xml" value="0.33" />
         <entry key="../../../../layout/compose-model-1632932128513.xml" value="0.2" />
         <entry key="../../../../layout/compose-model-1633008467062.xml" value="0.29975922953451045" />
+        <entry key="../../../../layout/compose-model-1633371950529.xml" value="0.1" />
+        <entry key="../../../../layout/compose-model-1633430204414.xml" value="0.1" />
         <entry key="UIViews/src/main/res/drawable/action_chapter.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
         <entry key="UIViews/src/main/res/drawable/ic_baseline_bubble_chart_24.xml" value="0.23778501628664495" />
@@ -73,6 +75,7 @@
         <entry key="animeworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
         <entry key="animeworldtv/src/main/res/layout/tv_item.xml" value="0.12894736842105264" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.13941368078175895" />
+        <entry key="mangaworld/src/main/res/drawable/gradient_shape.xml" value="0.23778501628664495" />
         <entry key="mangaworld/src/main/res/layout/activity_read.xml" value="0.18" />
         <entry key="mangaworld/src/main/res/layout/download_navigation_fragment.xml" value="0.22430555555555556" />
         <entry key="mangaworld/src/main/res/layout/downloaded_item.xml" value="0.20555555555555555" />

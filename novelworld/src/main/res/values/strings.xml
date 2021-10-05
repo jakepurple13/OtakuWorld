@@ -2,4 +2,6 @@
     <string name="app_name">NovelWorld</string>
     <string name="title_activity_reading">ScrollingActivity</string>
     <string name="action_settings">Settings</string>
+
+    <string name="playSettings">Reader Settings</string>
 </resources>

@@ -149,4 +149,6 @@
     <string name="battery_default">Default is 20</string>
     <string name="clear_all_history">Clear All History?</string>
     <string name="reverseOrder">Reverse Chapter Order</string>
+
+    <string name="playSettings">Play Settings</string>
 </resources>

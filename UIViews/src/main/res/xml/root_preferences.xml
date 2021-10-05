@@ -112,6 +112,12 @@
             app:title="@string/theme_choice_title"
             app:useSimpleSummaryProvider="true" />
 
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="playCategory"
+        app:title="@string/playSettings">
+
         <SeekBarPreference
             app:icon="@drawable/ic_baseline_battery_alert_24"
             app:key="battery_alert"
