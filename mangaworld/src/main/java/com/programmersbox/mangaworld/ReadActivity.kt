@@ -167,6 +167,7 @@ class ReadActivityCompose : ComponentActivity() {
         }
     }
 
+    @ExperimentalMaterialApi
     @ExperimentalComposeUiApi
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -267,6 +268,51 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
 
+                /*val scaffoldState = rememberBottomDrawerState(BottomDrawerValue.Closed)
+
+                BackHandler(scaffoldState.isExpanded) { scope.launch { scaffoldState.close() } }
+
+                BottomDrawer(
+                    drawerState = scaffoldState,
+                    drawerContent = {
+                        TopAppBar(
+                            title = { Text("Go to Page") },
+                            actions = { Text("${currentPage + 1}/${pages.size}") }
+                        )
+
+                        LazyVerticalGrid(
+                            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            itemsIndexed(pages) { i, it ->
+                                Box {
+                                    GlideImage(
+                                        imageModel = it,
+                                        contentScale = ContentScale.Crop,
+                                        loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .align(Alignment.Center)
+                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                            .border(
+                                                if (currentPage == i) 5.dp else 0.dp,
+                                                color = androidx.compose.ui.graphics.Color.Green
+                                            )
+                                            .clickable {
+                                                scope.launch {
+                                                    scaffoldState.close()
+                                                    listState.animateScrollToItem(i)
+                                                }
+                                            }
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    gesturesEnabled = false
+                ) {*/
+
                 Scaffold(
                     floatingActionButton = {
                         FloatingActionButton(
@@ -354,7 +400,9 @@ class ReadActivityCompose : ComponentActivity() {
                                                             fabOffsetHeightPx.value = -fabHeightPx
                                                         }
                                                     },
-                                                    onLongClick = {}
+                                                    onLongClick = {
+                                                        //scope.launch { scaffoldState.expand() }
+                                                    }
                                                 )
                                         )
                                     }
@@ -492,7 +540,7 @@ class ReadActivityCompose : ComponentActivity() {
                                         .align(Alignment.Center)
                                 )
                             }
-
+                            //}
                         }
                     }
                 }
