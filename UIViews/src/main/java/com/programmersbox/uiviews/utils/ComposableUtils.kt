@@ -1186,7 +1186,7 @@ fun Coordinator(
     ) {
         content()
         otherCoords.filter(CoordinatorModel::show).forEach { it.Content(this) }
-        topBar?.Content(this)
-        bottomBar?.Content(this)
+        topBar?.let { if (it.show) it.Content(this) }
+        bottomBar?.let { if (it.show) it.Content(this) }
     }
 }

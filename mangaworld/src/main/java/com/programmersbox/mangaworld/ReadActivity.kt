@@ -157,6 +157,16 @@ class ReadActivityCompose : ComponentActivity() {
 
     private val pageList = mutableStateListOf<String>()
 
+    private val ad by lazy { AdRequest.Builder().build() }
+
+    private val adView by lazy {
+        AdView(this).apply {
+            adSize = AdSize.SMART_BANNER
+            adUnitId = getString(R.string.ad_unit_id)
+            loadAd(ad)
+        }
+    }
+
     @ExperimentalComposeUiApi
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -243,7 +253,7 @@ class ReadActivityCompose : ComponentActivity() {
                 }
 
                 fun showToast() {
-                    Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show()
+                    runOnUiThread { Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
                 }
 
                 val showItems = showInfo || listState.isScrolledToTheEnd()
@@ -351,7 +361,8 @@ class ReadActivityCompose : ComponentActivity() {
                                 }
 
                                 item {
-                                    Column {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        AndroidView(modifier = Modifier.fillMaxWidth(), factory = { adView })
                                         if (currentChapter <= 0) {
                                             Text(
                                                 stringResource(id = R.string.reachedLastChapter),
@@ -363,16 +374,6 @@ class ReadActivityCompose : ComponentActivity() {
                                             )
                                         }
                                         GoBackButton(modifier = Modifier.fillMaxWidth())
-                                        AndroidView(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            factory = { context ->
-                                                AdView(context).apply {
-                                                    adSize = AdSize.SMART_BANNER
-                                                    adUnitId = getString(R.string.ad_unit_id)
-                                                    loadAd(ad)
-                                                }
-                                            }
-                                        )
                                     }
                                 }
                             }
@@ -526,8 +527,6 @@ class ReadActivityCompose : ComponentActivity() {
     private fun Context.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
     private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
-
-    private val ad by lazy { AdRequest.Builder().build() }
 
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
