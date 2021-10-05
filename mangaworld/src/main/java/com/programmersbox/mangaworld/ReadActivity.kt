@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -69,6 +70,8 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshState
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -291,7 +294,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .border(
                                                         animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
                                                         color = animateColorAsState(
-                                                            if (currentPage == i) androidx.compose.ui.graphics.Color.Green
+                                                            if (currentPage == i) MaterialTheme.colors.primaryVariant
                                                             else androidx.compose.ui.graphics.Color.Transparent
                                                         ).value
                                                     )
@@ -419,7 +422,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                 )
                                             }
                                             GoBackButton(modifier = Modifier.fillMaxWidth())
-                                            /*AndroidView(
+                                            AndroidView(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 factory = {
                                                     AdView(it).apply {
@@ -428,7 +431,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                         loadAd(ad)
                                                     }
                                                 }
-                                            )*/
+                                            )
                                         }
                                     }
                                 }
