@@ -13,29 +13,23 @@ import android.view.View
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BatteryAlert
-import androidx.compose.material.icons.filled.FormatLineSpacing
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.VerticalAlignTop
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -159,14 +153,6 @@ class ReadActivityCompose : ComponentActivity() {
 
     private val ad by lazy { AdRequest.Builder().build() }
 
-    private val adView by lazy {
-        AdView(this).apply {
-            adSize = AdSize.SMART_BANNER
-            adUnitId = getString(R.string.ad_unit_id)
-            loadAd(ad)
-        }
-    }
-
     @ExperimentalMaterialApi
     @ExperimentalComposeUiApi
     @ExperimentalAnimationApi
@@ -268,279 +254,304 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
 
-                /*val scaffoldState = rememberBottomDrawerState(BottomDrawerValue.Closed)
+                val scaffoldState = rememberBottomDrawerState(BottomDrawerValue.Closed)
 
                 BackHandler(scaffoldState.isExpanded) { scope.launch { scaffoldState.close() } }
 
                 BottomDrawer(
                     drawerState = scaffoldState,
                     drawerContent = {
-                        TopAppBar(
-                            title = { Text("Go to Page") },
-                            actions = { Text("${currentPage + 1}/${pages.size}") }
-                        )
-
-                        LazyVerticalGrid(
-                            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            itemsIndexed(pages) { i, it ->
-                                Box {
-                                    GlideImage(
-                                        imageModel = it,
-                                        contentScale = ContentScale.Crop,
-                                        loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .align(Alignment.Center)
-                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                            .border(
-                                                if (currentPage == i) 5.dp else 0.dp,
-                                                color = androidx.compose.ui.graphics.Color.Green
+                        Scaffold(
+                            topBar = {
+                                TopAppBar(
+                                    title = { Text(list.getOrNull(currentChapter)?.name.orEmpty()) },
+                                    actions = { Text("${currentPage + 1}/${pages.size}") },
+                                    navigationIcon = {
+                                        IconButton(onClick = { scope.launch { scaffoldState.close() } }) {
+                                            Icon(Icons.Default.Close, null)
+                                        }
+                                    }
+                                )
+                            }
+                        ) { p ->
+                            if (scaffoldState.isExpanded) {
+                                LazyVerticalGrid(
+                                    cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    contentPadding = p
+                                ) {
+                                    itemsIndexed(pages) { i, it ->
+                                        Box {
+                                            GlideImage(
+                                                imageModel = it,
+                                                contentScale = ContentScale.Crop,
+                                                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .align(Alignment.Center)
+                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                                    .border(
+                                                        animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                                        color = animateColorAsState(
+                                                            if (currentPage == i) androidx.compose.ui.graphics.Color.Green
+                                                            else androidx.compose.ui.graphics.Color.Transparent
+                                                        ).value
+                                                    )
+                                                    .clickable {
+                                                        scope.launch {
+                                                            if (currentPage == i) scaffoldState.close()
+                                                            listState.animateScrollToItem(i)
+                                                        }
+                                                    }
                                             )
-                                            .clickable {
-                                                scope.launch {
-                                                    scaffoldState.close()
-                                                    listState.animateScrollToItem(i)
-                                                }
-                                            }
-                                    )
+                                        }
+                                    }
                                 }
                             }
                         }
                     },
                     gesturesEnabled = false
-                ) {*/
+                ) {
 
-                Scaffold(
-                    floatingActionButton = {
-                        FloatingActionButton(
-                            onClick = { scope.launch { listState.animateScrollToItem(0) } },
-                            modifier = Modifier
-                                .padding(bottom = 56.dp)
-                                .offset { IntOffset(x = animateFab, y = 0) }
-                        ) { Icon(Icons.Default.VerticalAlignTop, null) }
-                    },
-                    floatingActionButtonPosition = FabPosition.End,
-                ) { p ->
-
-                    val swipeState = rememberSwipeRefreshState(isRefreshing = false)
-
-                    SwipeRefresh(
-                        state = swipeState,
-                        onRefresh = {
-                            loadPages(
-                                list.getOrNull(currentChapter)
-                                    ?.getChapterInfo()
-                                    ?.map { it.mapNotNull(Storage::link) }
-                                    ?.subscribeOn(Schedulers.io())
-                                    ?.observeOn(AndroidSchedulers.mainThread()),
-                                swipeState
-                            )
+                    Scaffold(
+                        floatingActionButton = {
+                            FloatingActionButton(
+                                onClick = { scope.launch { listState.animateScrollToItem(0) } },
+                                modifier = Modifier
+                                    .padding(bottom = 56.dp)
+                                    .offset { IntOffset(x = animateFab, y = 0) }
+                            ) { Icon(Icons.Default.VerticalAlignTop, null) }
                         },
-                        modifier = Modifier.padding(p)
-                    ) {
+                        floatingActionButtonPosition = FabPosition.End,
+                    ) { p ->
 
-                        val topBarHeight = 28.dp
-                        val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
-                        val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
+                        val swipeState = rememberSwipeRefreshState(isRefreshing = false)
 
-                        val toolbarHeight = 56.dp
-                        val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
-                        val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
-                        val nestedScrollConnection = remember {
-                            object : NestedScrollConnection {
-                                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                                    val delta = available.y
-
-                                    val newFabOffset = fabOffsetHeightPx.value + delta
-                                    fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
-
-                                    val newOffset = toolbarOffsetHeightPx.value + delta
-                                    toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
-
-                                    val newTopOffset = topBarOffsetHeightPx.value + delta
-                                    topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
-                                    return Offset.Zero
-                                }
-                            }
-                        }
-
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .nestedScroll(nestedScrollConnection)
-                        ) {
-                            LazyColumn(
-                                state = listState,
-                                verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp),
-                                contentPadding = PaddingValues(
-                                    top = topBarHeight,
-                                    bottom = toolbarHeight
+                        SwipeRefresh(
+                            state = swipeState,
+                            onRefresh = {
+                                loadPages(
+                                    list.getOrNull(currentChapter)
+                                        ?.getChapterInfo()
+                                        ?.map { it.mapNotNull(Storage::link) }
+                                        ?.subscribeOn(Schedulers.io())
+                                        ?.observeOn(AndroidSchedulers.mainThread()),
+                                    swipeState
                                 )
-                            ) {
+                            },
+                            modifier = Modifier.padding(p)
+                        ) {
 
-                                items(pages) {
-                                    Box {
-                                        GlideImage(
-                                            imageModel = it,
-                                            contentScale = ContentScale.FillWidth,
-                                            loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .align(Alignment.Center)
-                                                .scaleRotateOffset(
-                                                    canRotate = false,
-                                                    onClick = {
-                                                        showInfo = !showInfo
-                                                        if (!showInfo) {
-                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
-                                                            topBarOffsetHeightPx.value = -topBarHeightPx
-                                                            fabOffsetHeightPx.value = -fabHeightPx
-                                                        }
-                                                    },
-                                                    onLongClick = {
-                                                        //scope.launch { scaffoldState.expand() }
-                                                    }
-                                                )
-                                        )
+                            val topBarHeight = 28.dp
+                            val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+                            val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
+
+                            val toolbarHeight = 56.dp
+                            val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
+                            val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
+                            val nestedScrollConnection = remember {
+                                object : NestedScrollConnection {
+                                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                                        val delta = available.y
+
+                                        val newFabOffset = fabOffsetHeightPx.value + delta
+                                        fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
+
+                                        val newOffset = toolbarOffsetHeightPx.value + delta
+                                        toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
+
+                                        val newTopOffset = topBarOffsetHeightPx.value + delta
+                                        topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
+                                        return Offset.Zero
                                     }
                                 }
+                            }
 
-                                item {
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        AndroidView(modifier = Modifier.fillMaxWidth(), factory = { adView })
-                                        if (currentChapter <= 0) {
-                                            Text(
-                                                stringResource(id = R.string.reachedLastChapter),
-                                                style = MaterialTheme.typography.h6,
-                                                textAlign = TextAlign.Center,
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .nestedScroll(nestedScrollConnection)
+                            ) {
+                                LazyColumn(
+                                    state = listState,
+                                    verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp),
+                                    contentPadding = PaddingValues(
+                                        top = topBarHeight,
+                                        bottom = toolbarHeight
+                                    )
+                                ) {
+
+                                    items(pages) {
+                                        Box {
+                                            GlideImage(
+                                                imageModel = it,
+                                                contentScale = ContentScale.FillWidth,
+                                                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .align(Alignment.CenterHorizontally)
+                                                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                                                    .align(Alignment.Center)
+                                                    .scaleRotateOffset(
+                                                        canRotate = false,
+                                                        onClick = {
+                                                            showInfo = !showInfo
+                                                            if (!showInfo) {
+                                                                toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                                                topBarOffsetHeightPx.value = -topBarHeightPx
+                                                                fabOffsetHeightPx.value = -fabHeightPx
+                                                            }
+                                                        },
+                                                        onLongClick = {
+                                                            scope.launch { scaffoldState.expand() }
+                                                        }
+                                                    )
                                             )
                                         }
-                                        GoBackButton(modifier = Modifier.fillMaxWidth())
-                                    }
-                                }
-                            }
-
-                            val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
-
-                            TopAppBar(
-                                modifier = Modifier
-                                    .height(topBarHeight)
-                                    .align(Alignment.TopCenter)
-                                    .alpha(1f - (-animateTopBar / topBarHeightPx))
-                                    .offset { IntOffset(x = 0, y = animateTopBar) }
-                            ) {
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(4.dp)
-                                ) {
-                                    Row {
-                                        Icon(
-                                            batteryIcon.composeIcon,
-                                            contentDescription = null,
-                                            tint = animateColorAsState(batteryColor).value
-                                        )
-                                        Text("${batteryPercent.toInt()}%", style = MaterialTheme.typography.body1)
                                     }
 
-                                    Text(
-                                        DateFormat.format("HH:mm a", time).toString(),
-                                        style = MaterialTheme.typography.body1
-                                    )
-
-                                    Text(
-                                        "${currentPage + 1}/${pages.size}",
-                                        style = MaterialTheme.typography.body1
-                                    )
-                                }
-                            }
-
-                            val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
-
-                            BottomAppBar(
-                                modifier = Modifier
-                                    .height(toolbarHeight)
-                                    .align(Alignment.BottomCenter)
-                                    .alpha(1f - (animateBar / toolbarHeightPx))
-                                    .offset { IntOffset(x = 0, y = animateBar) }
-                            ) {
-
-                                val prevShown = currentChapter < pages.size
-                                val nextShown = currentChapter > 0
-
-                                AnimatedVisibility(
-                                    visible = prevShown,
-                                    enter = expandHorizontally(expandFrom = Alignment.Start),
-                                    exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
-                                ) {
-                                    PreviousButton(
-                                        modifier = Modifier
-                                            .padding(horizontal = 4.dp)
-                                            .weight(
-                                                when {
-                                                    prevShown && nextShown -> 8f / 3f
-                                                    prevShown -> 4f
-                                                    else -> 4f
+                                    item {
+                                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                            if (currentChapter <= 0) {
+                                                Text(
+                                                    stringResource(id = R.string.reachedLastChapter),
+                                                    style = MaterialTheme.typography.h6,
+                                                    textAlign = TextAlign.Center,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .align(Alignment.CenterHorizontally)
+                                                )
+                                            }
+                                            GoBackButton(modifier = Modifier.fillMaxWidth())
+                                            AndroidView(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                factory = {
+                                                    AdView(it).apply {
+                                                        adSize = AdSize.BANNER
+                                                        adUnitId = getString(R.string.ad_unit_id)
+                                                        loadAd(ad)
+                                                    }
                                                 }
-                                            ),
-                                        previousChapter = ::showToast
-                                    )
+                                            )
+                                        }
+                                    }
                                 }
 
-                                GoBackButton(
+                                val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
+
+                                TopAppBar(
                                     modifier = Modifier
-                                        .weight(
-                                            animateFloatAsState(
-                                                when {
-                                                    prevShown && nextShown -> 8f / 3f
-                                                    prevShown || nextShown -> 4f
-                                                    else -> 8f
-                                                }
-                                            ).value
+                                        .height(topBarHeight)
+                                        .align(Alignment.TopCenter)
+                                        .alpha(1f - (-animateTopBar / topBarHeightPx))
+                                        .offset { IntOffset(x = 0, y = animateTopBar) }
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(4.dp)
+                                    ) {
+                                        Row {
+                                            Icon(
+                                                batteryIcon.composeIcon,
+                                                contentDescription = null,
+                                                tint = animateColorAsState(batteryColor).value
+                                            )
+                                            Text("${batteryPercent.toInt()}%", style = MaterialTheme.typography.body1)
+                                        }
+
+                                        Text(
+                                            DateFormat.format("HH:mm a", time).toString(),
+                                            style = MaterialTheme.typography.body1
                                         )
-                                )
 
-                                AnimatedVisibility(
-                                    visible = nextShown,
-                                    enter = expandHorizontally(),
-                                    exit = shrinkHorizontally()
-                                ) {
-                                    NextButton(
-                                        modifier = Modifier
-                                            .padding(horizontal = 4.dp)
-                                            .weight(
-                                                when {
-                                                    prevShown && nextShown -> 8f / 3f
-                                                    nextShown -> 4f
-                                                    else -> 4f
-                                                }
-                                            ),
-                                        nextChapter = ::showToast
-                                    )
+                                        Text(
+                                            "${currentPage + 1}/${pages.size}",
+                                            style = MaterialTheme.typography.body1
+                                        )
+                                    }
                                 }
 
-                                IconButton(
-                                    onClick = { settingsPopup = true },
-                                    modifier = Modifier.weight(2f)
-                                ) { Icon(Icons.Default.Settings, null) }
-                            }
+                                val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
 
-                            if (pages.isEmpty()) {
-                                CircularProgressIndicator(
+                                BottomAppBar(
                                     modifier = Modifier
-                                        .padding(p)
-                                        .fillMaxSize()
-                                        .align(Alignment.Center)
-                                )
+                                        .height(toolbarHeight)
+                                        .align(Alignment.BottomCenter)
+                                        .alpha(1f - (animateBar / toolbarHeightPx))
+                                        .offset { IntOffset(x = 0, y = animateBar) }
+                                ) {
+
+                                    val prevShown = currentChapter < pages.size
+                                    val nextShown = currentChapter > 0
+
+                                    AnimatedVisibility(
+                                        visible = prevShown,
+                                        enter = expandHorizontally(expandFrom = Alignment.Start),
+                                        exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+                                    ) {
+                                        PreviousButton(
+                                            modifier = Modifier
+                                                .padding(horizontal = 4.dp)
+                                                .weight(
+                                                    when {
+                                                        prevShown && nextShown -> 8f / 3f
+                                                        prevShown -> 4f
+                                                        else -> 4f
+                                                    }
+                                                ),
+                                            previousChapter = ::showToast
+                                        )
+                                    }
+
+                                    GoBackButton(
+                                        modifier = Modifier
+                                            .weight(
+                                                animateFloatAsState(
+                                                    when {
+                                                        prevShown && nextShown -> 8f / 3f
+                                                        prevShown || nextShown -> 4f
+                                                        else -> 8f
+                                                    }
+                                                ).value
+                                            )
+                                    )
+
+                                    AnimatedVisibility(
+                                        visible = nextShown,
+                                        enter = expandHorizontally(),
+                                        exit = shrinkHorizontally()
+                                    ) {
+                                        NextButton(
+                                            modifier = Modifier
+                                                .padding(horizontal = 4.dp)
+                                                .weight(
+                                                    when {
+                                                        prevShown && nextShown -> 8f / 3f
+                                                        nextShown -> 4f
+                                                        else -> 4f
+                                                    }
+                                                ),
+                                            nextChapter = ::showToast
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = { settingsPopup = true },
+                                        modifier = Modifier.weight(2f)
+                                    ) { Icon(Icons.Default.Settings, null) }
+                                }
+
+                                if (pages.isEmpty()) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .padding(p)
+                                            .fillMaxSize()
+                                            .align(Alignment.Center)
+                                    )
+                                }
                             }
-                            //}
                         }
                     }
                 }
