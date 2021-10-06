@@ -277,8 +277,8 @@ class ReadActivityCompose : ComponentActivity() {
                             if (scaffoldState.bottomSheetState.isExpanded) {
                                 LazyVerticalGrid(
                                     cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    //verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    //horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     contentPadding = p
                                 ) {
                                     itemsIndexed(pages) { i, it ->
