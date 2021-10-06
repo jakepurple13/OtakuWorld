@@ -537,8 +537,13 @@ class ReadActivityCompose : ComponentActivity() {
                                     }
 
                                     IconButton(
+                                        onClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
+                                        modifier = Modifier.weight(1f)
+                                    ) { Icon(Icons.Default.GridOn, null) }
+
+                                    IconButton(
                                         onClick = { settingsPopup = true },
-                                        modifier = Modifier.weight(2f)
+                                        modifier = Modifier.weight(1f)
                                     ) { Icon(Icons.Default.Settings, null) }
                                 }
 
