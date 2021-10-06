@@ -95,10 +95,11 @@ class GlobalSearchFragment : Fragment() {
                 MdcTheme {
 
                     var searchText by rememberSaveable { mutableStateOf(args.searchFor) }
+                    var isRefreshing by remember { mutableStateOf(false) }
                     val focusManager = LocalFocusManager.current
                     val listState = rememberLazyListState()
                     val scope = rememberCoroutineScope()
-                    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
+                    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
                     val context = LocalContext.current
                     val mainLogo = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
@@ -117,8 +118,8 @@ class GlobalSearchFragment : Fragment() {
                         if (args.searchFor.isNotEmpty()) {
                             searchForItems(
                                 searchText = args.searchFor,
-                                onSubscribe = { swipeRefreshState.isRefreshing = true },
-                                subscribe = { swipeRefreshState.isRefreshing = false }
+                                onSubscribe = { isRefreshing = true },
+                                subscribe = { isRefreshing = false }
                             )
                         }
                     }
@@ -160,12 +161,8 @@ class GlobalSearchFragment : Fragment() {
                                             focusManager.clearFocus()
                                             searchForItems(
                                                 searchText = searchText,
-                                                onSubscribe = { swipeRefreshState.isRefreshing = true },
-                                                //TODO: isRefreshing is false when choosing a new item
-                                                // its almost as if this behavior resets the refresh state
-                                                // I had tried with isRefreshing starting as true and when coming through here
-                                                // it was true
-                                                subscribe = { swipeRefreshState.isRefreshing = false }
+                                                onSubscribe = { isRefreshing = true },
+                                                subscribe = { isRefreshing = false }
                                             )
                                         }
 
@@ -181,6 +178,7 @@ class GlobalSearchFragment : Fragment() {
                                                     onClick = {
                                                         searchText = ""
                                                         filter("")
+                                                        searchListPublisher.clear()
                                                     }
                                                 ) { Icon(Icons.Default.Cancel, null) }
                                             },
@@ -199,8 +197,8 @@ class GlobalSearchFragment : Fragment() {
                                                 }
                                                 searchForItems(
                                                     searchText = searchText,
-                                                    onSubscribe = { swipeRefreshState.isRefreshing = true },
-                                                    subscribe = { swipeRefreshState.isRefreshing = false }
+                                                    onSubscribe = { isRefreshing = true },
+                                                    subscribe = { isRefreshing = false }
                                                 )
                                             })
                                         )
