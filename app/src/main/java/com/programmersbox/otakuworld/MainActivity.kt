@@ -131,8 +131,7 @@ class MainActivity : ComponentActivity() {
                 }*/
 
                 //NestedScrollExample()
-                //CustomNestedScrollExample()
-                CustomNestedScrollScaffoldExample()
+                CustomNestedScrollExample()
             }
         }
     }
@@ -658,114 +657,4 @@ fun CustomNestedScrollExample() {
             }
         }
     }
-
-}
-
-@Composable
-fun CustomNestedScrollScaffoldExample() {
-
-    val scope = rememberCoroutineScope()
-    val state = rememberLazyListState()
-
-    var showInfo by remember { mutableStateOf(false) }
-
-    val topBar = remember {
-        CoordinatorModel(56.dp, false) { it, model ->
-            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
-            TopAppBar(
-                modifier = Modifier
-                    .height(56.dp)
-                    .alpha(1f - (-animateTopBar / model.heightPx))
-                    .align(Alignment.TopCenter)
-                    .offset { IntOffset(x = 0, y = animateTopBar) },
-                title = { Text("toolbar offset is $it") }
-            )
-        }
-    }
-
-    //topBar.Setup()
-
-    val bottomBar = remember {
-        CoordinatorModel(56.dp, false) { it, model ->
-            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
-            BottomAppBar(
-                modifier = Modifier
-                    .height(56.dp)
-                    .alpha(1f - (-animateBottomBar / model.heightPx))
-                    .align(Alignment.BottomCenter)
-                    .offset { IntOffset(x = 0, y = -animateBottomBar) }
-            ) { Text("bottom bar offset is $it") }
-        }
-    }
-
-    //bottomBar.Setup()
-
-    val scrollToTop = remember {
-        CoordinatorModel(72.dp) { it, _ ->
-            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()))
-            FloatingActionButton(
-                onClick = { scope.launch { state.animateScrollToItem(0) } },
-                modifier = Modifier
-                    .padding(bottom = 56.dp)
-                    .padding(12.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset {
-                        IntOffset(
-                            x = animateFab,
-                            y = 0
-                        )
-                    }
-            ) { Icon(Icons.Default.VerticalAlignTop, null) }
-        }
-    }
-
-    val scrollToBottom = remember {
-        CoordinatorModel(72.dp) { it, _ ->
-            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
-            FloatingActionButton(
-                onClick = { scope.launch { state.animateScrollToItem(100) } },
-                modifier = Modifier
-                    .padding(bottom = 56.dp)
-                    .padding(12.dp)
-                    .align(Alignment.BottomStart)
-                    .offset {
-                        IntOffset(
-                            x = animateFab,
-                            y = 0
-                        )
-                    }
-            ) { Icon(Icons.Default.VerticalAlignBottom, null) }
-        }
-    }
-
-    Scaffold(
-        topBar = { Box { topBar.Content(this) } },
-        bottomBar = { Box { bottomBar.Content(this) } }
-    ) { p ->
-        Coordinator(topBar = topBar, bottomBar = bottomBar, scrollToTop, scrollToBottom) {
-            LazyColumn(
-                state = state,
-                contentPadding = p
-            ) {
-                items(100) { index ->
-                    Text(
-                        "I'm item $index",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .clickable {
-                                showInfo = !showInfo
-                                if (!showInfo) {
-                                    topBar.offsetHeightPx.value = -topBar.heightPx
-                                    bottomBar.offsetHeightPx.value = -bottomBar.heightPx
-                                    scrollToTop.offsetHeightPx.value = -scrollToTop.heightPx
-                                    scrollToBottom.offsetHeightPx.value = -scrollToBottom.heightPx
-                                }
-                            }
-                    )
-                }
-            }
-        }
-    }
-
 }
