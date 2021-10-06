@@ -45,6 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -1137,6 +1138,8 @@ class CoordinatorModel(
     @Composable
     fun Content(scope: BoxScope) = scope.content(offsetHeightPx.value, this)
 }
+
+fun Modifier.coordinatorOffset(x: Int = 0, y: Int = 0) = offset { IntOffset(x = x, y = y) }
 
 @Composable
 fun Coordinator(

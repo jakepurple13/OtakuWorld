@@ -4,8 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -561,15 +564,17 @@ fun CustomNestedScrollExample() {
 
     var showInfo by remember { mutableStateOf(false) }
 
+    val animationSpec = spring<Int>(Spring.DampingRatioMediumBouncy)
+
     val topBar = remember {
         CoordinatorModel(56.dp) { it, model ->
-            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
             TopAppBar(
                 modifier = Modifier
                     .height(56.dp)
                     .alpha(1f - (-animateTopBar / model.heightPx))
                     .align(Alignment.TopCenter)
-                    .offset { IntOffset(x = 0, y = animateTopBar) },
+                    .coordinatorOffset(y = animateTopBar),
                 title = { Text("toolbar offset is $it") }
             )
         }
@@ -577,52 +582,44 @@ fun CustomNestedScrollExample() {
 
     val bottomBar = remember {
         CoordinatorModel(56.dp) { it, model ->
-            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
             BottomAppBar(
                 modifier = Modifier
                     .height(56.dp)
                     .alpha(1f - (-animateBottomBar / model.heightPx))
                     .align(Alignment.BottomCenter)
-                    .offset { IntOffset(x = 0, y = -animateBottomBar) }
+                    .coordinatorOffset(y = -animateBottomBar)
             ) { Text("bottom bar offset is $it") }
         }
     }
 
     val scrollToTop = remember {
-        CoordinatorModel(72.dp) { it, _ ->
-            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()))
+        CoordinatorModel(72.dp) { it, model ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()), animationSpec)
             FloatingActionButton(
                 onClick = { scope.launch { state.animateScrollToItem(0) } },
                 modifier = Modifier
                     .padding(bottom = 56.dp)
                     .padding(12.dp)
+                    .alpha(1f - (animateFab / model.heightPx))
                     .align(Alignment.BottomEnd)
-                    .offset {
-                        IntOffset(
-                            x = animateFab,
-                            y = 0
-                        )
-                    }
-            ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                    .coordinatorOffset(animateFab)
+            ) { Icon(Icons.Default.VerticalAlignTop, null, modifier = Modifier.rotate(animateFab.toFloat())) }
         }
     }
 
     val scrollToBottom = remember {
-        CoordinatorModel(72.dp) { it, _ ->
-            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+        CoordinatorModel(72.dp) { it, model ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
             FloatingActionButton(
                 onClick = { scope.launch { state.animateScrollToItem(100) } },
                 modifier = Modifier
                     .padding(bottom = 56.dp)
                     .padding(12.dp)
+                    .alpha(1f - (-animateFab / model.heightPx))
                     .align(Alignment.BottomStart)
-                    .offset {
-                        IntOffset(
-                            x = animateFab,
-                            y = 0
-                        )
-                    }
-            ) { Icon(Icons.Default.VerticalAlignBottom, null) }
+                    .coordinatorOffset(animateFab)
+            ) { Icon(Icons.Default.VerticalAlignBottom, null, modifier = Modifier.rotate(-animateFab.toFloat())) }
         }
     }
 
@@ -643,7 +640,6 @@ fun CustomNestedScrollExample() {
                     "I'm item $index",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
                         .clickable {
                             showInfo = !showInfo
                             if (!showInfo) {
@@ -653,6 +649,7 @@ fun CustomNestedScrollExample() {
                                 scrollToBottom.offsetHeightPx.value = -scrollToBottom.heightPx
                             }
                         }
+                        .padding(16.dp)
                 )
             }
         }
