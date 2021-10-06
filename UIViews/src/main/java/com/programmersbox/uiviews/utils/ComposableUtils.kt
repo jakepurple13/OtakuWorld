@@ -1131,7 +1131,7 @@ class CoordinatorModel(
     val offsetHeightPx = mutableStateOf(0f)
 
     @Composable
-    fun Setup() {
+    internal fun Setup() {
         heightPx = with(LocalDensity.current) { height.roundToPx().toFloat() }
     }
 
@@ -1147,10 +1147,18 @@ fun Coordinator(
     bottomBar: CoordinatorModel? = null,
     vararg otherCoords: CoordinatorModel,
     content: @Composable BoxScope.() -> Unit
+) = Coordinator(topBar, bottomBar, otherCoords.toList(), content)
+
+@Composable
+fun Coordinator(
+    topBar: CoordinatorModel? = null,
+    bottomBar: CoordinatorModel? = null,
+    otherCoords: List<CoordinatorModel>,
+    content: @Composable BoxScope.() -> Unit
 ) {
     topBar?.Setup()
     bottomBar?.Setup()
-    otherCoords.forEach { it.Setup() }
+    otherCoords.fastForEach { it.Setup() }
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -1167,7 +1175,7 @@ fun Coordinator(
                     it.offsetHeightPx.value = bottomBarOffset.coerceIn(-it.heightPx, 0f)
                 }
 
-                otherCoords.forEach { c ->
+                otherCoords.fastForEach { c ->
                     c.let {
                         val offset = it.offsetHeightPx.value + delta
                         it.offsetHeightPx.value = offset.coerceIn(-it.heightPx, 0f)
