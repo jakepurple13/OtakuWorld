@@ -28,6 +28,11 @@ object AppUpdate {
                 false
             }
         }
+    //TODO: change to check
+    // new major > old major
+    // new major == old major && new minor > old minor
+    // new major == old major && new minor == old minor && new patch > old patch
+    // else false
 }
 
 val appUpdateCheck = BehaviorSubject.create<AppUpdate.AppUpdates>()
