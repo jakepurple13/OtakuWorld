@@ -44,6 +44,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -160,6 +161,10 @@ class GlobalSearchFragment : Fragment() {
                                             searchForItems(
                                                 searchText = searchText,
                                                 onSubscribe = { swipeRefreshState.isRefreshing = true },
+                                                //TODO: isRefreshing is false when choosing a new item
+                                                // its almost as if this behavior resets the refresh state
+                                                // I had tried with isRefreshing starting as true and when coming through here
+                                                // it was true
                                                 subscribe = { swipeRefreshState.isRefreshing = false }
                                             )
                                         }
@@ -258,7 +263,25 @@ class GlobalSearchFragment : Fragment() {
                                         verticalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
                                         if (swipeRefreshState.isRefreshing) {
-                                            items(9) { PlaceHolderCoverCard(placeHolder = logo.notificationId) }
+                                            items(3) {
+                                                Card(modifier = Modifier.placeholder(true)) {
+                                                    Column {
+                                                        Box(modifier = Modifier.fillMaxWidth()) {
+                                                            Text(
+                                                                "Otaku",
+                                                                modifier = Modifier
+                                                                    .align(Alignment.CenterStart)
+                                                                    .padding(start = 5.dp)
+                                                            )
+                                                            IconButton(
+                                                                onClick = {},
+                                                                modifier = Modifier.align(Alignment.CenterEnd)
+                                                            ) { Icon(Icons.Default.ChevronRight, null) }
+                                                        }
+                                                        LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
+                                                    }
+                                                }
+                                            }
                                         } else if (searchListPublisher.isNotEmpty()) {
                                             items(searchListPublisher) { i ->
                                                 Card(
@@ -303,7 +326,6 @@ class GlobalSearchFragment : Fragment() {
                                             }
                                         }
                                     }
-
                                 }
                             } else {
                                 Column(
@@ -342,10 +364,12 @@ class GlobalSearchFragment : Fragment() {
                         .toObservable()
                 }
         ) { (it as Array<SearchModel>).toList().filter { s -> s.data.isNotEmpty() } }
-            .doOnSubscribe { onSubscribe() }
+            .doOnSubscribe {
+                searchListPublisher.clear()
+                onSubscribe()
+            }
             .onErrorReturnItem(emptyList())
             .subscribe {
-                searchListPublisher.clear()
                 searchListPublisher.addAll(it)
                 subscribe()
             }

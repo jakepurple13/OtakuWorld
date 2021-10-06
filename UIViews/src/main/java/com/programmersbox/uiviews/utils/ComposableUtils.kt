@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
@@ -794,7 +795,7 @@ interface ValueAutoCompleteEntity<T> : AutoCompleteEntity {
 typealias CustomFilter<T> = (T, String) -> Boolean
 
 fun <T> List<T>.asAutoCompleteEntities(filter: CustomFilter<T>): List<ValueAutoCompleteEntity<T>> {
-    return map {
+    return fastMap {
         object : ValueAutoCompleteEntity<T> {
             override val value: T = it
 
@@ -821,16 +822,12 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
         autoCompleteState.content()
 
         DropdownMenu(
-            expanded = autoCompleteState.isSearching,
+            expanded = autoCompleteState.isSearching && items.isNotEmpty(),
             onDismissRequest = { },
             modifier = Modifier.autoComplete(autoCompleteState),
             properties = PopupProperties(focusable = false)
         ) {
-            items.fastForEach { item ->
-                DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) {
-                    itemContent(item)
-                }
-            }
+            items.fastForEach { item -> DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) { itemContent(item) } }
         }
     }
 }
@@ -1185,7 +1182,7 @@ fun Coordinator(
             .nestedScroll(nestedScrollConnection)
     ) {
         content()
-        otherCoords.filter(CoordinatorModel::show).forEach { it.Content(this) }
+        otherCoords.filter(CoordinatorModel::show).fastForEach { it.Content(this) }
         topBar?.let { if (it.show) it.Content(this) }
         bottomBar?.let { if (it.show) it.Content(this) }
     }
