@@ -138,6 +138,8 @@ class ReadActivityCompose : ComponentActivity() {
     private val isDownloaded by lazy { intent.getBooleanExtra("downloaded", false) }
     private val filePath by lazy { intent.getSerializableExtra("filePath") as? File }
 
+    private val title by lazy { intent.getStringExtra("mangaTitle") ?: "" }
+
     private var batteryInfo: BroadcastReceiver? = null
     private var timeInfo: BroadcastReceiver? = null
 
@@ -188,6 +190,7 @@ class ReadActivityCompose : ComponentActivity() {
             MdcTheme {
 
                 val scope = rememberCoroutineScope()
+                val swipeState = rememberSwipeRefreshState(isRefreshing = false)
 
                 val pages = pageList
 
@@ -256,7 +259,14 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
-                BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
+                BackHandler(scaffoldState.bottomSheetState.isExpanded || scaffoldState.drawerState.isOpen) {
+                    scope.launch {
+                        when {
+                            scaffoldState.bottomSheetState.isExpanded -> scaffoldState.bottomSheetState.collapse()
+                            scaffoldState.drawerState.isOpen -> scaffoldState.drawerState.close()
+                        }
+                    }
+                }
 
                 BottomSheetScaffold(
                     scaffoldState = scaffoldState,
@@ -312,7 +322,65 @@ class ReadActivityCompose : ComponentActivity() {
                         }
                     },
                     sheetGesturesEnabled = false,
-                    sheetPeekHeight = 0.dp
+                    sheetPeekHeight = 0.dp,
+                    drawerContent = {
+                        Scaffold(
+                            topBar = {
+                                TopAppBar(
+                                    title = { Text(title) },
+                                    actions = { Text("${list.size - currentChapter}/${list.size}") }
+                                )
+                            }
+                        ) { p ->
+                            if (scaffoldState.drawerState.isOpen) {
+                                LazyColumn(
+                                    state = rememberLazyListState(currentChapter.coerceAtLeast(0)),
+                                    contentPadding = p,
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    itemsIndexed(list) { i, c ->
+
+                                        var showChangeChapter by remember { mutableStateOf(false) }
+
+                                        if (showChangeChapter) {
+                                            AlertDialog(
+                                                onDismissRequest = { showChangeChapter = false },
+                                                title = { Text("Change to ${c.name}") },
+                                                confirmButton = {
+                                                    TextButton(
+                                                        onClick = {
+                                                            showChangeChapter = false
+                                                            currentChapter = i
+                                                            loadPages(
+                                                                list.getOrNull(currentChapter)
+                                                                    ?.getChapterInfo()
+                                                                    ?.map { it.mapNotNull(Storage::link) }
+                                                                    ?.subscribeOn(Schedulers.io())
+                                                                    ?.observeOn(AndroidSchedulers.mainThread()),
+                                                                swipeState
+                                                            )
+                                                        }
+                                                    ) { Text(stringResource(R.string.yes)) }
+                                                },
+                                                dismissButton = {
+                                                    TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                                                }
+                                            )
+                                        }
+
+                                        ListItem(
+                                            text = { Text(c.name) },
+                                            icon = if (currentChapter == i) {
+                                                { Icon(Icons.Default.ArrowRight, null) }
+                                            } else null,
+                                            modifier = Modifier.clickable { showChangeChapter = true }
+                                        )
+                                        if (i != list.lastIndex) Divider()
+                                    }
+                                }
+                            }
+                        }
+                    }
                 ) {
 
                     Scaffold(
@@ -324,11 +392,9 @@ class ReadActivityCompose : ComponentActivity() {
                                     .offset { IntOffset(x = animateFab, y = 0) }
                             ) { Icon(Icons.Default.VerticalAlignTop, null) }
                         },
-                        floatingActionButtonPosition = FabPosition.End,
+                        floatingActionButtonPosition = FabPosition.End
                     ) { p ->
-
-                        val swipeState = rememberSwipeRefreshState(isRefreshing = false)
-
+                        //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
                         SwipeRefresh(
                             state = swipeState,
                             onRefresh = {
@@ -535,7 +601,8 @@ class ReadActivityCompose : ComponentActivity() {
                                             nextChapter = ::showToast
                                         )
                                     }
-
+                                    //The three buttons above will equal 8f
+                                    //So these two need to add up to 2f
                                     IconButton(
                                         onClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
                                         modifier = Modifier.weight(1f)

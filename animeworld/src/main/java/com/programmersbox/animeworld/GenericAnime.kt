@@ -132,7 +132,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private val fetch = Fetch.getDefaultInstance()
 
-    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
+    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         if ((model.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(
                 context,

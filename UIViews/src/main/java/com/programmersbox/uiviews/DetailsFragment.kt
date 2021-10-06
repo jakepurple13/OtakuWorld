@@ -481,7 +481,7 @@ class DetailsFragment : Fragment() {
 
         Card(
             onClick = {
-                genericInfo.chapterOnClick(c, chapters, context)
+                genericInfo.chapterOnClick(c, chapters, infoModel, context)
                 insertRecent()
                 ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                     .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
@@ -560,7 +560,7 @@ class DetailsFragment : Fragment() {
 
                     OutlinedButton(
                         onClick = {
-                            genericInfo.chapterOnClick(c, chapters, context)
+                            genericInfo.chapterOnClick(c, chapters, infoModel, context)
                             insertRecent()
                             ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                                 .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }

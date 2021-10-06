@@ -65,12 +65,12 @@ class GenericManga(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { manga_file }
 
-    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
+    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         context.startActivity(
             Intent(context, if (context.useNewReader) ReadActivityCompose::class.java else ReadActivity::class.java).apply {
                 putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                putExtra("mangaTitle", model.name)
+                putExtra("mangaTitle", infoModel.title)
                 putExtra("mangaUrl", model.url)
                 putExtra("mangaInfoUrl", model.sourceUrl)
             }

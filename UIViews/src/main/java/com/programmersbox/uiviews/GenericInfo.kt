@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 
@@ -14,7 +15,7 @@ interface GenericInfo {
     val apkString: AppUpdate.AppUpdates.() -> String?
 
     val showDownload: Boolean get() = true
-    fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context)
+    fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context)
     fun sourceList(): List<ApiService>
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
