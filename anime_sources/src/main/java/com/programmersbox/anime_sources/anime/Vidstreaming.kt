@@ -99,7 +99,7 @@ object Vidstreaming : ShowApi(
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> {
-        return Single.create {
+        return Single.create<List<Storage>> {
 
             //val e = "https://vidstreaming.io/videos/tensei-shitara-slime-datta-ken-episode-24-9".toJsoup()
             //println(e)
@@ -126,8 +126,8 @@ object Vidstreaming : ShowApi(
             //println(getApi(file!!))
 
             it.onSuccess(file)
-
         }
+            .onErrorReturnItem(emptyList())
     }
 
     data class Xstream(val success: Boolean?, val player: Any?, val data: List<XstreamData>?, val captions: Any?, val is_vr: Boolean?)

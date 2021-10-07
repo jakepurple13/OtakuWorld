@@ -128,20 +128,28 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
             ?.toJsoup()
             ?.select("div.dowload")
             ?.select("a")
-            ?.eachAttr("abs:href")
-            ?.filter { it1 -> it1.contains(".mp4") }
-            ?.randomOrNull()
-
-        it.onSuccess(
-            listOf(
+            ?.fastMap { a ->
                 Storage(
-                    link = downloadUrl,
+                    link = a.attr("abs:href"),
                     source = chapterModel.url,
-                    quality = "Good",
+                    quality = a.text(),
                     sub = "Yes"
                 ).apply { headers["referer"] = chapterModel.url }
-            )
-        )
+            }
+            .orEmpty()
+
+        it.onSuccess(downloadUrl)
+    }
+
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
+        val doc = url.toJsoup()
+        ItemModel(
+            title = doc.select("div.title-box").text(),
+            description = "",
+            imageUrl = doc.select("div.infopicbox").select("img").attr("abs:src"),
+            url = url,
+            source = this
+        ).let(emitter::onSuccess)
     }
 
 }

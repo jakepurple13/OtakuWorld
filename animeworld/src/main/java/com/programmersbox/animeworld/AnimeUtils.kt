@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.provider.MediaStore
@@ -60,7 +61,7 @@ class videoFolderContent {
 class VideoGet private constructor(private val videoContex: Context) {
 
     @SuppressLint("InlinedApi")
-    private val Projections = arrayOf(
+    private val projections = arrayOf(
         MediaStore.Video.Media.DATA,
         MediaStore.Video.Media.DISPLAY_NAME,
         MediaStore.Video.Media.DURATION,
@@ -78,35 +79,38 @@ class VideoGet private constructor(private val videoContex: Context) {
     @SuppressLint("InlinedApi")
     fun getAllVideoContent(contentLocation: Uri): List<VideoContent> {
         val allVideo = mutableListOf<VideoContent>()
-        val cursor = videoContex.contentResolver.query(
-            contentLocation,
-            Projections,
-            null,
-            null,
-            "LOWER (" + MediaStore.Video.Media.DATE_TAKEN + ") DESC"
-        ) //DESC ASC
-        try {
-            while (cursor?.moveToNext() == true) {
-                val id: Int = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID))
-                val contentUri: Uri = Uri.withAppendedPath(contentLocation, id.toString())
-                allVideo.add(
-                    VideoContent(
-                        videoDuration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)),
-                        videoId = id.toLong(),
-                        videoName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)),
-                        album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.ALBUM)),
-                        artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.ARTIST)),
-                        assetFileStringUri = contentUri.toString(),
-                        path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)),
-                        videoSize = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE))
-                    )
-                )
+        videoContex.contentResolver
+            .query(
+                contentLocation,
+                projections,
+                null,
+                null,
+                "LOWER (" + MediaStore.Video.Media.DATE_TAKEN + ") DESC"
+            ) //DESC ASC
+            ?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    try {
+                        val id: Int = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID))
+                        val contentUri: Uri = Uri.withAppendedPath(contentLocation, id.toString())
+                        allVideo.add(
+                            VideoContent(
+                                videoDuration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)),
+                                videoId = id.toLong(),
+                                videoName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)),
+                                album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.ALBUM)),
+                                artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.ARTIST)),
+                                assetFileStringUri = contentUri.toString(),
+                                path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)),
+                                videoSize = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE))
+                            )
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        continue
+                    }
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            cursor?.close()
-        }
+
         return allVideo
     }
 
@@ -155,7 +159,7 @@ class VideoGet private constructor(private val videoContex: Context) {
         val videoPaths: ArrayList<Int> = ArrayList()
         cursor = videoContex.contentResolver.query(
             contentLocation,
-            Projections,
+            projections,
             null,
             null,
             "LOWER (" + MediaStore.Video.Media.DATE_TAKEN + ") DESC"
@@ -206,7 +210,13 @@ class VideoGet private constructor(private val videoContex: Context) {
     companion object {
         @SuppressLint("StaticFieldLeak")
         private var videoGet: VideoGet? = null
-        val externalContentUri: Uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        val externalContentUri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        } else {
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        }
+
+        //MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         val internalContentUri: Uri = MediaStore.Video.Media.INTERNAL_CONTENT_URI
         private var cursor: Cursor? = null
         fun getInstance(contx: Context): VideoGet? {

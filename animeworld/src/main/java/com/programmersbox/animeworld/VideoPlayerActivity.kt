@@ -162,7 +162,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             finish()
         }*/
 
-        showPath = intent.getStringExtra("showPath")
+        showPath = intent.data?.toString() ?: intent.getStringExtra("showPath")
         val showName = intent.getStringExtra("showName")
         val downloadOrStream = intent.getBooleanExtra("downloadOrStream", true)
 
