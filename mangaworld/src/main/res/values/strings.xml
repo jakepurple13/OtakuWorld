@@ -21,4 +21,5 @@
     <string name="reader_summary_setting">If the new reader crashes, please use the old reader. The new reader is still being worked on.</string>
 
     <string name="playSettings">Reader Settings</string>
+    <string name="changeToChapter">Change to %s</string>
 </resources>

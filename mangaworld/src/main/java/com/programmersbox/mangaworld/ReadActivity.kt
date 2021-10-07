@@ -336,7 +336,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 LazyColumn(
                                     state = rememberLazyListState(currentChapter.coerceAtLeast(0)),
                                     contentPadding = p,
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     itemsIndexed(list) { i, c ->
 
@@ -345,7 +345,7 @@ class ReadActivityCompose : ComponentActivity() {
                                         if (showChangeChapter) {
                                             AlertDialog(
                                                 onDismissRequest = { showChangeChapter = false },
-                                                title = { Text("Change to ${c.name}") },
+                                                title = { Text(stringResource(R.string.changeToChapter, c.name)) },
                                                 confirmButton = {
                                                     TextButton(
                                                         onClick = {
@@ -368,14 +368,24 @@ class ReadActivityCompose : ComponentActivity() {
                                             )
                                         }
 
-                                        ListItem(
-                                            text = { Text(c.name) },
-                                            icon = if (currentChapter == i) {
-                                                { Icon(Icons.Default.ArrowRight, null) }
-                                            } else null,
-                                            modifier = Modifier.clickable { showChangeChapter = true }
-                                        )
-                                        if (i != list.lastIndex) Divider()
+                                        Card(
+                                            modifier = Modifier.padding(horizontal = 5.dp),
+                                            border = BorderStroke(
+                                                1.dp,
+                                                animateColorAsState(
+                                                    if (currentChapter == i) MaterialTheme.colors.onSurface
+                                                    else MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+                                                ).value
+                                            )
+                                        ) {
+                                            ListItem(
+                                                text = { Text(c.name) },
+                                                icon = if (currentChapter == i) {
+                                                    { Icon(Icons.Default.ArrowRight, null) }
+                                                } else null,
+                                                modifier = Modifier.clickable { showChangeChapter = true }
+                                            )
+                                        }
                                     }
                                 }
                             }
