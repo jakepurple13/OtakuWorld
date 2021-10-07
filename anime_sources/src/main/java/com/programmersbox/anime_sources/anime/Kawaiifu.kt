@@ -145,4 +145,17 @@ object Kawaiifu : ShowApi(
         emitter.onSuccess(servers)
     }
 
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
+        val doc = url.toJsoup()
+        ItemModel(
+            title = doc.selectFirst(".title")?.text().orEmpty(),
+            description = doc.select(".sub-desc p")
+                .filter { it.select("strong").isEmpty() && it.select("iframe").isEmpty() }
+                .joinToString("\n") { it.text() },
+            imageUrl = doc.selectFirst("a.thumb > img")?.attr("src").orEmpty(),
+            url = url,
+            source = this
+        ).let(emitter::onSuccess)
+    }
+
 }
