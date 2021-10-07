@@ -248,15 +248,6 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val showItems = showInfo || listState.isScrolledToTheEnd()
 
-                //56 is default FabSize
-                //56 is the bottom app bar size
-                //16 is the scaffold padding
-                val fabHeight = 72.dp
-                val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
-                val fabOffsetHeightPx = remember { mutableStateOf(0f) }
-
-                val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
-
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
                 BackHandler(scaffoldState.bottomSheetState.isExpanded || scaffoldState.drawerState.isOpen) {
@@ -394,6 +385,13 @@ class ReadActivityCompose : ComponentActivity() {
                         }
                     } else null
                 ) {
+                    //56 is default FabSize
+                    //56 is the bottom app bar size
+                    //16 is the scaffold padding
+                    val fabHeight = 72.dp
+                    val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
+                    val fabOffsetHeightPx = remember { mutableStateOf(0f) }
+                    val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
 
                     Scaffold(
                         floatingActionButton = {
@@ -638,7 +636,6 @@ class ReadActivityCompose : ComponentActivity() {
                         }
                     }
                 }
-
             }
         }
     }
