@@ -481,7 +481,7 @@ class DetailsFragment : Fragment() {
 
         Card(
             onClick = {
-                genericInfo.chapterOnClick(c, chapters, context)
+                genericInfo.chapterOnClick(c, chapters, infoModel, context)
                 insertRecent()
                 ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
                     .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
@@ -557,42 +557,43 @@ class DetailsFragment : Fragment() {
                 )
 
                 Row {
-
-                    OutlinedButton(
-                        onClick = {
-                            genericInfo.chapterOnClick(c, chapters, context)
-                            insertRecent()
-                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                                .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe { snackbar(R.string.addedChapterItem) }
-                                .addTo(disposable)
-                        },
-                        modifier = Modifier
-                            .weight(1f, true)
-                            .padding(horizontal = 5.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
-                        border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
-                    ) {
-                        Column {
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                "Play",
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
-                                tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-                            )
-                            Text(
-                                stringResource(R.string.read),
-                                style = MaterialTheme.typography.button
-                                    .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
+                    if (infoModel.source.canPlay) {
+                        OutlinedButton(
+                            onClick = {
+                                genericInfo.chapterOnClick(c, chapters, infoModel, context)
+                                insertRecent()
+                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                                    .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe { snackbar(R.string.addedChapterItem) }
+                                    .addTo(disposable)
+                            },
+                            modifier = Modifier
+                                .weight(1f, true)
+                                .padding(horizontal = 5.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
+                            border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
+                        ) {
+                            Column {
+                                Icon(
+                                    Icons.Default.PlayArrow,
+                                    "Play",
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                )
+                                Text(
+                                    stringResource(R.string.read),
+                                    style = MaterialTheme.typography.button
+                                        .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
+                            }
                         }
                     }
 
-                    if (genericInfo.showDownload) {
+                    if (infoModel.source.canDownload) {
                         OutlinedButton(
                             onClick = { genericInfo.downloadChapter(c, infoModel.title) },
                             modifier = Modifier

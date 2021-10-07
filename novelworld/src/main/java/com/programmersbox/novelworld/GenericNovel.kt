@@ -24,6 +24,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.novel_sources.Sources
 import com.programmersbox.sharedutils.AppUpdate
@@ -43,9 +44,7 @@ val appModule = module {
 
 class GenericNovel(val context: Context) : GenericInfo {
 
-    override val showDownload: Boolean get() = false
-
-    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
+    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         context.startActivity(
             Intent(context, ReadingActivity::class.java).apply {
                 putExtra("model", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))

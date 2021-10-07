@@ -45,9 +45,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
@@ -794,7 +796,7 @@ interface ValueAutoCompleteEntity<T> : AutoCompleteEntity {
 typealias CustomFilter<T> = (T, String) -> Boolean
 
 fun <T> List<T>.asAutoCompleteEntities(filter: CustomFilter<T>): List<ValueAutoCompleteEntity<T>> {
-    return map {
+    return fastMap {
         object : ValueAutoCompleteEntity<T> {
             override val value: T = it
 
@@ -821,16 +823,12 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
         autoCompleteState.content()
 
         DropdownMenu(
-            expanded = autoCompleteState.isSearching,
+            expanded = autoCompleteState.isSearching && items.isNotEmpty(),
             onDismissRequest = { },
             modifier = Modifier.autoComplete(autoCompleteState),
             properties = PopupProperties(focusable = false)
         ) {
-            items.fastForEach { item ->
-                DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) {
-                    itemContent(item)
-                }
-            }
+            items.fastForEach { item -> DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) { itemContent(item) } }
         }
     }
 }
@@ -1133,7 +1131,7 @@ class CoordinatorModel(
     val offsetHeightPx = mutableStateOf(0f)
 
     @Composable
-    fun Setup() {
+    internal fun Setup() {
         heightPx = with(LocalDensity.current) { height.roundToPx().toFloat() }
     }
 
@@ -1141,16 +1139,26 @@ class CoordinatorModel(
     fun Content(scope: BoxScope) = scope.content(offsetHeightPx.value, this)
 }
 
+fun Modifier.coordinatorOffset(x: Int = 0, y: Int = 0) = offset { IntOffset(x = x, y = y) }
+
 @Composable
 fun Coordinator(
     topBar: CoordinatorModel? = null,
     bottomBar: CoordinatorModel? = null,
     vararg otherCoords: CoordinatorModel,
     content: @Composable BoxScope.() -> Unit
+) = Coordinator(topBar, bottomBar, otherCoords.toList(), content)
+
+@Composable
+fun Coordinator(
+    topBar: CoordinatorModel? = null,
+    bottomBar: CoordinatorModel? = null,
+    otherCoords: List<CoordinatorModel>,
+    content: @Composable BoxScope.() -> Unit
 ) {
     topBar?.Setup()
     bottomBar?.Setup()
-    otherCoords.forEach { it.Setup() }
+    otherCoords.fastForEach { it.Setup() }
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -1167,7 +1175,7 @@ fun Coordinator(
                     it.offsetHeightPx.value = bottomBarOffset.coerceIn(-it.heightPx, 0f)
                 }
 
-                otherCoords.forEach { c ->
+                otherCoords.fastForEach { c ->
                     c.let {
                         val offset = it.offsetHeightPx.value + delta
                         it.offsetHeightPx.value = offset.coerceIn(-it.heightPx, 0f)
@@ -1185,7 +1193,7 @@ fun Coordinator(
             .nestedScroll(nestedScrollConnection)
     ) {
         content()
-        otherCoords.filter(CoordinatorModel::show).forEach { it.Content(this) }
+        otherCoords.filter(CoordinatorModel::show).fastForEach { it.Content(this) }
         topBar?.let { if (it.show) it.Content(this) }
         bottomBar?.let { if (it.show) it.Content(this) }
     }

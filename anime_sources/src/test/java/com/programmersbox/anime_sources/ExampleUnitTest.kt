@@ -1,6 +1,7 @@
 package com.programmersbox.anime_sources
 
 import androidx.annotation.WorkerThread
+import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.anime.*
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.header
@@ -33,6 +34,27 @@ import javax.net.ssl.X509TrustManager
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun kawaiifuTest() {
+        val url = "https://kawaiifu.com"
+        val f = Jsoup.connect(url)
+            .sslSocketFactory(socketFactory())
+            .get()
+
+        val recent = f.select(".today-update .item").fastMap {
+            ItemModel(
+                title = it.selectFirst("img")?.attr("alt").orEmpty(),
+                description = it.select("div.info").select("p").text(),
+                imageUrl = it.selectFirst("img")?.attr("src").orEmpty(),
+                url = it.selectFirst("a")?.attr("href").orEmpty(),
+                source = AnimeHeaven
+            )
+        }
+
+        println(recent.joinToString("\n"))
+
+    }
 
     @Test
     fun allmoviesforyouTest() {

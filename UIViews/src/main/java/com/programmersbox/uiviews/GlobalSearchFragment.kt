@@ -44,6 +44,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -94,10 +95,11 @@ class GlobalSearchFragment : Fragment() {
                 MdcTheme {
 
                     var searchText by rememberSaveable { mutableStateOf(args.searchFor) }
+                    var isRefreshing by remember { mutableStateOf(false) }
                     val focusManager = LocalFocusManager.current
                     val listState = rememberLazyListState()
                     val scope = rememberCoroutineScope()
-                    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
+                    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
                     val context = LocalContext.current
                     val mainLogo = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
@@ -116,8 +118,8 @@ class GlobalSearchFragment : Fragment() {
                         if (args.searchFor.isNotEmpty()) {
                             searchForItems(
                                 searchText = args.searchFor,
-                                onSubscribe = { swipeRefreshState.isRefreshing = true },
-                                subscribe = { swipeRefreshState.isRefreshing = false }
+                                onSubscribe = { isRefreshing = true },
+                                subscribe = { isRefreshing = false }
                             )
                         }
                     }
@@ -159,8 +161,8 @@ class GlobalSearchFragment : Fragment() {
                                             focusManager.clearFocus()
                                             searchForItems(
                                                 searchText = searchText,
-                                                onSubscribe = { swipeRefreshState.isRefreshing = true },
-                                                subscribe = { swipeRefreshState.isRefreshing = false }
+                                                onSubscribe = { isRefreshing = true },
+                                                subscribe = { isRefreshing = false }
                                             )
                                         }
 
@@ -176,6 +178,7 @@ class GlobalSearchFragment : Fragment() {
                                                     onClick = {
                                                         searchText = ""
                                                         filter("")
+                                                        searchListPublisher.clear()
                                                     }
                                                 ) { Icon(Icons.Default.Cancel, null) }
                                             },
@@ -194,8 +197,8 @@ class GlobalSearchFragment : Fragment() {
                                                 }
                                                 searchForItems(
                                                     searchText = searchText,
-                                                    onSubscribe = { swipeRefreshState.isRefreshing = true },
-                                                    subscribe = { swipeRefreshState.isRefreshing = false }
+                                                    onSubscribe = { isRefreshing = true },
+                                                    subscribe = { isRefreshing = false }
                                                 )
                                             })
                                         )
@@ -258,7 +261,25 @@ class GlobalSearchFragment : Fragment() {
                                         verticalArrangement = Arrangement.spacedBy(2.dp)
                                     ) {
                                         if (swipeRefreshState.isRefreshing) {
-                                            items(9) { PlaceHolderCoverCard(placeHolder = logo.notificationId) }
+                                            items(3) {
+                                                Card(modifier = Modifier.placeholder(true)) {
+                                                    Column {
+                                                        Box(modifier = Modifier.fillMaxWidth()) {
+                                                            Text(
+                                                                "Otaku",
+                                                                modifier = Modifier
+                                                                    .align(Alignment.CenterStart)
+                                                                    .padding(start = 5.dp)
+                                                            )
+                                                            IconButton(
+                                                                onClick = {},
+                                                                modifier = Modifier.align(Alignment.CenterEnd)
+                                                            ) { Icon(Icons.Default.ChevronRight, null) }
+                                                        }
+                                                        LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
+                                                    }
+                                                }
+                                            }
                                         } else if (searchListPublisher.isNotEmpty()) {
                                             items(searchListPublisher) { i ->
                                                 Card(
@@ -303,7 +324,6 @@ class GlobalSearchFragment : Fragment() {
                                             }
                                         }
                                     }
-
                                 }
                             } else {
                                 Column(
@@ -342,10 +362,12 @@ class GlobalSearchFragment : Fragment() {
                         .toObservable()
                 }
         ) { (it as Array<SearchModel>).toList().filter { s -> s.data.isNotEmpty() } }
-            .doOnSubscribe { onSubscribe() }
+            .doOnSubscribe {
+                searchListPublisher.clear()
+                onSubscribe()
+            }
             .onErrorReturnItem(emptyList())
             .subscribe {
-                searchListPublisher.clear()
                 searchListPublisher.addAll(it)
                 subscribe()
             }

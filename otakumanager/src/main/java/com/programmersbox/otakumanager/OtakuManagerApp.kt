@@ -7,6 +7,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseDb
@@ -43,7 +44,7 @@ val appModule = module {
         object : GenericInfo {
             override val apkString: AppUpdate.AppUpdates.() -> String? get() = { otakumanager_file }
 
-            override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, context: Context) {
+            override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
                 throw Exception("This should not be seen")
             }
 

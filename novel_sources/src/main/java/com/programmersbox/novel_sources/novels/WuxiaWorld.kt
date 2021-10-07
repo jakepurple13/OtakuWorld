@@ -11,6 +11,8 @@ object WuxiaWorld : ApiService {
 
     override val baseUrl: String get() = "https://wuxiaworld.online"
 
+    override val canDownload: Boolean get() = false
+
     override val serviceName: String get() = "WUXIAWORLD"
 
     override val canScroll: Boolean get() = true

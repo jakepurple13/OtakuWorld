@@ -57,6 +57,9 @@ interface ApiService: Serializable {
     val baseUrl: String
     val websiteUrl: String get() = baseUrl
     val canScroll: Boolean get() = false
+    val canScrollAll: Boolean get() = canScroll
+    val canPlay: Boolean get() = true
+    val canDownload: Boolean get() = true
     fun getRecent(page: Int = 1): Single<List<ItemModel>>
     fun getList(page: Int = 1): Single<List<ItemModel>>
     fun getItemInfo(model: ItemModel): Single<InfoModel>

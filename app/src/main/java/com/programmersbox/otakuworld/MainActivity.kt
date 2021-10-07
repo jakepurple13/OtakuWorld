@@ -4,8 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -30,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
@@ -51,6 +55,7 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlin.properties.Delegates
 import kotlin.random.Random
 import com.programmersbox.anime_sources.Sources as ASources
 import com.programmersbox.manga_sources.Sources as MSources
@@ -131,7 +136,8 @@ class MainActivity : ComponentActivity() {
                 }*/
 
                 //NestedScrollExample()
-                CustomNestedScrollExample()
+                //CustomNestedScrollExample()
+                ScaffoldNestedScrollExample()
             }
         }
     }
@@ -561,15 +567,17 @@ fun CustomNestedScrollExample() {
 
     var showInfo by remember { mutableStateOf(false) }
 
+    val animationSpec = spring<Int>(Spring.DampingRatioMediumBouncy)
+
     val topBar = remember {
         CoordinatorModel(56.dp) { it, model ->
-            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
             TopAppBar(
                 modifier = Modifier
                     .height(56.dp)
                     .alpha(1f - (-animateTopBar / model.heightPx))
                     .align(Alignment.TopCenter)
-                    .offset { IntOffset(x = 0, y = animateTopBar) },
+                    .coordinatorOffset(y = animateTopBar),
                 title = { Text("toolbar offset is $it") }
             )
         }
@@ -577,52 +585,44 @@ fun CustomNestedScrollExample() {
 
     val bottomBar = remember {
         CoordinatorModel(56.dp) { it, model ->
-            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
             BottomAppBar(
                 modifier = Modifier
                     .height(56.dp)
                     .alpha(1f - (-animateBottomBar / model.heightPx))
                     .align(Alignment.BottomCenter)
-                    .offset { IntOffset(x = 0, y = -animateBottomBar) }
+                    .coordinatorOffset(y = -animateBottomBar)
             ) { Text("bottom bar offset is $it") }
         }
     }
 
     val scrollToTop = remember {
-        CoordinatorModel(72.dp) { it, _ ->
-            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()))
+        CoordinatorModel(72.dp) { it, model ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()), animationSpec)
             FloatingActionButton(
                 onClick = { scope.launch { state.animateScrollToItem(0) } },
                 modifier = Modifier
                     .padding(bottom = 56.dp)
                     .padding(12.dp)
+                    .alpha(1f - (animateFab / model.heightPx))
                     .align(Alignment.BottomEnd)
-                    .offset {
-                        IntOffset(
-                            x = animateFab,
-                            y = 0
-                        )
-                    }
-            ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                    .coordinatorOffset(animateFab)
+            ) { Icon(Icons.Default.VerticalAlignTop, null, modifier = Modifier.rotate(animateFab.toFloat())) }
         }
     }
 
     val scrollToBottom = remember {
-        CoordinatorModel(72.dp) { it, _ ->
-            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()))
+        CoordinatorModel(72.dp) { it, model ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
             FloatingActionButton(
                 onClick = { scope.launch { state.animateScrollToItem(100) } },
                 modifier = Modifier
                     .padding(bottom = 56.dp)
                     .padding(12.dp)
+                    .alpha(1f - (-animateFab / model.heightPx))
                     .align(Alignment.BottomStart)
-                    .offset {
-                        IntOffset(
-                            x = animateFab,
-                            y = 0
-                        )
-                    }
-            ) { Icon(Icons.Default.VerticalAlignBottom, null) }
+                    .coordinatorOffset(animateFab)
+            ) { Icon(Icons.Default.VerticalAlignBottom, null, modifier = Modifier.rotate(-animateFab.toFloat())) }
         }
     }
 
@@ -643,7 +643,6 @@ fun CustomNestedScrollExample() {
                     "I'm item $index",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
                         .clickable {
                             showInfo = !showInfo
                             if (!showInfo) {
@@ -653,8 +652,155 @@ fun CustomNestedScrollExample() {
                                 scrollToBottom.offsetHeightPx.value = -scrollToBottom.heightPx
                             }
                         }
+                        .padding(16.dp)
                 )
             }
         }
     }
+}
+
+@Composable
+fun ScaffoldNestedScrollExample() {
+    val scope = rememberCoroutineScope()
+    val state = rememberLazyListState()
+
+    var showInfo by remember { mutableStateOf(false) }
+
+    val animationSpec = spring<Int>(Spring.DampingRatioMediumBouncy)
+
+    val topBar = remember {
+        CoordinatorModel1(56.dp) { it, model ->
+            val animateTopBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
+            TopAppBar(
+                modifier = Modifier
+                    .height(56.dp - with(LocalDensity.current) { -animateTopBar.toDp() })
+                    .alpha(1f - (-animateTopBar / model.heightPx))
+                    .coordinatorOffset(y = animateTopBar),
+                title = { Text("toolbar offset is $it") }
+            )
+        }
+    }
+
+    val bottomBar = remember {
+        CoordinatorModel1(56.dp) { it, model ->
+            val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
+            BottomAppBar(
+                modifier = Modifier
+                    .height(56.dp - with(LocalDensity.current) { -animateBottomBar.toDp() })
+                    .alpha(1f - (-animateBottomBar / model.heightPx))
+                    .coordinatorOffset(y = -animateBottomBar)
+            ) { Text("bottom bar offset is $it") }
+        }
+    }
+
+    val scrollToTop = remember {
+        CoordinatorModel1(56.dp) { it, model ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (-it.roundToInt()), animationSpec)
+            FloatingActionButton(
+                onClick = { scope.launch { state.animateScrollToItem(0) } },
+                modifier = Modifier
+                    .alpha(1f - (animateFab / model.heightPx))
+                    .coordinatorOffset(animateFab)
+            ) { Icon(Icons.Default.VerticalAlignTop, null, modifier = Modifier.rotate(animateFab.toFloat())) }
+        }
+    }
+
+    val scrollToBottom = remember {
+        CoordinatorModel1(56.dp) { it, model ->
+            val animateFab by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
+            FloatingActionButton(
+                onClick = { scope.launch { state.animateScrollToItem(100) } },
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .alpha(1f - (-animateFab / model.heightPx))
+                    .coordinatorOffset(animateFab)
+            ) { Icon(Icons.Default.VerticalAlignBottom, null, modifier = Modifier.rotate(-animateFab.toFloat())) }
+        }
+    }
+
+    topBar.Setup()
+    bottomBar.Setup()
+    scrollToTop.Setup()
+    scrollToBottom.Setup()
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+
+                topBar.let {
+                    val topBarOffset = it.offsetHeightPx.value + delta
+                    it.offsetHeightPx.value = topBarOffset.coerceIn(-it.heightPx, 0f)
+                }
+
+                bottomBar.let {
+                    val bottomBarOffset = it.offsetHeightPx.value + delta
+                    it.offsetHeightPx.value = bottomBarOffset.coerceIn(-it.heightPx, 0f)
+                }
+
+                scrollToTop.let {
+                    val offset = it.offsetHeightPx.value + delta
+                    it.offsetHeightPx.value = offset.coerceIn(-it.heightPx, 0f)
+                }
+
+                scrollToBottom.let {
+                    val offset = it.offsetHeightPx.value + delta
+                    it.offsetHeightPx.value = offset.coerceIn(-it.heightPx, 0f)
+                }
+
+                return Offset.Zero
+            }
+        }
+    }
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(nestedScrollConnection),
+        topBar = { topBar.Content() },
+        bottomBar = { bottomBar.Content() },
+        floatingActionButton = { scrollToTop.Content() },
+        floatingActionButtonPosition = FabPosition.End,
+        isFloatingActionButtonDocked = true
+    ) { p ->
+        LazyColumn(
+            state = state,
+            contentPadding = p
+        ) {
+            items(100) { index ->
+                Text(
+                    "I'm item $index",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            showInfo = !showInfo
+                            if (!showInfo) {
+                                topBar.offsetHeightPx.value = -topBar.heightPx
+                                bottomBar.offsetHeightPx.value = -bottomBar.heightPx
+                                scrollToTop.offsetHeightPx.value = -scrollToTop.heightPx
+                                scrollToBottom.offsetHeightPx.value = -scrollToBottom.heightPx
+                            }
+                        }
+                        .padding(16.dp)
+                )
+            }
+        }
+
+        scrollToBottom.Content()
+    }
+}
+
+class CoordinatorModel1(
+    val height: Dp,
+    val show: Boolean = true,
+    val content: @Composable (Float, CoordinatorModel1) -> Unit
+) {
+    var heightPx by Delegates.notNull<Float>()
+    val offsetHeightPx = mutableStateOf(0f)
+
+    @Composable
+    internal fun Setup() {
+        heightPx = with(LocalDensity.current) { height.roundToPx().toFloat() }
+    }
+
+    @Composable
+    fun Content() = content(offsetHeightPx.value, this)
 }
