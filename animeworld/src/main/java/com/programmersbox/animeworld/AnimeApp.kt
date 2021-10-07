@@ -20,6 +20,7 @@ import com.tonyodev.fetch2.Fetch.Impl.setDefaultInstanceConfiguration
 import com.tonyodev.fetch2core.Downloader
 import com.tonyodev.fetch2core.deleteFile
 import org.koin.core.context.loadKoinModules
+import java.io.File
 import java.net.HttpURLConnection
 import javax.net.ssl.*
 
@@ -54,6 +55,7 @@ class AnimeApp : OtakuApp() {
                 }
 
                 override fun onCompleted(download: Download) {
+                    sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(File(download.file))))
                     notificationManager.cancel(download.id)
                     Fetch.getDefaultInstance().remove(download.id)
                 }
