@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
-import androidx.compose.ui.util.fastMap
 import com.bumptech.glide.Glide
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
@@ -47,12 +46,7 @@ import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
@@ -63,7 +57,6 @@ import com.programmersbox.novel_sources.Sources as NSources
 
 class MainActivity : ComponentActivity() {
 
-    private var count = 0
     private val disposable = CompositeDisposable()
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
@@ -73,7 +66,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Single.merge(
+        /*Single.merge(
             SourceChoice
                 .values()
                 .flatMap { it.choices.toList() }
@@ -87,7 +80,7 @@ class MainActivity : ComponentActivity() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy { sourceList.addAll(it) }
-            .addTo(disposable)
+            .addTo(disposable)*/
 
         setContent {
             MdcTheme {
@@ -141,9 +134,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    @Composable
-    fun TestData() = Scaffold { Column { repeat(10) { Text("Hello ${count++}") } } }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -804,3 +794,6 @@ class CoordinatorModel1(
     @Composable
     fun Content() = content(offsetHeightPx.value, this)
 }
+
+@Composable
+fun TestData() = Column { repeat(10) { Text("Hello $it") } }
