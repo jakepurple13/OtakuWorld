@@ -323,74 +323,76 @@ class ReadActivityCompose : ComponentActivity() {
                     },
                     sheetGesturesEnabled = false,
                     sheetPeekHeight = 0.dp,
-                    drawerContent = {
-                        Scaffold(
-                            topBar = {
-                                TopAppBar(
-                                    title = { Text(title) },
-                                    actions = { Text("${list.size - currentChapter}/${list.size}") }
-                                )
-                            }
-                        ) { p ->
-                            if (scaffoldState.drawerState.isOpen) {
-                                LazyColumn(
-                                    state = rememberLazyListState(currentChapter.coerceAtLeast(0)),
-                                    contentPadding = p,
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    itemsIndexed(list) { i, c ->
+                    drawerContent = if (list.size > 1) {
+                        {
+                            Scaffold(
+                                topBar = {
+                                    TopAppBar(
+                                        title = { Text(title) },
+                                        actions = { Text("${list.size - currentChapter}/${list.size}") }
+                                    )
+                                }
+                            ) { p ->
+                                if (scaffoldState.drawerState.isOpen) {
+                                    LazyColumn(
+                                        state = rememberLazyListState(currentChapter.coerceIn(0, list.lastIndex)),
+                                        contentPadding = p,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        itemsIndexed(list) { i, c ->
 
-                                        var showChangeChapter by remember { mutableStateOf(false) }
+                                            var showChangeChapter by remember { mutableStateOf(false) }
 
-                                        if (showChangeChapter) {
-                                            AlertDialog(
-                                                onDismissRequest = { showChangeChapter = false },
-                                                title = { Text(stringResource(R.string.changeToChapter, c.name)) },
-                                                confirmButton = {
-                                                    TextButton(
-                                                        onClick = {
-                                                            showChangeChapter = false
-                                                            currentChapter = i
-                                                            loadPages(
-                                                                list.getOrNull(currentChapter)
-                                                                    ?.getChapterInfo()
-                                                                    ?.map { it.mapNotNull(Storage::link) }
-                                                                    ?.subscribeOn(Schedulers.io())
-                                                                    ?.observeOn(AndroidSchedulers.mainThread()),
-                                                                swipeState
-                                                            )
-                                                        }
-                                                    ) { Text(stringResource(R.string.yes)) }
-                                                },
-                                                dismissButton = {
-                                                    TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
-                                                }
-                                            )
-                                        }
+                                            if (showChangeChapter) {
+                                                AlertDialog(
+                                                    onDismissRequest = { showChangeChapter = false },
+                                                    title = { Text(stringResource(R.string.changeToChapter, c.name)) },
+                                                    confirmButton = {
+                                                        TextButton(
+                                                            onClick = {
+                                                                showChangeChapter = false
+                                                                currentChapter = i
+                                                                loadPages(
+                                                                    list.getOrNull(currentChapter)
+                                                                        ?.getChapterInfo()
+                                                                        ?.map { it.mapNotNull(Storage::link) }
+                                                                        ?.subscribeOn(Schedulers.io())
+                                                                        ?.observeOn(AndroidSchedulers.mainThread()),
+                                                                    swipeState
+                                                                )
+                                                            }
+                                                        ) { Text(stringResource(R.string.yes)) }
+                                                    },
+                                                    dismissButton = {
+                                                        TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                                                    }
+                                                )
+                                            }
 
-                                        Card(
-                                            modifier = Modifier.padding(horizontal = 5.dp),
-                                            border = BorderStroke(
-                                                1.dp,
-                                                animateColorAsState(
-                                                    if (currentChapter == i) MaterialTheme.colors.onSurface
-                                                    else MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
-                                                ).value
-                                            )
-                                        ) {
-                                            ListItem(
-                                                text = { Text(c.name) },
-                                                icon = if (currentChapter == i) {
-                                                    { Icon(Icons.Default.ArrowRight, null) }
-                                                } else null,
-                                                modifier = Modifier.clickable { showChangeChapter = true }
-                                            )
+                                            Card(
+                                                modifier = Modifier.padding(horizontal = 5.dp),
+                                                border = BorderStroke(
+                                                    1.dp,
+                                                    animateColorAsState(
+                                                        if (currentChapter == i) MaterialTheme.colors.onSurface
+                                                        else MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+                                                    ).value
+                                                )
+                                            ) {
+                                                ListItem(
+                                                    text = { Text(c.name) },
+                                                    icon = if (currentChapter == i) {
+                                                        { Icon(Icons.Default.ArrowRight, null) }
+                                                    } else null,
+                                                    modifier = Modifier.clickable { showChangeChapter = true }
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
+                    } else null
                 ) {
 
                     Scaffold(
@@ -558,11 +560,11 @@ class ReadActivityCompose : ComponentActivity() {
                                         .offset { IntOffset(x = 0, y = animateBar) }
                                 ) {
 
-                                    val prevShown = currentChapter < pages.size
+                                    val prevShown = currentChapter < list.lastIndex
                                     val nextShown = currentChapter > 0
 
                                     AnimatedVisibility(
-                                        visible = prevShown,
+                                        visible = prevShown && list.size > 1,
                                         enter = expandHorizontally(expandFrom = Alignment.Start),
                                         exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
                                     ) {
@@ -594,7 +596,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     )
 
                                     AnimatedVisibility(
-                                        visible = nextShown,
+                                        visible = nextShown && list.size > 1,
                                         enter = expandHorizontally(),
                                         exit = shrinkHorizontally()
                                     ) {
