@@ -309,6 +309,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             putExtra("showPath", item.assetFileStringUri)
                             putExtra("showName", item.videoName)
                             putExtra("downloadOrStream", true)
+                            data = item.assetFileStringUri?.toUri()
                         }
                     )
                 } else if (it == DismissValue.DismissedToStart) {
