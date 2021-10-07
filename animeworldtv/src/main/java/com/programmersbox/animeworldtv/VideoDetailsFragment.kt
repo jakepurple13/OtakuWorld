@@ -362,7 +362,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             }*/
 
             if (item is ChapterModel) {
-                if ((item.source as? ShowApi)?.canStream == false) {
+                if ((item.source as? ShowApi)?.canDownload == false) {
                     Toast.makeText(
                         context,
                         requireContext().getString(R.string.source_no_stream, item.source.serviceName),

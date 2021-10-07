@@ -14,7 +14,6 @@ interface GenericInfo {
 
     val apkString: AppUpdate.AppUpdates.() -> String?
 
-    val showDownload: Boolean get() = true
     fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context)
     fun sourceList(): List<ApiService>
     fun searchList(): List<ApiService> = sourceList()

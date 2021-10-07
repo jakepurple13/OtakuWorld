@@ -268,7 +268,7 @@ class AllFragment : BaseFragmentCompose() {
                         }
                     }
 
-                    if (source?.canScroll == true) {
+                    if (source?.canScrollAll == true) {
                         InfiniteListHandler(listState = state, buffer = 1) {
                             source?.let {
                                 count++

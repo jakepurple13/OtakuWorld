@@ -77,7 +77,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
 
     override fun downloadChapter(chapterModel: ChapterModel, title: String) {
-        if ((chapterModel.source as? ShowApi)?.canStream == false) {
+        if ((chapterModel.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, chapterModel.source.serviceName), Toast.LENGTH_SHORT).show()
             return
         }

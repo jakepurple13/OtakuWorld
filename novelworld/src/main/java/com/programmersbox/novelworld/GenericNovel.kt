@@ -44,8 +44,6 @@ val appModule = module {
 
 class GenericNovel(val context: Context) : GenericInfo {
 
-    override val showDownload: Boolean get() = false
-
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         context.startActivity(
             Intent(context, ReadingActivity::class.java).apply {
