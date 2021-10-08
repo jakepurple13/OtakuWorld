@@ -4,6 +4,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
+import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.anime_sources.utilities.JsUnpacker
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.models.ChapterModel
@@ -82,7 +83,7 @@ object GogoAnimeVC : ShowApi(
     }
 
     override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { s ->
-        val doc = Jsoup.connect(url).get()
+        val doc = (if (!url.contains(baseUrl)) "$baseUrl$url" else url).toJsoup()
 
         val animeBody = doc.selectFirst(".anime_info_body_bg")
         val title = animeBody?.selectFirst("h1")?.text().orEmpty()

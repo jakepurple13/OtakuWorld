@@ -82,9 +82,9 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
             source = this,
             url = source.url,
             title = source.title,
-            description = "",
+            description = doc.selectFirst("div.infodes2")?.text().orEmpty(),
             imageUrl = doc.select("div.infopicbox").select("img").attr("abs:src"),
-            genres = emptyList(),
+            genres = doc.select("a.infoan").eachText(),
             chapters = doc.select("a.infovan").fastMap {
                 ChapterModel(
                     name = it.text(),
@@ -144,8 +144,8 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
     override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
         val doc = url.toJsoup()
         ItemModel(
-            title = doc.select("div.title-box").text(),
-            description = "",
+            title = doc.select("div.infodesbox").select("h1").text(),
+            description = doc.select("div.infodes2").text(),
             imageUrl = doc.select("div.infopicbox").select("img").attr("abs:src"),
             url = url,
             source = this
