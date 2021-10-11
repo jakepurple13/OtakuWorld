@@ -427,13 +427,33 @@ class DetailsFragment : Fragment() {
                     thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
                     thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary).copy(alpha = .6f),
                 ) {
+
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(1.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
                             .fillMaxHeight()
                             .padding(vertical = 5.dp),
                         state = listState
                     ) {
+
+                        if (info.description.isNotEmpty()) {
+                            item {
+                                Text(
+                                    info.description,
+                                    modifier = Modifier
+                                        .clickable { descriptionVisibility = !descriptionVisibility }
+                                        .padding(horizontal = 5.dp)
+                                        .fillMaxWidth()
+                                        .animateContentSize(),
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                    style = MaterialTheme.typography.body2
+                                )
+                            }
+                        }
+
                         items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
                             ChapterItem(
                                 infoModel = info,
@@ -491,14 +511,10 @@ class DetailsFragment : Fragment() {
                     .addTo(disposable)
             },
             shape = RoundedCornerShape(0.dp),
-            modifier = Modifier
-                .padding(vertical = 5.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
         ) {
-
             Column(modifier = Modifier.padding(16.dp)) {
-
                 Row(
                     modifier = Modifier.clickable {
                         val b = read.fastAny { it.url == c.url }
@@ -661,8 +677,6 @@ class DetailsFragment : Fragment() {
 
         }
 
-        var descriptionVisibility by remember { mutableStateOf(false) }
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -725,13 +739,16 @@ class DetailsFragment : Fragment() {
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 5.dp)
+                    modifier = Modifier.padding(start = 5.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
 
-                    LazyRow(
-                        modifier = Modifier.padding(vertical = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
+                    Text(
+                        model.source.serviceName,
+                        style = MaterialTheme.typography.overline
+                    )
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                         items(model.genres) {
                             CustomChip(
                                 category = it,
@@ -747,8 +764,8 @@ class DetailsFragment : Fragment() {
                         modifier = Modifier
                             .clickable { favoriteClick(isFavorite) }
                             .semantics(true) {}
-                            .padding(vertical = 5.dp)
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -765,15 +782,32 @@ class DetailsFragment : Fragment() {
                     }
 
                     Text(
+                        stringResource(R.string.chapter_count, model.chapters.size),
+                        style = MaterialTheme.typography.body2
+                    )
+
+                    /*if(model.alternativeNames.isNotEmpty()) {
+                        Text(
+                            stringResource(R.string.alternateNames, model.alternativeNames.joinToString(", ")),
+                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
+                            style = MaterialTheme.typography.body2,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { descriptionVisibility = !descriptionVisibility }
+                        )
+                    }*/
+
+                    /*
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+                    Text(
                         model.description,
                         modifier = Modifier
-                            .padding(vertical = 5.dp)
                             .fillMaxWidth()
                             .clickable { descriptionVisibility = !descriptionVisibility },
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
                         style = MaterialTheme.typography.body2,
-                    )
+                    )*/
 
                 }
 

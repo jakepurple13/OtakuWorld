@@ -479,7 +479,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                                 fabOffsetHeightPx.value = -fabHeightPx
                                                             }
                                                         },
-                                                        onLongClick = { scope.launch { scaffoldState.bottomSheetState.expand() } }
+                                                        onLongClick = {}
                                                     )
                                             )
                                         }
@@ -822,7 +822,7 @@ class ReadActivityCompose : ComponentActivity() {
         var rotation by remember { mutableStateOf(0f) }
         var offset by remember { mutableStateOf(Offset.Zero) }
         val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-            if (canScale) scale *= zoomChange
+            if (canScale) scale = (scale * zoomChange).coerceAtLeast(1f)// *= zoomChange
             if (canRotate) rotation += rotationChange
             if (canOffset) offset += offsetChange
         }

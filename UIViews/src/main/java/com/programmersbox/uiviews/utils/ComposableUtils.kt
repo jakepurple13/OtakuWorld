@@ -605,7 +605,7 @@ fun <T> BottomSheetDeleteScaffold(
                 }
             ) {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
                     modifier = Modifier.padding(5.dp)
                 ) {

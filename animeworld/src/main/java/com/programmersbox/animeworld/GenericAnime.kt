@@ -9,6 +9,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -473,7 +474,11 @@ class GenericAnime(val context: Context) : GenericInfo {
         onClick: (ItemModel) -> Unit
     ) {
         val animated by updateAnimatedItemsState(newList = list)
-        LazyColumn(state = listState) {
+        LazyColumn(
+            state = listState,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) {
             animatedItems(
                 animated,
                 enterTransition = fadeIn(),
@@ -483,7 +488,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     onClick = { onClick(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(5.dp),
+                        .padding(horizontal = 5.dp),
                     elevation = 5.dp
                 ) {
                     ListItem(

@@ -187,7 +187,11 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         )
                     }
                 ) { p ->
-                    LazyColumn(contentPadding = p) { items(items) { NotificationItem(item = it, navController = findNavController()) } }
+                    LazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) { items(items) { NotificationItem(item = it, navController = findNavController()) } }
                 }
             }
         }
@@ -307,7 +311,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                 indication = rememberRipple(),
                 onClickLabel = item.notiTitle,
                 modifier = Modifier
-                    .padding(5.dp)
+                    .padding(horizontal = 5.dp)
                     .fadeInAnimation()
             ) {
 
