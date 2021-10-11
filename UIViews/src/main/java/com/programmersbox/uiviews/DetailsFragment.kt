@@ -43,7 +43,6 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -310,7 +309,7 @@ class DetailsFragment : Fragment() {
                             DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
+                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
                                 }
                             ) {
                                 Icon(
