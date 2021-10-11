@@ -152,6 +152,7 @@ class ReadActivityCompose : ComponentActivity() {
     private var time by mutableStateOf(System.currentTimeMillis())
 
     private val pageList = mutableStateListOf<String>()
+    private var isLoadingPages = mutableStateOf(false)
 
     private val ad by lazy { AdRequest.Builder().build() }
 
@@ -190,7 +191,7 @@ class ReadActivityCompose : ComponentActivity() {
             MdcTheme {
 
                 val scope = rememberCoroutineScope()
-                val swipeState = rememberSwipeRefreshState(isRefreshing = false)
+                val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
 
                 val pages = pageList
 
@@ -490,6 +491,11 @@ class ReadActivityCompose : ComponentActivity() {
                                                     interactionSource = remember { MutableInteractionSource() }
                                                 )
                                         ) {
+                                            Text(
+                                                stringResource(R.string.doubleTapToReset),
+                                                modifier = Modifier.align(Alignment.Center),
+                                                textAlign = TextAlign.Center
+                                            )
                                             val scaleAnim = animateFloatAsState(scale).value
                                             GlideImage(
                                                 imageModel = it,
@@ -648,15 +654,6 @@ class ReadActivityCompose : ComponentActivity() {
                                         modifier = Modifier.weight(1f)
                                     ) { Icon(Icons.Default.Settings, null) }
                                 }
-
-                                if (pages.isEmpty()) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier
-                                            .padding(p)
-                                            .fillMaxSize()
-                                            .align(Alignment.Center)
-                                    )
-                                }
                             }
                         }
                     }
@@ -680,10 +677,13 @@ class ReadActivityCompose : ComponentActivity() {
         } else {
             modelPath
         }
-            ?.doOnSubscribe { pageList.clear() }
+            ?.doOnSubscribe {
+                isLoadingPages.value = true
+                pageList.clear()
+            }
             ?.subscribeBy {
                 pageList.addAll(it)
-                swipeRefreshState?.isRefreshing = false
+                isLoadingPages.value = false
             }
             ?.addTo(disposable)
     }
