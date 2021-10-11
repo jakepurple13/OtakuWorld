@@ -1,6 +1,5 @@
 package com.programmersbox.mangaworld
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -460,7 +460,37 @@ class ReadActivityCompose : ComponentActivity() {
                                 ) {
 
                                     items(pages) {
-                                        Box {
+                                        var scale by remember { mutableStateOf(1f) }
+                                        var offset by remember { mutableStateOf(Offset.Zero) }
+                                        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+                                            scale = (scale * zoomChange).coerceAtLeast(1f)
+                                            offset += offsetChange
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                // add transformable to listen to multitouch transformation events
+                                                // after offset
+                                                .transformable(state = state)
+                                                .combinedClickable(
+                                                    onClick = {
+                                                        showInfo = !showInfo
+                                                        if (!showInfo) {
+                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                                            topBarOffsetHeightPx.value = -topBarHeightPx
+                                                            fabOffsetHeightPx.value = -fabHeightPx
+                                                        }
+                                                    },
+                                                    onDoubleClick = {
+                                                        scale = 1f
+                                                        offset = Offset.Zero
+                                                    },
+                                                    onLongClick = {},
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() }
+                                                )
+                                        ) {
+                                            val scaleAnim = animateFloatAsState(scale).value
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.FillWidth,
@@ -469,17 +499,12 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .fillMaxWidth()
                                                     .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                                                     .align(Alignment.Center)
-                                                    .scaleRotateOffset(
-                                                        canRotate = false,
-                                                        onClick = {
-                                                            showInfo = !showInfo
-                                                            if (!showInfo) {
-                                                                toolbarOffsetHeightPx.value = -toolbarHeightPx
-                                                                topBarOffsetHeightPx.value = -topBarHeightPx
-                                                                fabOffsetHeightPx.value = -fabHeightPx
-                                                            }
-                                                        },
-                                                        onLongClick = {}
+                                                    .clipToBounds()
+                                                    .graphicsLayer(
+                                                        scaleX = scaleAnim,
+                                                        scaleY = scaleAnim,
+                                                        translationX = animateFloatAsState(offset.x).value,
+                                                        translationY = animateFloatAsState(offset.y).value
                                                     )
                                             )
                                         }
@@ -827,11 +852,11 @@ class ReadActivityCompose : ComponentActivity() {
             if (canOffset) offset += offsetChange
         }
         return graphicsLayer(
-            scaleX = scale,
-            scaleY = scale,
-            rotationZ = rotation,
-            translationX = offset.x,
-            translationY = offset.y
+            scaleX = animateFloatAsState(scale).value,
+            scaleY = animateFloatAsState(scale).value,
+            rotationZ = animateFloatAsState(rotation).value,
+            translationX = animateFloatAsState(offset.x).value,
+            translationY = animateFloatAsState(offset.y).value
         )
             // add transformable to listen to multitouch transformation events
             // after offset
@@ -839,18 +864,9 @@ class ReadActivityCompose : ComponentActivity() {
             .combinedClickable(
                 onClick = onClick,
                 onDoubleClick = {
-                    ValueAnimator
-                        .ofFloat(scale, 1f)
-                        .apply { addUpdateListener { scale = it.animatedValue as Float } }
-                        .start()
-                    //scale = 1f
-                    ValueAnimator
-                        .ofFloat(rotation, 0f)
-                        .apply { addUpdateListener { rotation = it.animatedValue as Float } }
-                        .start()
-                    //rotation = 0f
-
-                    offset = Offset.Zero
+                    if (canScale) scale = 1f
+                    if (canRotate) rotation = 0f
+                    if (canOffset) offset = Offset.Zero
                 },
                 onLongClick = onLongClick,
                 indication = null,
