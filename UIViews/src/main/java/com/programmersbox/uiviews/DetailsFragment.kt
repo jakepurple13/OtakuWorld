@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -46,6 +47,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
@@ -217,7 +219,17 @@ class DetailsFragment : Fragment() {
         var reverseChapters by remember { mutableStateOf(false) }
 
         val scope = rememberCoroutineScope()
-        val scaffoldState = rememberScaffoldState()
+        val scaffoldState = rememberBottomSheetScaffoldState()
+
+        BackHandler(scaffoldState.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
+            scope.launch {
+                try {
+                    scaffoldState.bottomSheetState.collapse()
+                } catch (e: Exception) {
+                    findNavController().popBackStack()
+                }
+            }
+        }
 
         fun showSnackBar(text: Int, duration: SnackbarDuration = SnackbarDuration.Short) {
             scope.launch {
@@ -226,12 +238,98 @@ class DetailsFragment : Fragment() {
             }
         }
 
-        Scaffold(
+        val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+            ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+
+        BottomSheetScaffold(
+            sheetContent = {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
+                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface
+                        )
+                    },
+                    backgroundColor = Color.Transparent,
+                    modifier = Modifier
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.background,
+                                    MaterialTheme.colors.background
+                                )
+                            )
+                        )
+                ) { p ->
+                    LazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(info.chapters) { c ->
+                            Card(
+                                shape = RoundedCornerShape(0.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .clickable {
+                                            val b = chapters.fastAny { it.url == c.url }
+                                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
+                                                .let {
+                                                    Completable.mergeArray(
+                                                        if (!b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                                        if (!b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                                    )
+                                                }
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe {}
+                                                .addTo(disposable)
+                                        }
+                                        .padding(horizontal = 4.dp)
+                                ) {
+                                    Checkbox(
+                                        checked = chapters.fastAny { it.url == c.url },
+                                        onCheckedChange = { b ->
+                                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
+                                                .let {
+                                                    Completable.mergeArray(
+                                                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                                    )
+                                                }
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe {}
+                                                .addTo(disposable)
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                ?: MaterialTheme.colors.secondary,
+                                            uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                ?: MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+                                        )
+                                    )
+
+                                    Text(
+                                        c.name,
+                                        style = MaterialTheme.typography.body1
+                                            .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                                        modifier = Modifier.padding(start = 5.dp)
+                                    )
+
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            sheetPeekHeight = 0.dp,
+            sheetGesturesEnabled = false,
             scaffoldState = scaffoldState,
             topBar = {
-                val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-
                 TopAppBar(
                     modifier = Modifier.zIndex(2f),
                     title = { Text(info.title, color = topBarColor) },
@@ -250,14 +348,19 @@ class DetailsFragment : Fragment() {
                             onDismissRequest = dropDownDismiss,
                         ) {
 
-                            //TODO: Don't forget to add the mark as dialog
-
-                            /*DropdownMenuItem(
+                            DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-
+                                    scope.launch { scaffoldState.bottomSheetState.expand() }
                                 }
-                            ) { Text(stringResource(id = R.string.markAs)) }*/
+                            ) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(stringResource(id = R.string.markAs))
+                            }
 
                             DropdownMenuItem(
                                 onClick = {
@@ -428,9 +531,7 @@ class DetailsFragment : Fragment() {
                     thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
                     thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary).copy(alpha = .6f),
                 ) {
-
                     var descriptionVisibility by remember { mutableStateOf(false) }
-
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
@@ -637,11 +738,8 @@ class DetailsFragment : Fragment() {
                         }
                     }
                 }
-
             }
-
         }
-
     }
 
     @OptIn(ExperimentalComposeUiApi::class)
