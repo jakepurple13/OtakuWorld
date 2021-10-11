@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,6 +40,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import androidx.core.os.bundleOf
@@ -643,6 +645,7 @@ class DetailsFragment : Fragment() {
 
     }
 
+    @OptIn(ExperimentalComposeUiApi::class)
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
@@ -659,16 +662,17 @@ class DetailsFragment : Fragment() {
         if (imagePopup) {
 
             AlertDialog(
+                properties = DialogProperties(usePlatformDefaultWidth = false),
                 onDismissRequest = { imagePopup = false },
                 title = { Text(model.title, modifier = Modifier.padding(5.dp)) },
                 text = {
                     GlideImage(
                         imageModel = model.imageUrl,
                         contentDescription = null,
-                        contentScale = ContentScale.None,
+                        contentScale = ContentScale.Fit,
                         requestBuilder = Glide.with(LocalView.current).asDrawable().transform(RoundedCorners(5)),
                         modifier = Modifier
-                            .scaleRotateOffset()
+                            .scaleRotateOffsetReset()
                             .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     )
                 },

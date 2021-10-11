@@ -195,7 +195,7 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val pages = pageList
 
-                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
+                LaunchedEffect(pages) { BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray()) }
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -832,46 +832,6 @@ class ReadActivityCompose : ComponentActivity() {
             )
 
         }
-    }
-
-    @ExperimentalFoundationApi
-    @Composable
-    private fun Modifier.scaleRotateOffset(
-        canScale: Boolean = true,
-        canRotate: Boolean = true,
-        canOffset: Boolean = true,
-        onClick: () -> Unit = {},
-        onLongClick: () -> Unit = {}
-    ): Modifier {
-        var scale by remember { mutableStateOf(1f) }
-        var rotation by remember { mutableStateOf(0f) }
-        var offset by remember { mutableStateOf(Offset.Zero) }
-        val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-            if (canScale) scale = (scale * zoomChange).coerceAtLeast(1f)// *= zoomChange
-            if (canRotate) rotation += rotationChange
-            if (canOffset) offset += offsetChange
-        }
-        return graphicsLayer(
-            scaleX = animateFloatAsState(scale).value,
-            scaleY = animateFloatAsState(scale).value,
-            rotationZ = animateFloatAsState(rotation).value,
-            translationX = animateFloatAsState(offset.x).value,
-            translationY = animateFloatAsState(offset.y).value
-        )
-            // add transformable to listen to multitouch transformation events
-            // after offset
-            .transformable(state = state)
-            .combinedClickable(
-                onClick = onClick,
-                onDoubleClick = {
-                    if (canScale) scale = 1f
-                    if (canRotate) rotation = 0f
-                    if (canOffset) offset = Offset.Zero
-                },
-                onLongClick = onLongClick,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )
     }
 
     override fun onDestroy() {

@@ -745,6 +745,46 @@ fun Modifier.scaleRotateOffset(
         .transformable(state = state)
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun Modifier.scaleRotateOffsetReset(
+    canScale: Boolean = true,
+    canRotate: Boolean = true,
+    canOffset: Boolean = true,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {}
+): Modifier {
+    var scale by remember { mutableStateOf(1f) }
+    var rotation by remember { mutableStateOf(0f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
+        if (canScale) scale *= zoomChange
+        if (canRotate) rotation += rotationChange
+        if (canOffset) offset += offsetChange
+    }
+    return graphicsLayer(
+        scaleX = animateFloatAsState(scale).value,
+        scaleY = animateFloatAsState(scale).value,
+        rotationZ = animateFloatAsState(rotation).value,
+        translationX = animateFloatAsState(offset.x).value,
+        translationY = animateFloatAsState(offset.y).value
+    )
+        // add transformable to listen to multitouch transformation events
+        // after offset
+        .transformable(state = state)
+        .combinedClickable(
+            onClick = onClick,
+            onDoubleClick = {
+                if (canScale) scale = 1f
+                if (canRotate) rotation = 0f
+                if (canOffset) offset = Offset.Zero
+            },
+            onLongClick = onLongClick,
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        )
+}
+
 interface AutoCompleteEntity {
     fun filter(query: String): Boolean
 }
