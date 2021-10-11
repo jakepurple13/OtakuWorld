@@ -255,7 +255,9 @@ class DetailsFragment : Fragment() {
                         .background(
                             Brush.verticalGradient(
                                 listOf(
-                                    swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.background,
+                                    swatchInfo.value?.rgb?.toComposeColor()
+                                        ?.copy(alpha = .25f)
+                                        ?.animate()?.value ?: MaterialTheme.colors.background,
                                     MaterialTheme.colors.background
                                 )
                             )
@@ -263,7 +265,8 @@ class DetailsFragment : Fragment() {
                 ) { p ->
                     LazyColumn(
                         contentPadding = p,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp)
                     ) {
                         items(info.chapters) { c ->
                             Card(
