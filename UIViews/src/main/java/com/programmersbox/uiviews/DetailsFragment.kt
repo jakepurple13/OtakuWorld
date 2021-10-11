@@ -143,7 +143,7 @@ class DetailsFragment : Fragment() {
                                             DropdownMenuItem(
                                                 onClick = {
                                                     dropDownDismiss()
-                                                    findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
+                                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
                                                 }
                                             ) { Text(stringResource(id = R.string.global_search_by_name)) }
                                         }
