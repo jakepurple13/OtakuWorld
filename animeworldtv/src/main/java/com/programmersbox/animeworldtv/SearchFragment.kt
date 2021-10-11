@@ -131,6 +131,7 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
             Observable.combineLatest(
                 //Sources.values().distinctBy { it.baseUrl }
                 Sources.searchSources
+                    .filter { it.canDownload }
                     .map {
                         it
                             .searchList(query, list = searchList)

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,12 +41,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
@@ -141,7 +144,7 @@ class DetailsFragment : Fragment() {
                                             DropdownMenuItem(
                                                 onClick = {
                                                     dropDownDismiss()
-                                                    findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
+                                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
                                                 }
                                             ) { Text(stringResource(id = R.string.global_search_by_name)) }
                                         }
@@ -216,7 +219,17 @@ class DetailsFragment : Fragment() {
         var reverseChapters by remember { mutableStateOf(false) }
 
         val scope = rememberCoroutineScope()
-        val scaffoldState = rememberScaffoldState()
+        val scaffoldState = rememberBottomSheetScaffoldState()
+
+        BackHandler(scaffoldState.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
+            scope.launch {
+                try {
+                    scaffoldState.bottomSheetState.collapse()
+                } catch (e: Exception) {
+                    findNavController().popBackStack()
+                }
+            }
+        }
 
         fun showSnackBar(text: Int, duration: SnackbarDuration = SnackbarDuration.Short) {
             scope.launch {
@@ -225,12 +238,101 @@ class DetailsFragment : Fragment() {
             }
         }
 
-        Scaffold(
+        val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+            ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+
+        BottomSheetScaffold(
+            sheetContent = {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
+                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface
+                        )
+                    },
+                    backgroundColor = Color.Transparent,
+                    modifier = Modifier
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    swatchInfo.value?.rgb?.toComposeColor()
+                                        ?.copy(alpha = .25f)
+                                        ?.animate()?.value ?: MaterialTheme.colors.background,
+                                    MaterialTheme.colors.background
+                                )
+                            )
+                        )
+                ) { p ->
+                    LazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        items(info.chapters) { c ->
+                            Card(
+                                shape = RoundedCornerShape(0.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .clickable {
+                                            val b = chapters.fastAny { it.url == c.url }
+                                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
+                                                .let {
+                                                    Completable.mergeArray(
+                                                        if (!b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                                        if (!b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                                    )
+                                                }
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe {}
+                                                .addTo(disposable)
+                                        }
+                                        .padding(horizontal = 4.dp)
+                                ) {
+                                    Checkbox(
+                                        checked = chapters.fastAny { it.url == c.url },
+                                        onCheckedChange = { b ->
+                                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
+                                                .let {
+                                                    Completable.mergeArray(
+                                                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                                    )
+                                                }
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe {}
+                                                .addTo(disposable)
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                ?: MaterialTheme.colors.secondary,
+                                            uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                ?: MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+                                        )
+                                    )
+
+                                    Text(
+                                        c.name,
+                                        style = MaterialTheme.typography.body1
+                                            .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                                        modifier = Modifier.padding(start = 5.dp)
+                                    )
+
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            sheetPeekHeight = 0.dp,
+            sheetGesturesEnabled = false,
             scaffoldState = scaffoldState,
             topBar = {
-                val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-
                 TopAppBar(
                     modifier = Modifier.zIndex(2f),
                     title = { Text(info.title, color = topBarColor) },
@@ -249,14 +351,19 @@ class DetailsFragment : Fragment() {
                             onDismissRequest = dropDownDismiss,
                         ) {
 
-                            //TODO: Don't forget to add the mark as dialog
-
-                            /*DropdownMenuItem(
+                            DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-
+                                    scope.launch { scaffoldState.bottomSheetState.expand() }
                                 }
-                            ) { Text(stringResource(id = R.string.markAs)) }*/
+                            ) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(stringResource(id = R.string.markAs))
+                            }
 
                             DropdownMenuItem(
                                 onClick = {
@@ -308,7 +415,7 @@ class DetailsFragment : Fragment() {
                             DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    findNavController().navigate(R.id.show_global_search, bundleOf("searchFor" to info.title))
+                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
                                 }
                             ) {
                                 Icon(
@@ -427,13 +534,31 @@ class DetailsFragment : Fragment() {
                     thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
                     thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary).copy(alpha = .6f),
                 ) {
+                    var descriptionVisibility by remember { mutableStateOf(false) }
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(1.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
                             .fillMaxHeight()
                             .padding(vertical = 5.dp),
                         state = listState
                     ) {
+
+                        if (info.description.isNotEmpty()) {
+                            item {
+                                Text(
+                                    info.description,
+                                    modifier = Modifier
+                                        .clickable { descriptionVisibility = !descriptionVisibility }
+                                        .padding(horizontal = 5.dp)
+                                        .fillMaxWidth()
+                                        .animateContentSize(),
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                    style = MaterialTheme.typography.body2
+                                )
+                            }
+                        }
+
                         items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
                             ChapterItem(
                                 infoModel = info,
@@ -491,14 +616,10 @@ class DetailsFragment : Fragment() {
                     .addTo(disposable)
             },
             shape = RoundedCornerShape(0.dp),
-            modifier = Modifier
-                .padding(vertical = 5.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
         ) {
-
             Column(modifier = Modifier.padding(16.dp)) {
-
                 Row(
                     modifier = Modifier.clickable {
                         val b = read.fastAny { it.url == c.url }
@@ -620,13 +741,11 @@ class DetailsFragment : Fragment() {
                         }
                     }
                 }
-
             }
-
         }
-
     }
 
+    @OptIn(ExperimentalComposeUiApi::class)
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
@@ -643,16 +762,17 @@ class DetailsFragment : Fragment() {
         if (imagePopup) {
 
             AlertDialog(
+                properties = DialogProperties(usePlatformDefaultWidth = false),
                 onDismissRequest = { imagePopup = false },
                 title = { Text(model.title, modifier = Modifier.padding(5.dp)) },
                 text = {
                     GlideImage(
                         imageModel = model.imageUrl,
                         contentDescription = null,
-                        contentScale = ContentScale.None,
+                        contentScale = ContentScale.Fit,
                         requestBuilder = Glide.with(LocalView.current).asDrawable().transform(RoundedCorners(5)),
                         modifier = Modifier
-                            .scaleRotateOffset()
+                            .scaleRotateOffsetReset()
                             .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     )
                 },
@@ -660,8 +780,6 @@ class DetailsFragment : Fragment() {
             )
 
         }
-
-        var descriptionVisibility by remember { mutableStateOf(false) }
 
         Box(
             modifier = Modifier
@@ -725,13 +843,16 @@ class DetailsFragment : Fragment() {
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 5.dp)
+                    modifier = Modifier.padding(start = 5.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
 
-                    LazyRow(
-                        modifier = Modifier.padding(vertical = 5.dp),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
+                    Text(
+                        model.source.serviceName,
+                        style = MaterialTheme.typography.overline
+                    )
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                         items(model.genres) {
                             CustomChip(
                                 category = it,
@@ -747,8 +868,8 @@ class DetailsFragment : Fragment() {
                         modifier = Modifier
                             .clickable { favoriteClick(isFavorite) }
                             .semantics(true) {}
-                            .padding(vertical = 5.dp)
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -765,15 +886,32 @@ class DetailsFragment : Fragment() {
                     }
 
                     Text(
+                        stringResource(R.string.chapter_count, model.chapters.size),
+                        style = MaterialTheme.typography.body2
+                    )
+
+                    /*if(model.alternativeNames.isNotEmpty()) {
+                        Text(
+                            stringResource(R.string.alternateNames, model.alternativeNames.joinToString(", ")),
+                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
+                            style = MaterialTheme.typography.body2,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { descriptionVisibility = !descriptionVisibility }
+                        )
+                    }*/
+
+                    /*
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+                    Text(
                         model.description,
                         modifier = Modifier
-                            .padding(vertical = 5.dp)
                             .fillMaxWidth()
                             .clickable { descriptionVisibility = !descriptionVisibility },
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
                         style = MaterialTheme.typography.body2,
-                    )
+                    )*/
 
                 }
 

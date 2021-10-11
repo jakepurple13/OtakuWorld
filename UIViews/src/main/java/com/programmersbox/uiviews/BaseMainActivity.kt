@@ -9,6 +9,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.uiviews.utils.currentScreen
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.setupWithNavController
 import io.reactivex.Single
@@ -70,7 +71,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     private fun setupBottomNavBar() {
         val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav, R.navigation.setting_nav)
-
+        currentScreen.value = R.id.recent_nav
         val controller = findViewById<BottomNavigationView>(R.id.navLayout2)
             .also { b ->
                 appUpdateCheck

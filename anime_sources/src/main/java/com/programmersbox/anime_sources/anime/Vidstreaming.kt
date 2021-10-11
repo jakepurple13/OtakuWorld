@@ -62,7 +62,7 @@ object Vidstreaming : ShowApi(
             title = source.title,
             url = source.url,
             alternativeNames = emptyList(),
-            description = doc.select("dic.post-entry").text(),
+            description = doc.select("div.post-entry").text(),
             imageUrl = source.imageUrl,
             genres = emptyList(),
             chapters = doc.select("div.video-info-left > ul.listing > li.video-block > a").fastMap {
@@ -74,6 +74,24 @@ object Vidstreaming : ShowApi(
                     this
                 )
             }
+        )
+            .let(it::onSuccess)
+    }
+
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
+        val doc = url.toJsoup()
+        ItemModel(
+            title = doc.select("div.video-details").select("span.date").text(),
+            description = doc.select("div.post-entry").text(),
+            imageUrl = doc
+                .select("div.video-info-left > ul.listing > li.video-block > a")
+                .select("div.picture")
+                .select("img")
+                .randomOrNull()
+                ?.attr("abs:src")
+                .orEmpty(),
+            url = url,
+            source = this
         )
             .let(it::onSuccess)
     }

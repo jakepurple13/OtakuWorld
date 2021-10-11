@@ -22,4 +22,5 @@
 
     <string name="playSettings">Reader Settings</string>
     <string name="changeToChapter">Change to %s</string>
+    <string name="doubleTapToReset">Double Tap to Reset</string>
 </resources>

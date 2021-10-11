@@ -151,4 +151,8 @@
     <string name="reverseOrder">Reverse Chapter Order</string>
 
     <string name="playSettings">Play Settings</string>
+
+    <string name="chapter_count">Chapters: %d</string>
+
+    <string name="alternateNames">Alternative Names: %s</string>
 </resources>

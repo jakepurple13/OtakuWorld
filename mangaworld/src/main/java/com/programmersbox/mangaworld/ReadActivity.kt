@@ -1,6 +1,5 @@
 package com.programmersbox.mangaworld
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -152,6 +152,7 @@ class ReadActivityCompose : ComponentActivity() {
     private var time by mutableStateOf(System.currentTimeMillis())
 
     private val pageList = mutableStateListOf<String>()
+    private var isLoadingPages = mutableStateOf(false)
 
     private val ad by lazy { AdRequest.Builder().build() }
 
@@ -190,11 +191,11 @@ class ReadActivityCompose : ComponentActivity() {
             MdcTheme {
 
                 val scope = rememberCoroutineScope()
-                val swipeState = rememberSwipeRefreshState(isRefreshing = false)
+                val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
 
                 val pages = pageList
 
-                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
+                LaunchedEffect(pages) { BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray()) }
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -460,7 +461,42 @@ class ReadActivityCompose : ComponentActivity() {
                                 ) {
 
                                     items(pages) {
-                                        Box {
+                                        var scale by remember { mutableStateOf(1f) }
+                                        var offset by remember { mutableStateOf(Offset.Zero) }
+                                        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+                                            scale = (scale * zoomChange).coerceAtLeast(1f)
+                                            offset += offsetChange
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                // add transformable to listen to multitouch transformation events
+                                                // after offset
+                                                .transformable(state = state)
+                                                .combinedClickable(
+                                                    onClick = {
+                                                        showInfo = !showInfo
+                                                        if (!showInfo) {
+                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                                            topBarOffsetHeightPx.value = -topBarHeightPx
+                                                            fabOffsetHeightPx.value = -fabHeightPx
+                                                        }
+                                                    },
+                                                    onDoubleClick = {
+                                                        scale = 1f
+                                                        offset = Offset.Zero
+                                                    },
+                                                    onLongClick = {},
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() }
+                                                )
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.doubleTapToReset),
+                                                modifier = Modifier.align(Alignment.Center),
+                                                textAlign = TextAlign.Center
+                                            )
+                                            val scaleAnim = animateFloatAsState(scale).value
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.FillWidth,
@@ -469,17 +505,12 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .fillMaxWidth()
                                                     .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                                                     .align(Alignment.Center)
-                                                    .scaleRotateOffset(
-                                                        canRotate = false,
-                                                        onClick = {
-                                                            showInfo = !showInfo
-                                                            if (!showInfo) {
-                                                                toolbarOffsetHeightPx.value = -toolbarHeightPx
-                                                                topBarOffsetHeightPx.value = -topBarHeightPx
-                                                                fabOffsetHeightPx.value = -fabHeightPx
-                                                            }
-                                                        },
-                                                        onLongClick = { scope.launch { scaffoldState.bottomSheetState.expand() } }
+                                                    .clipToBounds()
+                                                    .graphicsLayer(
+                                                        scaleX = scaleAnim,
+                                                        scaleY = scaleAnim,
+                                                        translationX = animateFloatAsState(offset.x).value,
+                                                        translationY = animateFloatAsState(offset.y).value
                                                     )
                                             )
                                         }
@@ -623,15 +654,6 @@ class ReadActivityCompose : ComponentActivity() {
                                         modifier = Modifier.weight(1f)
                                     ) { Icon(Icons.Default.Settings, null) }
                                 }
-
-                                if (pages.isEmpty()) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier
-                                            .padding(p)
-                                            .fillMaxSize()
-                                            .align(Alignment.Center)
-                                    )
-                                }
                             }
                         }
                     }
@@ -655,10 +677,13 @@ class ReadActivityCompose : ComponentActivity() {
         } else {
             modelPath
         }
-            ?.doOnSubscribe { pageList.clear() }
+            ?.doOnSubscribe {
+                isLoadingPages.value = true
+                pageList.clear()
+            }
             ?.subscribeBy {
                 pageList.addAll(it)
-                swipeRefreshState?.isRefreshing = false
+                isLoadingPages.value = false
             }
             ?.addTo(disposable)
     }
@@ -807,55 +832,6 @@ class ReadActivityCompose : ComponentActivity() {
             )
 
         }
-    }
-
-    @ExperimentalFoundationApi
-    @Composable
-    private fun Modifier.scaleRotateOffset(
-        canScale: Boolean = true,
-        canRotate: Boolean = true,
-        canOffset: Boolean = true,
-        onClick: () -> Unit = {},
-        onLongClick: () -> Unit = {}
-    ): Modifier {
-        var scale by remember { mutableStateOf(1f) }
-        var rotation by remember { mutableStateOf(0f) }
-        var offset by remember { mutableStateOf(Offset.Zero) }
-        val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-            if (canScale) scale *= zoomChange
-            if (canRotate) rotation += rotationChange
-            if (canOffset) offset += offsetChange
-        }
-        return graphicsLayer(
-            scaleX = scale,
-            scaleY = scale,
-            rotationZ = rotation,
-            translationX = offset.x,
-            translationY = offset.y
-        )
-            // add transformable to listen to multitouch transformation events
-            // after offset
-            .transformable(state = state)
-            .combinedClickable(
-                onClick = onClick,
-                onDoubleClick = {
-                    ValueAnimator
-                        .ofFloat(scale, 1f)
-                        .apply { addUpdateListener { scale = it.animatedValue as Float } }
-                        .start()
-                    //scale = 1f
-                    ValueAnimator
-                        .ofFloat(rotation, 0f)
-                        .apply { addUpdateListener { rotation = it.animatedValue as Float } }
-                        .start()
-                    //rotation = 0f
-
-                    offset = Offset.Zero
-                },
-                onLongClick = onLongClick,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )
     }
 
     override fun onDestroy() {

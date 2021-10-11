@@ -172,6 +172,7 @@ class AllFragment : BaseFragmentCompose() {
                     scaffoldState = scaffoldState,
                     sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
                     sheetContent = {
+                        var isSearching by remember { mutableStateOf(false) }
                         Scaffold(
                             topBar = {
                                 Column {
@@ -213,8 +214,12 @@ class AllFragment : BaseFragmentCompose() {
                                             sourcePublish.value!!.searchList(searchText, 1, sourceList)
                                                 .subscribeOn(Schedulers.io())
                                                 .observeOn(AndroidSchedulers.mainThread())
+                                                .doOnSubscribe { isSearching = true }
                                                 .onErrorReturnItem(sourceList)
-                                                .subscribe(searchPublisher::onNext)
+                                                .subscribeBy {
+                                                    searchPublisher.onNext(it)
+                                                    isSearching = false
+                                                }
                                                 .addTo(disposable)
                                         })
                                     )
@@ -222,8 +227,14 @@ class AllFragment : BaseFragmentCompose() {
                             }
                         ) { p ->
                             Box(modifier = Modifier.padding(p)) {
-                                info.ItemListView(list = searchList, listState = rememberLazyListState(), favorites = favoriteList) {
-                                    findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                                SwipeRefresh(
+                                    state = rememberSwipeRefreshState(isRefreshing = isSearching),
+                                    onRefresh = {},
+                                    swipeEnabled = false
+                                ) {
+                                    info.ItemListView(list = searchList, listState = rememberLazyListState(), favorites = favoriteList) {
+                                        findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                                    }
                                 }
                             }
                         }
