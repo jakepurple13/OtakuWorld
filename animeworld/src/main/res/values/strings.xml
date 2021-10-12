@@ -76,7 +76,7 @@
     <string name="retry_text">Retry</string>
     <string name="view_downloads">View Downloads</string>
     <string name="view_videos">View Videos</string>
-    <string name="wco_recent_info">Due to some possible with this source, multiple calls need to be made which we need to be careful of. If you turn this off, just be wary that Wcostream could stop you from getting data.</string>
+    <string name="wco_recent_info">Due to some possible issues with this source, multiple calls need to be made which we need to be careful of. If you turn this off, just be wary that Wcostream could stop you from getting data.</string>
     <string name="wco_recent_title">Wcostream Recent Type</string>
 
     <string name="videoPlayerBack">Back</string>
