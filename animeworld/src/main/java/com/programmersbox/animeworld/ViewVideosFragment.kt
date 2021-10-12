@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.MoreVert
@@ -34,20 +35,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
+import androidx.mediarouter.app.MediaRouteButton
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.animeworld.databinding.FragmentViewVideosBinding
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.uiviews.BaseMainActivity
@@ -61,41 +66,28 @@ import java.util.concurrent.TimeUnit
 
 class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
-    private lateinit var binding: FragmentViewVideosBinding
+    private val disposable = CompositeDisposable()
 
+    @ExperimentalPermissionsApi
+    @ExperimentalAnimationApi
+    @ExperimentalMaterialApi
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
-        binding = FragmentViewVideosBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+            setContent {
+                MdcTheme {
+                    PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        LaunchedEffect(Unit) {
+                            val v = VideoGet.getInstance(requireContext())
+                            v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
+                        }
 
-    private val disposable = CompositeDisposable()
-
-    @ExperimentalPermissionsApi
-    @ExperimentalMaterialApi
-    @ExperimentalAnimationApi
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        MainActivity.cast.setMediaRouteMenu(requireContext(), binding.toolbarmenu.menu)
-        getStuff()
-    }
-
-    @ExperimentalPermissionsApi
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    private fun getStuff() {
-        binding.composeLayout.setContent {
-            MdcTheme {
-                PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    LaunchedEffect(Unit) {
-                        val v = VideoGet.getInstance(requireContext())
-                        v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
+                        VideoLoad()
                     }
-
-                    VideoLoad()
                 }
             }
         }
@@ -133,6 +125,32 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             EmptyState()
         } else {
             BottomSheetDeleteScaffold(
+                topBar = {
+                    TopAppBar(
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {
+                                    dismiss()
+                                    try {
+                                        findNavController().popBackStack()
+                                    } catch (e: IllegalStateException) {
+                                    }
+                                }) { Icon(Icons.Default.Close, null) }
+                        },
+                        title = { Text(stringResource(R.string.downloaded_videos)) },
+                        actions = {
+                            AndroidView(
+                                factory = { context ->
+                                    MediaRouteButton(context).apply {
+                                        MainActivity.cast.showIntroductoryOverlay(this)
+                                        MainActivity.cast.setMediaRouteMenu(context, this)
+                                    }
+                                }
+                            )
+                            IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                        }
+                    )
+                },
                 state = state,
                 listOfItems = items,
                 multipleTitle = stringResource(id = R.string.delete),
