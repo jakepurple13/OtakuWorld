@@ -155,4 +155,6 @@
     <string name="chapter_count">Chapters: %d</string>
 
     <string name="alternateNames">Alternative Names: %s</string>
+
+    <string name="share_item">Share %s</string>
 </resources>

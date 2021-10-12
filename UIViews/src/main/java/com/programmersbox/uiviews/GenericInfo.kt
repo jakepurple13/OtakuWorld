@@ -3,6 +3,7 @@ package com.programmersbox.uiviews
 import android.content.Context
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -20,6 +21,10 @@ interface GenericInfo {
     fun toSource(s: String): ApiService?
     fun customPreferences(preferenceScreen: SettingsDsl) = Unit
     fun downloadChapter(chapterModel: ChapterModel, infoModel: InfoModel)
+
+    @Composable
+    fun DetailActions(infoModel: InfoModel, tint: Color) {
+    }
 
     @Composable
     fun ComposeShimmerItem()

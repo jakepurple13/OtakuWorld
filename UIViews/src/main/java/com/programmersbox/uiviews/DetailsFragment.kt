@@ -155,7 +155,7 @@ class DetailsFragment : Fragment() {
                                                     type = "text/plain"
                                                     putExtra(Intent.EXTRA_TEXT, info.url)
                                                     putExtra(Intent.EXTRA_TITLE, info.title)
-                                                }, "Share ${info.title}"))
+                                                }, getString(R.string.share_item, info.title)))
                                             }
                                         ) { Icon(Icons.Default.Share, null) }
 
@@ -247,7 +247,12 @@ class DetailsFragment : Fragment() {
                     topBar = {
                         TopAppBar(
                             title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
-                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface
+                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface,
+                            navigationIcon = {
+                                IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
+                                    Icon(Icons.Default.Close, null, tint = topBarColor)
+                                }
+                            }
                         )
                     },
                     backgroundColor = Color.Transparent,
@@ -438,9 +443,11 @@ class DetailsFragment : Fragment() {
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, info.url)
                                     putExtra(Intent.EXTRA_TITLE, info.title)
-                                }, "Share ${info.title}"))
+                                }, getString(R.string.share_item, info.title)))
                             }
                         ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
 
                         IconButton(onClick = { showDropDown = true }) {
                             Icon(Icons.Default.MoreVert, null, tint = topBarColor)
@@ -823,12 +830,24 @@ class DetailsFragment : Fragment() {
 
                 Column(
                     modifier = Modifier.padding(start = 5.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
 
                     Text(
                         model.source.serviceName,
                         style = MaterialTheme.typography.overline
+                    )
+
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+
+                    Text(
+                        model.title,
+                        style = MaterialTheme.typography.subtitle1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { descriptionVisibility = !descriptionVisibility },
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                     )
 
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {

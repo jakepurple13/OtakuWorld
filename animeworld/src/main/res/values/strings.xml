@@ -93,4 +93,6 @@
     <string name="playSettings">Player Settings</string>
 
     <string name="chapter_count">Episodes: %d</string>
+
+    <string name="castIntro">Cast!\nStream an episode straight to any Chromecast device!</string>
 </resources>
