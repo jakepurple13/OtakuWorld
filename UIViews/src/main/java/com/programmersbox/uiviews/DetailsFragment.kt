@@ -133,7 +133,6 @@ class DetailsFragment : Fragment() {
                                             expanded = showDropDown,
                                             onDismissRequest = dropDownDismiss,
                                         ) {
-
                                             DropdownMenuItem(
                                                 onClick = {
                                                     dropDownDismiss()

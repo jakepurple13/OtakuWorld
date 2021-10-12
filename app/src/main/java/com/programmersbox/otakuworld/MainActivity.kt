@@ -371,7 +371,8 @@ fun MaterialCardPreview() {
         modifier = Modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        MaterialCard(
+
+    MaterialCard(
             supportingText = supportingText,
             header = {
                 ListItem(
