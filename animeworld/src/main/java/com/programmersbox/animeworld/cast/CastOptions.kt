@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.mediarouter.app.MediaRouteButton
+import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.gms.cast.*
 import com.google.android.gms.cast.framework.*
 import com.google.android.gms.cast.framework.CastOptions
@@ -245,6 +246,47 @@ class CastHelper {
                     .build()
             )
         }
+    }
+
+    fun loadUrl(
+        mediaUrl: String?,
+        title: String,
+        name: String,
+        poster: String?,
+        headers: Map<String, String>
+    ) {
+        if (mediaUrl == null) return
+        /** Generate movie meta data */
+        val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE)
+        movieMetadata.putString(MediaMetadata.KEY_TITLE, title)
+        movieMetadata.putString(MediaMetadata.KEY_SUBTITLE, name)
+        movieMetadata.addImage(WebImage(Uri.parse(poster)))
+        //movieMetadata.addImage(WebImage(Uri.parse(remoteImageFileName)))
+
+        val mediaInfo = MediaInfo.Builder(mediaUrl)
+            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+            .setContentType(MimeTypes.VIDEO_UNKNOWN)
+            .setMetadata(movieMetadata)
+            .build()
+
+        val remoteMediaClient = mCastSession?.remoteMediaClient ?: return
+
+        remoteMediaClient.registerCallback(object : RemoteMediaClient.Callback() {
+            override fun onStatusUpdated() {
+                /** When media loaded we will start the fullscreen player activity. */
+                val intent = Intent(mApplicationContext, ExpandedControlsActivity::class.java)
+                mActivity.get()?.startActivity(intent)
+                remoteMediaClient.unregisterCallback(this)
+            }
+        })
+
+        remoteMediaClient.load(
+            MediaLoadRequestData.Builder()
+                .setMediaInfo(mediaInfo)
+                .setAutoplay(true)
+                .setCurrentTime(0L)
+                .build()
+        )
     }
 
     fun stopCast() {

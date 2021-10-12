@@ -93,6 +93,7 @@ object Kawaiifu : ShowApi(
                         Sources.KAWAIIFU
                     )
                 }
+                ?.reversed()
                 .orEmpty()
         )
             .let(emitter::onSuccess)

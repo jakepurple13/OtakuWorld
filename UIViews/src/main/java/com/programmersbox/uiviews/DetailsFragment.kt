@@ -695,7 +695,7 @@ class DetailsFragment : Fragment() {
 
                     if (infoModel.source.canDownload) {
                         OutlinedButton(
-                            onClick = { genericInfo.downloadChapter(c, infoModel.title) },
+                            onClick = { genericInfo.downloadChapter(c, infoModel) },
                             modifier = Modifier
                                 .weight(1f, true)
                                 .padding(horizontal = 5.dp),

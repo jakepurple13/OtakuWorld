@@ -19,7 +19,7 @@ interface GenericInfo {
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
     fun customPreferences(preferenceScreen: SettingsDsl) = Unit
-    fun downloadChapter(chapterModel: ChapterModel, title: String)
+    fun downloadChapter(chapterModel: ChapterModel, infoModel: InfoModel)
 
     @Composable
     fun ComposeShimmerItem()
