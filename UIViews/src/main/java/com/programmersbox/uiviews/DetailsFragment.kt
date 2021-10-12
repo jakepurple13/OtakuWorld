@@ -269,21 +269,22 @@ class DetailsFragment : Fragment() {
                         modifier = Modifier.padding(vertical = 4.dp)
                     ) {
                         items(info.chapters) { c ->
+                            fun markAs(b: Boolean) {
+                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
+                                    .let {
+                                        Completable.mergeArray(
+                                            if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                            if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                        )
+                                    }
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe {}
+                                    .addTo(disposable)
+                            }
+
                             Card(
-                                onClick = {
-                                    val b = chapters.fastAny { it.url == c.url }
-                                    ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
-                                        .let {
-                                            Completable.mergeArray(
-                                                if (!b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                                if (!b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                            )
-                                        }
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe {}
-                                        .addTo(disposable)
-                                },
+                                onClick = { markAs(!chapters.fastAny { it.url == c.url }) },
                                 shape = RoundedCornerShape(0.dp),
                                 modifier = Modifier.fillMaxWidth(),
                                 backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
@@ -302,19 +303,7 @@ class DetailsFragment : Fragment() {
                                     icon = {
                                         Checkbox(
                                             checked = chapters.fastAny { it.url == c.url },
-                                            onCheckedChange = { b ->
-                                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
-                                                    .let {
-                                                        Completable.mergeArray(
-                                                            if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                                            if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                                        )
-                                                    }
-                                                    .subscribeOn(Schedulers.io())
-                                                    .observeOn(AndroidSchedulers.mainThread())
-                                                    .subscribe {}
-                                                    .addTo(disposable)
-                                            },
+                                            onCheckedChange = { b -> markAs(b) },
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
                                                     ?: MaterialTheme.colors.secondary,
@@ -622,37 +611,25 @@ class DetailsFragment : Fragment() {
             backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.clickable {
-                        val b = read.fastAny { it.url == c.url }
-                        ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                            .let {
-                                Completable.mergeArray(
-                                    if (!b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                    if (!b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                )
-                            }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe { snackbar(if (!b) R.string.addedChapterItem else R.string.removedChapterItem) }
-                            .addTo(disposable)
-                    }
-                ) {
+
+                fun markAs(b: Boolean) {
+                    ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                        .let {
+                            Completable.mergeArray(
+                                if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                            )
+                        }
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
+                        .addTo(disposable)
+                }
+
+                Row(modifier = Modifier.clickable { markAs(!read.fastAny { it.url == c.url }) }) {
                     Checkbox(
                         checked = read.fastAny { it.url == c.url },
-                        onCheckedChange = { b ->
-                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                                .let {
-                                    Completable.mergeArray(
-                                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                    )
-                                }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
-                                .addTo(disposable)
-                        },
+                        onCheckedChange = { b -> markAs(b) },
                         colors = CheckboxDefaults.colors(
                             checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.secondary,
                             uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
