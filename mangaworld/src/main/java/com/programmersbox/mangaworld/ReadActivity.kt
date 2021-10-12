@@ -42,6 +42,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -149,8 +150,6 @@ class ReadActivityCompose : ComponentActivity() {
     private var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
     private var batteryPercent by mutableStateOf(0f)
 
-    private var time by mutableStateOf(System.currentTimeMillis())
-
     private val pageList = mutableStateListOf<String>()
     private var isLoadingPages = mutableStateOf(false)
 
@@ -181,8 +180,6 @@ class ReadActivityCompose : ComponentActivity() {
             batteryInformation.batteryInfoItem(it)
         }
 
-        timeInfo = timeTick { _, _ -> time = System.currentTimeMillis() }
-
         enableImmersiveMode()
 
         loadPages(model)
@@ -195,7 +192,9 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val pages = pageList
 
-                LaunchedEffect(pages) { BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray()) }
+                //LaunchedEffect(pages) {
+                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
+                //}
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -545,6 +544,13 @@ class ReadActivityCompose : ComponentActivity() {
 
                                 val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
 
+                                var time by remember { mutableStateOf(System.currentTimeMillis()) }
+
+                                DisposableEffect(LocalContext.current) {
+                                    val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
+                                    onDispose { unregisterReceiver(timeReceiver) }
+                                }
+
                                 TopAppBar(
                                     modifier = Modifier
                                         .height(topBarHeight)
@@ -837,7 +843,6 @@ class ReadActivityCompose : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(batteryInfo)
-        unregisterReceiver(timeInfo)
         disposable.dispose()
     }
 }

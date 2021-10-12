@@ -1,6 +1,8 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.OtakuWorld" parent="Theme.OtakuWorldBase" />
+    <style name="Theme.OtakuWorld" parent="Theme.OtakuWorldBase">
+        <item name="mediaRouteTheme">@style/CustomMediaRouterTheme</item>
+    </style>
 
     <style name="mx_style_dialog_progress" parent="@android:style/Theme.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -24,5 +26,13 @@
         <item name="android:indeterminateDuration">3500</item>
         <item name="android:indeterminateBehavior">repeat</item>
         <item name="android:minWidth">1dp</item>
+    </style>
+
+    <style name="CustomMediaRouterTheme" parent="Theme.MediaRouter">
+        <item name="mediaRouteButtonStyle">@style/CustomMediaRouteButtonStyle</item>
+    </style>
+
+    <style name="CustomMediaRouteButtonStyle" parent="Widget.MediaRouter.Light.MediaRouteButton">
+        <item name="mediaRouteButtonTint">?colorAccent</item>
     </style>
 </resources>

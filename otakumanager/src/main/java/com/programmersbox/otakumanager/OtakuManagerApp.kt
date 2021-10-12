@@ -61,7 +61,7 @@ val appModule = module {
                 null
             }
 
-            override fun downloadChapter(chapterModel: ChapterModel, title: String) {
+            override fun downloadChapter(chapterModel: ChapterModel, infoModel: InfoModel) {
                 throw Exception("This should not be seen")
             }
 

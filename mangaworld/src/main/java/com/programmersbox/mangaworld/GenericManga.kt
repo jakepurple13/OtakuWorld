@@ -107,9 +107,9 @@ class GenericManga(val context: Context) : GenericInfo {
             .addTo(disposable)
     }
 
-    override fun downloadChapter(chapterModel: ChapterModel, title: String) {
+    override fun downloadChapter(chapterModel: ChapterModel, infoModel: InfoModel) {
         MainActivity.activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
-            if (p.isGranted) downloadFullChapter(chapterModel, title)
+            if (p.isGranted) downloadFullChapter(chapterModel, infoModel.title)
         }
     }
 

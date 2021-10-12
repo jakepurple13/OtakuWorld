@@ -1,4 +1,10 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.OtakuWorld" parent="Theme.OtakuWorldBase" />
+    <style name="Theme.OtakuWorld" parent="Theme.OtakuWorldBase">
+        <item name="mediaRouteTheme">@style/CustomMediaRouterTheme</item>
+    </style>
+
+    <style name="CustomMediaRouteButtonStyle" parent="Widget.MediaRouter.MediaRouteButton">
+        <item name="mediaRouteButtonTint">?colorAccent</item>
+    </style>
 </resources>

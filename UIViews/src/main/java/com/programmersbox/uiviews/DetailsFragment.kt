@@ -155,7 +155,7 @@ class DetailsFragment : Fragment() {
                                                     type = "text/plain"
                                                     putExtra(Intent.EXTRA_TEXT, info.url)
                                                     putExtra(Intent.EXTRA_TITLE, info.title)
-                                                }, "Share ${info.title}"))
+                                                }, getString(R.string.share_item, info.title)))
                                             }
                                         ) { Icon(Icons.Default.Share, null) }
 
@@ -247,7 +247,12 @@ class DetailsFragment : Fragment() {
                     topBar = {
                         TopAppBar(
                             title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
-                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface
+                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface,
+                            navigationIcon = {
+                                IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
+                                    Icon(Icons.Default.Close, null, tint = topBarColor)
+                                }
+                            }
                         )
                     },
                     backgroundColor = Color.Transparent,
@@ -269,61 +274,52 @@ class DetailsFragment : Fragment() {
                         modifier = Modifier.padding(vertical = 4.dp)
                     ) {
                         items(info.chapters) { c ->
+                            fun markAs(b: Boolean) {
+                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
+                                    .let {
+                                        Completable.mergeArray(
+                                            if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                            if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                        )
+                                    }
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe {}
+                                    .addTo(disposable)
+                            }
+
                             Card(
+                                onClick = { markAs(!chapters.fastAny { it.url == c.url }) },
                                 shape = RoundedCornerShape(0.dp),
                                 modifier = Modifier.fillMaxWidth(),
                                 backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .clickable {
-                                            val b = chapters.fastAny { it.url == c.url }
-                                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
-                                                .let {
-                                                    Completable.mergeArray(
-                                                        if (!b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                                        if (!b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                                    )
-                                                }
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .subscribe {}
-                                                .addTo(disposable)
-                                        }
-                                        .padding(horizontal = 4.dp)
-                                ) {
-                                    Checkbox(
-                                        checked = chapters.fastAny { it.url == c.url },
-                                        onCheckedChange = { b ->
-                                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
-                                                .let {
-                                                    Completable.mergeArray(
-                                                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                                    )
-                                                }
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .subscribe {}
-                                                .addTo(disposable)
-                                        },
-                                        colors = CheckboxDefaults.colors(
-                                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                ?: MaterialTheme.colors.secondary,
-                                            uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                ?: MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+                                ListItem(
+                                    modifier = Modifier.padding(horizontal = 4.dp),
+                                    text = {
+                                        Text(
+                                            c.name,
+                                            color = swatchInfo.value
+                                                ?.bodyColor
+                                                ?.toComposeColor()
+                                                ?.animate()?.value ?: MaterialTheme.typography.subtitle1.color
                                         )
-                                    )
-
-                                    Text(
-                                        c.name,
-                                        style = MaterialTheme.typography.body1
-                                            .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
-                                        modifier = Modifier.padding(start = 5.dp)
-                                    )
-
-                                }
+                                    },
+                                    icon = {
+                                        Checkbox(
+                                            checked = chapters.fastAny { it.url == c.url },
+                                            onCheckedChange = { b -> markAs(b) },
+                                            colors = CheckboxDefaults.colors(
+                                                checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                    ?: MaterialTheme.colors.secondary,
+                                                uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                    ?: MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                                checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
+                                                    ?: MaterialTheme.colors.surface
+                                            )
+                                        )
+                                    }
+                                )
                             }
                         }
                     }
@@ -447,9 +443,11 @@ class DetailsFragment : Fragment() {
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, info.url)
                                     putExtra(Intent.EXTRA_TITLE, info.title)
-                                }, "Share ${info.title}"))
+                                }, getString(R.string.share_item, info.title)))
                             }
                         ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
 
                         IconButton(onClick = { showDropDown = true }) {
                             Icon(Icons.Default.MoreVert, null, tint = topBarColor)
@@ -620,37 +618,25 @@ class DetailsFragment : Fragment() {
             backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.clickable {
-                        val b = read.fastAny { it.url == c.url }
-                        ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                            .let {
-                                Completable.mergeArray(
-                                    if (!b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                    if (!b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                )
-                            }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe { snackbar(if (!b) R.string.addedChapterItem else R.string.removedChapterItem) }
-                            .addTo(disposable)
-                    }
-                ) {
+
+                fun markAs(b: Boolean) {
+                    ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                        .let {
+                            Completable.mergeArray(
+                                if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                            )
+                        }
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
+                        .addTo(disposable)
+                }
+
+                Row(modifier = Modifier.clickable { markAs(!read.fastAny { it.url == c.url }) }) {
                     Checkbox(
                         checked = read.fastAny { it.url == c.url },
-                        onCheckedChange = { b ->
-                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                                .let {
-                                    Completable.mergeArray(
-                                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                    )
-                                }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
-                                .addTo(disposable)
-                        },
+                        onCheckedChange = { b -> markAs(b) },
                         colors = CheckboxDefaults.colors(
                             checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.secondary,
                             uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
@@ -716,7 +702,7 @@ class DetailsFragment : Fragment() {
 
                     if (infoModel.source.canDownload) {
                         OutlinedButton(
-                            onClick = { genericInfo.downloadChapter(c, infoModel.title) },
+                            onClick = { genericInfo.downloadChapter(c, infoModel) },
                             modifier = Modifier
                                 .weight(1f, true)
                                 .padding(horizontal = 5.dp),
@@ -844,12 +830,24 @@ class DetailsFragment : Fragment() {
 
                 Column(
                     modifier = Modifier.padding(start = 5.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
 
                     Text(
                         model.source.serviceName,
                         style = MaterialTheme.typography.overline
+                    )
+
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+
+                    Text(
+                        model.title,
+                        style = MaterialTheme.typography.subtitle1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { descriptionVisibility = !descriptionVisibility },
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                     )
 
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {

@@ -5,9 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -20,12 +18,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
@@ -62,6 +64,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
+import kotlin.collections.set
+
 
 val appModule = module {
     single<GenericInfo> { GenericAnime(get()) }
@@ -77,7 +81,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
 
-    override fun downloadChapter(chapterModel: ChapterModel, title: String) {
+    override fun downloadChapter(chapterModel: ChapterModel, infoModel: InfoModel) {
         if ((chapterModel.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, chapterModel.source.serviceName), Toast.LENGTH_SHORT).show()
             return
@@ -103,15 +107,25 @@ class GenericAnime(val context: Context) : GenericInfo {
                         title = context.getString(R.string.choose_quality_for, chapterModel.name),
                         list = c,
                         onClick = {
-                            MainActivity.activity.runOnUiThread {
-                                MainActivity.activity.startActivity(
-                                    Intent(context, VideoPlayerActivity::class.java).apply {
-                                        putExtra("showPath", it.link)
-                                        putExtra("showName", chapterModel.name)
-                                        putExtra("referer", it.headers["referer"])
-                                        putExtra("downloadOrStream", false)
-                                    }
+                            if (MainActivity.cast.isCastActive()) {
+                                MainActivity.cast.loadUrl(
+                                    it.link,
+                                    infoModel.title,
+                                    chapterModel.name,
+                                    infoModel.imageUrl,
+                                    it.headers
                                 )
+                            } else {
+                                MainActivity.activity.runOnUiThread {
+                                    MainActivity.activity.startActivity(
+                                        Intent(context, VideoPlayerActivity::class.java).apply {
+                                            putExtra("showPath", it.link)
+                                            putExtra("showName", chapterModel.name)
+                                            putExtra("referer", it.headers["referer"])
+                                            putExtra("downloadOrStream", false)
+                                        }
+                                    )
+                                }
                             }
                         }
                     ) {
@@ -427,6 +441,29 @@ class GenericAnime(val context: Context) : GenericInfo {
 
         }
 
+    }
+
+    @OptIn(ExperimentalAnimationApi::class)
+    @Composable
+    override fun DetailActions(infoModel: InfoModel, tint: Color) {
+        val showCast by MainActivity.cast.sessionConnected()
+            .subscribeAsState(initial = true)
+
+        AnimatedVisibility(
+            visible = showCast,
+            enter = fadeIn() + expandHorizontally(),
+            exit = fadeOut() + shrinkHorizontally()
+        ) {
+            AndroidView(
+                modifier = Modifier.animateContentSize(),
+                factory = { context ->
+                    MediaRouteButton(context).apply {
+                        MainActivity.cast.showIntroductoryOverlay(this)
+                        MainActivity.cast.setMediaRouteMenu(context, this)
+                    }
+                }
+            )
+        }
     }
 
     @ExperimentalMaterialApi

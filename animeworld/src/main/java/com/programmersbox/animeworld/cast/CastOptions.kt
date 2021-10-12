@@ -9,11 +9,12 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Environment
-import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.core.view.isVisible
 import androidx.mediarouter.app.MediaRouteButton
+import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.gms.cast.*
 import com.google.android.gms.cast.framework.*
 import com.google.android.gms.cast.framework.CastOptions
@@ -23,6 +24,7 @@ import com.google.android.gms.cast.framework.media.RemoteMediaClient
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.images.WebImage
+import com.programmersbox.animeworld.R
 import io.github.dkbai.tinyhttpd.nanohttpd.webserver.SimpleWebServer
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -182,7 +184,7 @@ class CastHelper {
 
     /** Separate UI logic to avoid memory, use context from view */
     fun setMediaRouteMenu(context: Context, menu: Menu): MenuItem? =
-        CastButtonFactory.setUpMediaRouteButton(context, menu, com.programmersbox.animeworld.R.id.media_route_menu_item)
+        CastButtonFactory.setUpMediaRouteButton(context, menu, R.id.media_route_menu_item)
 
     fun setMediaRouteMenu(context: Context, button: MediaRouteButton) =
         CastButtonFactory.setUpMediaRouteButton(context, button)
@@ -245,6 +247,47 @@ class CastHelper {
                     .build()
             )
         }
+    }
+
+    fun loadUrl(
+        mediaUrl: String?,
+        title: String,
+        name: String,
+        poster: String?,
+        headers: Map<String, String>
+    ) {
+        if (mediaUrl == null) return
+        /** Generate movie meta data */
+        val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE)
+        movieMetadata.putString(MediaMetadata.KEY_TITLE, title)
+        movieMetadata.putString(MediaMetadata.KEY_SUBTITLE, name)
+        movieMetadata.addImage(WebImage(Uri.parse(poster)))
+        //movieMetadata.addImage(WebImage(Uri.parse(remoteImageFileName)))
+
+        val mediaInfo = MediaInfo.Builder(mediaUrl)
+            .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+            .setContentType(MimeTypes.VIDEO_UNKNOWN)
+            .setMetadata(movieMetadata)
+            .build()
+
+        val remoteMediaClient = mCastSession?.remoteMediaClient ?: return
+
+        remoteMediaClient.registerCallback(object : RemoteMediaClient.Callback() {
+            override fun onStatusUpdated() {
+                /** When media loaded we will start the fullscreen player activity. */
+                val intent = Intent(mApplicationContext, ExpandedControlsActivity::class.java)
+                mActivity.get()?.startActivity(intent)
+                remoteMediaClient.unregisterCallback(this)
+            }
+        })
+
+        remoteMediaClient.load(
+            MediaLoadRequestData.Builder()
+                .setMediaInfo(mediaInfo)
+                .setAutoplay(true)
+                .setCurrentTime(0L)
+                .build()
+        )
     }
 
     fun stopCast() {
@@ -320,20 +363,18 @@ class CastHelper {
         }
     }
 
-    fun showIntroductoryOverlay(mediaRouteMenuItem: MenuItem?) {
+    fun showIntroductoryOverlay(mediaRouteMenuItem: MediaRouteButton?) {
         mIntroductoryOverlay?.remove()
 
         if (mediaRouteMenuItem != null && mediaRouteMenuItem.isVisible)
-            Handler().post {
-                mIntroductoryOverlay = IntroductoryOverlay.Builder(
-                    mActivity.get(), mediaRouteMenuItem
-                )
-                    .setTitleText("Cast")
-                    .setSingleTime()
-                    .setOnOverlayDismissedListener { mIntroductoryOverlay = null }
-                    .build()
-                mIntroductoryOverlay?.show()
-            }
+            mIntroductoryOverlay = IntroductoryOverlay.Builder(
+                mActivity.get(), mediaRouteMenuItem
+            )
+                .setTitleText(R.string.castIntro)
+                .setSingleTime()
+                .setOnOverlayDismissedListener { mIntroductoryOverlay = null }
+                .build()
+        mIntroductoryOverlay?.show()
     }
 }
 
