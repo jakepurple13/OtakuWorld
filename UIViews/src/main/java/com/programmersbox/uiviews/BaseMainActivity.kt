@@ -24,7 +24,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected val disposable = CompositeDisposable()
 
-    private var currentNavController: LiveData<NavController>? = null
+    protected var currentNavController: LiveData<NavController>? = null
 
     protected val genericInfo: GenericInfo by inject()
 

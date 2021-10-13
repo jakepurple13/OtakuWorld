@@ -214,20 +214,8 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             onMultipleRemove = { downloadItems -> fetch.delete(downloadItems.fastMap { it.id }) },
             topBar = {
                 TopAppBar(
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                dismiss()
-                                try {
-                                    findNavController().popBackStack()
-                                } catch (e: IllegalStateException) {
-                                }
-                            }
-                        ) { Icon(Icons.Default.Close, null) }
-                    },
-                    actions = {
-                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
-                    },
+                    navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                    actions = { IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) } },
                     title = {
                         Text(
                             stringResource(id = R.string.in_progress_downloads),

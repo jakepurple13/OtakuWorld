@@ -128,16 +128,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             BottomSheetDeleteScaffold(
                 topBar = {
                     TopAppBar(
-                        navigationIcon = {
-                            IconButton(
-                                onClick = {
-                                    dismiss()
-                                    try {
-                                        findNavController().popBackStack()
-                                    } catch (e: IllegalStateException) {
-                                    }
-                                }) { Icon(Icons.Default.Close, null) }
-                        },
+                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                         title = { Text(stringResource(R.string.downloaded_videos)) },
                         actions = {
                             AndroidView(
