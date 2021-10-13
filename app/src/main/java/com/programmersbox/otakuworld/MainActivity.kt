@@ -139,37 +139,42 @@ class MainActivity : ComponentActivity() {
                 //CustomNestedScrollExample()
                 //ScaffoldNestedScrollExample()
 
-                SlideTo(
-                    slideColor = Color(0xFF0079D3),
-                    navigationIcon = {
-                        Icon(
-                            Icons.Filled.ArrowForward,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .rotate(it)
-                        )
-                    },
-                    endIcon = {
-                        Icon(
-                            Icons.Filled.Done,
-                            contentDescription = null,
-                        )
-                    },
-                    slideHeight = 60.dp,
-                    slideWidth = 300.dp,
-                    content = {
-                        Text(
-                            "Slide to Play Game!! $it",
-                            style = TextStyle(
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.W700
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SlideTo(
+                        slideColor = Color(0xFF0079D3),
+                        navigationIcon = {
+                            Icon(
+                                Icons.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .rotate(it)
                             )
-                        )
-                    },
-                    onSlideComplete = { runOnUiThread { Toast.makeText(this, "Completed!", Toast.LENGTH_SHORT).show() } }
-                )
+                        },
+                        endIcon = {
+                            Icon(
+                                Icons.Filled.Done,
+                                contentDescription = null,
+                            )
+                        },
+                        slideHeight = 60.dp,
+                        slideWidth = 300.dp,
+                        content = {
+                            Text(
+                                "Slide to Play Game!! $it",
+                                style = TextStyle(
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.W700
+                                )
+                            )
+                        },
+                        onSlideComplete = { runOnUiThread { Toast.makeText(this@MainActivity, "Completed!", Toast.LENGTH_SHORT).show() } }
+                    )
+                }
             }
         }
     }
@@ -848,6 +853,7 @@ fun SlideTo(
     slideHeight: Dp = 60.dp,
     slideWidth: Dp = 400.dp,
     slideColor: Color,
+    iconCircleColor: Color = contentColorFor(backgroundColor = slideColor),
     onSlideComplete: suspend () -> Unit = {},
     navigationIcon: @Composable (progress: Float) -> Unit,
     navigationIconPadding: Dp = 0.dp,
@@ -870,7 +876,9 @@ fun SlideTo(
     }
 
     val contentAlpha by animateFloatAsState(
-        targetValue = if (swipeableState.offset.value != 0f) (1 - swipeableState.progress.fraction) else 1f
+        targetValue = if (swipeableState.offset.value != 0f && swipeableState.offset.value > 0f)
+            (1 - swipeableState.progress.fraction)
+        else 1f
     )
 
     val iconSizeAnimation by animateDpAsState(targetValue = flag, tween(250))
@@ -887,56 +895,59 @@ fun SlideTo(
             tween(250, easing = LinearEasing, delayMillis = 1000)
         )
     ) {
-        Surface(
-            shape = CircleShape,
-            modifier = modifier
-                .height(slideHeight)
-                .width(width),
-            color = slideColor,
-            elevation = elevation
-        ) {
-            Box(
-                modifier = Modifier.padding(5.dp),
-                contentAlignment = Alignment.Center
+        Box(contentAlignment = Alignment.Center) {
+            Surface(
+                shape = CircleShape,
+                modifier = modifier
+                    .height(slideHeight)
+                    .width(width),
+                color = slideColor,
+                elevation = elevation
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .alpha(contentAlpha),
+                    modifier = Modifier.padding(5.dp),
                     contentAlignment = Alignment.Center
-                ) { content(swipeableState.offset.value) }
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Surface(
-                        shape = CircleShape,
+                    Box(
                         modifier = Modifier
-                            .size(iconSizeAnimation)
-                            .padding(navigationIconPadding)
-                            .swipeable(
-                                state = swipeableState,
-                                anchors = mapOf(
-                                    0f to SlideState.Start,
-                                    slideDistance to SlideState.End
-                                ),
-                                thresholds = { _, _ -> FractionalThreshold(0.9f) },
-                                orientation = Orientation.Horizontal
-                            )
-                            .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
-                    ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
-                }
-                AnimatedVisibility(visible = width == slideHeight) {
+                            .fillMaxSize()
+                            .alpha(contentAlpha),
+                        contentAlignment = Alignment.Center
+                    ) { content(swipeableState.offset.value) }
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.CenterStart
                     ) {
                         Surface(
-                            modifier = Modifier.size(iconSize),
-                            color = Color.Transparent
-                        ) { endIcon() }
+                            shape = CircleShape,
+                            color = iconCircleColor,
+                            modifier = Modifier
+                                .size(iconSizeAnimation)
+                                .padding(navigationIconPadding)
+                                .swipeable(
+                                    state = swipeableState,
+                                    anchors = mapOf(
+                                        0f to SlideState.Start,
+                                        slideDistance to SlideState.End
+                                    ),
+                                    thresholds = { _, _ -> FractionalThreshold(0.9f) },
+                                    orientation = Orientation.Horizontal
+                                )
+                                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
+                        ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
                     }
-                    LaunchedEffect(key1 = Unit) { onSlideComplete() }
+                    AnimatedVisibility(visible = width == slideHeight) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(iconSize),
+                                color = Color.Transparent
+                            ) { endIcon() }
+                        }
+                        LaunchedEffect(key1 = Unit) { onSlideComplete() }
+                    }
                 }
             }
         }

@@ -16,6 +16,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
@@ -300,57 +301,62 @@ fun SlideTo(
             tween(250, easing = LinearEasing, delayMillis = 1000)
         )
     ) {
-        Surface(
-            shape = CircleShape,
-            modifier = modifier
-                .height(slideHeight)
-                .width(width),
-            color = slideColor,
-            elevation = elevation
-        ) {
-            Box(
-                modifier = Modifier.padding(5.dp),
-                contentAlignment = Alignment.Center
+        Box(contentAlignment = Alignment.Center) {
+            Surface(
+                shape = CircleShape,
+                modifier = modifier
+                    .height(slideHeight)
+                    .width(width),
+                color = slideColor,
+                elevation = elevation
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .alpha(contentAlpha),
+                    modifier = Modifier.padding(5.dp),
                     contentAlignment = Alignment.Center
-                ) { content(swipeableState.offset.value) }
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = iconCircleColor,
+                    Box(
                         modifier = Modifier
-                            .size(iconSizeAnimation)
-                            .padding(navigationIconPadding)
-                            .swipeable(
-                                state = swipeableState,
-                                anchors = mapOf(
-                                    0f to SlideState.Start,
-                                    slideDistance to SlideState.End
-                                ),
-                                thresholds = { _, _ -> FractionalThreshold(0.9f) },
-                                orientation = Orientation.Horizontal
-                            )
-                            .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
-                    ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
-                }
-                AnimatedVisibility(visible = width == slideHeight) {
+                            .fillMaxSize()
+                            .alpha(contentAlpha),
+                        contentAlignment = Alignment.Center
+                    ) { content(swipeableState.offset.value) }
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.CenterStart
                     ) {
                         Surface(
-                            modifier = Modifier.size(iconSize),
-                            color = Color.Transparent
-                        ) { endIcon() }
+                            shape = CircleShape,
+                            color = iconCircleColor,
+                            modifier = Modifier
+                                .size(iconSizeAnimation)
+                                .padding(navigationIconPadding)
+                                .swipeable(
+                                    state = swipeableState,
+                                    anchors = mapOf(
+                                        0f to SlideState.Start,
+                                        slideDistance to SlideState.End
+                                    ),
+                                    thresholds = { _, _ -> FractionalThreshold(0.9f) },
+                                    orientation = Orientation.Horizontal
+                                )
+                                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
+                        ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
                     }
-                    LaunchedEffect(key1 = Unit) { onSlideComplete() }
+                    AnimatedVisibility(
+                        visible = width == slideHeight,
+                        enter = expandIn()
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(iconSize),
+                                color = Color.Transparent
+                            ) { endIcon() }
+                        }
+                        LaunchedEffect(key1 = Unit) { onSlideComplete() }
+                    }
                 }
             }
         }

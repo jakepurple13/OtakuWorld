@@ -49,7 +49,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -442,8 +441,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             contentScale = ContentScale.Crop,
                             requestBuilder = Glide.with(LocalView.current)
                                 .asDrawable()
-                                .thumbnail(0.5f)
-                                .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                                .thumbnail(0.5f),//.transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .size(
