@@ -370,7 +370,6 @@ fun CoverCard(
         indication = rememberRipple(),
         onClickLabel = name,
     ) {
-
         Box {
             GlideImage(
                 imageModel = imageUrl,
