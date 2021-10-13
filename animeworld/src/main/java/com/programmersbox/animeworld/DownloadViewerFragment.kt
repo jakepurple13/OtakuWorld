@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -50,7 +49,6 @@ import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.currentScreen
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.Extras
-import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import kotlin.random.Random
@@ -63,7 +61,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     }
 
     private val fetch: Fetch = Fetch.getDefaultInstance()
-    private val downloadSubject = BehaviorSubject.createDefault<List<DownloadData>>(emptyList())
+    private val downloadState = mutableStateListOf<DownloadData>()
 
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
@@ -80,7 +78,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         fetch.getDownloads { downloads ->
             val list = ArrayList(downloads)
             list.sortWith { first, second -> first.created.compareTo(second.created) }
-            downloadSubject.onNext(list.fastMap { DownloadData(it) })
+            downloadState.addAll(list.fastMap { DownloadData(it) })
         }.addListener(fetchListener)
     }
 
@@ -95,27 +93,25 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         downloadPs: Long = UNKNOWN_DOWNLOADED_BYTES_PER_SECOND,
         addOrRemove: Boolean = true
     ) {
-        val downloads = downloadSubject.value.orEmpty().toMutableList()
-        val d = downloads.withIndex().find { it.value.id == download.id }
+        val d = downloadState.withIndex().find { it.value.id == download.id }
 
         if (addOrRemove) {
-
             val item = DownloadData(download).apply {
                 eta = etaTime
                 downloadedBytesPerSecond = downloadPs
             }
 
             if (d == null) {
-                downloads.add(item)
+                downloadState.add(item)
             } else {
-                downloads[d.index] = item
+                downloadState.remove(d.value)
+                downloadState.add(d.index, item)
             }
         } else {
             if (download.status == Status.REMOVED || download.status == Status.DELETED) {
-                downloads.removeAt(d!!.index)
+                downloadState.removeAt(d!!.index)
             }
         }
-        downloadSubject.onNext(downloads)
     }
 
     private val fetchListener = object : AbstractFetchListener() {
@@ -152,16 +148,16 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         override fun onRemoved(download: Download) {
             //updateUI(download)
-            val downloads = downloadSubject.value.orEmpty().toMutableList()
-            downloads.removeAll { it.id == download.id }
-            downloadSubject.onNext(downloads)
+            //val downloads = downloadSubject.value.orEmpty().toMutableList()
+            downloadState.removeAll { it.id == download.id }
+            //downloadSubject.onNext(downloads)
         }
 
         override fun onDeleted(download: Download) {
             //updateUI(download)
-            val downloads = downloadSubject.value.orEmpty().toMutableList()
-            downloads.removeAll { it.id == download.id }
-            downloadSubject.onNext(downloads)
+            //val downloads = downloadSubject.value.orEmpty().toMutableList()
+            downloadState.removeAll { it.id == download.id }
+            //downloadSubject.onNext(downloads)
             context?.notificationManager?.cancel(download.id)
         }
     }
@@ -189,7 +185,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         val state = rememberBottomSheetScaffoldState()
         val scope = rememberCoroutineScope()
-        val downloads by downloadSubject.subscribeAsState(initial = emptyList())
 
         BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
             scope.launch { state.bottomSheetState.collapse() }
@@ -202,7 +197,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         BottomSheetDeleteScaffold(
             state = state,
-            listOfItems = downloads,
+            listOfItems = downloadState,
             multipleTitle = stringResource(id = R.string.delete),
             onRemove = { download ->
                 itemToDelete = download
@@ -213,7 +208,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                 showDialog.value = true
                 false
             },
-            onMultipleRemove = { downloadItems -> fetch.delete(downloadItems.map { it.id }) },
+            onMultipleRemove = { downloadItems -> fetch.delete(downloadItems.fastMap { it.id }) },
             topBar = {
                 TopAppBar(
                     actions = {
@@ -246,14 +241,14 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                 }
             }
         ) {
-            if (downloads.isEmpty()) {
+            if (downloadState.isEmpty()) {
                 EmptyState()
             } else {
                 LazyColumn(
                     modifier = Modifier.padding(top = 5.dp),
                     contentPadding = it,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) { items(downloads) { d -> DownloadItem(d, this@DownloadViewerFragment) } }
+                ) { items(downloadState) { d -> DownloadItem(d, this@DownloadViewerFragment) } }
             }
         }
     }
@@ -261,7 +256,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     @Composable
     private fun EmptyState() {
         Box(modifier = Modifier.fillMaxSize()) {
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -269,9 +263,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                 elevation = 5.dp,
                 shape = RoundedCornerShape(5.dp)
             ) {
-
                 Column(modifier = Modifier) {
-
                     Text(
                         text = stringResource(id = R.string.get_started),
                         style = MaterialTheme.typography.h4,
@@ -298,9 +290,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                             style = MaterialTheme.typography.button
                         )
                     }
-
                 }
-
             }
         }
     }
@@ -591,7 +581,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             }
         }
 
-        downloadSubject.onNext(list)
+        downloadState.addAll(list)
     }
 
 }

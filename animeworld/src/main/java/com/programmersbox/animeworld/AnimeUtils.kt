@@ -264,7 +264,7 @@ fun SlideTo(
     navigationIcon: @Composable (progress: Float) -> Unit,
     navigationIconPadding: Dp = 0.dp,
     endIcon: @Composable () -> Unit,
-    widthAnimationMillis: Int = 500,
+    widthAnimationMillis: Int = 300,
     elevation: Dp = 0.dp,
     content: @Composable (Float) -> Unit = {}
 ) {
