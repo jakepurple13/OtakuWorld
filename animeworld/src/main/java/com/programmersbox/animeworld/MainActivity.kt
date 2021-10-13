@@ -8,6 +8,7 @@ import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
 
 class MainActivity : BaseMainActivity() {
@@ -43,11 +44,15 @@ class MainActivity : BaseMainActivity() {
     }
 
     private fun openDownloads() {
-        DownloadViewerFragment().show(activity.supportFragmentManager, "downloadViewer")
+        goToScreen(Screen.SETTINGS)
+        currentNavController?.value
+            ?.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
     }
 
     private fun openVideos() {
-        ViewVideosFragment().show(activity.supportFragmentManager, "videoViewer")
+        goToScreen(Screen.SETTINGS)
+        currentNavController?.value
+            ?.navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
     }
 
 }

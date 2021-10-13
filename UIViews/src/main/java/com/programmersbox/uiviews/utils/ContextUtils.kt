@@ -15,6 +15,7 @@ import android.text.util.Linkify
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
@@ -35,10 +36,12 @@ import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.helpfulutils.sharedPrefDelegate
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.R
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -289,3 +292,5 @@ class BatteryInformation(val context: Context) {
     }
 
 }
+
+fun Context.showErrorToast() = runOnUIThread { Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }

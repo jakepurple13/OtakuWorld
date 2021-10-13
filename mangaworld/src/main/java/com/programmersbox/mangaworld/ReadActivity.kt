@@ -142,7 +142,6 @@ class ReadActivityCompose : ComponentActivity() {
     private val title by lazy { intent.getStringExtra("mangaTitle") ?: "" }
 
     private var batteryInfo: BroadcastReceiver? = null
-    private var timeInfo: BroadcastReceiver? = null
 
     private val batteryInformation by lazy { BatteryInformation(this) }
 
@@ -192,9 +191,7 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val pages = pageList
 
-                //LaunchedEffect(pages) {
                 BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
-                //}
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -343,14 +340,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                             onClick = {
                                                                 showChangeChapter = false
                                                                 currentChapter = i
-                                                                loadPages(
-                                                                    list.getOrNull(currentChapter)
-                                                                        ?.getChapterInfo()
-                                                                        ?.map { it.mapNotNull(Storage::link) }
-                                                                        ?.subscribeOn(Schedulers.io())
-                                                                        ?.observeOn(AndroidSchedulers.mainThread()),
-                                                                    swipeState
-                                                                )
+                                                                addChapterToWatched(currentChapter, ::showToast)
                                                             }
                                                         ) { Text(stringResource(R.string.yes)) }
                                                     },
@@ -413,8 +403,7 @@ class ReadActivityCompose : ComponentActivity() {
                                         ?.getChapterInfo()
                                         ?.map { it.mapNotNull(Storage::link) }
                                         ?.subscribeOn(Schedulers.io())
-                                        ?.observeOn(AndroidSchedulers.mainThread()),
-                                    swipeState
+                                        ?.observeOn(AndroidSchedulers.mainThread())
                                 )
                             },
                             modifier = Modifier.padding(p)
@@ -668,7 +657,7 @@ class ReadActivityCompose : ComponentActivity() {
         }
     }
 
-    private fun loadPages(modelPath: Single<List<String>>?, swipeRefreshState: SwipeRefreshState? = null) {
+    private fun loadPages(modelPath: Single<List<String>>?) {
         if (isDownloaded && filePath != null) {
             Single.create<List<String>> {
                 filePath

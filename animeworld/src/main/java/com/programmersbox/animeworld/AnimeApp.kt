@@ -50,9 +50,12 @@ class AnimeApp : OtakuApp() {
 
         Fetch.getDefaultInstance().addListener(
             object : AbstractFetchListener() {
-                override fun onQueued(download: Download, waitingOnNetwork: Boolean) {
 
-                }
+                override fun onQueued(download: Download, waitingOnNetwork: Boolean) {}
+                override fun onProgress(download: Download, etaInMilliSeconds: Long, downloadedBytesPerSecond: Long) {}
+                override fun onPaused(download: Download) {}
+                override fun onResumed(download: Download) {}
+                override fun onRemoved(download: Download) {}
 
                 override fun onCompleted(download: Download) {
                     sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(File(download.file))))
@@ -60,28 +63,15 @@ class AnimeApp : OtakuApp() {
                     Fetch.getDefaultInstance().remove(download.id)
                 }
 
-
-                override fun onProgress(download: Download, etaInMilliSeconds: Long, downloadedBytesPerSecond: Long) {
-                }
-
-                override fun onPaused(download: Download) {
-                }
-
-                override fun onResumed(download: Download) {
-                }
-
                 override fun onCancelled(download: Download) {
                     notificationManager.cancel(download.id)
                     try {
                         deleteFile(download.file, this@AnimeApp)
                     } catch (e: IllegalArgumentException) {
-                        Loged.w(e.message!!)//e.printStackTrace()
+                        Loged.w(e.message)//e.printStackTrace()
                     } catch (e: java.lang.NullPointerException) {
-                        Loged.w(e.message!!)//e.printStackTrace()
+                        Loged.w(e.message)//e.printStackTrace()
                     }
-                }
-
-                override fun onRemoved(download: Download) {
                 }
 
                 override fun onDeleted(download: Download) {
@@ -89,9 +79,9 @@ class AnimeApp : OtakuApp() {
                     try {
                         deleteFile(download.file, this@AnimeApp)
                     } catch (e: IllegalArgumentException) {
-                        Loged.w(e.message!!)//e.printStackTrace()
+                        Loged.w(e.message)//e.printStackTrace()
                     } catch (e: java.lang.NullPointerException) {
-                        Loged.w(e.message!!)//e.printStackTrace()
+                        Loged.w(e.message)//e.printStackTrace()
                     }
                 }
             }

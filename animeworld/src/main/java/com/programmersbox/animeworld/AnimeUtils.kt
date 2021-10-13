@@ -10,11 +10,33 @@ import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.provider.MediaStore
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 
 var Context.folderLocation: String by sharedPrefNotNullDelegate(
@@ -225,4 +247,118 @@ class VideoGet private constructor(private val videoContex: Context) {
         }
     }
 
+}
+
+enum class SlideState { Start, End }
+
+@ExperimentalAnimationApi
+@ExperimentalMaterialApi
+@Composable
+fun SlideTo(
+    modifier: Modifier = Modifier,
+    slideHeight: Dp = 60.dp,
+    slideWidth: Dp = 400.dp,
+    slideColor: Color,
+    iconCircleColor: Color = contentColorFor(backgroundColor = slideColor),
+    onSlideComplete: suspend () -> Unit = {},
+    navigationIcon: @Composable (progress: Float) -> Unit,
+    navigationIconPadding: Dp = 0.dp,
+    endIcon: @Composable () -> Unit,
+    widthAnimationMillis: Int = 300,
+    elevation: Dp = 0.dp,
+    content: @Composable (Float) -> Unit = {}
+) {
+
+    val iconSize = slideHeight - 10.dp
+
+    val slideDistance = with(LocalDensity.current) { (slideWidth - iconSize - 15.dp).toPx() }
+
+    val swipeableState = rememberSwipeableState(initialValue = SlideState.Start)
+
+    var flag by remember { mutableStateOf(iconSize) }
+
+    if (swipeableState.currentValue == SlideState.End) {
+        flag = 0.dp
+    }
+
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (swipeableState.offset.value != 0f && swipeableState.offset.value > 0f)
+            (1 - swipeableState.progress.fraction)
+        else 1f
+    )
+
+    val iconSizeAnimation by animateDpAsState(targetValue = flag, tween(250))
+
+    val width by animateDpAsState(
+        targetValue = if (iconSizeAnimation == 0.dp) slideHeight else slideWidth,
+        tween(widthAnimationMillis)
+    )
+
+    AnimatedVisibility(
+        visible = width != slideHeight,
+        exit = fadeOut(
+            targetAlpha = 0f,
+            tween(250, easing = LinearEasing, delayMillis = 1000)
+        )
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Surface(
+                shape = CircleShape,
+                modifier = modifier
+                    .height(slideHeight)
+                    .width(width),
+                color = slideColor,
+                elevation = elevation
+            ) {
+                Box(
+                    modifier = Modifier.padding(5.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .alpha(contentAlpha),
+                        contentAlignment = Alignment.Center
+                    ) { content(swipeableState.offset.value) }
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = iconCircleColor,
+                            modifier = Modifier
+                                .size(iconSizeAnimation)
+                                .padding(navigationIconPadding)
+                                .swipeable(
+                                    state = swipeableState,
+                                    anchors = mapOf(
+                                        0f to SlideState.Start,
+                                        slideDistance to SlideState.End
+                                    ),
+                                    thresholds = { _, _ -> FractionalThreshold(0.9f) },
+                                    orientation = Orientation.Horizontal
+                                )
+                                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
+                        ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
+                    }
+                    AnimatedVisibility(
+                        visible = width == slideHeight,
+                        enter = expandIn()
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(iconSize),
+                                color = Color.Transparent
+                            ) { endIcon() }
+                        }
+                        LaunchedEffect(key1 = Unit) { onSlideComplete() }
+                    }
+                }
+            }
+        }
+    }
 }

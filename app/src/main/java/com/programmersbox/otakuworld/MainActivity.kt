@@ -1,17 +1,20 @@
 package com.programmersbox.otakuworld
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -32,10 +35,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastAny
 import com.bumptech.glide.Glide
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -61,6 +67,7 @@ class MainActivity : ComponentActivity() {
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
 
+    @ExperimentalAnimationApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,7 +137,44 @@ class MainActivity : ComponentActivity() {
 
                 //NestedScrollExample()
                 //CustomNestedScrollExample()
-                ScaffoldNestedScrollExample()
+                //ScaffoldNestedScrollExample()
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SlideTo(
+                        slideColor = Color(0xFF0079D3),
+                        navigationIcon = {
+                            Icon(
+                                Icons.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .rotate(it)
+                            )
+                        },
+                        endIcon = {
+                            Icon(
+                                Icons.Filled.Done,
+                                contentDescription = null,
+                            )
+                        },
+                        slideHeight = 60.dp,
+                        slideWidth = 300.dp,
+                        content = {
+                            Text(
+                                "Slide to Play Game!! $it",
+                                style = TextStyle(
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.W700
+                                )
+                            )
+                        },
+                        onSlideComplete = { runOnUiThread { Toast.makeText(this@MainActivity, "Completed!", Toast.LENGTH_SHORT).show() } }
+                    )
+                }
             }
         }
     }
@@ -371,6 +415,7 @@ fun MaterialCardPreview() {
         modifier = Modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+
         MaterialCard(
             supportingText = supportingText,
             header = {
@@ -797,3 +842,114 @@ class CoordinatorModel1(
 
 @Composable
 fun TestData() = Column { repeat(10) { Text("Hello $it") } }
+
+enum class SlideState { Start, End }
+
+@ExperimentalAnimationApi
+@ExperimentalMaterialApi
+@Composable
+fun SlideTo(
+    modifier: Modifier = Modifier,
+    slideHeight: Dp = 60.dp,
+    slideWidth: Dp = 400.dp,
+    slideColor: Color,
+    iconCircleColor: Color = contentColorFor(backgroundColor = slideColor),
+    onSlideComplete: suspend () -> Unit = {},
+    navigationIcon: @Composable (progress: Float) -> Unit,
+    navigationIconPadding: Dp = 0.dp,
+    endIcon: @Composable () -> Unit,
+    widthAnimationMillis: Int = 500,
+    elevation: Dp = 0.dp,
+    content: @Composable (Float) -> Unit = {}
+) {
+
+    val iconSize = slideHeight - 10.dp
+
+    val slideDistance = with(LocalDensity.current) { (slideWidth - iconSize - 15.dp).toPx() }
+
+    val swipeableState = rememberSwipeableState(initialValue = SlideState.Start)
+
+    var flag by remember { mutableStateOf(iconSize) }
+
+    if (swipeableState.currentValue == SlideState.End) {
+        flag = 0.dp
+    }
+
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (swipeableState.offset.value != 0f && swipeableState.offset.value > 0f)
+            (1 - swipeableState.progress.fraction)
+        else 1f
+    )
+
+    val iconSizeAnimation by animateDpAsState(targetValue = flag, tween(250))
+
+    val width by animateDpAsState(
+        targetValue = if (iconSizeAnimation == 0.dp) slideHeight else slideWidth,
+        tween(widthAnimationMillis)
+    )
+
+    AnimatedVisibility(
+        visible = width != slideHeight,
+        exit = fadeOut(
+            targetAlpha = 0f,
+            tween(250, easing = LinearEasing, delayMillis = 1000)
+        )
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Surface(
+                shape = CircleShape,
+                modifier = modifier
+                    .height(slideHeight)
+                    .width(width),
+                color = slideColor,
+                elevation = elevation
+            ) {
+                Box(
+                    modifier = Modifier.padding(5.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .alpha(contentAlpha),
+                        contentAlignment = Alignment.Center
+                    ) { content(swipeableState.offset.value) }
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = iconCircleColor,
+                            modifier = Modifier
+                                .size(iconSizeAnimation)
+                                .padding(navigationIconPadding)
+                                .swipeable(
+                                    state = swipeableState,
+                                    anchors = mapOf(
+                                        0f to SlideState.Start,
+                                        slideDistance to SlideState.End
+                                    ),
+                                    thresholds = { _, _ -> FractionalThreshold(0.9f) },
+                                    orientation = Orientation.Horizontal
+                                )
+                                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
+                        ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
+                    }
+                    AnimatedVisibility(visible = width == slideHeight) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(iconSize),
+                                color = Color.Transparent
+                            ) { endIcon() }
+                        }
+                        LaunchedEffect(key1 = Unit) { onSlideComplete() }
+                    }
+                }
+            }
+        }
+    }
+}

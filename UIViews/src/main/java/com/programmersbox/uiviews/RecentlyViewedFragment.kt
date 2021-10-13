@@ -38,6 +38,7 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.GroupButton
 import com.programmersbox.uiviews.utils.GroupButtonModel
+import com.programmersbox.uiviews.utils.showErrorToast
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -144,6 +145,7 @@ class RecentlyViewedFragment : Fragment() {
                                 ?.getSourceByUrl(it.url)
                                 ?.subscribeOn(Schedulers.io())
                                 ?.observeOn(AndroidSchedulers.mainThread())
+                                ?.doOnError { context?.showErrorToast() }
                                 ?.subscribeBy { m ->
                                     findNavController().navigate(RecentlyViewedFragmentDirections.actionRecentlyViewedFragmentToDetailsFragment(m))
                                 }

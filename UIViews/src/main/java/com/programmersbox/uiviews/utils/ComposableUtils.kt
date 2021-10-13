@@ -199,9 +199,7 @@ fun CustomChip(
     backgroundColor: Color = MaterialTheme.colors.surface
 ) {
     Surface(
-        modifier = Modifier
-            .padding(end = 8.dp, bottom = 8.dp)
-            .then(modifier),
+        modifier = Modifier.then(modifier),
         elevation = 8.dp,
         shape = RoundedCornerShape(16.dp),
         color = backgroundColor
@@ -518,7 +516,7 @@ fun <T> BottomSheetDeleteScaffold(
     customSingleRemoveDialog: (T) -> Boolean = { true },
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
-    mainView: @Composable (PaddingValues) -> Unit
+    mainView: @Composable (PaddingValues, List<T>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -621,7 +619,7 @@ fun <T> BottomSheetDeleteScaffold(
                 }
             }
         }
-    ) { mainView(it) }
+    ) { mainView(it, listOfItems) }
 }
 
 @ExperimentalMaterialApi
@@ -714,7 +712,6 @@ private fun <T> DeleteItemView(
                 animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
             ),
             onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
-            //backgroundColor = animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colors.surface).value
         ) { itemUi(item) }
     }
 

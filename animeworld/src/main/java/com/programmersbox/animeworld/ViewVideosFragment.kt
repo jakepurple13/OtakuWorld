@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.MoreVert
@@ -34,20 +35,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
+import androidx.mediarouter.app.MediaRouteButton
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.animeworld.databinding.FragmentViewVideosBinding
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.uiviews.BaseMainActivity
@@ -61,33 +65,17 @@ import java.util.concurrent.TimeUnit
 
 class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
-    private lateinit var binding: FragmentViewVideosBinding
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Inflate the layout for this fragment
-        binding = FragmentViewVideosBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
     private val disposable = CompositeDisposable()
 
     @ExperimentalPermissionsApi
-    @ExperimentalMaterialApi
-    @ExperimentalAnimationApi
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        MainActivity.cast.setMediaRouteMenu(requireContext(), binding.toolbarmenu.menu)
-        getStuff()
-    }
-
-    @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
-    private fun getStuff() {
-        binding.composeLayout.setContent {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+        setContent {
             MdcTheme {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     LaunchedEffect(Unit) {
@@ -129,16 +117,42 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             scope.launch { state.bottomSheetState.collapse() }
         }
 
+        var itemToDelete by remember { mutableStateOf<VideoContent?>(null) }
+        val showDialog = remember { mutableStateOf(false) }
+
+        itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, video = it) }
+
         if (items.isEmpty()) {
             EmptyState()
         } else {
             BottomSheetDeleteScaffold(
+                topBar = {
+                    TopAppBar(
+                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                        title = { Text(stringResource(R.string.downloaded_videos)) },
+                        actions = {
+                            AndroidView(
+                                factory = { context ->
+                                    MediaRouteButton(context).apply {
+                                        MainActivity.cast.showIntroductoryOverlay(this)
+                                        MainActivity.cast.setMediaRouteMenu(context, this)
+                                    }
+                                }
+                            )
+                            IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                        }
+                    )
+                },
                 state = state,
                 listOfItems = items,
                 multipleTitle = stringResource(id = R.string.delete),
-                onRemove = { context?.deleteDialog(it) {} },
+                onRemove = {
+                    itemToDelete = it
+                    showDialog.value = true
+                },
                 customSingleRemoveDialog = {
-                    context?.deleteDialog(it) {}
+                    itemToDelete = it
+                    showDialog.value = true
                     false
                 },
                 onMultipleRemove = { downloadedItems ->
@@ -165,7 +179,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     ListItem(
                         modifier = Modifier.padding(5.dp),
                         icon = {
-
                             Box {
 
                                 /*convert millis to appropriate time*/
@@ -225,13 +238,13 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         secondaryText = { Text(item.path.orEmpty()) }
                     )
                 }
-            ) {
-                Scaffold(modifier = Modifier.padding(it)) { p ->
-                    val videos by updateAnimatedItemsState(newList = items)
+            ) { p, itemList ->
+                Scaffold(modifier = Modifier.padding(p)) { p1 ->
+                    val videos by updateAnimatedItemsState(newList = itemList)
 
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(5.dp),
-                        contentPadding = p,
+                        contentPadding = p1,
                         state = rememberLazyListState(),
                         modifier = Modifier.padding(5.dp)
                     ) {
@@ -243,9 +256,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     }
                 }
             }
-
         }
-
     }
 
     @Composable
@@ -297,23 +308,35 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
     private fun VideoContentView(item: VideoContent) {
+        val showDialog = remember { mutableStateOf(false) }
+
+        SlideToDeleteDialog(showDialog = showDialog, video = item)
 
         val dismissState = rememberDismissState(
             confirmStateChange = {
                 if (it == DismissValue.DismissedToEnd) {
-                    context?.startActivity(
-                        Intent(context, VideoPlayerActivity::class.java).apply {
-                            putExtra("showPath", item.assetFileStringUri)
-                            putExtra("showName", item.videoName)
-                            putExtra("downloadOrStream", true)
-                            data = item.assetFileStringUri?.toUri()
-                        }
-                    )
+                    if (MainActivity.cast.isCastActive()) {
+                        MainActivity.cast.loadMedia(
+                            File(item.path!!),
+                            context?.getSharedPreferences("videos", Context.MODE_PRIVATE)?.getLong(item.assetFileStringUri, 0) ?: 0L,
+                            null, null
+                        )
+                    } else {
+                        context?.startActivity(
+                            Intent(context, VideoPlayerActivity::class.java).apply {
+                                putExtra("showPath", item.assetFileStringUri)
+                                putExtra("showName", item.videoName)
+                                putExtra("downloadOrStream", true)
+                                data = item.assetFileStringUri?.toUri()
+                            }
+                        )
+                    }
                 } else if (it == DismissValue.DismissedToStart) {
-                    context?.deleteDialog(item) {}
+                    showDialog.value = true
                 }
                 false
             }
@@ -374,16 +397,14 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                                 putExtra("showPath", item.assetFileStringUri)
                                 putExtra("showName", item.videoName)
                                 putExtra("downloadOrStream", true)
+                                data = item.assetFileStringUri?.toUri()
                             }
                         )
                     }
                 }
             ) {
-
                 Row {
-
                     Box {
-
                         /*convert millis to appropriate time*/
                         val runTimeString = remember {
                             val duration = item.videoDuration
@@ -409,8 +430,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             contentScale = ContentScale.Crop,
                             requestBuilder = Glide.with(LocalView.current)
                                 .asDrawable()
-                                .thumbnail(0.5f)
-                                .transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                                .thumbnail(0.5f),//.transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .size(
@@ -460,7 +480,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    context?.deleteDialog(item) {}
+                                    showDialog.value = true
                                 }
                             ) { Text(stringResource(R.string.remove)) }
                         }

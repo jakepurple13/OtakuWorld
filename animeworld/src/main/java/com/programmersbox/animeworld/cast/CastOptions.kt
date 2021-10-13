@@ -211,7 +211,6 @@ class CastHelper {
         val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE)
         movieMetadata.putString(MediaMetadata.KEY_TITLE, mediaFile.nameWithoutExtension)
         movieMetadata.addImage(WebImage(Uri.parse(remoteImageFileName)))
-        movieMetadata.addImage(WebImage(Uri.parse(remoteImageFileName)))
 
         buildSubtitle(srtFile) { mediaTracks ->
             val mediaInfo = MediaInfo.Builder(remoteFileName)

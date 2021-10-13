@@ -180,12 +180,12 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
                     )
                 }
             }
-        ) {
-            Scaffold(modifier = Modifier.padding(it)) { p ->
-                val f by updateAnimatedItemsState(newList = files)
+        ) { p, items ->
+            Scaffold(modifier = Modifier.padding(p)) { p1 ->
+                val f by updateAnimatedItemsState(newList = items)
 
                 if (files.isEmpty()) EmptyState()
-                else LazyColumn(contentPadding = p) {
+                else LazyColumn(contentPadding = p1) {
                     animatedItems(
                         f,
                         enterTransition = slideInHorizontally(),

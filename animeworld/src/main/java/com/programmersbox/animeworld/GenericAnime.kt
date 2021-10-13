@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.fragment.FragmentNavigator
@@ -60,9 +59,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import kotlin.collections.set
 
@@ -86,73 +82,28 @@ class GenericAnime(val context: Context) : GenericInfo {
             Toast.makeText(context, context.getString(R.string.source_no_stream, chapterModel.source.serviceName), Toast.LENGTH_SHORT).show()
             return
         }
-        MainActivity.activity.lifecycleScope.launch(Dispatchers.IO) {
-            val c = chapterModel.getChapterInfo().blockingGet()//.firstOrNull()
-            when {
-                c.size == 1 -> {
-                    MainActivity.activity.runOnUiThread {
-                        val link = c.firstOrNull()
-                        MainActivity.activity.startActivity(
-                            Intent(context, VideoPlayerActivity::class.java).apply {
-                                putExtra("showPath", link?.link)
-                                putExtra("showName", chapterModel.name)
-                                putExtra("referer", link?.headers?.get("referer"))
-                                putExtra("downloadOrStream", false)
-                            }
-                        )
+        getEpisodes(
+            R.string.source_no_stream,
+            chapterModel,
+            context
+        ) {
+            if (MainActivity.cast.isCastActive()) {
+                MainActivity.cast.loadUrl(
+                    it.link,
+                    infoModel.title,
+                    chapterModel.name,
+                    infoModel.imageUrl,
+                    it.headers
+                )
+            } else {
+                MainActivity.activity.startActivity(
+                    Intent(context, VideoPlayerActivity::class.java).apply {
+                        putExtra("showPath", it.link)
+                        putExtra("showName", chapterModel.name)
+                        putExtra("referer", it.headers["referer"])
+                        putExtra("downloadOrStream", false)
                     }
-                }
-                c.isNotEmpty() -> {
-                    ListBottomSheet(
-                        title = context.getString(R.string.choose_quality_for, chapterModel.name),
-                        list = c,
-                        onClick = {
-                            if (MainActivity.cast.isCastActive()) {
-                                MainActivity.cast.loadUrl(
-                                    it.link,
-                                    infoModel.title,
-                                    chapterModel.name,
-                                    infoModel.imageUrl,
-                                    it.headers
-                                )
-                            } else {
-                                MainActivity.activity.runOnUiThread {
-                                    MainActivity.activity.startActivity(
-                                        Intent(context, VideoPlayerActivity::class.java).apply {
-                                            putExtra("showPath", it.link)
-                                            putExtra("showName", chapterModel.name)
-                                            putExtra("referer", it.headers["referer"])
-                                            putExtra("downloadOrStream", false)
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    ) {
-                        ListBottomSheetItemModel(
-                            primaryText = it.quality.orEmpty(),
-                            icon = when (getQualityFromName(it.quality.orEmpty())) {
-                                Qualities.Unknown -> Icons.Default.DeviceUnknown
-                                Qualities.P360 -> Icons.Default._360
-                                Qualities.P480 -> Icons.Default._4mp
-                                Qualities.P720 -> Icons.Default._7mp
-                                Qualities.P1080 -> Icons.Default._10mp
-                                Qualities.P1440 -> Icons.Default._1k
-                                Qualities.P2160 -> Icons.Default._4k
-                                else -> Icons.Default.DeviceUnknown
-                            }
-                        )
-                    }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
-                }
-                else -> {
-                    runOnUIThread {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.source_no_stream, chapterModel.source.serviceName),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+                )
             }
         }
     }
@@ -171,52 +122,11 @@ class GenericAnime(val context: Context) : GenericInfo {
         MainActivity.activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
-
-                //DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
-
-                model.getChapterInfo()
-                    .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
-                    .onErrorReturnItem(emptyList())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeBy { c ->
-                        when {
-                            c.size == 1 -> {
-                                when (model.source) {
-                                    else -> GlobalScope.launch { fetchIt(model) }
-                                }
-                            }
-                            c.isNotEmpty() -> {
-                                ListBottomSheet(
-                                    title = context.getString(R.string.choose_quality_for, model.name),
-                                    list = c,
-                                    onClick = { fetchIt(it, model) }
-                                ) {
-                                    ListBottomSheetItemModel(
-                                        primaryText = it.quality.orEmpty(),
-                                        icon = when (getQualityFromName(it.quality.orEmpty())) {
-                                            Qualities.Unknown -> Icons.Default.DeviceUnknown
-                                            Qualities.P360 -> Icons.Default._360
-                                            Qualities.P480 -> Icons.Default._4mp
-                                            Qualities.P720 -> Icons.Default._7mp
-                                            Qualities.P1080 -> Icons.Default._10mp
-                                            Qualities.P1440 -> Icons.Default._1k
-                                            Qualities.P2160 -> Icons.Default._4k
-                                            else -> Icons.Default.DeviceUnknown
-                                        }
-                                    )
-                                }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
-                            }
-                            else -> {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.source_no_download, model.source.serviceName),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
-                    .addTo(disposable)
+                getEpisodes(
+                    R.string.source_no_download,
+                    model,
+                    context
+                ) { fetchIt(it, model) }
             }
         }
     }
@@ -258,48 +168,51 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    private fun fetchIt(ep: ChapterModel) {
-
-        try {
-
-            fetch.setGlobalNetworkType(NetworkType.ALL)
-
-            fun getNameFromUrl(url: String): String {
-                return Uri.parse(url).lastPathSegment?.let { if (it.isNotEmpty()) it else ep.name } ?: ep.name
+    private fun getEpisodes(
+        errorId: Int,
+        model: ChapterModel,
+        context: Context,
+        onAction: (Storage) -> Unit
+    ) {
+        model.getChapterInfo()
+            .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
+            .onErrorReturnItem(emptyList())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy { c ->
+                when {
+                    c.size == 1 -> {
+                        when (model.source) {
+                            else -> c.firstOrNull()?.let { onAction(it) }
+                        }
+                    }
+                    c.isNotEmpty() -> {
+                        ListBottomSheet(
+                            title = context.getString(R.string.choose_quality_for, model.name),
+                            list = c,
+                            onClick = { onAction(it) }
+                        ) {
+                            ListBottomSheetItemModel(
+                                primaryText = it.quality.orEmpty(),
+                                icon = when (getQualityFromName(it.quality.orEmpty())) {
+                                    Qualities.Unknown -> Icons.Default.DeviceUnknown
+                                    Qualities.P360 -> Icons.Default._360
+                                    Qualities.P480 -> Icons.Default._4mp
+                                    Qualities.P720 -> Icons.Default._7mp
+                                    Qualities.P1080 -> Icons.Default._10mp
+                                    Qualities.P1440 -> Icons.Default._1k
+                                    Qualities.P2160 -> Icons.Default._4k
+                                    else -> Icons.Default.DeviceUnknown
+                                }
+                            )
+                        }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
+                    }
+                    else -> {
+                        Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-
-            val requestList = arrayListOf<Request>()
-            val url = ep.getChapterInfo()
-                .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
-                .onErrorReturnItem(emptyList())
-                .blockingGet()
-
-            for (i in url) {
-
-                val filePath = context.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
-                val request = Request(i.link!!, filePath)
-                request.priority = Priority.HIGH
-                request.networkType = NetworkType.ALL
-                request.enqueueAction = EnqueueAction.REPLACE_EXISTING
-                request.extras.map.toProperties()["URL_INTENT"] = ep.url
-                request.extras.map.toProperties()["NAME_INTENT"] = ep.name
-
-                request.addHeader("Accept-Language", "en-US,en;q=0.5")
-                request.addHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
-                request.addHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                request.addHeader("Access-Control-Allow-Origin", "*")
-                request.addHeader("Referer", i.headers["referer"] ?: "http://thewebsite.com")
-                request.addHeader("Connection", "keep-alive")
-
-                i.headers.entries.forEach { request.headers[it.key] = it.value }
-
-                requestList.add(request)
-
-            }
-            fetch.enqueue(requestList) {}
-        } catch (e: Exception) {
-            MainActivity.activity.runOnUiThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
-        }
+            .addTo(disposable)
     }
 
     override fun sourceList(): List<ApiService> = Sources.values().toList()
@@ -367,7 +280,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
 
         preferenceScreen.generalSettings { _, it ->
-
             it.addPreference(
                 SwitchPreference(it.context).apply {
                     title = context.getString(R.string.wco_recent_title)
@@ -438,7 +350,6 @@ class GenericAnime(val context: Context) : GenericInfo {
                         className = ViewVideosFragment::class.java.name
                     }
                 )
-
         }
 
     }
@@ -481,7 +392,6 @@ class GenericAnime(val context: Context) : GenericInfo {
                             .fillMaxWidth()
                             .placeholder(true, highlight = PlaceholderHighlight.shimmer())
                     ) {
-
                         Icon(
                             Icons.Default.FavoriteBorder,
                             contentDescription = null,
@@ -545,5 +455,4 @@ class GenericAnime(val context: Context) : GenericInfo {
             }
         }
     }
-
 }

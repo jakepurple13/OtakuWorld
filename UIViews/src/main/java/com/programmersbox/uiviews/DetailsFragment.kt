@@ -133,7 +133,6 @@ class DetailsFragment : Fragment() {
                                             expanded = showDropDown,
                                             onDismissRequest = dropDownDismiss,
                                         ) {
-
                                             DropdownMenuItem(
                                                 onClick = {
                                                     dropDownDismiss()
@@ -168,6 +167,7 @@ class DetailsFragment : Fragment() {
                 }
             }
             ?.toInfoModel()
+            ?.doOnError { context?.showErrorToast() }
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeBy { info -> setContent { MdcTheme { DetailsView(info) } } }
@@ -829,7 +829,7 @@ class DetailsFragment : Fragment() {
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 5.dp),
+                    modifier = Modifier.padding(start = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
 
@@ -850,7 +850,7 @@ class DetailsFragment : Fragment() {
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                     )
 
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         items(model.genres) {
                             CustomChip(
                                 category = it,
