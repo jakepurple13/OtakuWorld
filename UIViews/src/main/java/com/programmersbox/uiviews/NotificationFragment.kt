@@ -138,7 +138,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                         .asDrawable()
                                         .override(360, 480)
                                         .thumbnail(0.5f)
-                                        .transform(RoundedCorners(15)),//GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                                        .transform(RoundedCorners(15)),
                                     modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                                     failure = {
                                         Image(
@@ -301,8 +301,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
             Card(
                 onClick = {
-                    genericInfo.toSource(item.source)?.getSourceByUrl(item.url)
+                    genericInfo.toSource(item.source)
+                        ?.getSourceByUrl(item.url)
                         ?.subscribeOn(Schedulers.io())
+                        ?.doOnError { context?.showErrorToast() }
                         ?.observeOn(AndroidSchedulers.mainThread())
                         ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
                         ?.addTo(disposable)

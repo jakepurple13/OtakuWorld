@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.fragment.FragmentNavigator
@@ -60,9 +59,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import kotlin.collections.set
 
@@ -86,73 +82,28 @@ class GenericAnime(val context: Context) : GenericInfo {
             Toast.makeText(context, context.getString(R.string.source_no_stream, chapterModel.source.serviceName), Toast.LENGTH_SHORT).show()
             return
         }
-        MainActivity.activity.lifecycleScope.launch(Dispatchers.IO) {
-            val c = chapterModel.getChapterInfo().blockingGet()//.firstOrNull()
-            when {
-                c.size == 1 -> {
-                    MainActivity.activity.runOnUiThread {
-                        val link = c.firstOrNull()
-                        MainActivity.activity.startActivity(
-                            Intent(context, VideoPlayerActivity::class.java).apply {
-                                putExtra("showPath", link?.link)
-                                putExtra("showName", chapterModel.name)
-                                putExtra("referer", link?.headers?.get("referer"))
-                                putExtra("downloadOrStream", false)
-                            }
-                        )
+        getEpisodes(
+            R.string.source_no_stream,
+            chapterModel,
+            context
+        ) {
+            if (MainActivity.cast.isCastActive()) {
+                MainActivity.cast.loadUrl(
+                    it.link,
+                    infoModel.title,
+                    chapterModel.name,
+                    infoModel.imageUrl,
+                    it.headers
+                )
+            } else {
+                MainActivity.activity.startActivity(
+                    Intent(context, VideoPlayerActivity::class.java).apply {
+                        putExtra("showPath", it.link)
+                        putExtra("showName", chapterModel.name)
+                        putExtra("referer", it.headers["referer"])
+                        putExtra("downloadOrStream", false)
                     }
-                }
-                c.isNotEmpty() -> {
-                    ListBottomSheet(
-                        title = context.getString(R.string.choose_quality_for, chapterModel.name),
-                        list = c,
-                        onClick = {
-                            if (MainActivity.cast.isCastActive()) {
-                                MainActivity.cast.loadUrl(
-                                    it.link,
-                                    infoModel.title,
-                                    chapterModel.name,
-                                    infoModel.imageUrl,
-                                    it.headers
-                                )
-                            } else {
-                                MainActivity.activity.runOnUiThread {
-                                    MainActivity.activity.startActivity(
-                                        Intent(context, VideoPlayerActivity::class.java).apply {
-                                            putExtra("showPath", it.link)
-                                            putExtra("showName", chapterModel.name)
-                                            putExtra("referer", it.headers["referer"])
-                                            putExtra("downloadOrStream", false)
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    ) {
-                        ListBottomSheetItemModel(
-                            primaryText = it.quality.orEmpty(),
-                            icon = when (getQualityFromName(it.quality.orEmpty())) {
-                                Qualities.Unknown -> Icons.Default.DeviceUnknown
-                                Qualities.P360 -> Icons.Default._360
-                                Qualities.P480 -> Icons.Default._4mp
-                                Qualities.P720 -> Icons.Default._7mp
-                                Qualities.P1080 -> Icons.Default._10mp
-                                Qualities.P1440 -> Icons.Default._1k
-                                Qualities.P2160 -> Icons.Default._4k
-                                else -> Icons.Default.DeviceUnknown
-                            }
-                        )
-                    }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
-                }
-                else -> {
-                    runOnUIThread {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.source_no_stream, chapterModel.source.serviceName),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+                )
             }
         }
     }
@@ -171,52 +122,11 @@ class GenericAnime(val context: Context) : GenericInfo {
         MainActivity.activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
-
-                //DownloadViewerFragment().show(MainActivity.activity.supportFragmentManager, "downloadViewer")
-
-                model.getChapterInfo()
-                    .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
-                    .onErrorReturnItem(emptyList())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeBy { c ->
-                        when {
-                            c.size == 1 -> {
-                                when (model.source) {
-                                    else -> GlobalScope.launch { c.firstOrNull()?.let { fetchIt(it, model) } }
-                                }
-                            }
-                            c.isNotEmpty() -> {
-                                ListBottomSheet(
-                                    title = context.getString(R.string.choose_quality_for, model.name),
-                                    list = c,
-                                    onClick = { fetchIt(it, model) }
-                                ) {
-                                    ListBottomSheetItemModel(
-                                        primaryText = it.quality.orEmpty(),
-                                        icon = when (getQualityFromName(it.quality.orEmpty())) {
-                                            Qualities.Unknown -> Icons.Default.DeviceUnknown
-                                            Qualities.P360 -> Icons.Default._360
-                                            Qualities.P480 -> Icons.Default._4mp
-                                            Qualities.P720 -> Icons.Default._7mp
-                                            Qualities.P1080 -> Icons.Default._10mp
-                                            Qualities.P1440 -> Icons.Default._1k
-                                            Qualities.P2160 -> Icons.Default._4k
-                                            else -> Icons.Default.DeviceUnknown
-                                        }
-                                    )
-                                }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
-                            }
-                            else -> {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.source_no_download, model.source.serviceName),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
-                    .addTo(disposable)
+                getEpisodes(
+                    R.string.source_no_download,
+                    model,
+                    context
+                ) { fetchIt(it, model) }
             }
         }
     }
@@ -256,6 +166,53 @@ class GenericAnime(val context: Context) : GenericInfo {
         } catch (e: Exception) {
             MainActivity.activity.runOnUiThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
         }
+    }
+
+    private fun getEpisodes(
+        errorId: Int,
+        model: ChapterModel,
+        context: Context,
+        onAction: (Storage) -> Unit
+    ) {
+        model.getChapterInfo()
+            .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
+            .onErrorReturnItem(emptyList())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy { c ->
+                when {
+                    c.size == 1 -> {
+                        when (model.source) {
+                            else -> c.firstOrNull()?.let { onAction(it) }
+                        }
+                    }
+                    c.isNotEmpty() -> {
+                        ListBottomSheet(
+                            title = context.getString(R.string.choose_quality_for, model.name),
+                            list = c,
+                            onClick = { onAction(it) }
+                        ) {
+                            ListBottomSheetItemModel(
+                                primaryText = it.quality.orEmpty(),
+                                icon = when (getQualityFromName(it.quality.orEmpty())) {
+                                    Qualities.Unknown -> Icons.Default.DeviceUnknown
+                                    Qualities.P360 -> Icons.Default._360
+                                    Qualities.P480 -> Icons.Default._4mp
+                                    Qualities.P720 -> Icons.Default._7mp
+                                    Qualities.P1080 -> Icons.Default._10mp
+                                    Qualities.P1440 -> Icons.Default._1k
+                                    Qualities.P2160 -> Icons.Default._4k
+                                    else -> Icons.Default.DeviceUnknown
+                                }
+                            )
+                        }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
+                    }
+                    else -> {
+                        Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .addTo(disposable)
     }
 
     override fun sourceList(): List<ApiService> = Sources.values().toList()

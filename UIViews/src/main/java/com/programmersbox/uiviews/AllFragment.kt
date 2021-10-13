@@ -49,6 +49,7 @@ import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.InfiniteListHandler
 import com.programmersbox.uiviews.utils.currentScreen
+import com.programmersbox.uiviews.utils.showErrorToast
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -118,6 +119,8 @@ class AllFragment : BaseFragmentCompose() {
             .getList(page)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnError { context?.showErrorToast() }
+            .onErrorReturnItem(emptyList())
             .doOnSubscribe { refreshState?.isRefreshing = true }
             .subscribeBy {
                 sourceList.addAll(it)

@@ -42,6 +42,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.InfiniteListHandler
+import com.programmersbox.uiviews.utils.showErrorToast
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -78,7 +79,7 @@ class RecentFragment : BaseFragmentCompose() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent { RecentView() }
+            setContent { MdcTheme { RecentView() } }
         }
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
@@ -116,6 +117,8 @@ class RecentFragment : BaseFragmentCompose() {
             .getRecent(page)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnError { context?.showErrorToast() }
+            .onErrorReturnItem(emptyList())
             .doOnSubscribe { refreshState?.isRefreshing = true }
             .subscribeBy {
                 sourceList.addAll(it)
@@ -128,55 +131,53 @@ class RecentFragment : BaseFragmentCompose() {
     @ExperimentalFoundationApi
     @Composable
     private fun RecentView() {
-        MdcTheme {
-            val state = rememberLazyListState()
-            val source by sourcePublish.subscribeAsState(initial = null)
-            val refresh = rememberSwipeRefreshState(isRefreshing = false)
+        val state = rememberLazyListState()
+        val source by sourcePublish.subscribeAsState(initial = null)
+        val refresh = rememberSwipeRefreshState(isRefreshing = false)
 
-            val isConnected by ReactiveNetwork.observeInternetConnectivity()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeAsState(initial = true)
+        val isConnected by ReactiveNetwork.observeInternetConnectivity()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeAsState(initial = true)
 
-            when {
-                !isConnected -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            Icons.Default.CloudOff,
-                            null,
-                            modifier = Modifier.size(50.dp, 50.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
-                        )
-                        Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+        when {
+            !isConnected -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        Icons.Default.CloudOff,
+                        null,
+                        modifier = Modifier.size(50.dp, 50.dp),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                    )
+                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                }
+            }
+            sourceList.isEmpty() -> info.ComposeShimmerItem()
+            else -> {
+                SwipeRefresh(
+                    state = refresh,
+                    onRefresh = {
+                        source?.let {
+                            count = 1
+                            sourceList.clear()
+                            sourceLoadCompose(it, count, refresh)
+                        }
+                    }
+                ) {
+                    info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
+                        findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it))
                     }
                 }
-                sourceList.isEmpty() -> info.ComposeShimmerItem()
-                else -> {
-                    SwipeRefresh(
-                        state = refresh,
-                        onRefresh = {
-                            source?.let {
-                                count = 1
-                                sourceList.clear()
-                                sourceLoadCompose(it, count, refresh)
-                            }
-                        }
-                    ) {
-                        info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
-                            findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it))
-                        }
-                    }
 
-                    if (source?.canScroll == true) {
-                        InfiniteListHandler(listState = state, buffer = 1) {
-                            source?.let {
-                                count++
-                                sourceLoadCompose(it, count, refresh)
-                            }
+                if (source?.canScroll == true) {
+                    InfiniteListHandler(listState = state, buffer = 1) {
+                        source?.let {
+                            count++
+                            sourceLoadCompose(it, count, refresh)
                         }
                     }
                 }

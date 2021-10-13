@@ -199,9 +199,7 @@ fun CustomChip(
     backgroundColor: Color = MaterialTheme.colors.surface
 ) {
     Surface(
-        modifier = Modifier
-            .padding(end = 8.dp, bottom = 8.dp)
-            .then(modifier),
+        modifier = Modifier.then(modifier),
         elevation = 8.dp,
         shape = RoundedCornerShape(16.dp),
         color = backgroundColor

@@ -74,20 +74,17 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        // Inflate the layout for this fragment
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent {
-                MdcTheme {
-                    PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                        LaunchedEffect(Unit) {
-                            val v = VideoGet.getInstance(requireContext())
-                            v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
-                        }
-
-                        VideoLoad()
+    ): View = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+        setContent {
+            MdcTheme {
+                PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    LaunchedEffect(Unit) {
+                        val v = VideoGet.getInstance(requireContext())
+                        v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
                     }
+
+                    VideoLoad()
                 }
             }
         }
@@ -120,6 +117,11 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
             scope.launch { state.bottomSheetState.collapse() }
         }
+
+        var itemToDelete by remember { mutableStateOf<VideoContent?>(null) }
+        val showDialog = remember { mutableStateOf(false) }
+
+        itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, video = it) }
 
         if (items.isEmpty()) {
             EmptyState()
@@ -154,9 +156,13 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 state = state,
                 listOfItems = items,
                 multipleTitle = stringResource(id = R.string.delete),
-                onRemove = { context?.deleteDialog(it) {} },
+                onRemove = {
+                    itemToDelete = it
+                    showDialog.value = true
+                },
                 customSingleRemoveDialog = {
-                    context?.deleteDialog(it) {}
+                    itemToDelete = it
+                    showDialog.value = true
                     false
                 },
                 onMultipleRemove = { downloadedItems ->
@@ -183,7 +189,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     ListItem(
                         modifier = Modifier.padding(5.dp),
                         icon = {
-
                             Box {
 
                                 /*convert millis to appropriate time*/
@@ -315,23 +320,35 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     }
 
+    @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
     private fun VideoContentView(item: VideoContent) {
+        val showDialog = remember { mutableStateOf(false) }
+
+        SlideToDeleteDialog(showDialog = showDialog, video = item)
 
         val dismissState = rememberDismissState(
             confirmStateChange = {
                 if (it == DismissValue.DismissedToEnd) {
-                    context?.startActivity(
-                        Intent(context, VideoPlayerActivity::class.java).apply {
-                            putExtra("showPath", item.assetFileStringUri)
-                            putExtra("showName", item.videoName)
-                            putExtra("downloadOrStream", true)
-                            data = item.assetFileStringUri?.toUri()
-                        }
-                    )
+                    if (MainActivity.cast.isCastActive()) {
+                        MainActivity.cast.loadMedia(
+                            File(item.path!!),
+                            context?.getSharedPreferences("videos", Context.MODE_PRIVATE)?.getLong(item.assetFileStringUri, 0) ?: 0L,
+                            null, null
+                        )
+                    } else {
+                        context?.startActivity(
+                            Intent(context, VideoPlayerActivity::class.java).apply {
+                                putExtra("showPath", item.assetFileStringUri)
+                                putExtra("showName", item.videoName)
+                                putExtra("downloadOrStream", true)
+                                data = item.assetFileStringUri?.toUri()
+                            }
+                        )
+                    }
                 } else if (it == DismissValue.DismissedToStart) {
-                    context?.deleteDialog(item) {}
+                    showDialog.value = true
                 }
                 false
             }
@@ -392,16 +409,14 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                                 putExtra("showPath", item.assetFileStringUri)
                                 putExtra("showName", item.videoName)
                                 putExtra("downloadOrStream", true)
+                                data = item.assetFileStringUri?.toUri()
                             }
                         )
                     }
                 }
             ) {
-
                 Row {
-
                     Box {
-
                         /*convert millis to appropriate time*/
                         val runTimeString = remember {
                             val duration = item.videoDuration
@@ -478,7 +493,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    context?.deleteDialog(item) {}
+                                    showDialog.value = true
                                 }
                             ) { Text(stringResource(R.string.remove)) }
                         }
