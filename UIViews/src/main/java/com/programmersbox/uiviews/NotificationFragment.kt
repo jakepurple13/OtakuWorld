@@ -186,12 +186,12 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             }
                         )
                     }
-                ) { p ->
+                ) { p, itemList ->
                     LazyColumn(
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp)
-                    ) { items(items) { NotificationItem(item = it, navController = findNavController()) } }
+                    ) { items(itemList) { NotificationItem(item = it, navController = findNavController()) } }
                 }
             }
         }
