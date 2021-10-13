@@ -238,9 +238,9 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         secondaryText = { Text(item.path.orEmpty()) }
                     )
                 }
-            ) { p, items ->
+            ) { p, itemList ->
                 Scaffold(modifier = Modifier.padding(p)) { p1 ->
-                    val videos by updateAnimatedItemsState(newList = items)
+                    val videos by updateAnimatedItemsState(newList = itemList)
 
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(5.dp),
