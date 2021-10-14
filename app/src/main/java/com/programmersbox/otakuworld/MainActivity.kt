@@ -1,7 +1,6 @@
 package com.programmersbox.otakuworld
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -35,13 +34,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastAny
 import com.bumptech.glide.Glide
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -143,7 +139,50 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    SlideTo(
+                    val options = listOf("Option 1", "Option 2", "Option 3", "Option 4", "Option 5")
+                    var expanded by remember { mutableStateOf(false) }
+                    var selectedOptionText by remember { mutableStateOf("") }
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = {
+                            expanded = !expanded
+                        }
+                    ) {
+                        TextField(
+                            value = selectedOptionText,
+                            onValueChange = { selectedOptionText = it },
+                            label = { Text("Label") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expanded
+                                )
+                            },
+                            colors = ExposedDropdownMenuDefaults.textFieldColors()
+                        )
+                        // filter options based on text field value
+                        val filteringOptions =
+                            options.filter { it.contains(selectedOptionText, ignoreCase = true) }
+                        if (filteringOptions.isNotEmpty()) {
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = {
+                                    expanded = false
+                                }
+                            ) {
+                                filteringOptions.forEach { selectionOption ->
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            selectedOptionText = selectionOption
+                                            expanded = false
+                                        }
+                                    ) {
+                                        Text(text = selectionOption)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    /*SlideTo(
                         slideColor = Color(0xFF0079D3),
                         navigationIcon = {
                             Icon(
@@ -173,7 +212,7 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         onSlideComplete = { runOnUiThread { Toast.makeText(this@MainActivity, "Completed!", Toast.LENGTH_SHORT).show() } }
-                    )
+                    )*/
                 }
             }
         }
@@ -892,7 +931,7 @@ fun SlideTo(
         visible = width != slideHeight,
         exit = fadeOut(
             targetAlpha = 0f,
-            tween(250, easing = LinearEasing, delayMillis = 1000)
+            animationSpec = tween(250, easing = LinearEasing, delayMillis = 1000)
         )
     ) {
         Box(contentAlignment = Alignment.Center) {

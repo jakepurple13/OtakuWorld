@@ -81,6 +81,9 @@ dependencies {
 
     implementation firebaseCrash.crash
     implementation compose.compose
+    implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
+
+    implementation datastore.datastore
 
     //Custom Libraries
     implementation jakepurple13Tools.helpfultools

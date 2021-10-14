@@ -124,7 +124,7 @@ class FavoriteFragment : Fragment() {
             state = rememberCollapsingToolbarScaffoldState(),
             scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
             toolbar = {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     TopAppBar(
                         navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                         title = { Text(stringResource(R.string.viewFavoritesMenu)) },
@@ -139,71 +139,62 @@ class FavoriteFragment : Fragment() {
                         }
                     )
 
-                    Column(
-                        modifier = Modifier.padding(5.dp)
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
+                        trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                    )
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
                     ) {
 
-                        OutlinedTextField(
-                            value = searchText,
-                            onValueChange = { searchText = it },
-                            label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
-                            trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
-                            modifier = Modifier
-                                .padding(5.dp)
-                                .fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                        )
+                        item {
+                            CustomChip(
+                                "ALL",
+                                modifier = Modifier
+                                    .combinedClickable(
+                                        onClick = {
+                                            selectedSources.clear()
+                                            selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
+                                        },
+                                        onLongClick = { selectedSources.clear() }
+                                    ),
+                                backgroundColor = MaterialTheme.colors.primary,
+                                textColor = MaterialTheme.colors.onPrimary
+                            )
+                        }
 
-                        Row(
-                            modifier = Modifier.padding(top = 5.dp)
+                        items(
+                            (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
+                                .groupBy { it }
+                                .toList()
+                                .sortedBy { it.first }
                         ) {
-
-                            LazyRow {
-
-                                item {
-                                    CustomChip(
-                                        "ALL",
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                onClick = {
-                                                    selectedSources.clear()
-                                                    selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
-                                                },
-                                                onLongClick = {
-                                                    selectedSources.clear()
-                                                }
-                                            ),
-                                        backgroundColor = MaterialTheme.colors.primary,
-                                        textColor = MaterialTheme.colors.onPrimary
-                                    )
-                                }
-
-                                items(
-                                    (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                        .groupBy { it }
-                                        .toList()
-                                        .sortedBy { it.first }
-                                ) {
-                                    CustomChip(
-                                        "${it.first}: ${it.second.size - 1}",
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                onClick = {
-                                                    if (it.first in selectedSources) selectedSources.remove(it.first)
-                                                    else selectedSources.add(it.first)
-                                                },
-                                                onLongClick = {
-                                                    selectedSources.clear()
-                                                    selectedSources.add(it.first)
-                                                }
-                                            ),
-                                        backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
-                                        textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
-                                    )
-                                }
-                            }
+                            CustomChip(
+                                "${it.first}: ${it.second.size - 1}",
+                                modifier = Modifier
+                                    .combinedClickable(
+                                        onClick = {
+                                            if (it.first in selectedSources) selectedSources.remove(it.first)
+                                            else selectedSources.add(it.first)
+                                        },
+                                        onLongClick = {
+                                            selectedSources.clear()
+                                            selectedSources.add(it.first)
+                                        }
+                                    ),
+                                backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
+                                textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
+                            )
                         }
                     }
                 }

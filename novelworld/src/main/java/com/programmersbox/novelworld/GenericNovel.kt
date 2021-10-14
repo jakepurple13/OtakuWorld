@@ -48,7 +48,7 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         context.startActivity(
             Intent(context, ReadingActivity::class.java).apply {
-                putExtra("model", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("novelTitle", model.name)
                 putExtra("novelUrl", model.url)

@@ -245,8 +245,8 @@ class AllFragment : BaseFragmentCompose() {
                     floatingActionButton = {
                         AnimatedVisibility(
                             visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
-                            enter = slideInVertically({ it / 2 }),
-                            exit = slideOutVertically({ it / 2 })
+                            enter = slideInVertically(initialOffsetY = { it / 2 }),
+                            exit = slideOutVertically(targetOffsetY = { it / 2 })
                         ) {
                             FloatingActionButton(
                                 onClick = { scope.launch { state.animateScrollToItem(0) } },

@@ -633,7 +633,10 @@ class DetailsFragment : Fragment() {
                         .addTo(disposable)
                 }
 
-                Row(modifier = Modifier.clickable { markAs(!read.fastAny { it.url == c.url }) }) {
+                Row(
+                    modifier = Modifier.clickable { markAs(!read.fastAny { it.url == c.url }) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Checkbox(
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b -> markAs(b) },
