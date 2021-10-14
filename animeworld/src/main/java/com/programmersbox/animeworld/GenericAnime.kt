@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -36,6 +37,7 @@ import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
 import com.google.android.gms.cast.framework.CastContext
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
@@ -60,6 +62,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import org.koin.dsl.module
+import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 
 
@@ -125,7 +128,8 @@ class GenericAnime(val context: Context) : GenericInfo {
                 getEpisodes(
                     R.string.source_no_download,
                     model,
-                    context
+                    context,
+                    { !it.link.orEmpty().endsWith(".m3u8") }
                 ) { fetchIt(it, model) }
             }
         }
@@ -172,14 +176,31 @@ class GenericAnime(val context: Context) : GenericInfo {
         errorId: Int,
         model: ChapterModel,
         context: Context,
+        filter: (Storage) -> Boolean = { true },
         onAction: (Storage) -> Unit
     ) {
+        val dialog = MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.loading_please_wait)
+            .setView(ProgressBar(context))
+            .setIcon(R.mipmap.ic_launcher)
+            .setCancelable(false)
+            .create()
+
         model.getChapterInfo()
-            .doOnError { runOnUIThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() } }
+            .doOnError {
+                runOnUIThread {
+                    Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+            }
+            .doOnSubscribe { runOnUIThread { dialog.show() } }
             .onErrorReturnItem(emptyList())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .timeout(15, TimeUnit.SECONDS)
+            .map { it.filter(filter) }
             .subscribeBy { c ->
+                dialog.dismiss()
                 when {
                     c.size == 1 -> {
                         when (model.source) {

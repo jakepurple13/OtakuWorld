@@ -95,4 +95,6 @@
     <string name="chapter_count">Episodes: %d</string>
 
     <string name="castIntro">Cast!\nStream an episode straight to any Chromecast device!</string>
+
+    <string name="loading_please_wait">Loading, Please Wait</string>
 </resources>
