@@ -705,7 +705,16 @@ class DetailsFragment : Fragment() {
 
                     if (infoModel.source.canDownload) {
                         OutlinedButton(
-                            onClick = { genericInfo.downloadChapter(c, infoModel) },
+                            onClick = {
+                                genericInfo.downloadChapter(c, chapters, infoModel, context)
+                                insertRecent()
+                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                                    .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe { snackbar(R.string.addedChapterItem) }
+                                    .addTo(disposable)
+                            },
                             modifier = Modifier
                                 .weight(1f, true)
                                 .padding(horizontal = 5.dp),

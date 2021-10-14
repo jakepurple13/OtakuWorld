@@ -77,21 +77,21 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
 
-    override fun downloadChapter(chapterModel: ChapterModel, infoModel: InfoModel) {
-        if ((chapterModel.source as? ShowApi)?.canDownload == false) {
-            Toast.makeText(context, context.getString(R.string.source_no_stream, chapterModel.source.serviceName), Toast.LENGTH_SHORT).show()
+    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+        if ((model.source as? ShowApi)?.canPlay == false) {
+            Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
             return
         }
         getEpisodes(
             R.string.source_no_stream,
-            chapterModel,
+            model,
             context
         ) {
             if (MainActivity.cast.isCastActive()) {
                 MainActivity.cast.loadUrl(
                     it.link,
                     infoModel.title,
-                    chapterModel.name,
+                    model.name,
                     infoModel.imageUrl,
                     it.headers
                 )
@@ -99,7 +99,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 MainActivity.activity.startActivity(
                     Intent(context, VideoPlayerActivity::class.java).apply {
                         putExtra("showPath", it.link)
-                        putExtra("showName", chapterModel.name)
+                        putExtra("showName", model.name)
                         putExtra("referer", it.headers["referer"])
                         putExtra("downloadOrStream", false)
                     }
@@ -110,8 +110,8 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private val fetch = Fetch.getDefaultInstance()
 
-    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
-        if ((model.source as? ShowApi)?.canPlay == false) {
+    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+        if ((model.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(
                 context,
                 context.getString(R.string.source_no_download, model.source.serviceName),

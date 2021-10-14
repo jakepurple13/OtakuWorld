@@ -65,7 +65,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         null
     }
 
-    override fun downloadChapter(chapterModel: ChapterModel, infoModel: InfoModel) {}
+    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {}
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 

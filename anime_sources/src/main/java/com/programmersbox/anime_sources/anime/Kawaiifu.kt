@@ -20,7 +20,7 @@ object Kawaiifu : ShowApi(
     override val serviceName: String get() = "KAWAIIFU"
     override val canScroll: Boolean get() = true
     override val canScrollAll: Boolean get() = false
-    override val canPlay: Boolean get() = false
+    override val canDownload: Boolean get() = false
     override fun recentPage(page: Int): String = page.toString()
 
     override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
