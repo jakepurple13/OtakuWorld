@@ -6,10 +6,13 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -19,14 +22,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -34,6 +43,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -49,6 +59,7 @@ import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
@@ -139,35 +150,55 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    val options = listOf("Option 1", "Option 2", "Option 3", "Option 4", "Option 5")
+
+                    val scope = rememberCoroutineScope()
+                    var swipeState by remember { mutableStateOf(SwipeButtonState.INITIAL) }
+
+                    Row {
+                        Text("Here")
+
+                        SwipeButton(
+                            onSwiped = {
+                                swipeState = SwipeButtonState.SWIPED
+                                scope.launch {
+                                    delay(2000)
+                                    swipeState = SwipeButtonState.COLLAPSED
+                                }
+                            },
+                            swipeButtonState = swipeState,
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .height(60.dp),
+                            iconPadding = PaddingValues(4.dp),
+                            shape = CircleShape,
+                            loadingIndicator = {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colors.onPrimary,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        ) { Text("Delete") }
+                    }
+                    /*val options = listOf("Option 1", "Option 2", "Option 3", "Option 4", "Option 5")
                     var expanded by remember { mutableStateOf(false) }
                     var selectedOptionText by remember { mutableStateOf("") }
                     ExposedDropdownMenuBox(
                         expanded = expanded,
-                        onExpandedChange = {
-                            expanded = !expanded
-                        }
+                        onExpandedChange = { expanded = !expanded }
                     ) {
                         TextField(
                             value = selectedOptionText,
                             onValueChange = { selectedOptionText = it },
                             label = { Text("Label") },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(
-                                    expanded = expanded
-                                )
-                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             colors = ExposedDropdownMenuDefaults.textFieldColors()
                         )
                         // filter options based on text field value
-                        val filteringOptions =
-                            options.filter { it.contains(selectedOptionText, ignoreCase = true) }
+                        val filteringOptions = options.filter { it.contains(selectedOptionText, ignoreCase = true) }
                         if (filteringOptions.isNotEmpty()) {
                             ExposedDropdownMenu(
                                 expanded = expanded,
-                                onDismissRequest = {
-                                    expanded = false
-                                }
+                                onDismissRequest = { expanded = false }
                             ) {
                                 filteringOptions.forEach { selectionOption ->
                                     DropdownMenuItem(
@@ -175,44 +206,11 @@ class MainActivity : ComponentActivity() {
                                             selectedOptionText = selectionOption
                                             expanded = false
                                         }
-                                    ) {
-                                        Text(text = selectionOption)
-                                    }
+                                    ) { Text(text = selectionOption) }
                                 }
                             }
                         }
-                    }
-                    /*SlideTo(
-                        slideColor = Color(0xFF0079D3),
-                        navigationIcon = {
-                            Icon(
-                                Icons.Filled.ArrowForward,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .rotate(it)
-                            )
-                        },
-                        endIcon = {
-                            Icon(
-                                Icons.Filled.Done,
-                                contentDescription = null,
-                            )
-                        },
-                        slideHeight = 60.dp,
-                        slideWidth = 300.dp,
-                        content = {
-                            Text(
-                                "Slide to Play Game!! $it",
-                                style = TextStyle(
-                                    color = Color.White,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.W700
-                                )
-                            )
-                        },
-                        onSlideComplete = { runOnUiThread { Toast.makeText(this@MainActivity, "Completed!", Toast.LENGTH_SHORT).show() } }
-                    )*/
+                    }*/
                 }
             }
         }
@@ -882,112 +880,195 @@ class CoordinatorModel1(
 @Composable
 fun TestData() = Column { repeat(10) { Text("Hello $it") } }
 
-enum class SlideState { Start, End }
-
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
-fun SlideTo(
+fun SwipeButton(
+    onSwiped: () -> Unit,
     modifier: Modifier = Modifier,
-    slideHeight: Dp = 60.dp,
-    slideWidth: Dp = 400.dp,
-    slideColor: Color,
-    iconCircleColor: Color = contentColorFor(backgroundColor = slideColor),
-    onSlideComplete: suspend () -> Unit = {},
-    navigationIcon: @Composable (progress: Float) -> Unit,
-    navigationIconPadding: Dp = 0.dp,
-    endIcon: @Composable () -> Unit,
-    widthAnimationMillis: Int = 500,
-    elevation: Dp = 0.dp,
-    content: @Composable (Float) -> Unit = {}
+    swipeButtonState: SwipeButtonState,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    elevation: ButtonElevation? = ButtonDefaults.elevation(),
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = null,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    icon: ImageVector = Icons.Default.ArrowForward,
+    rotateIcon: Boolean = true,
+    iconPadding: PaddingValues = PaddingValues(2.dp),
+    loadingIndicator: @Composable BoxScope.() -> Unit = { HorizontalDottedProgressBar() },
+    content: @Composable RowScope.() -> Unit
 ) {
+    val contentColor by colors.contentColor(enabled)
+    val dragOffset = remember { mutableStateOf(0f) }
 
-    val iconSize = slideHeight - 10.dp
+    val collapsed = swipeButtonState == SwipeButtonState.COLLAPSED
+    val swiped = swipeButtonState == SwipeButtonState.SWIPED
 
-    val slideDistance = with(LocalDensity.current) { (slideWidth - iconSize - 15.dp).toPx() }
-
-    val swipeableState = rememberSwipeableState(initialValue = SlideState.Start)
-
-    var flag by remember { mutableStateOf(iconSize) }
-
-    if (swipeableState.currentValue == SlideState.End) {
-        flag = 0.dp
-    }
-
-    val contentAlpha by animateFloatAsState(
-        targetValue = if (swipeableState.offset.value != 0f && swipeableState.offset.value > 0f)
-            (1 - swipeableState.progress.fraction)
-        else 1f
-    )
-
-    val iconSizeAnimation by animateDpAsState(targetValue = flag, tween(250))
-
-    val width by animateDpAsState(
-        targetValue = if (iconSizeAnimation == 0.dp) slideHeight else slideWidth,
-        tween(widthAnimationMillis)
-    )
-
-    AnimatedVisibility(
-        visible = width != slideHeight,
-        exit = fadeOut(
-            targetAlpha = 0f,
-            animationSpec = tween(250, easing = LinearEasing, delayMillis = 1000)
-        )
+    Surface(
+        modifier = modifier.animateContentSize(),
+        shape = shape,
+        color = colors.backgroundColor(enabled).value,
+        contentColor = contentColor.copy(alpha = 1f),
+        border = border,
+        elevation = elevation?.elevation(enabled, interactionSource)?.value ?: 0.dp,
+        onClick = {},
+        enabled = enabled,
+        role = Role.Button,
+        interactionSource = interactionSource,
+        indication = rememberRipple()
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Surface(
-                shape = CircleShape,
-                modifier = modifier
-                    .height(slideHeight)
-                    .width(width),
-                color = slideColor,
-                elevation = elevation
-            ) {
-                Box(
-                    modifier = Modifier.padding(5.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .alpha(contentAlpha),
-                        contentAlignment = Alignment.Center
-                    ) { content(swipeableState.offset.value) }
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = iconCircleColor,
-                            modifier = Modifier
-                                .size(iconSizeAnimation)
-                                .padding(navigationIconPadding)
-                                .swipeable(
-                                    state = swipeableState,
-                                    anchors = mapOf(
-                                        0f to SlideState.Start,
-                                        slideDistance to SlideState.End
-                                    ),
-                                    thresholds = { _, _ -> FractionalThreshold(0.9f) },
-                                    orientation = Orientation.Horizontal
-                                )
-                                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
-                        ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            // Content
+            val maxWidth = this.constraints.maxWidth.toFloat()
+
+            when {
+                collapsed -> {
+                    val animatedProgress = remember { Animatable(initialValue = 0f) }
+                    LaunchedEffect(Unit) {
+                        animatedProgress.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(600)
+                        )
                     }
-                    AnimatedVisibility(visible = width == slideHeight) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(iconSize),
-                                color = Color.Transparent
-                            ) { endIcon() }
-                        }
-                        LaunchedEffect(key1 = Unit) { onSlideComplete() }
+                    IconButton(
+                        onClick = { },
+                        modifier = Modifier
+                            .scale(animatedProgress.value)
+                            .padding(iconPadding)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colors.onPrimary)
+                            .align(Alignment.Center)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = "Done",
+                            tint = MaterialTheme.colors.primary
+                        )
                     }
                 }
+                swiped -> {
+                    loadingIndicator()
+                }
+                else -> {
+                    dragOffset.value = 0f // when button goes to inital state
+                    CompositionLocalProvider(LocalContentAlpha provides contentColor.alpha) {
+                        ProvideTextStyle(
+                            value = MaterialTheme.typography.button
+                        ) {
+                            Row(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(contentPadding),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                                content = content
+                            )
+                        }
+                    }
+                }
+            }
+            // Swipe Component
+            AnimatedVisibility(visible = !swiped) {
+                IconButton(onClick = { }, enabled = enabled, modifier = Modifier
+                    .padding(iconPadding)
+                    .align(Alignment.CenterStart)
+                    .offset { IntOffset(dragOffset.value.roundToInt(), 0) }
+                    .draggable(
+                        enabled = enabled,
+                        orientation = Orientation.Horizontal,
+                        state = rememberDraggableState { delta ->
+                            val newValue = dragOffset.value + delta
+                            dragOffset.value = newValue.coerceIn(0f, maxWidth)
+                        },
+                        onDragStopped = {
+                            if (dragOffset.value > maxWidth * 2 / 3) {
+                                dragOffset.value = maxWidth
+                                onSwiped.invoke()
+                            } else {
+                                dragOffset.value = 0f
+                            }
+                        }
+                    )
+                    .background(MaterialTheme.colors.onPrimary, shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        modifier = Modifier.graphicsLayer {
+                            if (rotateIcon) {
+                                rotationZ += dragOffset.value / 5
+                            }
+                        },
+                        contentDescription = "Arrow",
+                        tint = colors.backgroundColor(enabled).value,
+                    )
+                }
+            }
+        }
+    }
+}
+
+enum class SwipeButtonState {
+    INITIAL, SWIPED, COLLAPSED
+}
+
+@Composable
+fun HorizontalDottedProgressBar() {
+    val color = MaterialTheme.colors.onPrimary
+    val transition = rememberInfiniteTransition()
+    val state by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 700,
+                easing = LinearEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    DrawCanvas(state = state, color = color)
+}
+
+
+@Composable
+fun DrawCanvas(
+    state: Float,
+    color: Color,
+) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp),
+    ) {
+
+        val radius = (4.dp).value
+        val padding = (6.dp).value
+
+        for (i in 1..5) {
+            if (i - 1 == state.toInt()) {
+                drawCircle(
+                    radius = radius * 2,
+                    brush = SolidColor(color),
+                    center = Offset(
+                        x = this.center.x + radius * 2 * (i - 3) + padding * (i - 3),
+                        y = this.center.y
+                    )
+                )
+            } else {
+                drawCircle(
+                    radius = radius,
+                    brush = SolidColor(color),
+                    center = Offset(
+                        x = this.center.x + radius * 2 * (i - 3) + padding * (i - 3),
+                        y = this.center.y
+                    )
+                )
             }
         }
     }
