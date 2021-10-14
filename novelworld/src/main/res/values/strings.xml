@@ -3,5 +3,8 @@
     <string name="title_activity_reading">ScrollingActivity</string>
     <string name="action_settings">Settings</string>
 
+    <string name="addedChapterItem">Added Chapter</string>
+    <string name="removedChapterItem">Removed Chapter</string>
     <string name="playSettings">Reader Settings</string>
+    <string name="changeToChapter">Change to %s</string>
 </resources>

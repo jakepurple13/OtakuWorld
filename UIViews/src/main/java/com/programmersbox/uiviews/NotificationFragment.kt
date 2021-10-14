@@ -235,7 +235,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                 onDismissRequest = onDismiss,
                 title = { Text(stringResource(R.string.removeNoti, item.notiTitle)) },
                 confirmButton = {
-                    Button(
+                    TextButton(
                         onClick = {
                             db.deleteNotification(item)
                                 .subscribeOn(Schedulers.io())
@@ -246,7 +246,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         }
                     ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
                 },
-                dismissButton = { Button(onClick = onDismiss) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) } }
+                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) } }
             )
 
         }

@@ -298,7 +298,7 @@ fun SlideTo(
         visible = width != slideHeight,
         exit = fadeOut(
             targetAlpha = 0f,
-            tween(250, easing = LinearEasing, delayMillis = 1000)
+            animationSpec = tween(250, easing = LinearEasing, delayMillis = 1000)
         )
     ) {
         Box(contentAlignment = Alignment.Center) {

@@ -14,7 +14,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
 
     GOGOANIME_VC(GogoAnimeVC),
     KAWAIIFU(Kawaiifu),
-
+    HDM(Hdm),
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
     VIDSTREAMING(Vidstreaming),
@@ -31,7 +31,16 @@ enum class Sources(private val api: ApiService) : ApiService by api {
     override val serviceName: String get() = this.name
 
     companion object {
-        val searchSources get() = listOf(VIDSTREAMING, PUTLOCKERTV, WCO_SUBBED, GOGOANIME_VC, KAWAIIFU, ANIMEKISA_SUBBED)
+        val searchSources
+            get() = listOf(
+                VIDSTREAMING,
+                PUTLOCKERTV,
+                WCO_SUBBED,
+                GOGOANIME_VC,
+                KAWAIIFU,
+                ANIMEKISA_SUBBED,
+                HDM
+            )
     }
 }
 

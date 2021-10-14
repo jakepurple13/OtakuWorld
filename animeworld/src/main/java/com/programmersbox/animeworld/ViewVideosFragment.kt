@@ -250,7 +250,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     ) {
                         animatedItems(
                             videos,
-                            enterTransition = slideInHorizontally({ x -> x / 2 }),
+                            enterTransition = slideInHorizontally(initialOffsetX = { x -> x / 2 }),
                             exitTransition = slideOutHorizontally()
                         ) { i -> VideoContentView(i) }
                     }

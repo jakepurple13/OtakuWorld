@@ -68,7 +68,6 @@ import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefreshState
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -739,7 +738,7 @@ class ReadActivityCompose : ComponentActivity() {
     }
 
     @Composable
-    fun SliderSetting(
+    private fun SliderSetting(
         scope: CoroutineScope,
         settingIcon: ImageVector,
         @StringRes settingTitle: Int,

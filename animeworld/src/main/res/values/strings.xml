@@ -42,8 +42,8 @@
     <string name="download_speed_bytes">%1$d B/s</string>
     <string name="download_speed_kb">%1$s KB/s</string>
     <string name="download_speed_mb">%1$s MB/s</string>
-    <string name="read">Download</string>
-    <string name="download_chapter">Stream</string>
+    <string name="read">Stream</string>
+    <string name="download_chapter">Download</string>
     <string name="deleteDownload">Delete %s</string>
     <string name="slide_to_delete">Slide to Delete</string>
     <string name="don_t_delete">Don\'t Delete</string>
@@ -95,4 +95,6 @@
     <string name="chapter_count">Episodes: %d</string>
 
     <string name="castIntro">Cast!\nStream an episode straight to any Chromecast device!</string>
+
+    <string name="loading_please_wait">Loading, Please Wait</string>
 </resources>
