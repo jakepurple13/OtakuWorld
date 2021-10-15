@@ -602,41 +602,28 @@ class DetailsFragment : Fragment() {
             }
         }
 
+        fun markAs(b: Boolean) {
+            ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
+                .let {
+                    Completable.mergeArray(
+                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                    )
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
+                .addTo(disposable)
+        }
+
         Card(
-            onClick = {
-                genericInfo.chapterOnClick(c, chapters, infoModel, context)
-                insertRecent()
-                ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                    .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { snackbar(R.string.addedChapterItem) }
-                    .addTo(disposable)
-            },
+            onClick = { markAs(!read.fastAny { it.url == c.url }) },
             shape = RoundedCornerShape(0.dp),
             modifier = Modifier.fillMaxWidth(),
             backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-
-                fun markAs(b: Boolean) {
-                    ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                        .let {
-                            Completable.mergeArray(
-                                if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                            )
-                        }
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe { snackbar(if (b) R.string.addedChapterItem else R.string.removedChapterItem) }
-                        .addTo(disposable)
-                }
-
-                Row(
-                    modifier = Modifier.clickable { markAs(!read.fastAny { it.url == c.url }) },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b -> markAs(b) },
