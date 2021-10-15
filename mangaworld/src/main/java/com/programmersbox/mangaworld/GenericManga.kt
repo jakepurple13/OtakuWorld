@@ -92,12 +92,12 @@ class GenericManga(val context: Context) : GenericInfo {
                     DownloadManager.Request(s.toUri())
                         .setDestinationInExternalPublicDir(
                             Environment.DIRECTORY_DOWNLOADS,
-                            "MangaWorld/$title/${model.name}/${String.format("%03d", index)}.png"
+                            "MangaWorld/$title/${model.name}/${String.format("%03d", index)}"
                         )
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         .setAllowedOverRoaming(true)
                         .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                        .setMimeType("image/jpeg")
+                        .setMimeType("image/*")
                         .setTitle(model.name)
                         .addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77")
                         .addRequestHeader("Accept-Language", "en-US,en;q=0.5")

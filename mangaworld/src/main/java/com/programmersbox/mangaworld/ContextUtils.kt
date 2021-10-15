@@ -17,6 +17,7 @@ import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.uiviews.utils.dataStore
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -45,18 +46,15 @@ class CustomHideBottomViewOnScrollBehavior<T : View>(context: Context?, attrs: A
 
 class ChaptersGet private constructor(private val chaptersContex: Context) {
 
-    @SuppressLint("InlinedApi")
-    private val Projections = arrayOf(
-        MediaStore.Files.FileColumns.DISPLAY_NAME,
-        MediaStore.Files.FileColumns._ID,
-        MediaStore.Files.FileColumns.DATA
-    )
-
     data class Chapters(
         val name: String,
         val id: String,
         val data: String,
-        val assetFileStringUri: String
+        val assetFileStringUri: String,
+        val folder: String = "",
+        val folderName: String = "",
+        val chapterFolder: String = "",
+        val chapterName: String = ""
     )
 
     /**Returns an Arraylist of [Chapters]   */
@@ -98,7 +96,6 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
         val contentObserver = object : ContentObserver(Handler()) {
             override fun onChange(selfChange: Boolean) {
                 observer(selfChange)
-                println("Changed!!!")
             }
         }
         registerContentObserver(uri, true, contentObserver)
@@ -112,6 +109,7 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
     }
 
     val chapters = PublishSubject.create<List<Chapters>>()
+    val chapters2 = MutableStateFlow<List<Chapters>>(emptyList())
 
     fun loadChapters(scope: CoroutineScope, contentLocation: Uri) {
         scope.launch {
@@ -121,6 +119,20 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
             if (contentObserver == null) {
                 contentObserver = chaptersContex.contentResolver.registerObserver(contentLocation) {
                     loadChapters(scope, contentLocation)
+                }
+            }
+        }
+    }
+
+    fun loadChapters(scope: CoroutineScope, folderLocation: String) {
+        scope.launch {
+            val imageList = getMangaFolders(chaptersContex, folderLocation)
+            chapters.onNext(imageList)
+            chapters2.tryEmit(imageList)
+
+            if (contentObserver == null) {
+                contentObserver = chaptersContex.contentResolver.registerObserver(externalContentUri) {
+                    loadChapters(scope, folderLocation)
                 }
             }
         }
@@ -136,6 +148,50 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
         fun getInstance(contx: Context): ChaptersGet? {
             if (chaptersGet == null) chaptersGet = ChaptersGet(contx)
             return chaptersGet
+        }
+
+        @SuppressLint("InlinedApi")
+        private val Projections = arrayOf(
+            MediaStore.Files.FileColumns.DISPLAY_NAME,
+            MediaStore.Files.FileColumns._ID,
+            MediaStore.Files.FileColumns.DATA
+        )
+
+        fun getMangaFolders(context: Context, folderLocation: String): List<Chapters> {
+            val contentLocation = externalContentUri
+            val allVideo = mutableListOf<Chapters>()
+            val cursor = context.contentResolver.query(
+                contentLocation,
+                Projections,
+                MediaStore.Files.FileColumns.DATA + " LIKE ?",
+                arrayOf("$folderLocation%"),
+                "LOWER (" + MediaStore.Files.FileColumns.DATE_ADDED + ") DESC"
+            ) //DESC ASC
+            try {
+                while (cursor?.moveToNext() == true) {
+                    val id: Int = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID))
+                    val contentUri: Uri = Uri.withAppendedPath(contentLocation, id.toString())
+                    val folder = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA))
+                        .split("/")
+                    allVideo.add(
+                        Chapters(
+                            id = id.toString(),
+                            name = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)),
+                            data = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)),
+                            assetFileStringUri = contentUri.toString(),
+                            folder = folder.dropLast(2).joinToString("/"),
+                            folderName = folder.dropLast(2).lastOrNull().orEmpty(),
+                            chapterFolder = folder.dropLast(1).joinToString("/"),
+                            chapterName = folder.dropLast(1).lastOrNull().orEmpty()
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                cursor?.close()
+            }
+            return allVideo
         }
     }
 }

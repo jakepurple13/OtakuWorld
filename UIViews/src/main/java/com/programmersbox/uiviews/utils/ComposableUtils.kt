@@ -572,7 +572,7 @@ fun <T> BottomSheetDeleteScaffold(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                        shape = RoundedCornerShape(0f)
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                     ) {
                         Text(
                             stringResource(R.string.delete_multiple),

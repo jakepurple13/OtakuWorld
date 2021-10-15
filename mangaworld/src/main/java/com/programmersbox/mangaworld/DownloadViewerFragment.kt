@@ -2,14 +2,16 @@ package com.programmersbox.mangaworld
 
 import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -17,12 +19,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -30,33 +35,34 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
+import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.anggrayudi.storage.file.DocumentFileCompat
-import com.anggrayudi.storage.file.DocumentFileType
-import com.anggrayudi.storage.file.deleteRecursively
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.dragswipe.*
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.*
-import de.helmbold.rxfilewatcher.PathObservables
-import io.reactivex.Completable
+import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.PermissionRequest
+import com.programmersbox.uiviews.utils.animatedItems
+import com.programmersbox.uiviews.utils.updateAnimatedItemsState
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 import java.io.File
-import kotlin.io.path.Path
 
-class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomSheetDialogFragment() {
+class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
 
     private val disposable = CompositeDisposable()
 
     private val defaultPathname get() = File(DOWNLOAD_FILE_PATH)
 
+    @ExperimentalFoundationApi
     @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
@@ -68,130 +74,58 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
         setContent {
             MdcTheme {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    LaunchedEffect(Unit) {
+                        val c = ChaptersGet.getInstance(requireContext())
+                        c?.loadChapters(lifecycleScope, defaultPathname.absolutePath)
+                    }
                     DownloadViewer()
                 }
             }
         }
     }
 
+    @ExperimentalFoundationApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
     private fun DownloadViewer() {
-        val context = LocalContext.current
-        val files by PathObservables
-            .watchNonRecursive(Path((pathname ?: defaultPathname).path))
-            .concatMapSingle {
-                Single.create<List<File>> {
-                    (pathname ?: defaultPathname)
-                        .listFiles()
-                        .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
-                        .orEmpty()
-                        .toList()
-                        .let(it::onSuccess)
-                }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
+
+        val c = remember { ChaptersGet.getInstance(requireContext()) }
+
+        val fileList by c!!.chapters2
+            .map { f ->
+                f
+                    .groupBy { it.folder }
+                    .entries
+                    .toList()
+                    .fastMap { it.key to it.value.groupBy { c -> c.chapterFolder } }
+                    .toMap()
             }
-            .startWith(
-                Single.create<List<File>> {
-                    (pathname ?: defaultPathname)
-                        .listFiles()
-                        .also { f -> println(f?.joinToString("\n") { n -> n.name }) }
-                        .orEmpty()
-                        .toList()
-                        .let(it::onSuccess)
-                }
-                    .toObservable()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-            )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(emptyList())
+            .collectAsState(initial = emptyMap())
 
-        val state = rememberBottomSheetScaffoldState()
-        val scope = rememberCoroutineScope()
-
-        BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
-            scope.launch { state.bottomSheetState.collapse() }
-        }
-
-        BottomSheetDeleteScaffold(
-            listOfItems = files,
-            state = state,
-            multipleTitle = stringResource(id = R.string.delete),
-            onRemove = { file ->
-                Single.create<Boolean> {
-                    it.onSuccess(
-                        DocumentFileCompat.fromFullPath(context, file.path, DocumentFileType.FOLDER)
-                            ?.deleteRecursively(context, false) ?: false
-                    )
-                }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
-                    .addTo(disposable)
-            },
-            onMultipleRemove = { list ->
-                Completable.create {
-                    list.forEach { f ->
-                        DocumentFileCompat.fromFullPath(context, f.path, DocumentFileType.FOLDER)
-                            ?.deleteRecursively(context, false)
-                    }
-                    it.onComplete()
-                }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeBy {
-                        Toast.makeText(requireContext(), R.string.finished_deleting, Toast.LENGTH_SHORT).show()
-                        list.clear()
-                    }
-                    .addTo(disposable)
-            },
+        Scaffold(
             topBar = {
                 TopAppBar(
                     title = { Text(stringResource(R.string.downloaded_chapters)) },
-                    navigationIcon = if (pathname != defaultPathname && pathname?.parentFile != null) {
-                        { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.ArrowBack, null) } }
-                    } else null,
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                parentFragmentManager.fragments
-                                    .filterIsInstance<DownloadViewerFragment>()
-                                    .forEach(DownloadViewerFragment::dismiss)
-                                findNavController().popBackStack()
-                            }
-                        ) { Icon(Icons.Default.Close, null) }
-
-                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) {
-                            Icon(Icons.Default.Delete, null)
-                        }
+                    navigationIcon = {
+                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) }
                     }
                 )
-            },
-            itemUi = { file ->
-                ListItem(modifier = Modifier.padding(5.dp)) {
-                    Text(
-                        file.name,
-                        style = MaterialTheme.typography.h5,
-                        modifier = Modifier.padding(5.dp)
-                    )
-                }
             }
-        ) { p, items ->
-            Scaffold(modifier = Modifier.padding(p)) { p1 ->
-                val f by updateAnimatedItemsState(newList = items)
+        ) { p1 ->
+            val f by updateAnimatedItemsState(newList = fileList.entries.toList())
 
-                if (files.isEmpty()) EmptyState()
-                else LazyColumn(contentPadding = p1) {
-                    animatedItems(
-                        f,
-                        enterTransition = slideInHorizontally(),
-                        exitTransition = slideOutHorizontally()
-                    ) { file -> ChapterItem(file) }
-                }
+            if (fileList.isEmpty()) EmptyState()
+            else LazyColumn(
+                contentPadding = p1,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+            ) {
+                animatedItems(
+                    f,
+                    enterTransition = fadeIn(),
+                    exitTransition = fadeOut()
+                ) { file -> ChapterItem(file) }
             }
         }
     }
@@ -222,7 +156,7 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
 
                     Button(
                         onClick = {
-                            dismiss()
+                            findNavController().popBackStack()
                             (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
                         },
                         modifier = Modifier
@@ -241,128 +175,158 @@ class DownloadViewerFragment(private val pathname: File? = null) : BaseBottomShe
 
     @ExperimentalMaterialApi
     @Composable
-    private fun ChapterItem(file: File) {
+    private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>) {
         val context = LocalContext.current
 
-        var showPopup by remember { mutableStateOf(false) }
+        var expanded by remember { mutableStateOf(false) }
 
-        if (showPopup) {
-            val onDismiss = { showPopup = false }
-
-            AlertDialog(
-                onDismissRequest = onDismiss,
-                title = { Text(stringResource(R.string.delete_title, file.name)) },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            Single.create<Boolean> {
-                                it.onSuccess(
-                                    DocumentFileCompat.fromFullPath(context, file.path, DocumentFileType.FOLDER)
-                                        ?.deleteRecursively(context, false) ?: false
-                                )
-                            }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
-                                .addTo(disposable)
-                            onDismiss()
-                        }
-                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
-                },
-                dismissButton = { Button(onClick = onDismiss) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) } }
-            )
-        }
-
-        val clickAction: () -> Unit = {
-            if (file.listFiles()?.all(File::isFile) == true)
-                activity?.startActivity(
-                    Intent(context, if (context.useNewReader) ReadActivityCompose::class.java else ReadActivity::class.java).apply {
-                        putExtra("downloaded", true)
-                        putExtra("filePath", file)
-                    }
-                )
-            else DownloadViewerFragment(file).show(parentFragmentManager, null)
-        }
-
-        val dismissState = rememberDismissState(
-            confirmStateChange = {
-                if (it == DismissValue.DismissedToEnd) {
-                    //read
-                    clickAction()
-                } else if (it == DismissValue.DismissedToStart) {
-                    //delete
-                    showPopup = true
-                }
-                false
-            }
-        )
-
-        SwipeToDismiss(
-            state = dismissState,
-            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-            dismissThresholds = { FractionalThreshold(0.5f) },
-            background = {
-                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
-                val color by animateColorAsState(
-                    when (dismissState.targetValue) {
-                        DismissValue.Default -> Color.Transparent
-                        DismissValue.DismissedToEnd -> Color.Green
-                        DismissValue.DismissedToStart -> Color.Red
-                    }
-                )
-                val alignment = when (direction) {
-                    DismissDirection.StartToEnd -> Alignment.CenterStart
-                    DismissDirection.EndToStart -> Alignment.CenterEnd
-                }
-                val icon = when (direction) {
-                    DismissDirection.StartToEnd -> Icons.Default.Book
-                    DismissDirection.EndToStart -> Icons.Default.Delete
-                }
-                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
-
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(color)
-                        .padding(horizontal = 20.dp),
-                    contentAlignment = alignment
-                ) {
-                    Icon(
-                        icon,
-                        contentDescription = null,
-                        modifier = Modifier.scale(scale)
-                    )
-                }
-            }
+        Column(
+            modifier = Modifier.animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Card(
                 interactionSource = MutableInteractionSource(),
                 indication = rememberRipple(),
-                onClick = clickAction,
-                modifier = Modifier
-                    .padding(5.dp)
-                    .fillMaxWidth()
+                onClick = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
             ) {
                 ListItem(
                     modifier = Modifier.padding(5.dp),
-                    text = { Text(file.name) },
-                    secondaryText = {
-                        Text(
-                            stringResource(
-                                if (file.listFiles()?.all(File::isFile) == true) R.string.page_count else R.string.chapter_count,
-                                file.listFiles()?.size ?: 0
-                            )
+                    text = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
+                    secondaryText = { Text(stringResource(R.string.chapter_count, file.value.size)) },
+                    trailing = {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            null,
+                            modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
                         )
-                    },
-                    trailing = { IconButton(onClick = clickAction) { Icon(Icons.Default.ChevronRight, null) } }
+                    }
                 )
             }
+
+            if (expanded)
+                file.value.values.toList().fastForEach { chapter ->
+                    val c = chapter.randomOrNull()
+
+                    var showPopup by remember { mutableStateOf(false) }
+
+                    if (showPopup) {
+                        val onDismiss = { showPopup = false }
+
+                        AlertDialog(
+                            onDismissRequest = onDismiss,
+                            title = { Text(stringResource(R.string.delete_title, c?.chapterName.orEmpty())) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        Single.create<Boolean> {
+                                            try {
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                                    chapter.fastForEach { f ->
+                                                        context.contentResolver.delete(
+                                                            f.assetFileStringUri.toUri(),
+                                                            "${MediaStore.Images.Media._ID} = ?",
+                                                            arrayOf(f.id)
+                                                        )
+                                                    }
+                                                } else {
+                                                    File(c?.chapterFolder!!).delete()
+                                                }
+                                                it.onSuccess(true)
+                                            } catch (e: Exception) {
+                                                it.onSuccess(false)
+                                            }
+                                        }
+                                            .subscribeOn(Schedulers.io())
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
+                                            .addTo(disposable)
+                                        onDismiss()
+                                    }
+                                ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = onDismiss) {
+                                    Text(
+                                        stringResource(R.string.no),
+                                        style = MaterialTheme.typography.button
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    val dismissState = rememberDismissState(
+                        confirmStateChange = {
+                            if (it == DismissValue.DismissedToStart) {
+                                //delete
+                                showPopup = true
+                            }
+                            false
+                        }
+                    )
+
+                    SwipeToDismiss(
+                        modifier = Modifier.padding(start = 32.dp),
+                        state = dismissState,
+                        directions = setOf(DismissDirection.EndToStart),
+                        dismissThresholds = { FractionalThreshold(0.5f) },
+                        background = {
+                            val color by animateColorAsState(
+                                when (dismissState.targetValue) {
+                                    DismissValue.Default -> Color.Transparent
+                                    DismissValue.DismissedToEnd -> Color.Transparent
+                                    DismissValue.DismissedToStart -> Color.Red
+                                }
+                            )
+                            val alignment = Alignment.CenterEnd
+                            val icon = Icons.Default.Delete
+                            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = alignment
+                            ) {
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.scale(scale)
+                                )
+                            }
+                        }
+                    ) {
+                        Card(
+                            interactionSource = MutableInteractionSource(),
+                            indication = rememberRipple(),
+                            onClick = {
+                                activity?.startActivity(
+                                    Intent(context, if (context.useNewReader) ReadActivityCompose::class.java else ReadActivity::class.java).apply {
+                                        putExtra("downloaded", true)
+                                        putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                    }
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ListItem(
+                                modifier = Modifier.padding(5.dp),
+                                text = { Text(c?.chapterName.orEmpty()) },
+                                secondaryText = { Text(stringResource(R.string.page_count, chapter.size)) },
+                                trailing = { Icon(Icons.Default.ChevronRight, null) }
+                            )
+                        }
+                    }
+                }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
+        ChaptersGet.getInstance(requireContext())?.unregister()
     }
 
 }
