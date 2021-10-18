@@ -6,6 +6,7 @@ import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.anime_sources.utilities.JsUnpacker
+import com.programmersbox.anime_sources.utilities.extractors
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -209,22 +210,57 @@ object GogoAnimeVC : ShowApi(
         Jsoup.connect(link)
             .headers(mapOf("Referer" to iframe))
             .get()
-            .select(".dowload > a[download]")
+            .select(".dowload > a")
             .fastMap {
-                val qual = if (it.text().contains("HDP"))
-                    "1080"
-                else
-                    qualityRegex.find(it.text())?.destructured?.component1().toString()
-
-                Storage(
-                    link = it.attr("href"),
-                    source = link,
-                    filename = "${chapterModel.name}.mp4",
-                    quality = qual,
-                    sub = getQualityFromName(qual).value.toString()
-                )
+                if (it.hasAttr("download")) {
+                    val qual = if (it.text().contains("HDP"))
+                        "1080"
+                    else
+                        qualityRegex.find(it.text())?.destructured?.component1().toString()
+                    listOf(
+                        Storage(
+                            link = it.attr("href"),
+                            source = link,
+                            filename = "${chapterModel.name}.mp4",
+                            quality = qual,
+                            sub = getQualityFromName(qual).value.toString()
+                        )
+                    )
+                } else {
+                    val url = it.attr("href")
+                    extractors
+                        .flatMap { e ->
+                            if (url.startsWith(e.mainUrl)) {
+                                //println(url + "\t" + e.name)
+                                e.getUrl(url)
+                            } else emptyList()
+                            /*listOf(
+                                Storage(
+                                    link = it.attr("href"),
+                                    source = link,
+                                    filename = "${chapterModel.name}.mp4",
+                                    quality = it.text(),
+                                    sub = it.text()
+                                )
+                            )*/
+                        }
+                    //.distinctBy { it.link }
+                    /*if(url.startsWith(XStreamCdn.mainUrl))
+                        XStreamCdn.getUrl(url)
+                    else
+                        listOf(
+                            Storage(
+                                link = it.attr("href"),
+                                source = link,
+                                filename = "${chapterModel.name}.mp4",
+                                quality = it.text(),
+                                sub = it.text()
+                            )
+                        )*/
+                }
             }
-            .filter { it.link?.endsWith(".mp4") == true }
+            .flatten()
+            //.filter { it.link?.endsWith(".mp4") == true }
             .sortedByDescending { it.sub?.toIntOrNull() }
             .let(s::onSuccess)
     }
@@ -234,5 +270,5 @@ object GogoAnimeVC : ShowApi(
     private fun getAndUnpack(string: String): String? = JsUnpacker(getPacked(string)).unpack()
 
     private val qualityRegex = Regex("(\\d+)P")
-
 }
+

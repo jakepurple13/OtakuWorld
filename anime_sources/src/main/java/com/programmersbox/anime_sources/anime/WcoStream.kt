@@ -4,7 +4,11 @@ import androidx.annotation.WorkerThread
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
+import com.programmersbox.anime_sources.Sources
+import com.programmersbox.anime_sources.asJsoup
 import com.programmersbox.anime_sources.toJsoup
+import com.programmersbox.anime_sources.utilities.WcoStreamExtractor
+import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
@@ -282,5 +286,167 @@ abstract class WcoStream(allPath: String) : ShowApi(
     }
 
     data class VideoBase(val enc: String?, val server: String?, val cdn: String?, val hd: String?)
+
+}
+
+object WcoStreamCC : ShowApi(
+    baseUrl = "https://wcostream.cc",
+    allPath = "ajax/list/recently_added?type=tv",
+    recentPath = "ajax/list/recently_updated?type=tv"
+) {
+    override val serviceName: String get() = "WCOSTREAMCC"
+
+    override val canDownload: Boolean get() = false
+
+    data class CcResponse(val html: String)
+
+    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create {
+        //JSONObject(getApi("$baseUrl/$recentPath").orEmpty()).getString("html")
+        getJsonApi<CcResponse>("$baseUrl/$allPath")?.html
+            ?.asJsoup()
+            ?.select("div.flw-item")
+            ?.fastMap {
+                val filmDetail = it.select("> div.film-detail")
+                val filmPoster = it.select("> div.film-poster")
+                val nameHeader = filmDetail.select("> h3.film-name > a")
+                val title = nameHeader.text().replace(" (Dub)", "")
+                val href = nameHeader.attr("href")
+                    .replace("/watch/", "/anime/")
+                    .replace("-episode-.*".toRegex(), "/")
+                ItemModel(
+                    title = title,
+                    description = "",
+                    imageUrl = filmPoster.select("> img").attr("data-src"),
+                    url = href,
+                    source = Sources.WCOSTREAMCC
+                )
+            }
+            ?.let(it::onSuccess) ?: throw Exception("Unable to get response")
+        //it.onSuccess(emptyList())
+    }
+
+    override fun getList(page: Int): Single<List<ItemModel>> = Single.create {
+        getJsonApi<CcResponse>("$baseUrl/$allPath")?.html?.asJsoup()
+            ?.select("div.flw-item")
+            ?.fastMap {
+                val filmDetail = it.select("> div.film-detail")
+                val filmPoster = it.select("> div.film-poster")
+                val nameHeader = filmDetail.select("> h3.film-name > a")
+                val title = nameHeader.text().replace(" (Dub)", "")
+                val href = nameHeader.attr("href")
+                    .replace("/watch/", "/anime/")
+                    .replace("-episode-.*".toRegex(), "/")
+                ItemModel(
+                    title = title,
+                    description = "",
+                    imageUrl = filmPoster.select("> img").attr("data-src"),
+                    url = href,
+                    source = Sources.WCOSTREAMCC
+                )
+            }
+            ?.let(it::onSuccess) ?: throw Exception("Unable to get response")
+        //it.onSuccess(emptyList())
+    }
+
+    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.never()
+    override fun getList(doc: Document): Single<List<ItemModel>> = Single.never()
+
+    override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
+        InfoModel(
+            source = Sources.WCOSTREAMCC,
+            url = source.url,
+            title = source.title,
+            description = doc.select(".description > p").text().trim(),
+            imageUrl = doc.select(".film-poster-img").attr("src"),
+            genres = doc.select("div.elements div.row > div:nth-child(1) > div.row-line:nth-child(5) > a")
+                .fastMap { it?.text()?.trim().toString() },
+            chapters = doc.select(".tab-content .nav-item > a")
+                .fastMap {
+                    ChapterModel(
+                        name = it.text(),
+                        url = it.attr("href"),
+                        uploaded = "",
+                        sourceUrl = source.url,
+                        source = Sources.WCOSTREAMCC
+                    )
+                }
+                .reversed(),
+            alternativeNames = emptyList()
+        )
+            .let(emitter::onSuccess)
+    }
+
+    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
+        chapterModel.url.toJsoup()
+            .select("#servers-list > ul > li")
+            .fastMap {
+                mapOf(
+                    "link" to it?.selectFirst("a")?.attr("data-embed"),
+                    "title" to it?.selectFirst("span")?.text()?.trim()
+                )
+            }
+            .fastMap { WcoStreamExtractor.getUrl(it["link"].orEmpty()) }
+            .flatten()
+            .let(emitter::onSuccess)
+    }
+
+    private fun fixAnimeLink(url: String): String {
+        val regex = "watch/([a-zA-Z\\-0-9]*)-episode".toRegex()
+        val (aniId) = regex.find(url)!!.destructured
+        return "$baseUrl/anime/$aniId"
+    }
+
+    private fun fixUrl(url: String): String {
+        if (url.startsWith("http")) {
+            return url
+        }
+
+        val startsWithNoHttp = url.startsWith("//")
+        if (startsWithNoHttp) {
+            return "https:$url"
+        } else {
+            if (url.startsWith('/')) {
+                return baseUrl + url
+            }
+            return "$baseUrl/$url"
+        }
+    }
+
+    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create { emitter ->
+        val url = "$baseUrl/search"
+        Jsoup.connect(url)
+            .data("keyword", searchText.toString())
+            .get()
+            .select(".film_list-wrap > .flw-item")
+            .fastMap {
+                val href = fixAnimeLink(it.select("a").attr("href"))
+                val img = fixUrl(it.select("img").attr("data-src"))
+                val title = it.select("img").attr("title")
+                val year = it.select(".film-detail.film-detail-fix > div > span:nth-child(1)").text().toIntOrNull()
+                val type = it.select(".film-detail.film-detail-fix > div > span:nth-child(3)").text()
+
+                ItemModel(
+                    title = title,
+                    description = "Year: $year\nType: $type",
+                    imageUrl = img,
+                    url = href,
+                    source = Sources.WCOSTREAMCC
+                )
+            }
+            .let(emitter::onSuccess)
+
+    }
+
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
+        val doc = url.toJsoup()
+        ItemModel(
+            source = Sources.WCOSTREAMCC,
+            url = url,
+            title = doc.select("meta[name=\"title\"]").attr("content").split("| W")[0],
+            description = doc.select(".description > p").text().trim(),
+            imageUrl = doc.select(".film-poster-img").attr("src")
+        )
+            .let(emitter::onSuccess)
+    }
 
 }

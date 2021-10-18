@@ -135,7 +135,7 @@ class RecentlyViewedFragment : Fragment() {
                         .let {
                             when (val s = sortedChoice) {
                                 is SortRecentlyBy.TITLE -> it.sortedBy(s.sort)
-                                is SortRecentlyBy.TIMESTAMP -> it.sortedBy(s.sort)
+                                is SortRecentlyBy.TIMESTAMP -> it.sortedByDescending(s.sort)
                             }
                         }
                 ) {

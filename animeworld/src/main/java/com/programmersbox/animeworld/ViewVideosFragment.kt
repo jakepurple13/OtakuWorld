@@ -42,7 +42,6 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
@@ -58,7 +57,6 @@ import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.disposables.CompositeDisposable
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -96,19 +94,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
         val v = remember { VideoGet.getInstance(requireContext()) }
 
-        val prefs = remember { requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE) }
-
-        val items by v!!.videos2
-            .onEach {
-                @Suppress("RegExpRedundantEscape") val fileRegex = "(\\/[^*|\"<>?\\n]*)|(\\\\\\\\.*?\\\\.*)".toRegex()
-                val filePrefs = prefs.all.keys.filter(fileRegex::containsMatchIn)
-                filePrefs.fastForEach { p ->
-                    if (it.none { it1 -> it1.assetFileStringUri == p }) {
-                        prefs.edit().remove(p).apply()
-                    }
-                }
-            }
-            .collectAsState(emptyList())
+        val items by v!!.videos2.collectAsState(emptyList())
 
         val state = rememberBottomSheetScaffoldState()
         val scope = rememberCoroutineScope()

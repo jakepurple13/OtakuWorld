@@ -362,7 +362,7 @@ fun CoverCard(
     Card(
         onClick = onClick,
         modifier = Modifier
-            .padding(5.dp)
+            .padding(4.dp)
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
@@ -572,7 +572,7 @@ fun <T> BottomSheetDeleteScaffold(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                        shape = RoundedCornerShape(0f)
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                     ) {
                         Text(
                             stringResource(R.string.delete_multiple),
