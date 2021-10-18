@@ -362,7 +362,7 @@ fun CoverCard(
     Card(
         onClick = onClick,
         modifier = Modifier
-            .padding(5.dp)
+            .padding(4.dp)
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT

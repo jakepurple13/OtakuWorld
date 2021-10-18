@@ -19,6 +19,18 @@ fun postApi(url: String, block: HttpUrl.Builder.() -> Unit = {}): ApiResponse = 
     })
 }
 
+fun postApiMethod(
+    url: String,
+    block: HttpUrl.Builder.() -> Unit = {},
+    method: Request.Builder.() -> Request.Builder
+): ApiResponse = apiAccess(url, block) {
+    post(object : RequestBody() {
+        override fun contentType(): MediaType? = "application/json".toMediaTypeOrNull()
+        override fun writeTo(sink: BufferedSink) {}
+    })
+        .method()
+}
+
 fun postApi(url: String, built: Request.Builder.() -> Request.Builder = { this }, block: HttpUrl.Builder.() -> Unit = {}): ApiResponse =
     apiAccess(url, block) {
         post(object : RequestBody() {
@@ -52,8 +64,10 @@ inline fun <reified T> String?.debugJson(): T? = try {
     null
 }
 
-class JsUnpacker(packedJS: String?) {
-    private var packedJS: String? = null
+/**
+ * @param  packedJS javascript P.A.C.K.E.R. coded.
+ */
+class JsUnpacker(private val packedJS: String?) {
 
     /**
      * Detects whether the javascript is P.A.C.K.E.R. coded.
@@ -75,8 +89,7 @@ class JsUnpacker(packedJS: String?) {
     fun unpack(): String? {
         val js = packedJS
         try {
-            var p =
-                Pattern.compile("""}\s*\('(.*)',\s*(.*?),\s*(\d+),\s*'(.*?)'\.split\('\|'\)""", Pattern.DOTALL)
+            var p = Pattern.compile("""\}\s*\('(.*)',\s*(.*?),\s*(\d+),\s*'(.*?)'\.split\('\|'\)""", Pattern.DOTALL)
             var m = p.matcher(js)
             if (m.find() && m.groupCount() == 4) {
                 val payload = m.group(1).replace("\\'", "'")
@@ -162,13 +175,6 @@ class JsUnpacker(packedJS: String?) {
                 }
             }
         }
-    }
-
-    /**
-     * @param  packedJS javascript P.A.C.K.E.R. coded.
-     */
-    init {
-        this.packedJS = packedJS
     }
 }
 
