@@ -232,7 +232,7 @@ object GogoAnimeVC : ShowApi(
                     extractors
                         .flatMap { e ->
                             if (url.startsWith(e.mainUrl)) {
-                                println(url + "\t" + e.name)
+                                //println(url + "\t" + e.name)
                                 e.getUrl(url)
                             } else emptyList()
                             /*listOf(
