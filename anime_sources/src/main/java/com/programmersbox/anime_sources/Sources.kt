@@ -24,7 +24,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
     ANIMEKISA_SUBBED(AnimeKisaSubbed), ANIMEKISA_DUBBED(AnimeKisaDubbed), ANIMEKISA_MOVIES(AnimeKisaMovies),
 
     WCO_DUBBED(WcoDubbed), WCO_SUBBED(WcoSubbed), WCO_CARTOON(WcoCartoon), WCO_MOVIES(WcoMovies), WCO_OVA(WcoOva),
-
+    WCOSTREAMCC(WcoStreamCC)
     //ANIMETOON(AnimeToonApi), DUBBED_ANIME(AnimeToonDubbed), ANIMETOON_MOVIES(AnimeToonMovies)
     ;
 
@@ -39,7 +39,8 @@ enum class Sources(private val api: ApiService) : ApiService by api {
                 GOGOANIME_VC,
                 KAWAIIFU,
                 ANIMEKISA_SUBBED,
-                HDM
+                HDM,
+                WCOSTREAMCC
             )
     }
 }

@@ -217,7 +217,6 @@ object GogoAnimeVC : ShowApi(
                         "1080"
                     else
                         qualityRegex.find(it.text())?.destructured?.component1().toString()
-                    //TODO: Fix this
                     listOf(
                         Storage(
                             link = it.attr("href"),

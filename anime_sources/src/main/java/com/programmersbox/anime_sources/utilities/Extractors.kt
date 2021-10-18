@@ -263,3 +263,55 @@ open class DoodLaExtractor : Extractor {
         return emptyList()
     }
 }
+
+object WcoStreamExtractor : Extractor {
+    override val name: String = "WcoStream"
+    override val mainUrl: String = "https://vidstream.pro"
+    val requiresReferer = false
+    private val hlsHelper = M3u8Helper()
+
+    data class WcoResponse(val success: Boolean?, val media: Media?)
+    data class Media(val sources: List<WcoSources>?)
+    data class WcoSources(val file: String)
+
+    override fun getUrl(url: String): List<Storage> {
+        val baseUrl = url.split("/e/")[0]
+
+        val html = get(url, headers = mapOf("Referer" to "https://wcostream.cc/")).text
+        val (Id) = "/e/(.*?)?domain".toRegex().find(url)!!.destructured
+        val (skey) = """skey\s=\s['"](.*?)['"];""".toRegex().find(html.orEmpty())!!.destructured
+
+        val apiLink = "$baseUrl/info/$Id?domain=wcostream.cc&skey=$skey"
+        val referrer = "$baseUrl/e/$Id?domain=wcostream.cc"
+
+        val response = get(apiLink, headers = mapOf("Referer" to referrer)).text.fromJson<WcoResponse>()
+
+        return response?.media?.sources?.fastMap {
+            if (it.file.contains("m3u8")) {
+                hlsHelper.m3u8Generation(M3u8Helper.M3u8Stream(it.file, null), true)
+                    .fastMap { stream ->
+                        val qualityString = if ((stream.quality ?: 0) == 0) "" else "${stream.quality}p"
+                        Storage(
+                            link = stream.streamUrl,
+                            source = mainUrl,
+                            filename = name,
+                            quality = "$name $qualityString",
+                            sub = getQualityFromName(stream.quality.toString()).name,
+                        )
+                    }
+            } else {
+                listOf(
+                    Storage(
+                        link = it.file,
+                        source = mainUrl,
+                        filename = name,
+                        quality = "720",
+                        sub = Qualities.Unknown.value.toString(),
+                    )
+                )
+            }
+        }
+            .orEmpty()
+            .flatten()
+    }
+}
