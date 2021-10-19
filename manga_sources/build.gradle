@@ -51,8 +51,8 @@ dependencies {
     implementation gson
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
-    implementation gsonutils
-    implementation helpfulutils
+    implementation Deps.gsonutils
+    implementation Deps.helpfulutils
 
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0'
 

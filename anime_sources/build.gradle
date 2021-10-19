@@ -46,9 +46,9 @@ dependencies {
     implementation gson
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
-    implementation gsonutils
-    implementation helpfulutils
-    implementation rxutils
+    implementation Deps.gsonutils
+    implementation Deps.helpfulutils
+    implementation Deps.rxutils
 
     implementation rxkotlin
     implementation rxandroid

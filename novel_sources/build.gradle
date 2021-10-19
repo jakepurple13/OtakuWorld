@@ -40,9 +40,9 @@ dependencies {
 
     implementation coroutinesCore
 
-    implementation gsonutils
-    implementation helpfulutils
-    implementation rxutils
+    implementation Deps.gsonutils
+    implementation Deps.helpfulutils
+    implementation Deps.rxutils
     implementation gson
 
     implementation jsoup
