@@ -659,12 +659,7 @@ class DetailsFragment : Fragment() {
                             onClick = {
                                 genericInfo.chapterOnClick(c, chapters, infoModel, context)
                                 insertRecent()
-                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                                    .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe { snackbar(R.string.addedChapterItem) }
-                                    .addTo(disposable)
+                                if (!read.fastAny { it.url == c.url }) markAs(true)
                             },
                             modifier = Modifier
                                 .weight(1f, true)
@@ -695,12 +690,7 @@ class DetailsFragment : Fragment() {
                             onClick = {
                                 genericInfo.downloadChapter(c, chapters, infoModel, context)
                                 insertRecent()
-                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = infoModel.url)
-                                    .let { Completable.mergeArray(FirebaseDb.insertEpisodeWatched(it), dao.insertChapter(it)) }
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe { snackbar(R.string.addedChapterItem) }
-                                    .addTo(disposable)
+                                if (!read.fastAny { it.url == c.url }) markAs(true)
                             },
                             modifier = Modifier
                                 .weight(1f, true)
