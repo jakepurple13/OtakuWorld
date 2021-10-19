@@ -2,7 +2,7 @@
 buildscript {
     ext.kotlin_version = "1.5.31"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "28.8.0"
+    ext.otakuVersionName = "28.9.0"
     ext.latestAboutLibsRelease = "+"
 
     ext.coroutinesVersion = "1.5.2"
