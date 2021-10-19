@@ -131,7 +131,7 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
             Observable.combineLatest(
                 //Sources.values().distinctBy { it.baseUrl }
                 Sources.searchSources
-                    .filter { it.canDownload }
+                    .filter { it.canPlay }
                     .map {
                         it
                             .searchList(query, list = searchList)
@@ -144,7 +144,7 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .delay(SEARCH_DELAY_MS, TimeUnit.MILLISECONDS)
-                .map { it.groupBy { it.title.firstOrNull().toString() } }
+                .map { it.groupBy { it.source.serviceName } }
                 .subscribe {
                     it.forEach {
                         val (t, u) = it
