@@ -1,5 +1,6 @@
 package com.programmersbox.animeworldtv
 
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
 import android.net.Uri
@@ -92,30 +93,40 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                     null,
                     null
                 )*/
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Choose One")
+                    .setItems(it.mapNotNull { it.quality }.toTypedArray()) { d, i ->
+                        d.dismiss()
 
-                val link = it.firstOrNull()
+                        val link = it.getOrNull(i)
 
-                val dataSourceFactory = if (link?.headers?.isEmpty() == true) {
-                    DefaultDataSourceFactory(
-                        requireContext(),
-                        com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
-                    )
-                } else {
-                    DefaultHttpDataSource.Factory()
-                        .setUserAgent(com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld"))
-                        .setDefaultRequestProperties(hashMapOf("Referer" to link?.headers?.get("referer").orEmpty()))
-                }
+                        val dataSourceFactory = if (link?.headers?.isEmpty() == true) {
+                            DefaultDataSourceFactory(
+                                requireContext(),
+                                com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
+                            )
+                        } else {
+                            DefaultHttpDataSource.Factory()
+                                .setUserAgent(com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld"))
+                                .setDefaultRequestProperties(hashMapOf("Referer" to link?.headers?.get("referer").orEmpty()))
+                        }
 
-                /*val dataSourceFactory = DefaultDataSourceFactory(
-                    requireContext(),
-                    com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
-                )*/
-                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(Uri.parse(link?.link)))
+                        /*val dataSourceFactory = DefaultDataSourceFactory(
+                            requireContext(),
+                            com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
+                        )*/
+                        val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .createMediaSource(MediaItem.fromUri(Uri.parse(link?.link)))
 
-                exoPlayer.setMediaSource(mediaSource)
-                exoPlayer.playWhenReady = true
-                mTransportControlGlue.play()
+                        exoPlayer.setMediaSource(mediaSource)
+                        exoPlayer.playWhenReady = true
+                        mTransportControlGlue.play()
+                    }
+                    .setNegativeButton("Never Mind") { d, _ ->
+                        d.dismiss()
+                        activity?.finish()
+                    }
+                    .show()
             }
             .addTo(disposable)
 
