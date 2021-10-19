@@ -9,15 +9,15 @@ plugins {
 }
 
 android {
-    compileSdkVersion compileVersion
-    buildToolsVersion buildVersion
+    compileSdkVersion Deps.compileVersion
+    buildToolsVersion Deps.buildVersion
 
     defaultConfig {
         applicationId "com.programmersbox.novelworld"
-        minSdkVersion minimumSdk
-        targetSdkVersion targetSdk
+        minSdkVersion Deps.minimumSdk
+        targetSdkVersion Deps.targetSdk
         versionCode 1
-        versionName otakuVersionName
+        versionName Deps.otakuVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

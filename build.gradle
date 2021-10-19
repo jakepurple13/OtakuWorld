@@ -2,7 +2,6 @@
 buildscript {
     ext.kotlin_version = "1.5.31"
     ext.jakepurple13 = "10.6.5"
-    ext.otakuVersionName = "28.9.0"
     ext.latestAboutLibsRelease = "+"
 
     ext.coroutinesVersion = "1.5.2"
@@ -36,11 +35,6 @@ buildscript {
     ext.material = 'com.google.android.material:material:1.4.0'
 
     ext.preference = "androidx.preference:preference-ktx:1.1.1"
-
-    ext.compileVersion = 31
-    ext.minimumSdk = 23
-    ext.targetSdk = 31
-    ext.buildVersion = "30.0.2"
 
     ext.recyclerview = 'androidx.recyclerview:recyclerview:1.2.1'
     ext.constraintlayout = 'androidx.constraintlayout:constraintlayout:2.1.1'

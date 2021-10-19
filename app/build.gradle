@@ -8,15 +8,15 @@ plugins {
 //This is just to show what the minimum is needed to create a new app
 
 android {
-    compileSdkVersion compileVersion
-    buildToolsVersion buildVersion
+    compileSdkVersion Deps.compileVersion
+    buildToolsVersion Deps.buildVersion
 
     defaultConfig {
         applicationId "com.programmersbox.otakuworld"
-        minSdkVersion minimumSdk
-        targetSdkVersion targetSdk
+        minSdkVersion Deps.minimumSdk
+        targetSdkVersion Deps.targetSdk
         versionCode 1
-        versionName otakuVersionName
+        versionName Deps.otakuVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

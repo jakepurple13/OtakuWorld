@@ -29,6 +29,7 @@
             android:name=".SettingsActivity"
             android:theme="@style/Theme.OtakuWorld.LeanbackPreferences" />
         <activity
+            android:exported="true"
             android:name=".MainActivity"
             android:banner="@drawable/animeworldtv_banner"
             android:icon="@mipmap/ic_launcher"
