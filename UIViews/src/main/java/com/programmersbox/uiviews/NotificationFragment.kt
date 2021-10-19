@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -94,9 +95,53 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     state = state,
                     multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
                     topBar = {
+
+                        var showPopup by remember { mutableStateOf(false) }
+
+                        if (showPopup) {
+
+                            val onDismiss = { showPopup = false }
+
+                            AlertDialog(
+                                onDismissRequest = onDismiss,
+                                title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            db.deleteAllNotifications()
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribeBy {
+                                                    onDismiss()
+                                                    Toast.makeText(
+                                                        requireContext(),
+                                                        getString(R.string.deleted_notifications, it),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                                .addTo(disposable)
+                                            notificationManager.cancel(42)
+                                        }
+                                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = onDismiss) {
+                                        Text(
+                                            stringResource(R.string.no),
+                                            style = MaterialTheme.typography.button
+                                        )
+                                    }
+                                }
+                            )
+
+                        }
+
                         TopAppBar(
                             title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
                             actions = {
+                                IconButton(onClick = { showPopup = true }) {
+                                    Icon(Icons.Default.ClearAll, null)
+                                }
                                 IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) {
                                     Icon(Icons.Default.Delete, null)
                                 }
