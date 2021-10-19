@@ -20,6 +20,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -484,6 +485,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                 textAlign = TextAlign.Center
                                             )
                                             val scaleAnim = animateFloatAsState(scale).value
+                                            val (x, y) = animateOffsetAsState(targetValue = offset).value
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.FillWidth,
@@ -496,8 +498,8 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .graphicsLayer(
                                                         scaleX = scaleAnim,
                                                         scaleY = scaleAnim,
-                                                        translationX = animateFloatAsState(offset.x).value,
-                                                        translationY = animateFloatAsState(offset.y).value
+                                                        translationX = x,
+                                                        translationY = y
                                                     )
                                             )
                                         }
