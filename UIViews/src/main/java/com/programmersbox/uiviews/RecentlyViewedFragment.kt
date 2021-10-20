@@ -23,15 +23,12 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -178,26 +175,23 @@ class RecentlyViewedFragment : Fragment() {
                             overlineText = { Text(it.source) },
                             secondaryText = { Text(format.format(it.timestamp)) },
                             icon = {
-                                GlideImage(
-                                    imageModel = it.imageUrl,
-                                    contentDescription = "",
-                                    contentScale = ContentScale.Crop,
-                                    requestBuilder = Glide.with(LocalView.current)
-                                        .asDrawable()
-                                        .override(360, 480)
-                                        .thumbnail(0.5f)
-                                        .transform(RoundedCorners(15)),
-                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                    failure = {
-                                        Image(
-                                            painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .padding(5.dp)
-                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                        )
-                                    }
-                                )
+                                Surface(shape = MaterialTheme.shapes.medium) {
+                                    GlideImage(
+                                        imageModel = it.imageUrl,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                        failure = {
+                                            Image(
+                                                painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .padding(5.dp)
+                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                            )
+                                        }
+                                    )
+                                }
                             },
                             trailing = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
