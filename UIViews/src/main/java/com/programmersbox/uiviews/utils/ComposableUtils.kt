@@ -1097,7 +1097,7 @@ class ListBottomSheet<T>(
         }
 }
 
-class GroupButtonModel<T>(val item: T, val icon: ImageVector)
+class GroupButtonModel<T>(val item: T, val iconContent: @Composable () -> Unit)
 
 @Composable
 fun <T> GroupButton(
@@ -1125,7 +1125,7 @@ fun <T> GroupButton(
                         if (selected == option.item) MaterialTheme.colors.primaryVariant else MaterialTheme.colors.surface
                     ).value
                 )
-            ) { Icon(option.icon, null) }
+            ) { option.iconContent() }
         }
     }
 }

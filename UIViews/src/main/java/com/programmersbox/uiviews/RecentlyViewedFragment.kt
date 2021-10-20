@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -82,6 +84,8 @@ class RecentlyViewedFragment : Fragment() {
 
         var sortedChoice by remember { mutableStateOf<SortRecentlyBy<*>>(SortRecentlyBy.TIMESTAMP) }
 
+        var reverse by remember { mutableStateOf(false) }
+
         var clearAllDialog by remember { mutableStateOf(false) }
 
         if (clearAllDialog) {
@@ -118,10 +122,30 @@ class RecentlyViewedFragment : Fragment() {
                         GroupButton(
                             selected = sortedChoice,
                             options = listOf(
-                                GroupButtonModel(SortRecentlyBy.TITLE, Icons.Default.SortByAlpha),
-                                GroupButtonModel(SortRecentlyBy.TIMESTAMP, Icons.Default.CalendarToday)
+                                GroupButtonModel(SortRecentlyBy.TITLE) {
+                                    Icon(
+                                        Icons.Default.SortByAlpha,
+                                        null,
+                                        modifier = Modifier.rotate(
+                                            animateFloatAsState(
+                                                if (SortRecentlyBy.TITLE == sortedChoice && reverse) 180f else 0f
+                                            ).value
+                                        )
+                                    )
+                                },
+                                GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
+                                    Icon(
+                                        Icons.Default.CalendarToday,
+                                        null,
+                                        modifier = Modifier.rotate(
+                                            animateFloatAsState(
+                                                if (SortRecentlyBy.TIMESTAMP == sortedChoice && reverse) 180f else 0f
+                                            ).value
+                                        )
+                                    )
+                                }
                             )
-                        ) { sortedChoice = it }
+                        ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
                     }
                 )
             }
@@ -138,6 +162,7 @@ class RecentlyViewedFragment : Fragment() {
                                 is SortRecentlyBy.TIMESTAMP -> it.sortedByDescending(s.sort)
                             }
                         }
+                        .let { if (reverse) it.reversed() else it }
                 ) {
                     Card(
                         onClick = {

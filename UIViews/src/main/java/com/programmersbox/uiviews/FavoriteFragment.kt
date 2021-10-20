@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -118,6 +120,7 @@ class FavoriteFragment : Fragment() {
         val showing = favorites.filter { it.title.contains(searchText, true) && it.source in selectedSources }
 
         var sortedBy by remember { mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE) }
+        var reverse by remember { mutableStateOf(false) }
 
         CollapsingToolbarScaffold(
             modifier = Modifier,
@@ -132,10 +135,41 @@ class FavoriteFragment : Fragment() {
                             GroupButton(
                                 selected = sortedBy,
                                 options = listOf(
-                                    GroupButtonModel(SortFavoritesBy.TITLE, Icons.Default.SortByAlpha),
-                                    GroupButtonModel(SortFavoritesBy.COUNT, Icons.Default.Sort)
+                                    GroupButtonModel(SortFavoritesBy.TITLE) {
+                                        Icon(
+                                            Icons.Default.SortByAlpha,
+                                            null,
+                                            modifier = Modifier.rotate(
+                                                animateFloatAsState(
+                                                    if (SortFavoritesBy.TITLE == sortedBy && reverse) 180f else 0f
+                                                ).value
+                                            )
+                                        )
+                                    },
+                                    GroupButtonModel(SortFavoritesBy.COUNT) {
+                                        Icon(
+                                            Icons.Default.Sort,
+                                            null,
+                                            modifier = Modifier.rotate(
+                                                animateFloatAsState(
+                                                    if (SortFavoritesBy.COUNT == sortedBy && reverse) 180f else 0f
+                                                ).value
+                                            )
+                                        )
+                                    },
+                                    GroupButtonModel(SortFavoritesBy.CHAPTERS) {
+                                        Icon(
+                                            Icons.Default.ReadMore,
+                                            null,
+                                            modifier = Modifier.rotate(
+                                                animateFloatAsState(
+                                                    if (SortFavoritesBy.CHAPTERS == sortedBy && reverse) 180f else 0f
+                                                ).value
+                                            )
+                                        )
+                                    }
                                 )
-                            ) { sortedBy = it }
+                            ) { if (sortedBy != it) sortedBy = it else reverse = !reverse }
                         }
                     )
 
@@ -259,9 +293,11 @@ class FavoriteFragment : Fragment() {
                                 .let {
                                     when (val s = sortedBy) {
                                         is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
-                                        is SortFavoritesBy.COUNT -> it.sortedBy(s.sort)
+                                        is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
+                                        is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
                                     }
                                 }
+                                .let { if (reverse) it.reversed() else it }
                                 .toTypedArray()
                         ) { info ->
                             CoverCard(
@@ -322,7 +358,8 @@ class FavoriteFragment : Fragment() {
 
     sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> K) {
         object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
-        object COUNT : SortFavoritesBy<Int>({ 0 - it.value.size })
+        object COUNT : SortFavoritesBy<Int>({ it.value.size })
+        object CHAPTERS : SortFavoritesBy<Int>({ it.value.maxOf(DbModel::numChapters) })
     }
 
 }
