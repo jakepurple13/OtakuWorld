@@ -144,7 +144,7 @@ class RecentlyViewedFragment : Fragment() {
         ) { p ->
             LazyColumn(
                 contentPadding = p,
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(
                     recentItems
