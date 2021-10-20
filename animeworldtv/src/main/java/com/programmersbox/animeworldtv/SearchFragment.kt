@@ -144,10 +144,10 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .delay(SEARCH_DELAY_MS, TimeUnit.MILLISECONDS)
-                .map { it.groupBy { it.source.serviceName } }
+                .map { d -> d.groupBy { it.source.serviceName } }
                 .subscribe {
-                    it.forEach {
-                        val (t, u) = it
+                    it.forEach { item ->
+                        val (t, u) = item
                         val listRowAdapter = ArrayObjectAdapter(CardPresenter())
 
                         listRowAdapter.addAll(0, u)
@@ -163,7 +163,7 @@ class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.Sear
     }
 
     companion object {
-        private val SEARCH_DELAY_MS = 300L
+        private const val SEARCH_DELAY_MS = 300L
     }
 
     private inner class ItemViewClickedListener : OnItemViewClickedListener {
