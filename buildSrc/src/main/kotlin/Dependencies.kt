@@ -19,4 +19,7 @@ object Deps {
     /*const val jakepurple13Tools = arrayOf(
         gsonutils, helpfulutils, loggingutils, funutils, rxutils, dragswipe
     )*/
+
+    const val palette = "androidx.palette:palette-ktx:1.0.0"
+    const val junit = "junit:junit:4.+"
 }

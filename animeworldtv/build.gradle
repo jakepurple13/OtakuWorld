@@ -62,7 +62,7 @@ dependencies {
 
     //implementation project(':UIViews')
 
-    implementation 'androidx.palette:palette-ktx:1.0.0'
+    implementation Deps.palette
 
     def exoplayer_version = "2.15.1"
 
