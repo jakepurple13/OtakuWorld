@@ -132,6 +132,11 @@ class FavoriteFragment : Fragment() {
                         navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                         title = { Text(stringResource(R.string.viewFavoritesMenu)) },
                         actions = {
+
+                            val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
+                                animateFloatAsState(if (it == sortedBy && reverse) 180f else 0f).value
+                            }
+
                             GroupButton(
                                 selected = sortedBy,
                                 options = listOf(
@@ -139,33 +144,21 @@ class FavoriteFragment : Fragment() {
                                         Icon(
                                             Icons.Default.SortByAlpha,
                                             null,
-                                            modifier = Modifier.rotate(
-                                                animateFloatAsState(
-                                                    if (SortFavoritesBy.TITLE == sortedBy && reverse) 180f else 0f
-                                                ).value
-                                            )
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
                                         )
                                     },
                                     GroupButtonModel(SortFavoritesBy.COUNT) {
                                         Icon(
                                             Icons.Default.Sort,
                                             null,
-                                            modifier = Modifier.rotate(
-                                                animateFloatAsState(
-                                                    if (SortFavoritesBy.COUNT == sortedBy && reverse) 180f else 0f
-                                                ).value
-                                            )
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
                                         )
                                     },
                                     GroupButtonModel(SortFavoritesBy.CHAPTERS) {
                                         Icon(
                                             Icons.Default.ReadMore,
                                             null,
-                                            modifier = Modifier.rotate(
-                                                animateFloatAsState(
-                                                    if (SortFavoritesBy.CHAPTERS == sortedBy && reverse) 180f else 0f
-                                                ).value
-                                            )
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
                                         )
                                     }
                                 )

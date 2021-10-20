@@ -119,6 +119,10 @@ class RecentlyViewedFragment : Fragment() {
 
                         IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
 
+                        val rotateIcon: @Composable (SortRecentlyBy<*>) -> Float = {
+                            animateFloatAsState(if (it == sortedChoice && reverse) 180f else 0f).value
+                        }
+
                         GroupButton(
                             selected = sortedChoice,
                             options = listOf(
@@ -126,22 +130,14 @@ class RecentlyViewedFragment : Fragment() {
                                     Icon(
                                         Icons.Default.SortByAlpha,
                                         null,
-                                        modifier = Modifier.rotate(
-                                            animateFloatAsState(
-                                                if (SortRecentlyBy.TITLE == sortedChoice && reverse) 180f else 0f
-                                            ).value
-                                        )
+                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
                                     )
                                 },
                                 GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
                                     Icon(
                                         Icons.Default.CalendarToday,
                                         null,
-                                        modifier = Modifier.rotate(
-                                            animateFloatAsState(
-                                                if (SortRecentlyBy.TIMESTAMP == sortedChoice && reverse) 180f else 0f
-                                            ).value
-                                        )
+                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
                                     )
                                 }
                             )
