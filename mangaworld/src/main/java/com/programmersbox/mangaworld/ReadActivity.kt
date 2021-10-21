@@ -67,7 +67,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
-import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
@@ -158,7 +157,6 @@ class ReadActivityCompose : ComponentActivity() {
     @ExperimentalComposeUiApi
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
-    @ExperimentalPagerApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -191,7 +189,7 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val pages = pageList
 
-                BigImageViewer.prefetch(*pages.map(Uri::parse).toTypedArray())
+                BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray())
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -263,7 +261,7 @@ class ReadActivityCompose : ComponentActivity() {
                             topBar = {
                                 TopAppBar(
                                     title = { Text(list.getOrNull(currentChapter)?.name.orEmpty()) },
-                                    actions = { Text("${currentPage + 1}/${pages.size}") },
+                                    actions = { PageIndicator(currentPage + 1, pages.size) },
                                     navigationIcon = {
                                         IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
                                             Icon(Icons.Default.Close, null)
@@ -275,8 +273,8 @@ class ReadActivityCompose : ComponentActivity() {
                             if (scaffoldState.bottomSheetState.isExpanded) {
                                 LazyVerticalGrid(
                                     cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                                    //verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    //horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     contentPadding = p
                                 ) {
                                     itemsIndexed(pages) { i, it ->
@@ -317,7 +315,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 topBar = {
                                     TopAppBar(
                                         title = { Text(title) },
-                                        actions = { Text("${list.size - currentChapter}/${list.size}") }
+                                        actions = { PageIndicator(list.size - currentChapter, list.size) }
                                     )
                                 }
                             ) { p ->
@@ -560,18 +558,41 @@ class ReadActivityCompose : ComponentActivity() {
                                                 contentDescription = null,
                                                 tint = animateColorAsState(batteryColor).value
                                             )
-                                            Text("${batteryPercent.toInt()}%", style = MaterialTheme.typography.body1)
+                                            AnimatedContent(
+                                                targetState = batteryPercent.toInt(),
+                                                transitionSpec = {
+                                                    if (targetState > initialState) {
+                                                        slideInVertically { height -> height } + fadeIn() with
+                                                                slideOutVertically { height -> -height } + fadeOut()
+                                                    } else {
+                                                        slideInVertically { height -> -height } + fadeIn() with
+                                                                slideOutVertically { height -> height } + fadeOut()
+                                                    }
+                                                        .using(SizeTransform(clip = false))
+                                                }
+                                            ) { targetBattery ->
+                                                Text(
+                                                    "$targetBattery%",
+                                                    style = MaterialTheme.typography.body1
+                                                )
+                                            }
                                         }
 
-                                        Text(
-                                            DateFormat.format("HH:mm a", time).toString(),
-                                            style = MaterialTheme.typography.body1
-                                        )
+                                        AnimatedContent(
+                                            targetState = time,
+                                            transitionSpec = {
+                                                (slideInVertically { height -> height } + fadeIn() with
+                                                        slideOutVertically { height -> -height } + fadeOut())
+                                                    .using(SizeTransform(clip = false))
+                                            }
+                                        ) { targetTime ->
+                                            Text(
+                                                DateFormat.format("HH:mm a", targetTime).toString(),
+                                                style = MaterialTheme.typography.body1
+                                            )
+                                        }
 
-                                        Text(
-                                            "${currentPage + 1}/${pages.size}",
-                                            style = MaterialTheme.typography.body1
-                                        )
+                                        PageIndicator(currentPage + 1, pages.size)
                                     }
                                 }
 
@@ -655,6 +676,36 @@ class ReadActivityCompose : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    @ExperimentalAnimationApi
+    @Composable
+    private fun PageIndicator(currentPage: Int, pageCount: Int) {
+        Row {
+            AnimatedContent(
+                targetState = currentPage,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        slideInVertically { height -> height } + fadeIn() with
+                                slideOutVertically { height -> -height } + fadeOut()
+                    } else {
+                        slideInVertically { height -> -height } + fadeIn() with
+                                slideOutVertically { height -> height } + fadeOut()
+                    }
+                        .using(SizeTransform(clip = false))
+                }
+            ) { targetPage ->
+                Text(
+                    "$targetPage",
+                    style = MaterialTheme.typography.body1,
+                )
+            }
+
+            Text(
+                "/$pageCount",
+                style = MaterialTheme.typography.body1
+            )
         }
     }
 

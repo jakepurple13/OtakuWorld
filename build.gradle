@@ -48,7 +48,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.0"
 
-    ext.jetpack = "1.0.4"
+    ext.jetpack = "1.1.0-alpha06"
 
     ext.accompanist = "0.20.0"
 
