@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,8 +49,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -745,7 +742,6 @@ class DetailsFragment : Fragment() {
                         imageModel = model.imageUrl,
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
-                        requestBuilder = Glide.with(LocalView.current).asDrawable().transform(RoundedCorners(5)),
                         modifier = Modifier
                             .scaleRotateOffsetReset()
                             .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -792,16 +788,14 @@ class DetailsFragment : Fragment() {
                     .padding(5.dp)
                     .animateContentSize()
             ) {
-
-                Card(
-                    shape = RoundedCornerShape(5.dp),
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.padding(5.dp)
                 ) {
                     GlideImage(
                         imageModel = model.imageUrl,
                         contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        requestBuilder = Glide.with(LocalView.current).asDrawable().transform(RoundedCorners(5)),
+                        contentScale = ContentScale.Fit,
                         error = logo,
                         placeHolder = logo,
                         bitmapPalette = BitmapPalette { p ->
