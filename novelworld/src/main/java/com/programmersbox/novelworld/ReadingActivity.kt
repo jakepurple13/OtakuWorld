@@ -208,7 +208,7 @@ class ReadingActivity : ComponentActivity() {
                                 topBar = {
                                     TopAppBar(
                                         title = { Text(title) },
-                                        actions = { Text("${list.size - currentChapter}/${list.size}") }
+                                        actions = { PageIndicator(list.size - currentChapter, list.size) }
                                     )
                                 }
                             ) { p ->
@@ -406,18 +406,41 @@ class ReadingActivity : ComponentActivity() {
                                                 contentDescription = null,
                                                 tint = animateColorAsState(batteryColor).value
                                             )
-                                            Text("${batteryPercent.toInt()}%", style = MaterialTheme.typography.body1)
+                                            AnimatedContent(
+                                                targetState = batteryPercent.toInt(),
+                                                transitionSpec = {
+                                                    if (targetState > initialState) {
+                                                        slideInVertically { height -> height } + fadeIn() with
+                                                                slideOutVertically { height -> -height } + fadeOut()
+                                                    } else {
+                                                        slideInVertically { height -> -height } + fadeIn() with
+                                                                slideOutVertically { height -> height } + fadeOut()
+                                                    }
+                                                        .using(SizeTransform(clip = false))
+                                                }
+                                            ) { targetBattery ->
+                                                Text(
+                                                    "$targetBattery%",
+                                                    style = MaterialTheme.typography.body1
+                                                )
+                                            }
                                         }
 
-                                        Text(
-                                            DateFormat.format("HH:mm a", time).toString(),
-                                            style = MaterialTheme.typography.body1
-                                        )
+                                        AnimatedContent(
+                                            targetState = time,
+                                            transitionSpec = {
+                                                (slideInVertically { height -> height } + fadeIn() with
+                                                        slideOutVertically { height -> -height } + fadeOut())
+                                                    .using(SizeTransform(clip = false))
+                                            }
+                                        ) { targetTime ->
+                                            Text(
+                                                DateFormat.format("HH:mm a", targetTime).toString(),
+                                                style = MaterialTheme.typography.body1
+                                            )
+                                        }
 
-                                        Text(
-                                            "${list.size - currentChapter}/${list.size}",
-                                            style = MaterialTheme.typography.body1
-                                        )
+                                        PageIndicator(list.size - currentChapter, list.size)
                                     }
                                 }
 
@@ -495,6 +518,36 @@ class ReadingActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    @ExperimentalAnimationApi
+    @Composable
+    private fun PageIndicator(currentPage: Int, pageCount: Int) {
+        Row {
+            AnimatedContent(
+                targetState = currentPage,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        slideInVertically { height -> height } + fadeIn() with
+                                slideOutVertically { height -> -height } + fadeOut()
+                    } else {
+                        slideInVertically { height -> -height } + fadeIn() with
+                                slideOutVertically { height -> height } + fadeOut()
+                    }
+                        .using(SizeTransform(clip = false))
+                }
+            ) { targetPage ->
+                Text(
+                    "$targetPage",
+                    style = MaterialTheme.typography.body1,
+                )
+            }
+
+            Text(
+                "/$pageCount",
+                style = MaterialTheme.typography.body1
+            )
         }
     }
 
