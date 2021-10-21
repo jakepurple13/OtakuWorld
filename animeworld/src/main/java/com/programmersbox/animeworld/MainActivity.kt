@@ -45,14 +45,12 @@ class MainActivity : BaseMainActivity() {
 
     private fun openDownloads() {
         goToScreen(Screen.SETTINGS)
-        currentNavController?.value
-            ?.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
+        currentNavController?.value?.navigate(Uri.parse(VIEW_DOWNLOADS), SettingsDsl.customAnimationOptions)
     }
 
     private fun openVideos() {
         goToScreen(Screen.SETTINGS)
-        currentNavController?.value
-            ?.navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
+        currentNavController?.value?.navigate(Uri.parse(VIEW_VIDEOS), SettingsDsl.customAnimationOptions)
     }
 
 }

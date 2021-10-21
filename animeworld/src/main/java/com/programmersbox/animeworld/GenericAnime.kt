@@ -360,6 +360,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
                         id = DownloadViewerFragment::class.java.hashCode()
                         setClassName(DownloadViewerFragment::class.java.name)
+                        addDeepLink(MainActivity.VIEW_DOWNLOADS)
                     }
                 )
 
@@ -369,6 +370,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
                         id = ViewVideosFragment::class.java.hashCode()
                         setClassName(ViewVideosFragment::class.java.name)
+                        addDeepLink(MainActivity.VIEW_VIDEOS)
                     }
                 )
         }
