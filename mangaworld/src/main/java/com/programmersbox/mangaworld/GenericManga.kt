@@ -292,7 +292,7 @@ class GenericManga(val context: Context) : GenericInfo {
                         GlideImage(
                             imageModel = itemInfo?.imageUrl.orEmpty(),
                             contentDescription = null,
-                            contentScale = ContentScale.Crop,
+                            contentScale = ContentScale.Fit,
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                             loading = {
                                 Image(
