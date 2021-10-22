@@ -5,22 +5,28 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.os.Environment
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -42,6 +48,7 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
+import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
@@ -214,6 +221,7 @@ class GenericManga(val context: Context) : GenericInfo {
         }
     }
 
+    @ExperimentalComposeUiApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
@@ -229,7 +237,53 @@ class GenericManga(val context: Context) : GenericInfo {
         ) {
             items(list.size) { i ->
                 list.getOrNull(i)?.let {
+                    var toState by remember { mutableStateOf(ComponentState.Released) }
+
+                    if (toState == ComponentState.Pressed) {
+                        AlertDialog(
+                            properties = DialogProperties(usePlatformDefaultWidth = false),
+                            onDismissRequest = { toState = ComponentState.Released },
+                            buttons = {},
+                            text = {
+                                ListItem(
+                                    icon = {
+                                        val placeholder = remember {
+                                            AppCompatResources
+                                                .getDrawable(context, R.drawable.manga_world_round_logo)!!
+                                                .toBitmap().asImageBitmap()
+                                        }
+
+                                        GlideImage(
+                                            imageModel = it.imageUrl,
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                            loading = {
+                                                Image(
+                                                    bitmap = placeholder,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                                )
+                                            },
+                                            failure = {
+                                                Image(
+                                                    bitmap = placeholder,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                                )
+                                            }
+                                        )
+                                    },
+                                    overlineText = { Text(it.source.serviceName) },
+                                    text = { Text(it.title) },
+                                    secondaryText = { Text(it.description) }
+                                )
+                            }
+                        )
+                    }
+
                     CoverCard(
+                        onLongPress = { c -> toState = c },
                         imageUrl = it.imageUrl,
                         name = it.title,
                         placeHolder = R.drawable.manga_world_round_logo,

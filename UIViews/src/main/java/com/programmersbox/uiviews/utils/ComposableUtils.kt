@@ -11,9 +11,11 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CornerSize
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
@@ -331,28 +334,48 @@ suspend fun calculateDiff(
     DiffUtil.calculateDiff(diffCb, detectMoves)
 }
 
+enum class ComponentState { Pressed, Released }
+
 @ExperimentalMaterialApi
 @Composable
 fun CoverCard(
+    modifier: Modifier = Modifier,
     imageUrl: String,
     name: String,
     placeHolder: Int,
     error: Int = placeHolder,
+    onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val interactionSource = remember { MutableInteractionSource() }
 
     Card(
-        onClick = onClick,
         modifier = Modifier
             .padding(4.dp)
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
-            ),
-        indication = rememberRipple(),
-        onClickLabel = name,
+            )
+            .indication(
+                interactionSource = interactionSource,
+                indication = rememberRipple()
+            )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { onLongPress(ComponentState.Pressed) },
+                    onPress = {
+                        val press = PressInteraction.Press(it)
+                        interactionSource.tryEmit(press)
+                        tryAwaitRelease()
+                        onLongPress(ComponentState.Released)
+                        interactionSource.tryEmit(PressInteraction.Release(press))
+                    },
+                    onTap = { _ -> onClick() }
+                )
+            }
+            .then(modifier)
     ) {
         Box {
             GlideImage(
