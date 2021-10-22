@@ -89,7 +89,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 ### AnimeWorld
 - Stream and download Anime from various different video sites
 - Watch in a built-in video player
-- Cast Downloaded Videos to Chromecast Enabled Devices!
+- Cast Videos to Chromecast Enabled Devices!
 
 ### AnimeWorldTV
 - Stream Anime/TV/Movies from various different video sites
