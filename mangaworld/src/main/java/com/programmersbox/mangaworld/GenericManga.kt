@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -245,34 +246,32 @@ class GenericManga(val context: Context) : GenericInfo {
                 cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                 state = listState,
             ) {
-                items(list.size) { i ->
-                    list.getOrNull(i)?.let {
-                        CoverCard(
-                            onLongPress = { c ->
-                                itemInfo = if (c == ComponentState.Pressed) it else null
-                                scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else -topBarHeightPx * 2f) }
-                            },
-                            imageUrl = it.imageUrl,
-                            name = it.title,
-                            placeHolder = R.drawable.manga_world_round_logo,
-                            favoriteIcon = {
-                                if (favorites.fastAny { f -> f.url == it.url }) {
-                                    Icon(
-                                        Icons.Default.Favorite,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colors.primary,
-                                        modifier = Modifier.align(Alignment.TopStart)
-                                    )
-                                    Icon(
-                                        Icons.Default.FavoriteBorder,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colors.onPrimary,
-                                        modifier = Modifier.align(Alignment.TopStart)
-                                    )
-                                }
+                items(list) {
+                    CoverCard(
+                        onLongPress = { c ->
+                            itemInfo = if (c == ComponentState.Pressed) it else null
+                            scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else -topBarHeightPx * 2f) }
+                        },
+                        imageUrl = it.imageUrl,
+                        name = it.title,
+                        placeHolder = R.drawable.manga_world_round_logo,
+                        favoriteIcon = {
+                            if (favorites.fastAny { f -> f.url == it.url }) {
+                                Icon(
+                                    Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colors.primary,
+                                    modifier = Modifier.align(Alignment.TopStart)
+                                )
+                                Icon(
+                                    Icons.Default.FavoriteBorder,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colors.onPrimary,
+                                    modifier = Modifier.align(Alignment.TopStart)
+                                )
                             }
-                        ) { onClick(it) }
-                    }
+                        }
+                    ) { onClick(it) }
                 }
             }
 
