@@ -6,9 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Environment
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
@@ -21,6 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
@@ -56,6 +60,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import java.io.File
+import kotlin.math.roundToInt
 
 val appModule = module {
     single<GenericInfo> { GenericManga(get()) }
@@ -228,78 +233,87 @@ class GenericManga(val context: Context) : GenericInfo {
         listState: LazyListState,
         onClick: (ItemModel) -> Unit
     ) {
-        LazyVerticalGrid(
-            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-            state = listState
-        ) {
-            items(list.size) { i ->
-                list.getOrNull(i)?.let {
-                    var toState by remember { mutableStateOf(ComponentState.Released) }
+        var itemInfo by remember { mutableStateOf<ItemModel?>(null) }
 
-                    if (toState == ComponentState.Pressed) {
-                        AlertDialog(
-                            onDismissRequest = { toState = ComponentState.Released },
-                            buttons = {},
-                            text = {
-                                ListItem(
-                                    icon = {
-                                        val placeholder = remember {
-                                            AppCompatResources
-                                                .getDrawable(context, R.drawable.manga_world_round_logo)!!
-                                                .toBitmap().asImageBitmap()
-                                        }
+        val topBarHeight = ComposableUtils.IMAGE_HEIGHT + 20.dp
+        val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+        val aniOffset = remember { Animatable(-topBarHeightPx * 2f) }
+        val scope = rememberCoroutineScope()
 
-                                        GlideImage(
-                                            imageModel = it.imageUrl,
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                            loading = {
-                                                Image(
-                                                    bitmap = placeholder,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                                )
-                                            },
-                                            failure = {
-                                                Image(
-                                                    bitmap = placeholder,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                                )
-                                            }
-                                        )
-                                    },
-                                    overlineText = { Text(it.source.serviceName) },
-                                    text = { Text(it.title) }
+        Box(Modifier.fillMaxSize()) {
+            LazyVerticalGrid(
+                cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                state = listState,
+            ) {
+                items(list.size) { i ->
+                    list.getOrNull(i)?.let {
+                        CoverCard(
+                            onLongPress = { c ->
+                                itemInfo = if (c == ComponentState.Pressed) it else null
+                                scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else -topBarHeightPx * 2f) }
+                            },
+                            imageUrl = it.imageUrl,
+                            name = it.title,
+                            placeHolder = R.drawable.manga_world_round_logo,
+                            favoriteIcon = {
+                                if (favorites.fastAny { f -> f.url == it.url }) {
+                                    Icon(
+                                        Icons.Default.Favorite,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colors.primary,
+                                        modifier = Modifier.align(Alignment.TopStart)
+                                    )
+                                    Icon(
+                                        Icons.Default.FavoriteBorder,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colors.onPrimary,
+                                        modifier = Modifier.align(Alignment.TopStart)
+                                    )
+                                }
+                            }
+                        ) { onClick(it) }
+                    }
+                }
+            }
+
+            Card(
+                modifier = Modifier
+                    .height(topBarHeight)
+                    .align(Alignment.TopCenter)
+                    .offset { IntOffset(x = 0, y = aniOffset.value.roundToInt()) }
+            ) {
+                ListItem(
+                    icon = {
+                        val placeholder = remember {
+                            AppCompatResources
+                                .getDrawable(context, R.drawable.manga_world_round_logo)!!
+                                .toBitmap().asImageBitmap()
+                        }
+
+                        GlideImage(
+                            imageModel = itemInfo?.imageUrl.orEmpty(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                            loading = {
+                                Image(
+                                    bitmap = placeholder,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            },
+                            failure = {
+                                Image(
+                                    bitmap = placeholder,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 )
                             }
                         )
-                    }
-
-                    CoverCard(
-                        onLongPress = { c -> toState = c },
-                        imageUrl = it.imageUrl,
-                        name = it.title,
-                        placeHolder = R.drawable.manga_world_round_logo,
-                        favoriteIcon = {
-                            if (favorites.fastAny { f -> f.url == it.url }) {
-                                Icon(
-                                    Icons.Default.Favorite,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colors.primary,
-                                    modifier = Modifier.align(Alignment.TopStart)
-                                )
-                                Icon(
-                                    Icons.Default.FavoriteBorder,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colors.onPrimary,
-                                    modifier = Modifier.align(Alignment.TopStart)
-                                )
-                            }
-                        }
-                    ) { onClick(it) }
-                }
+                    },
+                    overlineText = { Text(itemInfo?.source?.serviceName.orEmpty()) },
+                    text = { Text(itemInfo?.title.orEmpty()) }
+                )
             }
         }
     }
