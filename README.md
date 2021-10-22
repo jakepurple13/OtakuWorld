@@ -34,22 +34,22 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 
 ### MangaWorld
 <p align="center">
-  <img src="/ss/s1.png" width="32%"/>
-  <img src="/ss/s2.png" width="32%"/>
-  <img src="/ss/s3.png" width="32%"/>
-  <img src="/ss/s4.png" width="32%"/>
-  <img src="/ss/s5.png" width="32%"/>
-  <img src="/ss/s6.png" width="32%"/>
+  <img src="/ss/mw_recent.png" width="32%"/>
+  <img src="/ss/mw_all.png" width="32%"/>
+  <img src="/ss/mw_details.png" width="32%"/>
+  <img src="/ss/mw_notifications.png" width="32%"/>
+  <img src="/ss/mw_top_settings.png" width="32%"/>
+  <img src="/ss/mw_more_settings.png" width="32%"/>
 </p>
 
 ### AnimeWorld
 <p align="center">
-  <img src="/ss/s7.png" width="32%"/>
-  <img src="/ss/s8.png" width="32%"/>
-  <img src="/ss/s9.png" width="32%"/>
-  <img src="/ss/s10.png" width="32%"/>
-  <img src="/ss/s11.png" width="32%"/>
-  <img src="/ss/s12.png" width="32%"/>
+  <img src="/ss/aw_recent.png" width="32%"/>
+  <img src="/ss/aw_all.png" width="32%"/>
+  <img src="/ss/aw_details.png" width="32%"/>
+  <img src="/ss/aw_history.png" width="32%"/>
+  <img src="/ss/aw_top_settings.png" width="32%"/>
+  <img src="/ss/aw_more_settings.png" width="32%"/>
 </p>
 
 ### AnimeWorldTV
@@ -64,12 +64,12 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 
 ### NovelWorld
 <p align="center">
-  <img src="/ss/novel_ss13.png" width="32%"/>
-  <img src="/ss/novel_ss14.png" width="32%"/>
-  <img src="/ss/novel_ss15.png" width="32%"/>
-  <img src="/ss/novel_ss16.png" width="32%"/>
-  <img src="/ss/novel_ss17.png" width="32%"/>
-  <img src="/ss/novel_ss18.png" width="32%"/>
+  <img src="/ss/nw_recent.png" width="32%"/>
+  <img src="/ss/nw_all.png" width="32%"/>
+  <img src="/ss/nw_details.png" width="32%"/>
+  <img src="/ss/nw_global_search.png" width="32%"/>
+  <img src="/ss/nw_favorites.png" width="32%"/>
+  <img src="/ss/nw_settings.png" width="32%"/>
 </p>
 
 ### Otaku Manager
@@ -89,7 +89,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 ### AnimeWorld
 - Stream and download Anime from various different video sites
 - Watch in a built-in video player
-- Cast Downloaded Videos to Chromecast Enabled Devices!
+- Cast Videos to Chromecast Enabled Devices!
 
 ### AnimeWorldTV
 - Stream Anime/TV/Movies from various different video sites

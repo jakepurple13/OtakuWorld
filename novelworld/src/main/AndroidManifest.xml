@@ -19,7 +19,9 @@
             android:name=".ReadingActivity"
             android:label="@string/title_activity_reading"
             android:theme="@style/Theme.OtakuWorld.NoActionBar" />
-        <activity android:name=".MainActivity">
+        <activity
+            android:exported="true"
+            android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

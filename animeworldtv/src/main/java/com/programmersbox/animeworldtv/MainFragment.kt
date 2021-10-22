@@ -8,6 +8,7 @@ import android.os.Handler
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
@@ -41,7 +42,18 @@ class MainFragment : BrowseSupportFragment() {
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundUri: String? = null
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        prepareBackgroundManager()
+
+        setupUIElements()
+
+        loadRows()
+
+        setupEventListeners()
+    }
+
+    /*override fun onActivityCreated(savedInstanceState: Bundle?) {
         Log.i(TAG, "onCreate")
         super.onActivityCreated(savedInstanceState)
 
@@ -52,7 +64,7 @@ class MainFragment : BrowseSupportFragment() {
         loadRows()
 
         setupEventListeners()
-    }
+    }*/
 
     override fun onDestroy() {
         super.onDestroy()
@@ -61,7 +73,6 @@ class MainFragment : BrowseSupportFragment() {
     }
 
     private fun prepareBackgroundManager() {
-
         mBackgroundManager = BackgroundManager.getInstance(activity)
         mBackgroundManager.attach(requireActivity().window)
         mDefaultBackground = ContextCompat.getDrawable(requireContext(), R.drawable.default_background)
@@ -126,7 +137,7 @@ class MainFragment : BrowseSupportFragment() {
             //Yts.getRecent()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .map {
+            .map { items ->
                 /*it.map {
                     MovieList.buildMovieInfo(
                         title = it.title,
@@ -140,7 +151,7 @@ class MainFragment : BrowseSupportFragment() {
 
                     }
                 }*/
-                it.groupBy { it.title.firstOrNull() }
+                items.groupBy { it.title.firstOrNull() }
             }
             .subscribeBy {
                 rowsAdapter.clear()
@@ -155,8 +166,8 @@ class MainFragment : BrowseSupportFragment() {
                 gridRowAdapter.add(resources.getString(R.string.personal_settings))*/
                 rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
-                it.entries.forEach {
-                    val (t, u) = it
+                it.entries.forEach { item ->
+                    val (t, u) = item
                     val listRowAdapter = ArrayObjectAdapter(cardPresenter)
 
                     listRowAdapter.addAll(0, u)

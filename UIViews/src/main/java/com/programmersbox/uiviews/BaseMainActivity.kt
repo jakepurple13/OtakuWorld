@@ -1,5 +1,7 @@
 package com.programmersbox.uiviews
 
+import android.app.assist.AssistContent
+import android.net.Uri
 import android.os.Bundle
 import android.webkit.URLUtil
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +11,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentScreen
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.setupWithNavController
@@ -56,6 +59,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    override fun onProvideAssistContent(outContent: AssistContent?) {
+        super.onProvideAssistContent(outContent)
+        outContent?.webUri = Uri.parse(currentDetailsUrl)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {

@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion compileVersion
-    buildToolsVersion buildVersion
+    compileSdkVersion Deps.compileVersion
+    buildToolsVersion Deps.buildVersion
 
     defaultConfig {
-        minSdkVersion minimumSdk
-        targetSdkVersion targetSdk
+        minSdkVersion Deps.minimumSdk
+        targetSdkVersion Deps.targetSdk
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -37,7 +37,7 @@ dependencies {
     implementation androidCore
     implementation appCompat
     implementation material
-    testImplementation 'junit:junit:4.+'
+    testImplementation Deps.junit
     testImplementation "com.jakewharton.picnic:picnic:0.5.0"
     testImplementation 'com.lordcodes.turtle:turtle:0.5.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

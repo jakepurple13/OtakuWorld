@@ -14,7 +14,9 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.OtakuWorld">
-        <activity android:name=".MainActivity">
+        <activity
+            android:exported="true"
+            android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -27,7 +29,9 @@
             android:enabled="true"
             android:exported="true" />
 
-        <receiver android:name="com.programmersbox.uiviews.BootReceived">
+        <receiver
+            android:exported="true"
+            android:name="com.programmersbox.uiviews.BootReceived">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.PACKAGE_FIRST_LAUNCH" />

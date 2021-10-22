@@ -11,9 +11,11 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CornerSize
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
@@ -101,10 +104,7 @@ fun StaggeredVerticalGrid(
         modifier = modifier
     ) { measurables, constraints ->
         val placeableXY: MutableMap<Placeable, Pair<Int, Int>> = mutableMapOf()
-
-        check(constraints.hasBoundedWidth) {
-            "Unbounded width not supported"
-        }
+        check(constraints.hasBoundedWidth) { "Unbounded width not supported" }
         val columns = ceil(constraints.maxWidth / maxColumnWidth.toPx()).toInt()
         val columnWidth = constraints.maxWidth / columns
         val itemConstraints = constraints.copy(maxWidth = columnWidth)
@@ -145,10 +145,7 @@ fun StaggeredVerticalGrid(
         modifier = modifier
     ) { measurables, constraints ->
         val placeableXY: MutableMap<Placeable, Pair<Int, Int>> = mutableMapOf()
-
-        check(constraints.hasBoundedWidth) {
-            "Unbounded width not supported"
-        }
+        check(constraints.hasBoundedWidth) { "Unbounded width not supported" }
         val columnWidth = constraints.maxWidth / columns
         val itemConstraints = constraints.copy(maxWidth = columnWidth)
         val colHeights = IntArray(columns) { 0 } // track each column's height
@@ -320,19 +317,12 @@ data class AnimatedItem<T>(
     val visibility: MutableTransitionState<Boolean>,
     val item: T,
 ) {
-
-    override fun hashCode(): Int {
-        return item?.hashCode() ?: 0
-    }
-
+    override fun hashCode(): Int = item?.hashCode() ?: 0
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-
         other as AnimatedItem<*>
-
         if (item != other.item) return false
-
         return true
     }
 }
@@ -340,35 +330,52 @@ data class AnimatedItem<T>(
 suspend fun calculateDiff(
     detectMoves: Boolean = true,
     diffCb: DiffUtil.Callback
-): DiffUtil.DiffResult {
-    return withContext(Dispatchers.Unconfined) {
-        DiffUtil.calculateDiff(diffCb, detectMoves)
-    }
+): DiffUtil.DiffResult = withContext(Dispatchers.Unconfined) {
+    DiffUtil.calculateDiff(diffCb, detectMoves)
 }
+
+enum class ComponentState { Pressed, Released }
 
 @ExperimentalMaterialApi
 @Composable
 fun CoverCard(
+    modifier: Modifier = Modifier,
     imageUrl: String,
     name: String,
     placeHolder: Int,
     error: Int = placeHolder,
+    onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {}
 ) {
-
     val context = LocalContext.current
+    val interactionSource = remember { MutableInteractionSource() }
 
     Card(
-        onClick = onClick,
         modifier = Modifier
             .padding(4.dp)
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
-            ),
-        indication = rememberRipple(),
-        onClickLabel = name,
+            )
+            .indication(
+                interactionSource = interactionSource,
+                indication = rememberRipple()
+            )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { onLongPress(ComponentState.Pressed) },
+                    onPress = {
+                        val press = PressInteraction.Press(it)
+                        interactionSource.tryEmit(press)
+                        tryAwaitRelease()
+                        onLongPress(ComponentState.Released)
+                        interactionSource.tryEmit(PressInteraction.Release(press))
+                    },
+                    onTap = { _ -> onClick() }
+                )
+            }
+            .then(modifier)
     ) {
         Box {
             GlideImage(
@@ -717,25 +724,55 @@ private fun <T> DeleteItemView(
 }
 
 @Composable
+fun rememberScaleRotateOffset(
+    initialScale: Float = 1f,
+    initialRotation: Float = 0f,
+    initialOffset: Offset = Offset.Zero
+) = remember { ScaleRotateOffset(initialScale, initialRotation, initialOffset) }
+
+class ScaleRotateOffset(initialScale: Float = 1f, initialRotation: Float = 0f, initialOffset: Offset = Offset.Zero) {
+    val scale: MutableState<Float> = mutableStateOf(initialScale)
+    val rotation: MutableState<Float> = mutableStateOf(initialRotation)
+    val offset: MutableState<Offset> = mutableStateOf(initialOffset)
+}
+
+@Composable
 fun Modifier.scaleRotateOffset(
+    scaleRotateOffset: ScaleRotateOffset,
+    canScale: Boolean = true,
+    canRotate: Boolean = true,
+    canOffset: Boolean = true
+): Modifier = scaleRotateOffset(
+    scaleRotateOffset.scale,
+    scaleRotateOffset.rotation,
+    scaleRotateOffset.offset,
+    canScale,
+    canRotate,
+    canOffset
+)
+
+@Composable
+fun Modifier.scaleRotateOffset(
+    scale: MutableState<Float> = remember { mutableStateOf(1f) },
+    rotation: MutableState<Float> = remember { mutableStateOf(0f) },
+    offset: MutableState<Offset> = remember { mutableStateOf(Offset.Zero) },
     canScale: Boolean = true,
     canRotate: Boolean = true,
     canOffset: Boolean = true
 ): Modifier {
-    var scale by remember { mutableStateOf(1f) }
-    var rotation by remember { mutableStateOf(0f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (canScale) scale *= zoomChange
-        if (canRotate) rotation += rotationChange
-        if (canOffset) offset += offsetChange
+        if (canScale) scale.value *= zoomChange
+        if (canRotate) rotation.value += rotationChange
+        if (canOffset) offset.value += offsetChange
     }
+    val animScale = animateFloatAsState(scale.value).value
+    val (x, y) = animateOffsetAsState(offset.value).value
     return graphicsLayer(
-        scaleX = scale,
-        scaleY = scale,
-        rotationZ = rotation,
-        translationX = offset.x,
-        translationY = offset.y
+        scaleX = animScale,
+        scaleY = animScale,
+        rotationZ = animateFloatAsState(rotation.value).value,
+        translationX = x,
+        translationY = y
     )
         // add transformable to listen to multitouch transformation events after offset
         .transformable(state = state)
@@ -758,12 +795,14 @@ fun Modifier.scaleRotateOffsetReset(
         if (canRotate) rotation += rotationChange
         if (canOffset) offset += offsetChange
     }
+    val animScale = animateFloatAsState(scale).value
+    val (x, y) = animateOffsetAsState(offset).value
     return graphicsLayer(
-        scaleX = animateFloatAsState(scale).value,
-        scaleY = animateFloatAsState(scale).value,
+        scaleX = animScale,
+        scaleY = animScale,
         rotationZ = animateFloatAsState(rotation).value,
-        translationX = animateFloatAsState(offset.x).value,
-        translationY = animateFloatAsState(offset.y).value
+        translationX = x,
+        translationY = y
     )
         // add transformable to listen to multitouch transformation events
         // after offset
@@ -835,10 +874,7 @@ fun <T> List<T>.asAutoCompleteEntities(filter: CustomFilter<T>): List<ValueAutoC
     return fastMap {
         object : ValueAutoCompleteEntity<T> {
             override val value: T = it
-
-            override fun filter(query: String): Boolean {
-                return filter(value, query)
-            }
+            override fun filter(query: String): Boolean = filter(value, query)
         }
     }
 }
@@ -1084,7 +1120,7 @@ class ListBottomSheet<T>(
         }
 }
 
-class GroupButtonModel<T>(val item: T, val icon: ImageVector)
+class GroupButtonModel<T>(val item: T, val iconContent: @Composable () -> Unit)
 
 @Composable
 fun <T> GroupButton(
@@ -1112,7 +1148,7 @@ fun <T> GroupButton(
                         if (selected == option.item) MaterialTheme.colors.primaryVariant else MaterialTheme.colors.surface
                     ).value
                 )
-            ) { Icon(option.icon, null) }
+            ) { option.iconContent() }
         }
     }
 }

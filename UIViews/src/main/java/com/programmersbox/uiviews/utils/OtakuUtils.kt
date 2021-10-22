@@ -19,3 +19,7 @@ class OtakuGlideModule : AppGlideModule() {
         builder.setLogLevel(Log.ERROR)
     }
 }
+
+val otakuWorldGithubUrl get() = "https://github.com/jakepurple13/OtakuWorld/"
+
+var currentDetailsUrl = otakuWorldGithubUrl

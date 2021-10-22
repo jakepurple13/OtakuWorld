@@ -8,15 +8,15 @@ plugins {
 //This is just to show what the minimum is needed to create a new app
 
 android {
-    compileSdkVersion compileVersion
-    buildToolsVersion buildVersion
+    compileSdkVersion Deps.compileVersion
+    buildToolsVersion Deps.buildVersion
 
     defaultConfig {
         applicationId "com.programmersbox.otakuworld"
-        minSdkVersion minimumSdk
-        targetSdkVersion targetSdk
+        minSdkVersion Deps.minimumSdk
+        targetSdkVersion Deps.targetSdk
         versionCode 1
-        versionName otakuVersionName
+        versionName Deps.otakuVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,7 +50,7 @@ dependencies {
     implementation appCompat
     implementation material
     implementation constraintlayout
-    testImplementation 'junit:junit:4.+'
+    testImplementation Deps.junit
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 

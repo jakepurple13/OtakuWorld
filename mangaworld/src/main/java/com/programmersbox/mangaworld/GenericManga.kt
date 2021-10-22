@@ -5,22 +5,31 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.os.Environment
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -42,6 +51,7 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
+import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
@@ -51,6 +61,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import java.io.File
+import kotlin.math.roundToInt
 
 val appModule = module {
     single<GenericInfo> { GenericManga(get()) }
@@ -190,7 +201,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 .addDestination(
                     FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
                         id = DownloadViewerFragment::class.java.hashCode()
-                        className = DownloadViewerFragment::class.java.name
+                        setClassName(DownloadViewerFragment::class.java.name)
                     }
                 )
         }
@@ -223,13 +234,24 @@ class GenericManga(val context: Context) : GenericInfo {
         listState: LazyListState,
         onClick: (ItemModel) -> Unit
     ) {
-        LazyVerticalGrid(
-            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-            state = listState
-        ) {
-            items(list.size) { i ->
-                list.getOrNull(i)?.let {
+        var itemInfo by remember { mutableStateOf<ItemModel?>(null) }
+
+        val topBarHeight = ComposableUtils.IMAGE_HEIGHT + 20.dp
+        val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+        val aniOffset = remember { Animatable(-topBarHeightPx * 2f) }
+        val scope = rememberCoroutineScope()
+
+        Box(Modifier.fillMaxSize()) {
+            LazyVerticalGrid(
+                cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                state = listState,
+            ) {
+                items(list) {
                     CoverCard(
+                        onLongPress = { c ->
+                            itemInfo = if (c == ComponentState.Pressed) it else null
+                            scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else -topBarHeightPx * 2f) }
+                        },
                         imageUrl = it.imageUrl,
                         name = it.title,
                         placeHolder = R.drawable.manga_world_round_logo,
@@ -251,6 +273,46 @@ class GenericManga(val context: Context) : GenericInfo {
                         }
                     ) { onClick(it) }
                 }
+            }
+
+            Card(
+                modifier = Modifier
+                    .height(topBarHeight)
+                    .align(Alignment.TopCenter)
+                    .offset { IntOffset(x = 0, y = aniOffset.value.roundToInt()) }
+            ) {
+                ListItem(
+                    icon = {
+                        val placeholder = remember {
+                            AppCompatResources
+                                .getDrawable(context, R.drawable.manga_world_round_logo)!!
+                                .toBitmap().asImageBitmap()
+                        }
+
+                        GlideImage(
+                            imageModel = itemInfo?.imageUrl.orEmpty(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                            loading = {
+                                Image(
+                                    bitmap = placeholder,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            },
+                            failure = {
+                                Image(
+                                    bitmap = placeholder,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            }
+                        )
+                    },
+                    overlineText = { Text(itemInfo?.source?.serviceName.orEmpty()) },
+                    text = { Text(itemInfo?.title.orEmpty()) }
+                )
             }
         }
     }

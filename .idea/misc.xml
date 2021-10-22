@@ -37,6 +37,8 @@
         <entry key="../../../../layout/compose-model-1633430204414.xml" value="0.1" />
         <entry key="../../../../layout/compose-model-1633518522182.xml" value="0.5" />
         <entry key="../../../../layout/compose-model-1634063183462.xml" value="0.1" />
+        <entry key="../../../../layout/compose-model-1634727913267.xml" value="0.3158783783783784" />
+        <entry key="../../../../layout/compose-model-1634727939029.xml" value="0.3158783783783784" />
         <entry key="UIViews/src/main/res/drawable/action_chapter.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/github_icon.xml" value="0.23541666666666666" />
         <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
@@ -71,6 +73,7 @@
         <entry key="animeworld/src/main/res/layout/delete_dialog_layout.xml" value="0.2048611111111111" />
         <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
         <entry key="animeworld/src/main/res/layout/download_viewer_fragment.xml" value="0.21736111111111112" />
+        <entry key="animeworld/src/main/res/layout/exo_controls.xml" value="0.2152777777777778" />
         <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
         <entry key="animeworld/src/main/res/layout/item_torrent_download.xml" value="0.12894736842105264" />
         <entry key="animeworld/src/main/res/layout/item_torrent_download_1.xml" value="0.12894736842105264" />
@@ -78,6 +81,7 @@
         <entry key="animeworld/src/main/res/layout/shimmer_row.xml" value="0.2325657894736842" />
         <entry key="animeworld/src/main/res/layout/video_layout.xml" value="0.2028688524590164" />
         <entry key="animeworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
+        <entry key="animeworld/src/main/res/xml/shortcuts.xml" value="0.2299342105263158" />
         <entry key="animeworldtv/src/main/res/layout/tv_item.xml" value="0.12894736842105264" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.13941368078175895" />
         <entry key="mangaworld/src/main/res/drawable/gradient_shape.xml" value="0.23778501628664495" />
@@ -91,6 +95,7 @@
         <entry key="mangaworld/src/main/res/layout/reader_settings_dialog.xml" value="0.2299342105263158" />
         <entry key="novelworld/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.14078947368421052" />
         <entry key="novelworld/src/main/res/layout/novel_list_item.xml" value="0.23029315960912053" />
+        <entry key="novelworld/src/main/res/menu/menu_reading.xml" value="0.22291666666666668" />
         <entry key="novelworld/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.14078947368421052" />
         <entry key="novelworld/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.14078947368421052" />
         <entry key="otakumanager/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.24039087947882737" />

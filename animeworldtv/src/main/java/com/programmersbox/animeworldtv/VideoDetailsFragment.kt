@@ -14,7 +14,6 @@ import androidx.leanback.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
-import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.models.ChapterModel
@@ -30,6 +29,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import org.koin.android.ext.android.inject
+import kotlin.math.roundToInt
 
 /**
  * A wrapper fragment for leanback details screens.
@@ -154,7 +154,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         Flowables.combineLatest(
             itemListener.findItemByUrl(movie!!.url),
-            itemDao.containsItem(movie!!.url)
+            itemDao.containsItem(movie.url)
         )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -334,7 +334,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
     private fun convertDpToPixel(context: Context, dp: Int): Int {
         val density = context.applicationContext.resources.displayMetrics.density
-        return Math.round(dp.toFloat() * density)
+        return (dp.toFloat() * density).roundToInt()
     }
 
     private inner class ItemViewClickedListener : OnItemViewClickedListener {
@@ -362,7 +362,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             }*/
 
             if (item is ChapterModel) {
-                if ((item.source as? ShowApi)?.canPlay == false) {
+                if (!item.source.canPlay) {
                     Toast.makeText(
                         context,
                         requireContext().getString(R.string.source_no_stream, item.source.serviceName),

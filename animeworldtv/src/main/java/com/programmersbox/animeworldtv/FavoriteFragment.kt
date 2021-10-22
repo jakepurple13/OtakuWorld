@@ -8,6 +8,7 @@ import android.os.Handler
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.app.ActivityOptionsCompat
@@ -41,9 +42,8 @@ class FavoriteFragment : BrowseSupportFragment() {
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundUri: String? = null
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        Log.i(TAG, "onCreate")
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         prepareBackgroundManager()
 
@@ -54,6 +54,19 @@ class FavoriteFragment : BrowseSupportFragment() {
         setupEventListeners()
     }
 
+    /*override fun onActivityCreated(savedInstanceState: Bundle?) {
+        Log.i(TAG, "onCreate")
+        super.onActivityCreated(savedInstanceState)
+
+        prepareBackgroundManager()
+
+        setupUIElements()
+
+        loadRows()
+
+        setupEventListeners()
+    }*/
+
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: " + mBackgroundTimer?.toString())
@@ -63,7 +76,6 @@ class FavoriteFragment : BrowseSupportFragment() {
     }
 
     private fun prepareBackgroundManager() {
-
         mBackgroundManager = BackgroundManager.getInstance(activity)
         mBackgroundManager.attach(requireActivity().window)
         mDefaultBackground = ContextCompat.getDrawable(requireContext(), R.drawable.default_background)
@@ -126,8 +138,8 @@ class FavoriteFragment : BrowseSupportFragment() {
             //Yts.getRecent()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .map {
-                it.mapNotNull {
+            .map { items ->
+                items.mapNotNull {
                     try {
                         it.toItemModel(Sources.valueOf(it.source))
                     } catch (e: IllegalArgumentException) {
@@ -135,16 +147,16 @@ class FavoriteFragment : BrowseSupportFragment() {
                     }
                 }.sortedBy { it.title }
             }
-            .map { it.groupBy { it.source } }
+            .map { d -> d.groupBy { it.source } }
             .subscribeBy {
                 rowsAdapter.clear()
-                it.entries.forEach {
-                    val (t, u) = it
+                it.entries.forEach { item ->
+                    val (t, u) = item
                     val listRowAdapter = ArrayObjectAdapter(cardPresenter)
 
                     listRowAdapter.addAll(0, u)
 
-                    val header = HeaderItem(t?.hashCode()?.toLong() ?: 0L, t.toString())
+                    val header = HeaderItem(t.hashCode().toLong(), t.toString())
                     rowsAdapter.add(ListRow(header, listRowAdapter))
                 }
 

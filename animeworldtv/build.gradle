@@ -7,15 +7,15 @@ plugins {
 }
 
 android {
-    compileSdkVersion compileVersion
-    buildToolsVersion buildVersion
+    compileSdkVersion Deps.compileVersion
+    buildToolsVersion Deps.buildVersion
 
     defaultConfig {
         applicationId "com.programmersbox.animeworldtv"
-        minSdkVersion minimumSdk
-        targetSdkVersion targetSdk
+        minSdkVersion Deps.minimumSdk
+        targetSdkVersion Deps.targetSdk
         versionCode 1
-        versionName otakuVersionName
+        versionName Deps.otakuVersionName
 
     }
 
@@ -62,7 +62,7 @@ dependencies {
 
     //implementation project(':UIViews')
 
-    implementation 'androidx.palette:palette-ktx:1.0.0'
+    implementation Deps.palette
 
     def exoplayer_version = "2.15.1"
 

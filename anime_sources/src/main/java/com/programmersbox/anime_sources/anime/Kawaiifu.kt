@@ -37,17 +37,17 @@ object Kawaiifu : ShowApi(
     }
 
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
-        doc.select(".section").flatMap {
-            it.select(".list-film > .item").fastMap { ani ->
+        doc.select(".section")
+            .select(".list-film > .item")
+            .fastMap {
                 ItemModel(
-                    title = ani.selectFirst("img")?.attr("alt").orEmpty(),
+                    title = it.select("img").attr("alt"),
                     description = it.selectFirst("p.txtstyle2")?.select("span.cot1")?.text().orEmpty(),
                     imageUrl = it.selectFirst("img")?.attr("src").orEmpty(),
                     url = it.selectFirst("a")?.attr("abs:href").orEmpty(),
                     source = Sources.KAWAIIFU
                 )
             }
-        }
             .let(emitter::onSuccess)
     }
 

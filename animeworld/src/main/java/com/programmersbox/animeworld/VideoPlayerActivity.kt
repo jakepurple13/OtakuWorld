@@ -219,7 +219,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "AnimeWorld"))
             ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(showPath!!.toUri()))
         } else {
-
             //stream
             //fun buildMediaSource(uri: Uri): MediaSource =
             //ProgressiveMediaSource.Factory(DefaultHttpDataSourceFactory("exoplayer-codelab")).createMediaSource(uri)

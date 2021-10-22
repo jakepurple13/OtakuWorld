@@ -110,6 +110,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MdcTheme {
+
+                val favorites by Flowable.combineLatest(
+                    animeListener.getAllShowsFlowable(),
+                    mangaListener.getAllShowsFlowable(),
+                    novelListener.getAllShowsFlowable()
+                ) { a, m, n -> (a + m + n).sortedBy { it.title } }
+                    .map { it.filter { it.source in allSources.map(ApiService::serviceName) } }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeAsState(initial = emptyList())
+
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
 
@@ -147,7 +158,7 @@ class MainActivity : ComponentActivity() {
                     ) { p ->
 
                         NavHost(navController = navController, startDestination = Screen.Favorites.route, modifier = Modifier.padding(p)) {
-                            composable(Screen.Favorites.route) { MainUi(navController) }
+                            composable(Screen.Favorites.route) { MainUi(navController, favorites) }
                             composable(Screen.Settings.route) { OtakuSettings(this@MainActivity, genericInfo) }
                             composable(
                                 Screen.Details.route,
@@ -194,7 +205,7 @@ class MainActivity : ComponentActivity() {
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
-    fun MainUi(navController: NavController) {
+    fun MainUi(navController: NavController, favorites: List<DbModel>) {
 
         val systemUi = rememberSystemUiController()
         systemUi.setStatusBarColor(animateColorAsState(MaterialTheme.colors.primaryVariant).value)
@@ -202,16 +213,6 @@ class MainActivity : ComponentActivity() {
         val focusManager = LocalFocusManager.current
 
         var searchText by rememberSaveable { mutableStateOf("") }
-
-        val favorites by Flowable.combineLatest(
-            animeListener.getAllShowsFlowable(),
-            mangaListener.getAllShowsFlowable(),
-            novelListener.getAllShowsFlowable()
-        ) { a, m, n -> (a + m + n).sortedBy { it.title } }
-            .map { it.filter { it.source in allSources.map(ApiService::serviceName) } }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(initial = emptyList())
 
         val selectedSources = remember { allSources.map { it.serviceName }.toMutableStateList() }
 

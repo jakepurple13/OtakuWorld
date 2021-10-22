@@ -1,5 +1,6 @@
 package com.programmersbox.animeworldtv
 
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
 import android.net.Uri
@@ -25,6 +26,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.video.VideoSize
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.Storage
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -82,7 +84,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                 Toast.makeText(requireContext(), "Something went wrong", Toast.LENGTH_SHORT).show()
                 activity?.finish()
             }
-            .subscribeBy {
+            .subscribeBy { videos ->
                 //playerAdapter.setDataSource(Uri.parse(it.firstOrNull()?.link))
                 /*val userAgent: String = com.google.android.exoplayer2.util.Util.getUserAgent(requireActivity(), "VideoPlayerGlue")
                 val mediaSource: MediaSource = DefaultMediaSourceFactory(
@@ -93,29 +95,45 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                     null
                 )*/
 
-                val link = it.firstOrNull()
+                fun startVideo(storage: Storage?) {
+                    val dataSourceFactory = if (storage?.headers?.isEmpty() == true) {
+                        DefaultDataSourceFactory(
+                            requireContext(),
+                            com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
+                        )
+                    } else {
+                        DefaultHttpDataSource.Factory()
+                            .setUserAgent(com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld"))
+                            .setDefaultRequestProperties(hashMapOf("Referer" to storage?.headers?.get("referer").orEmpty()))
+                    }
 
-                val dataSourceFactory = if (link?.headers?.isEmpty() == true) {
-                    DefaultDataSourceFactory(
+                    /*val dataSourceFactory = DefaultDataSourceFactory(
                         requireContext(),
                         com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
-                    )
-                } else {
-                    DefaultHttpDataSource.Factory()
-                        .setUserAgent(com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld"))
-                        .setDefaultRequestProperties(hashMapOf("Referer" to link?.headers?.get("referer").orEmpty()))
+                    )*/
+                    val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+                        .createMediaSource(MediaItem.fromUri(Uri.parse(storage?.link)))
+
+                    exoPlayer.setMediaSource(mediaSource)
+                    exoPlayer.playWhenReady = true
+                    mTransportControlGlue.play()
                 }
 
-                /*val dataSourceFactory = DefaultDataSourceFactory(
-                    requireContext(),
-                    com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
-                )*/
-                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(Uri.parse(link?.link)))
-
-                exoPlayer.setMediaSource(mediaSource)
-                exoPlayer.playWhenReady = true
-                mTransportControlGlue.play()
+                if (videos.size == 1) {
+                    startVideo(videos.firstOrNull())
+                } else {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(getString(R.string.choose_quality_for, item.name))
+                        .setItems(videos.mapNotNull { it.quality }.toTypedArray()) { d, i ->
+                            d.dismiss()
+                            startVideo(videos.getOrNull(i))
+                        }
+                        .setNegativeButton(R.string.videoPlayerBack) { d, _ ->
+                            d.dismiss()
+                            activity?.finish()
+                        }
+                        .show()
+                }
             }
             .addTo(disposable)
 

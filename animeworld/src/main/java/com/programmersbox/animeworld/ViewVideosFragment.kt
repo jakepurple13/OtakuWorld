@@ -229,7 +229,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     val videos by updateAnimatedItemsState(newList = itemList)
 
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         contentPadding = p1,
                         state = rememberLazyListState(),
                         modifier = Modifier.padding(5.dp)

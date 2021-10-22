@@ -3,10 +3,7 @@ package com.programmersbox.otakuworld
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
@@ -52,6 +49,7 @@ import androidx.compose.ui.util.fastAny
 import com.bumptech.glide.Glide
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.helpfulutils.itemRangeOf
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
@@ -59,7 +57,6 @@ import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.disposables.CompositeDisposable
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
@@ -96,8 +93,47 @@ class MainActivity : ComponentActivity() {
             .subscribeBy { sourceList.addAll(it) }
             .addTo(disposable)*/
 
+        val strings = itemRangeOf("Hello", "World", "How", "Are", "You?")
+
         setContent {
             MdcTheme {
+
+                //TODO: Try to animate a string
+
+                var stringer by remember { mutableStateOf(strings.item) }
+
+                Column {
+                    AnimatedContent(
+                        targetState = stringer,
+                        transitionSpec = {
+                            // Compare the incoming number with the previous number.
+                            /*if (targetState > initialState) {
+                                // If the target number is larger, it slides up and fades in
+                                // while the initial (smaller) number slides up and fades out.
+                                slideInVertically { height -> height } + fadeIn() with
+                                        slideOutVertically { height -> -height } + fadeOut()
+                            } else {
+                                // If the target number is smaller, it slides down and fades in
+                                // while the initial number slides down and fades out.
+                                slideInVertically { height -> -height } + fadeIn() with
+                                        slideOutVertically { height -> height } + fadeOut()
+                            }*/
+                            (slideInVertically { height -> height } + fadeIn() with
+                                    slideOutVertically { height -> -height } + fadeOut())
+                                .using(
+                                    // Disable clipping since the faded slide-in/out should
+                                    // be displayed out of bounds.
+                                    SizeTransform(clip = false)
+                                )
+                        }
+                    ) { targetString -> Text(targetString) }
+                    Button(
+                        onClick = {
+                            strings.next()
+                            stringer = strings()
+                        }
+                    ) { Text("Next String") }
+                }
 
                 /*BottomDrawer(
                     drawerContent = {
@@ -146,7 +182,7 @@ class MainActivity : ComponentActivity() {
                 //CustomNestedScrollExample()
                 //ScaffoldNestedScrollExample()
 
-                Box(
+                /*Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
@@ -178,40 +214,40 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         ) { Text("Delete") }
-                    }
-                    /*val options = listOf("Option 1", "Option 2", "Option 3", "Option 4", "Option 5")
-                    var expanded by remember { mutableStateOf(false) }
-                    var selectedOptionText by remember { mutableStateOf("") }
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
-                    ) {
-                        TextField(
-                            value = selectedOptionText,
-                            onValueChange = { selectedOptionText = it },
-                            label = { Text("Label") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            colors = ExposedDropdownMenuDefaults.textFieldColors()
-                        )
-                        // filter options based on text field value
-                        val filteringOptions = options.filter { it.contains(selectedOptionText, ignoreCase = true) }
-                        if (filteringOptions.isNotEmpty()) {
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                filteringOptions.forEach { selectionOption ->
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            selectedOptionText = selectionOption
-                                            expanded = false
-                                        }
-                                    ) { Text(text = selectionOption) }
-                                }
+                    }*/
+                /*val options = listOf("Option 1", "Option 2", "Option 3", "Option 4", "Option 5")
+                var expanded by remember { mutableStateOf(false) }
+                var selectedOptionText by remember { mutableStateOf("") }
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    TextField(
+                        value = selectedOptionText,
+                        onValueChange = { selectedOptionText = it },
+                        label = { Text("Label") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.textFieldColors()
+                    )
+                    // filter options based on text field value
+                    val filteringOptions = options.filter { it.contains(selectedOptionText, ignoreCase = true) }
+                    if (filteringOptions.isNotEmpty()) {
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            filteringOptions.forEach { selectionOption ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        selectedOptionText = selectionOption
+                                        expanded = false
+                                    }
+                                ) { Text(text = selectionOption) }
                             }
                         }
-                    }*/
+                    }
                 }
+            }*/
             }
         }
     }
