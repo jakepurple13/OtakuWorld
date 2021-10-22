@@ -109,6 +109,7 @@ class DetailsFragment : Fragment() {
 
         args.itemInfo
             ?.also { info ->
+                currentDetailsUrl = info.url
                 setContent {
                     MdcTheme {
                         Scaffold(

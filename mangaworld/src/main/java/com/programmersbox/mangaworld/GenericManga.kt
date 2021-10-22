@@ -18,13 +18,11 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
@@ -221,7 +219,6 @@ class GenericManga(val context: Context) : GenericInfo {
         }
     }
 
-    @ExperimentalComposeUiApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
@@ -241,7 +238,6 @@ class GenericManga(val context: Context) : GenericInfo {
 
                     if (toState == ComponentState.Pressed) {
                         AlertDialog(
-                            properties = DialogProperties(usePlatformDefaultWidth = false),
                             onDismissRequest = { toState = ComponentState.Released },
                             buttons = {},
                             text = {
@@ -275,8 +271,7 @@ class GenericManga(val context: Context) : GenericInfo {
                                         )
                                     },
                                     overlineText = { Text(it.source.serviceName) },
-                                    text = { Text(it.title) },
-                                    secondaryText = { Text(it.description) }
+                                    text = { Text(it.title) }
                                 )
                             }
                         )
