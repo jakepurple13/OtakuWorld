@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.utils
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
@@ -14,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import kotlinx.coroutines.*
@@ -72,23 +73,14 @@ internal class AnimatedLazyListViewModel<T>(
                           currentPreviousList,
                           currentList
                       ) ->
-                if (insertedPositions.isEmpty() && removedPositions.isEmpty()
-                    && movedPositions.isEmpty() && changedPositions.isEmpty()
-                ) {
+                if (insertedPositions.isEmpty() && removedPositions.isEmpty() && movedPositions.isEmpty() && changedPositions.isEmpty()) {
                     return@onEach
                 }
                 mutex.withLock {
                     if (items.value.isEmpty()) {
-                        items.emit(currentList.map {
-                            AnimatedItemWA(
-                                value = it,
-                                state = AnimatedItemState.INITIAL
-                            )
-                        })
+                        items.emit(currentList.fastMap { AnimatedItemWA(value = it, state = AnimatedItemState.INITIAL) })
                         delay(animationDuration.toLong())
-                        items.emit(items.value.map {
-                            it.copy(state = AnimatedItemState.IDLE)
-                        })
+                        items.emit(items.value.fastMap { it.copy(state = AnimatedItemState.IDLE) })
                         previousList = currentList
                         return@onEach
                     }
@@ -98,14 +90,12 @@ internal class AnimatedLazyListViewModel<T>(
                         AnimatedItemWA(
                             value = item,
                             state = when {
-                                insertedPositions.contains(index) ||
-                                        movedPositions.find { it.second == index } != null ->
-                                    AnimatedItemState.INSERTED
+                                insertedPositions.contains(index) || movedPositions.find { it.second == index } != null -> AnimatedItemState.INSERTED
                                 else -> AnimatedItemState.IDLE
                             }
                         )
                     })
-                    removedPositions.forEach {
+                    removedPositions.fastForEach {
                         val index = max(
                             0,
                             if (it > intermediateList.size) intermediateList.size - 1 else it
@@ -123,7 +113,7 @@ internal class AnimatedLazyListViewModel<T>(
                         )
                     }
                     if (!allRemoved) {
-                        movedPositions.forEach {
+                        movedPositions.fastForEach {
                             val item = currentPreviousList[it.first]
                             intermediateList.add(
                                 if (it.first > intermediateList.size) {
@@ -140,7 +130,7 @@ internal class AnimatedLazyListViewModel<T>(
                     }
                     items.emit(intermediateList.distinctBy { it.value.key })
                     delay(animationDuration.toLong())
-                    items.emit(currentList.map {
+                    items.emit(currentList.fastMap {
                         AnimatedItemWA(
                             value = it,
                             state = AnimatedItemState.IDLE
@@ -196,7 +186,6 @@ internal class AnimatedLazyListViewModel<T>(
             return previousList[oldItemPosition].key == newList[newItemPosition].key
         }
 
-        @SuppressLint("DiffUtilEquals")
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
             return previousList[oldItemPosition].value == newList[newItemPosition].value
         }
@@ -244,48 +233,46 @@ internal fun <T> animatedLazyListScope(
     isVertical: Boolean,
     spacing: Dp
 ): LazyListScope.() -> Unit = {
-    currentItems.forEachIndexed { index, item ->
-        item(key = item.value.key) {
-            val transitionState = remember("${item.value.key}-$index") {
-                MutableTransitionState(
-                    when (item.state) {
-                        AnimatedItemState.INITIAL -> false
-                        AnimatedItemState.INSERTED -> false
-                        AnimatedItemState.REMOVED -> true
-                        AnimatedItemState.IDLE -> true
-                        AnimatedItemState.ALL_REMOVED -> true
+    itemsIndexed(currentItems, key = { _, k -> k.value.key }) { index, item ->
+        val transitionState = remember("${item.value.key}-$index") {
+            MutableTransitionState(
+                when (item.state) {
+                    AnimatedItemState.INITIAL -> false
+                    AnimatedItemState.INSERTED -> false
+                    AnimatedItemState.REMOVED -> true
+                    AnimatedItemState.IDLE -> true
+                    AnimatedItemState.ALL_REMOVED -> true
+                }
+            )
+        }
+        transitionState.targetState = when (item.state) {
+            AnimatedItemState.INITIAL -> true
+            AnimatedItemState.INSERTED -> true
+            AnimatedItemState.REMOVED -> false
+            AnimatedItemState.IDLE -> true
+            AnimatedItemState.ALL_REMOVED -> false
+        }
+        AnimatedVisibility(
+            visibleState = transitionState,
+            enter = when (item.state) {
+                AnimatedItemState.INITIAL -> initialEnter
+                else -> enter
+            },
+            exit = when (item.state) {
+                AnimatedItemState.ALL_REMOVED -> finalExit
+                else -> exit
+            }
+        ) {
+            Box(
+                modifier = Modifier.let {
+                    if (isVertical) {
+                        it.padding(bottom = spacing)
+                    } else {
+                        it.padding(end = spacing)
                     }
-                )
-            }
-            transitionState.targetState = when (item.state) {
-                AnimatedItemState.INITIAL -> true
-                AnimatedItemState.INSERTED -> true
-                AnimatedItemState.REMOVED -> false
-                AnimatedItemState.IDLE -> true
-                AnimatedItemState.ALL_REMOVED -> false
-            }
-            AnimatedVisibility(
-                visibleState = transitionState,
-                enter = when (item.state) {
-                    AnimatedItemState.INITIAL -> initialEnter
-                    else -> enter
-                },
-                exit = when (item.state) {
-                    AnimatedItemState.ALL_REMOVED -> finalExit
-                    else -> exit
                 }
             ) {
-                Box(
-                    modifier = Modifier.let {
-                        if (isVertical) {
-                            it.padding(bottom = spacing)
-                        } else {
-                            it.padding(end = spacing)
-                        }
-                    }
-                ) {
-                    item.value.composable()
-                }
+                item.value.composable()
             }
         }
     }
@@ -299,13 +286,12 @@ data class AnimatedLazyListItem<out T>(
 
 @Composable
 fun <T> AnimatedLazyRow(
-    state: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
     items: List<AnimatedLazyListItem<T>>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     reverseLayout: Boolean = false,
-    horizontalArrangement: Arrangement.Horizontal =
-        if (!reverseLayout) Arrangement.Start else Arrangement.End,
+    horizontalArrangement: Arrangement.Horizontal = if (!reverseLayout) Arrangement.Start else Arrangement.End,
     animationDuration: Int = 400,
     initialEnter: EnterTransition = fadeIn(),
     enter: EnterTransition = fadeIn(
@@ -321,8 +307,7 @@ fun <T> AnimatedLazyRow(
     finalExit: ExitTransition = exit
 ) {
     val scope = rememberCoroutineScope { Dispatchers.Main }
-    val viewModel =
-        remember { AnimatedLazyListViewModel<T>(scope, animationDuration, reverseLayout) }
+    val viewModel = remember { AnimatedLazyListViewModel<T>(scope, animationDuration, reverseLayout) }
     viewModel.updateList(items)
     val currentItems by viewModel.items.collectAsState(emptyList())
 
@@ -345,13 +330,12 @@ fun <T> AnimatedLazyRow(
 
 @Composable
 fun <T> AnimatedLazyColumn(
-    state: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
     items: List<AnimatedLazyListItem<T>>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     reverseLayout: Boolean = false,
-    verticalArrangement: Arrangement.Vertical =
-        if (!reverseLayout) Arrangement.Top else Arrangement.Bottom,
+    verticalArrangement: Arrangement.Vertical = if (!reverseLayout) Arrangement.Top else Arrangement.Bottom,
     animationDuration: Int = 400,
     initialEnter: EnterTransition = fadeIn(),
     enter: EnterTransition = fadeIn(
