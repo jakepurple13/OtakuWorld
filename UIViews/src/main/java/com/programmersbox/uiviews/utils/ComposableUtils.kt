@@ -608,7 +608,23 @@ fun <T> BottomSheetDeleteScaffold(
                     }
                 }
             ) {
-                LazyColumn(
+                AnimatedLazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = it,
+                    modifier = Modifier.padding(5.dp),
+                    items = listOfItems.fastMap { i ->
+                        AnimatedLazyListItem(key = i.hashCode().toString(), value = i) {
+                            DeleteItemView(
+                                item = i,
+                                deleteItemList = itemsToDelete,
+                                customSingleRemoveDialog = customSingleRemoveDialog,
+                                onRemove = onRemove,
+                                itemUi = itemUi
+                            )
+                        }
+                    }
+                )
+                /*LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
                     modifier = Modifier.padding(5.dp)
@@ -622,7 +638,7 @@ fun <T> BottomSheetDeleteScaffold(
                             itemUi = itemUi
                         )
                     }
-                }
+                }*/
             }
         }
     ) { mainView(it, listOfItems) }

@@ -32,7 +32,6 @@ import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
-import androidx.preference.SwitchPreference
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -41,7 +40,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.anime.WcoStream
 import com.programmersbox.anime_sources.utilities.Qualities
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
@@ -301,26 +299,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
 
         preferenceScreen.generalSettings { _, it ->
-            it.addPreference(
-                SwitchPreference(it.context).apply {
-                    title = context.getString(R.string.wco_recent_title)
-                    summary = context.getString(R.string.wco_recent_info)
-                    key = "wco_recent"
-                    isChecked = context.wcoRecent
-                    setOnPreferenceChangeListener { _, newValue ->
-                        WcoStream.RECENT_TYPE = newValue as Boolean
-                        context.wcoRecent = newValue
-                        true
-                    }
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_article_24)
-                    sourcePublish.subscribe { api ->
-                        isVisible = api == Sources.WCO_CARTOON || api == Sources.WCO_DUBBED ||
-                                api == Sources.WCO_MOVIES || api == Sources.WCO_SUBBED || api == Sources.WCO_OVA
-                    }
-                        .addTo(disposable)
-                }
-            )
-
             it.addPreference(
                 Preference(it.context).apply {
                     title = context.getString(R.string.folder_location)

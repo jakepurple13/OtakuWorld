@@ -19,7 +19,7 @@ import okio.ByteString.Companion.decodeBase64
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-object WcoDubbed : WcoStream("dubbed-anime-list") {
+/*object WcoDubbed : WcoStream("dubbed-anime-list") {
     override val serviceName: String get() = "WCO_DUBBED"
 }
 
@@ -37,17 +37,19 @@ object WcoMovies : WcoStream("movie-list") {
 
 object WcoOva : WcoStream("cartoon-list") {
     override val serviceName: String get() = "WCO_OVA"
-}
+}*/
 
-abstract class WcoStream(allPath: String) : ShowApi(
+object WcoStream : ShowApi(
     baseUrl = "https://www.wcostream.com",
-    allPath = allPath,
-    recentPath = "last-50-recent-release"
+    allPath = "subbed-anime-list",
+    recentPath = "dubbed-anime-list"
 ) {
 
-    companion object {
+    /*companion object {
         var RECENT_TYPE = true
-    }
+    }*/
+
+    override val serviceName: String get() = "WCOSTREAM"
 
     override val canScroll: Boolean get() = false
 
@@ -73,30 +75,31 @@ abstract class WcoStream(allPath: String) : ShowApi(
             .onErrorResumeNext(super.searchList(searchText, page, list))
     }
 
-    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
-        //https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide
-        //https://www.wcostream.com/wonder-egg-priority-episode-7-english-dubbed
-        //https://www.wcostream.com/anime/wonder-egg-priority
-        doc
-            //.select("ul.items")
-            .select("div.menulaststyle")
-            .select("li")
-            .select("a")
-            //.alsoPrint()
-            .fastMap {
-                ItemModel(
-                    title = it.text(),
-                    description = "",
-                    imageUrl = it.select("div.img").select("img").attr("abs:src"),
-                    url = if (RECENT_TYPE)
-                        it.attr("abs:href")
-                    else
-                        Jsoup.connect(it.attr("abs:href")).get().select("div.ildate").select("a").attr("abs:href"),
-                    source = this
-                )
-            }
-            .let(emitter::onSuccess)
-    }
+    override fun getRecent(doc: Document): Single<List<ItemModel>> = getList(doc)
+    /*Single.create { emitter ->
+    //https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide
+    //https://www.wcostream.com/wonder-egg-priority-episode-7-english-dubbed
+    //https://www.wcostream.com/anime/wonder-egg-priority
+    doc
+        //.select("ul.items")
+        .select("div.menulaststyle")
+        .select("li")
+        .select("a")
+        //.alsoPrint()
+        .fastMap {
+            ItemModel(
+                title = it.text(),
+                description = "",
+                imageUrl = it.select("div.img").select("img").attr("abs:src"),
+                url = if (RECENT_TYPE)
+                    it.attr("abs:href")
+                else
+                    Jsoup.connect(it.attr("abs:href")).get().select("div.ildate").select("a").attr("abs:href"),
+                source = this
+            )
+        }
+        .let(emitter::onSuccess)
+}*/
 
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
         doc

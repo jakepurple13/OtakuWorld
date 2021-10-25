@@ -13,8 +13,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -44,9 +42,7 @@ import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.sizedListOf
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
-import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
-import com.programmersbox.uiviews.utils.currentScreen
+import com.programmersbox.uiviews.utils.*
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.Extras
 import kotlinx.coroutines.launch
@@ -246,11 +242,18 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             if (items.isEmpty()) {
                 EmptyState()
             } else {
-                LazyColumn(
+                AnimatedLazyColumn(
+                    modifier = Modifier.padding(top = 5.dp),
+                    contentPadding = p,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    items = items.fastMap { AnimatedLazyListItem(it.id.toString(), it) { DownloadItem(it, this@DownloadViewerFragment) } }
+                )
+
+                /*LazyColumn(
                     modifier = Modifier.padding(top = 5.dp),
                     contentPadding = p,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) { items(items) { d -> DownloadItem(d, this@DownloadViewerFragment) } }
+                ) { items(items) { d -> DownloadItem(d, this@DownloadViewerFragment) } }*/
             }
         }
     }
