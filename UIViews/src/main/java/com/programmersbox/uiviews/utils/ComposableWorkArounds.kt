@@ -120,7 +120,7 @@ internal class AnimatedLazyListViewModel<T>(
                                     intermediateList.size
                                 } else {
                                     it.first + if (reverseLayout) 1 else -1
-                                },
+                                }.coerceIn(0, intermediateList.size),
                                 AnimatedItemWA(
                                     value = item.copy(key = "${item.key}-temp"),
                                     state = AnimatedItemState.REMOVED
