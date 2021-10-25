@@ -204,7 +204,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                 )
             }
 
-            if (expanded)
+            if (expanded) {
                 file.value.values.toList().fastForEach { chapter ->
                     val c = chapter.randomOrNull()
 
@@ -320,6 +320,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                         }
                     }
                 }
+            }
         }
     }
 
