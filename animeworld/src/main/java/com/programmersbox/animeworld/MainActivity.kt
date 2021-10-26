@@ -1,11 +1,8 @@
 package com.programmersbox.animeworld
 
-import android.content.Context
 import android.net.Uri
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.anime.WcoStream
 import com.programmersbox.animeworld.cast.CastHelper
-import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.SettingsDsl
@@ -20,15 +17,11 @@ class MainActivity : BaseMainActivity() {
         val cast: CastHelper = CastHelper()
     }
 
-    private var Context.wcoRecent by sharedPrefNotNullDelegate(true)
-
     override fun onCreate() {
 
         activity = this
 
         cast.init(this)
-
-        WcoStream.RECENT_TYPE = wcoRecent
 
         when (intent.data) {
             Uri.parse(VIEW_DOWNLOADS) -> openDownloads()

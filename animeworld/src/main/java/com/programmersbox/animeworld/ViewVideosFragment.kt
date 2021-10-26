@@ -14,13 +14,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -42,6 +38,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
@@ -226,9 +223,14 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 }
             ) { p, itemList ->
                 Scaffold(modifier = Modifier.padding(p)) { p1 ->
-                    val videos by updateAnimatedItemsState(newList = itemList)
+                    AnimatedLazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        contentPadding = p1,
+                        items = itemList.fastMap { AnimatedLazyListItem(it.videoId.toString(), it) { VideoContentView(it) } }
+                    )
+                    //val videos by updateAnimatedItemsState(newList = itemList)
 
-                    LazyColumn(
+                    /*LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         contentPadding = p1,
                         state = rememberLazyListState(),
@@ -239,7 +241,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             enterTransition = slideInHorizontally(initialOffsetX = { x -> x / 2 }),
                             exitTransition = slideOutHorizontally()
                         ) { i -> VideoContentView(i) }
-                    }
+                    }*/
                 }
             }
         }

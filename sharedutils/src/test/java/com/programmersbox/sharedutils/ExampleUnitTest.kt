@@ -140,6 +140,7 @@ class ExampleUnitTest {
 
         val fileType = listOf(
             ".kt",
+            ".kts",
             ".xml",
             ".gradle",
             ".json",

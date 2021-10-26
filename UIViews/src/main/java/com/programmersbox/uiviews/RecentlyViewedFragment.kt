@@ -7,11 +7,10 @@ import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -27,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -116,7 +116,10 @@ class RecentlyViewedFragment : Fragment() {
                         IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
 
                         val rotateIcon: @Composable (SortRecentlyBy<*>) -> Float = {
-                            animateFloatAsState(if (it == sortedChoice && reverse) 180f else 0f).value
+                            animateFloatAsState(
+                                if (it == sortedChoice && reverse) 180f else 0f,
+                                animationSpec = tween(500)
+                            ).value
                         }
 
                         GroupButton(
@@ -142,7 +145,20 @@ class RecentlyViewedFragment : Fragment() {
                 )
             }
         ) { p ->
-            LazyColumn(
+            AnimatedLazyColumn(
+                contentPadding = p,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                items = recentItems
+                    .let {
+                        when (val s = sortedChoice) {
+                            is SortRecentlyBy.TITLE -> it.sortedBy(s.sort)
+                            is SortRecentlyBy.TIMESTAMP -> it.sortedByDescending(s.sort)
+                        }
+                    }
+                    .let { if (reverse) it.reversed() else it }
+                    .fastMap { AnimatedLazyListItem(it.url, it) { HistoryItem(it, scope) } }
+            )
+            /*LazyColumn(
                 contentPadding = p,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -156,7 +172,7 @@ class RecentlyViewedFragment : Fragment() {
                         }
                         .let { if (reverse) it.reversed() else it }
                 ) { HistoryItem(it, scope) }
-            }
+            }*/
         }
 
     }

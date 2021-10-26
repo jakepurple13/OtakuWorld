@@ -86,6 +86,7 @@ object MangaPark : ApiService, KoinComponent {
                 )
             )
         } catch (e: Exception) {
+            e.printStackTrace()
             val genres = mutableListOf<String>()
             val alternateNames = mutableListOf<String>()
             doc.select(".attr > tbody > tr").forEach {
@@ -130,7 +131,7 @@ object MangaPark : ApiService, KoinComponent {
             .build()
 
         return POST(
-            "$baseUrl/ajax.reader.subject.episodes.lang",
+            "$baseUrl/ajax.reader.subject.episodes.by.serial",
             headers = newHeaders,
             body = requestBody
         )
@@ -193,14 +194,14 @@ object MangaPark : ApiService, KoinComponent {
     private fun chapterFromElement(element: Element): SChapter {
         val urlElement = element.select("a.chapt")
         val time = element.select("div.extra > i.ps-2").text()
-
         return SChapter().apply {
             name = urlElement.text()
-            chapterNumber = urlElement.attr("href").substringAfterLast("/").toFloat()
+            chapterNumber = urlElement.attr("href").substringAfterLast("/").toFloatOrNull() ?: 0f
             if (time != "") {
                 dateUploaded = parseDate(time)
             }
-            url = urlElement.attr("abs:href")
+            originalDate = time
+            url = baseUrl + urlElement.attr("href")
         }
     }
 

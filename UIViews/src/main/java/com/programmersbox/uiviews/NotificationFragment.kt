@@ -11,8 +11,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
@@ -32,6 +30,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -232,11 +231,20 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         )
                     }
                 ) { p, itemList ->
-                    LazyColumn(
+                    AnimatedLazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        items = itemList.fastMap {
+                            AnimatedLazyListItem(key = it.url, value = it) { NotificationItem(item = it, navController = findNavController()) }
+                        }
+                    )
+                    //TODO: This will be used when native lazycolumn/lazyrow gains support for animations
+                    /*LazyColumn(
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp)
-                    ) { items(itemList) { NotificationItem(item = it, navController = findNavController()) } }
+                    ) { items(itemList) { NotificationItem(item = it, navController = findNavController()) } }*/
                 }
             }
         }
