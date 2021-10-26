@@ -134,10 +134,9 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                 p.isVisible = false
                 appUpdateCheck
                     .subscribe {
-                        p.summary = getString(R.string.currentVersion, it.update_version?.toString().orEmpty())
-                        val appVersion =
-                            context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
-                        p.isVisible = appVersion < it.update_version ?: 0.0
+                        p.summary = getString(R.string.currentVersion, it.update_real_version.orEmpty())
+                        val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
+                        p.isVisible = AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
                     }
                     .addTo(disposable)
             }

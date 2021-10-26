@@ -22,6 +22,7 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.appUpdateCheck
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -202,8 +203,8 @@ class MainFragment : BrowseSupportFragment() {
 
         appUpdateCheck
             .map {
-                val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName?.toDoubleOrNull() ?: 0.0
-                appVersion < it.update_version ?: 0.0
+                val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
+                AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
             }
             .subscribe {
                 if (it) gridRowAdapter.add(resources.getString(R.string.update_available))

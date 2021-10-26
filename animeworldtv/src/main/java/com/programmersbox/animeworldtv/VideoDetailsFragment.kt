@@ -14,6 +14,7 @@ import androidx.leanback.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.models.ChapterModel
@@ -38,6 +39,7 @@ import kotlin.math.roundToInt
 class VideoDetailsFragment : DetailsSupportFragment() {
 
     private var mSelectedMovie: ItemModel? = null
+    private var mSelectedInfoModel: InfoModel? = null
 
     private val logo: MainLogo by inject()
 
@@ -62,11 +64,26 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 startActivity(intent)
             }
             ?.subscribeBy {
+                mSelectedInfoModel = it
                 mPresenterSelector = ClassPresenterSelector()
                 mAdapter = ArrayObjectAdapter(mPresenterSelector)
                 setupDetailsOverviewRow(it)
                 setupDetailsOverviewRowPresenter(it)
                 setupRelatedMovieListRow(it)
+
+                Flowables.combineLatest(
+                    chapterListener.getAllEpisodesByShow(it.url),
+                    itemDao.getAllChapters(it.url).subscribeOn(Schedulers.io())
+                ) { f, d -> (f + d).distinctBy { u -> u.url } }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { l ->
+                        episodePresenter.watched.clear()
+                        episodePresenter.watched.addAll(l)
+                        rows.forEach { it.notifyChanges() }
+                    }
+                    .addTo(disposable)
+
                 adapter = mAdapter
                 initializeBackground(it)
                 onItemViewClickedListener = ItemViewClickedListener()
@@ -108,6 +125,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
     private val itemDao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
+    private val chapterListener = FirebaseDb.FirebaseListener()
 
     private fun setupDetailsOverviewRow(movie: InfoModel?) {
         Log.d(TAG, "doInBackground: " + mSelectedMovie?.toString())
@@ -303,9 +321,13 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         super.onDestroy()
         disposable.dispose()
         itemListener.unregister()
+        chapterListener.unregister()
     }
 
-    private fun setupRelatedMovieListRow(model: InfoModel) {
+    private val episodePresenter = EpisodePresenter()
+    private val rows = mutableListOf<RefreshableArrayObjectAdapter>()
+
+    private fun setupRelatedMovieListRow(model: InfoModel, watched: List<ChapterWatched> = emptyList()) {
         /*val subcategories = arrayOf(getString(R.string.related_movies))
         val list = MovieList.list
 
@@ -314,8 +336,9 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         val chapters = model.chapters.reversed()//.map { it.copy(it.name.removePrefix(model.title)) }
 
         chapters.chunked(5).forEachIndexed { index, list ->
-            val listRowAdapter = ArrayObjectAdapter(EpisodePresenter())
+            val listRowAdapter = RefreshableArrayObjectAdapter(episodePresenter)
             listRowAdapter.addAll(0, list)
+            rows.add(listRowAdapter)
             val header = HeaderItem(index.toLong(), "Episodes ${(index * 5) + 1} - ${index * 5 + list.size}")
             mAdapter.add(ListRow(header, listRowAdapter))
         }
@@ -370,6 +393,19 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                     ).show()
                     return
                 }
+
+                ChapterWatched(url = item.url, name = item.name, favoriteUrl = mSelectedInfoModel?.url.orEmpty())
+                    .let {
+                        Completable.mergeArray(
+                            FirebaseDb.insertEpisodeWatched(it),
+                            itemDao.insertChapter(it)
+                        )
+                    }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe()
+                    .addTo(disposable)
+
                 val intent = Intent(requireContext(), PlaybackActivity::class.java)
                 intent.putExtra(DetailsActivity.MOVIE, item)
                 startActivity(intent)
@@ -391,4 +427,16 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         private val NUM_COLS = 10
     }
+
+    class RefreshableArrayObjectAdapter(presenter: Presenter) : ArrayObjectAdapter(presenter) {
+        override fun isImmediateNotifySupported(): Boolean = true
+        fun replaceAll(list: Collection<Any>) {
+            clear()
+            addAll(0, list)
+            notifyChanged()
+        }
+
+        fun notifyChanges() = notifyChanged()
+    }
+
 }

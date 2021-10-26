@@ -119,7 +119,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                     mTransportControlGlue.play()
                 }
 
-                if (videos.size == 1) {
+                if (videos.size <= 1) {
                     startVideo(videos.firstOrNull())
                 } else {
                     AlertDialog.Builder(requireContext())

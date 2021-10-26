@@ -4,10 +4,13 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.leanback.widget.ImageCardView
 import androidx.leanback.widget.Presenter
 import com.bumptech.glide.Glide
+import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.ItemModel
@@ -81,7 +84,7 @@ class CardPresenter : Presenter() {
     }
 }
 
-class EpisodePresenter : Presenter() {
+class EpisodePresenter(val watched: MutableList<ChapterWatched> = mutableListOf()) : Presenter() {
 
     override fun onCreateViewHolder(parent: ViewGroup): Presenter.ViewHolder {
 
@@ -97,8 +100,16 @@ class EpisodePresenter : Presenter() {
 
     override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
         val movie = item as ChapterModel
-        val cardView = viewHolder.view.findViewById<TextView>(R.id.episode_name)
-        cardView.text = movie.name
+        val cardView = viewHolder.view.findViewById<CardView>(R.id.episode_background)
+        val textView = viewHolder.view.findViewById<TextView>(R.id.episode_name)
+        textView.text = movie.name
+        cardView.setCardBackgroundColor(
+            if (watched.any { it.url == movie.url }) {
+                cardView.context.getColor(R.color.emeraldGreen)
+            } else {
+                cardView.context.colorFromTheme(R.attr.cardBackgroundColor)
+            }
+        )
     }
 
     override fun onUnbindViewHolder(viewHolder: ViewHolder?) {
