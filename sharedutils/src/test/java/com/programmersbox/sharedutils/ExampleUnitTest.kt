@@ -18,10 +18,22 @@ class ExampleUnitTest {
     @Test
     fun newUpdateCheckTest() {
 
-        val oldVersion = "1.0.1"
+        val oldVersion = "1.5.1"
         val newVersion = "1.0.1"
 
         println(AppUpdate.checkForUpdate(oldVersion, newVersion))
+
+        println("-".repeat(50))
+        var newVersion2 = "1.0.0"
+        println(AppUpdate.checkForUpdate(oldVersion, newVersion2))
+        newVersion2 = "1.0.1"
+        println(AppUpdate.checkForUpdate(oldVersion, newVersion2))
+        newVersion2 = "1.1.0"
+        println(AppUpdate.checkForUpdate(oldVersion, newVersion2))
+        newVersion2 = "2.0.0"
+        println(AppUpdate.checkForUpdate(oldVersion, newVersion2))
+        newVersion2 = "1.1.1"
+        println(AppUpdate.checkForUpdate(oldVersion, newVersion2))
 
     }
 
