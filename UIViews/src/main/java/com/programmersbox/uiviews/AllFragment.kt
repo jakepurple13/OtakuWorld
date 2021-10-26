@@ -174,78 +174,77 @@ class AllFragment : BaseFragmentCompose() {
                 val searchList by searchPublisher.subscribeAsState(initial = emptyList())
                 var searchText by rememberSaveable { mutableStateOf("") }
                 val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+                BannerBox(
+                    remember {
+                        AppCompatResources
+                            .getDrawable(requireContext(), logo.logoId)!!
+                            .toBitmap().asImageBitmap()
+                    }
+                ) { itemInfo, aniOffset, topBarHeightPx ->
+                    BottomSheetScaffold(
+                        scaffoldState = scaffoldState,
+                        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+                        sheetContent = {
+                            var isSearching by remember { mutableStateOf(false) }
+                            Scaffold(
+                                topBar = {
+                                    Column {
+                                        Button(
+                                            onClick = {
+                                                scope.launch {
+                                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                                    else scaffoldState.bottomSheetState.collapse()
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                                            shape = RoundedCornerShape(0f)
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.search),
+                                                style = MaterialTheme.typography.button
+                                            )
+                                        }
 
-                BottomSheetScaffold(
-                    scaffoldState = scaffoldState,
-                    sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
-                    sheetContent = {
-                        var isSearching by remember { mutableStateOf(false) }
-                        Scaffold(
-                            topBar = {
-                                Column {
-                                    Button(
-                                        onClick = {
-                                            scope.launch {
-                                                if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
-                                                else scaffoldState.bottomSheetState.collapse()
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                                        shape = RoundedCornerShape(0f)
-                                    ) {
-                                        Text(
-                                            stringResource(R.string.search),
-                                            style = MaterialTheme.typography.button
+                                        OutlinedTextField(
+                                            value = searchText,
+                                            onValueChange = { searchText = it },
+                                            label = { Text(stringResource(R.string.searchFor, source?.serviceName.orEmpty())) },
+                                            trailingIcon = {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(searchList.size.toString())
+                                                    IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) }
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .fillMaxWidth(),
+                                            singleLine = true,
+                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                            keyboardActions = KeyboardActions(onSearch = {
+                                                focusManager.clearFocus()
+                                                sourcePublish.value!!.searchList(searchText, 1, sourceList)
+                                                    .subscribeOn(Schedulers.io())
+                                                    .observeOn(AndroidSchedulers.mainThread())
+                                                    .doOnSubscribe { isSearching = true }
+                                                    .onErrorReturnItem(sourceList)
+                                                    .subscribeBy {
+                                                        searchPublisher.onNext(it)
+                                                        isSearching = false
+                                                    }
+                                                    .addTo(disposable)
+                                            })
                                         )
                                     }
-
-                                    OutlinedTextField(
-                                        value = searchText,
-                                        onValueChange = { searchText = it },
-                                        label = { Text(stringResource(R.string.searchFor, source?.serviceName.orEmpty())) },
-                                        trailingIcon = {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text(searchList.size.toString())
-                                                IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) }
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .padding(5.dp)
-                                            .fillMaxWidth(),
-                                        singleLine = true,
-                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                        keyboardActions = KeyboardActions(onSearch = {
-                                            focusManager.clearFocus()
-                                            sourcePublish.value!!.searchList(searchText, 1, sourceList)
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .doOnSubscribe { isSearching = true }
-                                                .onErrorReturnItem(sourceList)
-                                                .subscribeBy {
-                                                    searchPublisher.onNext(it)
-                                                    isSearching = false
-                                                }
-                                                .addTo(disposable)
-                                        })
-                                    )
                                 }
-                            }
-                        ) { p ->
-                            Box(modifier = Modifier.padding(p)) {
-                                SwipeRefresh(
-                                    state = rememberSwipeRefreshState(isRefreshing = isSearching),
-                                    onRefresh = {},
-                                    swipeEnabled = false
-                                ) {
-                                    BannerBox(
-                                        remember {
-                                            AppCompatResources
-                                                .getDrawable(requireContext(), logo.logoId)!!
-                                                .toBitmap().asImageBitmap()
-                                        }
-                                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                            ) { p ->
+                                Box(modifier = Modifier.padding(p)) {
+                                    SwipeRefresh(
+                                        state = rememberSwipeRefreshState(isRefreshing = isSearching),
+                                        onRefresh = {},
+                                        swipeEnabled = false
+                                    ) {
                                         info.ItemListView(
                                             list = searchList,
                                             listState = rememberLazyListState(),
@@ -258,49 +257,41 @@ class AllFragment : BaseFragmentCompose() {
                                     }
                                 }
                             }
-                        }
-                    },
-                    floatingActionButton = {
-                        AnimatedVisibility(
-                            visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
-                            enter = slideInVertically(initialOffsetY = { it / 2 }),
-                            exit = slideOutVertically(targetOffsetY = { it / 2 })
-                        ) {
-                            FloatingActionButton(
-                                onClick = { scope.launch { state.animateScrollToItem(0) } },
-                                backgroundColor = MaterialTheme.colors.primary
+                        },
+                        floatingActionButton = {
+                            AnimatedVisibility(
+                                visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
+                                enter = slideInVertically(initialOffsetY = { it / 2 }),
+                                exit = slideOutVertically(targetOffsetY = { it / 2 })
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowUp,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(5.dp),
-                                )
-                            }
-                        }
-                    },
-                    floatingActionButtonPosition = FabPosition.End
-                ) { p ->
-                    SwipeRefresh(
-                        modifier = Modifier.padding(p),
-                        state = refresh,
-                        onRefresh = {
-                            source?.let {
-                                count = 1
-                                sourceList.clear()
-                                sourceLoadCompose(it, count, refresh)
-                            }
-                        }
-                    ) {
-                        if (sourceList.isEmpty()) {
-                            info.ComposeShimmerItem()
-                        } else {
-                            BannerBox(
-                                remember {
-                                    AppCompatResources
-                                        .getDrawable(requireContext(), logo.logoId)!!
-                                        .toBitmap().asImageBitmap()
+                                FloatingActionButton(
+                                    onClick = { scope.launch { state.animateScrollToItem(0) } },
+                                    backgroundColor = MaterialTheme.colors.primary
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowUp,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(5.dp),
+                                    )
                                 }
-                            ) { itemInfo, aniOffset, topBarHeightPx ->
+                            }
+                        },
+                        floatingActionButtonPosition = FabPosition.End
+                    ) { p ->
+                        SwipeRefresh(
+                            modifier = Modifier.padding(p),
+                            state = refresh,
+                            onRefresh = {
+                                source?.let {
+                                    count = 1
+                                    sourceList.clear()
+                                    sourceLoadCompose(it, count, refresh)
+                                }
+                            }
+                        ) {
+                            if (sourceList.isEmpty()) {
+                                info.ComposeShimmerItem()
+                            } else {
                                 info.ItemListView(
                                     list = sourceList,
                                     listState = state,
@@ -312,17 +303,16 @@ class AllFragment : BaseFragmentCompose() {
                                 ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                             }
                         }
-                    }
 
-                    if (source?.canScrollAll == true) {
-                        InfiniteListHandler(listState = state, buffer = 1) {
-                            source?.let {
-                                count++
-                                sourceLoadCompose(it, count, refresh)
+                        if (source?.canScrollAll == true) {
+                            InfiniteListHandler(listState = state, buffer = 1) {
+                                source?.let {
+                                    count++
+                                    sourceLoadCompose(it, count, refresh)
+                                }
                             }
                         }
                     }
-
                 }
             }
         }

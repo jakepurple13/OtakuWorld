@@ -130,118 +130,118 @@ class GlobalSearchFragment : Fragment() {
                         }
                     }
 
-                    CollapsingToolbarScaffold(
-                        modifier = Modifier,
-                        state = rememberCollapsingToolbarScaffoldState(),
-                        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-                        toolbar = {
-                            Column(modifier = Modifier.padding(5.dp)) {
-                                AutoCompleteBox(
-                                    items = history.asAutoCompleteEntities { _, _ -> true },
-                                    itemContent = {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = it.value.searchText,
-                                                style = MaterialTheme.typography.subtitle2,
-                                                modifier = Modifier
-                                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                                    .weight(.9f)
-                                            )
-                                            IconButton(
-                                                onClick = { scope.launch { dao.deleteHistory(it.value) } },
-                                                modifier = Modifier.weight(.1f)
-                                            ) { Icon(Icons.Default.Cancel, null) }
-                                        }
-                                    },
-                                    content = {
-
-                                        boxWidthPercentage = 1f
-                                        boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
-
-                                        onItemSelected {
-                                            searchText = it.value.searchText
-                                            filter(searchText)
-                                            focusManager.clearFocus()
-                                            searchForItems(
-                                                searchText = searchText,
-                                                onSubscribe = { isRefreshing = true },
-                                                subscribe = { isRefreshing = false }
-                                            )
-                                        }
-
-                                        OutlinedTextField(
-                                            value = searchText,
-                                            onValueChange = {
-                                                searchText = it
-                                                filter(it)
-                                            },
-                                            label = { Text(stringResource(id = R.string.search)) },
-                                            trailingIcon = {
+                    BannerBox(
+                        placeholder = remember { mainLogo!!.toBitmap().asImageBitmap() }
+                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                        CollapsingToolbarScaffold(
+                            modifier = Modifier,
+                            state = rememberCollapsingToolbarScaffoldState(),
+                            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                            toolbar = {
+                                Column(modifier = Modifier.padding(5.dp)) {
+                                    AutoCompleteBox(
+                                        items = history.asAutoCompleteEntities { _, _ -> true },
+                                        itemContent = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = it.value.searchText,
+                                                    style = MaterialTheme.typography.subtitle2,
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                                        .weight(.9f)
+                                                )
                                                 IconButton(
-                                                    onClick = {
-                                                        searchText = ""
-                                                        filter("")
-                                                        searchListPublisher.clear()
-                                                    }
+                                                    onClick = { scope.launch { dao.deleteHistory(it.value) } },
+                                                    modifier = Modifier.weight(.1f)
                                                 ) { Icon(Icons.Default.Cancel, null) }
-                                            },
-                                            modifier = Modifier
-                                                .padding(5.dp)
-                                                .fillMaxWidth()
-                                                .onFocusChanged { isSearching = it.isFocused },
-                                            singleLine = true,
-                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                            keyboardActions = KeyboardActions(onSearch = {
+                                            }
+                                        },
+                                        content = {
+
+                                            boxWidthPercentage = 1f
+                                            boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
+
+                                            onItemSelected {
+                                                searchText = it.value.searchText
+                                                filter(searchText)
                                                 focusManager.clearFocus()
-                                                if (searchText.isNotEmpty()) {
-                                                    lifecycleScope.launch(Dispatchers.IO) {
-                                                        dao.insertHistory(HistoryItem(System.currentTimeMillis(), searchText))
-                                                    }
-                                                }
                                                 searchForItems(
                                                     searchText = searchText,
                                                     onSubscribe = { isRefreshing = true },
                                                     subscribe = { isRefreshing = false }
                                                 )
-                                            })
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    ) {
+                                            }
 
-                        val bottomScaffold = rememberBottomSheetScaffoldState()
-                        var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
-
-                        BackHandler(bottomScaffold.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
-                            scope.launch {
-                                try {
-                                    bottomScaffold.bottomSheetState.collapse()
-                                } catch (e: Exception) {
-                                    findNavController().popBackStack()
-                                }
-                            }
-                        }
-
-                        BottomSheetScaffold(
-                            scaffoldState = bottomScaffold,
-                            sheetContent = searchModelBottom?.let { s ->
-                                {
-                                    Scaffold(
-                                        topBar = {
-                                            TopAppBar(
-                                                title = { Text(s.apiName) },
-                                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                            OutlinedTextField(
+                                                value = searchText,
+                                                onValueChange = {
+                                                    searchText = it
+                                                    filter(it)
+                                                },
+                                                label = { Text(stringResource(id = R.string.search)) },
+                                                trailingIcon = {
+                                                    IconButton(
+                                                        onClick = {
+                                                            searchText = ""
+                                                            filter("")
+                                                            searchListPublisher.clear()
+                                                        }
+                                                    ) { Icon(Icons.Default.Cancel, null) }
+                                                },
+                                                modifier = Modifier
+                                                    .padding(5.dp)
+                                                    .fillMaxWidth()
+                                                    .onFocusChanged { isSearching = it.isFocused },
+                                                singleLine = true,
+                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                keyboardActions = KeyboardActions(onSearch = {
+                                                    focusManager.clearFocus()
+                                                    if (searchText.isNotEmpty()) {
+                                                        lifecycleScope.launch(Dispatchers.IO) {
+                                                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), searchText))
+                                                        }
+                                                    }
+                                                    searchForItems(
+                                                        searchText = searchText,
+                                                        onSubscribe = { isRefreshing = true },
+                                                        subscribe = { isRefreshing = false }
+                                                    )
+                                                })
                                             )
                                         }
-                                    ) { p ->
-                                        BannerBox(
-                                            placeholder = remember { mainLogo!!.toBitmap().asImageBitmap() }
-                                        ) { itemInfo, aniOffset, topBarHeightPx ->
+                                    )
+                                }
+                            }
+                        ) {
+
+                            val bottomScaffold = rememberBottomSheetScaffoldState()
+                            var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
+
+                            BackHandler(bottomScaffold.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
+                                scope.launch {
+                                    try {
+                                        bottomScaffold.bottomSheetState.collapse()
+                                    } catch (e: Exception) {
+                                        findNavController().popBackStack()
+                                    }
+                                }
+                            }
+
+                            BottomSheetScaffold(
+                                scaffoldState = bottomScaffold,
+                                sheetContent = searchModelBottom?.let { s ->
+                                    {
+                                        Scaffold(
+                                            topBar = {
+                                                TopAppBar(
+                                                    title = { Text(s.apiName) },
+                                                    actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                                )
+                                            }
+                                        ) { p ->
                                             LazyVerticalGrid(
                                                 cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                                                 contentPadding = p
@@ -259,20 +259,16 @@ class GlobalSearchFragment : Fragment() {
                                             }
                                         }
                                     }
-                                }
-                            } ?: {},
-                            sheetPeekHeight = 0.dp,
-                        ) {
-                            if (networkState) {
-                                SwipeRefresh(
-                                    state = swipeRefreshState,
-                                    onRefresh = {},
-                                    swipeEnabled = false,
-                                    modifier = Modifier.padding(it)
-                                ) {
-                                    BannerBox(
-                                        placeholder = remember { mainLogo!!.toBitmap().asImageBitmap() }
-                                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                                } ?: {},
+                                sheetPeekHeight = 0.dp,
+                            ) {
+                                if (networkState) {
+                                    SwipeRefresh(
+                                        state = swipeRefreshState,
+                                        onRefresh = {},
+                                        swipeEnabled = false,
+                                        modifier = Modifier.padding(it)
+                                    ) {
                                         LazyColumn(
                                             state = listState,
                                             verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -346,22 +342,22 @@ class GlobalSearchFragment : Fragment() {
                                             }
                                         }
                                     }
-                                }
-                            } else {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(it),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Image(
-                                        Icons.Default.CloudOff,
-                                        null,
-                                        modifier = Modifier.size(50.dp, 50.dp),
-                                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
-                                    )
-                                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                                } else {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(it),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Image(
+                                            Icons.Default.CloudOff,
+                                            null,
+                                            modifier = Modifier.size(50.dp, 50.dp),
+                                            colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                                        )
+                                        Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                                    }
                                 }
                             }
                         }

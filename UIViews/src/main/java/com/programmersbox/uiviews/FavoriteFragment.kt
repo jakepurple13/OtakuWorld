@@ -126,167 +126,166 @@ class FavoriteFragment : Fragment() {
         var sortedBy by remember { mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE) }
         var reverse by remember { mutableStateOf(false) }
 
-        CollapsingToolbarScaffold(
-            modifier = Modifier,
-            state = rememberCollapsingToolbarScaffoldState(),
-            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-            toolbar = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TopAppBar(
-                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
-                        title = { Text(stringResource(R.string.viewFavoritesMenu)) },
-                        actions = {
+        BannerBox(
+            placeholder = remember {
+                AppCompatResources
+                    .getDrawable(requireContext(), logo.logoId)!!
+                    .toBitmap().asImageBitmap()
+            }
+        ) { itemInfo, aniOffset, topBarHeightPx ->
+            CollapsingToolbarScaffold(
+                modifier = Modifier,
+                state = rememberCollapsingToolbarScaffoldState(),
+                scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                toolbar = {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        TopAppBar(
+                            navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                            title = { Text(stringResource(R.string.viewFavoritesMenu)) },
+                            actions = {
 
-                            val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                                animateFloatAsState(if (it == sortedBy && reverse) 180f else 0f).value
+                                val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
+                                    animateFloatAsState(if (it == sortedBy && reverse) 180f else 0f).value
+                                }
+
+                                GroupButton(
+                                    selected = sortedBy,
+                                    options = listOf(
+                                        GroupButtonModel(SortFavoritesBy.TITLE) {
+                                            Icon(
+                                                Icons.Default.SortByAlpha,
+                                                null,
+                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
+                                            )
+                                        },
+                                        GroupButtonModel(SortFavoritesBy.COUNT) {
+                                            Icon(
+                                                Icons.Default.Sort,
+                                                null,
+                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
+                                            )
+                                        },
+                                        GroupButtonModel(SortFavoritesBy.CHAPTERS) {
+                                            Icon(
+                                                Icons.Default.ReadMore,
+                                                null,
+                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
+                                            )
+                                        }
+                                    )
+                                ) { if (sortedBy != it) sortedBy = it else reverse = !reverse }
+                            }
+                        )
+
+                        OutlinedTextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
+                            trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 5.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                        ) {
+
+                            item {
+                                CustomChip(
+                                    "ALL",
+                                    modifier = Modifier
+                                        .combinedClickable(
+                                            onClick = {
+                                                selectedSources.clear()
+                                                selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
+                                            },
+                                            onLongClick = { selectedSources.clear() }
+                                        ),
+                                    backgroundColor = MaterialTheme.colors.primary,
+                                    textColor = MaterialTheme.colors.onPrimary
+                                )
                             }
 
-                            GroupButton(
-                                selected = sortedBy,
-                                options = listOf(
-                                    GroupButtonModel(SortFavoritesBy.TITLE) {
-                                        Icon(
-                                            Icons.Default.SortByAlpha,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
-                                        )
-                                    },
-                                    GroupButtonModel(SortFavoritesBy.COUNT) {
-                                        Icon(
-                                            Icons.Default.Sort,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
-                                        )
-                                    },
-                                    GroupButtonModel(SortFavoritesBy.CHAPTERS) {
-                                        Icon(
-                                            Icons.Default.ReadMore,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
-                                        )
-                                    }
+                            items(
+                                (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
+                                    .groupBy { it }
+                                    .toList()
+                                    .sortedBy { it.first }
+                            ) {
+                                CustomChip(
+                                    "${it.first}: ${it.second.size - 1}",
+                                    modifier = Modifier
+                                        .combinedClickable(
+                                            onClick = {
+                                                if (it.first in selectedSources) selectedSources.remove(it.first)
+                                                else selectedSources.add(it.first)
+                                            },
+                                            onLongClick = {
+                                                selectedSources.clear()
+                                                selectedSources.add(it.first)
+                                            }
+                                        ),
+                                    backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
+                                    textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
                                 )
-                            ) { if (sortedBy != it) sortedBy = it else reverse = !reverse }
-                        }
-                    )
-
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
-                        trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                    )
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
-                    ) {
-
-                        item {
-                            CustomChip(
-                                "ALL",
-                                modifier = Modifier
-                                    .combinedClickable(
-                                        onClick = {
-                                            selectedSources.clear()
-                                            selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
-                                        },
-                                        onLongClick = { selectedSources.clear() }
-                                    ),
-                                backgroundColor = MaterialTheme.colors.primary,
-                                textColor = MaterialTheme.colors.onPrimary
-                            )
-                        }
-
-                        items(
-                            (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                .groupBy { it }
-                                .toList()
-                                .sortedBy { it.first }
-                        ) {
-                            CustomChip(
-                                "${it.first}: ${it.second.size - 1}",
-                                modifier = Modifier
-                                    .combinedClickable(
-                                        onClick = {
-                                            if (it.first in selectedSources) selectedSources.remove(it.first)
-                                            else selectedSources.add(it.first)
-                                        },
-                                        onLongClick = {
-                                            selectedSources.clear()
-                                            selectedSources.add(it.first)
-                                        }
-                                    ),
-                                backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
-                                textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
-                            )
+                            }
                         }
                     }
                 }
-            }
-        ) {
-            Scaffold { p ->
-                if (showing.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(p)
-                    ) {
-
-                        Card(
+            ) {
+                Scaffold { p ->
+                    if (showing.isEmpty()) {
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp),
-                            elevation = 5.dp,
-                            shape = RoundedCornerShape(5.dp)
+                                .fillMaxSize()
+                                .padding(p)
                         ) {
 
-                            Column(modifier = Modifier) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(5.dp),
+                                elevation = 5.dp,
+                                shape = RoundedCornerShape(5.dp)
+                            ) {
 
-                                Text(
-                                    text = stringResource(id = R.string.get_started),
-                                    style = MaterialTheme.typography.h4,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
+                                Column(modifier = Modifier) {
 
-                                Text(
-                                    text = stringResource(R.string.get_started_info),
-                                    style = MaterialTheme.typography.body1,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
-
-                                Button(
-                                    onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
-                                    modifier = Modifier
-                                        .align(Alignment.CenterHorizontally)
-                                        .padding(vertical = 5.dp)
-                                ) {
                                     Text(
-                                        text = stringResource(R.string.add_a_favorite),
-                                        style = MaterialTheme.typography.button
+                                        text = stringResource(id = R.string.get_started),
+                                        style = MaterialTheme.typography.h4,
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
                                     )
+
+                                    Text(
+                                        text = stringResource(R.string.get_started_info),
+                                        style = MaterialTheme.typography.body1,
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    )
+
+                                    Button(
+                                        onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally)
+                                            .padding(vertical = 5.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.add_a_favorite),
+                                            style = MaterialTheme.typography.button
+                                        )
+                                    }
+
                                 }
 
                             }
-
                         }
-                    }
-                } else {
-                    val scope = rememberCoroutineScope()
-
-                    BannerBox(
-                        placeholder = remember {
-                            AppCompatResources
-                                .getDrawable(requireContext(), logo.logoId)!!
-                                .toBitmap().asImageBitmap()
-                        }
-                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                    } else {
+                        val scope = rememberCoroutineScope()
                         LazyVerticalGrid(
                             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                             contentPadding = p,
