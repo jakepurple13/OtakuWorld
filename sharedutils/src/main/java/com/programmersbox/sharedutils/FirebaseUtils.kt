@@ -171,22 +171,36 @@ object FirebaseDb {
     }
 
     fun insertEpisodeWatched(episodeWatched: ChapterWatched) = Completable.create { emitter ->
-        episodeDoc2?.document(episodeWatched.favoriteUrl.urlToPath())
-            ?.set("create" to 1)
-            ?.addOnSuccessListener {
-                episodeDoc2?.document(episodeWatched.favoriteUrl.urlToPath())
-                    //?.set("watched" to listOf(episodeWatched.toFirebaseEpisodeWatched()), SetOptions.merge())
-                    ?.update("watched", FieldValue.arrayUnion(episodeWatched.toFirebaseChapterWatched()))
-                    //?.collection(episodeWatched.url.urlToPath())
-                    //?.document("watched")
-                    //?.set(episodeWatched.toFirebaseEpisodeWatched())
-                    ?.addOnSuccessListener { emitter.onComplete() }
-                    ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
+        episodeDoc2
+            ?.document(episodeWatched.favoriteUrl.urlToPath())
+            //?.set("create" to 1)
+            //?.update("watched", FieldValue.arrayUnion(episodeWatched.toFirebaseChapterWatched()))
+            ?.get()
+            ?.addOnSuccessListener { value ->
+                if (value?.exists() == true) {
+                    episodeDoc2
+                        ?.document(episodeWatched.favoriteUrl.urlToPath())
+                        ?.update("watched", FieldValue.arrayUnion(episodeWatched.toFirebaseChapterWatched()))
+                        ?.addOnSuccessListener { emitter.onComplete() }
+                        ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
+                } else {
+                    episodeDoc2
+                        ?.document(episodeWatched.favoriteUrl.urlToPath())
+                        ?.set("create" to 1)
+                        ?.addOnSuccessListener {
+                            episodeDoc2
+                                ?.document(episodeWatched.favoriteUrl.urlToPath())
+                                ?.update("watched", FieldValue.arrayUnion(episodeWatched.toFirebaseChapterWatched()))
+                                ?.addOnSuccessListener { emitter.onComplete() }
+                                ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
+                        }
+                }
             } ?: emitter.onComplete()
     }
 
     fun removeEpisodeWatched(episodeWatched: ChapterWatched) = Completable.create { emitter ->
-        episodeDoc2?.document(episodeWatched.favoriteUrl.urlToPath())
+        episodeDoc2
+            ?.document(episodeWatched.favoriteUrl.urlToPath())
             ?.update("watched", FieldValue.arrayRemove(episodeWatched.toFirebaseChapterWatched()))
             //?.collection(episodeWatched.url.urlToPath())
             //?.document("watched")
