@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
@@ -27,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -34,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -47,9 +50,8 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.utils.InfiniteListHandler
-import com.programmersbox.uiviews.utils.currentScreen
-import com.programmersbox.uiviews.utils.showErrorToast
+import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -79,6 +81,8 @@ class AllFragment : BaseFragmentCompose() {
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
+
+    private val logo: MainLogo by inject()
 
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -235,8 +239,22 @@ class AllFragment : BaseFragmentCompose() {
                                     onRefresh = {},
                                     swipeEnabled = false
                                 ) {
-                                    info.ItemListView(list = searchList, listState = rememberLazyListState(), favorites = favoriteList) {
-                                        findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                                    BannerBox(
+                                        remember {
+                                            AppCompatResources
+                                                .getDrawable(requireContext(), logo.logoId)!!
+                                                .toBitmap().asImageBitmap()
+                                        }
+                                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                                        info.ItemListView(
+                                            list = searchList,
+                                            listState = rememberLazyListState(),
+                                            favorites = favoriteList,
+                                            onLongPress = { item, c ->
+                                                itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                                scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                            }
+                                        ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                                     }
                                 }
                             }
@@ -276,8 +294,22 @@ class AllFragment : BaseFragmentCompose() {
                         if (sourceList.isEmpty()) {
                             info.ComposeShimmerItem()
                         } else {
-                            info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
-                                findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
+                            BannerBox(
+                                remember {
+                                    AppCompatResources
+                                        .getDrawable(requireContext(), logo.logoId)!!
+                                        .toBitmap().asImageBitmap()
+                                }
+                            ) { itemInfo, aniOffset, topBarHeightPx ->
+                                info.ItemListView(
+                                    list = sourceList,
+                                    listState = state,
+                                    favorites = favoriteList,
+                                    onLongPress = { item, c ->
+                                        itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                        scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                    }
+                                ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                             }
                         }
                     }

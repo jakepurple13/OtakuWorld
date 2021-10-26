@@ -8,6 +8,10 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,12 +21,15 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
@@ -419,6 +426,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         list: List<ItemModel>,
         favorites: List<DbModel>,
         listState: LazyListState,
+        onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
         val animated by updateAnimatedItemsState(newList = list)
@@ -432,11 +440,29 @@ class GenericAnime(val context: Context) : GenericInfo {
                 enterTransition = fadeIn(),
                 exitTransition = fadeOut()
             ) {
+                val interactionSource = remember { MutableInteractionSource() }
+
                 Card(
-                    onClick = { onClick(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 5.dp),
+                        .padding(horizontal = 5.dp)
+                        .indication(
+                            interactionSource = interactionSource,
+                            indication = rememberRipple()
+                        )
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = { _ -> onLongPress(it, ComponentState.Pressed) },
+                                onPress = { m ->
+                                    val press = PressInteraction.Press(m)
+                                    interactionSource.tryEmit(press)
+                                    tryAwaitRelease()
+                                    onLongPress(it, ComponentState.Released)
+                                    interactionSource.tryEmit(PressInteraction.Release(press))
+                                },
+                                onTap = { _ -> onClick(it) }
+                            )
+                        },
                     elevation = 5.dp
                 ) {
                     ListItem(

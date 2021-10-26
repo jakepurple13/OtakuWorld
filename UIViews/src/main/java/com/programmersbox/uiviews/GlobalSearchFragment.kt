@@ -9,6 +9,9 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -28,6 +31,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
@@ -35,6 +40,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -233,15 +239,23 @@ class GlobalSearchFragment : Fragment() {
                                             )
                                         }
                                     ) { p ->
-                                        LazyVerticalGrid(
-                                            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                                            contentPadding = p
-                                        ) {
-                                            items(s.data) { m ->
-                                                SearchCoverCard(
-                                                    model = m,
-                                                    placeHolder = mainLogo
-                                                ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                        BannerBox(
+                                            placeholder = remember { mainLogo!!.toBitmap().asImageBitmap() }
+                                        ) { itemInfo, aniOffset, topBarHeightPx ->
+                                            LazyVerticalGrid(
+                                                cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                                                contentPadding = p
+                                            ) {
+                                                items(s.data) { m ->
+                                                    SearchCoverCard(
+                                                        model = m,
+                                                        placeHolder = mainLogo,
+                                                        onLongPress = { c ->
+                                                            itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                            scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                                        }
+                                                    ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                }
                                             }
                                         }
                                     }
@@ -256,67 +270,75 @@ class GlobalSearchFragment : Fragment() {
                                     swipeEnabled = false,
                                     modifier = Modifier.padding(it)
                                 ) {
-                                    LazyColumn(
-                                        state = listState,
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                                    ) {
-                                        if (swipeRefreshState.isRefreshing) {
-                                            items(3) {
-                                                Card(modifier = Modifier.placeholder(true)) {
-                                                    Column {
-                                                        Box(modifier = Modifier.fillMaxWidth()) {
-                                                            Text(
-                                                                "Otaku",
-                                                                modifier = Modifier
-                                                                    .align(Alignment.CenterStart)
-                                                                    .padding(start = 5.dp)
-                                                            )
-                                                            IconButton(
-                                                                onClick = {},
-                                                                modifier = Modifier.align(Alignment.CenterEnd)
-                                                            ) { Icon(Icons.Default.ChevronRight, null) }
+                                    BannerBox(
+                                        placeholder = remember { mainLogo!!.toBitmap().asImageBitmap() }
+                                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                                        LazyColumn(
+                                            state = listState,
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            if (swipeRefreshState.isRefreshing) {
+                                                items(3) {
+                                                    Card(modifier = Modifier.placeholder(true)) {
+                                                        Column {
+                                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                                Text(
+                                                                    "Otaku",
+                                                                    modifier = Modifier
+                                                                        .align(Alignment.CenterStart)
+                                                                        .padding(start = 5.dp)
+                                                                )
+                                                                IconButton(
+                                                                    onClick = {},
+                                                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                                                ) { Icon(Icons.Default.ChevronRight, null) }
+                                                            }
+                                                            LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
                                                         }
-                                                        LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
                                                     }
                                                 }
-                                            }
-                                        } else if (searchListPublisher.isNotEmpty()) {
-                                            items(searchListPublisher) { i ->
-                                                Card(
-                                                    onClick = {
-                                                        searchModelBottom = i
-                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                    }
-                                                ) {
-                                                    Column {
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .clickable {
-                                                                    searchModelBottom = i
-                                                                    scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                                }
-                                                        ) {
-                                                            Text(
-                                                                i.apiName,
-                                                                modifier = Modifier
-                                                                    .align(Alignment.CenterStart)
-                                                                    .padding(start = 5.dp)
-                                                            )
-                                                            IconButton(
-                                                                onClick = {
-                                                                    searchModelBottom = i
-                                                                    scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                                },
-                                                                modifier = Modifier.align(Alignment.CenterEnd)
-                                                            ) { Icon(Icons.Default.ChevronRight, null) }
+                                            } else if (searchListPublisher.isNotEmpty()) {
+                                                items(searchListPublisher) { i ->
+                                                    Card(
+                                                        onClick = {
+                                                            searchModelBottom = i
+                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
                                                         }
-                                                        LazyRow {
-                                                            items(i.data) { m ->
-                                                                SearchCoverCard(
-                                                                    model = m,
-                                                                    placeHolder = mainLogo
-                                                                ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                    ) {
+                                                        Column {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .clickable {
+                                                                        searchModelBottom = i
+                                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                                    }
+                                                            ) {
+                                                                Text(
+                                                                    i.apiName,
+                                                                    modifier = Modifier
+                                                                        .align(Alignment.CenterStart)
+                                                                        .padding(start = 5.dp)
+                                                                )
+                                                                IconButton(
+                                                                    onClick = {
+                                                                        searchModelBottom = i
+                                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                                    },
+                                                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                                                ) { Icon(Icons.Default.ChevronRight, null) }
+                                                            }
+                                                            LazyRow {
+                                                                items(i.data) { m ->
+                                                                    SearchCoverCard(
+                                                                        model = m,
+                                                                        placeHolder = mainLogo,
+                                                                        onLongPress = { c ->
+                                                                            itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                                            scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                                                        }
+                                                                    ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -381,17 +403,39 @@ class GlobalSearchFragment : Fragment() {
 
     @ExperimentalMaterialApi
     @Composable
-    fun SearchCoverCard(model: ItemModel, placeHolder: Drawable?, error: Drawable? = placeHolder, onClick: () -> Unit = {}) {
+    fun SearchCoverCard(
+        model: ItemModel,
+        placeHolder: Drawable?,
+        error: Drawable? = placeHolder,
+        onLongPress: (ComponentState) -> Unit,
+        onClick: () -> Unit = {}
+    ) {
+        val interactionSource = remember { MutableInteractionSource() }
+
         Card(
-            onClick = onClick,
             modifier = Modifier
                 .padding(5.dp)
                 .size(
                     ComposableUtils.IMAGE_WIDTH,
                     ComposableUtils.IMAGE_HEIGHT
-                ),
-            indication = rememberRipple(),
-            onClickLabel = model.title,
+                )
+                .indication(
+                    interactionSource = interactionSource,
+                    indication = rememberRipple()
+                )
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { onLongPress(ComponentState.Pressed) },
+                        onPress = {
+                            val press = PressInteraction.Press(it)
+                            interactionSource.tryEmit(press)
+                            tryAwaitRelease()
+                            onLongPress(ComponentState.Released)
+                            interactionSource.tryEmit(PressInteraction.Release(press))
+                        },
+                        onTap = { onClick() }
+                    )
+                }
         ) {
             Box {
                 GlideImage(

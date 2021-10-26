@@ -6,6 +6,10 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,9 +19,12 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import com.google.accompanist.placeholder.material.placeholder
@@ -31,10 +38,7 @@ import com.programmersbox.novel_sources.Sources
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.animatedItems
-import com.programmersbox.uiviews.utils.updateAnimatedItemsState
+import com.programmersbox.uiviews.utils.*
 import org.koin.dsl.module
 
 val appModule = module {
@@ -99,6 +103,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         list: List<ItemModel>,
         favorites: List<DbModel>,
         listState: LazyListState,
+        onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
         val animated by updateAnimatedItemsState(newList = list)
@@ -112,11 +117,29 @@ class GenericNovel(val context: Context) : GenericInfo {
                 enterTransition = fadeIn(),
                 exitTransition = fadeOut()
             ) {
+                val interactionSource = remember { MutableInteractionSource() }
+
                 Card(
-                    onClick = { onClick(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 5.dp),
+                        .padding(horizontal = 5.dp)
+                        .indication(
+                            interactionSource = interactionSource,
+                            indication = rememberRipple()
+                        )
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = { _ -> onLongPress(it, ComponentState.Pressed) },
+                                onPress = { m ->
+                                    val press = PressInteraction.Press(m)
+                                    interactionSource.tryEmit(press)
+                                    tryAwaitRelease()
+                                    onLongPress(it, ComponentState.Released)
+                                    interactionSource.tryEmit(PressInteraction.Release(press))
+                                },
+                                onTap = { _ -> onClick(it) }
+                            )
+                        },
                     elevation = 5.dp
                 ) {
                     ListItem(

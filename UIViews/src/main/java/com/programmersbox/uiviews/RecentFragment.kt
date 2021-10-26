@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -16,18 +17,18 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -41,6 +42,9 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.utils.BannerBox
+import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InfiniteListHandler
 import com.programmersbox.uiviews.utils.showErrorToast
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -49,6 +53,7 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 /**
@@ -68,6 +73,8 @@ class RecentFragment : BaseFragmentCompose() {
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
+
+    private val logo: MainLogo by inject()
 
     companion object {
         @JvmStatic
@@ -168,8 +175,23 @@ class RecentFragment : BaseFragmentCompose() {
                         }
                     }
                 ) {
-                    info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
-                        findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it))
+                    val scope = rememberCoroutineScope()
+                    BannerBox(
+                        remember {
+                            AppCompatResources
+                                .getDrawable(requireContext(), logo.logoId)!!
+                                .toBitmap().asImageBitmap()
+                        }
+                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                        info.ItemListView(
+                            list = sourceList,
+                            listState = state,
+                            favorites = favoriteList,
+                            onLongPress = { item, c ->
+                                itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                            }
+                        ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
                     }
                 }
 

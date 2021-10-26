@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -22,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -30,6 +32,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -48,6 +51,7 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -274,72 +278,89 @@ class FavoriteFragment : Fragment() {
                         }
                     }
                 } else {
-                    LazyVerticalGrid(
-                        cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                        contentPadding = p,
-                        state = rememberLazyListState()
-                    ) {
-                        items(
-                            showing
-                                .groupBy(DbModel::title)
-                                .entries
-                                .let {
-                                    when (val s = sortedBy) {
-                                        is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
-                                        is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
-                                        is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
+                    val scope = rememberCoroutineScope()
+
+                    BannerBox(
+                        placeholder = remember {
+                            AppCompatResources
+                                .getDrawable(requireContext(), logo.logoId)!!
+                                .toBitmap().asImageBitmap()
+                        }
+                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                        LazyVerticalGrid(
+                            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                            contentPadding = p,
+                            state = rememberLazyListState()
+                        ) {
+                            items(
+                                showing
+                                    .groupBy(DbModel::title)
+                                    .entries
+                                    .let {
+                                        when (val s = sortedBy) {
+                                            is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
+                                            is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
+                                            is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
+                                        }
                                     }
-                                }
-                                .let { if (reverse) it.reversed() else it }
-                                .toTypedArray()
-                        ) { info ->
-                            CoverCard(
-                                imageUrl = info.value.random().imageUrl,
-                                name = info.key,
-                                placeHolder = logo.logoId,
-                                favoriteIcon = {
-                                    if (info.value.size > 1) {
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.TopStart)
-                                                .padding(4.dp)
+                                    .let { if (reverse) it.reversed() else it }
+                                    .toTypedArray()
+                            ) { info ->
+                                CoverCard(
+                                    onLongPress = { c ->
+                                        itemInfo.value = if (c == ComponentState.Pressed) {
+                                            info.value.randomOrNull()
+                                                ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                        } else null
+                                        scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                    },
+                                    imageUrl = info.value.random().imageUrl,
+                                    name = info.key,
+                                    placeHolder = logo.logoId,
+                                    favoriteIcon = {
+                                        if (info.value.size > 1) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(Alignment.TopStart)
+                                                    .padding(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Circle,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colors.primary,
+                                                    modifier = Modifier.align(Alignment.Center)
+                                                )
+                                                Text(
+                                                    info.value.size.toString(),
+                                                    color = MaterialTheme.colors.onPrimary,
+                                                    modifier = Modifier.align(Alignment.Center)
+                                                )
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    if (info.value.size == 1) {
+                                        val item = info.value
+                                            .firstOrNull()
+                                            ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                        findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
+                                    } else {
+                                        ListBottomSheet(
+                                            title = getString(R.string.chooseASource),
+                                            list = info.value,
+                                            onClick = { item ->
+                                                val i = item
+                                                    .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                                findNavController()
+                                                    .navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(i))
+                                            }
                                         ) {
-                                            Icon(
-                                                Icons.Default.Circle,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colors.primary,
-                                                modifier = Modifier.align(Alignment.Center)
+                                            ListBottomSheetItemModel(
+                                                primaryText = it.title,
+                                                overlineText = it.source
                                             )
-                                            Text(
-                                                info.value.size.toString(),
-                                                color = MaterialTheme.colors.onPrimary,
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                        }
+                                        }.show(parentFragmentManager, "sourceChooser")
                                     }
-                                }
-                            ) {
-                                if (info.value.size == 1) {
-                                    val item = info.value
-                                        .firstOrNull()
-                                        ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                    findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
-                                } else {
-                                    ListBottomSheet(
-                                        title = getString(R.string.chooseASource),
-                                        list = info.value,
-                                        onClick = { item ->
-                                            val i = item
-                                                .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                            findNavController()
-                                                .navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(i))
-                                        }
-                                    ) {
-                                        ListBottomSheetItemModel(
-                                            primaryText = it.title,
-                                            overlineText = it.source
-                                        )
-                                    }.show(parentFragmentManager, "sourceChooser")
                                 }
                             }
                         }

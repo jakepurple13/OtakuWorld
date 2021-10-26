@@ -10,6 +10,7 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.uiviews.utils.ComponentState
 
 interface GenericInfo {
 
@@ -34,6 +35,7 @@ interface GenericInfo {
         list: List<ItemModel>,
         favorites: List<DbModel>,
         listState: LazyListState,
+        onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     )
 

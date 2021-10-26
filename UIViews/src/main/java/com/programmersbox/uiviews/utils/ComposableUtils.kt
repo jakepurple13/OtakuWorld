@@ -65,6 +65,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.composethemeadapter.MdcTheme
+import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +76,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 
 fun Modifier.fadeInAnimation(): Modifier = composed {
@@ -1284,5 +1286,55 @@ fun Coordinator(
         otherCoords.filter(CoordinatorModel::show).fastForEach { it.Content(this) }
         topBar?.let { if (it.show) it.Content(this) }
         bottomBar?.let { if (it.show) it.Content(this) }
+    }
+}
+
+@ExperimentalMaterialApi
+@ExperimentalFoundationApi
+@Composable
+fun BannerBox(
+    placeholder: ImageBitmap,
+    content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>, aniOffset: Animatable<Float, AnimationVector1D>, topBarHeightPx: Float) -> Unit
+) {
+    val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
+    val topBarHeight = ComposableUtils.IMAGE_HEIGHT + 20.dp
+    val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+    val aniOffset = remember { Animatable(-topBarHeightPx * 2f) }
+
+    Box(Modifier.fillMaxSize()) {
+        content(itemInfo, aniOffset, -topBarHeightPx * 2f)
+        Card(
+            modifier = Modifier
+                .height(topBarHeight)
+                .align(Alignment.TopCenter)
+                .offset { IntOffset(x = 0, y = aniOffset.value.roundToInt()) }
+        ) {
+            ListItem(
+                icon = {
+                    GlideImage(
+                        imageModel = itemInfo.value?.imageUrl.orEmpty(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                        loading = {
+                            Image(
+                                bitmap = placeholder,
+                                contentDescription = null,
+                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            )
+                        },
+                        failure = {
+                            Image(
+                                bitmap = placeholder,
+                                contentDescription = null,
+                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            )
+                        }
+                    )
+                },
+                overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
+                text = { Text(itemInfo.value?.title.orEmpty()) }
+            )
+        }
     }
 }
