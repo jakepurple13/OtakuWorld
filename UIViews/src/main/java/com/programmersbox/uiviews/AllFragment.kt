@@ -171,7 +171,11 @@ class AllFragment : BaseFragmentCompose() {
                 val searchList by searchPublisher.subscribeAsState(initial = emptyList())
                 var searchText by rememberSaveable { mutableStateOf("") }
                 val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-                BannerBox(logo.logoId) { itemInfo, showBanner ->
+                var showBanner by remember { mutableStateOf(false) }
+                OtakuBannerBox(
+                    showBanner = showBanner,
+                    placeholder = logo.logoId
+                ) { itemInfo ->
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
                         sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
@@ -242,7 +246,7 @@ class AllFragment : BaseFragmentCompose() {
                                             favorites = favoriteList,
                                             onLongPress = { item, c ->
                                                 itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                                showBanner.value = c == ComponentState.Pressed
+                                                showBanner = c == ComponentState.Pressed
                                             }
                                         ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                                     }
@@ -289,7 +293,7 @@ class AllFragment : BaseFragmentCompose() {
                                     favorites = favoriteList,
                                     onLongPress = { item, c ->
                                         itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                        showBanner.value = c == ComponentState.Pressed
+                                        showBanner = c == ComponentState.Pressed
                                     }
                                 ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                             }

@@ -123,7 +123,12 @@ class GlobalSearchFragment : Fragment() {
                         }
                     }
 
-                    BannerBox(placeholder = this@GlobalSearchFragment.mainLogo.logoId) { itemInfo, showBanner ->
+                    var showBanner by remember { mutableStateOf(false) }
+
+                    OtakuBannerBox(
+                        showBanner = showBanner,
+                        placeholder = this@GlobalSearchFragment.mainLogo.logoId
+                    ) { itemInfo ->
                         CollapsingToolbarScaffold(
                             modifier = Modifier,
                             state = rememberCollapsingToolbarScaffoldState(),
@@ -243,7 +248,7 @@ class GlobalSearchFragment : Fragment() {
                                                         placeHolder = mainLogo,
                                                         onLongPress = { c ->
                                                             itemInfo.value = if (c == ComponentState.Pressed) m else null
-                                                            showBanner.value = c == ComponentState.Pressed
+                                                            showBanner = c == ComponentState.Pressed
                                                         }
                                                     ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
                                                 }
@@ -322,7 +327,7 @@ class GlobalSearchFragment : Fragment() {
                                                                         placeHolder = mainLogo,
                                                                         onLongPress = { c ->
                                                                             itemInfo.value = if (c == ComponentState.Pressed) m else null
-                                                                            showBanner.value = c == ComponentState.Pressed
+                                                                            showBanner = c == ComponentState.Pressed
                                                                         }
                                                                     ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
                                                                 }

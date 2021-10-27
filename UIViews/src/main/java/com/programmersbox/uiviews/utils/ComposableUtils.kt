@@ -71,7 +71,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
-import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 
 object ComposableUtils {
@@ -1158,69 +1157,82 @@ fun Coordinator(
 }
 
 @ExperimentalMaterialApi
-@ExperimentalFoundationApi
 @Composable
-fun BannerBox(
+fun OtakuBannerBox(
+    showBanner: Boolean = false,
     placeholder: Int,
-    content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>, showBanner: MutableState<Boolean>) -> Unit
+    content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val context = LocalContext.current
-
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
-    val topBarHeight = ComposableUtils.IMAGE_HEIGHT + 20.dp
-    val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
-    val aniOffset = remember { Animatable(-topBarHeightPx * 2f) }
-    val showBanner = remember { mutableStateOf(false) }
-
-    LaunchedEffect(key1 = showBanner.value) { aniOffset.animateTo(if (showBanner.value) 0f else (-topBarHeightPx * 2f)) }
-
     val placeHolderImage = remember {
         AppCompatResources
             .getDrawable(context, placeholder)!!
             .toBitmap().asImageBitmap()
     }
 
-    Box(Modifier.fillMaxSize()) {
-        content(itemInfo, showBanner)
-        Card(
-            modifier = Modifier
-                .height(topBarHeight)
-                .align(Alignment.TopCenter)
-                .offset { IntOffset(x = 0, y = aniOffset.value.roundToInt()) }
-        ) {
-            ListItem(
-                icon = {
-                    GlideImage(
-                        imageModel = itemInfo.value?.imageUrl.orEmpty(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                        loading = {
-                            Image(
-                                bitmap = placeHolderImage,
-                                contentDescription = null,
-                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            )
-                        },
-                        failure = {
-                            Image(
-                                bitmap = placeHolderImage,
-                                contentDescription = null,
-                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            )
-                        }
-                    )
-                },
-                overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                text = { Text(itemInfo.value?.title.orEmpty()) },
-                secondaryText = {
-                    Text(
-                        itemInfo.value?.description.orEmpty(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 5
-                    )
-                }
-            )
-        }
+    BannerBox(
+        showBanner = showBanner,
+        banner = {
+            Card(modifier = Modifier.align(Alignment.TopCenter)) {
+                ListItem(
+                    icon = {
+                        GlideImage(
+                            imageModel = itemInfo.value?.imageUrl.orEmpty(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                            loading = {
+                                Image(
+                                    bitmap = placeHolderImage,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            },
+                            failure = {
+                                Image(
+                                    bitmap = placeHolderImage,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            }
+                        )
+                    },
+                    overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
+                    text = { Text(itemInfo.value?.title.orEmpty()) },
+                    secondaryText = {
+                        Text(
+                            itemInfo.value?.description.orEmpty(),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 5
+                        )
+                    }
+                )
+            }
+        },
+        content = { content(itemInfo) }
+    )
+}
+
+@Composable
+fun BannerBox(
+    modifier: Modifier = Modifier,
+    showBanner: Boolean = false,
+    bannerEnter: EnterTransition = slideInVertically { -it },
+    bannerExit: ExitTransition = slideOutVertically { -it },
+    banner: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .then(modifier)
+    ) {
+        content()
+        AnimatedVisibility(
+            visible = showBanner,
+            enter = bannerEnter,
+            exit = bannerExit,
+        ) { banner() }
     }
 }

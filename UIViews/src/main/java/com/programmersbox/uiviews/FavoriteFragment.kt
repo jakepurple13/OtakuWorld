@@ -122,7 +122,12 @@ class FavoriteFragment : Fragment() {
         var sortedBy by remember { mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE) }
         var reverse by remember { mutableStateOf(false) }
 
-        BannerBox(placeholder = logo.logoId) { itemInfo, showBanner ->
+        var showBanner by remember { mutableStateOf(false) }
+
+        OtakuBannerBox(
+            showBanner = showBanner,
+            placeholder = logo.logoId
+        ) { itemInfo ->
             CollapsingToolbarScaffold(
                 modifier = Modifier,
                 state = rememberCollapsingToolbarScaffoldState(),
@@ -301,7 +306,7 @@ class FavoriteFragment : Fragment() {
                                             info.value.randomOrNull()
                                                 ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                                         } else null
-                                        showBanner.value = c == ComponentState.Pressed
+                                        showBanner = c == ComponentState.Pressed
                                     },
                                     imageUrl = info.value.random().imageUrl,
                                     name = info.key,

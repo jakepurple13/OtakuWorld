@@ -98,16 +98,44 @@ class MainActivity : ComponentActivity() {
         setContent {
             MdcTheme {
 
+                var showBanner by remember { mutableStateOf(false) }
+
+                BannerBox(
+                    showBanner = showBanner,
+                    banner = {
+                        Card {
+                            ListItem(text = { Text("Hello World") })
+                        }
+                    },
+                    content = {
+                        Column {
+                            Text("Hello!")
+                            TopAppBar(title = { Text("World!") })
+                            BottomAppBar { Text("Hello World!") }
+                            Button(onClick = { showBanner = !showBanner }) {
+                                Text("Show/Hide Banner", style = MaterialTheme.typography.button)
+                            }
+                            Text(
+                                "Show/Hide Banner here too!",
+                                modifier = Modifier
+                                    .combineClickableWithIndication(
+                                        onLongPress = { showBanner = it == ComponentState.Pressed }
+                                    )
+                            )
+                        }
+                    }
+                )
+
                 //TODO: Try to animate a string
 
-                var stringer by remember { mutableStateOf(strings.item) }
+                /*var stringer by remember { mutableStateOf(strings.item) }
 
                 Column {
                     AnimatedContent(
                         targetState = stringer,
                         transitionSpec = {
                             // Compare the incoming number with the previous number.
-                            /*if (targetState > initialState) {
+                            *//*if (targetState > initialState) {
                                 // If the target number is larger, it slides up and fades in
                                 // while the initial (smaller) number slides up and fades out.
                                 slideInVertically { height -> height } + fadeIn() with
@@ -117,7 +145,7 @@ class MainActivity : ComponentActivity() {
                                 // while the initial number slides down and fades out.
                                 slideInVertically { height -> -height } + fadeIn() with
                                         slideOutVertically { height -> height } + fadeOut()
-                            }*/
+                            }*//*
                             (slideInVertically { height -> height } + fadeIn() with
                                     slideOutVertically { height -> -height } + fadeOut())
                                 .using(
@@ -133,7 +161,7 @@ class MainActivity : ComponentActivity() {
                             stringer = strings()
                         }
                     ) { Text("Next String") }
-                }
+                }*/
 
                 /*BottomDrawer(
                     drawerContent = {
@@ -1107,5 +1135,24 @@ fun DrawCanvas(
                 )
             }
         }
+    }
+}
+
+@ExperimentalMaterialApi
+@ExperimentalFoundationApi
+@Composable
+fun BannerBox(
+    showBanner: Boolean = false,
+    banner: @Composable () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(Modifier.fillMaxSize()) {
+        content()
+        AnimatedVisibility(
+            visible = showBanner,
+            enter = slideInVertically { -it },
+            exit = slideOutVertically { -it },
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) { banner() }
     }
 }
