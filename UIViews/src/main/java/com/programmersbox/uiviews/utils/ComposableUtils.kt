@@ -1161,16 +1161,27 @@ fun Coordinator(
 @ExperimentalFoundationApi
 @Composable
 fun BannerBox(
-    placeholder: ImageBitmap,
-    content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>, aniOffset: Animatable<Float, AnimationVector1D>, topBarHeightPx: Float) -> Unit
+    placeholder: Int,
+    content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>, showBanner: MutableState<Boolean>) -> Unit
 ) {
+    val context = LocalContext.current
+
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
     val topBarHeight = ComposableUtils.IMAGE_HEIGHT + 20.dp
     val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
     val aniOffset = remember { Animatable(-topBarHeightPx * 2f) }
+    val showBanner = remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = showBanner.value) { aniOffset.animateTo(if (showBanner.value) 0f else (-topBarHeightPx * 2f)) }
+
+    val placeHolderImage = remember {
+        AppCompatResources
+            .getDrawable(context, placeholder)!!
+            .toBitmap().asImageBitmap()
+    }
 
     Box(Modifier.fillMaxSize()) {
-        content(itemInfo, aniOffset, -topBarHeightPx * 2f)
+        content(itemInfo, showBanner)
         Card(
             modifier = Modifier
                 .height(topBarHeight)
@@ -1186,14 +1197,14 @@ fun BannerBox(
                         modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                         loading = {
                             Image(
-                                bitmap = placeholder,
+                                bitmap = placeHolderImage,
                                 contentDescription = null,
                                 modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             )
                         },
                         failure = {
                             Image(
-                                bitmap = placeholder,
+                                bitmap = placeHolderImage,
                                 contentDescription = null,
                                 modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             )

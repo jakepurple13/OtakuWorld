@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
@@ -28,7 +27,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -36,7 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
-import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -174,13 +171,7 @@ class AllFragment : BaseFragmentCompose() {
                 val searchList by searchPublisher.subscribeAsState(initial = emptyList())
                 var searchText by rememberSaveable { mutableStateOf("") }
                 val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-                BannerBox(
-                    remember {
-                        AppCompatResources
-                            .getDrawable(requireContext(), logo.logoId)!!
-                            .toBitmap().asImageBitmap()
-                    }
-                ) { itemInfo, aniOffset, topBarHeightPx ->
+                BannerBox(logo.logoId) { itemInfo, showBanner ->
                     BottomSheetScaffold(
                         scaffoldState = scaffoldState,
                         sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
@@ -251,7 +242,7 @@ class AllFragment : BaseFragmentCompose() {
                                             favorites = favoriteList,
                                             onLongPress = { item, c ->
                                                 itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                                scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                                showBanner.value = c == ComponentState.Pressed
                                             }
                                         ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                                     }
@@ -298,7 +289,7 @@ class AllFragment : BaseFragmentCompose() {
                                     favorites = favoriteList,
                                     onLongPress = { item, c ->
                                         itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                        scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                        showBanner.value = c == ComponentState.Pressed
                                     }
                                 ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                             }

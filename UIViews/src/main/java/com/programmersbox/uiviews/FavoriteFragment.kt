@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -23,7 +22,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -32,7 +30,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
-import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -51,7 +48,6 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -126,13 +122,7 @@ class FavoriteFragment : Fragment() {
         var sortedBy by remember { mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE) }
         var reverse by remember { mutableStateOf(false) }
 
-        BannerBox(
-            placeholder = remember {
-                AppCompatResources
-                    .getDrawable(requireContext(), logo.logoId)!!
-                    .toBitmap().asImageBitmap()
-            }
-        ) { itemInfo, aniOffset, topBarHeightPx ->
+        BannerBox(placeholder = logo.logoId) { itemInfo, showBanner ->
             CollapsingToolbarScaffold(
                 modifier = Modifier,
                 state = rememberCollapsingToolbarScaffoldState(),
@@ -311,7 +301,7 @@ class FavoriteFragment : Fragment() {
                                             info.value.randomOrNull()
                                                 ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                                         } else null
-                                        scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                        showBanner.value = c == ComponentState.Pressed
                                     },
                                     imageUrl = info.value.random().imageUrl,
                                     name = info.key,

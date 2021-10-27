@@ -27,7 +27,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
@@ -35,7 +34,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
-import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -125,9 +123,7 @@ class GlobalSearchFragment : Fragment() {
                         }
                     }
 
-                    BannerBox(
-                        placeholder = remember { mainLogo!!.toBitmap().asImageBitmap() }
-                    ) { itemInfo, aniOffset, topBarHeightPx ->
+                    BannerBox(placeholder = this@GlobalSearchFragment.mainLogo.logoId) { itemInfo, showBanner ->
                         CollapsingToolbarScaffold(
                             modifier = Modifier,
                             state = rememberCollapsingToolbarScaffoldState(),
@@ -247,7 +243,7 @@ class GlobalSearchFragment : Fragment() {
                                                         placeHolder = mainLogo,
                                                         onLongPress = { c ->
                                                             itemInfo.value = if (c == ComponentState.Pressed) m else null
-                                                            scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                                            showBanner.value = c == ComponentState.Pressed
                                                         }
                                                     ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
                                                 }
@@ -326,7 +322,7 @@ class GlobalSearchFragment : Fragment() {
                                                                         placeHolder = mainLogo,
                                                                         onLongPress = { c ->
                                                                             itemInfo.value = if (c == ComponentState.Pressed) m else null
-                                                                            scope.launch { aniOffset.animateTo(if (c == ComponentState.Pressed) 0f else topBarHeightPx) }
+                                                                            showBanner.value = c == ComponentState.Pressed
                                                                         }
                                                                     ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
                                                                 }
