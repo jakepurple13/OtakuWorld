@@ -23,14 +23,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 
 enum class ComponentState { Pressed, Released }
 
-@Composable
 fun Modifier.combineClickableWithIndication(
     onLongPress: (ComponentState) -> Unit = {},
     onClick: () -> Unit = {}
-): Modifier {
+): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
 
-    return indication(
+    indication(
         interactionSource = interactionSource,
         indication = rememberRipple()
     )
@@ -73,20 +72,21 @@ class ScaleRotateOffset(initialScale: Float = 1f, initialRotation: Float = 0f, i
     val offset: MutableState<Offset> = mutableStateOf(initialOffset)
 }
 
-@Composable
 fun Modifier.scaleRotateOffset(
     scaleRotateOffset: ScaleRotateOffset,
     canScale: Boolean = true,
     canRotate: Boolean = true,
     canOffset: Boolean = true
-): Modifier = scaleRotateOffset(
-    scaleRotateOffset.scale,
-    scaleRotateOffset.rotation,
-    scaleRotateOffset.offset,
-    canScale,
-    canRotate,
-    canOffset
-)
+): Modifier = composed {
+    scaleRotateOffset(
+        scaleRotateOffset.scale,
+        scaleRotateOffset.rotation,
+        scaleRotateOffset.offset,
+        canScale,
+        canRotate,
+        canOffset
+    )
+}
 
 @Composable
 fun Modifier.scaleRotateOffset(
@@ -116,14 +116,13 @@ fun Modifier.scaleRotateOffset(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-@Composable
 fun Modifier.scaleRotateOffsetReset(
     canScale: Boolean = true,
     canRotate: Boolean = true,
     canOffset: Boolean = true,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {}
-): Modifier {
+): Modifier = composed {
     var scale by remember { mutableStateOf(1f) }
     var rotation by remember { mutableStateOf(0f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -134,7 +133,7 @@ fun Modifier.scaleRotateOffsetReset(
     }
     val animScale = animateFloatAsState(scale).value
     val (x, y) = animateOffsetAsState(offset).value
-    return graphicsLayer(
+    graphicsLayer(
         scaleX = animScale,
         scaleY = animScale,
         rotationZ = animateFloatAsState(rotation).value,
