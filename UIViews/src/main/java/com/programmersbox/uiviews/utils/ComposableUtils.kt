@@ -1206,7 +1206,7 @@ fun BannerBox(
                     Text(
                         itemInfo.value?.description.orEmpty(),
                         overflow = TextOverflow.Ellipsis,
-                        maxLines = 7
+                        maxLines = 5
                     )
                 }
             )
