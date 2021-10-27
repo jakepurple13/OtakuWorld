@@ -25,7 +25,8 @@ enum class ComponentState { Pressed, Released }
 
 fun Modifier.combineClickableWithIndication(
     onLongPress: (ComponentState) -> Unit = {},
-    onClick: () -> Unit = {}
+    onClick: (() -> Unit)? = null,
+    onDoubleTap: (() -> Unit)? = null
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -43,7 +44,8 @@ fun Modifier.combineClickableWithIndication(
                     onLongPress(ComponentState.Released)
                     interactionSource.tryEmit(PressInteraction.Release(press))
                 },
-                onTap = { onClick() }
+                onTap = onClick?.let { c -> { c() } },
+                onDoubleTap = onDoubleTap?.let { d -> { d() } }
             )
         }
 }
