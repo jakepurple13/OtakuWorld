@@ -9,9 +9,6 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -21,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,7 +28,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
@@ -406,8 +401,6 @@ class GlobalSearchFragment : Fragment() {
         onLongPress: (ComponentState) -> Unit,
         onClick: () -> Unit = {}
     ) {
-        val interactionSource = remember { MutableInteractionSource() }
-
         Card(
             modifier = Modifier
                 .padding(5.dp)
@@ -415,23 +408,7 @@ class GlobalSearchFragment : Fragment() {
                     ComposableUtils.IMAGE_WIDTH,
                     ComposableUtils.IMAGE_HEIGHT
                 )
-                .indication(
-                    interactionSource = interactionSource,
-                    indication = rememberRipple()
-                )
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = { onLongPress(ComponentState.Pressed) },
-                        onPress = {
-                            val press = PressInteraction.Press(it)
-                            interactionSource.tryEmit(press)
-                            tryAwaitRelease()
-                            onLongPress(ComponentState.Released)
-                            interactionSource.tryEmit(PressInteraction.Release(press))
-                        },
-                        onTap = { onClick() }
-                    )
-                }
+                .combineClickableWithIndication(onLongPress, onClick)
         ) {
             Box {
                 GlideImage(

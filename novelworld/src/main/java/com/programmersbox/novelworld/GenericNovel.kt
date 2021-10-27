@@ -6,10 +6,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,12 +15,9 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import com.google.accompanist.placeholder.material.placeholder
@@ -117,29 +110,14 @@ class GenericNovel(val context: Context) : GenericInfo {
                 enterTransition = fadeIn(),
                 exitTransition = fadeOut()
             ) {
-                val interactionSource = remember { MutableInteractionSource() }
-
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 5.dp)
-                        .indication(
-                            interactionSource = interactionSource,
-                            indication = rememberRipple()
-                        )
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onLongPress = { _ -> onLongPress(it, ComponentState.Pressed) },
-                                onPress = { m ->
-                                    val press = PressInteraction.Press(m)
-                                    interactionSource.tryEmit(press)
-                                    tryAwaitRelease()
-                                    onLongPress(it, ComponentState.Released)
-                                    interactionSource.tryEmit(PressInteraction.Release(press))
-                                },
-                                onTap = { _ -> onClick(it) }
-                            )
-                        },
+                        .combineClickableWithIndication(
+                            onLongPress = { c -> onLongPress(it, c) },
+                            onClick = { onClick(it) }
+                        ),
                     elevation = 5.dp
                 ) {
                     ListItem(

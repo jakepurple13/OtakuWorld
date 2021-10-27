@@ -11,11 +11,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CornerSize
@@ -31,7 +27,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
@@ -39,7 +34,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
@@ -47,6 +41,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -78,17 +73,6 @@ import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
-
-fun Modifier.fadeInAnimation(): Modifier = composed {
-    val animatedProgress = remember { Animatable(initialValue = 0f) }
-    LaunchedEffect(Unit) {
-        animatedProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(600)
-        )
-    }
-    alpha(animatedProgress.value)
-}
 
 object ComposableUtils {
     val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
@@ -336,8 +320,6 @@ suspend fun calculateDiff(
     DiffUtil.calculateDiff(diffCb, detectMoves)
 }
 
-enum class ComponentState { Pressed, Released }
-
 @ExperimentalMaterialApi
 @Composable
 fun CoverCard(
@@ -351,7 +333,6 @@ fun CoverCard(
     onClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val interactionSource = remember { MutableInteractionSource() }
 
     Card(
         modifier = Modifier
@@ -360,23 +341,7 @@ fun CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .indication(
-                interactionSource = interactionSource,
-                indication = rememberRipple()
-            )
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = { onLongPress(ComponentState.Pressed) },
-                    onPress = {
-                        val press = PressInteraction.Press(it)
-                        interactionSource.tryEmit(press)
-                        tryAwaitRelease()
-                        onLongPress(ComponentState.Released)
-                        interactionSource.tryEmit(PressInteraction.Release(press))
-                    },
-                    onTap = { _ -> onClick() }
-                )
-            }
+            .combineClickableWithIndication(onLongPress, onClick)
             .then(modifier)
     ) {
         Box {
@@ -739,103 +704,6 @@ private fun <T> DeleteItemView(
         ) { itemUi(item) }
     }
 
-}
-
-@Composable
-fun rememberScaleRotateOffset(
-    initialScale: Float = 1f,
-    initialRotation: Float = 0f,
-    initialOffset: Offset = Offset.Zero
-) = remember { ScaleRotateOffset(initialScale, initialRotation, initialOffset) }
-
-class ScaleRotateOffset(initialScale: Float = 1f, initialRotation: Float = 0f, initialOffset: Offset = Offset.Zero) {
-    val scale: MutableState<Float> = mutableStateOf(initialScale)
-    val rotation: MutableState<Float> = mutableStateOf(initialRotation)
-    val offset: MutableState<Offset> = mutableStateOf(initialOffset)
-}
-
-@Composable
-fun Modifier.scaleRotateOffset(
-    scaleRotateOffset: ScaleRotateOffset,
-    canScale: Boolean = true,
-    canRotate: Boolean = true,
-    canOffset: Boolean = true
-): Modifier = scaleRotateOffset(
-    scaleRotateOffset.scale,
-    scaleRotateOffset.rotation,
-    scaleRotateOffset.offset,
-    canScale,
-    canRotate,
-    canOffset
-)
-
-@Composable
-fun Modifier.scaleRotateOffset(
-    scale: MutableState<Float> = remember { mutableStateOf(1f) },
-    rotation: MutableState<Float> = remember { mutableStateOf(0f) },
-    offset: MutableState<Offset> = remember { mutableStateOf(Offset.Zero) },
-    canScale: Boolean = true,
-    canRotate: Boolean = true,
-    canOffset: Boolean = true
-): Modifier {
-    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (canScale) scale.value *= zoomChange
-        if (canRotate) rotation.value += rotationChange
-        if (canOffset) offset.value += offsetChange
-    }
-    val animScale = animateFloatAsState(scale.value).value
-    val (x, y) = animateOffsetAsState(offset.value).value
-    return graphicsLayer(
-        scaleX = animScale,
-        scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation.value).value,
-        translationX = x,
-        translationY = y
-    )
-        // add transformable to listen to multitouch transformation events after offset
-        .transformable(state = state)
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun Modifier.scaleRotateOffsetReset(
-    canScale: Boolean = true,
-    canRotate: Boolean = true,
-    canOffset: Boolean = true,
-    onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {}
-): Modifier {
-    var scale by remember { mutableStateOf(1f) }
-    var rotation by remember { mutableStateOf(0f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (canScale) scale *= zoomChange
-        if (canRotate) rotation += rotationChange
-        if (canOffset) offset += offsetChange
-    }
-    val animScale = animateFloatAsState(scale).value
-    val (x, y) = animateOffsetAsState(offset).value
-    return graphicsLayer(
-        scaleX = animScale,
-        scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation).value,
-        translationX = x,
-        translationY = y
-    )
-        // add transformable to listen to multitouch transformation events
-        // after offset
-        .transformable(state = state)
-        .combinedClickable(
-            onClick = onClick,
-            onDoubleClick = {
-                if (canScale) scale = 1f
-                if (canRotate) rotation = 0f
-                if (canOffset) offset = Offset.Zero
-            },
-            onLongClick = onLongClick,
-            indication = null,
-            interactionSource = remember { MutableInteractionSource() }
-        )
 }
 
 interface AutoCompleteEntity {
@@ -1333,7 +1201,14 @@ fun BannerBox(
                     )
                 },
                 overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                text = { Text(itemInfo.value?.title.orEmpty()) }
+                text = { Text(itemInfo.value?.title.orEmpty()) },
+                secondaryText = {
+                    Text(
+                        itemInfo.value?.description.orEmpty(),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 7
+                    )
+                }
             )
         }
     }
