@@ -76,4 +76,10 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation compose.compose
+    implementation materialYou
+
+    implementation "androidx.window:window:1.0.0-beta03"
+
+    // For RxJava2 integration
+    implementation "androidx.window:window-rxjava2:1.0.0-beta03"
 }
