@@ -415,7 +415,7 @@ class ReadActivityCompose : ComponentActivity() {
 
                     //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
 
-                    androidx.compose.material3.Scaffold(
+                    Scaffold(
                         //TODO: This stuff will be used again once we find a way to keep the top and bottom bars out when reaching the bottom
                         // and animating the top and bottom bars away
                         //modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

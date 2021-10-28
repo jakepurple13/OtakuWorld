@@ -26,6 +26,8 @@ abstract class OtakuApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        //TODO: Will add this in the future when material3 is more stable
+        //DynamicColors.applyToActivitiesIfAvailable(this)
 
         if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 
