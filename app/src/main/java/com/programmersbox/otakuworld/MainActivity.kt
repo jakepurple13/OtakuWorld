@@ -2,6 +2,7 @@ package com.programmersbox.otakuworld
 
 import android.os.Build
 import android.os.Bundle
+import android.text.format.DateFormat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
@@ -148,17 +149,74 @@ class MainActivity : ComponentActivity() {
                     }
                 )*/
 
-                //val decayAnimationSpec = rememberSplineBasedDecay<Float>()
+                var showInfo by remember { mutableStateOf(false) }
+
                 val scrollBehavior = remember {
-                    TopAppBarDefaults.enterAlwaysScrollBehavior()
+                    TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo }
                 }
+
+                val currentOffset = animateFloatAsState(targetValue = if (showInfo) 0f else scrollBehavior.offsetLimit)
+
+                if (showInfo) scrollBehavior.offset = currentOffset.value else scrollBehavior.offset = currentOffset.value
+
                 androidx.compose.material3.Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     topBar = {
-                        SmallTopAppBar(
+                        CenterAlignedTopAppBar(
+                            actions = {
+                                androidx.compose.material3.Text(
+                                    "1/17",
+                                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                )
+                            },
+                            title = {
+                                AnimatedContent(
+                                    targetState = System.currentTimeMillis(),
+                                    transitionSpec = {
+                                        (slideInVertically { height -> height } + fadeIn() with
+                                                slideOutVertically { height -> -height } + fadeOut())
+                                            .using(SizeTransform(clip = false))
+                                    }
+                                ) { targetTime ->
+                                    androidx.compose.material3.Text(
+                                        DateFormat.format("HH:mm a", targetTime).toString(),
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            },
+                            navigationIcon = {
+                                Row {
+                                    androidx.compose.material3.Icon(
+                                        Icons.Default.BatteryFull,
+                                        contentDescription = null,
+                                        tint = animateColorAsState(Color.White).value
+                                    )
+                                    AnimatedContent(
+                                        targetState = 100,
+                                        transitionSpec = {
+                                            if (targetState > initialState) {
+                                                slideInVertically { height -> height } + fadeIn() with
+                                                        slideOutVertically { height -> -height } + fadeOut()
+                                            } else {
+                                                slideInVertically { height -> -height } + fadeIn() with
+                                                        slideOutVertically { height -> height } + fadeOut()
+                                            }
+                                                .using(SizeTransform(clip = false))
+                                        }
+                                    ) { targetBattery ->
+                                        androidx.compose.material3.Text(
+                                            "$targetBattery%",
+                                            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                            },
+                            scrollBehavior = scrollBehavior
+                        )
+                        /*SmallTopAppBar(
                             title = { androidx.compose.material3.Text("Large TopAppBar") },
                             navigationIcon = {
-                                androidx.compose.material3.IconButton(onClick = { /* doSomething() */ }) {
+                                androidx.compose.material3.IconButton(onClick = {  }) {
                                     androidx.compose.material3.Icon(
                                         imageVector = Icons.Filled.Menu,
                                         contentDescription = "Localized description"
@@ -166,7 +224,36 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             actions = {
-                                androidx.compose.material3.IconButton(onClick = { /* doSomething() */ }) {
+                                androidx.compose.material3.IconButton(onClick = {  }) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = Icons.Filled.Favorite,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            },
+                            scrollBehavior = scrollBehavior
+                        )*/
+                    },
+                    floatingActionButton = {
+                        androidx.compose.material3.FloatingActionButton(
+                            onClick = { },
+                            modifier = Modifier
+                        ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                    },
+                    floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
+                    bottomBar = {
+                        SmallTopAppBar(
+                            title = { androidx.compose.material3.Text("Large TopAppBar") },
+                            navigationIcon = {
+                                androidx.compose.material3.IconButton(onClick = { }) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = Icons.Filled.Menu,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            },
+                            actions = {
+                                androidx.compose.material3.IconButton(onClick = { }) {
                                     androidx.compose.material3.Icon(
                                         imageVector = Icons.Filled.Favorite,
                                         contentDescription = "Localized description"
@@ -189,6 +276,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
+                                    .clickable { showInfo = !showInfo }
                             )
                         }
                     }
