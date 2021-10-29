@@ -60,11 +60,11 @@ import java.util.*
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
-class RecentlyViewedFragment : Fragment() {
+class HistoryFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance() = RecentlyViewedFragment()
+        fun newInstance() = HistoryFragment()
     }
 
     private val dao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
@@ -270,7 +270,7 @@ class RecentlyViewedFragment : Fragment() {
                         ?.observeOn(AndroidSchedulers.mainThread())
                         ?.doOnError { context?.showErrorToast() }
                         ?.subscribeBy { m ->
-                            findNavController().navigate(RecentlyViewedFragmentDirections.actionRecentlyViewedFragmentToDetailsFragment(m))
+                            findNavController().navigate(HistoryFragmentDirections.actionHistoryFragmentToDetailsFragment(m))
                         }
                         ?.addTo(disposable)
                 },
@@ -317,7 +317,7 @@ class RecentlyViewedFragment : Fragment() {
                                         ?.observeOn(AndroidSchedulers.mainThread())
                                         ?.subscribeBy { m ->
                                             findNavController()
-                                                .navigate(RecentlyViewedFragmentDirections.actionRecentlyViewedFragmentToDetailsFragment(m))
+                                                .navigate(HistoryFragmentDirections.actionHistoryFragmentToDetailsFragment(m))
                                         }
                                         ?.addTo(disposable)
                                 }
