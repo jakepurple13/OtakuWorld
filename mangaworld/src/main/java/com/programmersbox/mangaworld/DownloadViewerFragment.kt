@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,12 +25,23 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -41,12 +53,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
-import com.programmersbox.uiviews.utils.PermissionRequest
-import com.programmersbox.uiviews.utils.animatedItems
-import com.programmersbox.uiviews.utils.updateAnimatedItemsState
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -55,6 +63,8 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.map
 import java.io.File
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
 
@@ -66,13 +76,14 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
     @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
+    @ExperimentalMaterial3Api
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
-            MdcTheme {
+            M3MaterialTheme(currentColorScheme) {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     LaunchedEffect(Unit) {
                         val c = ChaptersGet.getInstance(requireContext())
@@ -84,6 +95,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
         }
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalFoundationApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
@@ -103,9 +115,13 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
             }
             .collectAsState(initial = emptyMap())
 
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopAppBar(
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
                     title = { Text(stringResource(R.string.downloaded_chapters)) },
                     navigationIcon = {
                         IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) }
@@ -138,19 +154,22 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                     .fillMaxWidth()
                     .padding(5.dp),
                 elevation = 5.dp,
-                shape = RoundedCornerShape(5.dp)
+                shape = RoundedCornerShape(5.dp),
+                backgroundColor = M3MaterialTheme.colorScheme.surface,
+                contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
             ) {
                 Column(modifier = Modifier) {
 
                     Text(
                         text = stringResource(id = R.string.get_started),
-                        style = MaterialTheme.typography.h4,
+                        style = M3MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
                     Text(
                         text = stringResource(id = R.string.download_a_manga),
-                        style = MaterialTheme.typography.body1,
+                        style = M3MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
@@ -162,12 +181,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(bottom = 5.dp)
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.go_download),
-                            style = MaterialTheme.typography.button
-                        )
-                    }
+                    ) { Text(text = stringResource(id = R.string.go_download)) }
                 }
             }
         }
@@ -188,7 +202,10 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                 interactionSource = MutableInteractionSource(),
                 indication = rememberRipple(),
                 onClick = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = M3MaterialTheme.colorScheme.surface,
+                contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
             ) {
                 ListItem(
                     modifier = Modifier.padding(5.dp),
@@ -243,16 +260,9 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                                             .addTo(disposable)
                                         onDismiss()
                                     }
-                                ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                                ) { Text(stringResource(R.string.yes)) }
                             },
-                            dismissButton = {
-                                TextButton(onClick = onDismiss) {
-                                    Text(
-                                        stringResource(R.string.no),
-                                        style = MaterialTheme.typography.button
-                                    )
-                                }
-                            }
+                            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
                         )
                     }
 
@@ -270,7 +280,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                         modifier = Modifier.padding(start = 32.dp),
                         state = dismissState,
                         directions = setOf(DismissDirection.EndToStart),
-                        dismissThresholds = { FractionalThreshold(0.5f) },
                         background = {
                             val color by animateColorAsState(
                                 when (dismissState.targetValue) {
@@ -279,8 +288,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                                     DismissValue.DismissedToStart -> Color.Red
                                 }
                             )
-                            val alignment = Alignment.CenterEnd
-                            val icon = Icons.Default.Delete
+
                             val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
 
                             Box(
@@ -288,10 +296,10 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                                     .fillMaxSize()
                                     .background(color)
                                     .padding(horizontal = 20.dp),
-                                contentAlignment = alignment
+                                contentAlignment = Alignment.CenterEnd
                             ) {
                                 Icon(
-                                    icon,
+                                    Icons.Default.Delete,
                                     contentDescription = null,
                                     modifier = Modifier.scale(scale)
                                 )
@@ -309,7 +317,10 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                                     }
                                 )
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = M3MaterialTheme.colorScheme.surface,
+                            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(5.dp),
