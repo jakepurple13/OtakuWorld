@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.work.*
 import com.facebook.stetho.Stetho
+import com.google.android.material.color.DynamicColors
 import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
@@ -26,8 +27,8 @@ abstract class OtakuApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        //TODO: Will add this in the future when material3 is more stable
-        //DynamicColors.applyToActivitiesIfAvailable(this)
+        //TODO: This acts funky if user enabled force dark mode from developer options
+        DynamicColors.applyToActivitiesIfAvailable(this)
 
         if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 

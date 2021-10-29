@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
@@ -17,7 +16,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -195,22 +193,7 @@ class ReadActivityCompose : ComponentActivity() {
 
         setContent {
 
-            val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
-                    (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-            val colorScheme = when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
-                darkTheme -> darkColorScheme(
-                    primary = androidx.compose.ui.graphics.Color(0xff90CAF9),
-                    secondary = androidx.compose.ui.graphics.Color(0xff90CAF9)
-                )
-                else -> lightColorScheme(
-                    primary = androidx.compose.ui.graphics.Color(0xff2196F3),
-                    secondary = androidx.compose.ui.graphics.Color(0xff90CAF9)
-                )
-            }
-
-            MaterialTheme(colorScheme) {
+            MaterialTheme(currentColorScheme) {
 
                 val scope = rememberCoroutineScope()
                 val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)

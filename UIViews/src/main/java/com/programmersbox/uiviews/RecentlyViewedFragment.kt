@@ -8,18 +8,27 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -48,6 +57,8 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class RecentlyViewedFragment : Fragment() {
 
@@ -64,13 +75,15 @@ class RecentlyViewedFragment : Fragment() {
 
     private val format = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.getDefault())
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent { MdcTheme { RecentlyViewedUi() } }
+            setContent { M3MaterialTheme(currentColorScheme) { RecentlyViewedUi() } }
         }
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @Composable
     private fun RecentlyViewedUi() {
@@ -97,18 +110,20 @@ class RecentlyViewedFragment : Fragment() {
                             lifecycleScope.launch(Dispatchers.IO) { println("Deleted " + dao.deleteAllRecentHistory() + " rows") }
                             onDismissRequest()
                         }
-                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                    ) { Text(stringResource(R.string.yes)) }
                 },
-                dismissButton = {
-                    TextButton(onClick = { onDismissRequest() }) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) }
-                }
+                dismissButton = { TextButton(onClick = { onDismissRequest() }) { Text(stringResource(R.string.no)) } }
             )
 
         }
 
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopAppBar(
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
                     navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                     title = { Text(stringResource(R.string.history)) },
                     actions = {
@@ -122,25 +137,27 @@ class RecentlyViewedFragment : Fragment() {
                             ).value
                         }
 
-                        GroupButton(
-                            selected = sortedChoice,
-                            options = listOf(
-                                GroupButtonModel(SortRecentlyBy.TITLE) {
-                                    Icon(
-                                        Icons.Default.SortByAlpha,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
-                                    )
-                                },
-                                GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
-                                    Icon(
-                                        Icons.Default.CalendarToday,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
-                                    )
-                                }
-                            )
-                        ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
+                        MdcTheme {
+                            GroupButton(
+                                selected = sortedChoice,
+                                options = listOf(
+                                    GroupButtonModel(SortRecentlyBy.TITLE) {
+                                        Icon(
+                                            Icons.Default.SortByAlpha,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
+                                        )
+                                    },
+                                    GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
+                                        Icon(
+                                            Icons.Default.CalendarToday,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
+                                        )
+                                    }
+                                )
+                            ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
+                        }
                     }
                 )
             }
@@ -194,9 +211,9 @@ class RecentlyViewedFragment : Fragment() {
                             scope.launch { dao.deleteRecent(item) }
                             onDismiss()
                         }
-                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                    ) { Text(stringResource(R.string.yes)) }
                 },
-                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) } }
+                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
             )
         }
 
@@ -211,8 +228,6 @@ class RecentlyViewedFragment : Fragment() {
 
         SwipeToDismiss(
             state = dismissState,
-            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-            dismissThresholds = { FractionalThreshold(0.5f) },
             background = {
                 val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
                 val color by animateColorAsState(
@@ -258,14 +273,17 @@ class RecentlyViewedFragment : Fragment() {
                             findNavController().navigate(RecentlyViewedFragmentDirections.actionRecentlyViewedFragmentToDetailsFragment(m))
                         }
                         ?.addTo(disposable)
-                }
+                },
+                backgroundColor = M3MaterialTheme.colorScheme.surface,
+                contentColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
             ) {
                 ListItem(
                     text = { Text(item.title) },
                     overlineText = { Text(item.source) },
                     secondaryText = { Text(format.format(item.timestamp)) },
                     icon = {
-                        Surface(shape = MaterialTheme.shapes.medium) {
+                        Surface(shape = androidx.compose.material.MaterialTheme.shapes.medium) {
                             GlideImage(
                                 imageModel = item.imageUrl,
                                 contentDescription = null,
