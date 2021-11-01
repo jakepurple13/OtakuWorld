@@ -33,7 +33,7 @@ buildscript {
     ext.jsoup = 'org.jsoup:jsoup:1.14.3'
 
     ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.4'
-    ext.analytics = 'com.google.firebase:firebase-analytics:19.0.2'
+    ext.analytics = 'com.google.firebase:firebase-analytics:20.0.0'
 
     ext.room_version = "2.4.0-beta01"
 
@@ -71,7 +71,7 @@ buildscript {
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.0.4"
-    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.0"
+    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.1"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-rc01"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
     ext.materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"
@@ -131,7 +131,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:7.0.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.10'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.7.1'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.0'
         classpath "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:8.9.4"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong

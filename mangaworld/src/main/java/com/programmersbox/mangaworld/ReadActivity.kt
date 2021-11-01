@@ -200,7 +200,7 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val pages = pageList
 
-                BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray())
+                LaunchedEffect(pages) { BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray()) }
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -766,9 +766,9 @@ class ReadActivityCompose : ComponentActivity() {
                                         .alpha(1f - (animateBar / toolbarHeightPx))
                                         .offset { IntOffset(x = 0, y = animateBar) },
                                     backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                                        .containerColor(scrollFraction = 1f).value,
+                                        .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
                                     contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                                        .titleContentColor(scrollFraction = 1f).value
+                                        .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
                                 ) {
                                     val prevShown = currentChapter < list.lastIndex
                                     val nextShown = currentChapter > 0
