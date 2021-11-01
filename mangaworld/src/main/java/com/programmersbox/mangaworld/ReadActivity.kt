@@ -394,6 +394,8 @@ class ReadActivityCompose : ComponentActivity() {
                         TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo }
                     }*/
 
+                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
                     //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
 
                     //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
@@ -401,7 +403,7 @@ class ReadActivityCompose : ComponentActivity() {
                     Scaffold(
                         //TODO: This stuff will be used again once we find a way to keep the top and bottom bars out when reaching the bottom
                         // and animating the top and bottom bars away
-                        //modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                         /*topBar = {
                             CenterAlignedTopAppBar(
                                 navigationIcon = {
@@ -682,6 +684,7 @@ class ReadActivityCompose : ComponentActivity() {
                                 val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
 
                                 CenterAlignedTopAppBar(
+                                    scrollBehavior = scrollBehavior,
                                     modifier = Modifier
                                         .height(topBarHeight)
                                         .align(Alignment.TopCenter)
@@ -763,9 +766,9 @@ class ReadActivityCompose : ComponentActivity() {
                                         .alpha(1f - (animateBar / toolbarHeightPx))
                                         .offset { IntOffset(x = 0, y = animateBar) },
                                     backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                                        .containerColor(scrollFraction = 1f - (animateBar / toolbarHeightPx)).value,
+                                        .containerColor(scrollFraction = 1f).value,
                                     contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                                        .titleContentColor(scrollFraction = 1f - (animateBar / toolbarHeightPx)).value
+                                        .titleContentColor(scrollFraction = 1f).value
                                 ) {
                                     val prevShown = currentChapter < list.lastIndex
                                     val nextShown = currentChapter > 0
