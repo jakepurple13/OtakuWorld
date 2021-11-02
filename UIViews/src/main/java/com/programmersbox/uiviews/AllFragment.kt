@@ -219,16 +219,17 @@ class AllFragment : BaseFragmentCompose() {
                                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                             keyboardActions = KeyboardActions(onSearch = {
                                                 focusManager.clearFocus()
-                                                sourcePublish.value!!.searchList(searchText, 1, sourceList)
-                                                    .subscribeOn(Schedulers.io())
-                                                    .observeOn(AndroidSchedulers.mainThread())
-                                                    .doOnSubscribe { isSearching = true }
-                                                    .onErrorReturnItem(sourceList)
-                                                    .subscribeBy {
+                                                sourcePublish.value
+                                                    ?.searchList(searchText, 1, sourceList)
+                                                    ?.subscribeOn(Schedulers.io())
+                                                    ?.observeOn(AndroidSchedulers.mainThread())
+                                                    ?.doOnSubscribe { isSearching = true }
+                                                    ?.onErrorReturnItem(sourceList)
+                                                    ?.subscribeBy {
                                                         searchPublisher.onNext(it)
                                                         isSearching = false
                                                     }
-                                                    .addTo(disposable)
+                                                    ?.addTo(disposable)
                                             })
                                         )
                                     }
