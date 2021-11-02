@@ -8,13 +8,13 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -58,7 +58,6 @@ import org.koin.android.ext.android.inject
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class HistoryFragment : Fragment() {
 
@@ -262,7 +261,7 @@ class HistoryFragment : Fragment() {
                 }
             }
         ) {
-            Card(
+            Surface(
                 onClick = {
                     info.toSource(item.source)
                         ?.getSourceByUrl(item.url)
@@ -274,9 +273,9 @@ class HistoryFragment : Fragment() {
                         }
                         ?.addTo(disposable)
                 },
-                backgroundColor = M3MaterialTheme.colorScheme.surface,
-                contentColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
+                tonalElevation = 5.dp,
+                shape = androidx.compose.material.MaterialTheme.shapes.medium,
+                indication = rememberRipple()
             ) {
                 ListItem(
                     text = { Text(item.title) },

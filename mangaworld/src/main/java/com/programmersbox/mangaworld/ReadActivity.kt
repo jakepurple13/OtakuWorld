@@ -264,9 +264,12 @@ class ReadActivityCompose : ComponentActivity() {
                 BottomSheetScaffold(
                     scaffoldState = scaffoldState,
                     sheetContent = {
+                        val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                         Scaffold(
+                            modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                             topBar = {
                                 SmallTopAppBar(
+                                    scrollBehavior = sheetScrollBehavior,
                                     title = { Text(list.getOrNull(currentChapter)?.name.orEmpty()) },
                                     actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
                                     navigationIcon = {
@@ -323,9 +326,12 @@ class ReadActivityCompose : ComponentActivity() {
                     sheetPeekHeight = 0.dp,
                     drawerContent = if (list.size > 1) {
                         {
+                            val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
+                                modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
                                 topBar = {
                                     LargeTopAppBar(
+                                        scrollBehavior = drawerScrollBehavior,
                                         title = { Text(title) },
                                         actions = { PageIndicator(Modifier, list.size - currentChapter, list.size) }
                                     )
@@ -360,17 +366,17 @@ class ReadActivityCompose : ComponentActivity() {
                                                 )
                                             }
 
-                                            Card(
+                                            androidx.compose.material3.Surface(
                                                 modifier = Modifier.padding(horizontal = 5.dp),
+                                                tonalElevation = 4.dp,
+                                                shape = androidx.compose.material.MaterialTheme.shapes.medium,
                                                 border = BorderStroke(
                                                     1.dp,
                                                     animateColorAsState(
                                                         if (currentChapter == i) MaterialTheme.colorScheme.onSurface
                                                         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                                     ).value
-                                                ),
-                                                backgroundColor = MaterialTheme.colorScheme.surface,
-                                                contentColor = androidx.compose.material3.contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
+                                                )
                                             ) {
                                                 ListItem(
                                                     text = { Text(c.name) },

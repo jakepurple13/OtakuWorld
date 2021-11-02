@@ -18,14 +18,20 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -69,6 +75,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.properties.Delegates
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @Composable
 fun StaggeredVerticalGrid(
@@ -488,8 +496,6 @@ private fun <T> DeleteItemView(
 
     SwipeToDismiss(
         state = dismissState,
-        directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-        dismissThresholds = { FractionalThreshold(0.5f) },
         background = {
             val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
             val color by animateColorAsState(
@@ -528,6 +534,242 @@ private fun <T> DeleteItemView(
             elevation = 5.dp,
             modifier = Modifier.fillMaxSize(),
             interactionSource = MutableInteractionSource(),
+            indication = rememberRipple(),
+            border = BorderStroke(
+                animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
+                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
+            ),
+            onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
+        ) { itemUi(item) }
+    }
+
+}
+
+@ExperimentalMaterial3Api
+@ExperimentalMaterialApi
+@Composable
+fun <T> M3BottomSheetDeleteScaffold(
+    listOfItems: List<T>,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    multipleTitle: String,
+    onRemove: (T) -> Unit,
+    onMultipleRemove: (SnapshotStateList<T>) -> Unit,
+    customSingleRemoveDialog: (T) -> Boolean = { true },
+    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
+    topBar: @Composable (() -> Unit)? = null,
+    itemUi: @Composable (T) -> Unit,
+    mainView: @Composable (PaddingValues, List<T>) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    BottomSheetScaffold(
+        scaffoldState = state,
+        modifier = Modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
+        topBar = topBar,
+        backgroundColor = M3MaterialTheme.colorScheme.background,
+        contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
+        sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
+        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+        sheetContent = {
+
+            val itemsToDelete = remember { mutableStateListOf<T>() }
+
+            LaunchedEffect(state) {
+                snapshotFlow { state.bottomSheetState.isCollapsed }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { itemsToDelete.clear() }
+            }
+
+            var showPopup by remember { mutableStateOf(false) }
+
+            if (showPopup) {
+
+                val onDismiss = { showPopup = false }
+
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = onDismiss,
+                    title = { androidx.compose.material3.Text(multipleTitle) },
+                    text = {
+                        androidx.compose.material3.Text(
+                            context.resources.getQuantityString(
+                                R.plurals.areYouSureRemove,
+                                itemsToDelete.size,
+                                itemsToDelete.size
+                            )
+                        )
+                    },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(
+                            onClick = {
+                                onDismiss()
+                                scope.launch { state.bottomSheetState.collapse() }
+                                onMultipleRemove(itemsToDelete)
+                            }
+                        ) { androidx.compose.material3.Text(stringResource(R.string.yes)) }
+                    },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { androidx.compose.material3.Text(stringResource(R.string.no)) } }
+                )
+
+            }
+
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+            androidx.compose.material3.Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            scope.launch {
+                                if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
+                                else state.bottomSheetState.collapse()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                    ) { androidx.compose.material3.Text(stringResource(R.string.delete_multiple)) }
+                },
+                bottomBar = {
+                    BottomAppBar(
+                        contentPadding = PaddingValues(0.dp),
+                        backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                            .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+                        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                            .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
+                    ) {
+                        androidx.compose.material3.Button(
+                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 5.dp)
+                        ) { androidx.compose.material3.Text(stringResource(id = R.string.cancel)) }
+
+                        androidx.compose.material3.Button(
+                            onClick = { showPopup = true },
+                            enabled = itemsToDelete.isNotEmpty(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 5.dp)
+                        ) { androidx.compose.material3.Text(stringResource(id = R.string.remove)) }
+                    }
+                }
+            ) {
+                AnimatedLazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = it,
+                    modifier = Modifier.padding(5.dp),
+                    items = listOfItems.fastMap { i ->
+                        AnimatedLazyListItem(key = i.hashCode().toString(), value = i) {
+                            M3DeleteItemView(
+                                item = i,
+                                deleteItemList = itemsToDelete,
+                                customSingleRemoveDialog = customSingleRemoveDialog,
+                                onRemove = onRemove,
+                                itemUi = itemUi
+                            )
+                        }
+                    }
+                )
+                /*LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = it,
+                    modifier = Modifier.padding(5.dp)
+                ) {
+                    items(listOfItems) { i ->
+                        DeleteItemView(
+                            item = i,
+                            deleteItemList = itemsToDelete,
+                            customSingleRemoveDialog = customSingleRemoveDialog,
+                            onRemove = onRemove,
+                            itemUi = itemUi
+                        )
+                    }
+                }*/
+            }
+        }
+    ) { mainView(it, listOfItems) }
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun <T> M3DeleteItemView(
+    item: T,
+    deleteItemList: SnapshotStateList<T>,
+    customSingleRemoveDialog: (T) -> Boolean,
+    onRemove: (T) -> Unit,
+    itemUi: @Composable (T) -> Unit
+) {
+
+    var showPopup by remember { mutableStateOf(false) }
+
+    if (showPopup) {
+
+        val onDismiss = { showPopup = false }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { androidx.compose.material3.Text(stringResource(R.string.remove)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        onDismiss()
+                        onRemove(item)
+                    }
+                ) { androidx.compose.material3.Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { androidx.compose.material3.Text(stringResource(R.string.no)) } }
+        )
+
+    }
+
+    val dismissState = rememberDismissState(
+        confirmStateChange = {
+            if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+                if (customSingleRemoveDialog(item)) {
+                    showPopup = true
+                }
+            }
+            false
+        }
+    )
+
+    SwipeToDismiss(
+        state = dismissState,
+        background = {
+            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    DismissValue.Default -> Color.Transparent
+                    DismissValue.DismissedToEnd -> Color.Red
+                    DismissValue.DismissedToStart -> Color.Red
+                }
+            )
+            val alignment = when (direction) {
+                DismissDirection.StartToEnd -> Alignment.CenterStart
+                DismissDirection.EndToStart -> Alignment.CenterEnd
+            }
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.scale(scale)
+                )
+            }
+        }
+    ) {
+        androidx.compose.material3.Surface(
+            tonalElevation = 5.dp,
+            modifier = Modifier.fillMaxSize(),
             indication = rememberRipple(),
             border = BorderStroke(
                 animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
@@ -684,7 +926,7 @@ private val DEFAULT_SWIPE_TO_DISMISS_BACKGROUND
 fun CustomSwipeToDelete(
     modifier: Modifier = Modifier,
     dismissState: DismissState,
-    dismissThresholds: (DismissDirection) -> ThresholdConfig = { FractionalThreshold(0.5f) },
+    dismissThresholds: (DismissDirection) -> androidx.compose.material.ThresholdConfig = { androidx.compose.material.FractionalThreshold(0.5f) },
     dismissDirections: Set<DismissDirection> = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
     backgroundInfo: @Composable (DismissState) -> Unit = DEFAULT_SWIPE_TO_DISMISS_BACKGROUND.background,
     content: @Composable () -> Unit

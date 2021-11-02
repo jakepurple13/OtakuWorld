@@ -11,13 +11,10 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -64,7 +61,6 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.map
 import java.io.File
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
 
@@ -149,15 +145,12 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
     @Composable
     private fun EmptyState() {
         Box(modifier = Modifier.fillMaxSize()) {
-            Card(
+            androidx.compose.material3.Surface(
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 4.dp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(5.dp),
-                elevation = 5.dp,
-                shape = RoundedCornerShape(5.dp),
-                backgroundColor = M3MaterialTheme.colorScheme.surface,
-                contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
+                    .padding(5.dp)
             ) {
                 Column(modifier = Modifier) {
 
@@ -198,14 +191,12 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
             modifier = Modifier.animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Card(
-                interactionSource = MutableInteractionSource(),
+            androidx.compose.material3.Surface(
                 indication = rememberRipple(),
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 4.dp,
                 onClick = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = M3MaterialTheme.colorScheme.surface,
-                contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 ListItem(
                     modifier = Modifier.padding(5.dp),
@@ -306,8 +297,9 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                             }
                         }
                     ) {
-                        Card(
-                            interactionSource = MutableInteractionSource(),
+                        androidx.compose.material3.Surface(
+                            shape = MaterialTheme.shapes.medium,
+                            tonalElevation = 4.dp,
                             indication = rememberRipple(),
                             onClick = {
                                 activity?.startActivity(
@@ -317,10 +309,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                                     }
                                 )
                             },
-                            modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = M3MaterialTheme.colorScheme.surface,
-                            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.surface),
-                            border = BorderStroke(1.dp, M3MaterialTheme.colorScheme.outline)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(5.dp),
