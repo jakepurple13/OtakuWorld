@@ -815,7 +815,7 @@ class DetailsFragment : Fragment() {
                     Text(
                         model.source.serviceName,
                         style = M3MaterialTheme.typography.labelSmall,
-                        color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current
+                        color = M3MaterialTheme.colorScheme.onSurface
                     )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
