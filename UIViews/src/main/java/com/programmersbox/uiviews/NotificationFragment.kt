@@ -45,6 +45,7 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.notificationManager
@@ -60,7 +61,6 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -85,9 +85,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         setContent {
             M3MaterialTheme(currentColorScheme) {
 
-                val items by db.getAllNotificationsFlow()
-                    .flowOn(Dispatchers.IO)
-                    .collectAsState(emptyList())
+                val items by db.getAllNotificationsFlow().collectAsState(emptyList())
 
                 val state = rememberBottomSheetScaffoldState()
                 val scope = rememberCoroutineScope()
@@ -98,7 +96,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-                M3BottomSheetDeleteScaffold(
+                BottomSheetDeleteScaffold(
                     listOfItems = items,
                     state = state,
                     multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
@@ -203,29 +201,31 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             trailing = {
                                 var showDropDown by remember { mutableStateOf(false) }
 
-                                DropdownMenu(
-                                    expanded = showDropDown,
-                                    onDismissRequest = { showDropDown = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            Completable.merge(
-                                                items
-                                                    .filter { it.notiTitle == item.notiTitle }
-                                                    .map {
-                                                        cancelNotification(it)
-                                                        db.deleteNotification(it)
+                                MdcTheme {
+                                    DropdownMenu(
+                                        expanded = showDropDown,
+                                        onDismissRequest = { showDropDown = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                Completable.merge(
+                                                    items
+                                                        .filter { it.notiTitle == item.notiTitle }
+                                                        .map {
+                                                            cancelNotification(it)
+                                                            db.deleteNotification(it)
+                                                        }
+                                                )
+                                                    .subscribeOn(Schedulers.io())
+                                                    .observeOn(AndroidSchedulers.mainThread())
+                                                    .subscribe {
+                                                        showDropDown = false
+                                                        Toast.makeText(requireContext(), R.string.done, Toast.LENGTH_SHORT).show()
                                                     }
-                                            )
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .subscribe {
-                                                    showDropDown = false
-                                                    Toast.makeText(requireContext(), R.string.done, Toast.LENGTH_SHORT).show()
-                                                }
-                                                .addTo(disposable)
-                                        }
-                                    ) { Text(stringResource(id = R.string.remove_same_name)) }
+                                                    .addTo(disposable)
+                                            }
+                                        ) { Text(stringResource(id = R.string.remove_same_name)) }
+                                    }
                                 }
 
                                 IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
@@ -413,24 +413,26 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss
-                        ) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    lifecycleScope.launch(Dispatchers.IO) {
-                                        SavedNotifications.viewNotificationFromDb(requireContext(), item, notificationLogo, genericInfo)
+                        MdcTheme {
+                            DropdownMenu(
+                                expanded = showDropDown,
+                                onDismissRequest = dropDownDismiss
+                            ) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        lifecycleScope.launch(Dispatchers.IO) {
+                                            SavedNotifications.viewNotificationFromDb(requireContext(), item, notificationLogo, genericInfo)
+                                        }
                                     }
-                                }
-                            ) { Text(stringResource(R.string.notify)) }
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    showPopup = true
-                                }
-                            ) { Text(stringResource(R.string.remove)) }
+                                ) { Text(stringResource(R.string.notify)) }
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        showPopup = true
+                                    }
+                                ) { Text(stringResource(R.string.remove)) }
+                            }
                         }
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }

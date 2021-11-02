@@ -9,10 +9,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
@@ -104,7 +105,7 @@ private fun SlideToDeleteDialog(
                             slideHeight = 60.dp,
                             slideWidth = 300.dp,
                             slideColor = colorResource(R.color.alizarin),
-                            iconCircleColor = MaterialTheme.colors.background,
+                            iconCircleColor = MaterialTheme.colorScheme.background,
                             navigationIcon = {
                                 Icon(
                                     Icons.Filled.ArrowForward,
@@ -120,7 +121,7 @@ private fun SlideToDeleteDialog(
                                 showDialog.value = false
                                 onSlide()
                             }
-                        ) { Text(stringResource(R.string.delete), color = MaterialTheme.colors.background) }
+                        ) { Text(stringResource(R.string.delete)) }
                     }
                 }
             },
@@ -130,7 +131,7 @@ private fun SlideToDeleteDialog(
                         showDialog.value = false
                         onCancel()
                     }
-                ) { Text(stringResource(R.string.cancel), style = MaterialTheme.typography.button) }
+                ) { Text(stringResource(R.string.cancel)) }
             },
             confirmButton = {}
         )

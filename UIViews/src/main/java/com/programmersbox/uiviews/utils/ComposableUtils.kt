@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CornerSize
@@ -24,9 +23,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.ProvideTextStyle
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -319,236 +316,10 @@ suspend fun calculateDiff(
     DiffUtil.calculateDiff(diffCb, detectMoves)
 }
 
-@ExperimentalMaterialApi
-@Composable
-fun <T> BottomSheetDeleteScaffold(
-    listOfItems: List<T>,
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
-    multipleTitle: String,
-    onRemove: (T) -> Unit,
-    onMultipleRemove: (SnapshotStateList<T>) -> Unit,
-    customSingleRemoveDialog: (T) -> Boolean = { true },
-    topBar: @Composable (() -> Unit)? = null,
-    itemUi: @Composable (T) -> Unit,
-    mainView: @Composable (PaddingValues, List<T>) -> Unit
-) {
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-
-    BottomSheetScaffold(
-        scaffoldState = state,
-        topBar = topBar,
-        sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
-        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
-        sheetContent = {
-
-            val itemsToDelete = remember { mutableStateListOf<T>() }
-
-            LaunchedEffect(state) {
-                snapshotFlow { state.bottomSheetState.isCollapsed }
-                    .distinctUntilChanged()
-                    .filter { it }
-                    .collect { itemsToDelete.clear() }
-            }
-
-            var showPopup by remember { mutableStateOf(false) }
-
-            if (showPopup) {
-
-                val onDismiss = { showPopup = false }
-
-                AlertDialog(
-                    onDismissRequest = onDismiss,
-                    title = { Text(multipleTitle) },
-                    text = { Text(context.resources.getQuantityString(R.plurals.areYouSureRemove, itemsToDelete.size, itemsToDelete.size)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                onDismiss()
-                                scope.launch { state.bottomSheetState.collapse() }
-                                onMultipleRemove(itemsToDelete)
-                            }
-                        ) { Text(stringResource(R.string.yes)) }
-                    },
-                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-                )
-
-            }
-
-            Scaffold(
-                topBar = {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
-                                else state.bottomSheetState.collapse()
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.delete_multiple),
-                            style = MaterialTheme.typography.button
-                        )
-                    }
-                },
-                bottomBar = {
-                    BottomAppBar(
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Button(
-                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 5.dp)
-                        ) { Text(stringResource(id = R.string.cancel), style = MaterialTheme.typography.button) }
-
-                        Button(
-                            onClick = { showPopup = true },
-                            enabled = itemsToDelete.isNotEmpty(),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 5.dp)
-                        ) { Text(stringResource(id = R.string.remove), style = MaterialTheme.typography.button) }
-                    }
-                }
-            ) {
-                AnimatedLazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = it,
-                    modifier = Modifier.padding(5.dp),
-                    items = listOfItems.fastMap { i ->
-                        AnimatedLazyListItem(key = i.hashCode().toString(), value = i) {
-                            DeleteItemView(
-                                item = i,
-                                deleteItemList = itemsToDelete,
-                                customSingleRemoveDialog = customSingleRemoveDialog,
-                                onRemove = onRemove,
-                                itemUi = itemUi
-                            )
-                        }
-                    }
-                )
-                /*LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = it,
-                    modifier = Modifier.padding(5.dp)
-                ) {
-                    items(listOfItems) { i ->
-                        DeleteItemView(
-                            item = i,
-                            deleteItemList = itemsToDelete,
-                            customSingleRemoveDialog = customSingleRemoveDialog,
-                            onRemove = onRemove,
-                            itemUi = itemUi
-                        )
-                    }
-                }*/
-            }
-        }
-    ) { mainView(it, listOfItems) }
-}
-
-@ExperimentalMaterialApi
-@Composable
-private fun <T> DeleteItemView(
-    item: T,
-    deleteItemList: SnapshotStateList<T>,
-    customSingleRemoveDialog: (T) -> Boolean,
-    onRemove: (T) -> Unit,
-    itemUi: @Composable (T) -> Unit
-) {
-
-    var showPopup by remember { mutableStateOf(false) }
-
-    if (showPopup) {
-
-        val onDismiss = { showPopup = false }
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.remove)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDismiss()
-                        onRemove(item)
-                    }
-                ) { Text(stringResource(R.string.yes)) }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-        )
-
-    }
-
-    val dismissState = rememberDismissState(
-        confirmStateChange = {
-            if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
-                if (customSingleRemoveDialog(item)) {
-                    showPopup = true
-                }
-            }
-            false
-        }
-    )
-
-    SwipeToDismiss(
-        state = dismissState,
-        background = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToEnd -> Color.Red
-                    DismissValue.DismissedToStart -> Color.Red
-                }
-            )
-            val alignment = when (direction) {
-                DismissDirection.StartToEnd -> Alignment.CenterStart
-                DismissDirection.EndToStart -> Alignment.CenterEnd
-            }
-            val icon = when (direction) {
-                DismissDirection.StartToEnd -> Icons.Default.Delete
-                DismissDirection.EndToStart -> Icons.Default.Delete
-            }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(color)
-                    .padding(horizontal = 20.dp),
-                contentAlignment = alignment
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.scale(scale)
-                )
-            }
-        }
-    ) {
-        Card(
-            elevation = 5.dp,
-            modifier = Modifier.fillMaxSize(),
-            interactionSource = MutableInteractionSource(),
-            indication = rememberRipple(),
-            border = BorderStroke(
-                animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
-                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
-            ),
-            onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
-        ) { itemUi(item) }
-    }
-
-}
-
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @Composable
-fun <T> M3BottomSheetDeleteScaffold(
+fun <T> BottomSheetDeleteScaffold(
     listOfItems: List<T>,
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
@@ -663,7 +434,7 @@ fun <T> M3BottomSheetDeleteScaffold(
                     modifier = Modifier.padding(5.dp),
                     items = listOfItems.fastMap { i ->
                         AnimatedLazyListItem(key = i.hashCode().toString(), value = i) {
-                            M3DeleteItemView(
+                            DeleteItemView(
                                 item = i,
                                 deleteItemList = itemsToDelete,
                                 customSingleRemoveDialog = customSingleRemoveDialog,
@@ -695,7 +466,7 @@ fun <T> M3BottomSheetDeleteScaffold(
 
 @ExperimentalMaterialApi
 @Composable
-private fun <T> M3DeleteItemView(
+private fun <T> DeleteItemView(
     item: T,
     deleteItemList: SnapshotStateList<T>,
     customSingleRemoveDialog: (T) -> Boolean,
@@ -759,7 +530,7 @@ private fun <T> M3DeleteItemView(
                     .padding(horizontal = 20.dp),
                 contentAlignment = alignment
             ) {
-                Icon(
+                androidx.compose.material3.Icon(
                     Icons.Default.Delete,
                     contentDescription = null,
                     modifier = Modifier.scale(scale)

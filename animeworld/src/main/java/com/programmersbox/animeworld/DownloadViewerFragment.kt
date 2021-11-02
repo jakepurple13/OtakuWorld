@@ -1,9 +1,6 @@
 package com.programmersbox.animeworld
 
-import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
-import android.os.Parcel
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +15,12 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,25 +32,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastMap
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.net.toUri
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.helpfulutils.sizedListOf
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.tonyodev.fetch2.*
-import com.tonyodev.fetch2core.Extras
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
-import kotlin.random.Random
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
@@ -59,6 +57,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     private val fetch: Fetch = Fetch.getDefaultInstance()
     private val downloadState = mutableStateListOf<DownloadData>()
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     override fun onCreateView(
@@ -66,7 +65,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        setContent { MdcTheme { ScaffoldUi() } }
+        setContent { M3MaterialTheme(currentColorScheme) { ScaffoldUi() } }
     }
 
     override fun onResume() {
@@ -169,6 +168,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
         fetch.retry(id)
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
@@ -194,7 +194,10 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         itemToDelete?.download?.let { SlideToDeleteDialog(showDialog = showDialog, download = it) }
 
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
         BottomSheetDeleteScaffold(
+            bottomScrollBehavior = scrollBehavior,
             state = state,
             listOfItems = downloadState,
             multipleTitle = stringResource(id = R.string.delete),
@@ -209,13 +212,14 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             },
             onMultipleRemove = { downloadItems -> fetch.delete(downloadItems.fastMap { it.id }) },
             topBar = {
-                TopAppBar(
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
                     navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                     actions = { IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) } },
                     title = {
                         Text(
                             stringResource(id = R.string.in_progress_downloads),
-                            style = MaterialTheme.typography.h5
+                            style = M3MaterialTheme.typography.titleLarge
                         )
                     }
                 )
@@ -230,6 +234,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                             Text(stringResource(R.string.percent_progress, progress))
                             LinearProgressIndicator(
                                 progress = animateFloatAsState(targetValue = progress.toFloat() / 100f).value,
+                                color = M3MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
                                     .fillMaxWidth()
@@ -261,23 +266,23 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     @Composable
     private fun EmptyState() {
         Box(modifier = Modifier.fillMaxSize()) {
-            Card(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(5.dp),
-                elevation = 5.dp,
+                tonalElevation = 5.dp,
                 shape = RoundedCornerShape(5.dp)
             ) {
                 Column(modifier = Modifier) {
                     Text(
                         text = stringResource(id = R.string.get_started),
-                        style = MaterialTheme.typography.h4,
+                        style = M3MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
                     Text(
                         text = stringResource(id = R.string.download_a_video),
-                        style = MaterialTheme.typography.body1,
+                        style = M3MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
@@ -289,12 +294,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(bottom = 5.dp)
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.go_download),
-                            style = MaterialTheme.typography.button
-                        )
-                    }
+                    ) { Text(text = stringResource(id = R.string.go_download)) }
                 }
             }
         }
@@ -319,8 +319,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         SwipeToDismiss(
             state = dismissState,
-            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-            dismissThresholds = { FractionalThreshold(0.5f) },
             background = {
                 val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
                 val color by animateColorAsState(
@@ -334,10 +332,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                     DismissDirection.StartToEnd -> Alignment.CenterStart
                     DismissDirection.EndToStart -> Alignment.CenterEnd
                 }
-                val icon = when (direction) {
-                    DismissDirection.StartToEnd -> Icons.Default.Delete
-                    DismissDirection.EndToStart -> Icons.Default.Delete
-                }
                 val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
 
                 Box(
@@ -348,18 +342,20 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                     contentAlignment = alignment
                 ) {
                     Icon(
-                        icon,
+                        Icons.Default.Delete,
                         contentDescription = null,
                         modifier = Modifier.scale(scale),
-                        tint = MaterialTheme.colors.onSurface
+                        tint = M3MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
         ) {
-            Card(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 5.dp)
+                    .padding(horizontal = 5.dp),
+                tonalElevation = 5.dp,
+                shape = MaterialTheme.shapes.medium
             ) {
 
                 ConstraintLayout {
@@ -389,6 +385,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
                     LinearProgressIndicator(
                         progress = animateFloatAsState(targetValue = prog.toFloat() / 100f).value,
+                        color = M3MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .constrainAs(progress) {
                                 start.linkTo(parent.start)
@@ -427,8 +424,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                                     Status.ADDED -> R.string.download
                                     else -> R.string.error_text
                                 }
-                            ),
-                            style = MaterialTheme.typography.button
+                            )
                         )
                     }
 
@@ -529,61 +525,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             minutes > 0 -> String.format("%02d:%02d mins", minutes, seconds)
             else -> "$seconds secs"
         } + (if (needLeft) " left" else "")
-    }
-
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true, device = Devices.PIXEL_2, name = "Light")
-    @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true, device = Devices.PIXEL_2, name = "Dark")
-    @Composable
-    fun PreviewDownloadItem() {
-        MaterialTheme { ScaffoldUi() }
-
-        val list = sizedListOf(5) {
-            DownloadData(
-                object : Download {
-                    override val autoRetryAttempts: Int get() = 1
-                    override val autoRetryMaxAttempts: Int get() = 1
-                    override val created: Long get() = 1L
-                    override val downloadOnEnqueue: Boolean get() = true
-                    override val downloaded: Long get() = 1L
-                    override val downloadedBytesPerSecond: Long get() = 60
-                    override val enqueueAction: EnqueueAction get() = EnqueueAction.REPLACE_EXISTING
-                    override val error: Error get() = Error.UNKNOWN
-                    override val etaInMilliSeconds: Long get() = 60000
-                    override val extras: Extras get() = Extras.emptyExtras
-                    override val file: String get() = ""
-                    override val fileUri: Uri get() = Uri.parse("")
-                    override val group: Int get() = 1
-                    override val headers: Map<String, String> get() = emptyMap()
-                    override val id: Int get() = 1
-                    override val identifier: Long get() = 0L
-                    override val namespace: String get() = ""
-                    override val networkType: NetworkType get() = NetworkType.ALL
-                    override val priority: Priority get() = Priority.HIGH
-                    override val progress: Int get() = Random.nextInt(1, 100)
-                    override val request: Request get() = Request("", "")
-                    override val status: Status get() = Status.DOWNLOADING
-                    override val tag: String get() = "tag"
-                    override val total: Long get() = 0L
-                    override val url: String get() = "https://raw.githubusercontent.com/jakepurple13/OtakuWorld/master/update.json"
-
-                    override fun copy(): Download = this
-
-                    override fun describeContents(): Int = 0
-
-                    override fun writeToParcel(p0: Parcel?, p1: Int) {
-
-                    }
-
-                }
-            ).apply {
-                eta = 100000L
-                downloadedBytesPerSecond = 13245674L
-            }
-        }
-
-        downloadState.addAll(list)
     }
 
 }

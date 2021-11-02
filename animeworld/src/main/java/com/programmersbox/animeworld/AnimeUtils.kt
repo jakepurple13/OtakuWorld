@@ -21,7 +21,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
+import androidx.compose.material3.Surface
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +42,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-
 
 var Context.folderLocation: String by sharedPrefNotNullDelegate(
     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString() + "/AnimeWorld/"
@@ -251,8 +255,8 @@ class VideoGet private constructor(private val videoContex: Context) {
 
 enum class SlideState { Start, End }
 
-@ExperimentalAnimationApi
 @ExperimentalMaterialApi
+@ExperimentalAnimationApi
 @Composable
 fun SlideTo(
     modifier: Modifier = Modifier,
@@ -308,7 +312,7 @@ fun SlideTo(
                     .height(slideHeight)
                     .width(width),
                 color = slideColor,
-                elevation = elevation
+                tonalElevation = elevation
             ) {
                 Box(
                     modifier = Modifier.padding(5.dp),
