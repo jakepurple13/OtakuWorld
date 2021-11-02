@@ -1,0 +1,251 @@
+package com.programmersbox.uiviews.utils
+
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.accompanist.placeholder.material.placeholder
+import com.programmersbox.models.ItemModel
+import com.skydoves.landscapist.glide.GlideImage
+
+object ComposableUtils {
+    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
+    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { 480.toDp() }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun CoverCard(
+    modifier: Modifier = Modifier,
+    imageUrl: String,
+    name: String,
+    placeHolder: Int,
+    error: Int = placeHolder,
+    onLongPress: (ComponentState) -> Unit = {},
+    favoriteIcon: @Composable BoxScope.() -> Unit = {},
+    onClick: () -> Unit = {}
+) {
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .size(
+                ComposableUtils.IMAGE_WIDTH,
+                ComposableUtils.IMAGE_HEIGHT
+            )
+            .combineClickableWithIndication(onLongPress, onClick)
+            .then(modifier)
+    ) {
+        Box {
+            GlideImage(
+                imageModel = imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                requestBuilder = Glide.with(LocalView.current)
+                    .asDrawable()
+                    //.override(360, 480)
+                    .placeholder(placeHolder)
+                    .error(error)
+                    .fallback(placeHolder)
+                    .transform(RoundedCorners(5)),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                loading = {
+                    Image(
+                        bitmap = AppCompatResources.getDrawable(context, placeHolder)!!.toBitmap().asImageBitmap(),
+                        contentDescription = name,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                },
+                failure = {
+                    Image(
+                        bitmap = AppCompatResources.getDrawable(context, error)!!.toBitmap().asImageBitmap(),
+                        contentDescription = name,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 50f
+                        )
+                    )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Text(
+                    name,
+                    style = MaterialTheme
+                        .typography
+                        .body1
+                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                )
+            }
+
+            favoriteIcon()
+        }
+
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun PlaceHolderCoverCard(placeHolder: Int) {
+    Card(
+        modifier = Modifier
+            .padding(5.dp)
+            .size(
+                ComposableUtils.IMAGE_WIDTH,
+                ComposableUtils.IMAGE_HEIGHT
+            )
+    ) {
+
+        Box {
+            Image(
+                painter = painterResource(placeHolder),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .placeholder(true)
+                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 50f
+                        )
+                    )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Text(
+                    "",
+                    style = MaterialTheme
+                        .typography
+                        .body1
+                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .placeholder(true)
+                        .align(Alignment.BottomCenter)
+                )
+            }
+        }
+
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun OtakuBannerBox(
+    showBanner: Boolean = false,
+    placeholder: Int,
+    content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
+) {
+    val context = LocalContext.current
+    val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
+    val placeHolderImage = remember {
+        AppCompatResources
+            .getDrawable(context, placeholder)!!
+            .toBitmap().asImageBitmap()
+    }
+
+    BannerBox(
+        showBanner = showBanner,
+        banner = {
+            Card(modifier = Modifier.align(Alignment.TopCenter)) {
+                ListItem(
+                    icon = {
+                        GlideImage(
+                            imageModel = itemInfo.value?.imageUrl.orEmpty(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                            loading = {
+                                Image(
+                                    bitmap = placeHolderImage,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            },
+                            failure = {
+                                Image(
+                                    bitmap = placeHolderImage,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            }
+                        )
+                    },
+                    overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
+                    text = { Text(itemInfo.value?.title.orEmpty()) },
+                    secondaryText = {
+                        Text(
+                            itemInfo.value?.description.orEmpty(),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 5
+                        )
+                    }
+                )
+            }
+        },
+        content = { content(itemInfo) }
+    )
+}

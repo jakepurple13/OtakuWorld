@@ -2,28 +2,33 @@ package com.programmersbox.uiviews.utils
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Text
+import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +36,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
@@ -39,12 +43,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -54,19 +55,14 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.window.PopupProperties
-import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.accompanist.placeholder.material.placeholder
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.uiviews.R
-import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -76,22 +72,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.properties.Delegates
-
-fun Modifier.fadeInAnimation(): Modifier = composed {
-    val animatedProgress = remember { Animatable(initialValue = 0f) }
-    LaunchedEffect(Unit) {
-        animatedProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(600)
-        )
-    }
-    alpha(animatedProgress.value)
-}
-
-object ComposableUtils {
-    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
-    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { 480.toDp() }
-}
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @Composable
 fun StaggeredVerticalGrid(
@@ -334,183 +316,7 @@ suspend fun calculateDiff(
     DiffUtil.calculateDiff(diffCb, detectMoves)
 }
 
-enum class ComponentState { Pressed, Released }
-
-@ExperimentalMaterialApi
-@Composable
-fun CoverCard(
-    modifier: Modifier = Modifier,
-    imageUrl: String,
-    name: String,
-    placeHolder: Int,
-    error: Int = placeHolder,
-    onLongPress: (ComponentState) -> Unit = {},
-    favoriteIcon: @Composable BoxScope.() -> Unit = {},
-    onClick: () -> Unit = {}
-) {
-    val context = LocalContext.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Card(
-        modifier = Modifier
-            .padding(4.dp)
-            .size(
-                ComposableUtils.IMAGE_WIDTH,
-                ComposableUtils.IMAGE_HEIGHT
-            )
-            .indication(
-                interactionSource = interactionSource,
-                indication = rememberRipple()
-            )
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = { onLongPress(ComponentState.Pressed) },
-                    onPress = {
-                        val press = PressInteraction.Press(it)
-                        interactionSource.tryEmit(press)
-                        tryAwaitRelease()
-                        onLongPress(ComponentState.Released)
-                        interactionSource.tryEmit(PressInteraction.Release(press))
-                    },
-                    onTap = { _ -> onClick() }
-                )
-            }
-            .then(modifier)
-    ) {
-        Box {
-            GlideImage(
-                imageModel = imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                requestBuilder = Glide.with(LocalView.current)
-                    .asDrawable()
-                    //.override(360, 480)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .fallback(placeHolder)
-                    .transform(RoundedCorners(5)),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                loading = {
-                    Image(
-                        bitmap = AppCompatResources.getDrawable(context, placeHolder)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                    )
-                },
-                failure = {
-                    Image(
-                        bitmap = AppCompatResources.getDrawable(context, error)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                    )
-                }
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 50f
-                        )
-                    )
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Text(
-                    name,
-                    style = MaterialTheme
-                        .typography
-                        .body1
-                        .copy(textAlign = TextAlign.Center, color = Color.White),
-                    maxLines = 2,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                )
-            }
-
-            favoriteIcon()
-        }
-
-    }
-}
-
-@ExperimentalMaterialApi
-@Composable
-fun PlaceHolderCoverCard(placeHolder: Int) {
-    Card(
-        modifier = Modifier
-            .padding(5.dp)
-            .size(
-                ComposableUtils.IMAGE_WIDTH,
-                ComposableUtils.IMAGE_HEIGHT
-            )
-    ) {
-
-        Box {
-            Image(
-                painter = painterResource(placeHolder),
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .placeholder(true)
-                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 50f
-                        )
-                    )
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Text(
-                    "",
-                    style = MaterialTheme
-                        .typography
-                        .body1
-                        .copy(textAlign = TextAlign.Center, color = Color.White),
-                    maxLines = 2,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .placeholder(true)
-                        .align(Alignment.BottomCenter)
-                )
-            }
-        }
-
-    }
-}
-
+@ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @Composable
 fun <T> BottomSheetDeleteScaffold(
@@ -520,6 +326,7 @@ fun <T> BottomSheetDeleteScaffold(
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     customSingleRemoveDialog: (T) -> Boolean = { true },
+    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit
@@ -529,7 +336,10 @@ fun <T> BottomSheetDeleteScaffold(
 
     BottomSheetScaffold(
         scaffoldState = state,
+        modifier = Modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
         topBar = topBar,
+        backgroundColor = M3MaterialTheme.colorScheme.background,
+        contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
         sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
         sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
         sheetContent = {
@@ -549,27 +359,38 @@ fun <T> BottomSheetDeleteScaffold(
 
                 val onDismiss = { showPopup = false }
 
-                AlertDialog(
+                androidx.compose.material3.AlertDialog(
                     onDismissRequest = onDismiss,
-                    title = { Text(multipleTitle) },
-                    text = { Text(context.resources.getQuantityString(R.plurals.areYouSureRemove, itemsToDelete.size, itemsToDelete.size)) },
+                    title = { androidx.compose.material3.Text(multipleTitle) },
+                    text = {
+                        androidx.compose.material3.Text(
+                            context.resources.getQuantityString(
+                                R.plurals.areYouSureRemove,
+                                itemsToDelete.size,
+                                itemsToDelete.size
+                            )
+                        )
+                    },
                     confirmButton = {
-                        TextButton(
+                        androidx.compose.material3.TextButton(
                             onClick = {
                                 onDismiss()
                                 scope.launch { state.bottomSheetState.collapse() }
                                 onMultipleRemove(itemsToDelete)
                             }
-                        ) { Text(stringResource(R.string.yes)) }
+                        ) { androidx.compose.material3.Text(stringResource(R.string.yes)) }
                     },
-                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { androidx.compose.material3.Text(stringResource(R.string.no)) } }
                 )
 
             }
 
-            Scaffold(
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+            androidx.compose.material3.Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Button(
+                    androidx.compose.material3.Button(
                         onClick = {
                             scope.launch {
                                 if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
@@ -580,31 +401,30 @@ fun <T> BottomSheetDeleteScaffold(
                             .fillMaxWidth()
                             .heightIn(ButtonDefaults.MinHeight + 4.dp),
                         shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.delete_multiple),
-                            style = MaterialTheme.typography.button
-                        )
-                    }
+                    ) { androidx.compose.material3.Text(stringResource(R.string.delete_multiple)) }
                 },
                 bottomBar = {
                     BottomAppBar(
-                        contentPadding = PaddingValues(0.dp)
+                        contentPadding = PaddingValues(0.dp),
+                        backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                            .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+                        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                            .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
                     ) {
-                        Button(
+                        androidx.compose.material3.Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 5.dp)
-                        ) { Text(stringResource(id = R.string.cancel), style = MaterialTheme.typography.button) }
+                        ) { androidx.compose.material3.Text(stringResource(id = R.string.cancel)) }
 
-                        Button(
+                        androidx.compose.material3.Button(
                             onClick = { showPopup = true },
                             enabled = itemsToDelete.isNotEmpty(),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 5.dp)
-                        ) { Text(stringResource(id = R.string.remove), style = MaterialTheme.typography.button) }
+                        ) { androidx.compose.material3.Text(stringResource(id = R.string.remove)) }
                     }
                 }
             ) {
@@ -659,18 +479,18 @@ private fun <T> DeleteItemView(
     if (showPopup) {
 
         val onDismiss = { showPopup = false }
-        AlertDialog(
+        androidx.compose.material3.AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.remove)) },
+            title = { androidx.compose.material3.Text(stringResource(R.string.remove)) },
             confirmButton = {
-                TextButton(
+                androidx.compose.material3.TextButton(
                     onClick = {
                         onDismiss()
                         onRemove(item)
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { androidx.compose.material3.Text(stringResource(R.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+            dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { androidx.compose.material3.Text(stringResource(R.string.no)) } }
         )
 
     }
@@ -688,8 +508,6 @@ private fun <T> DeleteItemView(
 
     SwipeToDismiss(
         state = dismissState,
-        directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-        dismissThresholds = { FractionalThreshold(0.5f) },
         background = {
             val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
             val color by animateColorAsState(
@@ -703,10 +521,6 @@ private fun <T> DeleteItemView(
                 DismissDirection.StartToEnd -> Alignment.CenterStart
                 DismissDirection.EndToStart -> Alignment.CenterEnd
             }
-            val icon = when (direction) {
-                DismissDirection.StartToEnd -> Icons.Default.Delete
-                DismissDirection.EndToStart -> Icons.Default.Delete
-            }
             val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
 
             Box(
@@ -716,18 +530,17 @@ private fun <T> DeleteItemView(
                     .padding(horizontal = 20.dp),
                 contentAlignment = alignment
             ) {
-                Icon(
-                    icon,
+                androidx.compose.material3.Icon(
+                    Icons.Default.Delete,
                     contentDescription = null,
                     modifier = Modifier.scale(scale)
                 )
             }
         }
     ) {
-        Card(
-            elevation = 5.dp,
+        androidx.compose.material3.Surface(
+            tonalElevation = 5.dp,
             modifier = Modifier.fillMaxSize(),
-            interactionSource = MutableInteractionSource(),
             indication = rememberRipple(),
             border = BorderStroke(
                 animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
@@ -737,103 +550,6 @@ private fun <T> DeleteItemView(
         ) { itemUi(item) }
     }
 
-}
-
-@Composable
-fun rememberScaleRotateOffset(
-    initialScale: Float = 1f,
-    initialRotation: Float = 0f,
-    initialOffset: Offset = Offset.Zero
-) = remember { ScaleRotateOffset(initialScale, initialRotation, initialOffset) }
-
-class ScaleRotateOffset(initialScale: Float = 1f, initialRotation: Float = 0f, initialOffset: Offset = Offset.Zero) {
-    val scale: MutableState<Float> = mutableStateOf(initialScale)
-    val rotation: MutableState<Float> = mutableStateOf(initialRotation)
-    val offset: MutableState<Offset> = mutableStateOf(initialOffset)
-}
-
-@Composable
-fun Modifier.scaleRotateOffset(
-    scaleRotateOffset: ScaleRotateOffset,
-    canScale: Boolean = true,
-    canRotate: Boolean = true,
-    canOffset: Boolean = true
-): Modifier = scaleRotateOffset(
-    scaleRotateOffset.scale,
-    scaleRotateOffset.rotation,
-    scaleRotateOffset.offset,
-    canScale,
-    canRotate,
-    canOffset
-)
-
-@Composable
-fun Modifier.scaleRotateOffset(
-    scale: MutableState<Float> = remember { mutableStateOf(1f) },
-    rotation: MutableState<Float> = remember { mutableStateOf(0f) },
-    offset: MutableState<Offset> = remember { mutableStateOf(Offset.Zero) },
-    canScale: Boolean = true,
-    canRotate: Boolean = true,
-    canOffset: Boolean = true
-): Modifier {
-    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (canScale) scale.value *= zoomChange
-        if (canRotate) rotation.value += rotationChange
-        if (canOffset) offset.value += offsetChange
-    }
-    val animScale = animateFloatAsState(scale.value).value
-    val (x, y) = animateOffsetAsState(offset.value).value
-    return graphicsLayer(
-        scaleX = animScale,
-        scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation.value).value,
-        translationX = x,
-        translationY = y
-    )
-        // add transformable to listen to multitouch transformation events after offset
-        .transformable(state = state)
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun Modifier.scaleRotateOffsetReset(
-    canScale: Boolean = true,
-    canRotate: Boolean = true,
-    canOffset: Boolean = true,
-    onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {}
-): Modifier {
-    var scale by remember { mutableStateOf(1f) }
-    var rotation by remember { mutableStateOf(0f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if (canScale) scale *= zoomChange
-        if (canRotate) rotation += rotationChange
-        if (canOffset) offset += offsetChange
-    }
-    val animScale = animateFloatAsState(scale).value
-    val (x, y) = animateOffsetAsState(offset).value
-    return graphicsLayer(
-        scaleX = animScale,
-        scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation).value,
-        translationX = x,
-        translationY = y
-    )
-        // add transformable to listen to multitouch transformation events
-        // after offset
-        .transformable(state = state)
-        .combinedClickable(
-            onClick = onClick,
-            onDoubleClick = {
-                if (canScale) scale = 1f
-                if (canRotate) rotation = 0f
-                if (canOffset) offset = Offset.Zero
-            },
-            onLongClick = onLongClick,
-            indication = null,
-            interactionSource = remember { MutableInteractionSource() }
-        )
 }
 
 interface AutoCompleteEntity {
@@ -981,7 +697,7 @@ private val DEFAULT_SWIPE_TO_DISMISS_BACKGROUND
 fun CustomSwipeToDelete(
     modifier: Modifier = Modifier,
     dismissState: DismissState,
-    dismissThresholds: (DismissDirection) -> ThresholdConfig = { FractionalThreshold(0.5f) },
+    dismissThresholds: (DismissDirection) -> androidx.compose.material.ThresholdConfig = { androidx.compose.material.FractionalThreshold(0.5f) },
     dismissDirections: Set<DismissDirection> = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
     backgroundInfo: @Composable (DismissState) -> Unit = DEFAULT_SWIPE_TO_DISMISS_BACKGROUND.background,
     content: @Composable () -> Unit
@@ -1286,3 +1002,45 @@ fun Coordinator(
         bottomBar?.let { if (it.show) it.Content(this) }
     }
 }
+
+@Composable
+fun BannerBox(
+    modifier: Modifier = Modifier,
+    showBanner: Boolean = false,
+    bannerEnter: EnterTransition = slideInVertically { -it },
+    bannerExit: ExitTransition = slideOutVertically { -it },
+    banner: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .then(modifier)
+    ) {
+        content()
+        AnimatedVisibility(
+            visible = showBanner,
+            enter = bannerEnter,
+            exit = bannerExit,
+        ) { banner() }
+    }
+}
+
+val currentColorScheme: ColorScheme
+    @Composable
+    get() {
+        val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
+                (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        return when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
+            darkTheme -> darkColorScheme(
+                primary = Color(0xff90CAF9),
+                secondary = Color(0xff90CAF9)
+            )
+            else -> lightColorScheme(
+                primary = Color(0xff2196F3),
+                secondary = Color(0xff90CAF9)
+            )
+        }
+    }

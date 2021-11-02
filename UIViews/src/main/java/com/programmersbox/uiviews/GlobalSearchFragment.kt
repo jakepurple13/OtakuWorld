@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -124,199 +123,214 @@ class GlobalSearchFragment : Fragment() {
                         }
                     }
 
-                    CollapsingToolbarScaffold(
-                        modifier = Modifier,
-                        state = rememberCollapsingToolbarScaffoldState(),
-                        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-                        toolbar = {
-                            Column(modifier = Modifier.padding(5.dp)) {
-                                AutoCompleteBox(
-                                    items = history.asAutoCompleteEntities { _, _ -> true },
-                                    itemContent = {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = it.value.searchText,
-                                                style = MaterialTheme.typography.subtitle2,
-                                                modifier = Modifier
-                                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                                    .weight(.9f)
-                                            )
-                                            IconButton(
-                                                onClick = { scope.launch { dao.deleteHistory(it.value) } },
-                                                modifier = Modifier.weight(.1f)
-                                            ) { Icon(Icons.Default.Cancel, null) }
-                                        }
-                                    },
-                                    content = {
+                    var showBanner by remember { mutableStateOf(false) }
 
-                                        boxWidthPercentage = 1f
-                                        boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
-
-                                        onItemSelected {
-                                            searchText = it.value.searchText
-                                            filter(searchText)
-                                            focusManager.clearFocus()
-                                            searchForItems(
-                                                searchText = searchText,
-                                                onSubscribe = { isRefreshing = true },
-                                                subscribe = { isRefreshing = false }
-                                            )
-                                        }
-
-                                        OutlinedTextField(
-                                            value = searchText,
-                                            onValueChange = {
-                                                searchText = it
-                                                filter(it)
-                                            },
-                                            label = { Text(stringResource(id = R.string.search)) },
-                                            trailingIcon = {
+                    OtakuBannerBox(
+                        showBanner = showBanner,
+                        placeholder = this@GlobalSearchFragment.mainLogo.logoId
+                    ) { itemInfo ->
+                        CollapsingToolbarScaffold(
+                            modifier = Modifier,
+                            state = rememberCollapsingToolbarScaffoldState(),
+                            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                            toolbar = {
+                                Column(modifier = Modifier.padding(5.dp)) {
+                                    AutoCompleteBox(
+                                        items = history.asAutoCompleteEntities { _, _ -> true },
+                                        itemContent = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = it.value.searchText,
+                                                    style = MaterialTheme.typography.subtitle2,
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                                        .weight(.9f)
+                                                )
                                                 IconButton(
-                                                    onClick = {
-                                                        searchText = ""
-                                                        filter("")
-                                                        searchListPublisher.clear()
-                                                    }
+                                                    onClick = { scope.launch { dao.deleteHistory(it.value) } },
+                                                    modifier = Modifier.weight(.1f)
                                                 ) { Icon(Icons.Default.Cancel, null) }
-                                            },
-                                            modifier = Modifier
-                                                .padding(5.dp)
-                                                .fillMaxWidth()
-                                                .onFocusChanged { isSearching = it.isFocused },
-                                            singleLine = true,
-                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                            keyboardActions = KeyboardActions(onSearch = {
+                                            }
+                                        },
+                                        content = {
+
+                                            boxWidthPercentage = 1f
+                                            boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
+
+                                            onItemSelected {
+                                                searchText = it.value.searchText
+                                                filter(searchText)
                                                 focusManager.clearFocus()
-                                                if (searchText.isNotEmpty()) {
-                                                    lifecycleScope.launch(Dispatchers.IO) {
-                                                        dao.insertHistory(HistoryItem(System.currentTimeMillis(), searchText))
-                                                    }
-                                                }
                                                 searchForItems(
                                                     searchText = searchText,
                                                     onSubscribe = { isRefreshing = true },
                                                     subscribe = { isRefreshing = false }
                                                 )
-                                            })
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    ) {
+                                            }
 
-                        val bottomScaffold = rememberBottomSheetScaffoldState()
-                        var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
-
-                        BackHandler(bottomScaffold.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
-                            scope.launch {
-                                try {
-                                    bottomScaffold.bottomSheetState.collapse()
-                                } catch (e: Exception) {
-                                    findNavController().popBackStack()
-                                }
-                            }
-                        }
-
-                        BottomSheetScaffold(
-                            scaffoldState = bottomScaffold,
-                            sheetContent = searchModelBottom?.let { s ->
-                                {
-                                    Scaffold(
-                                        topBar = {
-                                            TopAppBar(
-                                                title = { Text(s.apiName) },
-                                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                            OutlinedTextField(
+                                                value = searchText,
+                                                onValueChange = {
+                                                    searchText = it
+                                                    filter(it)
+                                                },
+                                                label = { Text(stringResource(id = R.string.search)) },
+                                                trailingIcon = {
+                                                    IconButton(
+                                                        onClick = {
+                                                            searchText = ""
+                                                            filter("")
+                                                            searchListPublisher.clear()
+                                                        }
+                                                    ) { Icon(Icons.Default.Cancel, null) }
+                                                },
+                                                modifier = Modifier
+                                                    .padding(5.dp)
+                                                    .fillMaxWidth()
+                                                    .onFocusChanged { isSearching = it.isFocused },
+                                                singleLine = true,
+                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                keyboardActions = KeyboardActions(onSearch = {
+                                                    focusManager.clearFocus()
+                                                    if (searchText.isNotEmpty()) {
+                                                        lifecycleScope.launch(Dispatchers.IO) {
+                                                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), searchText))
+                                                        }
+                                                    }
+                                                    searchForItems(
+                                                        searchText = searchText,
+                                                        onSubscribe = { isRefreshing = true },
+                                                        subscribe = { isRefreshing = false }
+                                                    )
+                                                })
                                             )
                                         }
-                                    ) { p ->
-                                        LazyVerticalGrid(
-                                            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
-                                            contentPadding = p
-                                        ) {
-                                            items(s.data) { m ->
-                                                SearchCoverCard(
-                                                    model = m,
-                                                    placeHolder = mainLogo
-                                                ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                    )
+                                }
+                            }
+                        ) {
+
+                            val bottomScaffold = rememberBottomSheetScaffoldState()
+                            var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
+
+                            BackHandler(bottomScaffold.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
+                                scope.launch {
+                                    try {
+                                        bottomScaffold.bottomSheetState.collapse()
+                                    } catch (e: Exception) {
+                                        findNavController().popBackStack()
+                                    }
+                                }
+                            }
+
+                            BottomSheetScaffold(
+                                scaffoldState = bottomScaffold,
+                                sheetContent = searchModelBottom?.let { s ->
+                                    {
+                                        Scaffold(
+                                            topBar = {
+                                                TopAppBar(
+                                                    title = { Text(s.apiName) },
+                                                    actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                                )
+                                            }
+                                        ) { p ->
+                                            LazyVerticalGrid(
+                                                cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                                                contentPadding = p
+                                            ) {
+                                                items(s.data) { m ->
+                                                    SearchCoverCard(
+                                                        model = m,
+                                                        placeHolder = mainLogo,
+                                                        onLongPress = { c ->
+                                                            itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                            showBanner = c == ComponentState.Pressed
+                                                        }
+                                                    ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            } ?: {},
-                            sheetPeekHeight = 0.dp,
-                        ) {
-                            if (networkState) {
-                                SwipeRefresh(
-                                    state = swipeRefreshState,
-                                    onRefresh = {},
-                                    swipeEnabled = false,
-                                    modifier = Modifier.padding(it)
-                                ) {
-                                    LazyColumn(
-                                        state = listState,
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                } ?: {},
+                                sheetPeekHeight = 0.dp,
+                            ) {
+                                if (networkState) {
+                                    SwipeRefresh(
+                                        state = swipeRefreshState,
+                                        onRefresh = {},
+                                        swipeEnabled = false,
+                                        modifier = Modifier.padding(it)
                                     ) {
-                                        if (swipeRefreshState.isRefreshing) {
-                                            items(3) {
-                                                Card(modifier = Modifier.placeholder(true)) {
-                                                    Column {
-                                                        Box(modifier = Modifier.fillMaxWidth()) {
-                                                            Text(
-                                                                "Otaku",
-                                                                modifier = Modifier
-                                                                    .align(Alignment.CenterStart)
-                                                                    .padding(start = 5.dp)
-                                                            )
-                                                            IconButton(
-                                                                onClick = {},
-                                                                modifier = Modifier.align(Alignment.CenterEnd)
-                                                            ) { Icon(Icons.Default.ChevronRight, null) }
+                                        LazyColumn(
+                                            state = listState,
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            if (swipeRefreshState.isRefreshing) {
+                                                items(3) {
+                                                    Card(modifier = Modifier.placeholder(true)) {
+                                                        Column {
+                                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                                Text(
+                                                                    "Otaku",
+                                                                    modifier = Modifier
+                                                                        .align(Alignment.CenterStart)
+                                                                        .padding(start = 5.dp)
+                                                                )
+                                                                IconButton(
+                                                                    onClick = {},
+                                                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                                                ) { Icon(Icons.Default.ChevronRight, null) }
+                                                            }
+                                                            LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
                                                         }
-                                                        LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
                                                     }
                                                 }
-                                            }
-                                        } else if (searchListPublisher.isNotEmpty()) {
-                                            items(searchListPublisher) { i ->
-                                                Card(
-                                                    onClick = {
-                                                        searchModelBottom = i
-                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                    }
-                                                ) {
-                                                    Column {
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .clickable {
-                                                                    searchModelBottom = i
-                                                                    scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                                }
-                                                        ) {
-                                                            Text(
-                                                                i.apiName,
-                                                                modifier = Modifier
-                                                                    .align(Alignment.CenterStart)
-                                                                    .padding(start = 5.dp)
-                                                            )
-                                                            IconButton(
-                                                                onClick = {
-                                                                    searchModelBottom = i
-                                                                    scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                                },
-                                                                modifier = Modifier.align(Alignment.CenterEnd)
-                                                            ) { Icon(Icons.Default.ChevronRight, null) }
+                                            } else if (searchListPublisher.isNotEmpty()) {
+                                                items(searchListPublisher) { i ->
+                                                    Card(
+                                                        onClick = {
+                                                            searchModelBottom = i
+                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
                                                         }
-                                                        LazyRow {
-                                                            items(i.data) { m ->
-                                                                SearchCoverCard(
-                                                                    model = m,
-                                                                    placeHolder = mainLogo
-                                                                ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                    ) {
+                                                        Column {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .clickable {
+                                                                        searchModelBottom = i
+                                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                                    }
+                                                            ) {
+                                                                Text(
+                                                                    i.apiName,
+                                                                    modifier = Modifier
+                                                                        .align(Alignment.CenterStart)
+                                                                        .padding(start = 5.dp)
+                                                                )
+                                                                IconButton(
+                                                                    onClick = {
+                                                                        searchModelBottom = i
+                                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                                    },
+                                                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                                                ) { Icon(Icons.Default.ChevronRight, null) }
+                                                            }
+                                                            LazyRow {
+                                                                items(i.data) { m ->
+                                                                    SearchCoverCard(
+                                                                        model = m,
+                                                                        placeHolder = mainLogo,
+                                                                        onLongPress = { c ->
+                                                                            itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                                            showBanner = c == ComponentState.Pressed
+                                                                        }
+                                                                    ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -324,22 +338,22 @@ class GlobalSearchFragment : Fragment() {
                                             }
                                         }
                                     }
-                                }
-                            } else {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(it),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Image(
-                                        Icons.Default.CloudOff,
-                                        null,
-                                        modifier = Modifier.size(50.dp, 50.dp),
-                                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
-                                    )
-                                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                                } else {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(it),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Image(
+                                            Icons.Default.CloudOff,
+                                            null,
+                                            modifier = Modifier.size(50.dp, 50.dp),
+                                            colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                                        )
+                                        Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                                    }
                                 }
                             }
                         }
@@ -381,17 +395,21 @@ class GlobalSearchFragment : Fragment() {
 
     @ExperimentalMaterialApi
     @Composable
-    fun SearchCoverCard(model: ItemModel, placeHolder: Drawable?, error: Drawable? = placeHolder, onClick: () -> Unit = {}) {
+    fun SearchCoverCard(
+        model: ItemModel,
+        placeHolder: Drawable?,
+        error: Drawable? = placeHolder,
+        onLongPress: (ComponentState) -> Unit,
+        onClick: () -> Unit = {}
+    ) {
         Card(
-            onClick = onClick,
             modifier = Modifier
                 .padding(5.dp)
                 .size(
                     ComposableUtils.IMAGE_WIDTH,
                     ComposableUtils.IMAGE_HEIGHT
-                ),
-            indication = rememberRipple(),
-            onClickLabel = model.title,
+                )
+                .combineClickableWithIndication(onLongPress, onClick)
         ) {
             Box {
                 GlideImage(

@@ -15,16 +15,17 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,11 +58,13 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     private val disposable = CompositeDisposable()
 
+    @ExperimentalMaterial3Api
     @ExperimentalPermissionsApi
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
@@ -71,7 +74,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
-            MdcTheme {
+            M3MaterialTheme(currentColorScheme) {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     LaunchedEffect(Unit) {
                         val v = VideoGet.getInstance(requireContext())
@@ -84,6 +87,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         }
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
@@ -108,9 +112,14 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         if (items.isEmpty()) {
             EmptyState()
         } else {
+
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
             BottomSheetDeleteScaffold(
+                bottomScrollBehavior = scrollBehavior,
                 topBar = {
-                    TopAppBar(
+                    SmallTopAppBar(
+                        scrollBehavior = scrollBehavior,
                         navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                         title = { Text(stringResource(R.string.downloaded_videos)) },
                         actions = {
@@ -222,7 +231,9 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     )
                 }
             ) { p, itemList ->
-                Scaffold(modifier = Modifier.padding(p)) { p1 ->
+                Scaffold(
+                    modifier = Modifier.padding(p)
+                ) { p1 ->
                     AnimatedLazyColumn(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         contentPadding = p1,
@@ -252,11 +263,11 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
         Box(modifier = Modifier.fillMaxSize()) {
 
-            Card(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(5.dp),
-                elevation = 5.dp,
+                tonalElevation = 5.dp,
                 shape = RoundedCornerShape(5.dp)
             ) {
 
@@ -264,13 +275,13 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
                     Text(
                         text = stringResource(id = R.string.get_started),
-                        style = MaterialTheme.typography.h4,
+                        style = M3MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
                     Text(
                         text = stringResource(id = R.string.download_a_video),
-                        style = MaterialTheme.typography.body1,
+                        style = M3MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
@@ -282,12 +293,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(bottom = 5.dp)
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.go_download),
-                            style = MaterialTheme.typography.button
-                        )
-                    }
+                    ) { Text(text = stringResource(id = R.string.go_download)) }
 
                 }
 
@@ -332,8 +338,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
         SwipeToDismiss(
             state = dismissState,
-            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-            dismissThresholds = { FractionalThreshold(0.5f) },
             background = {
                 val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
                 val color by animateColorAsState(
@@ -348,7 +352,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     DismissDirection.EndToStart -> Alignment.CenterEnd
                 }
                 val icon = when (direction) {
-                    DismissDirection.StartToEnd -> Icons.Default.Done
+                    DismissDirection.StartToEnd -> Icons.Default.PlayArrow
                     DismissDirection.EndToStart -> Icons.Default.Delete
                 }
                 val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
@@ -368,9 +372,8 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 }
             }
         ) {
-            Card(
+            Surface(
                 modifier = Modifier.fillMaxSize(),
-                interactionSource = MutableInteractionSource(),
                 indication = rememberRipple(),
                 onClick = {
                     if (MainActivity.cast.isCastActive()) {
@@ -389,7 +392,9 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             }
                         )
                     }
-                }
+                },
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 5.dp
             ) {
                 Row {
                     Box {
@@ -446,9 +451,9 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                     ) {
                         val shared = requireContext().getSharedPreferences("videos", Context.MODE_PRIVATE)
                         if (shared.contains(item.assetFileStringUri))
-                            Text(shared.getLong(item.assetFileStringUri, 0).stringForTime(), style = MaterialTheme.typography.overline)
-                        Text(item.videoName.orEmpty(), style = MaterialTheme.typography.subtitle2)
-                        Text(item.path.orEmpty(), style = MaterialTheme.typography.body2, fontSize = 10.sp)
+                            Text(shared.getLong(item.assetFileStringUri, 0).stringForTime(), style = M3MaterialTheme.typography.labelMedium)
+                        Text(item.videoName.orEmpty(), style = M3MaterialTheme.typography.titleSmall)
+                        Text(item.path.orEmpty(), style = M3MaterialTheme.typography.bodyMedium, fontSize = 10.sp)
                     }
 
                     Box(
@@ -461,16 +466,18 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss
-                        ) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    showDialog.value = true
-                                }
-                            ) { Text(stringResource(R.string.remove)) }
+                        MdcTheme {
+                            DropdownMenu(
+                                expanded = showDropDown,
+                                onDismissRequest = dropDownDismiss
+                            ) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        showDialog.value = true
+                                    }
+                                ) { Text(stringResource(R.string.remove)) }
+                            }
                         }
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }

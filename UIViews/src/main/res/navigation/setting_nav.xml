@@ -54,8 +54,8 @@
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out" />
         <action
-            android:id="@+id/action_settingsFragment_to_recentlyViewedFragment"
-            app:destination="@id/recentlyViewedFragment"
+            android:id="@+id/action_settingsFragment_to_historyFragment"
+            app:destination="@id/historyFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
@@ -123,11 +123,11 @@
             app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
-        android:id="@+id/recentlyViewedFragment"
-        android:name="com.programmersbox.uiviews.RecentlyViewedFragment"
-        android:label="RecentlyViewedFragment">
+        android:id="@+id/historyFragment"
+        android:name="com.programmersbox.uiviews.HistoryFragment"
+        android:label="HistoryFragment">
         <action
-            android:id="@+id/action_recentlyViewedFragment_to_detailsFragment"
+            android:id="@+id/action_historyFragment_to_detailsFragment"
             app:destination="@id/detailsFragment"
             app:enterAnim="@anim/slide_in"
             app:exitAnim="@anim/fade_out"

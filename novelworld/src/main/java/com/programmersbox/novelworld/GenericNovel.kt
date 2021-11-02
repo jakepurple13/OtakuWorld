@@ -31,10 +31,7 @@ import com.programmersbox.novel_sources.Sources
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.animatedItems
-import com.programmersbox.uiviews.utils.updateAnimatedItemsState
+import com.programmersbox.uiviews.utils.*
 import org.koin.dsl.module
 
 val appModule = module {
@@ -99,6 +96,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         list: List<ItemModel>,
         favorites: List<DbModel>,
         listState: LazyListState,
+        onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
         val animated by updateAnimatedItemsState(newList = list)
@@ -113,10 +111,13 @@ class GenericNovel(val context: Context) : GenericInfo {
                 exitTransition = fadeOut()
             ) {
                 Card(
-                    onClick = { onClick(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 5.dp),
+                        .padding(horizontal = 5.dp)
+                        .combineClickableWithIndication(
+                            onLongPress = { c -> onLongPress(it, c) },
+                            onClick = { onClick(it) }
+                        ),
                     elevation = 5.dp
                 ) {
                     ListItem(

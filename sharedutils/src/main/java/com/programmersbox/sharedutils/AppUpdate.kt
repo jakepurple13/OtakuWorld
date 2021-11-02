@@ -1,6 +1,5 @@
 package com.programmersbox.sharedutils
 
-import androidx.compose.ui.util.fastAny
 import com.programmersbox.gsonutils.getJsonApi
 import io.reactivex.subjects.BehaviorSubject
 
@@ -20,19 +19,28 @@ object AppUpdate {
         fun downloadUrl(url: AppUpdates.() -> String?) = "$update_url${url()}"
     }
 
-    fun checkForUpdate(oldVersion: String, newVersion: String) = oldVersion.split(".").zip(newVersion.split("."))
-        .fastAny {
-            try {
-                it.second.toInt() > it.first.toInt()
-            } catch (e: NumberFormatException) {
-                false
-            }
+    fun checkForUpdate(oldVersion: String, newVersion: String): Boolean = try {
+        val items = oldVersion.split(".").zip(newVersion.split("."))
+        val major = items[0]
+        val minor = items[1]
+        val patch = items[2]
+        /*
+         new major > old major
+         new major == old major && new minor > old minor
+         new major == old major && new minor == old minor && new patch > old patch
+         else false
+         */
+        when {
+            major.second.toInt() > major.first.toInt() -> true
+            major.second.toInt() == major.first.toInt() && minor.second.toInt() > minor.first.toInt() -> true
+            major.second.toInt() == major.first.toInt()
+                    && minor.second.toInt() == minor.first.toInt()
+                    && patch.second.toInt() > patch.first.toInt() -> true
+            else -> false
         }
-    //TODO: change to check
-    // new major > old major
-    // new major == old major && new minor > old minor
-    // new major == old major && new minor == old minor && new patch > old patch
-    // else false
+    } catch (e: Exception) {
+        false
+    }
 }
 
 val appUpdateCheck = BehaviorSubject.create<AppUpdate.AppUpdates>()

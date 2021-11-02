@@ -12,6 +12,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -21,15 +22,25 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
@@ -77,6 +89,8 @@ import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import org.koin.android.ext.android.inject
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class DetailsFragment : Fragment() {
 
@@ -98,6 +112,7 @@ class DetailsFragment : Fragment() {
 
     private val logo: NotificationLogo by inject()
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
@@ -111,41 +126,16 @@ class DetailsFragment : Fragment() {
             ?.also { info ->
                 currentDetailsUrl = info.url
                 setContent {
-                    MdcTheme {
+                    M3MaterialTheme(currentColorScheme) {
                         Scaffold(
                             topBar = {
-                                TopAppBar(
+                                SmallTopAppBar(
                                     modifier = Modifier.zIndex(2f),
                                     title = { Text(info.title) },
                                     navigationIcon = {
-                                        IconButton(onClick = { findNavController().popBackStack() }) {
-                                            Icon(Icons.Default.ArrowBack, null)
-                                        }
+                                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
                                     },
                                     actions = {
-                                        var showDropDown by remember { mutableStateOf(false) }
-
-                                        val dropDownDismiss = { showDropDown = false }
-
-                                        DropdownMenu(
-                                            expanded = showDropDown,
-                                            onDismissRequest = dropDownDismiss,
-                                        ) {
-                                            DropdownMenuItem(
-                                                onClick = {
-                                                    dropDownDismiss()
-                                                    requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                                                }
-                                            ) { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) }
-
-                                            DropdownMenuItem(
-                                                onClick = {
-                                                    dropDownDismiss()
-                                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
-                                                }
-                                            ) { Text(stringResource(id = R.string.global_search_by_name)) }
-                                        }
-
                                         IconButton(
                                             onClick = {
                                                 startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
@@ -156,7 +146,7 @@ class DetailsFragment : Fragment() {
                                             }
                                         ) { Icon(Icons.Default.Share, null) }
 
-                                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                                        IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
                                     },
                                 )
                             }
@@ -168,13 +158,14 @@ class DetailsFragment : Fragment() {
             ?.doOnError { context?.showErrorToast() }
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribeBy { info -> setContent { MdcTheme { DetailsView(info) } } }
+            ?.subscribeBy { info -> setContent { M3MaterialTheme(currentColorScheme) { DetailsView(info) } } }
             ?.addTo(disposable)
     }
 
     @Composable
     private fun Color.animate() = animateColorAsState(this)
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
@@ -205,14 +196,16 @@ class DetailsFragment : Fragment() {
 
         val systemUiController = rememberSystemUiController()
 
-        swatchInfo.value?.rgb?.toComposeColor()
-            ?.animate()?.value
-            ?.let { s ->
+        val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
+
+        LaunchedEffect(statusBarColor) {
+            statusBarColor?.value?.let { s ->
                 systemUiController.setStatusBarColor(
                     color = s,
                     darkIcons = s.luminance() > .5f
                 )
             }
+        }
 
         var reverseChapters by remember { mutableStateOf(false) }
 
@@ -240,12 +233,15 @@ class DetailsFragment : Fragment() {
             ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
 
         BottomSheetScaffold(
+            backgroundColor = Color.Transparent,
             sheetContent = {
                 Scaffold(
                     topBar = {
-                        TopAppBar(
+                        SmallTopAppBar(
                             title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
-                            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface,
+                            colors = TopAppBarDefaults.smallTopAppBarColors(
+                                containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                            ),
                             navigationIcon = {
                                 IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
                                     Icon(Icons.Default.Close, null, tint = topBarColor)
@@ -253,18 +249,6 @@ class DetailsFragment : Fragment() {
                             }
                         )
                     },
-                    backgroundColor = Color.Transparent,
-                    modifier = Modifier
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    swatchInfo.value?.rgb?.toComposeColor()
-                                        ?.copy(alpha = .25f)
-                                        ?.animate()?.value ?: MaterialTheme.colors.background,
-                                    MaterialTheme.colors.background
-                                )
-                            )
-                        )
                 ) { p ->
                     LazyColumn(
                         contentPadding = p,
@@ -286,11 +270,13 @@ class DetailsFragment : Fragment() {
                                     .addTo(disposable)
                             }
 
-                            Card(
+                            Surface(
                                 onClick = { markAs(!chapters.fastAny { it.url == c.url }) },
                                 shape = RoundedCornerShape(0.dp),
+                                tonalElevation = 5.dp,
                                 modifier = Modifier.fillMaxWidth(),
-                                backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+                                indication = rememberRipple(),
+                                color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
                             ) {
                                 ListItem(
                                     modifier = Modifier.padding(horizontal = 4.dp),
@@ -300,7 +286,7 @@ class DetailsFragment : Fragment() {
                                             color = swatchInfo.value
                                                 ?.bodyColor
                                                 ?.toComposeColor()
-                                                ?.animate()?.value ?: MaterialTheme.typography.subtitle1.color
+                                                ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
                                         )
                                     },
                                     icon = {
@@ -309,11 +295,11 @@ class DetailsFragment : Fragment() {
                                             onCheckedChange = { b -> markAs(b) },
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                    ?: MaterialTheme.colors.secondary,
+                                                    ?: M3MaterialTheme.colorScheme.secondary,
                                                 uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                    ?: MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                                                    ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                                 checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
-                                                    ?: MaterialTheme.colors.surface
+                                                    ?: M3MaterialTheme.colorScheme.surface
                                             )
                                         )
                                     }
@@ -327,7 +313,7 @@ class DetailsFragment : Fragment() {
             sheetGesturesEnabled = false,
             scaffoldState = scaffoldState,
             topBar = {
-                TopAppBar(
+                SmallTopAppBar(
                     modifier = Modifier.zIndex(2f),
                     title = { Text(info.title, color = topBarColor) },
                     navigationIcon = {
@@ -340,98 +326,100 @@ class DetailsFragment : Fragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss,
-                        ) {
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    scope.launch { scaffoldState.bottomSheetState.expand() }
-                                }
+                        MdcTheme {
+                            DropdownMenu(
+                                expanded = showDropDown,
+                                onDismissRequest = dropDownDismiss,
                             ) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    null,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(stringResource(id = R.string.markAs))
-                            }
 
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                                }
-                            ) {
-                                Icon(
-                                    Icons.Default.OpenInBrowser,
-                                    null,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(stringResource(id = R.string.fallback_menu_item_open_in_browser))
-                            }
-
-                            if (!isSaved) {
                                 DropdownMenuItem(
                                     onClick = {
                                         dropDownDismiss()
-                                        lifecycleScope.launch(Dispatchers.IO) {
-                                            dao.insertNotification(
-                                                NotificationItem(
-                                                    id = info.hashCode(),
-                                                    url = info.url,
-                                                    summaryText = requireContext()
-                                                        .getString(
-                                                            R.string.hadAnUpdate,
-                                                            info.title,
-                                                            info.chapters.firstOrNull()?.name ?: ""
-                                                        ),
-                                                    notiTitle = info.title,
-                                                    imageUrl = info.imageUrl,
-                                                    source = info.source.serviceName,
-                                                    contentTitle = info.title
-                                                )
-                                            ).subscribe()
-                                        }
+                                        scope.launch { scaffoldState.bottomSheetState.expand() }
                                     }
                                 ) {
                                     Icon(
-                                        Icons.Default.Save,
+                                        Icons.Default.Check,
                                         null,
                                         modifier = Modifier.padding(end = 8.dp)
                                     )
-                                    Text(stringResource(id = R.string.save_for_later))
+                                    Text(stringResource(id = R.string.markAs))
                                 }
-                            }
 
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.OpenInBrowser,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.fallback_menu_item_open_in_browser))
                                 }
-                            ) {
-                                Icon(
-                                    Icons.Default.Search,
-                                    null,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(stringResource(id = R.string.global_search_by_name))
-                            }
 
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    reverseChapters = !reverseChapters
+                                if (!isSaved) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            dropDownDismiss()
+                                            lifecycleScope.launch(Dispatchers.IO) {
+                                                dao.insertNotification(
+                                                    NotificationItem(
+                                                        id = info.hashCode(),
+                                                        url = info.url,
+                                                        summaryText = requireContext()
+                                                            .getString(
+                                                                R.string.hadAnUpdate,
+                                                                info.title,
+                                                                info.chapters.firstOrNull()?.name ?: ""
+                                                            ),
+                                                        notiTitle = info.title,
+                                                        imageUrl = info.imageUrl,
+                                                        source = info.source.serviceName,
+                                                        contentTitle = info.title
+                                                    )
+                                                ).subscribe()
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Save,
+                                            null,
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        )
+                                        Text(stringResource(id = R.string.save_for_later))
+                                    }
                                 }
-                            ) {
-                                Icon(
-                                    Icons.Default.Sort,
-                                    null,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(stringResource(id = R.string.reverseOrder))
+
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.global_search_by_name))
+                                }
+
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        reverseChapters = !reverseChapters
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Sort,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.reverseOrder))
+                                }
                             }
                         }
 
@@ -451,28 +439,29 @@ class DetailsFragment : Fragment() {
                             Icon(Icons.Default.MoreVert, null, tint = topBarColor)
                         }
                     },
-                    backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primarySurface,
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                    )
                 )
             },
             snackbarHost = {
                 SnackbarHost(it) { data ->
                     val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
-                    val font = swatchInfo.value?.titleColor?.toComposeColor() ?: MaterialTheme.colors.surface
+                    val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
                     Snackbar(
                         elevation = 15.dp,
-                        backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colors.onSurface.toArgb(), .25f)),
+                        backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), M3MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
                         contentColor = font,
                         snackbarData = data
                     )
                 }
             },
-            backgroundColor = Color.Transparent,
             modifier = Modifier
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.background,
-                            MaterialTheme.colors.background
+                            swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
+                            M3MaterialTheme.colorScheme.background
                         )
                     )
                 )
@@ -527,8 +516,8 @@ class DetailsFragment : Fragment() {
                     thickness = 8.dp,
                     padding = 2.dp,
                     listState = listState,
-                    thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary,
-                    thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: MaterialTheme.colors.primary).copy(alpha = .6f),
+                    thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.primary,
+                    thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.primary).copy(alpha = .6f),
                 ) {
                     var descriptionVisibility by remember { mutableStateOf(false) }
                     LazyColumn(
@@ -544,13 +533,17 @@ class DetailsFragment : Fragment() {
                                 Text(
                                     info.description,
                                     modifier = Modifier
-                                        .clickable { descriptionVisibility = !descriptionVisibility }
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = rememberRipple()
+                                        ) { descriptionVisibility = !descriptionVisibility }
                                         .padding(horizontal = 5.dp)
                                         .fillMaxWidth()
                                         .animateContentSize(),
                                     overflow = TextOverflow.Ellipsis,
                                     maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                    style = MaterialTheme.typography.body2
+                                    style = M3MaterialTheme.typography.bodyMedium,
+                                    color = M3MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -614,11 +607,13 @@ class DetailsFragment : Fragment() {
                 .addTo(disposable)
         }
 
-        Card(
+        Surface(
             onClick = { markAs(!read.fastAny { it.url == c.url }) },
             shape = RoundedCornerShape(0.dp),
+            indication = rememberRipple(),
             modifier = Modifier.fillMaxWidth(),
-            backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+            color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+            tonalElevation = 5.dp,
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -626,16 +621,16 @@ class DetailsFragment : Fragment() {
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b -> markAs(b) },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.secondary,
+                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.secondary,
                             uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                ?: MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
-                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface
+                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
                         )
                     )
 
                     Text(
                         c.name,
-                        style = MaterialTheme.typography.body1
+                        style = M3MaterialTheme.typography.bodyLarge
                             .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                         modifier = Modifier.padding(start = 5.dp)
                     )
@@ -644,7 +639,7 @@ class DetailsFragment : Fragment() {
 
                 Text(
                     c.uploaded,
-                    style = MaterialTheme.typography.subtitle2
+                    style = M3MaterialTheme.typography.titleSmall
                         .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                     modifier = Modifier
                         .align(Alignment.End)
@@ -662,7 +657,7 @@ class DetailsFragment : Fragment() {
                             modifier = Modifier
                                 .weight(1f, true)
                                 .padding(horizontal = 5.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
+                            //colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
                             border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
                         ) {
                             Column {
@@ -675,7 +670,7 @@ class DetailsFragment : Fragment() {
                                 )
                                 Text(
                                     stringResource(R.string.read),
-                                    style = MaterialTheme.typography.button
+                                    style = M3MaterialTheme.typography.labelLarge
                                         .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                                     modifier = Modifier.align(Alignment.CenterHorizontally)
                                 )
@@ -693,7 +688,7 @@ class DetailsFragment : Fragment() {
                             modifier = Modifier
                                 .weight(1f, true)
                                 .padding(horizontal = 5.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
+                            //colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
                             border = BorderStroke(1.dp, swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
                         ) {
                             Column {
@@ -706,7 +701,7 @@ class DetailsFragment : Fragment() {
                                 )
                                 Text(
                                     stringResource(R.string.download_chapter),
-                                    style = MaterialTheme.typography.button
+                                    style = M3MaterialTheme.typography.labelLarge
                                         .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                                     modifier = Modifier.align(Alignment.CenterHorizontally)
                                 )
@@ -773,7 +768,7 @@ class DetailsFragment : Fragment() {
                         ColorUtils
                             .setAlphaComponent(
                                 ColorUtils.blendARGB(
-                                    MaterialTheme.colors.primarySurface.toArgb(),
+                                    M3MaterialTheme.colorScheme.surface.toArgb(),
                                     swatchInfo.value?.rgb ?: Color.Transparent.toArgb(),
                                     0.25f
                                 ),
@@ -819,27 +814,32 @@ class DetailsFragment : Fragment() {
 
                     Text(
                         model.source.serviceName,
-                        style = MaterialTheme.typography.overline
+                        style = M3MaterialTheme.typography.labelSmall,
+                        color = M3MaterialTheme.colorScheme.onSurface
                     )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
 
                     Text(
                         model.title,
-                        style = MaterialTheme.typography.subtitle1,
+                        style = M3MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { descriptionVisibility = !descriptionVisibility },
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) { descriptionVisibility = !descriptionVisibility },
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                        color = M3MaterialTheme.colorScheme.onSurface
                     )
 
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         items(model.genres) {
                             CustomChip(
                                 category = it,
-                                textColor = (swatchInfo.value?.rgb?.toComposeColor() ?: MaterialTheme.colors.onSurface).animate().value,
-                                backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: MaterialTheme.colors.surface)
+                                textColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface).animate().value,
+                                backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
                                     .animate().value,
                                 modifier = Modifier.fadeInAnimation()
                             )
@@ -848,7 +848,10 @@ class DetailsFragment : Fragment() {
 
                     Row(
                         modifier = Modifier
-                            .clickable { favoriteClick(isFavorite) }
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) { favoriteClick(isFavorite) }
                             .semantics(true) {}
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -862,14 +865,17 @@ class DetailsFragment : Fragment() {
                         )
                         Text(
                             stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites),
-                            style = MaterialTheme.typography.h6,
-                            modifier = Modifier.align(Alignment.CenterVertically)
+                            style = M3MaterialTheme.typography.headlineSmall,
+                            fontSize = 20.sp,
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            color = M3MaterialTheme.colorScheme.onSurface
                         )
                     }
 
                     Text(
                         stringResource(R.string.chapter_count, model.chapters.size),
-                        style = MaterialTheme.typography.body2
+                        style = M3MaterialTheme.typography.bodyMedium,
+                        color = M3MaterialTheme.colorScheme.onSurface
                     )
 
                     /*if(model.alternativeNames.isNotEmpty()) {
@@ -906,6 +912,19 @@ class DetailsFragment : Fragment() {
     @Composable
     private fun PlaceHolderHeader() {
 
+        /*
+        @Composable
+fun PlaceholderDefaults.color(
+    backgroundColor: Color = MaterialTheme.colors.surface,
+    contentColor: Color = contentColorFor(backgroundColor),
+    contentAlpha: Float = 0.1f,
+): Color = contentColor.copy(contentAlpha).compositeOver(backgroundColor)
+         */
+
+        val placeholderColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
+            .copy(0.1f)
+            .compositeOver(M3MaterialTheme.colorScheme.surface)
+
         Box(modifier = Modifier.fillMaxSize()) {
 
             Row(modifier = Modifier.padding(5.dp)) {
@@ -919,7 +938,7 @@ class DetailsFragment : Fragment() {
                         contentDescription = null,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .placeholder(true)
+                            .placeholder(true, color = placeholderColor)
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     )
                 }
@@ -931,14 +950,14 @@ class DetailsFragment : Fragment() {
                     Row(
                         modifier = Modifier
                             .padding(vertical = 5.dp)
-                            .placeholder(true)
+                            .placeholder(true, color = placeholderColor)
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) { Text("") }
 
                     Row(
                         modifier = Modifier
-                            .placeholder(true)
+                            .placeholder(true, color = placeholderColor)
                             .semantics(true) {}
                             .padding(vertical = 5.dp)
                             .fillMaxWidth()
@@ -951,7 +970,7 @@ class DetailsFragment : Fragment() {
                         )
                         Text(
                             stringResource(R.string.addToFavorites),
-                            style = MaterialTheme.typography.h6,
+                            style = M3MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }
@@ -961,7 +980,7 @@ class DetailsFragment : Fragment() {
                         modifier = Modifier
                             .padding(vertical = 5.dp)
                             .fillMaxWidth()
-                            .placeholder(true),
+                            .placeholder(true, color = placeholderColor),
                         maxLines = 2
                     )
 

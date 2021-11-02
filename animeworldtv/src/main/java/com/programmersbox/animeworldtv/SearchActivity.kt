@@ -9,7 +9,7 @@ class SearchActivity : FragmentActivity() {
         setContentView(R.layout.activity_search)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(android.R.id.content, CustomSearchFragment())
+                .replace(android.R.id.content, SearchFragment())
                 .commit()
         }
     }

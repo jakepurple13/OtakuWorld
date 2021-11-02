@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.OtakuWorldBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.OtakuWorldBase" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@android:color/system_accent1_500</item>
         <item name="colorPrimaryVariant">@android:color/system_accent1_700</item>

@@ -1,6 +1,8 @@
 package com.programmersbox.otakuworld
 
+import android.os.Build
 import android.os.Bundle
+import android.text.format.DateFormat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
@@ -17,9 +19,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.ButtonElevation
+import androidx.compose.material.FabPosition
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +61,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import com.bumptech.glide.Glide
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.itemRangeOf
 import com.programmersbox.models.ApiService
@@ -71,6 +84,7 @@ class MainActivity : ComponentActivity() {
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
@@ -96,18 +110,186 @@ class MainActivity : ComponentActivity() {
         val strings = itemRangeOf("Hello", "World", "How", "Are", "You?")
 
         setContent {
-            MdcTheme {
 
-                //TODO: Try to animate a string
+            val darkTheme = isSystemInDarkTheme()
+            val colorScheme = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
+                darkTheme -> darkColorScheme()
+                else -> lightColorScheme()
+            }
 
-                var stringer by remember { mutableStateOf(strings.item) }
+            androidx.compose.material3.MaterialTheme(colorScheme = colorScheme) {
+
+                /*var showBanner by remember { mutableStateOf(false) }
+
+                BannerBox(
+                    showBanner = showBanner,
+                    banner = {
+                        Card {
+                            ListItem(text = { Text("Hello World") })
+                        }
+                    },
+                    content = {
+                        Column {
+                            Text("Hello!")
+                            TopAppBar(title = { Text("World!") })
+                            BottomAppBar { Text("Hello World!") }
+                            Button(onClick = { showBanner = !showBanner }) {
+                                Text("Show/Hide Banner", style = MaterialTheme.typography.button)
+                            }
+                            Text(
+                                "Show/Hide Banner here too!",
+                                modifier = Modifier
+                                    .combineClickableWithIndication(
+                                        onLongPress = { showBanner = it == ComponentState.Pressed }
+                                    )
+                            )
+                        }
+                    }
+                )*/
+
+                var showInfo by remember { mutableStateOf(false) }
+
+                val scrollBehavior = remember {
+                    TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo }
+                }
+
+                val currentOffset = animateFloatAsState(targetValue = if (showInfo) 0f else scrollBehavior.offsetLimit)
+
+                if (showInfo) scrollBehavior.offset = currentOffset.value else scrollBehavior.offset = currentOffset.value
+
+                androidx.compose.material3.Scaffold(
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        CenterAlignedTopAppBar(
+                            actions = {
+                                androidx.compose.material3.Text(
+                                    "1/17",
+                                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                )
+                            },
+                            title = {
+                                AnimatedContent(
+                                    targetState = System.currentTimeMillis(),
+                                    transitionSpec = {
+                                        (slideInVertically { height -> height } + fadeIn() with
+                                                slideOutVertically { height -> -height } + fadeOut())
+                                            .using(SizeTransform(clip = false))
+                                    }
+                                ) { targetTime ->
+                                    androidx.compose.material3.Text(
+                                        DateFormat.format("HH:mm a", targetTime).toString(),
+                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            },
+                            navigationIcon = {
+                                Row {
+                                    androidx.compose.material3.Icon(
+                                        Icons.Default.BatteryFull,
+                                        contentDescription = null,
+                                        tint = animateColorAsState(Color.White).value
+                                    )
+                                    AnimatedContent(
+                                        targetState = 100,
+                                        transitionSpec = {
+                                            if (targetState > initialState) {
+                                                slideInVertically { height -> height } + fadeIn() with
+                                                        slideOutVertically { height -> -height } + fadeOut()
+                                            } else {
+                                                slideInVertically { height -> -height } + fadeIn() with
+                                                        slideOutVertically { height -> height } + fadeOut()
+                                            }
+                                                .using(SizeTransform(clip = false))
+                                        }
+                                    ) { targetBattery ->
+                                        androidx.compose.material3.Text(
+                                            "$targetBattery%",
+                                            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                            },
+                            scrollBehavior = scrollBehavior
+                        )
+                        /*SmallTopAppBar(
+                            title = { androidx.compose.material3.Text("Large TopAppBar") },
+                            navigationIcon = {
+                                androidx.compose.material3.IconButton(onClick = {  }) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = Icons.Filled.Menu,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            },
+                            actions = {
+                                androidx.compose.material3.IconButton(onClick = {  }) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = Icons.Filled.Favorite,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            },
+                            scrollBehavior = scrollBehavior
+                        )*/
+                    },
+                    floatingActionButton = {
+                        androidx.compose.material3.FloatingActionButton(
+                            onClick = { },
+                            modifier = Modifier
+                        ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                    },
+                    floatingActionButtonPosition = androidx.compose.material3.FabPosition.End,
+                    bottomBar = {
+                        SmallTopAppBar(
+                            title = { androidx.compose.material3.Text("Large TopAppBar") },
+                            navigationIcon = {
+                                androidx.compose.material3.IconButton(onClick = { }) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = Icons.Filled.Menu,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            },
+                            actions = {
+                                androidx.compose.material3.IconButton(onClick = { }) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = Icons.Filled.Favorite,
+                                        contentDescription = "Localized description"
+                                    )
+                                }
+                            },
+                            scrollBehavior = scrollBehavior
+                        )
+                    }
+                ) { innerPadding ->
+                    LazyColumn(
+                        contentPadding = innerPadding,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val list = (0..75).map { it.toString() }
+                        items(count = list.size) {
+                            androidx.compose.material3.Text(
+                                text = list[it],
+                                style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .clickable { showInfo = !showInfo }
+                            )
+                        }
+                    }
+                }
+
+                /*var stringer by remember { mutableStateOf(strings.item) }
 
                 Column {
                     AnimatedContent(
                         targetState = stringer,
                         transitionSpec = {
                             // Compare the incoming number with the previous number.
-                            /*if (targetState > initialState) {
+                            *//*if (targetState > initialState) {
                                 // If the target number is larger, it slides up and fades in
                                 // while the initial (smaller) number slides up and fades out.
                                 slideInVertically { height -> height } + fadeIn() with
@@ -117,7 +299,7 @@ class MainActivity : ComponentActivity() {
                                 // while the initial number slides down and fades out.
                                 slideInVertically { height -> -height } + fadeIn() with
                                         slideOutVertically { height -> height } + fadeOut()
-                            }*/
+                            }*//*
                             (slideInVertically { height -> height } + fadeIn() with
                                     slideOutVertically { height -> -height } + fadeOut())
                                 .using(
@@ -133,7 +315,7 @@ class MainActivity : ComponentActivity() {
                             stringer = strings()
                         }
                     ) { Text("Next String") }
-                }
+                }*/
 
                 /*BottomDrawer(
                     drawerContent = {
@@ -1107,5 +1289,24 @@ fun DrawCanvas(
                 )
             }
         }
+    }
+}
+
+@ExperimentalMaterialApi
+@ExperimentalFoundationApi
+@Composable
+fun BannerBox(
+    showBanner: Boolean = false,
+    banner: @Composable () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(Modifier.fillMaxSize()) {
+        content()
+        AnimatedVisibility(
+            visible = showBanner,
+            enter = slideInVertically { -it },
+            exit = slideOutVertically { -it },
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) { banner() }
     }
 }

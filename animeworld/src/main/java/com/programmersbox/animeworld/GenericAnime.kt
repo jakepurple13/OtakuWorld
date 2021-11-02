@@ -419,6 +419,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         list: List<ItemModel>,
         favorites: List<DbModel>,
         listState: LazyListState,
+        onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
         val animated by updateAnimatedItemsState(newList = list)
@@ -433,10 +434,13 @@ class GenericAnime(val context: Context) : GenericInfo {
                 exitTransition = fadeOut()
             ) {
                 Card(
-                    onClick = { onClick(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 5.dp),
+                        .padding(horizontal = 5.dp)
+                        .combineClickableWithIndication(
+                            onLongPress = { c -> onLongPress(it, c) },
+                            onClick = { onClick(it) }
+                        ),
                     elevation = 5.dp
                 ) {
                     ListItem(

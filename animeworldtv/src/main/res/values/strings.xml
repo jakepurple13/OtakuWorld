@@ -35,4 +35,5 @@
     <string name="favorites">Favorites</string>
     <string name="choose_quality_for">Choose Quality for %s</string>
     <string name="videoPlayerBack">Back</string>
+    <string name="history">History</string>
 </resources>

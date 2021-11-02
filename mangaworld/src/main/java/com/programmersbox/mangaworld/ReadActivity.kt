@@ -30,6 +30,15 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -37,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -72,7 +82,6 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mikepenz.iconics.IconicsDrawable
@@ -153,6 +162,7 @@ class ReadActivityCompose : ComponentActivity() {
 
     private val ad by lazy { AdRequest.Builder().build() }
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @ExperimentalComposeUiApi
     @ExperimentalAnimationApi
@@ -182,14 +192,15 @@ class ReadActivityCompose : ComponentActivity() {
         loadPages(model)
 
         setContent {
-            MdcTheme {
+
+            MaterialTheme(currentColorScheme) {
 
                 val scope = rememberCoroutineScope()
                 val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
 
                 val pages = pageList
 
-                BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray())
+                LaunchedEffect(pages) { BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray()) }
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -217,10 +228,9 @@ class ReadActivityCompose : ComponentActivity() {
                                     settingSummary = R.string.battery_default,
                                     preference = BATTERY_PERCENT,
                                     initialValue = runBlocking { dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
-                                    range = 1f..100f,
-                                    steps = 0
+                                    range = 1f..100f
                                 )
-                                Divider()
+                                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
                                 SliderSetting(
                                     scope = scope,
                                     settingIcon = Icons.Default.FormatLineSpacing,
@@ -228,8 +238,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     settingSummary = R.string.default_padding_summary,
                                     preference = PAGE_PADDING,
                                     initialValue = runBlocking { dataStore.data.first()[PAGE_PADDING] ?: 4 },
-                                    range = 0f..10f,
-                                    steps = 0
+                                    range = 0f..10f
                                 )
                             }
                         },
@@ -240,8 +249,6 @@ class ReadActivityCompose : ComponentActivity() {
                 fun showToast() {
                     runOnUiThread { Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
                 }
-
-                val showItems = showInfo || listState.isScrolledToTheEnd()
 
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
@@ -257,11 +264,14 @@ class ReadActivityCompose : ComponentActivity() {
                 BottomSheetScaffold(
                     scaffoldState = scaffoldState,
                     sheetContent = {
+                        val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                         Scaffold(
+                            modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                             topBar = {
-                                TopAppBar(
+                                SmallTopAppBar(
+                                    scrollBehavior = sheetScrollBehavior,
                                     title = { Text(list.getOrNull(currentChapter)?.name.orEmpty()) },
-                                    actions = { PageIndicator(currentPage + 1, pages.size) },
+                                    actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
                                     navigationIcon = {
                                         IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
                                             Icon(Icons.Default.Close, null)
@@ -282,7 +292,12 @@ class ReadActivityCompose : ComponentActivity() {
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.Crop,
-                                                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                                                loading = {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.align(Alignment.Center),
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .align(Alignment.Center)
@@ -290,7 +305,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .border(
                                                         animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
                                                         color = animateColorAsState(
-                                                            if (currentPage == i) MaterialTheme.colors.primaryVariant
+                                                            if (currentPage == i) MaterialTheme.colorScheme.primary
                                                             else androidx.compose.ui.graphics.Color.Transparent
                                                         ).value
                                                     )
@@ -311,11 +326,14 @@ class ReadActivityCompose : ComponentActivity() {
                     sheetPeekHeight = 0.dp,
                     drawerContent = if (list.size > 1) {
                         {
+                            val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
+                                modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
                                 topBar = {
-                                    TopAppBar(
+                                    LargeTopAppBar(
+                                        scrollBehavior = drawerScrollBehavior,
                                         title = { Text(title) },
-                                        actions = { PageIndicator(list.size - currentChapter, list.size) }
+                                        actions = { PageIndicator(Modifier, list.size - currentChapter, list.size) }
                                     )
                                 }
                             ) { p ->
@@ -348,13 +366,15 @@ class ReadActivityCompose : ComponentActivity() {
                                                 )
                                             }
 
-                                            Card(
+                                            androidx.compose.material3.Surface(
                                                 modifier = Modifier.padding(horizontal = 5.dp),
+                                                tonalElevation = 4.dp,
+                                                shape = androidx.compose.material.MaterialTheme.shapes.medium,
                                                 border = BorderStroke(
                                                     1.dp,
                                                     animateColorAsState(
-                                                        if (currentChapter == i) MaterialTheme.colors.onSurface
-                                                        else MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+                                                        if (currentChapter == i) MaterialTheme.colorScheme.onSurface
+                                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                                     ).value
                                                 )
                                             ) {
@@ -373,24 +393,159 @@ class ReadActivityCompose : ComponentActivity() {
                         }
                     } else null
                 ) {
-                    //56 is default FabSize
-                    //56 is the bottom app bar size
-                    //16 is the scaffold padding
-                    val fabHeight = 72.dp
-                    val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
-                    val fabOffsetHeightPx = remember { mutableStateOf(0f) }
-                    val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
+
+                    val showItems = showInfo || listState.isScrolledToTheEnd()
+
+                    /*val scrollBehavior = remember {
+                        TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo }
+                    }*/
+
+                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+                    //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
+
+                    //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
 
                     Scaffold(
-                        floatingActionButton = {
-                            FloatingActionButton(
-                                onClick = { scope.launch { listState.animateScrollToItem(0) } },
-                                modifier = Modifier
-                                    .padding(bottom = 56.dp)
-                                    .offset { IntOffset(x = animateFab, y = 0) }
-                            ) { Icon(Icons.Default.VerticalAlignTop, null) }
-                        },
-                        floatingActionButtonPosition = FabPosition.End
+                        //TODO: This stuff will be used again once we find a way to keep the top and bottom bars out when reaching the bottom
+                        // and animating the top and bottom bars away
+                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        /*topBar = {
+                            CenterAlignedTopAppBar(
+                                navigationIcon = {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            batteryIcon.composeIcon,
+                                            contentDescription = null,
+                                            tint = animateColorAsState(
+                                                if(batteryColor == androidx.compose.ui.graphics.Color.White) MaterialTheme.colorScheme.onSurface
+                                                else batteryColor
+                                            ).value
+                                        )
+                                        AnimatedContent(
+                                            targetState = batteryPercent.toInt(),
+                                            transitionSpec = {
+                                                if (targetState > initialState) {
+                                                    slideInVertically { height -> height } + fadeIn() with
+                                                            slideOutVertically { height -> -height } + fadeOut()
+                                                } else {
+                                                    slideInVertically { height -> -height } + fadeIn() with
+                                                            slideOutVertically { height -> height } + fadeOut()
+                                                }
+                                                    .using(SizeTransform(clip = false))
+                                            }
+                                        ) { targetBattery ->
+                                            Text(
+                                                "$targetBattery%",
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                        }
+                                    }
+                                },
+                                title = {
+                                    var time by remember { mutableStateOf(System.currentTimeMillis()) }
+
+                                    DisposableEffect(LocalContext.current) {
+                                        val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
+                                        onDispose { unregisterReceiver(timeReceiver) }
+                                    }
+
+                                    AnimatedContent(
+                                        targetState = time,
+                                        transitionSpec = {
+                                            (slideInVertically { height -> height } + fadeIn() with
+                                                    slideOutVertically { height -> -height } + fadeOut())
+                                                .using(SizeTransform(clip = false))
+                                        }
+                                    ) { targetTime ->
+                                        Text(
+                                            DateFormat.format("HH:mm a", targetTime).toString(),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            modifier = Modifier.padding(horizontal = 4.dp)
+                                        )
+                                    }
+                                },
+                                actions = { PageIndicator(Modifier.padding(horizontal = 4.dp), currentPage + 1, pages.size) },
+                                scrollBehavior = scrollBehavior
+                            )
+                        },*/
+                        /*bottomBar = {
+                            CenterAlignedTopAppBar(
+                                scrollBehavior = scrollBehavior,
+                                title = {
+                                    Row {
+
+                                        val prevShown = currentChapter < list.lastIndex
+                                        val nextShown = currentChapter > 0
+
+                                        AnimatedVisibility(
+                                            visible = prevShown && list.size > 1,
+                                            enter = expandHorizontally(expandFrom = Alignment.Start),
+                                            exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+                                        ) {
+                                            PreviousButton(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 4.dp)
+                                                    .weight(
+                                                        when {
+                                                            prevShown && nextShown -> 8f / 3f
+                                                            prevShown -> 4f
+                                                            else -> 4f
+                                                        }
+                                                    ),
+                                                previousChapter = ::showToast
+                                            )
+                                        }
+
+                                        GoBackButton(
+                                            modifier = Modifier
+                                                .weight(
+                                                    animateFloatAsState(
+                                                        when {
+                                                            prevShown && nextShown -> 8f / 3f
+                                                            prevShown || nextShown -> 4f
+                                                            else -> 8f
+                                                        }
+                                                    ).value
+                                                )
+                                        )
+
+                                        AnimatedVisibility(
+                                            visible = nextShown && list.size > 1,
+                                            enter = expandHorizontally(),
+                                            exit = shrinkHorizontally()
+                                        ) {
+                                            NextButton(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 4.dp)
+                                                    .weight(
+                                                        when {
+                                                            prevShown && nextShown -> 8f / 3f
+                                                            nextShown -> 4f
+                                                            else -> 4f
+                                                        }
+                                                    ),
+                                                nextChapter = ::showToast
+                                            )
+                                        }
+                                        //The three buttons above will equal 8f
+                                        //So these two need to add up to 2f
+                                        IconButton(
+                                            onClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
+                                            modifier = Modifier.weight(1f)
+                                        ) { Icon(Icons.Default.GridOn, null) }
+
+                                        IconButton(
+                                            onClick = { settingsPopup = true },
+                                            modifier = Modifier.weight(1f)
+                                        ) { Icon(Icons.Default.Settings, null) }
+                                    }
+                                }
+                            )
+                        }*/
                     ) { p ->
                         //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
                         SwipeRefresh(
@@ -407,20 +562,18 @@ class ReadActivityCompose : ComponentActivity() {
                             modifier = Modifier.padding(p)
                         ) {
 
-                            val topBarHeight = 28.dp
+                            val topBarHeight = 32.dp//28.dp
                             val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
                             val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
 
-                            val toolbarHeight = 56.dp
+                            val toolbarHeight = 64.dp
                             val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
                             val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
+
                             val nestedScrollConnection = remember {
                                 object : NestedScrollConnection {
                                     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                                         val delta = available.y
-
-                                        val newFabOffset = fabOffsetHeightPx.value + delta
-                                        fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
 
                                         val newOffset = toolbarOffsetHeightPx.value + delta
                                         toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
@@ -465,7 +618,6 @@ class ReadActivityCompose : ComponentActivity() {
                                                         if (!showInfo) {
                                                             toolbarOffsetHeightPx.value = -toolbarHeightPx
                                                             topBarOffsetHeightPx.value = -topBarHeightPx
-                                                            fabOffsetHeightPx.value = -fabHeightPx
                                                         }
                                                     },
                                                     onDoubleClick = {
@@ -487,7 +639,12 @@ class ReadActivityCompose : ComponentActivity() {
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.FillWidth,
-                                                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                                                loading = {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.align(Alignment.Center),
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
@@ -508,7 +665,7 @@ class ReadActivityCompose : ComponentActivity() {
                                             if (currentChapter <= 0) {
                                                 Text(
                                                     stringResource(id = R.string.reachedLastChapter),
-                                                    style = MaterialTheme.typography.h6,
+                                                    style = MaterialTheme.typography.headlineSmall,
                                                     textAlign = TextAlign.Center,
                                                     modifier = Modifier
                                                         .fillMaxWidth()
@@ -532,31 +689,25 @@ class ReadActivityCompose : ComponentActivity() {
 
                                 val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
 
-                                var time by remember { mutableStateOf(System.currentTimeMillis()) }
-
-                                DisposableEffect(LocalContext.current) {
-                                    val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
-                                    onDispose { unregisterReceiver(timeReceiver) }
-                                }
-
-                                TopAppBar(
+                                CenterAlignedTopAppBar(
+                                    scrollBehavior = scrollBehavior,
                                     modifier = Modifier
                                         .height(topBarHeight)
                                         .align(Alignment.TopCenter)
                                         .alpha(1f - (-animateTopBar / topBarHeightPx))
-                                        .offset { IntOffset(x = 0, y = animateTopBar) }
-                                ) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(4.dp)
-                                    ) {
-                                        Row {
+                                        .offset { IntOffset(x = 0, y = animateTopBar) },
+                                    navigationIcon = {
+                                        Row(
+                                            modifier = Modifier.padding(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
                                             Icon(
                                                 batteryIcon.composeIcon,
                                                 contentDescription = null,
-                                                tint = animateColorAsState(batteryColor).value
+                                                tint = animateColorAsState(
+                                                    if (batteryColor == androidx.compose.ui.graphics.Color.White) MaterialTheme.colorScheme.onSurface
+                                                    else batteryColor
+                                                ).value
                                             )
                                             AnimatedContent(
                                                 targetState = batteryPercent.toInt(),
@@ -573,9 +724,17 @@ class ReadActivityCompose : ComponentActivity() {
                                             ) { targetBattery ->
                                                 Text(
                                                     "$targetBattery%",
-                                                    style = MaterialTheme.typography.body1
+                                                    style = MaterialTheme.typography.bodyLarge
                                                 )
                                             }
+                                        }
+                                    },
+                                    title = {
+                                        var time by remember { mutableStateOf(System.currentTimeMillis()) }
+
+                                        DisposableEffect(LocalContext.current) {
+                                            val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
+                                            onDispose { unregisterReceiver(timeReceiver) }
                                         }
 
                                         AnimatedContent(
@@ -588,13 +747,21 @@ class ReadActivityCompose : ComponentActivity() {
                                         ) { targetTime ->
                                             Text(
                                                 DateFormat.format("HH:mm a", targetTime).toString(),
-                                                style = MaterialTheme.typography.body1
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                modifier = Modifier.padding(4.dp)
                                             )
                                         }
-
-                                        PageIndicator(currentPage + 1, pages.size)
-                                    }
-                                }
+                                    },
+                                    actions = {
+                                        PageIndicator(
+                                            Modifier
+                                                .padding(4.dp)
+                                                .align(Alignment.CenterVertically),
+                                            currentPage + 1,
+                                            pages.size
+                                        )
+                                    },
+                                )
 
                                 val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
 
@@ -603,9 +770,12 @@ class ReadActivityCompose : ComponentActivity() {
                                         .height(toolbarHeight)
                                         .align(Alignment.BottomCenter)
                                         .alpha(1f - (animateBar / toolbarHeightPx))
-                                        .offset { IntOffset(x = 0, y = animateBar) }
+                                        .offset { IntOffset(x = 0, y = animateBar) },
+                                    backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                                        .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+                                    contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                                        .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
                                 ) {
-
                                     val prevShown = currentChapter < list.lastIndex
                                     val nextShown = currentChapter > 0
 
@@ -681,8 +851,8 @@ class ReadActivityCompose : ComponentActivity() {
 
     @ExperimentalAnimationApi
     @Composable
-    private fun PageIndicator(currentPage: Int, pageCount: Int) {
-        Row {
+    private fun PageIndicator(modifier: Modifier = Modifier, currentPage: Int, pageCount: Int) {
+        Row(modifier = modifier) {
             AnimatedContent(
                 targetState = currentPage,
                 transitionSpec = {
@@ -698,13 +868,13 @@ class ReadActivityCompose : ComponentActivity() {
             ) { targetPage ->
                 Text(
                     "$targetPage",
-                    style = MaterialTheme.typography.body1,
+                    style = MaterialTheme.typography.bodyLarge,
                 )
             }
 
             Text(
                 "/$pageCount",
-                style = MaterialTheme.typography.body1
+                style = MaterialTheme.typography.bodyLarge
             )
         }
     }
@@ -744,8 +914,8 @@ class ReadActivityCompose : ComponentActivity() {
         OutlinedButton(
             onClick = { finish() },
             modifier = modifier,
-            border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
-        ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
+            border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, MaterialTheme.colorScheme.primary)
+        ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
     }
 
     private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
@@ -778,8 +948,8 @@ class ReadActivityCompose : ComponentActivity() {
         Button(
             onClick = { addChapterToWatched(--currentChapter, nextChapter) },
             modifier = modifier,
-            border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
-        ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.button) }
+            border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, MaterialTheme.colorScheme.primary)
+        ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.labelLarge) }
     }
 
     @Composable
@@ -787,7 +957,7 @@ class ReadActivityCompose : ComponentActivity() {
         TextButton(
             onClick = { addChapterToWatched(++currentChapter, previousChapter) },
             modifier = modifier
-        ) { Text(stringResource(id = R.string.loadPreviousChapter), style = MaterialTheme.typography.button) }
+        ) { Text(stringResource(id = R.string.loadPreviousChapter), style = MaterialTheme.typography.labelLarge) }
     }
 
     @Composable
@@ -798,8 +968,7 @@ class ReadActivityCompose : ComponentActivity() {
         @StringRes settingSummary: Int,
         preference: Preferences.Key<Int>,
         initialValue: Int,
-        range: ClosedFloatingPointRange<Float>,
-        steps: Int = 0
+        range: ClosedFloatingPointRange<Float>
     ) {
         ConstraintLayout(
             modifier = Modifier
@@ -828,7 +997,7 @@ class ReadActivityCompose : ComponentActivity() {
 
             Text(
                 stringResource(settingTitle),
-                style = MaterialTheme.typography.body1,
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.constrainAs(title) {
                     top.linkTo(parent.top)
@@ -840,7 +1009,7 @@ class ReadActivityCompose : ComponentActivity() {
 
             Text(
                 stringResource(settingSummary),
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.constrainAs(summary) {
                     top.linkTo(title.bottom)
@@ -859,7 +1028,16 @@ class ReadActivityCompose : ComponentActivity() {
                     scope.launch { updatePref(preference, sliderValue.toInt()) }
                 },
                 valueRange = range,
-                steps = steps,
+                steps = 0,
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    disabledThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+                        .compositeOver(MaterialTheme.colorScheme.surface),
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    disabledActiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
+                    activeTickColor = androidx.compose.material3.contentColorFor(MaterialTheme.colorScheme.primary)
+                        .copy(alpha = SliderDefaults.TickAlpha)
+                ),
                 modifier = Modifier.constrainAs(slider) {
                     top.linkTo(summary.bottom)
                     end.linkTo(value.start)
@@ -870,7 +1048,7 @@ class ReadActivityCompose : ComponentActivity() {
 
             Text(
                 sliderValue.toInt().toString(),
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.constrainAs(value) {
                     end.linkTo(parent.end)
                     start.linkTo(slider.end)

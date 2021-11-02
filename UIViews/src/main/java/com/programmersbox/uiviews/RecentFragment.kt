@@ -16,9 +16,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +39,10 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InfiniteListHandler
+import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.showErrorToast
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -68,6 +69,8 @@ class RecentFragment : BaseFragmentCompose() {
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
+
+    private val logo: MainLogo by inject()
 
     companion object {
         @JvmStatic
@@ -168,8 +171,20 @@ class RecentFragment : BaseFragmentCompose() {
                         }
                     }
                 ) {
-                    info.ItemListView(list = sourceList, listState = state, favorites = favoriteList) {
-                        findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it))
+                    var showBanner by remember { mutableStateOf(false) }
+                    OtakuBannerBox(
+                        showBanner = showBanner,
+                        placeholder = logo.logoId
+                    ) { itemInfo ->
+                        info.ItemListView(
+                            list = sourceList,
+                            listState = state,
+                            favorites = favoriteList,
+                            onLongPress = { item, c ->
+                                itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                showBanner = c == ComponentState.Pressed
+                            }
+                        ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
                     }
                 }
 

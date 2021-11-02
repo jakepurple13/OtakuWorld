@@ -18,6 +18,12 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,9 +61,9 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class NotificationFragment : BaseBottomSheetDialogFragment() {
 
@@ -68,6 +74,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
 
+    @ExperimentalMaterial3Api
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     override fun onCreateView(
@@ -76,11 +83,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
-            MdcTheme {
+            M3MaterialTheme(currentColorScheme) {
 
-                val items by db.getAllNotificationsFlow()
-                    .flowOn(Dispatchers.IO)
-                    .collectAsState(emptyList())
+                val items by db.getAllNotificationsFlow().collectAsState(emptyList())
 
                 val state = rememberBottomSheetScaffoldState()
                 val scope = rememberCoroutineScope()
@@ -89,10 +94,13 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     scope.launch { state.bottomSheetState.collapse() }
                 }
 
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
                 BottomSheetDeleteScaffold(
                     listOfItems = items,
                     state = state,
                     multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
+                    bottomScrollBehavior = scrollBehavior,
                     topBar = {
 
                         var showPopup by remember { mutableStateOf(false) }
@@ -121,29 +129,21 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                                 .addTo(disposable)
                                             notificationManager.cancel(42)
                                         }
-                                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                                    ) { Text(stringResource(R.string.yes)) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = onDismiss) {
-                                        Text(
-                                            stringResource(R.string.no),
-                                            style = MaterialTheme.typography.button
-                                        )
-                                    }
+                                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) }
                                 }
                             )
 
                         }
 
-                        TopAppBar(
+                        SmallTopAppBar(
+                            scrollBehavior = scrollBehavior,
                             title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
                             actions = {
-                                IconButton(onClick = { showPopup = true }) {
-                                    Icon(Icons.Default.ClearAll, null)
-                                }
-                                IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) {
-                                    Icon(Icons.Default.Delete, null)
-                                }
+                                IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
+                                IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                             },
                             navigationIcon = {
                                 IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) }
@@ -201,29 +201,31 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             trailing = {
                                 var showDropDown by remember { mutableStateOf(false) }
 
-                                DropdownMenu(
-                                    expanded = showDropDown,
-                                    onDismissRequest = { showDropDown = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            Completable.merge(
-                                                items
-                                                    .filter { it.notiTitle == item.notiTitle }
-                                                    .map {
-                                                        cancelNotification(it)
-                                                        db.deleteNotification(it)
+                                MdcTheme {
+                                    DropdownMenu(
+                                        expanded = showDropDown,
+                                        onDismissRequest = { showDropDown = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            onClick = {
+                                                Completable.merge(
+                                                    items
+                                                        .filter { it.notiTitle == item.notiTitle }
+                                                        .map {
+                                                            cancelNotification(it)
+                                                            db.deleteNotification(it)
+                                                        }
+                                                )
+                                                    .subscribeOn(Schedulers.io())
+                                                    .observeOn(AndroidSchedulers.mainThread())
+                                                    .subscribe {
+                                                        showDropDown = false
+                                                        Toast.makeText(requireContext(), R.string.done, Toast.LENGTH_SHORT).show()
                                                     }
-                                            )
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .subscribe {
-                                                    showDropDown = false
-                                                    Toast.makeText(requireContext(), R.string.done, Toast.LENGTH_SHORT).show()
-                                                }
-                                                .addTo(disposable)
-                                        }
-                                    ) { Text(stringResource(id = R.string.remove_same_name)) }
+                                                    .addTo(disposable)
+                                            }
+                                        ) { Text(stringResource(id = R.string.remove_same_name)) }
+                                    }
                                 }
 
                                 IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
@@ -297,9 +299,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 .addTo(disposable)
                             cancelNotification(item)
                         }
-                    ) { Text(stringResource(R.string.yes), style = MaterialTheme.typography.button) }
+                    ) { Text(stringResource(R.string.yes)) }
                 },
-                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no), style = MaterialTheme.typography.button) } }
+                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
             )
 
         }
@@ -315,8 +317,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
         SwipeToDismiss(
             state = dismissState,
-            directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
-            dismissThresholds = { FractionalThreshold(0.5f) },
             background = {
                 val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
                 val color by animateColorAsState(
@@ -352,7 +352,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             }
         ) {
 
-            Card(
+            Surface(
                 onClick = {
                     genericInfo.toSource(item.source)
                         ?.getSourceByUrl(item.url)
@@ -362,12 +362,11 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
                         ?.addTo(disposable)
                 },
-                elevation = 5.dp,
+                tonalElevation = 5.dp,
                 indication = rememberRipple(),
                 onClickLabel = item.notiTitle,
-                modifier = Modifier
-                    .padding(horizontal = 5.dp)
-                    .fadeInAnimation()
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.padding(horizontal = 5.dp)
             ) {
 
                 Row {
@@ -399,9 +398,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             .weight(1f)
                             .padding(start = 16.dp, top = 4.dp)
                     ) {
-                        Text(item.source, style = MaterialTheme.typography.overline)
-                        Text(item.notiTitle, style = MaterialTheme.typography.subtitle2)
-                        Text(item.summaryText, style = MaterialTheme.typography.body2)
+                        Text(item.source, style = M3MaterialTheme.typography.labelMedium)
+                        Text(item.notiTitle, style = M3MaterialTheme.typography.titleSmall)
+                        Text(item.summaryText, style = M3MaterialTheme.typography.bodyMedium)
                     }
 
                     Box(
@@ -414,24 +413,26 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss
-                        ) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    lifecycleScope.launch(Dispatchers.IO) {
-                                        SavedNotifications.viewNotificationFromDb(requireContext(), item, notificationLogo, genericInfo)
+                        MdcTheme {
+                            DropdownMenu(
+                                expanded = showDropDown,
+                                onDismissRequest = dropDownDismiss
+                            ) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        lifecycleScope.launch(Dispatchers.IO) {
+                                            SavedNotifications.viewNotificationFromDb(requireContext(), item, notificationLogo, genericInfo)
+                                        }
                                     }
-                                }
-                            ) { Text(stringResource(R.string.notify)) }
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    showPopup = true
-                                }
-                            ) { Text(stringResource(R.string.remove)) }
+                                ) { Text(stringResource(R.string.notify)) }
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        showPopup = true
+                                    }
+                                ) { Text(stringResource(R.string.remove)) }
+                            }
                         }
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }

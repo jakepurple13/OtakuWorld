@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
  * Use the [SearchFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class CustomSearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResultProvider {
+class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResultProvider {
     private val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
     private val handler = Handler()
     private val delayedLoad = SearchRunnable()
