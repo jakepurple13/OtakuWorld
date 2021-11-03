@@ -912,15 +912,6 @@ class DetailsFragment : Fragment() {
     @Composable
     private fun PlaceHolderHeader() {
 
-        /*
-        @Composable
-fun PlaceholderDefaults.color(
-    backgroundColor: Color = MaterialTheme.colors.surface,
-    contentColor: Color = contentColorFor(backgroundColor),
-    contentAlpha: Float = 0.1f,
-): Color = contentColor.copy(contentAlpha).compositeOver(backgroundColor)
-         */
-
         val placeholderColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
             .copy(0.1f)
             .compositeOver(M3MaterialTheme.colorScheme.surface)
