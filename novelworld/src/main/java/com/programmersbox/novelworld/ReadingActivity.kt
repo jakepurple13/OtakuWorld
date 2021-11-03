@@ -27,12 +27,23 @@ import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VerticalAlignTop
+import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -51,7 +62,6 @@ import androidx.core.text.HtmlCompat
 import androidx.datastore.preferences.core.Preferences
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
@@ -77,6 +87,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import kotlin.math.roundToInt
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class ReadingActivity : ComponentActivity() {
 
@@ -117,6 +129,7 @@ class ReadingActivity : ComponentActivity() {
     private val pageList = mutableStateOf("")
     private var isLoadingPages = mutableStateOf(false)
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @ExperimentalComposeUiApi
     @ExperimentalAnimationApi
@@ -146,7 +159,7 @@ class ReadingActivity : ComponentActivity() {
         loadPages(model)
 
         setContent {
-            MdcTheme {
+            M3MaterialTheme(currentColorScheme) {
 
                 val scope = rememberCoroutineScope()
                 val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
@@ -200,15 +213,54 @@ class ReadingActivity : ComponentActivity() {
                     }
                 }
 
+                val contentScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+                //56 is default FabSize
+                //56 is the bottom app bar size
+                //16 is the scaffold padding
+                val fabHeight = 72.dp
+                val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
+                val fabOffsetHeightPx = remember { mutableStateOf(0f) }
+                val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
+
+                val topBarHeight = 28.dp
+                val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+                val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
+
+                val toolbarHeight = 56.dp
+                val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
+                val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
+                val nestedScrollConnection = remember {
+                    object : NestedScrollConnection by contentScrollBehavior.nestedScrollConnection {
+                        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                            val delta = available.y
+
+                            val newFabOffset = fabOffsetHeightPx.value + delta
+                            fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
+
+                            val newOffset = toolbarOffsetHeightPx.value + delta
+                            toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
+
+                            val newTopOffset = topBarOffsetHeightPx.value + delta
+                            topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
+                            return contentScrollBehavior.nestedScrollConnection.onPreScroll(available, source)//Offset.Zero
+                        }
+                    }
+                }
+
                 Scaffold(
+                    modifier = Modifier.nestedScroll(nestedScrollConnection),
                     scaffoldState = scaffoldState,
                     drawerContent = if (list.size > 1) {
                         {
+                            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
+                                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                 topBar = {
-                                    TopAppBar(
+                                    SmallTopAppBar(
                                         title = { Text(title) },
-                                        actions = { PageIndicator(list.size - currentChapter, list.size) }
+                                        actions = { PageIndicator(list.size - currentChapter, list.size) },
+                                        scrollBehavior = scrollBehavior
                                     )
                                 }
                             ) { p ->
@@ -241,15 +293,17 @@ class ReadingActivity : ComponentActivity() {
                                                 )
                                             }
 
-                                            Card(
+                                            Surface(
                                                 modifier = Modifier.padding(horizontal = 5.dp),
                                                 border = BorderStroke(
                                                     1.dp,
                                                     animateColorAsState(
-                                                        if (currentChapter == i) MaterialTheme.colors.onSurface
-                                                        else MaterialTheme.colors.onSurface.copy(alpha = 0.12f)
+                                                        if (currentChapter == i) M3MaterialTheme.colorScheme.onSurface
+                                                        else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                                     ).value
-                                                )
+                                                ),
+                                                shape = MaterialTheme.shapes.medium,
+                                                tonalElevation = 5.dp
                                             ) {
                                                 ListItem(
                                                     text = { Text(c.name) },
@@ -264,255 +318,221 @@ class ReadingActivity : ComponentActivity() {
                                 }
                             }
                         }
-                    } else null
-                ) {
-                    //56 is default FabSize
-                    //56 is the bottom app bar size
-                    //16 is the scaffold padding
-                    val fabHeight = 72.dp
-                    val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
-                    val fabOffsetHeightPx = remember { mutableStateOf(0f) }
-                    val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
-
-                    Scaffold(
-                        floatingActionButton = {
-                            FloatingActionButton(
-                                onClick = { scope.launch { listState.animateScrollToItem(0) } },
-                                modifier = Modifier
-                                    .padding(bottom = 56.dp)
-                                    .offset { IntOffset(x = animateFab, y = 0) }
-                            ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                    } else null,
+                    floatingActionButtonPosition = FabPosition.End,
+                    floatingActionButton = {
+                        FloatingActionButton(
+                            onClick = { scope.launch { listState.animateScrollToItem(0) } },
+                            modifier = Modifier
+                                .padding(bottom = 56.dp)
+                                .offset { IntOffset(x = animateFab, y = 0) },
+                            containerColor = androidx.compose.material3.ButtonDefaults.buttonColors().containerColor(enabled = true).value
+                        ) { Icon(Icons.Default.VerticalAlignTop, null) }
+                    }
+                ) { p ->
+                    //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
+                    SwipeRefresh(
+                        state = swipeState,
+                        onRefresh = {
+                            loadPages(
+                                list.getOrNull(currentChapter)
+                                    ?.getChapterInfo()
+                                    ?.map { it.mapNotNull(Storage::link) }
+                                    ?.subscribeOn(Schedulers.io())
+                                    ?.observeOn(AndroidSchedulers.mainThread())
+                            )
                         },
-                        floatingActionButtonPosition = FabPosition.End
-                    ) { p ->
-                        //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
-                        SwipeRefresh(
-                            state = swipeState,
-                            onRefresh = {
-                                loadPages(
-                                    list.getOrNull(currentChapter)
-                                        ?.getChapterInfo()
-                                        ?.map { it.mapNotNull(Storage::link) }
-                                        ?.subscribeOn(Schedulers.io())
-                                        ?.observeOn(AndroidSchedulers.mainThread())
+                        modifier = Modifier.padding(p)
+                    ) {
+                        Box(Modifier.fillMaxSize()) {
+                            LazyColumn(
+                                state = listState,
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                contentPadding = PaddingValues(
+                                    top = topBarHeight,
+                                    bottom = toolbarHeight
                                 )
-                            },
-                            modifier = Modifier.padding(p)
-                        ) {
+                            ) {
 
-                            val topBarHeight = 28.dp
-                            val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
-                            val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
+                                item {
+                                    AndroidView(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(5.dp)
+                                            .clickable(
+                                                indication = null,
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                onClick = {
+                                                    showInfo = !showInfo
+                                                    if (!showInfo) {
+                                                        toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                                        topBarOffsetHeightPx.value = -topBarHeightPx
+                                                        fabOffsetHeightPx.value = -fabHeightPx
+                                                    }
+                                                }
+                                            ),
+                                        factory = { TextView(it) },
+                                        update = { it.text = HtmlCompat.fromHtml(pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
+                                    )
+                                }
 
-                            val toolbarHeight = 56.dp
-                            val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
-                            val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
-                            val nestedScrollConnection = remember {
-                                object : NestedScrollConnection {
-                                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                                        val delta = available.y
-
-                                        val newFabOffset = fabOffsetHeightPx.value + delta
-                                        fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
-
-                                        val newOffset = toolbarOffsetHeightPx.value + delta
-                                        toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
-
-                                        val newTopOffset = topBarOffsetHeightPx.value + delta
-                                        topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
-                                        return Offset.Zero
+                                item {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        if (currentChapter <= 0) {
+                                            Text(
+                                                stringResource(id = R.string.reachedLastChapter),
+                                                style = M3MaterialTheme.typography.headlineSmall,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .align(Alignment.CenterHorizontally)
+                                            )
+                                        }
+                                        GoBackButton(modifier = Modifier.fillMaxWidth())
                                     }
                                 }
                             }
 
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .nestedScroll(nestedScrollConnection)
-                            ) {
-                                LazyColumn(
-                                    state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    contentPadding = PaddingValues(
-                                        top = topBarHeight,
-                                        bottom = toolbarHeight
-                                    )
-                                ) {
+                            val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
 
-                                    item {
-                                        AndroidView(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(5.dp)
-                                                .clickable(
-                                                    indication = null,
-                                                    interactionSource = remember { MutableInteractionSource() },
-                                                    onClick = {
-                                                        showInfo = !showInfo
-                                                        if (!showInfo) {
-                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
-                                                            topBarOffsetHeightPx.value = -topBarHeightPx
-                                                            fabOffsetHeightPx.value = -fabHeightPx
-                                                        }
-                                                    }
-                                                ),
-                                            factory = { TextView(it) },
-                                            update = { it.text = HtmlCompat.fromHtml(pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
-                                        )
-                                    }
-
-                                    item {
-                                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                            if (currentChapter <= 0) {
-                                                Text(
-                                                    stringResource(id = R.string.reachedLastChapter),
-                                                    style = MaterialTheme.typography.h6,
-                                                    textAlign = TextAlign.Center,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .align(Alignment.CenterHorizontally)
-                                                )
-                                            }
-                                            GoBackButton(modifier = Modifier.fillMaxWidth())
-                                        }
-                                    }
-                                }
-
-                                val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
-
-                                var time by remember { mutableStateOf(System.currentTimeMillis()) }
-
-                                DisposableEffect(LocalContext.current) {
-                                    val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
-                                    onDispose { unregisterReceiver(timeReceiver) }
-                                }
-
-                                TopAppBar(
-                                    modifier = Modifier
-                                        .height(topBarHeight)
-                                        .align(Alignment.TopCenter)
-                                        .alpha(1f - (-animateTopBar / topBarHeightPx))
-                                        .offset { IntOffset(x = 0, y = animateTopBar) }
-                                ) {
+                            CenterAlignedTopAppBar(
+                                scrollBehavior = contentScrollBehavior,
+                                modifier = Modifier
+                                    .height(topBarHeight)
+                                    .align(Alignment.TopCenter)
+                                    .alpha(1f - (-animateTopBar / topBarHeightPx))
+                                    .offset { IntOffset(x = 0, y = animateTopBar) },
+                                navigationIcon = {
                                     Row(
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(4.dp)
+                                        modifier = Modifier.padding(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Row {
-                                            Icon(
-                                                batteryIcon.composeIcon,
-                                                contentDescription = null,
-                                                tint = animateColorAsState(batteryColor).value
-                                            )
-                                            AnimatedContent(
-                                                targetState = batteryPercent.toInt(),
-                                                transitionSpec = {
-                                                    if (targetState > initialState) {
-                                                        slideInVertically { height -> height } + fadeIn() with
-                                                                slideOutVertically { height -> -height } + fadeOut()
-                                                    } else {
-                                                        slideInVertically { height -> -height } + fadeIn() with
-                                                                slideOutVertically { height -> height } + fadeOut()
-                                                    }
-                                                        .using(SizeTransform(clip = false))
-                                                }
-                                            ) { targetBattery ->
-                                                Text(
-                                                    "$targetBattery%",
-                                                    style = MaterialTheme.typography.body1
-                                                )
-                                            }
-                                        }
-
+                                        Icon(
+                                            batteryIcon.composeIcon,
+                                            contentDescription = null,
+                                            tint = animateColorAsState(
+                                                if (batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
+                                                else batteryColor
+                                            ).value
+                                        )
                                         AnimatedContent(
-                                            targetState = time,
+                                            targetState = batteryPercent.toInt(),
                                             transitionSpec = {
-                                                (slideInVertically { height -> height } + fadeIn() with
-                                                        slideOutVertically { height -> -height } + fadeOut())
+                                                if (targetState > initialState) {
+                                                    slideInVertically { height -> height } + fadeIn() with
+                                                            slideOutVertically { height -> -height } + fadeOut()
+                                                } else {
+                                                    slideInVertically { height -> -height } + fadeIn() with
+                                                            slideOutVertically { height -> height } + fadeOut()
+                                                }
                                                     .using(SizeTransform(clip = false))
                                             }
-                                        ) { targetTime ->
+                                        ) { targetBattery ->
                                             Text(
-                                                DateFormat.format("HH:mm a", targetTime).toString(),
-                                                style = MaterialTheme.typography.body1
+                                                "$targetBattery%",
+                                                style = M3MaterialTheme.typography.bodyLarge
                                             )
                                         }
-
-                                        PageIndicator(list.size - currentChapter, list.size)
                                     }
-                                }
+                                },
+                                title = {
+                                    var time by remember { mutableStateOf(System.currentTimeMillis()) }
 
-                                val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
+                                    DisposableEffect(LocalContext.current) {
+                                        val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
+                                        onDispose { unregisterReceiver(timeReceiver) }
+                                    }
 
-                                BottomAppBar(
-                                    modifier = Modifier
-                                        .height(toolbarHeight)
-                                        .align(Alignment.BottomCenter)
-                                        .alpha(1f - (animateBar / toolbarHeightPx))
-                                        .offset { IntOffset(x = 0, y = animateBar) }
+                                    AnimatedContent(
+                                        targetState = time,
+                                        transitionSpec = {
+                                            (slideInVertically { height -> height } + fadeIn() with
+                                                    slideOutVertically { height -> -height } + fadeOut())
+                                                .using(SizeTransform(clip = false))
+                                        }
+                                    ) { targetTime ->
+                                        Text(
+                                            DateFormat.format("HH:mm a", targetTime).toString(),
+                                            style = M3MaterialTheme.typography.bodyLarge,
+                                            modifier = Modifier.padding(4.dp)
+                                        )
+                                    }
+                                },
+                                actions = { PageIndicator(list.size - currentChapter, list.size) }
+                            )
+
+                            val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
+
+                            BottomAppBar(
+                                modifier = Modifier
+                                    .height(toolbarHeight)
+                                    .align(Alignment.BottomCenter)
+                                    .alpha(1f - (animateBar / toolbarHeightPx))
+                                    .offset { IntOffset(x = 0, y = animateBar) },
+                                backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                                    .containerColor(scrollFraction = contentScrollBehavior.scrollFraction).value,
+                                contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                                    .titleContentColor(scrollFraction = contentScrollBehavior.scrollFraction).value
+                            ) {
+
+                                val prevShown = currentChapter < list.lastIndex
+                                val nextShown = currentChapter > 0
+
+                                AnimatedVisibility(
+                                    visible = prevShown && list.size > 1,
+                                    enter = expandHorizontally(expandFrom = Alignment.Start),
+                                    exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
                                 ) {
-
-                                    val prevShown = currentChapter < list.lastIndex
-                                    val nextShown = currentChapter > 0
-
-                                    AnimatedVisibility(
-                                        visible = prevShown && list.size > 1,
-                                        enter = expandHorizontally(expandFrom = Alignment.Start),
-                                        exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
-                                    ) {
-                                        PreviousButton(
-                                            modifier = Modifier
-                                                .padding(horizontal = 4.dp)
-                                                .weight(
-                                                    when {
-                                                        prevShown && nextShown -> 8f / 3f
-                                                        prevShown -> 4f
-                                                        else -> 4f
-                                                    }
-                                                ),
-                                            previousChapter = ::showToast
-                                        )
-                                    }
-
-                                    GoBackButton(
+                                    PreviousButton(
                                         modifier = Modifier
+                                            .padding(horizontal = 4.dp)
                                             .weight(
-                                                animateFloatAsState(
-                                                    when {
-                                                        prevShown && nextShown -> 8f / 3f
-                                                        prevShown || nextShown -> 4f
-                                                        else -> 8f
-                                                    }
-                                                ).value
-                                            )
+                                                when {
+                                                    prevShown && nextShown -> 8f / 3f
+                                                    prevShown -> 4f
+                                                    else -> 4f
+                                                }
+                                            ),
+                                        previousChapter = ::showToast
                                     )
-
-                                    AnimatedVisibility(
-                                        visible = nextShown && list.size > 1,
-                                        enter = expandHorizontally(),
-                                        exit = shrinkHorizontally()
-                                    ) {
-                                        NextButton(
-                                            modifier = Modifier
-                                                .padding(horizontal = 4.dp)
-                                                .weight(
-                                                    when {
-                                                        prevShown && nextShown -> 8f / 3f
-                                                        nextShown -> 4f
-                                                        else -> 4f
-                                                    }
-                                                ),
-                                            nextChapter = ::showToast
-                                        )
-                                    }
-
-                                    IconButton(
-                                        onClick = { settingsPopup = true },
-                                        modifier = Modifier.weight(2f)
-                                    ) { Icon(Icons.Default.Settings, null) }
                                 }
+
+                                GoBackButton(
+                                    modifier = Modifier
+                                        .weight(
+                                            animateFloatAsState(
+                                                when {
+                                                    prevShown && nextShown -> 8f / 3f
+                                                    prevShown || nextShown -> 4f
+                                                    else -> 8f
+                                                }
+                                            ).value
+                                        )
+                                )
+
+                                AnimatedVisibility(
+                                    visible = nextShown && list.size > 1,
+                                    enter = expandHorizontally(),
+                                    exit = shrinkHorizontally()
+                                ) {
+                                    NextButton(
+                                        modifier = Modifier
+                                            .padding(horizontal = 4.dp)
+                                            .weight(
+                                                when {
+                                                    prevShown && nextShown -> 8f / 3f
+                                                    nextShown -> 4f
+                                                    else -> 4f
+                                                }
+                                            ),
+                                        nextChapter = ::showToast
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = { settingsPopup = true },
+                                    modifier = Modifier.weight(2f)
+                                ) { Icon(Icons.Default.Settings, null) }
                             }
                         }
                     }
@@ -540,13 +560,13 @@ class ReadingActivity : ComponentActivity() {
             ) { targetPage ->
                 Text(
                     "$targetPage",
-                    style = MaterialTheme.typography.body1,
+                    style = M3MaterialTheme.typography.bodyLarge,
                 )
             }
 
             Text(
                 "/$pageCount",
-                style = MaterialTheme.typography.body1
+                style = M3MaterialTheme.typography.bodyLarge
             )
         }
     }
@@ -571,8 +591,8 @@ class ReadingActivity : ComponentActivity() {
         OutlinedButton(
             onClick = { finish() },
             modifier = modifier,
-            border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
-        ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.button, color = MaterialTheme.colors.primary) }
+            border = BorderStroke(ButtonDefaults.outlinedButtonBorder.width, M3MaterialTheme.colorScheme.primary)
+        ) { Text(stringResource(id = R.string.goBack), color = M3MaterialTheme.colorScheme.primary) }
     }
 
     private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
@@ -605,8 +625,8 @@ class ReadingActivity : ComponentActivity() {
         Button(
             onClick = { addChapterToWatched(--currentChapter, nextChapter) },
             modifier = modifier,
-            border = BorderStroke(ButtonDefaults.OutlinedBorderSize, MaterialTheme.colors.primary)
-        ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.button) }
+            border = BorderStroke(ButtonDefaults.outlinedButtonBorder.width, M3MaterialTheme.colorScheme.primary)
+        ) { Text(stringResource(id = R.string.loadNextChapter)) }
     }
 
     @Composable
@@ -614,7 +634,7 @@ class ReadingActivity : ComponentActivity() {
         TextButton(
             onClick = { addChapterToWatched(++currentChapter, previousChapter) },
             modifier = modifier
-        ) { Text(stringResource(id = R.string.loadPreviousChapter), style = MaterialTheme.typography.button) }
+        ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
     }
 
     @Composable
@@ -655,7 +675,7 @@ class ReadingActivity : ComponentActivity() {
 
             Text(
                 stringResource(settingTitle),
-                style = MaterialTheme.typography.body1,
+                style = M3MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.constrainAs(title) {
                     top.linkTo(parent.top)
@@ -667,7 +687,7 @@ class ReadingActivity : ComponentActivity() {
 
             Text(
                 stringResource(settingSummary),
-                style = MaterialTheme.typography.body2,
+                style = M3MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.constrainAs(summary) {
                     top.linkTo(title.bottom)
@@ -687,6 +707,15 @@ class ReadingActivity : ComponentActivity() {
                 },
                 valueRange = range,
                 steps = steps,
+                colors = SliderDefaults.colors(
+                    thumbColor = M3MaterialTheme.colorScheme.primary,
+                    disabledThumbColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+                        .compositeOver(M3MaterialTheme.colorScheme.surface),
+                    activeTrackColor = M3MaterialTheme.colorScheme.primary,
+                    disabledActiveTrackColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
+                    activeTickColor = m3ContentColorFor(M3MaterialTheme.colorScheme.primary)
+                        .copy(alpha = SliderDefaults.TickAlpha)
+                ),
                 modifier = Modifier.constrainAs(slider) {
                     top.linkTo(summary.bottom)
                     end.linkTo(value.start)
@@ -697,7 +726,7 @@ class ReadingActivity : ComponentActivity() {
 
             Text(
                 sliderValue.toInt().toString(),
-                style = MaterialTheme.typography.subtitle1,
+                style = M3MaterialTheme.typography.titleMedium,
                 modifier = Modifier.constrainAs(value) {
                     end.linkTo(parent.end)
                     start.linkTo(slider.end)
