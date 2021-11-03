@@ -1,5 +1,5 @@
 object Deps {
-    const val otakuVersionName = "29.0.0"
+    const val otakuVersionName = "29.0.1"
     const val compileVersion = 31
     const val minimumSdk = 23
     const val targetSdk = 31

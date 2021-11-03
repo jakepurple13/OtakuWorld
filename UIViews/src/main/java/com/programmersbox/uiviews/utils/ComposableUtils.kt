@@ -21,7 +21,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedButton
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.contentColorFor
@@ -859,10 +858,12 @@ fun <T> GroupButton(
     modifier: Modifier = Modifier,
     selected: T,
     options: List<GroupButtonModel<T>>,
+    selectedColor: Color = M3MaterialTheme.colorScheme.inversePrimary,
+    unselectedColor: Color = M3MaterialTheme.colorScheme.surface,
     onClick: (T) -> Unit
 ) {
     Row(modifier) {
-        val smallShape = MaterialTheme.shapes.small
+        val smallShape = RoundedCornerShape(20.0.dp)
         val noCorner = CornerSize(0.dp)
 
         options.fastForEachIndexed { i, option ->
@@ -875,10 +876,8 @@ fun <T> GroupButton(
                     bottomStart = if (i == 0) smallShape.bottomStart else noCorner,
                     bottomEnd = if (i == options.size - 1) smallShape.bottomEnd else noCorner
                 ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    backgroundColor = animateColorAsState(
-                        if (selected == option.item) MaterialTheme.colors.primaryVariant else MaterialTheme.colors.surface
-                    ).value
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                    containerColor = animateColorAsState(if (selected == option.item) selectedColor else unselectedColor).value
                 )
             ) { option.iconContent() }
         }

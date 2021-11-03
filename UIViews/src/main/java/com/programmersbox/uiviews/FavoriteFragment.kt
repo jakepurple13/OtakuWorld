@@ -7,21 +7,25 @@ import android.view.ViewGroup
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -53,6 +57,7 @@ import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class FavoriteFragment : Fragment() {
 
@@ -84,6 +89,7 @@ class FavoriteFragment : Fragment() {
             .addTo(disposable)
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     override fun onCreateView(
@@ -92,7 +98,9 @@ class FavoriteFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        setContent { MdcTheme { FavoriteUi(favoriteItems = favoriteList.toLatestFlowable(), allSources = genericInfo.sourceList()) } }
+        setContent {
+            M3MaterialTheme(currentColorScheme) { FavoriteUi(favoriteItems = favoriteList.toLatestFlowable(), allSources = genericInfo.sourceList()) }
+        }
     }
 
     override fun onDestroy() {
@@ -101,6 +109,7 @@ class FavoriteFragment : Fragment() {
         super.onDestroy()
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
@@ -124,7 +133,9 @@ class FavoriteFragment : Fragment() {
 
         var showBanner by remember { mutableStateOf(false) }
 
-        OtakuBannerBox(
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+        M3OtakuBannerBox(
             showBanner = showBanner,
             placeholder = logo.logoId
         ) { itemInfo ->
@@ -133,8 +144,12 @@ class FavoriteFragment : Fragment() {
                 state = rememberCollapsingToolbarScaffoldState(),
                 scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
                 toolbar = {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        TopAppBar(
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.scrollFraction).value)
+                    ) {
+                        SmallTopAppBar(
+                            scrollBehavior = scrollBehavior,
                             navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
                             title = { Text(stringResource(R.string.viewFavoritesMenu)) },
                             actions = {
@@ -172,18 +187,32 @@ class FavoriteFragment : Fragment() {
                             }
                         )
 
-                        OutlinedTextField(
-                            value = searchText,
-                            onValueChange = { searchText = it },
-                            label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
-                            trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 5.dp),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                        )
+                        MdcTheme {
+                            OutlinedTextField(
+                                value = searchText,
+                                onValueChange = { searchText = it },
+                                label = {
+                                    androidx.compose.material.Text(
+                                        resources.getQuantityString(
+                                            R.plurals.numFavorites,
+                                            showing.size,
+                                            showing.size
+                                        )
+                                    )
+                                },
+                                trailingIcon = {
+                                    androidx.compose.material.IconButton(onClick = { searchText = "" }) {
+                                        androidx.compose.material.Icon(Icons.Default.Cancel, null)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 5.dp),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                            )
+                        }
 
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -201,8 +230,8 @@ class FavoriteFragment : Fragment() {
                                             },
                                             onLongClick = { selectedSources.clear() }
                                         ),
-                                    backgroundColor = MaterialTheme.colors.primary,
-                                    textColor = MaterialTheme.colors.onPrimary
+                                    backgroundColor = M3MaterialTheme.colorScheme.primary,
+                                    textColor = M3MaterialTheme.colorScheme.onPrimary
                                 )
                             }
 
@@ -225,15 +254,21 @@ class FavoriteFragment : Fragment() {
                                                 selectedSources.add(it.first)
                                             }
                                         ),
-                                    backgroundColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.primary else MaterialTheme.colors.surface).value,
-                                    textColor = animateColorAsState(if (it.first in selectedSources) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface).value
+                                    backgroundColor = animateColorAsState(
+                                        if (it.first in selectedSources) M3MaterialTheme.colorScheme.primary
+                                        else M3MaterialTheme.colorScheme.surface
+                                    ).value,
+                                    textColor = animateColorAsState(
+                                        if (it.first in selectedSources) M3MaterialTheme.colorScheme.onPrimary
+                                        else M3MaterialTheme.colorScheme.onSurface
+                                    ).value
                                 )
                             }
                         }
                     }
                 }
             ) {
-                Scaffold { p ->
+                Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) { p ->
                     if (showing.isEmpty()) {
                         Box(
                             modifier = Modifier
@@ -241,11 +276,11 @@ class FavoriteFragment : Fragment() {
                                 .padding(p)
                         ) {
 
-                            Card(
+                            Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(5.dp),
-                                elevation = 5.dp,
+                                tonalElevation = 5.dp,
                                 shape = RoundedCornerShape(5.dp)
                             ) {
 
@@ -253,13 +288,13 @@ class FavoriteFragment : Fragment() {
 
                                     Text(
                                         text = stringResource(id = R.string.get_started),
-                                        style = MaterialTheme.typography.h4,
+                                        style = M3MaterialTheme.typography.headlineSmall,
                                         modifier = Modifier.align(Alignment.CenterHorizontally)
                                     )
 
                                     Text(
                                         text = stringResource(R.string.get_started_info),
-                                        style = MaterialTheme.typography.body1,
+                                        style = M3MaterialTheme.typography.bodyLarge,
                                         modifier = Modifier.align(Alignment.CenterHorizontally)
                                     )
 
@@ -268,19 +303,13 @@ class FavoriteFragment : Fragment() {
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally)
                                             .padding(vertical = 5.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.add_a_favorite),
-                                            style = MaterialTheme.typography.button
-                                        )
-                                    }
+                                    ) { Text(text = stringResource(R.string.add_a_favorite)) }
 
                                 }
 
                             }
                         }
                     } else {
-                        val scope = rememberCoroutineScope()
                         LazyVerticalGrid(
                             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                             contentPadding = p,
@@ -300,7 +329,7 @@ class FavoriteFragment : Fragment() {
                                     .let { if (reverse) it.reversed() else it }
                                     .toTypedArray()
                             ) { info ->
-                                CoverCard(
+                                M3CoverCard(
                                     onLongPress = { c ->
                                         itemInfo.value = if (c == ComponentState.Pressed) {
                                             info.value.randomOrNull()
@@ -308,7 +337,7 @@ class FavoriteFragment : Fragment() {
                                         } else null
                                         showBanner = c == ComponentState.Pressed
                                     },
-                                    imageUrl = info.value.random().imageUrl,
+                                    imageUrl = remember { info.value.random().imageUrl },
                                     name = info.key,
                                     placeHolder = logo.logoId,
                                     favoriteIcon = {
@@ -321,12 +350,12 @@ class FavoriteFragment : Fragment() {
                                                 Icon(
                                                     Icons.Default.Circle,
                                                     contentDescription = null,
-                                                    tint = MaterialTheme.colors.primary,
+                                                    tint = M3MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier.align(Alignment.Center)
                                                 )
                                                 Text(
                                                     info.value.size.toString(),
-                                                    color = MaterialTheme.colors.onPrimary,
+                                                    color = M3MaterialTheme.colorScheme.onPrimary,
                                                     modifier = Modifier.align(Alignment.Center)
                                                 )
                                             }

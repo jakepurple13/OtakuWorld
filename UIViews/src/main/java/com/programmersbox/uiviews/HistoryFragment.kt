@@ -40,7 +40,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
@@ -136,27 +135,25 @@ class HistoryFragment : Fragment() {
                             ).value
                         }
 
-                        MdcTheme {
-                            GroupButton(
-                                selected = sortedChoice,
-                                options = listOf(
-                                    GroupButtonModel(SortRecentlyBy.TITLE) {
-                                        Icon(
-                                            Icons.Default.SortByAlpha,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
-                                        )
-                                    },
-                                    GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
-                                        Icon(
-                                            Icons.Default.CalendarToday,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
-                                        )
-                                    }
-                                )
-                            ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
-                        }
+                        GroupButton(
+                            selected = sortedChoice,
+                            options = listOf(
+                                GroupButtonModel(SortRecentlyBy.TITLE) {
+                                    Icon(
+                                        Icons.Default.SortByAlpha,
+                                        null,
+                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
+                                    )
+                                },
+                                GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
+                                    Icon(
+                                        Icons.Default.CalendarToday,
+                                        null,
+                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
+                                    )
+                                }
+                            )
+                        ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
                     }
                 )
             }

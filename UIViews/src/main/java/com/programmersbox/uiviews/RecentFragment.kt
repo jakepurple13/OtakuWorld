@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
@@ -32,7 +31,6 @@ import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshState
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.models.ApiService
@@ -40,10 +38,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.InfiniteListHandler
-import com.programmersbox.uiviews.utils.OtakuBannerBox
-import com.programmersbox.uiviews.utils.showErrorToast
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -51,6 +46,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import org.koin.android.ext.android.inject
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 /**
  * A simple [Fragment] subclass.
@@ -82,7 +78,7 @@ class RecentFragment : BaseFragmentCompose() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent { MdcTheme { RecentView() } }
+            setContent { M3MaterialTheme(currentColorScheme) { RecentView() } }
         }
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
@@ -154,9 +150,9 @@ class RecentFragment : BaseFragmentCompose() {
                         Icons.Default.CloudOff,
                         null,
                         modifier = Modifier.size(50.dp, 50.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                        colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                     )
-                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                    Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                 }
             }
             sourceList.isEmpty() -> info.ComposeShimmerItem()
@@ -172,7 +168,7 @@ class RecentFragment : BaseFragmentCompose() {
                     }
                 ) {
                     var showBanner by remember { mutableStateOf(false) }
-                    OtakuBannerBox(
+                    M3OtakuBannerBox(
                         showBanner = showBanner,
                         placeholder = logo.logoId
                     ) { itemInfo ->

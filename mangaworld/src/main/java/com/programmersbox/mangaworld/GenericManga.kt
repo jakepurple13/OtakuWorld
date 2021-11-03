@@ -11,11 +11,11 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -211,7 +211,7 @@ class GenericManga(val context: Context) : GenericInfo {
     @Composable
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH)) {
-            items(10) { PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) }
+            items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) }
         }
     }
 
@@ -230,7 +230,7 @@ class GenericManga(val context: Context) : GenericInfo {
             state = listState,
         ) {
             items(list) {
-                CoverCard(
+                M3CoverCard(
                     onLongPress = { c -> onLongPress(it, c) },
                     imageUrl = it.imageUrl,
                     name = it.title,
@@ -240,13 +240,13 @@ class GenericManga(val context: Context) : GenericInfo {
                             Icon(
                                 Icons.Default.Favorite,
                                 contentDescription = null,
-                                tint = MaterialTheme.colors.primary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.align(Alignment.TopStart)
                             )
                             Icon(
                                 Icons.Default.FavoriteBorder,
                                 contentDescription = null,
-                                tint = MaterialTheme.colors.onPrimary,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.align(Alignment.TopStart)
                             )
                         }
