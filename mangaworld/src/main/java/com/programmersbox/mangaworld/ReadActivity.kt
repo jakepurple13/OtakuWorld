@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.rememberTransformableState
@@ -35,7 +34,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,7 +55,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
@@ -108,15 +105,14 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class ReadActivityCompose : ComponentActivity() {
 
@@ -193,14 +189,12 @@ class ReadActivityCompose : ComponentActivity() {
 
         setContent {
 
-            MaterialTheme(currentColorScheme) {
+            M3MaterialTheme(currentColorScheme) {
 
                 val scope = rememberCoroutineScope()
                 val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
 
                 val pages = pageList
-
-                LaunchedEffect(pages) { BigImageViewer.prefetch(*pages.fastMap(Uri::parse).toTypedArray()) }
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
@@ -230,7 +224,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     initialValue = runBlocking { dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
                                     range = 1f..100f
                                 )
-                                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
+                                Divider(color = M3MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
                                 SliderSetting(
                                     scope = scope,
                                     settingIcon = Icons.Default.FormatLineSpacing,
@@ -295,7 +289,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                 loading = {
                                                     CircularProgressIndicator(
                                                         modifier = Modifier.align(Alignment.Center),
-                                                        color = MaterialTheme.colorScheme.primary
+                                                        color = M3MaterialTheme.colorScheme.primary
                                                     )
                                                 },
                                                 modifier = Modifier
@@ -305,7 +299,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .border(
                                                         animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
                                                         color = animateColorAsState(
-                                                            if (currentPage == i) MaterialTheme.colorScheme.primary
+                                                            if (currentPage == i) M3MaterialTheme.colorScheme.primary
                                                             else androidx.compose.ui.graphics.Color.Transparent
                                                         ).value
                                                     )
@@ -366,15 +360,15 @@ class ReadActivityCompose : ComponentActivity() {
                                                 )
                                             }
 
-                                            androidx.compose.material3.Surface(
+                                            Surface(
                                                 modifier = Modifier.padding(horizontal = 5.dp),
                                                 tonalElevation = 4.dp,
-                                                shape = androidx.compose.material.MaterialTheme.shapes.medium,
+                                                shape = MaterialTheme.shapes.medium,
                                                 border = BorderStroke(
                                                     1.dp,
                                                     animateColorAsState(
-                                                        if (currentChapter == i) MaterialTheme.colorScheme.onSurface
-                                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                                        if (currentChapter == i) M3MaterialTheme.colorScheme.onSurface
+                                                        else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                                     ).value
                                                 )
                                             ) {
@@ -396,154 +390,57 @@ class ReadActivityCompose : ComponentActivity() {
 
                     val showItems = showInfo || listState.isScrolledToTheEnd()
 
-                    /*val scrollBehavior = remember {
-                        TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo }
-                    }*/
+                    /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo } }*/
+                    //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
+                    //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
 
                     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-                    //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
+                    val topBarHeight = 32.dp//28.dp
+                    val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+                    val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
 
-                    //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
+                    val toolbarHeight = 64.dp
+
+                    val nestedScrollConnection = remember {
+                        object : NestedScrollConnection {
+                            //by scrollBehavior.nestedScrollConnection {
+                            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                                val delta = available.y
+
+                                val newTopOffset = topBarOffsetHeightPx.value + delta
+                                topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
+
+                                return scrollBehavior.nestedScrollConnection.onPreScroll(available, source)//Offset.Zero
+                            }
+                        }
+                    }
 
                     Scaffold(
                         //TODO: This stuff will be used again once we find a way to keep the top and bottom bars out when reaching the bottom
                         // and animating the top and bottom bars away
-                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        modifier = Modifier.nestedScroll(nestedScrollConnection),
                         /*topBar = {
-                            CenterAlignedTopAppBar(
-                                navigationIcon = {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            batteryIcon.composeIcon,
-                                            contentDescription = null,
-                                            tint = animateColorAsState(
-                                                if(batteryColor == androidx.compose.ui.graphics.Color.White) MaterialTheme.colorScheme.onSurface
-                                                else batteryColor
-                                            ).value
-                                        )
-                                        AnimatedContent(
-                                            targetState = batteryPercent.toInt(),
-                                            transitionSpec = {
-                                                if (targetState > initialState) {
-                                                    slideInVertically { height -> height } + fadeIn() with
-                                                            slideOutVertically { height -> -height } + fadeOut()
-                                                } else {
-                                                    slideInVertically { height -> -height } + fadeIn() with
-                                                            slideOutVertically { height -> height } + fadeOut()
-                                                }
-                                                    .using(SizeTransform(clip = false))
-                                            }
-                                        ) { targetBattery ->
-                                            Text(
-                                                "$targetBattery%",
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
-                                        }
-                                    }
-                                },
-                                title = {
-                                    var time by remember { mutableStateOf(System.currentTimeMillis()) }
-
-                                    DisposableEffect(LocalContext.current) {
-                                        val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
-                                        onDispose { unregisterReceiver(timeReceiver) }
-                                    }
-
-                                    AnimatedContent(
-                                        targetState = time,
-                                        transitionSpec = {
-                                            (slideInVertically { height -> height } + fadeIn() with
-                                                    slideOutVertically { height -> -height } + fadeOut())
-                                                .using(SizeTransform(clip = false))
-                                        }
-                                    ) { targetTime ->
-                                        Text(
-                                            DateFormat.format("HH:mm a", targetTime).toString(),
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            modifier = Modifier.padding(horizontal = 4.dp)
-                                        )
-                                    }
-                                },
-                                actions = { PageIndicator(Modifier.padding(horizontal = 4.dp), currentPage + 1, pages.size) },
-                                scrollBehavior = scrollBehavior
+                            TopBar(
+                                scrollBehavior = scrollBehavior,
+                                modifier = Modifier
+                                    .height(topBarHeight)
+                                    .align(Alignment.TopCenter)
+                                    .alpha(animateTopBar),
+                                pages = pages,
+                                currentPage = currentPage
                             )
                         },*/
                         /*bottomBar = {
-                            CenterAlignedTopAppBar(
+                            BottomBar(
+                                modifier = Modifier
+                                    .height(toolbarHeight)
+                                    .align(Alignment.BottomCenter)
+                                    .alpha(animateTopBar),
                                 scrollBehavior = scrollBehavior,
-                                title = {
-                                    Row {
-
-                                        val prevShown = currentChapter < list.lastIndex
-                                        val nextShown = currentChapter > 0
-
-                                        AnimatedVisibility(
-                                            visible = prevShown && list.size > 1,
-                                            enter = expandHorizontally(expandFrom = Alignment.Start),
-                                            exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
-                                        ) {
-                                            PreviousButton(
-                                                modifier = Modifier
-                                                    .padding(horizontal = 4.dp)
-                                                    .weight(
-                                                        when {
-                                                            prevShown && nextShown -> 8f / 3f
-                                                            prevShown -> 4f
-                                                            else -> 4f
-                                                        }
-                                                    ),
-                                                previousChapter = ::showToast
-                                            )
-                                        }
-
-                                        GoBackButton(
-                                            modifier = Modifier
-                                                .weight(
-                                                    animateFloatAsState(
-                                                        when {
-                                                            prevShown && nextShown -> 8f / 3f
-                                                            prevShown || nextShown -> 4f
-                                                            else -> 8f
-                                                        }
-                                                    ).value
-                                                )
-                                        )
-
-                                        AnimatedVisibility(
-                                            visible = nextShown && list.size > 1,
-                                            enter = expandHorizontally(),
-                                            exit = shrinkHorizontally()
-                                        ) {
-                                            NextButton(
-                                                modifier = Modifier
-                                                    .padding(horizontal = 4.dp)
-                                                    .weight(
-                                                        when {
-                                                            prevShown && nextShown -> 8f / 3f
-                                                            nextShown -> 4f
-                                                            else -> 4f
-                                                        }
-                                                    ),
-                                                nextChapter = ::showToast
-                                            )
-                                        }
-                                        //The three buttons above will equal 8f
-                                        //So these two need to add up to 2f
-                                        IconButton(
-                                            onClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
-                                            modifier = Modifier.weight(1f)
-                                        ) { Icon(Icons.Default.GridOn, null) }
-
-                                        IconButton(
-                                            onClick = { settingsPopup = true },
-                                            modifier = Modifier.weight(1f)
-                                        ) { Icon(Icons.Default.Settings, null) }
-                                    }
-                                }
+                                onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
+                                onSettingsClick = { settingsPopup = true },
+                                chapterChange = ::showToast
                             )
                         }*/
                     ) { p ->
@@ -562,34 +459,7 @@ class ReadActivityCompose : ComponentActivity() {
                             modifier = Modifier.padding(p)
                         ) {
 
-                            val topBarHeight = 32.dp//28.dp
-                            val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
-                            val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
-
-                            val toolbarHeight = 64.dp
-                            val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
-                            val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
-
-                            val nestedScrollConnection = remember {
-                                object : NestedScrollConnection {
-                                    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                                        val delta = available.y
-
-                                        val newOffset = toolbarOffsetHeightPx.value + delta
-                                        toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
-
-                                        val newTopOffset = topBarOffsetHeightPx.value + delta
-                                        topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
-                                        return Offset.Zero
-                                    }
-                                }
-                            }
-
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .nestedScroll(nestedScrollConnection)
-                            ) {
+                            Box(Modifier.fillMaxSize()) {
                                 LazyColumn(
                                     state = listState,
                                     verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp),
@@ -616,7 +486,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                     onClick = {
                                                         showInfo = !showInfo
                                                         if (!showInfo) {
-                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                                            //toolbarOffsetHeightPx.value = -toolbarHeightPx
                                                             topBarOffsetHeightPx.value = -topBarHeightPx
                                                         }
                                                     },
@@ -642,7 +512,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                 loading = {
                                                     CircularProgressIndicator(
                                                         modifier = Modifier.align(Alignment.Center),
-                                                        color = MaterialTheme.colorScheme.primary
+                                                        color = M3MaterialTheme.colorScheme.primary
                                                     )
                                                 },
                                                 modifier = Modifier
@@ -665,7 +535,7 @@ class ReadActivityCompose : ComponentActivity() {
                                             if (currentChapter <= 0) {
                                                 Text(
                                                     stringResource(id = R.string.reachedLastChapter),
-                                                    style = MaterialTheme.typography.headlineSmall,
+                                                    style = M3MaterialTheme.typography.headlineSmall,
                                                     textAlign = TextAlign.Center,
                                                     modifier = Modifier
                                                         .fillMaxWidth()
@@ -687,165 +557,192 @@ class ReadActivityCompose : ComponentActivity() {
                                     }
                                 }
 
-                                val animateTopBar by animateIntAsState(if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt()))
+                                val animateTopBar by animateFloatAsState(
+                                    if (showItems) 1f
+                                    else 1f - (-topBarOffsetHeightPx.value.roundToInt() / topBarHeightPx)
+                                )
 
-                                CenterAlignedTopAppBar(
+                                TopBar(
                                     scrollBehavior = scrollBehavior,
                                     modifier = Modifier
                                         .height(topBarHeight)
                                         .align(Alignment.TopCenter)
-                                        .alpha(1f - (-animateTopBar / topBarHeightPx))
-                                        .offset { IntOffset(x = 0, y = animateTopBar) },
-                                    navigationIcon = {
-                                        Row(
-                                            modifier = Modifier.padding(4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                batteryIcon.composeIcon,
-                                                contentDescription = null,
-                                                tint = animateColorAsState(
-                                                    if (batteryColor == androidx.compose.ui.graphics.Color.White) MaterialTheme.colorScheme.onSurface
-                                                    else batteryColor
-                                                ).value
-                                            )
-                                            AnimatedContent(
-                                                targetState = batteryPercent.toInt(),
-                                                transitionSpec = {
-                                                    if (targetState > initialState) {
-                                                        slideInVertically { height -> height } + fadeIn() with
-                                                                slideOutVertically { height -> -height } + fadeOut()
-                                                    } else {
-                                                        slideInVertically { height -> -height } + fadeIn() with
-                                                                slideOutVertically { height -> height } + fadeOut()
-                                                    }
-                                                        .using(SizeTransform(clip = false))
-                                                }
-                                            ) { targetBattery ->
-                                                Text(
-                                                    "$targetBattery%",
-                                                    style = MaterialTheme.typography.bodyLarge
-                                                )
-                                            }
-                                        }
-                                    },
-                                    title = {
-                                        var time by remember { mutableStateOf(System.currentTimeMillis()) }
-
-                                        DisposableEffect(LocalContext.current) {
-                                            val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
-                                            onDispose { unregisterReceiver(timeReceiver) }
-                                        }
-
-                                        AnimatedContent(
-                                            targetState = time,
-                                            transitionSpec = {
-                                                (slideInVertically { height -> height } + fadeIn() with
-                                                        slideOutVertically { height -> -height } + fadeOut())
-                                                    .using(SizeTransform(clip = false))
-                                            }
-                                        ) { targetTime ->
-                                            Text(
-                                                DateFormat.format("HH:mm a", targetTime).toString(),
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                modifier = Modifier.padding(4.dp)
-                                            )
-                                        }
-                                    },
-                                    actions = {
-                                        PageIndicator(
-                                            Modifier
-                                                .padding(4.dp)
-                                                .align(Alignment.CenterVertically),
-                                            currentPage + 1,
-                                            pages.size
-                                        )
-                                    },
+                                        .alpha(animateTopBar),
+                                    pages = pages,
+                                    currentPage = currentPage
                                 )
 
-                                val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
-
-                                BottomAppBar(
+                                BottomBar(
                                     modifier = Modifier
                                         .height(toolbarHeight)
                                         .align(Alignment.BottomCenter)
-                                        .alpha(1f - (animateBar / toolbarHeightPx))
-                                        .offset { IntOffset(x = 0, y = animateBar) },
-                                    backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                                        .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
-                                    contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                                        .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
-                                ) {
-                                    val prevShown = currentChapter < list.lastIndex
-                                    val nextShown = currentChapter > 0
-
-                                    AnimatedVisibility(
-                                        visible = prevShown && list.size > 1,
-                                        enter = expandHorizontally(expandFrom = Alignment.Start),
-                                        exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
-                                    ) {
-                                        PreviousButton(
-                                            modifier = Modifier
-                                                .padding(horizontal = 4.dp)
-                                                .weight(
-                                                    when {
-                                                        prevShown && nextShown -> 8f / 3f
-                                                        prevShown -> 4f
-                                                        else -> 4f
-                                                    }
-                                                ),
-                                            previousChapter = ::showToast
-                                        )
-                                    }
-
-                                    GoBackButton(
-                                        modifier = Modifier
-                                            .weight(
-                                                animateFloatAsState(
-                                                    when {
-                                                        prevShown && nextShown -> 8f / 3f
-                                                        prevShown || nextShown -> 4f
-                                                        else -> 8f
-                                                    }
-                                                ).value
-                                            )
-                                    )
-
-                                    AnimatedVisibility(
-                                        visible = nextShown && list.size > 1,
-                                        enter = expandHorizontally(),
-                                        exit = shrinkHorizontally()
-                                    ) {
-                                        NextButton(
-                                            modifier = Modifier
-                                                .padding(horizontal = 4.dp)
-                                                .weight(
-                                                    when {
-                                                        prevShown && nextShown -> 8f / 3f
-                                                        nextShown -> 4f
-                                                        else -> 4f
-                                                    }
-                                                ),
-                                            nextChapter = ::showToast
-                                        )
-                                    }
-                                    //The three buttons above will equal 8f
-                                    //So these two need to add up to 2f
-                                    IconButton(
-                                        onClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
-                                        modifier = Modifier.weight(1f)
-                                    ) { Icon(Icons.Default.GridOn, null) }
-
-                                    IconButton(
-                                        onClick = { settingsPopup = true },
-                                        modifier = Modifier.weight(1f)
-                                    ) { Icon(Icons.Default.Settings, null) }
-                                }
+                                        .alpha(animateTopBar),
+                                    scrollBehavior = scrollBehavior,
+                                    onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
+                                    onSettingsClick = { settingsPopup = true },
+                                    chapterChange = ::showToast
+                                )
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    @ExperimentalAnimationApi
+    @Composable
+    private fun TopBar(modifier: Modifier = Modifier, scrollBehavior: TopAppBarScrollBehavior, pages: List<String>, currentPage: Int) {
+        CenterAlignedTopAppBar(
+            scrollBehavior = scrollBehavior,
+            modifier = modifier,
+            navigationIcon = {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        batteryIcon.composeIcon,
+                        contentDescription = null,
+                        tint = animateColorAsState(
+                            if (batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
+                            else batteryColor
+                        ).value
+                    )
+                    AnimatedContent(
+                        targetState = batteryPercent.toInt(),
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                slideInVertically { height -> height } + fadeIn() with
+                                        slideOutVertically { height -> -height } + fadeOut()
+                            } else {
+                                slideInVertically { height -> -height } + fadeIn() with
+                                        slideOutVertically { height -> height } + fadeOut()
+                            }
+                                .using(SizeTransform(clip = false))
+                        }
+                    ) { targetBattery ->
+                        Text(
+                            "$targetBattery%",
+                            style = M3MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            },
+            title = {
+                var time by remember { mutableStateOf(System.currentTimeMillis()) }
+
+                DisposableEffect(LocalContext.current) {
+                    val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
+                    onDispose { unregisterReceiver(timeReceiver) }
+                }
+
+                AnimatedContent(
+                    targetState = time,
+                    transitionSpec = {
+                        (slideInVertically { height -> height } + fadeIn() with
+                                slideOutVertically { height -> -height } + fadeOut())
+                            .using(SizeTransform(clip = false))
+                    }
+                ) { targetTime ->
+                    Text(
+                        DateFormat.format("HH:mm a", targetTime).toString(),
+                        style = M3MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
+            },
+            actions = {
+                PageIndicator(
+                    Modifier
+                        .padding(4.dp)
+                        .align(Alignment.CenterVertically),
+                    currentPage + 1,
+                    pages.size
+                )
+            },
+        )
+    }
+
+    @Composable
+    private fun BottomBar(
+        modifier: Modifier = Modifier,
+        scrollBehavior: TopAppBarScrollBehavior,
+        onPageSelectClick: () -> Unit,
+        onSettingsClick: () -> Unit,
+        chapterChange: () -> Unit
+    ) {
+        BottomAppBar(
+            modifier = modifier,
+            backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+            contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
+        ) {
+            val prevShown = currentChapter < list.lastIndex
+            val nextShown = currentChapter > 0
+
+            AnimatedVisibility(
+                visible = prevShown && list.size > 1,
+                enter = expandHorizontally(expandFrom = Alignment.Start),
+                exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+            ) {
+                PreviousButton(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .weight(
+                            when {
+                                prevShown && nextShown -> 8f / 3f
+                                prevShown -> 4f
+                                else -> 4f
+                            }
+                        ),
+                    previousChapter = chapterChange
+                )
+            }
+
+            GoBackButton(
+                modifier = Modifier
+                    .weight(
+                        animateFloatAsState(
+                            when {
+                                prevShown && nextShown -> 8f / 3f
+                                prevShown || nextShown -> 4f
+                                else -> 8f
+                            }
+                        ).value
+                    )
+            )
+
+            AnimatedVisibility(
+                visible = nextShown && list.size > 1,
+                enter = expandHorizontally(),
+                exit = shrinkHorizontally()
+            ) {
+                NextButton(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .weight(
+                            when {
+                                prevShown && nextShown -> 8f / 3f
+                                nextShown -> 4f
+                                else -> 4f
+                            }
+                        ),
+                    nextChapter = chapterChange
+                )
+            }
+            //The three buttons above will equal 8f
+            //So these two need to add up to 2f
+            IconButton(
+                onClick = onPageSelectClick,
+                modifier = Modifier.weight(1f)
+            ) { Icon(Icons.Default.GridOn, null) }
+
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier.weight(1f)
+            ) { Icon(Icons.Default.Settings, null) }
         }
     }
 
@@ -868,13 +765,13 @@ class ReadActivityCompose : ComponentActivity() {
             ) { targetPage ->
                 Text(
                     "$targetPage",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = M3MaterialTheme.typography.bodyLarge,
                 )
             }
 
             Text(
                 "/$pageCount",
-                style = MaterialTheme.typography.bodyLarge
+                style = M3MaterialTheme.typography.bodyLarge
             )
         }
     }
@@ -914,8 +811,8 @@ class ReadActivityCompose : ComponentActivity() {
         OutlinedButton(
             onClick = { finish() },
             modifier = modifier,
-            border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, MaterialTheme.colorScheme.primary)
-        ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)
+        ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }
     }
 
     private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
@@ -947,9 +844,8 @@ class ReadActivityCompose : ComponentActivity() {
     private fun NextButton(modifier: Modifier = Modifier, nextChapter: () -> Unit) {
         Button(
             onClick = { addChapterToWatched(--currentChapter, nextChapter) },
-            modifier = modifier,
-            border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, MaterialTheme.colorScheme.primary)
-        ) { Text(stringResource(id = R.string.loadNextChapter), style = MaterialTheme.typography.labelLarge) }
+            modifier = modifier
+        ) { Text(stringResource(id = R.string.loadNextChapter)) }
     }
 
     @Composable
@@ -957,7 +853,7 @@ class ReadActivityCompose : ComponentActivity() {
         TextButton(
             onClick = { addChapterToWatched(++currentChapter, previousChapter) },
             modifier = modifier
-        ) { Text(stringResource(id = R.string.loadPreviousChapter), style = MaterialTheme.typography.labelLarge) }
+        ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
     }
 
     @Composable
@@ -997,7 +893,7 @@ class ReadActivityCompose : ComponentActivity() {
 
             Text(
                 stringResource(settingTitle),
-                style = MaterialTheme.typography.bodyLarge,
+                style = M3MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.constrainAs(title) {
                     top.linkTo(parent.top)
@@ -1009,7 +905,7 @@ class ReadActivityCompose : ComponentActivity() {
 
             Text(
                 stringResource(settingSummary),
-                style = MaterialTheme.typography.bodyMedium,
+                style = M3MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.constrainAs(summary) {
                     top.linkTo(title.bottom)
@@ -1030,12 +926,12 @@ class ReadActivityCompose : ComponentActivity() {
                 valueRange = range,
                 steps = 0,
                 colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    disabledThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-                        .compositeOver(MaterialTheme.colorScheme.surface),
-                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                    disabledActiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
-                    activeTickColor = androidx.compose.material3.contentColorFor(MaterialTheme.colorScheme.primary)
+                    thumbColor = M3MaterialTheme.colorScheme.primary,
+                    disabledThumbColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+                        .compositeOver(M3MaterialTheme.colorScheme.surface),
+                    activeTrackColor = M3MaterialTheme.colorScheme.primary,
+                    disabledActiveTrackColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
+                    activeTickColor = m3ContentColorFor(M3MaterialTheme.colorScheme.primary)
                         .copy(alpha = SliderDefaults.TickAlpha)
                 ),
                 modifier = Modifier.constrainAs(slider) {
@@ -1048,7 +944,7 @@ class ReadActivityCompose : ComponentActivity() {
 
             Text(
                 sliderValue.toInt().toString(),
-                style = MaterialTheme.typography.titleMedium,
+                style = M3MaterialTheme.typography.titleMedium,
                 modifier = Modifier.constrainAs(value) {
                     end.linkTo(parent.end)
                     start.linkTo(slider.end)
@@ -1063,6 +959,8 @@ class ReadActivityCompose : ComponentActivity() {
         super.onDestroy()
         unregisterReceiver(batteryInfo)
         disposable.dispose()
+        Glide.get(this).clearMemory()
+        GlobalScope.launch { Glide.get(this@ReadActivityCompose).clearDiskCache() }
     }
 }
 
