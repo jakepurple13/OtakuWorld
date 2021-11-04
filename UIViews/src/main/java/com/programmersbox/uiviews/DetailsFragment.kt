@@ -112,6 +112,7 @@ class DetailsFragment : Fragment() {
 
     private val logo: NotificationLogo by inject()
 
+    @ExperimentalComposeUiApi
     @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -165,6 +166,7 @@ class DetailsFragment : Fragment() {
     @Composable
     private fun Color.animate() = animateColorAsState(this)
 
+    @ExperimentalComposeUiApi
     @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -713,7 +715,7 @@ class DetailsFragment : Fragment() {
         }
     }
 
-    @OptIn(ExperimentalComposeUiApi::class)
+    @ExperimentalComposeUiApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
