@@ -230,7 +230,7 @@ class DetailsFragment : Fragment() {
         }
 
         val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-            ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+            ?: M3MaterialTheme.colorScheme.onSurface
 
         BottomSheetScaffold(
             backgroundColor = Color.Transparent,
