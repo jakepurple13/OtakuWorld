@@ -21,7 +21,11 @@ class MainActivity : BaseMainActivity() {
 
         activity = this
 
-        cast.init(this)
+        try {
+            cast.init(this)
+        } catch (e: Exception) {
+
+        }
 
         when (intent.data) {
             Uri.parse(VIEW_DOWNLOADS) -> openDownloads()

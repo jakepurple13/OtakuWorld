@@ -112,8 +112,11 @@ class CastHelper {
 
     fun sessionStatus(): Observable<Boolean> = sessionStatus
 
-    fun isCastActive() =
+    fun isCastActive() = try {
         mCastContext.castState == CastState.CONNECTED
+    } catch (e: Exception) {
+        false
+    }
 
     /**
      * You need to call this method in the parent activity if you are setting up
