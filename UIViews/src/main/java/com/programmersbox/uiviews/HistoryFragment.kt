@@ -271,7 +271,7 @@ class HistoryFragment : Fragment() {
                         ?.addTo(disposable)
                 },
                 tonalElevation = 5.dp,
-                shape = androidx.compose.material.MaterialTheme.shapes.medium,
+                shape = MaterialTheme.shapes.medium,
                 indication = rememberRipple()
             ) {
                 ListItem(
@@ -279,7 +279,7 @@ class HistoryFragment : Fragment() {
                     overlineText = { Text(item.source) },
                     secondaryText = { Text(format.format(item.timestamp)) },
                     icon = {
-                        Surface(shape = androidx.compose.material.MaterialTheme.shapes.medium) {
+                        Surface(shape = MaterialTheme.shapes.medium) {
                             GlideImage(
                                 imageModel = item.imageUrl,
                                 contentDescription = null,

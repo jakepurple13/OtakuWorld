@@ -235,7 +235,7 @@ class AllFragment : BaseFragmentCompose() {
                                                 trailingIcon = {
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                                         androidx.compose.material.Text(searchList.size.toString())
-                                                        androidx.compose.material.IconButton(onClick = { searchText = "" }) {
+                                                        IconButton(onClick = { searchText = "" }) {
                                                             androidx.compose.material.Icon(Icons.Default.Cancel, null)
                                                         }
                                                     }
@@ -301,7 +301,7 @@ class AllFragment : BaseFragmentCompose() {
                                 }
                             }
                         },
-                        floatingActionButtonPosition = androidx.compose.material.FabPosition.End
+                        floatingActionButtonPosition = FabPosition.End
                     ) { p ->
                         SwipeRefresh(
                             modifier = Modifier.padding(p),
