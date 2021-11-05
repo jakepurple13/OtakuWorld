@@ -64,7 +64,7 @@ dependencies {
 
     implementation Deps.palette
 
-    def exoplayer_version = "2.15.1"
+    def exoplayer_version = "2.16.0"
 
     implementation "com.google.android.exoplayer:exoplayer:$exoplayer_version"
     implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"
