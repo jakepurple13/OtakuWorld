@@ -482,11 +482,13 @@ class ReadActivityCompose : ComponentActivity() {
                                                 // add transformable to listen to multitouch transformation events
                                                 // after offset
                                                 .transformable(state = state)
+                                                //TODO: For some reason this is causing the weird performance issue
+                                                // it is a known issue: https://issuetracker.google.com/issues/204328131
+                                                // when that gets resolved, look into adding back the nestedScrollConnection by scrollBehavior
                                                 .combinedClickable(
                                                     onClick = {
                                                         showInfo = !showInfo
                                                         if (!showInfo) {
-                                                            //toolbarOffsetHeightPx.value = -toolbarHeightPx
                                                             topBarOffsetHeightPx.value = -topBarHeightPx
                                                         }
                                                     },
