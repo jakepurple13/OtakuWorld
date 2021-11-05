@@ -79,7 +79,7 @@ dependencies {
     implementation "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
     implementation "androidx.tonyodev.fetch2rx:xfetch2rx:3.1.6"
 
-    implementation "com.github.TorrentStream:TorrentStream-Android:2.7.0"
+    implementation "com.github.TorrentStream:TorrentStream-Android:2.8.0"
 
     implementation gson
 
