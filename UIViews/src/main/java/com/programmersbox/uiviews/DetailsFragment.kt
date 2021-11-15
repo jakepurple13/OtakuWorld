@@ -862,7 +862,7 @@ class DetailsFragment : Fragment() {
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
                             tint = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
-                                ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
+                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Text(
