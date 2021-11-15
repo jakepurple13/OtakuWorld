@@ -65,13 +65,15 @@ fun CoverCard(
                 imageModel = imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                requestBuilder = Glide.with(LocalView.current)
-                    .asDrawable()
-                    //.override(360, 480)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .fallback(placeHolder)
-                    .transform(RoundedCorners(5)),
+                requestBuilder = {
+                    Glide.with(LocalView.current)
+                        .asDrawable()
+                        //.override(360, 480)
+                        .placeholder(placeHolder)
+                        .error(error)
+                        .fallback(placeHolder)
+                        .transform(RoundedCorners(5))
+                },
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
@@ -209,8 +211,9 @@ fun OtakuBannerBox(
             .toBitmap().asImageBitmap()
     }
 
-    BannerBox(
+    BannerBox2(
         showBanner = showBanner,
+        bannerSize = ComposableUtils.IMAGE_HEIGHT + 20.dp,
         banner = {
             Card(modifier = Modifier.align(Alignment.TopCenter)) {
                 ListItem(
@@ -283,13 +286,15 @@ fun M3CoverCard(
                 imageModel = imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                requestBuilder = Glide.with(LocalView.current)
-                    .asDrawable()
-                    //.override(360, 480)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .fallback(placeHolder)
-                    .transform(RoundedCorners(5)),
+                requestBuilder = {
+                    Glide.with(LocalView.current)
+                        .asDrawable()
+                        //.override(360, 480)
+                        .placeholder(placeHolder)
+                        .error(error)
+                        .fallback(placeHolder)
+                        .transform(RoundedCorners(5))
+                },
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),

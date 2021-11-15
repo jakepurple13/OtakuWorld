@@ -60,7 +60,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
-import com.bumptech.glide.Glide
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.itemRangeOf
 import com.programmersbox.models.ApiService
@@ -466,7 +465,6 @@ fun InfoCard2(
                 imageModel = info.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                requestBuilder = Glide.with(LocalContext.current.applicationContext).asDrawable(),
                 bitmapPalette = BitmapPalette { p ->
                     swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
                 },
@@ -545,7 +543,6 @@ fun InfoCard(
                     imageModel = info.imageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    requestBuilder = Glide.with(LocalContext.current.applicationContext).asDrawable(),
                     bitmapPalette = BitmapPalette { p ->
                         swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
                     },

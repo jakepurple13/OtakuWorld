@@ -70,6 +70,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
@@ -1022,6 +1023,27 @@ fun BannerBox(
             enter = bannerEnter,
             exit = bannerExit,
         ) { banner() }
+    }
+}
+
+@Composable
+fun BannerBox2(
+    modifier: Modifier = Modifier,
+    showBanner: Boolean = false,
+    bannerSize: Dp,
+    banner: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .then(modifier)
+    ) {
+        content()
+        val topBarHeightPx = with(LocalDensity.current) { bannerSize.roundToPx().toFloat() }
+        val aniOffset = remember { Animatable(-topBarHeightPx * 2f) }
+        LaunchedEffect(key1 = showBanner) { aniOffset.animateTo(if (showBanner) 0f else (-topBarHeightPx * 2f)) }
+        Box(modifier = Modifier.offset { IntOffset(x = 0, y = aniOffset.value.roundToInt()) }) { banner() }
     }
 }
 

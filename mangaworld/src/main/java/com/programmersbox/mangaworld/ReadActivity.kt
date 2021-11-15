@@ -390,7 +390,7 @@ class ReadActivityCompose : ComponentActivity() {
 
                     val showItems = showInfo || listState.isScrolledToTheEnd()
 
-                    /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo } }*/
+                    /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
                     //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
                     //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
 
@@ -430,8 +430,8 @@ class ReadActivityCompose : ComponentActivity() {
                                 pages = pages,
                                 currentPage = currentPage
                             )
-                        },*/
-                        /*bottomBar = {
+                        },
+                        bottomBar = {
                             BottomBar(
                                 modifier = Modifier
                                     .height(toolbarHeight)
