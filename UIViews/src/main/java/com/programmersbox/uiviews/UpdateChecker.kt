@@ -17,6 +17,7 @@ import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.RxWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.favoritesdatabase.*
+import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.loggingutils.fd
@@ -72,7 +73,6 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
         .timeout(1, TimeUnit.MINUTES)
 
 }
-
 
 class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
 
@@ -349,6 +349,23 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
         Loged.d("BootReceived")
         context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info) }
     }
+}
+
+class NotifySingleWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
+
+    private val logo: NotificationLogo by inject()
+    private val genericInfo: GenericInfo by inject()
+
+    override fun createWork(): Single<Result> = Single.create<Result> {
+        inputData.getString("notiData")
+            ?.fromJson<NotificationItem>()
+            ?.let { d -> SavedNotifications.viewNotificationFromDb(applicationContext, d, logo, genericInfo) }
+
+        it.onSuccess(Result.success())
+    }
+        .onErrorReturn { Result.success() }
+        .timeout(1, TimeUnit.MINUTES)
+
 }
 
 object SavedNotifications {

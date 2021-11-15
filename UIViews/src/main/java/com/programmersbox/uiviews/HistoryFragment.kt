@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -71,7 +72,12 @@ class HistoryFragment : Fragment() {
     private val logo: MainLogo by inject()
     private val disposable = CompositeDisposable()
 
-    private val format = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.getDefault())
+    private val format by lazy {
+        SimpleDateFormat(
+            "${(DateFormat.getDateFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()}",
+            Locale.getDefault()
+        )
+    }
 
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
