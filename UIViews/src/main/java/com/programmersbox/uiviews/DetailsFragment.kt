@@ -668,7 +668,7 @@ class DetailsFragment : Fragment() {
                                     "Play",
                                     modifier = Modifier.align(Alignment.CenterHorizontally),
                                     tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                        ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                                 )
                                 Text(
                                     stringResource(R.string.read),
@@ -699,7 +699,7 @@ class DetailsFragment : Fragment() {
                                     "Download",
                                     modifier = Modifier.align(Alignment.CenterHorizontally),
                                     tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                        ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                                 )
                                 Text(
                                     stringResource(R.string.download_chapter),

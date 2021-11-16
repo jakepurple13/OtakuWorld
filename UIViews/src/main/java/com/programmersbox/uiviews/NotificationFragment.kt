@@ -368,7 +368,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     Icon(
                         icon,
                         contentDescription = null,
-                        modifier = Modifier.scale(scale)
+                        modifier = Modifier.scale(scale),
+                        tint = M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                     )
                 }
             }
