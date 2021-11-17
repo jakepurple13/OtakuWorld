@@ -21,7 +21,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedButton
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.contentColorFor
@@ -71,6 +70,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
@@ -859,10 +859,12 @@ fun <T> GroupButton(
     modifier: Modifier = Modifier,
     selected: T,
     options: List<GroupButtonModel<T>>,
+    selectedColor: Color = M3MaterialTheme.colorScheme.inversePrimary,
+    unselectedColor: Color = M3MaterialTheme.colorScheme.surface,
     onClick: (T) -> Unit
 ) {
     Row(modifier) {
-        val smallShape = MaterialTheme.shapes.small
+        val smallShape = RoundedCornerShape(20.0.dp)
         val noCorner = CornerSize(0.dp)
 
         options.fastForEachIndexed { i, option ->
@@ -875,10 +877,8 @@ fun <T> GroupButton(
                     bottomStart = if (i == 0) smallShape.bottomStart else noCorner,
                     bottomEnd = if (i == options.size - 1) smallShape.bottomEnd else noCorner
                 ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    backgroundColor = animateColorAsState(
-                        if (selected == option.item) MaterialTheme.colors.primaryVariant else MaterialTheme.colors.surface
-                    ).value
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                    containerColor = animateColorAsState(if (selected == option.item) selectedColor else unselectedColor).value
                 )
             ) { option.iconContent() }
         }
@@ -1023,6 +1023,27 @@ fun BannerBox(
             enter = bannerEnter,
             exit = bannerExit,
         ) { banner() }
+    }
+}
+
+@Composable
+fun BannerBox2(
+    modifier: Modifier = Modifier,
+    showBanner: Boolean = false,
+    bannerSize: Dp,
+    banner: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .then(modifier)
+    ) {
+        content()
+        val topBarHeightPx = with(LocalDensity.current) { bannerSize.roundToPx().toFloat() }
+        val aniOffset = remember { Animatable(-topBarHeightPx * 2f) }
+        LaunchedEffect(key1 = showBanner) { aniOffset.animateTo(if (showBanner) 0f else (-topBarHeightPx * 2f)) }
+        Box(modifier = Modifier.offset { IntOffset(x = 0, y = aniOffset.value.roundToInt()) }) { banner() }
     }
 }
 

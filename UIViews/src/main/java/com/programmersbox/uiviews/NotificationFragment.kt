@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,12 +43,22 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.composethemeadapter.MdcTheme
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointForward
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
@@ -63,6 +74,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class NotificationFragment : BaseBottomSheetDialogFragment() {
@@ -73,6 +87,12 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val notificationManager by lazy { requireContext().notificationManager }
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
+    private val dateFormat by lazy {
+        SimpleDateFormat(
+            "${(DateFormat.getDateFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()}",
+            Locale.getDefault()
+        )
+    }
 
     @ExperimentalMaterial3Api
     @ExperimentalFoundationApi
@@ -178,11 +198,13 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                     imageModel = item.imageUrl.orEmpty(),
                                     contentDescription = "",
                                     contentScale = ContentScale.Crop,
-                                    requestBuilder = Glide.with(LocalView.current)
-                                        .asDrawable()
-                                        .override(360, 480)
-                                        .thumbnail(0.5f)
-                                        .transform(RoundedCorners(15)),
+                                    requestBuilder = {
+                                        Glide.with(LocalView.current)
+                                            .asDrawable()
+                                            .override(360, 480)
+                                            .thumbnail(0.5f)
+                                            .transform(RoundedCorners(15))
+                                    },
                                     modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                                     failure = {
                                         Image(
@@ -346,7 +368,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     Icon(
                         icon,
                         contentDescription = null,
-                        modifier = Modifier.scale(scale)
+                        modifier = Modifier.scale(scale),
+                        tint = M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                     )
                 }
             }
@@ -374,10 +397,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         imageModel = item.imageUrl.orEmpty(),
                         contentDescription = "",
                         contentScale = ContentScale.Crop,
-                        requestBuilder = Glide.with(LocalView.current)
-                            .asDrawable()
-                            .override(360, 480)
-                            .thumbnail(0.5f),
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
@@ -426,6 +445,65 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                         }
                                     }
                                 ) { Text(stringResource(R.string.notify)) }
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        val datePicker = MaterialDatePicker.Builder.datePicker()
+                                            .setTitleText(R.string.selectDate)
+                                            .setCalendarConstraints(
+                                                CalendarConstraints.Builder()
+                                                    .setOpenAt(System.currentTimeMillis())
+                                                    .setValidator(DateValidatorPointForward.now())
+                                                    .build()
+                                            )
+                                            .setSelection(System.currentTimeMillis())
+                                            .build()
+
+                                        datePicker.addOnPositiveButtonClickListener {
+                                            val c = Calendar.getInstance()
+                                            val timePicker = MaterialTimePicker.Builder()
+                                                .setTitleText(R.string.selectTime)
+                                                .setPositiveButtonText(R.string.ok)
+                                                .setTimeFormat(
+                                                    if (DateFormat.is24HourFormat(requireContext())) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
+                                                )
+                                                .setHour(c[Calendar.HOUR_OF_DAY])
+                                                .setMinute(c[Calendar.MINUTE])
+                                                .build()
+
+                                            timePicker.addOnPositiveButtonClickListener { _ ->
+                                                c.timeInMillis = it
+                                                c.add(Calendar.DAY_OF_YEAR, 1)
+                                                c[Calendar.HOUR_OF_DAY] = timePicker.hour
+                                                c[Calendar.MINUTE] = timePicker.minute
+
+                                                WorkManager.getInstance(requireContext())
+                                                    .enqueueUniqueWork(
+                                                        item.notiTitle,
+                                                        ExistingWorkPolicy.REPLACE,
+                                                        OneTimeWorkRequestBuilder<NotifySingleWorker>()
+                                                            .setInputData(
+                                                                Data.Builder()
+                                                                    .putString("notiData", item.toJson())
+                                                                    .build()
+                                                            )
+                                                            .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                                                            .build()
+                                                    )
+
+                                                Toast.makeText(
+                                                    requireContext(),
+                                                    getString(R.string.willNotifyAt, dateFormat.format(c.timeInMillis)),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
+                                            timePicker.show(parentFragmentManager, "timePicker")
+                                        }
+
+                                        datePicker.show(parentFragmentManager, "datePicker")
+                                    }
+                                ) { Text(stringResource(R.string.notifyAtTime)) }
                                 DropdownMenuItem(
                                     onClick = {
                                         dropDownDismiss()

@@ -11,13 +11,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import com.google.accompanist.placeholder.material.placeholder
@@ -71,16 +75,24 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun ComposeShimmerItem() {
         LazyColumn {
             items(10) {
-                Card(
+                androidx.compose.material3.Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(5.dp)
+                        .padding(5.dp),
+                    tonalElevation = 5.dp,
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     Text(
                         "",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .placeholder(true)
+                            .placeholder(
+                                true,
+                                color = androidx.compose.material3
+                                    .contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                                    .copy(0.1f)
+                                    .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                            )
                             .padding(5.dp)
                     )
                 }
@@ -110,7 +122,7 @@ class GenericNovel(val context: Context) : GenericInfo {
                 enterTransition = fadeIn(),
                 exitTransition = fadeOut()
             ) {
-                Card(
+                androidx.compose.material3.Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 5.dp)
@@ -118,19 +130,20 @@ class GenericNovel(val context: Context) : GenericInfo {
                             onLongPress = { c -> onLongPress(it, c) },
                             onClick = { onClick(it) }
                         ),
-                    elevation = 5.dp
+                    tonalElevation = 5.dp,
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     ListItem(
                         icon = {
-                            Icon(
+                            androidx.compose.material3.Icon(
                                 if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = null,
                             )
                         },
-                        text = { Text(it.title) },
-                        overlineText = { Text(it.source.serviceName) },
+                        text = { androidx.compose.material3.Text(it.title) },
+                        overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
                         secondaryText = if (it.description.isNotEmpty()) {
-                            { Text(it.description) }
+                            { androidx.compose.material3.Text(it.description) }
                         } else null
                     )
                 }

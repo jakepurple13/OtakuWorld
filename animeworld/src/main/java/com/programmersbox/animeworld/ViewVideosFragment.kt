@@ -202,11 +202,13 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                                     imageModel = item.assetFileStringUri.orEmpty(),
                                     contentDescription = item.videoName,
                                     contentScale = ContentScale.Crop,
-                                    requestBuilder = Glide.with(LocalView.current)
-                                        .asDrawable()
-                                        .override(360, 480)
-                                        .thumbnail(0.5f)
-                                        .transform(RoundedCorners(15)),
+                                    requestBuilder = {
+                                        Glide.with(LocalView.current)
+                                            .asDrawable()
+                                            .override(360, 480)
+                                            .thumbnail(0.5f)
+                                            .transform(RoundedCorners(15))
+                                    },
                                     modifier = Modifier
                                         .align(Alignment.Center)
                                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -421,9 +423,11 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             imageModel = item.assetFileStringUri.orEmpty(),
                             contentDescription = "",
                             contentScale = ContentScale.Crop,
-                            requestBuilder = Glide.with(LocalView.current)
-                                .asDrawable()
-                                .thumbnail(0.5f),//.transform(GranularRoundedCorners(0f, 15f, 15f, 0f)),
+                            requestBuilder = {
+                                Glide.with(LocalView.current)
+                                    .asDrawable()
+                                    .thumbnail(0.5f)
+                            },
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .size(

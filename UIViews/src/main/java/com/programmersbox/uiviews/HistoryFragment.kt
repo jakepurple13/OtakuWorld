@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,7 +41,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
@@ -72,7 +72,12 @@ class HistoryFragment : Fragment() {
     private val logo: MainLogo by inject()
     private val disposable = CompositeDisposable()
 
-    private val format = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a", Locale.getDefault())
+    private val format by lazy {
+        SimpleDateFormat(
+            "${(DateFormat.getDateFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()}",
+            Locale.getDefault()
+        )
+    }
 
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
@@ -136,27 +141,25 @@ class HistoryFragment : Fragment() {
                             ).value
                         }
 
-                        MdcTheme {
-                            GroupButton(
-                                selected = sortedChoice,
-                                options = listOf(
-                                    GroupButtonModel(SortRecentlyBy.TITLE) {
-                                        Icon(
-                                            Icons.Default.SortByAlpha,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
-                                        )
-                                    },
-                                    GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
-                                        Icon(
-                                            Icons.Default.CalendarToday,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
-                                        )
-                                    }
-                                )
-                            ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
-                        }
+                        GroupButton(
+                            selected = sortedChoice,
+                            options = listOf(
+                                GroupButtonModel(SortRecentlyBy.TITLE) {
+                                    Icon(
+                                        Icons.Default.SortByAlpha,
+                                        null,
+                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
+                                    )
+                                },
+                                GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
+                                    Icon(
+                                        Icons.Default.CalendarToday,
+                                        null,
+                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
+                                    )
+                                }
+                            )
+                        ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
                     }
                 )
             }
@@ -274,7 +277,7 @@ class HistoryFragment : Fragment() {
                         ?.addTo(disposable)
                 },
                 tonalElevation = 5.dp,
-                shape = androidx.compose.material.MaterialTheme.shapes.medium,
+                shape = MaterialTheme.shapes.medium,
                 indication = rememberRipple()
             ) {
                 ListItem(
@@ -282,7 +285,7 @@ class HistoryFragment : Fragment() {
                     overlineText = { Text(item.source) },
                     secondaryText = { Text(format.format(item.timestamp)) },
                     icon = {
-                        Surface(shape = androidx.compose.material.MaterialTheme.shapes.medium) {
+                        Surface(shape = MaterialTheme.shapes.medium) {
                             GlideImage(
                                 imageModel = item.imageUrl,
                                 contentDescription = null,

@@ -112,6 +112,7 @@ class DetailsFragment : Fragment() {
 
     private val logo: NotificationLogo by inject()
 
+    @ExperimentalComposeUiApi
     @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -165,6 +166,7 @@ class DetailsFragment : Fragment() {
     @Composable
     private fun Color.animate() = animateColorAsState(this)
 
+    @ExperimentalComposeUiApi
     @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -230,7 +232,7 @@ class DetailsFragment : Fragment() {
         }
 
         val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-            ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+            ?: M3MaterialTheme.colorScheme.onSurface
 
         BottomSheetScaffold(
             backgroundColor = Color.Transparent,
@@ -666,7 +668,7 @@ class DetailsFragment : Fragment() {
                                     "Play",
                                     modifier = Modifier.align(Alignment.CenterHorizontally),
                                     tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                        ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                                 )
                                 Text(
                                     stringResource(R.string.read),
@@ -697,7 +699,7 @@ class DetailsFragment : Fragment() {
                                     "Download",
                                     modifier = Modifier.align(Alignment.CenterHorizontally),
                                     tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                        ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                                 )
                                 Text(
                                     stringResource(R.string.download_chapter),
@@ -713,7 +715,7 @@ class DetailsFragment : Fragment() {
         }
     }
 
-    @OptIn(ExperimentalComposeUiApi::class)
+    @ExperimentalComposeUiApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
@@ -860,7 +862,7 @@ class DetailsFragment : Fragment() {
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
                             tint = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
-                                ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
+                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Text(
@@ -911,15 +913,6 @@ class DetailsFragment : Fragment() {
     @ExperimentalMaterialApi
     @Composable
     private fun PlaceHolderHeader() {
-
-        /*
-        @Composable
-fun PlaceholderDefaults.color(
-    backgroundColor: Color = MaterialTheme.colors.surface,
-    contentColor: Color = contentColorFor(backgroundColor),
-    contentAlpha: Float = 0.1f,
-): Color = contentColor.copy(contentAlpha).compositeOver(backgroundColor)
-         */
 
         val placeholderColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
             .copy(0.1f)

@@ -17,12 +17,14 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
@@ -46,7 +48,6 @@ import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
-import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
@@ -63,7 +64,6 @@ import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 
-
 val appModule = module {
     single<GenericInfo> { GenericAnime(get()) }
     single { MainLogo(R.mipmap.ic_launcher) }
@@ -71,8 +71,6 @@ val appModule = module {
 }
 
 class GenericAnime(val context: Context) : GenericInfo {
-
-    private var Context.wcoRecent by sharedPrefNotNullDelegate(true)
 
     private val disposable = CompositeDisposable()
 
@@ -391,7 +389,14 @@ class GenericAnime(val context: Context) : GenericInfo {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .placeholder(true, highlight = PlaceholderHighlight.shimmer())
+                            .placeholder(
+                                true,
+                                highlight = PlaceholderHighlight.shimmer(),
+                                color = androidx.compose.material3
+                                    .contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
+                                    .copy(0.1f)
+                                    .compositeOver(MaterialTheme.colorScheme.surface)
+                            )
                     ) {
                         Icon(
                             Icons.Default.FavoriteBorder,
@@ -433,7 +438,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 enterTransition = fadeIn(),
                 exitTransition = fadeOut()
             ) {
-                Card(
+                androidx.compose.material3.Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 5.dp)
@@ -441,19 +446,20 @@ class GenericAnime(val context: Context) : GenericInfo {
                             onLongPress = { c -> onLongPress(it, c) },
                             onClick = { onClick(it) }
                         ),
-                    elevation = 5.dp
+                    tonalElevation = 5.dp,
+                    shape = androidx.compose.material.MaterialTheme.shapes.medium
                 ) {
                     ListItem(
                         icon = {
-                            Icon(
+                            androidx.compose.material3.Icon(
                                 if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = null,
                             )
                         },
-                        text = { Text(it.title) },
-                        overlineText = { Text(it.source.serviceName) },
+                        text = { androidx.compose.material3.Text(it.title) },
+                        overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
                         secondaryText = if (it.description.isNotEmpty()) {
-                            { Text(it.description) }
+                            { androidx.compose.material3.Text(it.description) }
                         } else null
                     )
                 }

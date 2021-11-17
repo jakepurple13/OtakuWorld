@@ -11,6 +11,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,12 +22,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -58,6 +67,8 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 /**
  * A simple [Fragment] subclass.
@@ -81,13 +92,14 @@ class AllFragment : BaseFragmentCompose() {
 
     private val logo: MainLogo by inject()
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent { MdcTheme { AllView() } }
+            setContent { M3MaterialTheme(currentColorScheme) { AllView() } }
         }
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
@@ -130,6 +142,7 @@ class AllFragment : BaseFragmentCompose() {
             .addTo(disposable)
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
@@ -158,9 +171,9 @@ class AllFragment : BaseFragmentCompose() {
                         Icons.Default.CloudOff,
                         null,
                         modifier = Modifier.size(50.dp, 50.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                        colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                     )
-                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.h5)
+                    Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                 }
             }
             else -> {
@@ -172,18 +185,28 @@ class AllFragment : BaseFragmentCompose() {
                 var searchText by rememberSaveable { mutableStateOf("") }
                 val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
                 var showBanner by remember { mutableStateOf(false) }
-                OtakuBannerBox(
+                M3OtakuBannerBox(
                     showBanner = showBanner,
                     placeholder = logo.logoId
                 ) { itemInfo ->
                     BottomSheetScaffold(
+                        backgroundColor = M3MaterialTheme.colorScheme.background,
+                        contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
                         scaffoldState = scaffoldState,
                         sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
                         sheetContent = {
                             var isSearching by remember { mutableStateOf(false) }
+                            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
+                                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                 topBar = {
-                                    Column {
+                                    Column(
+                                        modifier = Modifier
+                                            .background(
+                                                TopAppBarDefaults.smallTopAppBarColors()
+                                                    .containerColor(scrollBehavior.scrollFraction).value
+                                            )
+                                    ) {
                                         Button(
                                             onClick = {
                                                 scope.launch {
@@ -195,43 +218,49 @@ class AllFragment : BaseFragmentCompose() {
                                                 .fillMaxWidth()
                                                 .heightIn(ButtonDefaults.MinHeight + 4.dp),
                                             shape = RoundedCornerShape(0f)
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.search),
-                                                style = MaterialTheme.typography.button
+                                        ) { Text(stringResource(R.string.search)) }
+
+                                        MdcTheme {
+                                            OutlinedTextField(
+                                                value = searchText,
+                                                onValueChange = { searchText = it },
+                                                label = {
+                                                    androidx.compose.material.Text(
+                                                        stringResource(
+                                                            R.string.searchFor,
+                                                            source?.serviceName.orEmpty()
+                                                        )
+                                                    )
+                                                },
+                                                trailingIcon = {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        androidx.compose.material.Text(searchList.size.toString())
+                                                        IconButton(onClick = { searchText = "" }) {
+                                                            androidx.compose.material.Icon(Icons.Default.Cancel, null)
+                                                        }
+                                                    }
+                                                },
+                                                modifier = Modifier
+                                                    .padding(5.dp)
+                                                    .fillMaxWidth(),
+                                                singleLine = true,
+                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                keyboardActions = KeyboardActions(onSearch = {
+                                                    focusManager.clearFocus()
+                                                    sourcePublish.value
+                                                        ?.searchList(searchText, 1, sourceList)
+                                                        ?.subscribeOn(Schedulers.io())
+                                                        ?.observeOn(AndroidSchedulers.mainThread())
+                                                        ?.doOnSubscribe { isSearching = true }
+                                                        ?.onErrorReturnItem(sourceList)
+                                                        ?.subscribeBy {
+                                                            searchPublisher.onNext(it)
+                                                            isSearching = false
+                                                        }
+                                                        ?.addTo(disposable)
+                                                })
                                             )
                                         }
-
-                                        OutlinedTextField(
-                                            value = searchText,
-                                            onValueChange = { searchText = it },
-                                            label = { Text(stringResource(R.string.searchFor, source?.serviceName.orEmpty())) },
-                                            trailingIcon = {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Text(searchList.size.toString())
-                                                    IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) }
-                                                }
-                                            },
-                                            modifier = Modifier
-                                                .padding(5.dp)
-                                                .fillMaxWidth(),
-                                            singleLine = true,
-                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                            keyboardActions = KeyboardActions(onSearch = {
-                                                focusManager.clearFocus()
-                                                sourcePublish.value
-                                                    ?.searchList(searchText, 1, sourceList)
-                                                    ?.subscribeOn(Schedulers.io())
-                                                    ?.observeOn(AndroidSchedulers.mainThread())
-                                                    ?.doOnSubscribe { isSearching = true }
-                                                    ?.onErrorReturnItem(sourceList)
-                                                    ?.subscribeBy {
-                                                        searchPublisher.onNext(it)
-                                                        isSearching = false
-                                                    }
-                                                    ?.addTo(disposable)
-                                            })
-                                        )
                                     }
                                 }
                             ) { p ->
@@ -262,7 +291,7 @@ class AllFragment : BaseFragmentCompose() {
                             ) {
                                 FloatingActionButton(
                                     onClick = { scope.launch { state.animateScrollToItem(0) } },
-                                    backgroundColor = MaterialTheme.colors.primary
+                                    containerColor = androidx.compose.material3.ButtonDefaults.buttonColors().containerColor(enabled = true).value
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowUp,

@@ -157,4 +157,9 @@
     <string name="alternateNames">Alternative Names: %s</string>
 
     <string name="share_item">Share %s</string>
+
+    <string name="selectDate">Select Date to be Notified At</string>
+    <string name="selectTime">Select Time to be Notified At</string>
+    <string name="notifyAtTime">Notify At…</string>
+    <string name="willNotifyAt">Will Notify at %s</string>
 </resources>
