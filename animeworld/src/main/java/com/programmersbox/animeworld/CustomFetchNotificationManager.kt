@@ -184,7 +184,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
         stackBuilder.addNextIntent(resultIntent)
         val resultPendingIntent = stackBuilder.getPendingIntent(
             0,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE
         )
 
         fun getPauseOrResumeAction(downloadNotification: DownloadNotification): NotificationCompat.Action? {
@@ -219,7 +219,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
                     null
                 }
             } ?: return null
-            val pendingPauseIntent = PendingIntent.getBroadcast(context, 1, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val pendingPauseIntent = PendingIntent.getBroadcast(context, 1, pauseIntent, PendingIntent.FLAG_IMMUTABLE)
             return NotificationCompat.Action(icon, text, pendingPauseIntent)
         }
 
@@ -280,7 +280,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
             putExtra(ConstantValues.NOTIFICATION_ID, downloadNotification.notificationId)
         }
 
-        val pendingIntent = PendingIntent.getBroadcast(context, 1, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getBroadcast(context, 1, cancelIntent, PendingIntent.FLAG_IMMUTABLE)
 
         notificationBuilder.addAction(android.R.drawable.ic_delete, "Cancel", pendingIntent)
     }
@@ -305,7 +305,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
                 else -> ACTION_TYPE_INVALID
             }
             intent.putExtra(EXTRA_ACTION_TYPE, action)
-            return PendingIntent.getBroadcast(context, downloadNotification.notificationId + action, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(context, downloadNotification.notificationId + action, intent, PendingIntent.FLAG_IMMUTABLE)
         }
     }
 
@@ -328,7 +328,7 @@ class CustomFetchNotificationManager(context: Context) : FetchNotificationManage
                 else -> ACTION_TYPE_INVALID
             }
             intent.putExtra(EXTRA_ACTION_TYPE, action)
-            return PendingIntent.getBroadcast(context, groupId + action, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(context, groupId + action, intent, PendingIntent.FLAG_IMMUTABLE)
         }
     }
 

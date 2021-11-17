@@ -113,6 +113,8 @@ dependencies {
         transitive = false
     }
 
+    implementation 'com.github.ertugrulkaragoz:SuperForwardView:0.2'
+
     implementation rxkotlin
     implementation rxandroid
     implementation rxbinding

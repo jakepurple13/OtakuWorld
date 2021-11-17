@@ -49,7 +49,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private var currentPos: Long = 0
 
-    private lateinit var player: SimpleExoPlayer
+    private lateinit var player: ExoPlayer
 
     private var locked = false
         set(value) {
@@ -153,6 +153,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             exoBinding.videoLock.toolTipText(R.string.videoPlayerLockUnlock)
         }
 
+        exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
+        exoBinding.forwardThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition + 30000) } }
+
         videoBinding.playerView.setControllerVisibilityListener {
             //exoBinding.videoInfoLayout.animate().setDuration(500).alpha(1f)
             exoBinding.videoInfoLayout.visibility = it
@@ -173,7 +176,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         mScreenWidth = this.resources.displayMetrics.widthPixels
         mScreenHeight = this.resources.displayMetrics.heightPixels
 
-        player = SimpleExoPlayer.Builder(this).build()
+        player = ExoPlayer.Builder(this).build()
 
         player.addListener(object : Player.Listener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
