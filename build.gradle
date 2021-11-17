@@ -73,7 +73,7 @@ buildscript {
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.0"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.2"
-    ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-rc01"
+    ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-rc02"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
     ext.materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"
     ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
