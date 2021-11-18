@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -38,5 +39,7 @@ interface GenericInfo {
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     )
+
+    fun debugMenuItem(context: Context): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
 }

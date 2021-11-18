@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Environment
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
@@ -210,9 +212,11 @@ class GenericManga(val context: Context) : GenericInfo {
     @ExperimentalMaterialApi
     @Composable
     override fun ComposeShimmerItem() {
-        LazyVerticalGrid(cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH)) {
-            items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) }
-        }
+        LazyVerticalGrid(
+            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
     }
 
     @ExperimentalMaterialApi
@@ -227,6 +231,8 @@ class GenericManga(val context: Context) : GenericInfo {
     ) {
         LazyVerticalGrid(
             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             state = listState,
         ) {
             items(list) {

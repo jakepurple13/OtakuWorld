@@ -60,6 +60,14 @@
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out" />
+
+        <action
+            android:id="@+id/action_settingsFragment_to_debugFragment"
+            app:destination="@id/debugFragment"
+            app:enterAnim="@anim/slide_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out" />
     </fragment>
     <fragment
         android:id="@+id/favoriteFragment"
@@ -134,4 +142,8 @@
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out" />
     </fragment>
+    <dialog
+        android:id="@+id/debugFragment"
+        android:name="com.programmersbox.uiviews.DebugFragment"
+        android:label="DebugFragment" />
 </navigation>

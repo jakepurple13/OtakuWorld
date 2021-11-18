@@ -83,6 +83,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<PreferenceCategory>("generalCategory")?.let { settingsDsl.generalSettings(this, it) }
         findPreference<PreferenceCategory>("viewCategory")?.let { settingsDsl.viewSettings(this, it) }
         findPreference<PreferenceCategory>("playCategory")?.let { settingsDsl.playSettings(this, it) }
+
+        findPreference<Preference>("debugMenu")?.let { p ->
+            p.isVisible = BuildConfig.DEBUG
+            p.setOnPreferenceClickListener {
+                findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToDebugFragment())
+                true
+            }
+        }
     }
 
     private fun accountPreferences() {
@@ -549,7 +557,7 @@ class DownloadApk(val context: Context, private val downloadUrl: String, private
             }
             fos.close()
             inputStream.close()
-            openNewVersion(path)
+            if (BuildConfig.DEBUG) outputFile.delete() else openNewVersion(path)
             flag = true
         } catch (e: MalformedURLException) {
             Loged.e("Update Error: " + e.message, "DownloadApk")

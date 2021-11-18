@@ -150,7 +150,7 @@ class FavoriteFragment : Fragment() {
                     ) {
                         SmallTopAppBar(
                             scrollBehavior = scrollBehavior,
-                            navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                            navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
                             title = { Text(stringResource(R.string.viewFavoritesMenu)) },
                             actions = {
 
@@ -313,6 +313,8 @@ class FavoriteFragment : Fragment() {
                         LazyVerticalGrid(
                             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                             contentPadding = p,
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
                             state = rememberLazyListState()
                         ) {
                             items(

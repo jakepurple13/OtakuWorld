@@ -70,6 +70,11 @@
         app:title="@string/view_menu_category_title">
 
         <Preference
+            app:isPreferenceVisible="false"
+            app:title="Debug Menu"
+            app:key="debugMenu" />
+
+        <Preference
             app:icon="@drawable/ic_baseline_star_24"
             app:key="view_favorites"
             app:title="@string/viewFavoritesMenu" />

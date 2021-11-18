@@ -119,7 +119,7 @@ class HistoryFragment : Fragment() {
             topBar = {
                 SmallTopAppBar(
                     scrollBehavior = scrollBehavior,
-                    navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                    navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
                     title = { Text(stringResource(R.string.history)) },
                     actions = {
 
