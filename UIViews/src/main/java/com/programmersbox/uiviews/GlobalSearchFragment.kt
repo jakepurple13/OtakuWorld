@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
@@ -144,6 +145,17 @@ class GlobalSearchFragment : Fragment() {
                             scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
                             toolbar = {
                                 Column(modifier = Modifier.padding(5.dp)) {
+                                    SmallTopAppBar(
+                                        navigationIcon = {
+                                            IconButton(onClick = { findNavController().popBackStack() }) {
+                                                Icon(
+                                                    Icons.Default.ArrowBack,
+                                                    null
+                                                )
+                                            }
+                                        },
+                                        title = { Text(stringResource(R.string.global_search)) }
+                                    )
                                     MdcTheme {
                                         AutoCompleteBox(
                                             items = history.asAutoCompleteEntities { _, _ -> true },
@@ -256,6 +268,8 @@ class GlobalSearchFragment : Fragment() {
                                         ) { p ->
                                             LazyVerticalGrid(
                                                 cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp),
                                                 contentPadding = p
                                             ) {
                                                 items(s.data) { m ->
@@ -345,9 +359,10 @@ class GlobalSearchFragment : Fragment() {
                                                                     modifier = Modifier.align(Alignment.CenterEnd)
                                                                 ) { Icon(Icons.Default.ChevronRight, null) }
                                                             }
-                                                            LazyRow {
+                                                            LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                                                 items(i.data) { m ->
                                                                     SearchCoverCard(
+                                                                        modifier = Modifier.padding(bottom = 4.dp),
                                                                         model = m,
                                                                         placeHolder = mainLogo,
                                                                         onLongPress = { c ->
@@ -421,6 +436,7 @@ class GlobalSearchFragment : Fragment() {
     @ExperimentalMaterialApi
     @Composable
     fun SearchCoverCard(
+        modifier: Modifier = Modifier,
         model: ItemModel,
         placeHolder: Drawable?,
         error: Drawable? = placeHolder,
@@ -429,12 +445,12 @@ class GlobalSearchFragment : Fragment() {
     ) {
         Surface(
             modifier = Modifier
-                .padding(5.dp)
                 .size(
                     ComposableUtils.IMAGE_WIDTH,
                     ComposableUtils.IMAGE_HEIGHT
                 )
-                .combineClickableWithIndication(onLongPress, onClick),
+                .combineClickableWithIndication(onLongPress, onClick)
+                .then(modifier),
             tonalElevation = 5.dp,
             shape = MaterialTheme.shapes.medium
         ) {

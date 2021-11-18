@@ -224,6 +224,7 @@ internal class AnimatedLazyListViewModel<T>(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 internal fun <T> animatedLazyListScope(
     currentItems: List<AnimatedItemWA<T>>,
     initialEnter: EnterTransition,
@@ -264,13 +265,15 @@ internal fun <T> animatedLazyListScope(
             }
         ) {
             Box(
-                modifier = Modifier.let {
-                    if (isVertical) {
-                        it.padding(bottom = spacing)
-                    } else {
-                        it.padding(end = spacing)
+                modifier = Modifier
+                    .let {
+                        if (isVertical) {
+                            it.padding(bottom = spacing)
+                        } else {
+                            it.padding(end = spacing)
+                        }
                     }
-                }
+                    .animateItemPlacement()
             ) {
                 item.value.composable()
             }

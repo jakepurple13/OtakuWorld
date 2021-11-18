@@ -17,7 +17,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
     HDM(Hdm),
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
-    VIDSTREAMING(Vidstreaming),
+    VIDSTREAMING(Vidstreaming), VIDEMBED(VidEmbed),
 
     PUTLOCKERTV(PutlockerTV), PUTLOCKERANIME(PutlockerAnime), PUTLOCKERCARTOONS(PutlockerCartoons), PUTLOCKERMOVIES(PutlockerMovies),
 
@@ -34,6 +34,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
         val searchSources
             get() = listOf(
                 VIDSTREAMING,
+                VIDEMBED,
                 PUTLOCKERTV,
                 //WCO_SUBBED,
                 WCOSTREAM,

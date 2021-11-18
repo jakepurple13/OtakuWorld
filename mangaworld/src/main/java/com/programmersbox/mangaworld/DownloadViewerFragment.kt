@@ -17,9 +17,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
@@ -120,7 +120,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                     scrollBehavior = scrollBehavior,
                     title = { Text(stringResource(R.string.downloaded_chapters)) },
                     navigationIcon = {
-                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) }
+                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
                     }
                 )
             }

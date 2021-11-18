@@ -14,10 +14,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ClearAll
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
@@ -74,7 +71,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -87,12 +83,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val notificationManager by lazy { requireContext().notificationManager }
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
-    private val dateFormat by lazy {
-        SimpleDateFormat(
-            "${(DateFormat.getDateFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()}",
-            Locale.getDefault()
-        )
-    }
 
     @ExperimentalMaterial3Api
     @ExperimentalFoundationApi
@@ -166,7 +156,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                             },
                             navigationIcon = {
-                                IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) }
+                                IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
                             }
                         )
                     },
@@ -493,7 +483,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                                                 Toast.makeText(
                                                     requireContext(),
-                                                    getString(R.string.willNotifyAt, dateFormat.format(c.timeInMillis)),
+                                                    getString(
+                                                        R.string.willNotifyAt,
+                                                        requireContext().getSystemDateTimeFormat().format(c.timeInMillis)
+                                                    ),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             }

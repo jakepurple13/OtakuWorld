@@ -120,7 +120,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 topBar = {
                     SmallTopAppBar(
                         scrollBehavior = scrollBehavior,
-                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
                         title = { Text(stringResource(R.string.downloaded_videos)) },
                         actions = {
                             AndroidView(

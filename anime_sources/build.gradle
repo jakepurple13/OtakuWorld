@@ -49,6 +49,7 @@ dependencies {
     implementation Deps.gsonutils
     implementation Deps.helpfulutils
     implementation Deps.rxutils
+    debugImplementation Deps.loggingutils
 
     implementation rxkotlin
     implementation rxandroid

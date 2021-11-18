@@ -4,7 +4,8 @@ import androidx.annotation.WorkerThread
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.toJsoup
-import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.anime_sources.utilities.extractors
+import com.programmersbox.anime_sources.utilities.fixUrl
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
@@ -18,13 +19,37 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import org.jsoup.nodes.Document
 
-object Vidstreaming : ShowApi(
-    baseUrl = "https://vidstreaming.io",
-    allPath = "popular",
-    recentPath = ""
+object Vidstreaming : VidstreamingTemplate(
+    "https://vidstreaming.io",
+    "popular",
+    ""
+) {
+    override val serviceName: String get() = "VIDSTREAMING"
+    override val searchUrl: String get() = "https://streamani.net"
+}
+
+object VidEmbed : VidstreamingTemplate(
+    "https://vidembed.cc",
+    "movies",
+    "series"
+) {
+    override val serviceName: String get() = "VIDEMBED"
+    override val searchUrl: String get() = baseUrl
+}
+
+abstract class VidstreamingTemplate(
+    baseUrl: String,
+    allPath: String,
+    recentPath: String
+) : ShowApi(
+    baseUrl = baseUrl,
+    allPath = allPath,
+    recentPath = recentPath
 ) {
 
-    override val serviceName: String get() = "VIDSTREAMING"
+    //override val serviceName: String get() = "VIDSTREAMING"
+
+    abstract val searchUrl: String
 
     override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create {
         doc
@@ -99,7 +124,7 @@ object Vidstreaming : ShowApi(
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
         return if (searchText.isEmpty()) super.searchList(searchText, page, list)
         else Single.create<List<ItemModel>> {
-            "https://streamani.net/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
+            "$searchUrl/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
                 .select("li.video-block")
                 .fastMap {
                     ItemModel(
@@ -117,7 +142,7 @@ object Vidstreaming : ShowApi(
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> {
-        return Single.create<List<Storage>> {
+        return Single.create<List<Storage>> { emitter ->
 
             //val e = "https://vidstreaming.io/videos/tensei-shitara-slime-datta-ken-episode-24-9".toJsoup()
             //println(e)
@@ -125,25 +150,33 @@ object Vidstreaming : ShowApi(
             val v = chapterModel.url.toJsoup().select("div.play-video").select("iframe").attr("abs:src")
 
             val s = v.toJsoup()
-            val links = s.select("li.linkserver")
 
-            val xstream = links.find { it.text() == "Xstreamcdn" }?.attr("abs:data-video")
-
-            val xApi = "https://fcdn.stream/api/source/${xstream?.split("/")?.last()}"
-            val api = getApiPost(xApi).fromJson<Xstream>()
-            val file = api?.data.orEmpty()
-                .fastMap { i ->
-                    Storage(
-                        link = i.file,
-                        source = chapterModel.url,
-                        quality = i.label,
-                        sub = "Yes"
-                    )
+            val servers = s.select(".list-server-items > .linkserver").mapNotNull { li ->
+                if (!li?.attr("data-video").isNullOrEmpty()) {
+                    li.text() to fixUrl(li.attr("data-video"), baseUrl)
+                } else {
+                    null
                 }
-            //?.firstOrNull()
-            //println(getApi(file!!))
+            }
 
-            it.onSuccess(file)
+            val i = servers
+                .map { l ->
+                    //println(l)
+                    extractors.flatMap { e ->
+                        //println(e.name)
+                        if (l.second.startsWith(e.mainUrl)) {
+                            //println(url + "\t" + e.name)
+                            e.getUrl(l.second)
+                        } else emptyList()
+                    }
+                }
+                .filter { it.isNotEmpty() }
+                .flatten()
+                .distinctBy { it.link }
+
+            //Loged.i(i)
+
+            emitter.onSuccess(i)
         }
             .onErrorReturnItem(emptyList())
     }

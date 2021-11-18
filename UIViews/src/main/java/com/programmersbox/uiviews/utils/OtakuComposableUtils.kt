@@ -271,7 +271,6 @@ fun M3CoverCard(
 
     androidx.compose.material3.Surface(
         modifier = Modifier
-            .padding(4.dp)
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
@@ -366,7 +365,6 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
 
     androidx.compose.material3.Surface(
         modifier = Modifier
-            .padding(5.dp)
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
@@ -444,7 +442,8 @@ fun M3OtakuBannerBox(
             androidx.compose.material3.Surface(
                 modifier = Modifier.align(Alignment.TopCenter),
                 shape = MaterialTheme.shapes.medium,
-                tonalElevation = 5.dp
+                tonalElevation = 5.dp,
+                shadowElevation = 10.dp
             ) {
                 ListItem(
                     icon = {

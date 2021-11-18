@@ -1,14 +1,21 @@
 package com.programmersbox.uiviews.utils
 
+import android.annotation.SuppressLint
 import android.app.Dialog
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.*
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Parcel
 import android.text.Spannable
 import android.text.Spanned
+import android.text.format.DateFormat
 import android.text.method.TransformationMethod
 import android.text.style.URLSpan
 import android.text.util.Linkify
@@ -21,6 +28,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -34,12 +42,10 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
-import com.programmersbox.helpfulutils.Battery
-import com.programmersbox.helpfulutils.BatteryHealth
-import com.programmersbox.helpfulutils.runOnUIThread
-import com.programmersbox.helpfulutils.sharedPrefDelegate
+import com.programmersbox.helpfulutils.*
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.rxutils.toLatestFlowable
+import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import io.reactivex.Observable
@@ -52,7 +58,12 @@ import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.rx2.asObservable
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.io.File
 import java.lang.reflect.Type
+import java.text.SimpleDateFormat
+import java.util.*
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
 
@@ -294,3 +305,78 @@ class BatteryInformation(val context: Context) {
 }
 
 fun Context.showErrorToast() = runOnUIThread { Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
+
+fun Context.getSystemDateTimeFormat() = SimpleDateFormat(
+    "${(DateFormat.getDateFormat(this) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(this) as SimpleDateFormat).toLocalizedPattern()}",
+    Locale.getDefault()
+)
+
+
+class DownloadUpdate(private val context: Context, private val packageName: String) : KoinComponent {
+
+    val genericInfo: GenericInfo by inject()
+
+    fun downloadUpdate(update: AppUpdate.AppUpdates): Boolean {
+        val downloadManager = context.downloadManager
+        val request = DownloadManager.Request(Uri.parse(update.downloadUrl(genericInfo.apkString)))
+            .setMimeType("application/vnd.android.package-archive")
+            .setTitle(context.getString(R.string.app_name))
+            .setDestinationInExternalPublicDir(
+                Environment.DIRECTORY_DOWNLOADS,
+                update.downloadUrl(genericInfo.apkString).split("/").lastOrNull() ?: "update_apk"
+            )
+            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+            .setAllowedOverRoaming(true)
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+
+        val id = try {
+            downloadManager.enqueue(request)
+        } catch (e: Exception) {
+            -1
+        }
+        if (id == -1L) return true
+        context.registerReceiver(
+            object : BroadcastReceiver() {
+                @SuppressLint("Range")
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    try {
+                        val downloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, id) ?: id
+
+                        val query = DownloadManager.Query()
+                        query.setFilterById(downloadId)
+                        val c = downloadManager.query(query)
+
+                        if (c.moveToFirst()) {
+                            val columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                            if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
+                                c.getColumnIndex(DownloadManager.COLUMN_MEDIAPROVIDER_URI)
+                                val uri = Uri.parse(c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
+                                openApk(this@DownloadUpdate.context, uri)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        )
+        return true
+    }
+
+    private fun openApk(context: Context, uri: Uri) {
+        uri.path?.let {
+            val contentUri = FileProvider.getUriForFile(
+                context,
+                "$packageName.provider",
+                File(it)
+            )
+            val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                data = contentUri
+            }
+            context.startActivity(installIntent)
+        }
+    }
+}

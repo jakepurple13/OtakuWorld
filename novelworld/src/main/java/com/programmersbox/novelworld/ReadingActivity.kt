@@ -452,7 +452,7 @@ class ReadingActivity : ComponentActivity() {
                                         }
                                     ) { targetTime ->
                                         Text(
-                                            DateFormat.format("HH:mm a", targetTime).toString(),
+                                            DateFormat.getTimeFormat(LocalContext.current).format(targetTime).toString(),
                                             style = M3MaterialTheme.typography.bodyLarge,
                                             modifier = Modifier.padding(4.dp)
                                         )
