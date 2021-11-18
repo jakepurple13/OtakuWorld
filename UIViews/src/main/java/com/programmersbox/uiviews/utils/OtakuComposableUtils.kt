@@ -442,7 +442,8 @@ fun M3OtakuBannerBox(
             androidx.compose.material3.Surface(
                 modifier = Modifier.align(Alignment.TopCenter),
                 shape = MaterialTheme.shapes.medium,
-                tonalElevation = 5.dp
+                tonalElevation = 5.dp,
+                shadowElevation = 10.dp
             ) {
                 ListItem(
                     icon = {

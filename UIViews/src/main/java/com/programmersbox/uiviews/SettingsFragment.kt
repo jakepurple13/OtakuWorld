@@ -1,18 +1,11 @@
 package com.programmersbox.uiviews
 
 import android.Manifest
-import android.content.Context
-import android.content.Intent
 import android.graphics.drawable.Drawable
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.webkit.URLUtil
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.FileProvider
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -31,7 +24,6 @@ import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
-import com.programmersbox.loggingutils.Loged
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseAuthentication
@@ -48,17 +40,9 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import org.koin.android.ext.android.inject
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
-import java.net.URL
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.CoroutineContext
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -344,11 +328,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                                             a.let(genericInfo.apkString).toString()
                                         )
                                         if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                        DownloadApk(
-                                            requireContext(),
-                                            a.downloadUrl(genericInfo.apkString),
-                                            a.let(genericInfo.apkString).toString()
-                                        ).startDownloadingApk()
+                                        DownloadUpdate(requireContext(), requireContext().packageName).downloadUpdate(a)
                                     }
                             }
                         }
@@ -491,114 +471,6 @@ class SettingsDsl {
                 popEnter = R.anim.fade_in
                 popExit = R.anim.slide_out
             }
-        }
-    }
-}
-
-class DownloadApk(val context: Context, private val downloadUrl: String, private val outputName: String) : CoroutineScope, KoinComponent {
-    private var job: Job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job // to run code in Main(UI) Thread
-
-    private val logo: MainLogo by inject()
-
-    // call this method to cancel a coroutine when you don't need it anymore,
-    // e.g. when user closes the screen
-    fun cancel() {
-        job.cancel()
-    }
-
-    fun startDownloadingApk() {
-        if (URLUtil.isValidUrl(downloadUrl)) execute()
-    }
-
-    private lateinit var bar: AlertDialog
-
-    private fun execute() = launch {
-        onPreExecute()
-        val result = doInBackground() // runs in background thread without blocking the Main Thread
-        onPostExecute(result)
-    }
-
-    private suspend fun onProgressUpdate(vararg values: Int?) = withContext(Dispatchers.Main) {
-        values[0]?.let {
-            bar.setMessage(if (it > 99) context.getString(R.string.finishing_dots) else context.getString(R.string.downloading_dots, it))
-        }
-    }
-
-    @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun doInBackground(): Boolean = withContext(Dispatchers.IO) { // to run code in Background Thread
-        // do async work
-        var flag = false
-
-        try {
-            val url = URL(downloadUrl)
-            val c = url.openConnection() as HttpURLConnection
-            c.requestMethod = "GET"
-            c.connect()
-            val path = Environment.getExternalStorageDirectory().toString() + "/Download/"
-            val file = File(path)
-            file.mkdirs()
-            val outputFile = File(file, outputName)
-
-            if (outputFile.exists()) outputFile.delete()
-
-            val fos = FileOutputStream(outputFile)
-            val inputStream = c.inputStream
-            val totalSize = c.contentLength.toFloat() //size of apk
-
-            val buffer = ByteArray(1024)
-            var len1: Int
-            var downloaded = 0f
-            while (inputStream.read(buffer).also { len1 = it } != -1) {
-                fos.write(buffer, 0, len1)
-                downloaded += len1
-                onProgressUpdate((downloaded * 100 / totalSize).toInt())
-            }
-            fos.close()
-            inputStream.close()
-            if (BuildConfig.DEBUG) outputFile.delete() else openNewVersion(path)
-            flag = true
-        } catch (e: MalformedURLException) {
-            Loged.e("Update Error: " + e.message, "DownloadApk")
-            flag = false
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        return@withContext flag
-    }
-
-    // Runs on the Main(UI) Thread
-    private fun onPreExecute() {
-        // show progress
-        bar = MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.updating_dots)
-            .setMessage(R.string.downloading_dots_no_percent)
-            .setCancelable(false)
-            .setIcon(logo.logoId)
-            .show()
-    }
-
-    // Runs on the Main(UI) Thread
-    private fun onPostExecute(result: Boolean?) {
-        // hide progress
-        bar.dismiss()
-        Toast.makeText(context, if (result == true) R.string.finishedDownloading else R.string.errorTryAgain, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun openNewVersion(location: String) {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.setDataAndType(getUriFromFile(location), "application/vnd.android.package-archive")
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        context.startActivity(intent)
-    }
-
-    private fun getUriFromFile(location: String): Uri {
-        return if (Build.VERSION.SDK_INT < 24) {
-            Uri.fromFile(File(location + outputName))
-        } else {
-            FileProvider.getUriForFile(context, context.packageName + ".provider", File(location + outputName))
         }
     }
 }
