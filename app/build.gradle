@@ -81,5 +81,5 @@ dependencies {
     implementation "androidx.window:window:1.0.0-beta03"
 
     // For RxJava2 integration
-    implementation "androidx.window:window-rxjava2:1.0.0-beta03"
+    implementation "androidx.window:window-rxjava2:1.0.0-beta04"
 }
