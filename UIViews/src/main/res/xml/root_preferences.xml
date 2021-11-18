@@ -70,6 +70,7 @@
         app:title="@string/view_menu_category_title">
 
         <Preference
+            app:icon="@drawable/ic_baseline_android_24"
             app:isPreferenceVisible="false"
             app:title="Debug Menu"
             app:key="debugMenu" />

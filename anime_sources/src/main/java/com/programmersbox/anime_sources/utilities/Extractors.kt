@@ -6,6 +6,7 @@ import com.programmersbox.gsonutils.header
 import com.programmersbox.models.Storage
 import org.jsoup.Jsoup
 import java.lang.Thread.sleep
+import java.net.URI
 
 val extractors: List<Extractor> = listOf(
     XStreamCdn,
@@ -21,6 +22,7 @@ interface Extractor {
     val name: String
     val mainUrl: String
     fun getUrl(url: String): List<Storage>
+    fun getExtractorUrl(id: String): String = ""
 }
 
 object XStreamCdn : Extractor {
@@ -39,7 +41,7 @@ object XStreamCdn : Extractor {
         val data: List<ResponseData>?
     )
 
-    fun getExtractorUrl(id: String): String = "$mainUrl/api/source/$id"
+    override fun getExtractorUrl(id: String): String = "$mainUrl/api/source/$id"
 
     private fun getQuality(string: String) = when (string) {
         "360p" -> Qualities.P480
@@ -191,7 +193,7 @@ object MixDrop : Extractor {
     private val srcRegex = Regex("""wurl.*?=.*?"(.*?)";""")
     val requiresReferer = false
 
-    fun getExtractorUrl(id: String): String = "$mainUrl/e/$id"
+    override fun getExtractorUrl(id: String): String = "$mainUrl/e/$id"
 
     fun httpsify(url: String): String = if (url.startsWith("//")) "https:$url" else url
 
@@ -232,7 +234,7 @@ open class DoodLaExtractor : Extractor {
         get() = "https://dood.la"
     val requiresReferer: Boolean get() = false
 
-    fun getExtractorUrl(id: String): String {
+    override fun getExtractorUrl(id: String): String {
         return "$mainUrl/d/$id"
     }
 
@@ -313,5 +315,173 @@ object WcoStreamExtractor : Extractor {
         }
             .orEmpty()
             .flatten()
+    }
+}
+
+object MultiQuality : Extractor {
+    override val name: String = "MultiQuality"
+    override val mainUrl: String = "https://gogo-play.net"
+    private val sourceRegex = Regex("""file:\s*['"](.*?)['"],label:\s*['"](.*?)['"]""")
+    private val m3u8Regex = Regex(""".*?(\d*).m3u8""")
+    private val urlRegex = Regex("""(.*?)([^/]+$)""")
+    val requiresReferer = false
+
+    override fun getExtractorUrl(id: String): String {
+        return "$mainUrl/loadserver.php?id=$id"
+    }
+
+    override fun getUrl(url: String): List<Storage> {
+        val extractedLinksList: MutableList<Storage> = mutableListOf()
+        with(get(url)) {
+            sourceRegex.findAll(this.text).forEach { sourceMatch ->
+                val extractedUrl = sourceMatch.groupValues[1]
+                // Trusting this isn't mp4, may fuck up stuff
+                if (URI(extractedUrl).path.endsWith(".m3u8")) {
+                    with(get(extractedUrl)) {
+                        m3u8Regex.findAll(this.text).forEach { match ->
+                            extractedLinksList.add(
+                                Storage(
+                                    link = urlRegex.find(this.url)!!.groupValues[1] + match.groupValues[0],
+                                    source = url,
+                                    filename = name,
+                                    quality = getQualityFromName(match.groupValues[1]).name,
+                                    sub = getQualityFromName(match.groupValues[1]).value.toString(),
+                                )
+                            )
+                            /*extractedLinksList.add(
+                                ExtractorLink(
+                                    name,
+                                    "$name ${match.groupValues[1]}p",
+                                    urlRegex.find(this.url)!!.groupValues[1] + match.groupValues[0],
+                                    url,
+                                    getQualityFromName(match.groupValues[1]),
+                                    isM3u8 = true
+                                )
+                            )*/
+                        }
+
+                    }
+                } else if (extractedUrl.endsWith(".mp4")) {
+                    extractedLinksList.add(
+                        Storage(
+                            link = extractedUrl,
+                            source = url,
+                            filename = name,
+                            quality = "720",
+                            sub = Qualities.Unknown.value.toString(),
+                        )
+                    )
+                    /*extractedLinksList.add(
+                        ExtractorLink(
+                            name,
+                            "$name ${sourceMatch.groupValues[2]}",
+                            extractedUrl,
+                            url.replace(" ", "%20"),
+                            Qualities.Unknown.value,
+                        )
+                    )*/
+                }
+            }
+            return extractedLinksList
+        }
+    }
+}
+
+class Vidstream(val mainUrl: String) {
+    val name: String = "Vidstream"
+
+    private fun getExtractorUrl(id: String): String {
+        return "$mainUrl/streaming.php?id=$id"
+    }
+
+    private fun getDownloadUrl(id: String): String {
+        return "$mainUrl/download?id=$id"
+    }
+
+    private val normalApis: List<Extractor> = listOf(MultiQuality)
+
+    // https://gogo-stream.com/streaming.php?id=MTE3NDg5
+    fun getUrl(id: String, sourceUrl: String): List<Storage> {
+        try {
+            val links = mutableListOf<Storage>()
+            links.addAll(
+                normalApis.flatMap { api ->
+                    val url = api.getExtractorUrl(id)
+                    api.getUrl(url)
+                }
+            )
+            val extractorUrl = getExtractorUrl(id)
+
+            val link = getDownloadUrl(id)
+            println("Generated vidstream download link: $link")
+            val page = get(link, referer = extractorUrl)
+
+            val pageDoc = Jsoup.parse(page.text)
+            val qualityRegex = Regex("(\\d+)P")
+
+            links.addAll(
+                pageDoc.select(".dowload > a[download]").map {
+                    val qual = if (it.text().contains("HDP")) "1080"
+                    else qualityRegex.find(it.text())?.destructured?.component1().toString()
+
+                    Storage(
+                        link = page.url,
+                        source = sourceUrl,
+                        filename = id,
+                        quality = qual,
+                        sub = Qualities.Unknown.value.toString(),
+                    )
+
+                    /*callback.invoke(
+                        ExtractorLink(
+                            this.name,
+                            if (qual == "null") this.name else "${this.name} - " + qual + "p",
+                            it.attr("href"),
+                            page.url,
+                            getQualityFromName(qual),
+                            it.attr("href").contains(".m3u8")
+                        )
+                    )*/
+                }
+            )
+
+            /*with(get(extractorUrl)) {
+                val document = Jsoup.parse(this.text)
+                val primaryLinks = document.select("ul.list-server-items > li.linkserver")
+                println(primaryLinks)
+                //val extractedLinksList: MutableList<ExtractorLink> = mutableListOf()
+
+                // All vidstream links passed to extractors
+                *//*links.addAll(
+                    primaryLinks.distinctBy { it.attr("data-video") }.map { element ->
+                        val link = element.attr("data-video")
+                        //val name = element.text()
+
+                        // Matches vidstream links with extractors
+                        *//**//*Storage(
+                            link = page.url,
+                            source = sourceUrl,
+                            filename = id,
+                            quality = qual,
+                            sub = Qualities.Unknown.value.toString(),
+                        )*//**//*
+                        *//**//*extractorApis.filter { !it.requiresReferer || !isCasting }.pmap { api ->
+                            if (link.startsWith(api.mainUrl)) {
+                                val extractedLinks = api.getSafeUrl(link, extractorUrl)
+                                if (extractedLinks?.isNotEmpty() == true) {
+                                    extractedLinks.forEach {
+                                        callback.invoke(it)
+                                    }
+                                }
+                            }
+                        }*//**//*
+                    }
+                )*//*
+                return links
+            }*/
+            return links
+        } catch (e: Exception) {
+            return emptyList()
+        }
     }
 }

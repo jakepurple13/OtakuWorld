@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Environment
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
@@ -230,6 +231,7 @@ class GenericManga(val context: Context) : GenericInfo {
         onClick: (ItemModel) -> Unit
     ) {
         LazyVerticalGrid(
+            modifier = Modifier.padding(vertical = 4.dp),
             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),

@@ -569,3 +569,19 @@ fun postRequestCreator(
         .post(getData(data))
         .build()
 }
+
+fun fixUrl(url: String, baseUrl: String): String {
+    if (url.startsWith("http")) {
+        return url
+    }
+
+    val startsWithNoHttp = url.startsWith("//")
+    if (startsWithNoHttp) {
+        return "https:$url"
+    } else {
+        if (url.startsWith('/')) {
+            return baseUrl + url
+        }
+        return "${baseUrl}/$url"
+    }
+}

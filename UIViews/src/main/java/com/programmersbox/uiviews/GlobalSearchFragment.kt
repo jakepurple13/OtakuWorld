@@ -359,9 +359,10 @@ class GlobalSearchFragment : Fragment() {
                                                                     modifier = Modifier.align(Alignment.CenterEnd)
                                                                 ) { Icon(Icons.Default.ChevronRight, null) }
                                                             }
-                                                            LazyRow {
+                                                            LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                                                 items(i.data) { m ->
                                                                     SearchCoverCard(
+                                                                        modifier = Modifier.padding(bottom = 4.dp),
                                                                         model = m,
                                                                         placeHolder = mainLogo,
                                                                         onLongPress = { c ->
@@ -435,6 +436,7 @@ class GlobalSearchFragment : Fragment() {
     @ExperimentalMaterialApi
     @Composable
     fun SearchCoverCard(
+        modifier: Modifier = Modifier,
         model: ItemModel,
         placeHolder: Drawable?,
         error: Drawable? = placeHolder,
@@ -447,7 +449,8 @@ class GlobalSearchFragment : Fragment() {
                     ComposableUtils.IMAGE_WIDTH,
                     ComposableUtils.IMAGE_HEIGHT
                 )
-                .combineClickableWithIndication(onLongPress, onClick),
+                .combineClickableWithIndication(onLongPress, onClick)
+                .then(modifier),
             tonalElevation = 5.dp,
             shape = MaterialTheme.shapes.medium
         ) {

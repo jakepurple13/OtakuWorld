@@ -30,7 +30,6 @@ android {
 }
 
 dependencies {
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation androidCore
     implementation appCompat
@@ -43,6 +42,7 @@ dependencies {
     implementation Deps.gsonutils
     implementation Deps.helpfulutils
     implementation Deps.rxutils
+    debugImplementation Deps.loggingutils
     implementation gson
 
     implementation jsoup
