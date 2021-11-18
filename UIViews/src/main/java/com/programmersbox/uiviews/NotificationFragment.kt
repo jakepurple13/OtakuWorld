@@ -74,7 +74,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -87,12 +86,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val notificationManager by lazy { requireContext().notificationManager }
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
-    private val dateFormat by lazy {
-        SimpleDateFormat(
-            "${(DateFormat.getDateFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()}",
-            Locale.getDefault()
-        )
-    }
 
     @ExperimentalMaterial3Api
     @ExperimentalFoundationApi
@@ -493,7 +486,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                                                 Toast.makeText(
                                                     requireContext(),
-                                                    getString(R.string.willNotifyAt, dateFormat.format(c.timeInMillis)),
+                                                    getString(
+                                                        R.string.willNotifyAt,
+                                                        requireContext().getSystemDateTimeFormat().format(c.timeInMillis)
+                                                    ),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             }

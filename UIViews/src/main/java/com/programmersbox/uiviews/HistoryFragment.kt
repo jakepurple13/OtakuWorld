@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -55,7 +54,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -71,13 +69,6 @@ class HistoryFragment : Fragment() {
     private val info by inject<GenericInfo>()
     private val logo: MainLogo by inject()
     private val disposable = CompositeDisposable()
-
-    private val format by lazy {
-        SimpleDateFormat(
-            "${(DateFormat.getDateFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()}",
-            Locale.getDefault()
-        )
-    }
 
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
@@ -283,7 +274,7 @@ class HistoryFragment : Fragment() {
                 ListItem(
                     text = { Text(item.title) },
                     overlineText = { Text(item.source) },
-                    secondaryText = { Text(format.format(item.timestamp)) },
+                    secondaryText = { Text(requireContext().getSystemDateTimeFormat().format(item.timestamp)) },
                     icon = {
                         Surface(shape = MaterialTheme.shapes.medium) {
                             GlideImage(

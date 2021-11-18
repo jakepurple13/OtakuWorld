@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.text.format.DateFormat
 import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -57,7 +56,6 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
@@ -69,13 +67,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private val genericInfo: GenericInfo by inject()
 
     private val logo: MainLogo by inject()
-
-    private val format by lazy {
-        SimpleDateFormat(
-            "${(DateFormat.getDateFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(requireContext()) as SimpleDateFormat).toLocalizedPattern()}",
-            Locale.getDefault()
-        )
-    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -370,16 +361,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             listOfNotNull(
                 requireContext().lastUpdateCheck
-                    ?.let { "Start: ${format.format(it)}" },
+                    ?.let { "Start: ${requireContext().getSystemDateTimeFormat().format(it)}" },
                 requireContext().lastUpdateCheckEnd
-                    ?.let { "End: ${format.format(it)}" }
+                    ?.let { "End: ${requireContext().getSystemDateTimeFormat().format(it)}" }
             )
                 .joinToString("\n")
                 .let { s.summary = it }
 
             Observables.combineLatest(
-                updateCheckPublish.map { "Start: ${format.format(it)}" },
-                updateCheckPublishEnd.map { "End: ${format.format(it)}" }
+                updateCheckPublish.map { "Start: ${requireContext().getSystemDateTimeFormat().format(it)}" },
+                updateCheckPublishEnd.map { "End: ${requireContext().getSystemDateTimeFormat().format(it)}" }
             )
                 .map { "${it.first}\n${it.second}" }
                 .subscribeOn(Schedulers.io())

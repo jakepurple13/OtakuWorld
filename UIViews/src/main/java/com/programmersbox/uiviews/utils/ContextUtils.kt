@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Parcel
 import android.text.Spannable
 import android.text.Spanned
+import android.text.format.DateFormat
 import android.text.method.TransformationMethod
 import android.text.style.URLSpan
 import android.text.util.Linkify
@@ -53,6 +54,8 @@ import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.rx2.asObservable
 import java.lang.reflect.Type
+import java.text.SimpleDateFormat
+import java.util.*
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
 
@@ -294,3 +297,8 @@ class BatteryInformation(val context: Context) {
 }
 
 fun Context.showErrorToast() = runOnUIThread { Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
+
+fun Context.getSystemDateTimeFormat() = SimpleDateFormat(
+    "${(DateFormat.getDateFormat(this) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(this) as SimpleDateFormat).toLocalizedPattern()}",
+    Locale.getDefault()
+)

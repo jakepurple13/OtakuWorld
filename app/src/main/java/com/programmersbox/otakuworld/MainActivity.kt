@@ -2,7 +2,6 @@ package com.programmersbox.otakuworld
 
 import android.os.Build
 import android.os.Bundle
-import android.text.format.DateFormat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
@@ -14,6 +13,7 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
@@ -120,6 +120,22 @@ class MainActivity : ComponentActivity() {
 
             androidx.compose.material3.MaterialTheme(colorScheme = colorScheme) {
 
+                var list by remember { mutableStateOf(listOf("A", "B", "C")) }
+                LazyColumn {
+                    item {
+                        androidx.compose.material3.Button(onClick = { list = list.shuffled() }) {
+                            androidx.compose.material3.Text("Shuffle")
+                        }
+                    }
+                    items(list, key = { it }) {
+                        Text(
+                            "Item $it",
+                            Modifier.animateItemPlacement(),
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+
                 /*var showBanner by remember { mutableStateOf(false) }
 
                 BannerBox(
@@ -148,7 +164,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )*/
 
-                var showInfo by remember { mutableStateOf(false) }
+                /*var showInfo by remember { mutableStateOf(false) }
 
                 val scrollBehavior = remember {
                     TopAppBarDefaults.enterAlwaysScrollBehavior { !showInfo }
@@ -212,7 +228,7 @@ class MainActivity : ComponentActivity() {
                             },
                             scrollBehavior = scrollBehavior
                         )
-                        /*SmallTopAppBar(
+                        *//*SmallTopAppBar(
                             title = { androidx.compose.material3.Text("Large TopAppBar") },
                             navigationIcon = {
                                 androidx.compose.material3.IconButton(onClick = {  }) {
@@ -231,7 +247,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             scrollBehavior = scrollBehavior
-                        )*/
+                        )*//*
                     },
                     floatingActionButton = {
                         androidx.compose.material3.FloatingActionButton(
@@ -279,7 +295,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                }
+                }*/
 
                 /*var stringer by remember { mutableStateOf(strings.item) }
 
