@@ -56,7 +56,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -82,7 +81,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
@@ -177,8 +175,6 @@ class DetailsFragment : Fragment() {
             itemListener.findItemByUrlFlow(info.url),
             dao.containsItemFlow(info.url)
         ) { f, d -> f || d }
-            .flowOn(Dispatchers.IO)
-            .flowWithLifecycle(lifecycle)
             .collectAsState(initial = false)
 
         val chapters by Flowables.combineLatest(

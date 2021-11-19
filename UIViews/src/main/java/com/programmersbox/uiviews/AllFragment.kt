@@ -303,20 +303,20 @@ class AllFragment : BaseFragmentCompose() {
                         },
                         floatingActionButtonPosition = FabPosition.End
                     ) { p ->
-                        SwipeRefresh(
-                            modifier = Modifier.padding(p),
-                            state = refresh,
-                            onRefresh = {
-                                source?.let {
-                                    count = 1
-                                    sourceList.clear()
-                                    sourceLoadCompose(it, count, refresh)
+                        if (sourceList.isEmpty()) {
+                            info.ComposeShimmerItem()
+                        } else {
+                            SwipeRefresh(
+                                modifier = Modifier.padding(p),
+                                state = refresh,
+                                onRefresh = {
+                                    source?.let {
+                                        count = 1
+                                        sourceList.clear()
+                                        sourceLoadCompose(it, count, refresh)
+                                    }
                                 }
-                            }
-                        ) {
-                            if (sourceList.isEmpty()) {
-                                info.ComposeShimmerItem()
-                            } else {
+                            ) {
                                 info.ItemListView(
                                     list = sourceList,
                                     listState = state,
@@ -329,8 +329,8 @@ class AllFragment : BaseFragmentCompose() {
                             }
                         }
 
-                        if (source?.canScrollAll == true) {
-                            InfiniteListHandler(listState = state, buffer = 1) {
+                        if (source?.canScrollAll == true && sourceList.isNotEmpty()) {
+                            InfiniteListHandler(listState = state, buffer = 2) {
                                 source?.let {
                                     count++
                                     sourceLoadCompose(it, count, refresh)
