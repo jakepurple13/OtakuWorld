@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -230,6 +231,8 @@ class DetailsFragment : Fragment() {
         val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
             ?: M3MaterialTheme.colorScheme.onSurface
 
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
         BottomSheetScaffold(
             backgroundColor = Color.Transparent,
             sheetContent = {
@@ -312,8 +315,13 @@ class DetailsFragment : Fragment() {
             scaffoldState = scaffoldState,
             topBar = {
                 SmallTopAppBar(
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        titleContentColor = topBarColor,
+                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                    ),
                     modifier = Modifier.zIndex(2f),
-                    title = { Text(info.title, color = topBarColor) },
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(info.title) },
                     navigationIcon = {
                         IconButton(onClick = { findNavController().popBackStack() }) {
                             Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
@@ -436,10 +444,7 @@ class DetailsFragment : Fragment() {
                         IconButton(onClick = { showDropDown = true }) {
                             Icon(Icons.Default.MoreVert, null, tint = topBarColor)
                         }
-                    },
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
-                    )
+                    }
                 )
             },
             snackbarHost = {
@@ -458,11 +463,14 @@ class DetailsFragment : Fragment() {
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
+                            swatchInfo.value?.rgb
+                                ?.toComposeColor()
+                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
                             M3MaterialTheme.colorScheme.background
                         )
                     )
                 )
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
 
             val header: @Composable () -> Unit = {
