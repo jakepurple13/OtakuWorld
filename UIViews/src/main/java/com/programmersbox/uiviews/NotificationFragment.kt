@@ -141,9 +141,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                         }
                                     ) { Text(stringResource(R.string.yes)) }
                                 },
-                                dismissButton = {
-                                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) }
-                                }
+                                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
                             )
 
                         }
