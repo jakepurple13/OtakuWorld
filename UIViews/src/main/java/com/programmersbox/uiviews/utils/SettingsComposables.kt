@@ -1,24 +1,736 @@
 package com.programmersbox.uiviews.utils
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.Slider
-import androidx.compose.material.SliderDefaults
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+
+open class SettingViewModel(
+    titleValue: String? = null,
+    titleIdValue: Int? = null,
+    summaryValue: String? = null,
+    summaryIdValue: Int? = null,
+    icon: (@Composable BoxScope.() -> Unit)? = null,
+) {
+    init {
+        require(titleValue != null || titleIdValue != null)
+    }
+
+    open var title: String by mutableStateOf(titleValue.orEmpty())
+    open var titleId: Int? by mutableStateOf(titleIdValue)
+    open var summary: String? by mutableStateOf(summaryValue)
+    open var summaryId: Int? by mutableStateOf(summaryIdValue)
+    open var icon: (@Composable BoxScope.() -> Unit)? by mutableStateOf(icon)
+
+    @Composable
+    fun titleString() = titleId?.let { stringResource(it) } ?: title
+
+    @Composable
+    fun summaryString() = summaryId?.let { stringResource(it) } ?: summary
+}
+
+class ListViewModel(
+    dialogTitleText: String? = null,
+    @StringRes dialogTitleId: Int? = null,
+    confirmText: String? = null,
+    @StringRes confirmTextId: Int? = null,
+    dismissText: String? = null,
+    @StringRes dismissTextId: Int? = null,
+    titleValue: String? = null,
+    @StringRes titleIdValue: Int? = null,
+    summaryValue: String? = null,
+    @StringRes summaryIdValue: Int? = null,
+    icon: (@Composable BoxScope.() -> Unit)? = null
+) : SettingViewModel(titleValue, titleIdValue, summaryValue, summaryIdValue, icon) {
+
+    init {
+        require(confirmText != null || confirmTextId != null)
+        require(dialogTitleText != null || dialogTitleId != null)
+        require(confirmText != null || confirmTextId != null)
+    }
+
+    var confirmText: String by mutableStateOf(confirmText.orEmpty())
+    var confirmTextId: Int? by mutableStateOf(confirmTextId)
+
+    var dismissText: String? by mutableStateOf(dismissText)
+    var dismissTextId: Int? by mutableStateOf(dismissTextId)
+
+    var dialogTitleText: String by mutableStateOf(dialogTitleText.orEmpty())
+    var dialogTitleTextId: Int? by mutableStateOf(dialogTitleId)
+
+    @Composable
+    fun dialogTitleString() = dialogTitleTextId?.let { stringResource(it) } ?: dialogTitleText
+
+    @Composable
+    fun confirmButtonString() = confirmTextId?.let { stringResource(it) } ?: confirmText
+
+    @Composable
+    fun dismissButtonString() = dismissTextId?.let { stringResource(it) } ?: dismissText
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+fun <T> ListSetting(
+    modifier: Modifier = Modifier,
+    viewModel: ListViewModel,
+    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(
+        selectedColor = MaterialTheme.colorScheme.secondary,
+        unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+    ),
+    value: T,
+    options: List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, MutableState<Boolean>) -> Unit
+) = ListSetting(
+    modifier = modifier,
+    value = value,
+    options = options,
+    viewText = viewText,
+    radioButtonColors = radioButtonColors,
+    updateValue = updateValue,
+    settingIcon = viewModel.icon,
+    settingTitle = viewModel.titleString(),
+    dialogTitle = viewModel.dialogTitleString(),
+    confirmText = viewModel.confirmButtonString(),
+    cancelText = viewModel.dismissButtonString()
+)
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+fun <T> ListSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    @StringRes settingTitleId: Int,
+    @StringRes dialogTitleId: Int,
+    @StringRes cancelTextId: Int? = null,
+    @StringRes confirmTextId: Int,
+    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(
+        selectedColor = MaterialTheme.colorScheme.secondary,
+        unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+    ),
+    value: T,
+    options: List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, MutableState<Boolean>) -> Unit
+) = ListSetting(
+    modifier = modifier,
+    settingIcon = settingIcon,
+    settingTitle = stringResource(settingTitleId),
+    dialogTitle = stringResource(dialogTitleId),
+    cancelText = cancelTextId?.let { stringResource(it) },
+    confirmText = stringResource(confirmTextId),
+    radioButtonColors = radioButtonColors,
+    value = value,
+    options = options,
+    viewText = viewText,
+    updateValue = updateValue
+)
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+fun <T> ListSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
+    dialogTitle: String,
+    cancelText: String? = null,
+    confirmText: String,
+    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(
+        selectedColor = MaterialTheme.colorScheme.secondary,
+        unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+    ),
+    value: T,
+    options: List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, MutableState<Boolean>) -> Unit
+) {
+    val dialogPopup = remember { mutableStateOf(false) }
+
+    if (dialogPopup.value) {
+
+        AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            onDismissRequest = { dialogPopup.value = false },
+            title = { Text(dialogTitle) },
+            text = {
+                LazyColumn {
+                    items(options) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = rememberRipple(),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { updateValue(it, dialogPopup) }
+                                .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
+                        ) {
+                            RadioButton(
+                                selected = it == value,
+                                onClick = { updateValue(it, dialogPopup) },
+                                modifier = Modifier.padding(8.dp),
+                                colors = radioButtonColors
+                            )
+                            Text(
+                                viewText(it),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { dialogPopup.value = false }) { Text(confirmText) } },
+            dismissButton = cancelText?.let { { TextButton(onClick = { dialogPopup.value = false }) { Text(it) } } }
+        )
+
+    }
+
+    PreferenceSetting(
+        settingTitle = settingTitle,
+        summaryValue = viewText(value),
+        settingIcon = settingIcon,
+        modifier = Modifier
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { dialogPopup.value = true }
+            .then(modifier)
+    )
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+fun <T> MultiSelectListSetting(
+    modifier: Modifier = Modifier,
+    viewModel: ListViewModel,
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(
+        checkedColor = MaterialTheme.colorScheme.secondary,
+        uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        checkmarkColor = MaterialTheme.colorScheme.surface,
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
+    ),
+    values: List<T>,
+    options: List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, Boolean) -> Unit
+) = MultiSelectListSetting(
+    modifier = modifier,
+    values = values,
+    options = options,
+    viewText = viewText,
+    checkboxColors = checkboxColors,
+    updateValue = updateValue,
+    settingIcon = viewModel.icon,
+    settingTitle = viewModel.titleString(),
+    dialogTitle = viewModel.dialogTitleString(),
+    confirmText = viewModel.confirmButtonString(),
+    cancelText = viewModel.dismissButtonString()
+)
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+fun <T> MultiSelectListSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    @StringRes settingTitleId: Int,
+    @StringRes settingSummaryId: Int? = null,
+    @StringRes dialogTitleId: Int,
+    @StringRes cancelTextId: Int? = null,
+    @StringRes confirmTextId: Int,
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(
+        checkedColor = MaterialTheme.colorScheme.secondary,
+        uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        checkmarkColor = MaterialTheme.colorScheme.surface,
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
+    ),
+    values: List<T>,
+    options: List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, Boolean) -> Unit
+) = MultiSelectListSetting(
+    modifier = modifier,
+    settingIcon = settingIcon,
+    settingTitle = stringResource(settingTitleId),
+    settingSummary = settingSummaryId?.let { stringResource(it) },
+    dialogTitle = stringResource(dialogTitleId),
+    cancelText = cancelTextId?.let { stringResource(it) },
+    confirmText = stringResource(confirmTextId),
+    checkboxColors = checkboxColors,
+    values = values,
+    options = options,
+    viewText = viewText,
+    updateValue = updateValue
+)
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+fun <T> MultiSelectListSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
+    settingSummary: String? = null,
+    dialogTitle: String,
+    cancelText: String? = null,
+    confirmText: String,
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(
+        checkedColor = MaterialTheme.colorScheme.secondary,
+        uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        checkmarkColor = MaterialTheme.colorScheme.surface,
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
+    ),
+    values: List<T>,
+    options: List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, Boolean) -> Unit
+) {
+    val dialogPopup = remember { mutableStateOf(false) }
+
+    if (dialogPopup.value) {
+
+        AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            onDismissRequest = { dialogPopup.value = false },
+            title = { Text(dialogTitle) },
+            text = {
+                LazyColumn {
+                    items(options) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = rememberRipple(),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { updateValue(it, it !in values) }
+                                .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
+                        ) {
+                            Checkbox(
+                                checked = it in values,
+                                onCheckedChange = { b -> updateValue(it, b) },
+                                colors = checkboxColors,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                            Text(
+                                viewText(it),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { dialogPopup.value = false }) { Text(confirmText) } },
+            dismissButton = cancelText?.let { { TextButton(onClick = { dialogPopup.value = false }) { Text(it) } } }
+        )
+
+    }
+
+    PreferenceSetting(
+        settingTitle = settingTitle,
+        summaryValue = settingSummary,
+        settingIcon = settingIcon,
+        modifier = Modifier
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { dialogPopup.value = true }
+            .then(modifier)
+    )
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun PreferenceSetting(
+    modifier: Modifier = Modifier,
+    viewModel: SettingViewModel
+) = PreferenceSetting(
+    modifier = modifier,
+    settingIcon = viewModel.icon,
+    settingTitle = viewModel.titleString(),
+    summaryValue = viewModel.summaryString()
+)
+
+@ExperimentalMaterialApi
+@Composable
+fun PreferenceSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    @StringRes settingTitleId: Int,
+    @StringRes summaryId: Int? = null
+) = PreferenceSetting(
+    modifier = modifier,
+    settingIcon = settingIcon,
+    settingTitle = stringResource(settingTitleId),
+    summaryValue = summaryId?.let { stringResource(it) }
+)
+
+@ExperimentalMaterialApi
+@Composable
+fun PreferenceSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
+    summaryValue: String? = null
+) {
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(modifier)
+            .padding(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .requiredWidth(32.dp)
+        ) { settingIcon?.invoke(this) }
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .padding(start = 8.dp)
+        ) {
+            Text(
+                settingTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            summaryValue?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+        }
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun SwitchSetting(
+    modifier: Modifier = Modifier,
+    viewModel: SettingViewModel,
+    switchColors: SwitchColors = SwitchDefaults.colors(
+        checkedThumbColor = MaterialTheme.colorScheme.secondary,
+        checkedTrackColor = MaterialTheme.colorScheme.secondary,
+        uncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface,
+        uncheckedTrackColor = MaterialTheme.colorScheme.onSurface,
+        disabledCheckedThumbColor = MaterialTheme.colorScheme.secondary
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledCheckedTrackColor = MaterialTheme.colorScheme.secondary
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledUncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledUncheckedTrackColor = MaterialTheme.colorScheme.onSurface
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface)
+    ),
+    value: Boolean,
+    updateValue: (Boolean) -> Unit
+) = SwitchSetting(
+    modifier = modifier,
+    settingIcon = viewModel.icon,
+    settingTitle = viewModel.titleString(),
+    summaryValue = viewModel.summaryString(),
+    switchColors = switchColors,
+    value = value,
+    updateValue = updateValue
+)
+
+@ExperimentalMaterialApi
+@Composable
+fun SwitchSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    @StringRes settingTitleId: Int,
+    @StringRes summaryValueId: Int? = null,
+    switchColors: SwitchColors = SwitchDefaults.colors(
+        checkedThumbColor = MaterialTheme.colorScheme.secondary,
+        checkedTrackColor = MaterialTheme.colorScheme.secondary,
+        uncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface,
+        uncheckedTrackColor = MaterialTheme.colorScheme.onSurface,
+        disabledCheckedThumbColor = MaterialTheme.colorScheme.secondary
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledCheckedTrackColor = MaterialTheme.colorScheme.secondary
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledUncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledUncheckedTrackColor = MaterialTheme.colorScheme.onSurface
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface)
+    ),
+    value: Boolean,
+    updateValue: (Boolean) -> Unit
+) = SwitchSetting(
+    modifier = modifier,
+    settingIcon = settingIcon,
+    settingTitle = stringResource(settingTitleId),
+    summaryValue = summaryValueId?.let { stringResource(it) },
+    switchColors = switchColors,
+    value = value,
+    updateValue = updateValue
+)
+
+@ExperimentalMaterialApi
+@Composable
+fun SwitchSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
+    summaryValue: String? = null,
+    switchColors: SwitchColors = SwitchDefaults.colors(
+        checkedThumbColor = MaterialTheme.colorScheme.secondary,
+        checkedTrackColor = MaterialTheme.colorScheme.secondary,
+        uncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface,
+        uncheckedTrackColor = MaterialTheme.colorScheme.onSurface,
+        disabledCheckedThumbColor = MaterialTheme.colorScheme.secondary
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledCheckedTrackColor = MaterialTheme.colorScheme.secondary
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledUncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface),
+        disabledUncheckedTrackColor = MaterialTheme.colorScheme.onSurface
+            .copy(alpha = ContentAlpha.disabled)
+            .compositeOver(MaterialTheme.colorScheme.inverseSurface)
+    ),
+    value: Boolean,
+    updateValue: (Boolean) -> Unit
+) {
+    ConstraintLayout(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { updateValue(!value) }
+            .padding(8.dp)
+            .then(modifier)
+    ) {
+        val (icon, text, switch) = createRefs()
+
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .requiredWidth(32.dp)
+                .constrainAs(icon) {
+                    start.linkTo(parent.start)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                }
+        ) { settingIcon?.invoke(this) }
+
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(text) {
+                    start.linkTo(icon.end, 8.dp)
+                    end.linkTo(switch.start, 8.dp)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.fillToConstraints
+                }
+        ) {
+            Text(
+                settingTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+            )
+            summaryValue?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Start
+                )
+            }
+        }
+
+        Switch(
+            checked = value,
+            onCheckedChange = updateValue,
+            colors = switchColors,
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(switch) {
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                }
+        )
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun SwitchSetting(
+    modifier: Modifier = Modifier,
+    viewModel: SettingViewModel,
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(
+        checkedColor = MaterialTheme.colorScheme.secondary,
+        uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        checkmarkColor = MaterialTheme.colorScheme.surface,
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
+    ),
+    value: Boolean,
+    updateValue: (Boolean) -> Unit
+) = CheckBoxSetting(
+    modifier = modifier,
+    settingIcon = viewModel.icon,
+    settingTitle = viewModel.titleString(),
+    summaryValue = viewModel.summaryString(),
+    checkboxColors = checkboxColors,
+    value = value,
+    updateValue = updateValue
+)
+
+@ExperimentalMaterialApi
+@Composable
+fun CheckBoxSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    @StringRes settingTitleId: Int,
+    @StringRes summaryValueId: Int? = null,
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(
+        checkedColor = MaterialTheme.colorScheme.secondary,
+        uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        checkmarkColor = MaterialTheme.colorScheme.surface,
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
+    ),
+    value: Boolean,
+    updateValue: (Boolean) -> Unit
+) = CheckBoxSetting(
+    modifier = modifier,
+    settingIcon = settingIcon,
+    settingTitle = stringResource(settingTitleId),
+    summaryValue = summaryValueId?.let { stringResource(it) },
+    checkboxColors = checkboxColors,
+    value = value,
+    updateValue = updateValue
+)
+
+@ExperimentalMaterialApi
+@Composable
+fun CheckBoxSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
+    summaryValue: String? = null,
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(
+        checkedColor = MaterialTheme.colorScheme.secondary,
+        uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        checkmarkColor = MaterialTheme.colorScheme.surface,
+        disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
+    ),
+    value: Boolean,
+    updateValue: (Boolean) -> Unit
+) {
+    ConstraintLayout(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { updateValue(!value) }
+            .padding(8.dp)
+            .then(modifier)
+    ) {
+        val (icon, text, checkbox) = createRefs()
+
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .requiredWidth(32.dp)
+                .constrainAs(icon) {
+                    start.linkTo(parent.start)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                }
+        ) { settingIcon?.invoke(this) }
+
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(text) {
+                    start.linkTo(icon.end, 8.dp)
+                    end.linkTo(checkbox.start, 8.dp)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.fillToConstraints
+                }
+        ) {
+            Text(
+                settingTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+            )
+            summaryValue?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Start
+                )
+            }
+        }
+
+        Checkbox(
+            checked = value,
+            onCheckedChange = updateValue,
+            colors = checkboxColors,
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(checkbox) {
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                }
+        )
+    }
+}
 
 @Composable
 fun SliderSetting(
@@ -55,12 +767,14 @@ fun SliderSetting(
                     bottom.linkTo(parent.bottom)
                 }
                 .padding(8.dp)
+                .padding(end = 16.dp)
         )
 
         Text(
             stringResource(settingTitle),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Start,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.constrainAs(title) {
                 top.linkTo(parent.top)
                 end.linkTo(parent.end)
@@ -106,12 +820,13 @@ fun SliderSetting(
         Text(
             sliderValue.toInt().toString(),
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.constrainAs(value) {
-                end.linkTo(parent.end)
-                start.linkTo(slider.end)
-                centerVerticallyTo(slider)
-            }
+            modifier = Modifier
+                .constrainAs(value) {
+                    end.linkTo(parent.end)
+                    start.linkTo(slider.end)
+                    centerVerticallyTo(slider)
+                }
+                .padding(horizontal = 16.dp)
         )
-
     }
 }

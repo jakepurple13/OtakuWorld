@@ -379,7 +379,7 @@ class DetailsFragment : Fragment() {
                                                             .getString(
                                                                 R.string.hadAnUpdate,
                                                                 info.title,
-                                                                info.chapters.firstOrNull()?.name ?: ""
+                                                                info.chapters.firstOrNull()?.name.orEmpty()
                                                             ),
                                                         notiTitle = info.title,
                                                         imageUrl = info.imageUrl,
