@@ -740,6 +740,34 @@ fun SliderSetting(
 @Composable
 fun ShowMoreSetting(
     modifier: Modifier = Modifier,
+    viewModel: SettingViewModel,
+    content: @Composable () -> Unit
+) = ShowMoreSetting(
+    modifier = modifier,
+    settingIcon = viewModel.icon,
+    settingTitle = viewModel.titleString(),
+    summaryValue = viewModel.summaryString(),
+    content = content
+)
+
+@Composable
+fun ShowMoreSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    @StringRes settingTitleId: Int,
+    @StringRes summaryValueId: Int? = null,
+    content: @Composable () -> Unit
+) = ShowMoreSetting(
+    modifier = modifier,
+    settingIcon = settingIcon,
+    settingTitle = stringResource(settingTitleId),
+    summaryValue = summaryValueId?.let { stringResource(it) },
+    content = content
+)
+
+@Composable
+fun ShowMoreSetting(
+    modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: String,
     summaryValue: String? = null,
