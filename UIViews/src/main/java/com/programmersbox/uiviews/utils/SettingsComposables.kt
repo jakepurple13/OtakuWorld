@@ -1,6 +1,8 @@
 package com.programmersbox.uiviews.utils
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -20,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -409,7 +414,6 @@ fun PreferenceSetting(
     settingTitle: String,
     summaryValue: String? = null
 ) {
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -537,66 +541,17 @@ fun SwitchSetting(
     value: Boolean,
     updateValue: (Boolean) -> Unit
 ) {
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { updateValue(!value) }
-            .padding(8.dp)
-            .then(modifier)
+    DefaultPreferenceLayout(
+        modifier = modifier,
+        settingIcon = settingIcon,
+        settingTitle = settingTitle,
+        summaryValue = summaryValue,
+        onClick = { updateValue(!value) }
     ) {
-        val (icon, text, switch) = createRefs()
-
-        Box(
-            modifier = Modifier
-                .padding(8.dp)
-                .requiredWidth(32.dp)
-                .constrainAs(icon) {
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                }
-        ) { settingIcon?.invoke(this) }
-
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-                .constrainAs(text) {
-                    start.linkTo(icon.end, 8.dp)
-                    end.linkTo(switch.start, 8.dp)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    width = Dimension.fillToConstraints
-                }
-        ) {
-            Text(
-                settingTitle,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Start,
-            )
-            summaryValue?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Start
-                )
-            }
-        }
-
         Switch(
             checked = value,
             onCheckedChange = updateValue,
-            colors = switchColors,
-            modifier = Modifier
-                .padding(8.dp)
-                .constrainAs(switch) {
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                }
+            colors = switchColors
         )
     }
 }
@@ -668,66 +623,17 @@ fun CheckBoxSetting(
     value: Boolean,
     updateValue: (Boolean) -> Unit
 ) {
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { updateValue(!value) }
-            .padding(8.dp)
-            .then(modifier)
+    DefaultPreferenceLayout(
+        modifier = modifier,
+        settingIcon = settingIcon,
+        settingTitle = settingTitle,
+        summaryValue = summaryValue,
+        onClick = { updateValue(!value) }
     ) {
-        val (icon, text, checkbox) = createRefs()
-
-        Box(
-            modifier = Modifier
-                .padding(8.dp)
-                .requiredWidth(32.dp)
-                .constrainAs(icon) {
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                }
-        ) { settingIcon?.invoke(this) }
-
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-                .constrainAs(text) {
-                    start.linkTo(icon.end, 8.dp)
-                    end.linkTo(checkbox.start, 8.dp)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    width = Dimension.fillToConstraints
-                }
-        ) {
-            Text(
-                settingTitle,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Start,
-            )
-            summaryValue?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Start
-                )
-            }
-        }
-
         Checkbox(
             checked = value,
             onCheckedChange = updateValue,
-            colors = checkboxColors,
-            modifier = Modifier
-                .padding(8.dp)
-                .constrainAs(checkbox) {
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                }
+            colors = checkboxColors
         )
     }
 }
@@ -829,4 +735,106 @@ fun SliderSetting(
                 .padding(horizontal = 16.dp)
         )
     }
+}
+
+@Composable
+fun ShowMoreSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
+    summaryValue: String? = null,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        var showMore by remember { mutableStateOf(false) }
+        DefaultPreferenceLayout(
+            modifier = modifier,
+            settingIcon = settingIcon,
+            settingTitle = settingTitle,
+            summaryValue = summaryValue,
+            onClick = { showMore = !showMore }
+        ) {
+            Icon(
+                Icons.Default.ArrowDropDown,
+                null,
+                modifier = Modifier.rotate(animateFloatAsState(targetValue = if (showMore) 180f else 0f).value)
+            )
+        }
+        ShowWhen(showMore) { content() }
+    }
+}
+
+@Composable
+private fun DefaultPreferenceLayout(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
+    summaryValue: String? = null,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    ConstraintLayout(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onClick() }
+            .padding(8.dp)
+            .then(modifier)
+    ) {
+        val (icon, text, endIcon) = createRefs()
+
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .requiredWidth(32.dp)
+                .constrainAs(icon) {
+                    start.linkTo(parent.start)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                }
+        ) { settingIcon?.invoke(this) }
+
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(text) {
+                    start.linkTo(icon.end, 8.dp)
+                    end.linkTo(endIcon.start, 8.dp)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                    width = Dimension.fillToConstraints
+                }
+        ) {
+            Text(
+                settingTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+            )
+            summaryValue?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Start
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .constrainAs(endIcon) {
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                }
+        ) { content() }
+    }
+}
+
+@Composable
+fun ShowWhen(visibility: Boolean, content: @Composable () -> Unit) {
+    Column(modifier = Modifier.animateContentSize()) { if (visibility) content() }
 }

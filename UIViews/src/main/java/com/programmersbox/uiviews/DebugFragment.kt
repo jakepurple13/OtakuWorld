@@ -236,6 +236,67 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                 }
 
                 item {
+                    var showMoreOptions by remember { mutableStateOf(false) }
+
+                    SwitchSetting(
+                        settingTitle = "Show More",
+                        settingIcon = { Icon(Icons.Default.Deck, null) },
+                        value = showMoreOptions,
+                        updateValue = { showMoreOptions = it }
+                    )
+
+                    ShowWhen(showMoreOptions) {
+                        PreferenceSetting(
+                            settingTitle = "Title",
+                            summaryValue = "Summary",
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+
+                        PreferenceSetting(
+                            settingTitle = "Title",
+                            summaryValue = "Summary",
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+
+                        PreferenceSetting(
+                            settingTitle = "Title",
+                            summaryValue = "Summary",
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+                    }
+
+                    Divider(color = M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                }
+
+                item {
+                    ShowMoreSetting(
+                        settingTitle = "Show More",
+                        summaryValue = "More Options Here",
+                        settingIcon = { Icon(Icons.Default.Deck, null) }
+                    ) {
+                        PreferenceSetting(
+                            settingTitle = "Title",
+                            summaryValue = "Summary",
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+
+                        PreferenceSetting(
+                            settingTitle = "Title",
+                            summaryValue = "Summary",
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+
+                        PreferenceSetting(
+                            settingTitle = "Title",
+                            summaryValue = "Summary",
+                            settingIcon = { Icon(Icons.Default.Deck, null) }
+                        )
+                    }
+
+                    Divider(color = M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                }
+
+                item {
                     var value by remember { mutableStateOf(false) }
 
                     SwitchSetting(
