@@ -25,6 +25,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.fragment.findNavController
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.utils.*
@@ -108,8 +109,8 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                     SliderSetting(
                         sliderValue = batteryPercent,
                         settingIcon = Icons.Default.BatteryAlert,
-                        settingTitle = R.string.battery_alert_percentage,
-                        settingSummary = R.string.battery_default,
+                        settingTitle = stringResource(R.string.battery_alert_percentage),
+                        settingSummary = stringResource(R.string.battery_default),
                         range = 1f..100f,
                         updateValue = {
                             batteryPercent = it
@@ -134,37 +135,6 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                         }
                     )
 
-                    ListSetting(
-                        settingTitleId = R.string.currentSource,
-                        dialogTitleId = R.string.chooseASource,
-                        confirmTextId = R.string.ok,
-                        value = value,
-                        options = genericInfo.sourceList(),
-                        updateValue = { it, d ->
-                            value = it
-                            d.value = false
-                        }
-                    )
-
-                    val viewModel = remember {
-                        ListViewModel(
-                            icon = { Icon(Icons.Default.Deck, null) },
-                            titleValue = "Current Source",
-                            dialogTitleText = "Choose a Source",
-                            confirmText = "OK"
-                        )
-                    }
-
-                    ListSetting(
-                        viewModel = viewModel,
-                        value = value,
-                        options = genericInfo.sourceList(),
-                        updateValue = { it, d ->
-                            value = it
-                            d.value = false
-                        }
-                    )
-
                     Divider(color = M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                 }
 
@@ -181,31 +151,6 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                         updateValue = { it, d -> if (d) value.add(it) else value.remove(it) }
                     )
 
-                    MultiSelectListSetting(
-                        settingTitleId = R.string.currentSource,
-                        dialogTitleId = R.string.chooseASource,
-                        confirmTextId = R.string.ok,
-                        values = value,
-                        options = genericInfo.sourceList(),
-                        updateValue = { it, d -> if (d) value.remove(it) else value.add(it) }
-                    )
-
-                    val viewModel = remember {
-                        ListViewModel(
-                            icon = { Icon(Icons.Default.Deck, null) },
-                            titleValue = "Current Source",
-                            dialogTitleText = "Choose a Source",
-                            confirmText = "OK"
-                        )
-                    }
-
-                    MultiSelectListSetting(
-                        viewModel = viewModel,
-                        values = value,
-                        options = genericInfo.sourceList(),
-                        updateValue = { it, d -> if (d) value.remove(it) else value.add(it) }
-                    )
-
                     Divider(color = M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                 }
 
@@ -220,7 +165,6 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                         settingTitle = "Title",
                         summaryValue = "Summary"
                     )
-
 
                     PreferenceSetting(
                         settingTitle = "Title",
