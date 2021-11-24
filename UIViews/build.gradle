@@ -133,7 +133,7 @@ dependencies {
     implementation "com.airbnb.android:lottie-compose:$lottieVersion"
     implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
-    implementation "me.onebone:toolbar-compose:2.2.0"
+    implementation "me.onebone:toolbar-compose:2.3.0"
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:1.0.3'
     implementation "io.coil-kt:coil-compose:1.4.0"
 
