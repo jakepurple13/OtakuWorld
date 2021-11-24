@@ -2,6 +2,7 @@ package com.programmersbox.otakuworld
 
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
@@ -121,6 +122,8 @@ class MainActivity : AppCompatActivity() {
 
             LaunchedEffect(Unit) { currentScheme = colorScheme }
 
+            val scope = rememberCoroutineScope()
+
             androidx.compose.material3.MaterialTheme(colorScheme = currentScheme) {
 
                 /*var list by remember { mutableStateOf(listOf("A", "B", "C")) }
@@ -140,6 +143,150 @@ class MainActivity : AppCompatActivity() {
                 }*/
 
                 val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
+                val scaffoldState = rememberBottomSheetScaffoldState()
+
+                BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
+
+                val showSettings: () -> Unit = {
+                    TestDialogFragment().showNow(supportFragmentManager, null)
+                    scope.launch { scaffoldState.bottomSheetState.collapse() }
+                }
+
+                BottomSheetScaffold(
+                    scaffoldState = scaffoldState,
+                    sheetContent = {
+                        Column {
+                            CompositionLocalProvider(
+                                androidx.compose.material3.LocalContentColor provides
+                                        androidx.compose.material3.contentColorFor(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                                            .animate().value
+                            ) {
+                                Divider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value)
+
+                                PreferenceSetting(settingTitle = "") {
+                                    androidx.compose.material3.IconButton(onClick = showSettings) {
+                                        androidx.compose.material3.Icon(Icons.Default.Settings, null)
+                                    }
+                                }
+
+                                var themeSetting by remember {
+                                    mutableStateOf(
+                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme ||
+                                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme ||
+                                                darkTheme
+                                    )
+                                }
+
+                                val context = LocalContext.current
+
+                                SwitchSetting(
+                                    summaryValue = "Current Theme: ${if (themeSetting) "Dark" else "Light"}",
+                                    settingIcon = { androidx.compose.material3.Icon(Icons.Default.SettingsBrightness, null) },
+                                    settingTitle = "Theme",
+                                    value = themeSetting,
+                                    updateValue = {
+                                        themeSetting = it
+                                        currentScheme = when {
+                                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && it -> dynamicDarkColorScheme(context)
+                                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !it -> dynamicLightColorScheme(context)
+                                            it -> darkColorScheme()
+                                            else -> lightColorScheme()
+                                        }
+                                    }
+                                )
+
+                                PreferenceSetting(
+                                    settingTitle = "System Settings",
+                                    settingIcon = { androidx.compose.material3.Icon(Icons.Default.Settings, null) },
+                                    onClick = showSettings
+                                ) { androidx.compose.material3.Icon(Icons.Default.ChevronRight, null) }
+                            }
+                        }
+                    },
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        Column {
+                            CenterAlignedTopAppBar(
+                                title = { androidx.compose.material3.Text("Fun Playground") },
+                                scrollBehavior = scrollBehavior
+                            )
+                            Divider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value)
+                        }
+                    },
+                    backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background.animate().value,
+                    contentColor = androidx.compose.material3.contentColorFor(androidx.compose.material3.MaterialTheme.colorScheme.background)
+                        .animate().value,
+                    sheetBackgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface.animate().value,
+                    sheetContentColor = androidx.compose.material3.contentColorFor(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                        .animate().value,
+                    sheetPeekHeight = 0.dp
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(it),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        Text("Outlined Button")
+                        androidx.compose.material3.OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                    else scaffoldState.bottomSheetState.collapse()
+                                }
+                            },
+                            modifier = Modifier.coloredShadow(androidx.compose.material3.MaterialTheme.colorScheme.primary.animate().value),
+                            border = BorderStroke(
+                                1.dp,
+                                androidx.compose.material3.MaterialTheme.colorScheme.primary.animate().value
+                            )
+                        ) { androidx.compose.material3.Text("Open Settings") }
+
+                        Text("Button with Colored Shadow")
+                        androidx.compose.material3.Button(
+                            onClick = {
+                                scope.launch {
+                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                    else scaffoldState.bottomSheetState.collapse()
+                                }
+                            },
+                            modifier = Modifier.coloredShadow(androidx.compose.material3.MaterialTheme.colorScheme.primary.animate().value),
+                        ) { androidx.compose.material3.Text("Open Settings") }
+
+                        Text("FilledTonalButton")
+                        androidx.compose.material3.FilledTonalButton(
+                            onClick = {
+                                scope.launch {
+                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                    else scaffoldState.bottomSheetState.collapse()
+                                }
+                            },
+                            border = BorderStroke(
+                                1.dp,
+                                androidx.compose.material3.MaterialTheme.colorScheme.primary.animate().value
+                            )
+                        ) { androidx.compose.material3.Text("Open Settings") }
+
+                        Text("FilledTonalButton with Colored Shadow")
+                        androidx.compose.material3.FilledTonalButton(
+                            onClick = {
+                                scope.launch {
+                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                    else scaffoldState.bottomSheetState.collapse()
+                                }
+                            },
+                            modifier = Modifier.coloredShadow(androidx.compose.material3.MaterialTheme.colorScheme.primary.animate().value),
+                            border = BorderStroke(
+                                1.dp,
+                                androidx.compose.material3.MaterialTheme.colorScheme.primary.animate().value
+                            )
+                        ) { androidx.compose.material3.Text("Open Settings") }
+                    }
+                }
+
+                /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
 
                 androidx.compose.material3.Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -189,7 +336,7 @@ class MainActivity : AppCompatActivity() {
 
                         }
                     }
-                }
+                }*/
 
                 /*var showBanner by remember { mutableStateOf(false) }
 

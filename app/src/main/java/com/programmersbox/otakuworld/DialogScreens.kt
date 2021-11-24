@@ -1,8 +1,10 @@
 package com.programmersbox.otakuworld
 
-import android.app.Dialog
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -65,10 +67,9 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
         dialog?.window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
     }
 
-    override fun setupDialog(dialog: Dialog, style: Int) {
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+    /*override fun setupDialog(dialog: Dialog, style: Int) {
         dialog.window?.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
-    }
+    }*/
 }
 
 enum class SettingLocation {
@@ -110,11 +111,15 @@ fun TestView(closeClick: () -> Unit) {
         },
         sheetPeekHeight = 0.dp,
         sheetContent = {
-            when (location) {
-                SettingLocation.CHECK -> CheckView { scope.launch { state.bottomSheetState.collapse() } }
-                SettingLocation.SWITCH -> SwitchView { scope.launch { state.bottomSheetState.collapse() } }
-                SettingLocation.PAGER -> PagerView { scope.launch { state.bottomSheetState.collapse() } }
-                else -> {}
+            CompositionLocalProvider(
+                androidx.compose.material3.LocalContentColor provides contentColorFor(MaterialTheme.colorScheme.surface)
+            ) {
+                when (location) {
+                    SettingLocation.CHECK -> CheckView { scope.launch { state.bottomSheetState.collapse() } }
+                    SettingLocation.SWITCH -> SwitchView { scope.launch { state.bottomSheetState.collapse() } }
+                    SettingLocation.PAGER -> PagerView { scope.launch { state.bottomSheetState.collapse() } }
+                    else -> {}
+                }
             }
         },
         backgroundColor = MaterialTheme.colorScheme.background,
@@ -127,31 +132,34 @@ fun TestView(closeClick: () -> Unit) {
                 item {
                     PreferenceSetting(
                         settingTitle = "Switch Settings",
+                        settingIcon = { Icon(Icons.Default.SwapHoriz, null) },
                         onClick = {
                             location = SettingLocation.SWITCH
                             scope.launch { state.bottomSheetState.expand() }
                         }
-                    ) { androidx.compose.material3.Icon(Icons.Default.ChevronRight, null) }
+                    ) { Icon(Icons.Default.ChevronRight, null) }
                 }
 
                 item {
                     PreferenceSetting(
                         settingTitle = "Check Settings",
+                        settingIcon = { Icon(Icons.Default.Check, null) },
                         onClick = {
                             location = SettingLocation.CHECK
                             scope.launch { state.bottomSheetState.expand() }
                         }
-                    ) { androidx.compose.material3.Icon(Icons.Default.ChevronRight, null) }
+                    ) { Icon(Icons.Default.ChevronRight, null) }
                 }
 
                 item {
                     PreferenceSetting(
                         settingTitle = "Pager Settings",
+                        settingIcon = { Icon(Icons.Default.ViewArray, null) },
                         onClick = {
                             location = SettingLocation.PAGER
                             scope.launch { state.bottomSheetState.expand() }
                         }
-                    ) { androidx.compose.material3.Icon(Icons.Default.ChevronRight, null) }
+                    ) { Icon(Icons.Default.ChevronRight, null) }
                 }
             }
         }
@@ -168,15 +176,18 @@ fun SwitchView(closeClick: () -> Unit) {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Fun") },
-                actions = {
-                    IconButton(onClick = { closeClick() }) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Fun") },
+                    actions = {
+                        IconButton(onClick = { closeClick() }) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
         },
     ) { p ->
         LazyColumn(contentPadding = p) {
@@ -203,15 +214,18 @@ fun CheckView(closeClick: () -> Unit) {
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Fun") },
-                actions = {
-                    IconButton(onClick = { closeClick() }) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Fun") },
+                    actions = {
+                        IconButton(onClick = { closeClick() }) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
         },
     ) { p ->
         LazyColumn(contentPadding = p) {
@@ -240,18 +254,18 @@ fun PagerView(closeClick: () -> Unit) {
     val state = rememberPagerState()
     val currentPage by remember { derivedStateOf { state.currentPage } }
     val pageCount = 4
-
+    //TODO: Look at this for a number picker setting
+    // https://github.com/ChargeMap/Compose-NumberPicker/blob/master/lib/src/main/kotlin/com/chargemap/compose/numberpicker/NumberPicker.kt
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Fun") },
-                actions = {
-                    IconButton(onClick = { closeClick() }) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Fun") },
+                    actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
+                    scrollBehavior = scrollBehavior
+                )
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
         },
     ) { p ->
         Column(modifier = Modifier.padding(p)) {
