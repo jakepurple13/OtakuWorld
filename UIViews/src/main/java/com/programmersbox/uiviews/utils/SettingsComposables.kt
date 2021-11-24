@@ -217,6 +217,24 @@ fun PreferenceSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: String,
+    summaryValue: String? = null,
+    onClick: (() -> Unit)? = null,
+    endIcon: @Composable () -> Unit
+) = DefaultPreferenceLayout(
+    modifier = modifier,
+    settingIcon = settingIcon,
+    settingTitle = settingTitle,
+    summaryValue = summaryValue,
+    onClick = onClick,
+    content = endIcon
+)
+
+@ExperimentalMaterialApi
+@Composable
+fun PreferenceSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: String,
     summaryValue: String? = null
 ) {
     Row(
@@ -429,16 +447,20 @@ private fun DefaultPreferenceLayout(
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: String,
     summaryValue: String? = null,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { onClick() }
+            .let {
+                onClick?.let { c ->
+                    it.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { c() }
+                } ?: it
+            }
             .padding(8.dp)
             .then(modifier)
     ) {

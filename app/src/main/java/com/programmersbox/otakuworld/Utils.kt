@@ -2,8 +2,9 @@ package com.programmersbox.otakuworld
 
 import android.app.Activity
 import androidx.annotation.VisibleForTesting
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.compose.ui.platform.LocalConfiguration
@@ -61,3 +62,5 @@ fun getWindowSizeClass(windowDpSize: DpSize): WindowSize = when {
     windowDpSize.width < 840.dp -> WindowSize.Medium
     else -> WindowSize.Expanded
 }
+
+var currentScheme: ColorScheme by mutableStateOf(darkColorScheme())

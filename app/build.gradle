@@ -76,7 +76,10 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation compose.compose
-    implementation materialYou
+    implementation "com.google.accompanist:accompanist-pager:$accompanist"
+    implementation "com.google.accompanist:accompanist-insets:$accompanist"
+    // If using insets-ui
+    implementation "com.google.accompanist:accompanist-insets-ui:$accompanist"
 
     implementation "androidx.window:window:1.0.0-beta04"
 

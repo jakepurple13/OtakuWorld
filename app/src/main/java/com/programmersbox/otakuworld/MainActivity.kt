@@ -2,8 +2,8 @@ package com.programmersbox.otakuworld
 
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -13,7 +13,6 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
@@ -60,6 +59,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.itemRangeOf
 import com.programmersbox.models.ApiService
@@ -77,12 +77,13 @@ import com.programmersbox.anime_sources.Sources as ASources
 import com.programmersbox.manga_sources.Sources as MSources
 import com.programmersbox.novel_sources.Sources as NSources
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val disposable = CompositeDisposable()
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
 
+    @ExperimentalPagerApi
     @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalFoundationApi
@@ -118,9 +119,11 @@ class MainActivity : ComponentActivity() {
                 else -> lightColorScheme()
             }
 
-            androidx.compose.material3.MaterialTheme(colorScheme = colorScheme) {
+            LaunchedEffect(Unit) { currentScheme = colorScheme }
 
-                var list by remember { mutableStateOf(listOf("A", "B", "C")) }
+            androidx.compose.material3.MaterialTheme(colorScheme = currentScheme) {
+
+                /*var list by remember { mutableStateOf(listOf("A", "B", "C")) }
                 LazyColumn {
                     item {
                         androidx.compose.material3.Button(onClick = { list = list.shuffled() }) {
@@ -133,6 +136,58 @@ class MainActivity : ComponentActivity() {
                             Modifier.animateItemPlacement(),
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
                         )
+                    }
+                }*/
+
+                val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
+
+                androidx.compose.material3.Scaffold(
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        CenterAlignedTopAppBar(
+                            title = { androidx.compose.material3.Text("Fun") },
+                            scrollBehavior = scrollBehavior
+                        )
+                    }
+                ) { p ->
+                    LazyColumn(contentPadding = p) {
+
+                        item {
+
+                            PreferenceSetting(
+                                settingTitle = "System Settings",
+                                onClick = { TestDialogFragment().showNow(supportFragmentManager, null) }
+                            ) { androidx.compose.material3.Icon(Icons.Default.ChevronRight, null) }
+
+                        }
+
+                        item {
+                            var themeSetting by remember {
+                                mutableStateOf(
+                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme ||
+                                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme ||
+                                            darkTheme
+                                )
+                            }
+
+                            val context = LocalContext.current
+
+                            SwitchSetting(
+                                summaryValue = "Current Theme: ${if (themeSetting) "Dark" else "Light"}",
+                                settingTitle = "Theme",
+                                value = themeSetting,
+                                updateValue = {
+                                    themeSetting = it
+                                    currentScheme = when {
+                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && it -> dynamicDarkColorScheme(context)
+                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !it -> dynamicLightColorScheme(context)
+                                        it -> darkColorScheme()
+                                        else -> lightColorScheme()
+                                    }
+                                }
+                            )
+
+                        }
                     }
                 }
 
