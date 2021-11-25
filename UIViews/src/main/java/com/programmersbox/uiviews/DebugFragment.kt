@@ -108,7 +108,7 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                     }
                     SliderSetting(
                         sliderValue = batteryPercent,
-                        settingIcon = Icons.Default.BatteryAlert,
+                        settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
                         settingTitle = stringResource(R.string.battery_alert_percentage),
                         settingSummary = stringResource(R.string.battery_default),
                         range = 1f..100f,

@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -320,11 +319,12 @@ fun CheckBoxSetting(
 fun SliderSetting(
     modifier: Modifier = Modifier,
     sliderValue: Float,
-    settingIcon: ImageVector,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: String,
-    settingSummary: String,
+    settingSummary: String? = null,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
+    onValueChangedFinished: (() -> Unit)? = null,
     updateValue: (Float) -> Unit
 ) {
     ConstraintLayout(
@@ -341,9 +341,7 @@ fun SliderSetting(
             value
         ) = createRefs()
 
-        Icon(
-            settingIcon,
-            null,
+        Box(
             modifier = Modifier
                 .constrainAs(icon) {
                     start.linkTo(parent.start)
@@ -352,7 +350,7 @@ fun SliderSetting(
                 }
                 .padding(8.dp)
                 .padding(end = 16.dp)
-        )
+        ) { settingIcon?.invoke(this) }
 
         Text(
             settingTitle,
@@ -368,7 +366,7 @@ fun SliderSetting(
         )
 
         Text(
-            settingSummary,
+            settingSummary.orEmpty(),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Start,
             modifier = Modifier.constrainAs(summary) {
@@ -382,6 +380,7 @@ fun SliderSetting(
         Slider(
             value = sliderValue,
             onValueChange = updateValue,
+            onValueChangeFinished = onValueChangedFinished,
             valueRange = range,
             steps = steps,
             colors = SliderDefaults.colors(

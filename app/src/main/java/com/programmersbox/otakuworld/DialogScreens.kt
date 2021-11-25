@@ -493,8 +493,6 @@ fun OptimisticView(closeClick: () -> Unit) {
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
     val scope = rememberCoroutineScope()
 
-    var count = remember { 0 }
-
     Scaffold(
         topBar = {
             Column {
@@ -508,49 +506,100 @@ fun OptimisticView(closeClick: () -> Unit) {
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { p ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(p),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            //THIS WORKS! This allows both optimistic updates and real time updates.
-            //To get this working for real, it would be in a view model variable that takes in a flow
-            val ticker = remember {
-                ticker(5000).receiveAsFlow()
-                    .map { Random.nextInt(0..10) }
-                    .shareIn(scope, SharingStarted.Eagerly, 1)
+            item {
+                var count = remember { 0 }
+
+                //THIS WORKS! This allows both optimistic updates and real time updates.
+                //To get this working for real, it would be in a view model variable that takes in a flow
+                val ticker = remember {
+                    ticker(5000).receiveAsFlow()
+                        .map { Random.nextInt(0..10) }
+                        .shareIn(scope, SharingStarted.Eagerly, 1)
+                }
+
+                val viewModel = remember {
+                    FlowStateViewModel(ticker, 0)
+                }
+
+                val viewModelCount by viewModel.collectAsState(initial = 0)
+
+                androidx.compose.material3.Button(
+                    onClick = { scope.launch { viewModel.emit(++count) } }
+                ) { Text("FlowState: $viewModelCount") }
+
+                val viewModel2 = remember {
+                    FlowSharedViewModel(ticker)
+                }
+
+                val viewModelCount2 by viewModel2.collectAsState(initial = 0)
+
+                androidx.compose.material3.Button(
+                    onClick = { scope.launch { viewModel2.emit(++count) } }
+                ) { Text("FlowShared: $viewModelCount2") }
+
+                val count2 = remember { MutableStateFlow(0) }
+
+                val timer by merge(ticker, count2).collectAsState(initial = 0)
+
+                androidx.compose.material3.Button(
+                    onClick = { scope.launch { count2.emit(++count) } }
+                ) { Text("Hi: $timer") }
+
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
 
-            val viewModel = remember {
-                FlowStateViewModel(ticker, 0)
+            item {
+
+                val lower = remember { FlowSharedViewModel(MutableSharedFlow<Float>()) }
+                val lowerFlow by lower.collectAsState(50f)
+
+                val upper = remember { FlowSharedViewModel(MutableSharedFlow<Float>()) }
+                val upperFlow by upper.collectAsState(75f)
+
+                val difference = 10f
+
+                SliderSetting(
+                    sliderValue = lowerFlow,
+                    settingTitle = "Lower",
+                    range = 0f..75f,
+                    updateValue = {
+                        scope.launch {
+                            lower.emit(it)
+                            if (upperFlow - difference < it) {
+                                upper.emit(it + difference)
+                            }
+                        }
+                    },
+                    onValueChangedFinished = {
+                        //TODO: This is where things would be sent
+                    }
+                )
+
+                SliderSetting(
+                    sliderValue = upperFlow,
+                    settingTitle = "Upper",
+                    range = 50f..100f,
+                    updateValue = {
+                        scope.launch {
+                            upper.emit(it)
+                            if (it < lowerFlow + difference) {
+                                lower.emit(it - difference)
+                            }
+                        }
+                    },
+                    onValueChangedFinished = {
+                        //TODO: This is where things would be sent
+                    }
+                )
+
             }
-
-            val viewModelCount by viewModel.collectAsState(initial = 0)
-
-            androidx.compose.material3.Button(
-                onClick = { scope.launch { viewModel.emit(++count) } }
-            ) { Text("FlowState: $viewModelCount") }
-
-            val viewModel2 = remember {
-                FlowSharedViewModel(ticker)
-            }
-
-            val viewModelCount2 by viewModel2.collectAsState(initial = 0)
-
-            androidx.compose.material3.Button(
-                onClick = { scope.launch { viewModel2.emit(++count) } }
-            ) { Text("FlowShared: $viewModelCount2") }
-
-            val count2 = remember { MutableStateFlow(0) }
-
-            val timer by merge(ticker, count2).collectAsState(initial = 0)
-
-            androidx.compose.material3.Button(
-                onClick = { scope.launch { count2.emit(++count) } }
-            ) { Text("Hi: $timer") }
-
         }
     }
 }
