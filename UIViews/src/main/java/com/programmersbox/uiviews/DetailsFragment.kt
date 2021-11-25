@@ -55,6 +55,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -190,6 +192,8 @@ class DetailsFragment : Fragment() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(false)
+
+        val shareChapter by LocalContext.current.shareChapter.collectAsState(initial = true)
 
         val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
 
@@ -561,6 +565,7 @@ class DetailsFragment : Fragment() {
                                 read = chapters,
                                 chapters = info.chapters,
                                 swatchInfo = swatchInfo,
+                                shareChapter = shareChapter,
                                 snackbar = ::showSnackBar
                             )
                         }
@@ -578,6 +583,7 @@ class DetailsFragment : Fragment() {
         read: List<ChapterWatched>,
         chapters: List<ChapterModel>,
         swatchInfo: MutableState<SwatchInfo?>,
+        shareChapter: Boolean,
         snackbar: (Int) -> Unit
     ) {
         val context = LocalContext.current
@@ -622,25 +628,91 @@ class DetailsFragment : Fragment() {
             tonalElevation = 5.dp,
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = read.fastAny { it.url == c.url },
-                        onCheckedChange = { b -> markAs(b) },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.secondary,
-                            uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+
+                if (shareChapter) {
+                    ConstraintLayout(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .fillMaxWidth()
+                    ) {
+                        val (checkbox, text, share) = createRefs()
+
+                        Checkbox(
+                            checked = read.fastAny { it.url == c.url },
+                            onCheckedChange = { b -> markAs(b) },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                    ?: M3MaterialTheme.colorScheme.secondary,
+                                uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                    ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                            ),
+                            modifier = Modifier.constrainAs(checkbox) {
+                                start.linkTo(parent.start)
+                                top.linkTo(parent.top)
+                                bottom.linkTo(parent.bottom)
+                            }
                         )
-                    )
 
-                    Text(
-                        c.name,
-                        style = M3MaterialTheme.typography.bodyLarge
-                            .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
-                        modifier = Modifier.padding(start = 5.dp)
-                    )
+                        Text(
+                            c.name,
+                            style = M3MaterialTheme.typography.bodyLarge
+                                .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                            modifier = Modifier
+                                .padding(start = 5.dp)
+                                .constrainAs(text) {
+                                    start.linkTo(checkbox.end)
+                                    end.linkTo(share.start)
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                    width = Dimension.fillToConstraints
+                                }
+                        )
 
+                        IconButton(
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .constrainAs(share) {
+                                    end.linkTo(parent.end)
+                                    top.linkTo(parent.top)
+                                    bottom.linkTo(parent.bottom)
+                                },
+                            onClick = {
+                                startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, c.url)
+                                    putExtra(Intent.EXTRA_TITLE, c.name)
+                                }, getString(R.string.share_item, c.name)))
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Share,
+                                null,
+                                tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current
+                            )
+                        }
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = read.fastAny { it.url == c.url },
+                            onCheckedChange = { b -> markAs(b) },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                    ?: M3MaterialTheme.colorScheme.secondary,
+                                uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                    ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                            )
+                        )
+
+                        Text(
+                            c.name,
+                            style = M3MaterialTheme.typography.bodyLarge
+                                .let { b -> swatchInfo.value?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                            modifier = Modifier.padding(start = 5.dp)
+                        )
+                    }
                 }
 
                 Text(

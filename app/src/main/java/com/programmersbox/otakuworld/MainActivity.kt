@@ -1,5 +1,6 @@
 package com.programmersbox.otakuworld
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
@@ -70,10 +71,16 @@ import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.channels.ticker
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 import kotlin.random.Random
+import kotlin.random.nextInt
 import com.programmersbox.anime_sources.Sources as ASources
 import com.programmersbox.manga_sources.Sources as MSources
 import com.programmersbox.novel_sources.Sources as NSources
@@ -84,6 +91,7 @@ class MainActivity : AppCompatActivity() {
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
 
+    @SuppressLint("FlowOperatorInvokedInComposition")
     @ExperimentalPagerApi
     @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
@@ -109,6 +117,8 @@ class MainActivity : AppCompatActivity() {
             .addTo(disposable)*/
 
         val strings = itemRangeOf("Hello", "World", "How", "Are", "You?")
+
+        var count = 0
 
         setContent {
 
@@ -283,6 +293,19 @@ class MainActivity : AppCompatActivity() {
                                 androidx.compose.material3.MaterialTheme.colorScheme.primary.animate().value
                             )
                         ) { androidx.compose.material3.Text("Open Settings") }
+
+                        //THIS WORKS! This allows both optimistic updates and real time updates.
+                        //To get this working for real, it would be in a view model variable that takes in a flow
+                        val count2 = remember { MutableStateFlow(0) }
+
+                        val timer by merge(
+                            ticker(5000).receiveAsFlow().map { Random.nextInt(0..10) },
+                            count2
+                        ).collectAsState(initial = 0)
+
+                        androidx.compose.material3.Button(
+                            onClick = { scope.launch { count2.emit(++count) } }
+                        ) { androidx.compose.material3.Text("Hi: $timer") }
                     }
                 }
 

@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -78,8 +79,10 @@ val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore("otakuworld")
 
 val BATTERY_PERCENT = intPreferencesKey("battery_percent")
-
 val Context.batteryPercent get() = dataStore.data.map { it[BATTERY_PERCENT] ?: 20 }
+
+val SHARE_CHAPTER = booleanPreferencesKey("share_chapter")
+val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true }
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 
