@@ -33,6 +33,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -42,10 +43,11 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.programmersbox.uiviews.utils.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.channels.ticker
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 class TestDialogFragment : BaseBottomSheetDialogFragment() {
 
@@ -73,7 +75,7 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
 }
 
 enum class SettingLocation {
-    CHECK, SWITCH, PAGER
+    CHECK, SWITCH, PAGER, OPTIMISTIC
 }
 
 @ExperimentalPagerApi
@@ -83,7 +85,7 @@ enum class SettingLocation {
 @ExperimentalMaterialApi
 @Composable
 fun TestView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
     var location: SettingLocation? by remember { mutableStateOf(null) }
@@ -118,12 +120,14 @@ fun TestView(closeClick: () -> Unit) {
                     SettingLocation.CHECK -> CheckView { scope.launch { state.bottomSheetState.collapse() } }
                     SettingLocation.SWITCH -> SwitchView { scope.launch { state.bottomSheetState.collapse() } }
                     SettingLocation.PAGER -> PagerView { scope.launch { state.bottomSheetState.collapse() } }
+                    SettingLocation.OPTIMISTIC -> OptimisticView { scope.launch { state.bottomSheetState.collapse() } }
                     else -> {}
                 }
             }
         },
         backgroundColor = MaterialTheme.colorScheme.background,
-        contentColor = contentColorFor(MaterialTheme.colorScheme.background)
+        contentColor = contentColorFor(MaterialTheme.colorScheme.background),
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { p ->
         CompositionLocalProvider(
             androidx.compose.material3.LocalContentColor provides contentColorFor(MaterialTheme.colorScheme.background)
@@ -161,6 +165,17 @@ fun TestView(closeClick: () -> Unit) {
                         }
                     ) { Icon(Icons.Default.ChevronRight, null) }
                 }
+
+                item {
+                    PreferenceSetting(
+                        settingTitle = "Optimistic Settings",
+                        settingIcon = { Icon(Icons.Default.Update, null) },
+                        onClick = {
+                            location = SettingLocation.OPTIMISTIC
+                            scope.launch { state.bottomSheetState.expand() }
+                        }
+                    ) { Icon(Icons.Default.ChevronRight, null) }
+                }
             }
         }
     }
@@ -172,13 +187,13 @@ fun TestView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun SwitchView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Fun") },
+                    title = { Text("Switch") },
                     actions = {
                         IconButton(onClick = { closeClick() }) {
                             Icon(imageVector = Icons.Default.Close, contentDescription = null)
@@ -189,6 +204,7 @@ fun SwitchView(closeClick: () -> Unit) {
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { p ->
         LazyColumn(contentPadding = p) {
             items(20) {
@@ -210,13 +226,13 @@ fun SwitchView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun CheckView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Fun") },
+                    title = { Text("Check") },
                     actions = {
                         IconButton(onClick = { closeClick() }) {
                             Icon(imageVector = Icons.Default.Close, contentDescription = null)
@@ -227,6 +243,7 @@ fun CheckView(closeClick: () -> Unit) {
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { p ->
         LazyColumn(contentPadding = p) {
             items(20) {
@@ -249,24 +266,25 @@ fun CheckView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun PagerView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
     val scope = rememberCoroutineScope()
     val state = rememberPagerState()
     val currentPage by remember { derivedStateOf { state.currentPage } }
-    val pageCount = 4
+    val pageCount = 5
     //TODO: Look at this for a number picker setting
     // https://github.com/ChargeMap/Compose-NumberPicker/blob/master/lib/src/main/kotlin/com/chargemap/compose/numberpicker/NumberPicker.kt
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Fun") },
+                    title = { Text("Pager") },
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { p ->
         Column(modifier = Modifier.padding(p)) {
             Row(
@@ -435,6 +453,11 @@ fun PagerView(closeClick: () -> Unit) {
                                 PreferenceSetting(settingTitle = "A Thing")
                             }
                         }
+                        4 -> {
+                            items(20) {
+                                PreferenceSetting(settingTitle = "A Thing2")
+                            }
+                        }
                     }
                 }
             }
@@ -459,4 +482,75 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
             )
         }
     )
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterial3Api
+@ExperimentalFoundationApi
+@ExperimentalMaterialApi
+@Composable
+fun OptimisticView(closeClick: () -> Unit) {
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val scope = rememberCoroutineScope()
+
+    var count = remember { 0 }
+
+    Scaffold(
+        topBar = {
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Optimistic Views") },
+                    actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
+                    scrollBehavior = scrollBehavior
+                )
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { p ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(p),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            //THIS WORKS! This allows both optimistic updates and real time updates.
+            //To get this working for real, it would be in a view model variable that takes in a flow
+            val ticker = remember {
+                ticker(5000).receiveAsFlow()
+                    .map { Random.nextInt(0..10) }
+                    .shareIn(scope, SharingStarted.Eagerly, 1)
+            }
+
+            val viewModel = remember {
+                FlowStateViewModel(ticker, 0)
+            }
+
+            val viewModelCount by viewModel.collectAsState(initial = 0)
+
+            androidx.compose.material3.Button(
+                onClick = { scope.launch { viewModel.emit(++count) } }
+            ) { Text("FlowState: $viewModelCount") }
+
+            val viewModel2 = remember {
+                FlowSharedViewModel(ticker)
+            }
+
+            val viewModelCount2 by viewModel2.collectAsState(initial = 0)
+
+            androidx.compose.material3.Button(
+                onClick = { scope.launch { viewModel2.emit(++count) } }
+            ) { Text("FlowShared: $viewModelCount2") }
+
+            val count2 = remember { MutableStateFlow(0) }
+
+            val timer by merge(ticker, count2).collectAsState(initial = 0)
+
+            androidx.compose.material3.Button(
+                onClick = { scope.launch { count2.emit(++count) } }
+            ) { Text("Hi: $timer") }
+
+        }
+    }
 }
