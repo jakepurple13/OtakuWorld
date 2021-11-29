@@ -44,6 +44,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.programmersbox.uiviews.utils.*
 import kotlinx.coroutines.channels.ticker
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -456,6 +457,45 @@ fun PagerView(closeClick: () -> Unit) {
                         4 -> {
                             items(20) {
                                 PreferenceSetting(settingTitle = "A Thing2")
+                            }
+
+                            items(3) {
+                                PreferenceSetting(
+                                    settingTitle = "Text!",
+                                    endIcon = { Text("More Text!") }
+                                )
+                            }
+
+                            items(3) {
+
+                                var showInfo by remember { mutableStateOf(false) }
+
+                                LaunchedEffect(key1 = showInfo) {
+                                    delay(10000)
+                                    showInfo = false
+                                }
+
+                                if (showInfo) {
+                                    AlertDialog(
+                                        onDismissRequest = { showInfo = false },
+                                        title = { Text("Title") },
+                                        confirmButton = { TextButton(onClick = { showInfo = false }) { Text("OK") } }
+                                    )
+                                }
+
+                                PreferenceSetting(
+                                    settingTitle = "Text!",
+                                    endIcon = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            IconButton(
+                                                onClick = { showInfo = true }
+                                            ) { Icon(imageVector = Icons.Default.Info, contentDescription = null) }
+                                            Text("More Text!")
+                                        }
+                                    }
+                                )
                             }
                         }
                     }

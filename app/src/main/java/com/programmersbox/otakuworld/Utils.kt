@@ -82,6 +82,7 @@ abstract class FlowViewModel<T>(protected val flow: Flow<T>) : ViewModel() {
 
 class FlowStateViewModel<T>(flow: Flow<T>, initialValue: T) : FlowViewModel<T>(flow) {
     override val manualFlow = MutableStateFlow(initialValue)
+    val value get() = manualFlow.value
 }
 
 class FlowSharedViewModel<T>(flow: Flow<T>) : FlowViewModel<T>(flow) {
