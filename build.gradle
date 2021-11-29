@@ -47,7 +47,7 @@ buildscript {
     // Koin Android - experimental builder extensions
     ext.koinAndroidExt = "io.insert-koin:koin-android-ext:$koin_version"
 
-    ext.lottieVersion = "4.2.1"
+    ext.lottieVersion = "4.2.2"
 
     ext.jetpack = "1.1.0-beta03"
 
