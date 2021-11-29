@@ -111,6 +111,7 @@ dependencies {
     implementation compose.compose
     implementation "com.google.accompanist:accompanist-pager:$accompanist"
     implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
+    implementation "xyz.quaver:subsampledimage:0.0.1-alpha09-SNAPSHOT"
 
     implementation datastore.datastore
 }
