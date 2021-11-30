@@ -31,12 +31,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.LayoutModifier
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -47,6 +55,7 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -484,14 +493,21 @@ fun PagerView(closeClick: () -> Unit) {
                                 }
 
                                 PreferenceSetting(
-                                    settingTitle = "Text!",
+                                    settingTitle = "Text $it!",
                                     endIcon = {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            IconButton(
-                                                onClick = { showInfo = true }
-                                            ) { Icon(imageVector = Icons.Default.Info, contentDescription = null) }
+
+                                            Icon(
+                                                imageVector = Icons.Default.Info,
+                                                contentDescription = null,
+                                                tint = Color.Cyan,
+                                                modifier = Modifier
+                                                    .clickable { showInfo = true }
+                                                    .minimumTouchTargetSizeCustom()
+                                            )
+
                                             Text("More Text!")
                                         }
                                     }
@@ -502,6 +518,47 @@ fun PagerView(closeClick: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+fun Modifier.minimumTouchTargetSizeCustom(): Modifier = composed {
+    if (androidx.compose.material3.LocalMinimumTouchTargetEnforcement.current) {
+        // TODO: consider using a hardcoded value of 48.dp instead to avoid inconsistent UI if the
+        // LocalViewConfiguration changes across devices / during runtime.
+        val size = LocalViewConfiguration.current.minimumTouchTargetSize
+        MinimumTouchTargetModifierCustom(size)
+    } else {
+        Modifier
+    }
+}
+
+class MinimumTouchTargetModifierCustom(val size: DpSize) : LayoutModifier {
+    override fun MeasureScope.measure(
+        measurable: Measurable,
+        constraints: Constraints
+    ): MeasureResult {
+
+        val placeable = measurable.measure(constraints)
+
+        // Be at least as big as the minimum dimension in both dimensions
+        val width = maxOf(placeable.width, size.width.roundToPx())
+        val height = maxOf(placeable.height, size.height.roundToPx())
+
+        return layout(width, height) {
+            val centerX = ((width - placeable.width) / 2f).roundToInt()
+            val centerY = ((height - placeable.height) / 2f).roundToInt()
+            placeable.place(centerX, centerY)
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        val otherModifier = other as? MinimumTouchTargetModifierCustom ?: return false
+        return size == otherModifier.size
+    }
+
+    override fun hashCode(): Int {
+        return size.hashCode()
     }
 }
 
