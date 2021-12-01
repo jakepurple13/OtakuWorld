@@ -68,7 +68,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:21.0.1'
     implementation 'com.google.android.gms:play-services-auth:19.2.0'
     implementation 'com.google.firebase:firebase-firestore-ktx:24.0.0'
-    implementation 'com.google.firebase:firebase-database-ktx:20.0.2'
+    implementation 'com.google.firebase:firebase-database-ktx:20.0.3'
     implementation "androidx.compose.ui:ui-tooling-preview:$jetpack"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0'
     implementation "androidx.datastore:datastore:1.0.0"
