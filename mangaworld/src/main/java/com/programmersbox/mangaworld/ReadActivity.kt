@@ -26,15 +26,18 @@ import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -44,7 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -54,13 +57,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.datastore.preferences.core.Preferences
@@ -105,14 +108,17 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
+import androidx.compose.material3.ProvideTextStyle as M3ProvideTextStyle
 
 class ReadActivityCompose : ComponentActivity() {
 
@@ -196,6 +202,8 @@ class ReadActivityCompose : ComponentActivity() {
 
                 val pages = pageList
 
+                LaunchedEffect(pageList) { BigImageViewer.prefetch(*pageList.fastMap(Uri::parse).toTypedArray()) }
+
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
                 var showInfo by remember { mutableStateOf(false) }
@@ -212,9 +220,7 @@ class ReadActivityCompose : ComponentActivity() {
                         onDismissRequest = { settingsPopup = false },
                         title = { Text(stringResource(R.string.settings)) },
                         text = {
-                            Column(
-                                modifier = Modifier.padding(5.dp)
-                            ) {
+                            Column {
                                 SliderSetting(
                                     scope = scope,
                                     settingIcon = Icons.Default.BatteryAlert,
@@ -401,6 +407,8 @@ class ReadActivityCompose : ComponentActivity() {
                     val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
 
                     val toolbarHeight = 64.dp
+                    val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
+                    val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
 
                     val nestedScrollConnection = remember {
                         object : NestedScrollConnection {
@@ -410,6 +418,9 @@ class ReadActivityCompose : ComponentActivity() {
 
                                 val newTopOffset = topBarOffsetHeightPx.value + delta
                                 topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
+
+                                val newOffset = toolbarOffsetHeightPx.value + delta
+                                toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
 
                                 return scrollBehavior.nestedScrollConnection.onPreScroll(available, source)//Offset.Zero
                             }
@@ -489,6 +500,7 @@ class ReadActivityCompose : ComponentActivity() {
                                                     onClick = {
                                                         showInfo = !showInfo
                                                         if (!showInfo) {
+                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
                                                             topBarOffsetHeightPx.value = -topBarHeightPx
                                                         }
                                                     },
@@ -508,6 +520,39 @@ class ReadActivityCompose : ComponentActivity() {
                                             )
                                             val scaleAnim = animateFloatAsState(scale).value
                                             val (x, y) = animateOffsetAsState(targetValue = offset).value
+
+                                            /*GlideImage(
+                                                imageModel = it,
+                                                contentScale = ContentScale.FillWidth,
+                                                loading = {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.align(Alignment.Center),
+                                                        color = M3MaterialTheme.colorScheme.primary
+                                                    )
+                                                },
+                                                success = {
+                                                    val byteArray = remember {
+                                                        val stream = ByteArrayOutputStream()
+                                                        it.drawable?.toBitmap()?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                                                        val b = stream.toByteArray()
+                                                        ByteArrayInputStream(b)
+                                                    }
+                                                    SubSampledImage(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                                                            .align(Alignment.Center)
+                                                            .clipToBounds(),
+                                                        imageSource = rememberInputStreamImageSource(inputStream = byteArray)
+                                                    )
+                                                },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                                                    .align(Alignment.Center)
+                                                    .clipToBounds()
+                                            )*/
+
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.FillWidth,
@@ -545,16 +590,18 @@ class ReadActivityCompose : ComponentActivity() {
                                                 )
                                             }
                                             GoBackButton(modifier = Modifier.fillMaxWidth())
-                                            AndroidView(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                factory = {
-                                                    AdView(it).apply {
-                                                        adSize = AdSize.BANNER
-                                                        adUnitId = getString(R.string.ad_unit_id)
-                                                        loadAd(ad)
+                                            if (!BuildConfig.DEBUG) {
+                                                AndroidView(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    factory = {
+                                                        AdView(it).apply {
+                                                            adSize = AdSize.BANNER
+                                                            adUnitId = getString(R.string.ad_unit_id)
+                                                            loadAd(ad)
+                                                        }
                                                     }
-                                                }
-                                            )
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -578,7 +625,8 @@ class ReadActivityCompose : ComponentActivity() {
                                     modifier = Modifier
                                         .height(toolbarHeight)
                                         .align(Alignment.BottomCenter)
-                                        .alpha(animateTopBar),
+                                        .alpha(animateTopBar)
+                                        .offset { IntOffset(x = 0, y = if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt())) },
                                     scrollBehavior = scrollBehavior,
                                     onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
                                     onSettingsClick = { settingsPopup = true },
@@ -615,11 +663,9 @@ class ReadActivityCompose : ComponentActivity() {
                         targetState = batteryPercent.toInt(),
                         transitionSpec = {
                             if (targetState > initialState) {
-                                slideInVertically { height -> height } + fadeIn() with
-                                        slideOutVertically { height -> -height } + fadeOut()
+                                slideInVertically { height -> height } + fadeIn() with slideOutVertically { height -> -height } + fadeOut()
                             } else {
-                                slideInVertically { height -> -height } + fadeIn() with
-                                        slideOutVertically { height -> height } + fadeOut()
+                                slideInVertically { height -> -height } + fadeIn() with slideOutVertically { height -> height } + fadeOut()
                             }
                                 .using(SizeTransform(clip = false))
                         }
@@ -642,13 +688,12 @@ class ReadActivityCompose : ComponentActivity() {
                 AnimatedContent(
                     targetState = time,
                     transitionSpec = {
-                        (slideInVertically { height -> height } + fadeIn() with
-                                slideOutVertically { height -> -height } + fadeOut())
+                        (slideInVertically { height -> height } + fadeIn() with slideOutVertically { height -> -height } + fadeOut())
                             .using(SizeTransform(clip = false))
                     }
                 ) { targetTime ->
                     Text(
-                        DateFormat.format("HH:mm a", targetTime).toString(),
+                        DateFormat.getTimeFormat(LocalContext.current).format(targetTime).toString(),
                         style = M3MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(4.dp)
                     )
@@ -810,11 +855,66 @@ class ReadActivityCompose : ComponentActivity() {
 
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
-        OutlinedButton(
+        NoRippleOutlinedButton(
             onClick = { finish() },
             modifier = modifier,
             border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)
         ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }
+    }
+
+    //TODO: Will be testing this out
+    @Composable
+    private fun NoRippleOutlinedButton(
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier,
+        enabled: Boolean = true,
+        interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+        elevation: ButtonElevation? = null,
+        shape: Shape = RoundedCornerShape(20.0.dp),
+        border: BorderStroke? = ButtonDefaults.outlinedButtonBorder,
+        colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+        contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+        content: @Composable RowScope.() -> Unit
+    ) {
+        val containerColor = colors.containerColor(enabled).value
+        val contentColor = colors.contentColor(enabled).value
+        val shadowElevation = elevation?.shadowElevation(enabled, interactionSource)?.value ?: 0.dp
+        val tonalElevation = elevation?.tonalElevation(enabled, interactionSource)?.value ?: 0.dp
+
+        Surface(
+            modifier = modifier,
+            shape = shape,
+            color = containerColor,
+            contentColor = contentColor,
+            shadowElevation = shadowElevation,
+            tonalElevation = tonalElevation,
+            border = border,
+        ) {
+            val clickAndSemanticsModifier = Modifier.clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = true,
+                onClickLabel = null,
+                role = Role.Button,
+                onClick = onClick
+            )
+            CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides contentColor) {
+                M3ProvideTextStyle(value = M3MaterialTheme.typography.labelLarge) {
+                    Row(
+                        Modifier
+                            .defaultMinSize(
+                                minWidth = ButtonDefaults.MinWidth,
+                                minHeight = ButtonDefaults.MinHeight
+                            )
+                            .then(clickAndSemanticsModifier)
+                            .padding(contentPadding),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        content = content
+                    )
+                }
+            }
+        }
     }
 
     private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
@@ -868,93 +968,19 @@ class ReadActivityCompose : ComponentActivity() {
         initialValue: Int,
         range: ClosedFloatingPointRange<Float>
     ) {
-        ConstraintLayout(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth()
-        ) {
-            val (
-                icon,
-                title,
-                summary,
-                slider,
-                value
-            ) = createRefs()
+        var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
 
-            Icon(
-                settingIcon,
-                null,
-                modifier = Modifier
-                    .constrainAs(icon) {
-                        start.linkTo(parent.start)
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                    }
-                    .padding(8.dp)
-            )
-
-            Text(
-                stringResource(settingTitle),
-                style = M3MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.constrainAs(title) {
-                    top.linkTo(parent.top)
-                    end.linkTo(parent.end)
-                    start.linkTo(icon.end, margin = 10.dp)
-                    width = Dimension.fillToConstraints
-                }
-            )
-
-            Text(
-                stringResource(settingSummary),
-                style = M3MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.constrainAs(summary) {
-                    top.linkTo(title.bottom)
-                    end.linkTo(parent.end)
-                    start.linkTo(icon.end, margin = 10.dp)
-                    width = Dimension.fillToConstraints
-                }
-            )
-
-            var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
-
-            Slider(
-                value = sliderValue,
-                onValueChange = {
-                    sliderValue = it
-                    scope.launch { updatePref(preference, sliderValue.toInt()) }
-                },
-                valueRange = range,
-                steps = 0,
-                colors = SliderDefaults.colors(
-                    thumbColor = M3MaterialTheme.colorScheme.primary,
-                    disabledThumbColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-                        .compositeOver(M3MaterialTheme.colorScheme.surface),
-                    activeTrackColor = M3MaterialTheme.colorScheme.primary,
-                    disabledActiveTrackColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
-                    activeTickColor = m3ContentColorFor(M3MaterialTheme.colorScheme.primary)
-                        .copy(alpha = SliderDefaults.TickAlpha)
-                ),
-                modifier = Modifier.constrainAs(slider) {
-                    top.linkTo(summary.bottom)
-                    end.linkTo(value.start)
-                    start.linkTo(icon.end)
-                    width = Dimension.fillToConstraints
-                }
-            )
-
-            Text(
-                sliderValue.toInt().toString(),
-                style = M3MaterialTheme.typography.titleMedium,
-                modifier = Modifier.constrainAs(value) {
-                    end.linkTo(parent.end)
-                    start.linkTo(slider.end)
-                    centerVerticallyTo(slider)
-                }
-            )
-
-        }
+        SliderSetting(
+            sliderValue = sliderValue,
+            settingTitle = stringResource(id = settingTitle),
+            settingSummary = stringResource(id = settingSummary),
+            range = range,
+            updateValue = {
+                sliderValue = it
+                scope.launch { updatePref(preference, sliderValue.toInt()) }
+            },
+            settingIcon = { Icon(settingIcon, null) }
+        )
     }
 
     override fun onDestroy() {
@@ -962,7 +988,6 @@ class ReadActivityCompose : ComponentActivity() {
         unregisterReceiver(batteryInfo)
         disposable.dispose()
         Glide.get(this).clearMemory()
-        GlobalScope.launch { Glide.get(this@ReadActivityCompose).clearDiskCache() }
     }
 }
 
@@ -972,29 +997,6 @@ class ReadActivity : AppCompatActivity() {
     private var mangaTitle: String? = null
     private var isDownloaded = false
     private val loader by lazy { Glide.with(this) }
-    /*private val adapter by lazy {
-        loader.let {
-            PageAdapter(
-                fullRequest = it
-                    .asDrawable()
-                    .skipMemoryCache(true)
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .centerCrop(),
-                thumbRequest = it
-                    .asDrawable()
-                    .diskCacheStrategy(DiskCacheStrategy.DATA)
-                    .transition(withCrossFade()),
-                context = this@ReadActivity,
-                dataList = mutableListOf()
-            ) { image ->
-                requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
-                    if (p.isGranted) saveImage("${mangaTitle}_${model?.name}_${image.toUri().lastPathSegment}", image)
-                }
-            }
-        }
-    }*/
-
-
     private val genericInfo by inject<GenericInfo>()
 
     private fun View.slideUp() {
@@ -1074,26 +1076,10 @@ class ReadActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityReadBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        /*MobileAds.initialize(this) {}
-        MobileAds.setRequestConfiguration(RequestConfiguration.Builder().setTestDeviceIds(listOf("BCF3E346AED658CDCCB1DDAEE8D84845")).build())*/
-
         enableImmersiveMode()
-
-        //adViewing.loadAd(AdRequest.Builder().build())
-
-        /*window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
-            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
-                println("Visible")
-                titleManga.animate().alpha(1f).withStartAction { titleManga.visible() }.start()
-            } else {
-                println("Invisible")
-                titleManga.animate().alpha(0f).withEndAction { titleManga.invisible() }.start()
-            }
-        }*/
 
         infoSetup()
         readerSetup()
@@ -1162,7 +1148,6 @@ class ReadActivity : AppCompatActivity() {
         }
 
         binding.readerSettings.setOnClickListener {
-
             val readerBinding = ReaderSettingsDialogBinding.inflate(layoutInflater)
 
             val padding = runBlocking { dataStore.data.first()[PAGE_PADDING] ?: 4 }
@@ -1295,22 +1280,6 @@ class ReadActivity : AppCompatActivity() {
             batteryInformation.batteryLevelAlert(it.percent)
             batteryInformation.batteryInfoItem(it)
         }
-    }
-
-    private fun saveCurrentChapterSpot() {
-        /*model?.let {
-            defaultSharedPref.edit().apply {
-                val currentItem = (readView.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
-                if (currentItem >= adapter.dataList.size - 2) remove(it.url)
-                else putInt(it.url, currentItem)
-            }.apply()
-        }*/
-    }
-
-    override fun onPause() {
-        //saveCurrentChapterSpot()
-        //adViewing.pause()
-        super.onPause()
     }
 
     override fun onDestroy() {

@@ -69,6 +69,16 @@ fun defaultCheckBoxColors() = CheckboxDefaults.colors(
     disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
 )
 
+@Composable
+fun defaultSliderColors() = SliderDefaults.colors(
+    thumbColor = MaterialTheme.colorScheme.primary,
+    disabledThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
+        .compositeOver(MaterialTheme.colorScheme.surface),
+    activeTrackColor = MaterialTheme.colorScheme.primary,
+    disabledActiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
+    activeTickColor = contentColorFor(MaterialTheme.colorScheme.primary).copy(alpha = SliderDefaults.TickAlpha)
+)
+
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @Composable
@@ -324,6 +334,7 @@ fun SliderSetting(
     settingSummary: String? = null,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
+    colors: SliderColors = defaultSliderColors(),
     onValueChangedFinished: (() -> Unit)? = null,
     updateValue: (Float) -> Unit
 ) {
@@ -383,14 +394,7 @@ fun SliderSetting(
             onValueChangeFinished = onValueChangedFinished,
             valueRange = range,
             steps = steps,
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.primary,
-                disabledThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-                    .compositeOver(MaterialTheme.colorScheme.surface),
-                activeTrackColor = MaterialTheme.colorScheme.primary,
-                disabledActiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
-                activeTickColor = contentColorFor(MaterialTheme.colorScheme.primary).copy(alpha = SliderDefaults.TickAlpha)
-            ),
+            colors = colors,
             modifier = Modifier.constrainAs(slider) {
                 top.linkTo(summary.bottom)
                 end.linkTo(value.start)
