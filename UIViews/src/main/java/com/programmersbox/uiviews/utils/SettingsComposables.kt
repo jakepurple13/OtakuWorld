@@ -335,6 +335,7 @@ fun SliderSetting(
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
     colors: SliderColors = defaultSliderColors(),
+    format: (Float) -> String = { it.toInt().toString() },
     onValueChangedFinished: (() -> Unit)? = null,
     updateValue: (Float) -> Unit
 ) {
@@ -346,8 +347,7 @@ fun SliderSetting(
     ) {
         val (
             icon,
-            title,
-            summary,
+            info,
             slider,
             value
         ) = createRefs()
@@ -363,30 +363,29 @@ fun SliderSetting(
                 .padding(end = 16.dp)
         ) { settingIcon?.invoke(this) }
 
-        Text(
-            settingTitle,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Start,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.constrainAs(title) {
+        Column(
+            modifier = Modifier.constrainAs(info) {
                 top.linkTo(parent.top)
                 end.linkTo(parent.end)
                 start.linkTo(icon.end, margin = 10.dp)
                 width = Dimension.fillToConstraints
             }
-        )
+        ) {
+            Text(
+                settingTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Start,
+                fontWeight = FontWeight.Bold
+            )
 
-        Text(
-            settingSummary.orEmpty(),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.constrainAs(summary) {
-                top.linkTo(title.bottom)
-                end.linkTo(parent.end)
-                start.linkTo(icon.end, margin = 10.dp)
-                width = Dimension.fillToConstraints
+            settingSummary?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Start
+                )
             }
-        )
+        }
 
         Slider(
             value = sliderValue,
@@ -396,7 +395,7 @@ fun SliderSetting(
             steps = steps,
             colors = colors,
             modifier = Modifier.constrainAs(slider) {
-                top.linkTo(summary.bottom)
+                top.linkTo(info.bottom)
                 end.linkTo(value.start)
                 start.linkTo(icon.end)
                 width = Dimension.fillToConstraints
@@ -404,7 +403,7 @@ fun SliderSetting(
         )
 
         Text(
-            sliderValue.toInt().toString(),
+            format(sliderValue),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .constrainAs(value) {

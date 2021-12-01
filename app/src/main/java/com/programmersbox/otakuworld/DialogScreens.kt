@@ -682,6 +682,8 @@ fun OptimisticView(closeClick: () -> Unit) {
                 SliderSetting(
                     sliderValue = upperFlow,
                     settingTitle = "Upper",
+                    settingSummary = "Must be $difference above Lower",
+                    format = { "${it.toInt()}%" },
                     range = 50f..100f,
                     updateValue = {
                         scope.launch {
