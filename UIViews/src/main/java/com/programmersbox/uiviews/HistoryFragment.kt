@@ -71,8 +71,10 @@ class HistoryFragment : Fragment() {
     private val logo: MainLogo by inject()
     private val disposable = CompositeDisposable()
 
-    @ExperimentalMaterial3Api
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class
+    )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))

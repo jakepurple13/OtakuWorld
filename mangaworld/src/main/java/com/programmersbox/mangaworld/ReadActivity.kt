@@ -164,11 +164,13 @@ class ReadActivityCompose : ComponentActivity() {
 
     private val ad by lazy { AdRequest.Builder().build() }
 
-    @ExperimentalMaterial3Api
-    @ExperimentalMaterialApi
-    @ExperimentalComposeUiApi
-    @ExperimentalAnimationApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -855,7 +857,7 @@ class ReadActivityCompose : ComponentActivity() {
 
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
-        NoRippleOutlinedButton(
+        androidx.compose.material3.OutlinedButton(
             onClick = { finish() },
             modifier = modifier,
             border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)

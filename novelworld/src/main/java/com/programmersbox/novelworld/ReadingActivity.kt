@@ -19,11 +19,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VerticalAlignTop
@@ -31,7 +29,6 @@ import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -129,11 +126,13 @@ class ReadingActivity : ComponentActivity() {
     private val pageList = mutableStateOf("")
     private var isLoadingPages = mutableStateOf(false)
 
-    @ExperimentalMaterial3Api
-    @ExperimentalMaterialApi
-    @ExperimentalComposeUiApi
-    @ExperimentalAnimationApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -251,7 +250,7 @@ class ReadingActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.nestedScroll(nestedScrollConnection),
                     scaffoldState = scaffoldState,
-                    drawerContent = if (list.size > 1) {
+                    /*drawerContent = if (list.size > 1) {
                         {
                             val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
@@ -318,8 +317,7 @@ class ReadingActivity : ComponentActivity() {
                                 }
                             }
                         }
-                    } else null,
-                    floatingActionButtonPosition = FabPosition.End,
+                    } else null,*/
                     floatingActionButton = {
                         FloatingActionButton(
                             onClick = { scope.launch { listState.animateScrollToItem(0) } },

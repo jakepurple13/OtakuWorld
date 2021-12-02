@@ -59,9 +59,11 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     private val fetch: Fetch = Fetch.getDefaultInstance()
     private val downloadState = mutableStateListOf<DownloadData>()
 
-    @ExperimentalMaterial3Api
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

@@ -68,11 +68,13 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
 
     private val defaultPathname get() = File(DOWNLOAD_FILE_PATH)
 
-    @ExperimentalFoundationApi
-    @ExperimentalPermissionsApi
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    @ExperimentalMaterial3Api
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalPermissionsApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

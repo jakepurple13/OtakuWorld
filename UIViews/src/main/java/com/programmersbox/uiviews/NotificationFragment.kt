@@ -84,9 +84,11 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
 
-    @ExperimentalMaterial3Api
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

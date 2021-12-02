@@ -89,10 +89,12 @@ class GlobalSearchFragment : Fragment() {
 
     data class SearchModel(val apiName: String, val data: List<ItemModel>)
 
-    @ExperimentalMaterial3Api
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))

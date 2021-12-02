@@ -209,8 +209,10 @@ class GenericManga(val context: Context) : GenericInfo {
         null
     }
 
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     @Composable
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
@@ -220,8 +222,10 @@ class GenericManga(val context: Context) : GenericInfo {
         ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
     }
 
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     @Composable
     override fun ItemListView(
         list: List<ItemModel>,

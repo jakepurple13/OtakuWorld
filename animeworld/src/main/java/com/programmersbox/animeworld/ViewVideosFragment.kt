@@ -64,10 +64,12 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     private val disposable = CompositeDisposable()
 
-    @ExperimentalMaterial3Api
-    @ExperimentalPermissionsApi
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalPermissionsApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

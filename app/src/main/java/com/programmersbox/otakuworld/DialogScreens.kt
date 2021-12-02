@@ -61,11 +61,13 @@ import kotlin.random.nextInt
 
 class TestDialogFragment : BaseBottomSheetDialogFragment() {
 
-    @ExperimentalPagerApi
-    @ExperimentalComposeUiApi
-    @ExperimentalMaterial3Api
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalPagerApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -387,11 +389,10 @@ fun PagerView(closeClick: () -> Unit) {
                                                             ) { currentSelection = it }
                                                             .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                                                     ) {
-                                                        RadioButton(
+                                                        androidx.compose.material3.RadioButton(
                                                             selected = it == currentSelection,
                                                             onClick = { currentSelection = it },
-                                                            modifier = Modifier.padding(8.dp),
-                                                            colors = defaultRadioButtonColors()
+                                                            modifier = Modifier.padding(8.dp)
                                                         )
                                                         Text(
                                                             it.toString(),

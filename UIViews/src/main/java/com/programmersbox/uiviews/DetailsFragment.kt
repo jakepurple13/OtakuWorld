@@ -113,11 +113,13 @@ class DetailsFragment : Fragment() {
 
     private val logo: NotificationLogo by inject()
 
-    @ExperimentalComposeUiApi
-    @ExperimentalMaterial3Api
-    @ExperimentalAnimationApi
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -295,10 +297,10 @@ class DetailsFragment : Fragment() {
                                         )
                                     },
                                     icon = {
-                                        Checkbox(
+                                        androidx.compose.material3.Checkbox(
                                             checked = chapters.fastAny { it.url == c.url },
                                             onCheckedChange = { b -> markAs(b) },
-                                            colors = CheckboxDefaults.colors(
+                                            colors = androidx.compose.material3.CheckboxDefaults.colors(
                                                 checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
                                                     ?: M3MaterialTheme.colorScheme.secondary,
                                                 uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
@@ -637,10 +639,10 @@ class DetailsFragment : Fragment() {
                     ) {
                         val (checkbox, text, share) = createRefs()
 
-                        Checkbox(
+                        androidx.compose.material3.Checkbox(
                             checked = read.fastAny { it.url == c.url },
                             onCheckedChange = { b -> markAs(b) },
-                            colors = CheckboxDefaults.colors(
+                            colors = androidx.compose.material3.CheckboxDefaults.colors(
                                 checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
                                     ?: M3MaterialTheme.colorScheme.secondary,
                                 uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
@@ -694,10 +696,10 @@ class DetailsFragment : Fragment() {
                     }
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
+                        androidx.compose.material3.Checkbox(
                             checked = read.fastAny { it.url == c.url },
                             onCheckedChange = { b -> markAs(b) },
-                            colors = CheckboxDefaults.colors(
+                            colors = androidx.compose.material3.CheckboxDefaults.colors(
                                 checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
                                     ?: M3MaterialTheme.colorScheme.secondary,
                                 uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value

@@ -73,8 +73,10 @@ class RecentFragment : BaseFragmentCompose() {
         fun newInstance() = RecentFragment()
     }
 
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))

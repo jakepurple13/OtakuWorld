@@ -42,10 +42,12 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
 
     private val genericInfo: GenericInfo by inject()
 
-    @ExperimentalComposeUiApi
-    @ExperimentalMaterial3Api
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

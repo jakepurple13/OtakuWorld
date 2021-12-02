@@ -89,9 +89,11 @@ class FavoriteFragment : Fragment() {
             .addTo(disposable)
     }
 
-    @ExperimentalMaterial3Api
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

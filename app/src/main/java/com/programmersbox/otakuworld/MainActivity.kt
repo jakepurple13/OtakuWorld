@@ -84,11 +84,13 @@ class MainActivity : AppCompatActivity() {
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
 
-    @ExperimentalPagerApi
-    @ExperimentalMaterial3Api
-    @ExperimentalAnimationApi
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalPagerApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

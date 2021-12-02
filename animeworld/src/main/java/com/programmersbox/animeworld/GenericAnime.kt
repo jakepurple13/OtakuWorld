@@ -376,7 +376,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    @ExperimentalMaterialApi
+    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
         LazyColumn {
@@ -416,9 +416,11 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     @Composable
     override fun ItemListView(
         list: List<ItemModel>,

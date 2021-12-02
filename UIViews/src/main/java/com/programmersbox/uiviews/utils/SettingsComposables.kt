@@ -54,22 +54,6 @@ fun defaultSwitchColors() = SwitchDefaults.colors(
 )
 
 @Composable
-fun defaultRadioButtonColors() = RadioButtonDefaults.colors(
-    selectedColor = MaterialTheme.colorScheme.secondary,
-    unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-    disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-)
-
-@Composable
-fun defaultCheckBoxColors() = CheckboxDefaults.colors(
-    checkedColor = MaterialTheme.colorScheme.secondary,
-    uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-    checkmarkColor = MaterialTheme.colorScheme.surface,
-    disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
-    disabledIndeterminateColor = MaterialTheme.colorScheme.secondary.copy(alpha = ContentAlpha.disabled)
-)
-
-@Composable
 fun defaultSliderColors() = SliderDefaults.colors(
     thumbColor = MaterialTheme.colorScheme.primary,
     disabledThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
@@ -89,7 +73,7 @@ fun <T> ListSetting(
     dialogTitle: String,
     cancelText: String? = null,
     confirmText: String,
-    radioButtonColors: RadioButtonColors = defaultRadioButtonColors(),
+    radioButtonColors: androidx.compose.material3.RadioButtonColors = androidx.compose.material3.RadioButtonDefaults.colors(),
     value: T,
     options: List<T>,
     viewText: (T) -> String = { it.toString() },
@@ -116,7 +100,7 @@ fun <T> ListSetting(
                                 ) { updateValue(it, dialogPopup) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                         ) {
-                            RadioButton(
+                            androidx.compose.material3.RadioButton(
                                 selected = it == value,
                                 onClick = { updateValue(it, dialogPopup) },
                                 modifier = Modifier.padding(8.dp),
@@ -160,7 +144,7 @@ fun <T> MultiSelectListSetting(
     dialogTitle: String,
     cancelText: String? = null,
     confirmText: String,
-    checkboxColors: CheckboxColors = defaultCheckBoxColors(),
+    checkboxColors: androidx.compose.material3.CheckboxColors = androidx.compose.material3.CheckboxDefaults.colors(),
     values: List<T>,
     options: List<T>,
     viewText: (T) -> String = { it.toString() },
@@ -187,7 +171,7 @@ fun <T> MultiSelectListSetting(
                                 ) { updateValue(it, it !in values) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                         ) {
-                            Checkbox(
+                            androidx.compose.material3.Checkbox(
                                 checked = it in values,
                                 onCheckedChange = { b -> updateValue(it, b) },
                                 colors = checkboxColors,
@@ -306,7 +290,7 @@ fun CheckBoxSetting(
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: String,
     summaryValue: String? = null,
-    checkboxColors: CheckboxColors = defaultCheckBoxColors(),
+    checkboxColors: androidx.compose.material3.CheckboxColors = androidx.compose.material3.CheckboxDefaults.colors(),
     value: Boolean,
     updateValue: (Boolean) -> Unit
 ) {
@@ -317,7 +301,7 @@ fun CheckBoxSetting(
         summaryValue = summaryValue,
         onClick = { updateValue(!value) }
     ) {
-        Checkbox(
+        androidx.compose.material3.Checkbox(
             checked = value,
             onCheckedChange = updateValue,
             colors = checkboxColors
