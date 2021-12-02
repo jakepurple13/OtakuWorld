@@ -36,7 +36,7 @@ buildscript {
     ext.analytics = 'com.google.firebase:firebase-analytics:20.0.0'
 
     ext.exoplayer_version = "2.16.1"
-    ext.room_version = "2.4.0-beta02"
+    ext.room_version = "2.4.0-rc01"
 
     ext.nav_version = "2.4.0-beta02"
 
