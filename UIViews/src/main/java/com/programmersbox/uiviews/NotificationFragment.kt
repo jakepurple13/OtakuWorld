@@ -395,7 +395,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
                                 contentDescription = item.notiTitle,
                                 modifier = Modifier
-                                    .align(Alignment.CenterVertically)
                                     .padding(5.dp)
                                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             )
