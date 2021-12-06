@@ -396,7 +396,7 @@ class ReadActivityCompose : ComponentActivity() {
                     } else null
                 ) {
 
-                    val showItems = showInfo || listState.isScrolledToTheEnd()
+                    val showItems = showInfo || listState.isScrolledToTheEnd() || listState.isScrolledNearToTheEnd()
 
                     /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
                     //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
@@ -591,7 +591,6 @@ class ReadActivityCompose : ComponentActivity() {
                                                         .align(Alignment.CenterHorizontally)
                                                 )
                                             }
-                                            GoBackButton(modifier = Modifier.fillMaxWidth())
                                             if (!BuildConfig.DEBUG) {
                                                 AndroidView(
                                                     modifier = Modifier.fillMaxWidth(),
@@ -855,9 +854,11 @@ class ReadActivityCompose : ComponentActivity() {
 
     private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
 
+    private fun LazyListState.isScrolledNearToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 2
+
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
-        androidx.compose.material3.OutlinedButton(
+        NoRippleOutlinedButton(
             onClick = { finish() },
             modifier = modifier,
             border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)
