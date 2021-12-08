@@ -92,10 +92,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
         var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
         val packageManager = LocalContext.current.packageManager
 
-        remember {
-            FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser }
-            1
-        }
+        LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
 
         DisposableEffect(accountInfo) {
             onDispose { disposable.dispose() }
@@ -164,7 +161,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                                 activity.getString(R.string.currentVersion, appUpdate?.update_real_version.orEmpty())
                             )
                         )
-                        .setMessage(R.string.please_update_for_leatest_features)
+                        .setMessage(R.string.please_update_for_latest_features)
                         .setPositiveButton(R.string.update) { d, _ ->
                             activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
                                 if (it.isGranted) {

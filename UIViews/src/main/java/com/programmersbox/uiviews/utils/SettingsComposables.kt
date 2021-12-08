@@ -455,12 +455,13 @@ private fun DefaultPreferenceLayout(
         Box(
             modifier = Modifier
                 .padding(8.dp)
-                .requiredWidth(32.dp)
+                .size(32.dp)
                 .constrainAs(icon) {
                     start.linkTo(parent.start)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
-                }
+                },
+            contentAlignment = Alignment.Center
         ) { settingIcon?.invoke(this) }
 
         Column(

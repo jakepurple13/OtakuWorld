@@ -35,6 +35,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -53,7 +54,19 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        setContent { M3MaterialTheme(currentColorScheme) { DebugView() } }
+        setContent {
+            M3MaterialTheme(currentColorScheme) {
+                DebugView()
+                //SettingScreenTest()
+            }
+        }
+    }
+
+    @ExperimentalMaterial3Api
+    @ExperimentalMaterialApi
+    @Composable
+    private fun SettingScreenTest() {
+        SettingScreen(logo = get(), genericInfo = genericInfo, activity = requireActivity())
     }
 
     @ExperimentalComposeUiApi

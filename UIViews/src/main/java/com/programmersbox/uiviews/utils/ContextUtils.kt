@@ -76,13 +76,19 @@ var Context.lastUpdateCheckEnd: Long? by sharedPrefDelegate(null)
 val updateCheckPublish = BehaviorSubject.create<Long>()
 val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore("otakuworld")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    "otakuworld",
+    //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
+)
 
 val BATTERY_PERCENT = intPreferencesKey("battery_percent")
 val Context.batteryPercent get() = dataStore.data.map { it[BATTERY_PERCENT] ?: 20 }
 
 val SHARE_CHAPTER = booleanPreferencesKey("share_chapter")
 val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true }
+
+val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
+val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 

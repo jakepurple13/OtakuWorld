@@ -5,7 +5,29 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Environment
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.SystemUpdateAlt
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -30,6 +52,7 @@ import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.utils.*
+import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -332,7 +355,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.setOnPreferenceClickListener {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(getString(R.string.updateTo, p.summary))
-                    .setMessage(R.string.please_update_for_leatest_features)
+                    .setMessage(R.string.please_update_for_latest_features)
                     .setPositiveButton(R.string.update) { d, _ ->
                         activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
                             if (it.isGranted) {
@@ -488,4 +511,215 @@ class SettingsDsl {
             }
         }
     }
+}
+
+@ExperimentalMaterialApi
+@ExperimentalMaterial3Api
+@Composable
+fun SettingScreen(logo: MainLogo, genericInfo: GenericInfo, activity: ComponentActivity) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
+    LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
+
+    val scrollBehavior = remember { TopAppBarDefaults.exitUntilCollapsedScrollBehavior(exponentialDecay()) }
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = { Text("Settings") },
+                navigationIcon = { IconButton(onClick = { }) { Icon(Icons.Default.ArrowBack, null) } },
+                scrollBehavior = scrollBehavior
+            )
+        }
+    ) { p ->
+        LazyColumn(
+            contentPadding = p
+        ) {
+
+            item {
+                CompositionLocalProvider(
+                    LocalContentColor provides MaterialTheme.colorScheme.primary
+                ) { PreferenceSetting(settingTitle = "Account") }
+
+                PreferenceSetting(
+                    settingTitle = accountInfo?.displayName ?: "User",
+                    settingIcon = {
+                        GlideImage(
+                            imageModel = accountInfo?.photoUrl ?: logo.logoId,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            requestBuilder = { Glide.with(LocalView.current).asDrawable().circleCrop() },
+                        )
+                    },
+                    onClick = {
+                        FirebaseAuthentication.currentUser?.let {
+                            MaterialAlertDialogBuilder(context)
+                                .setTitle(R.string.logOut)
+                                .setMessage(R.string.areYouSureLogOut)
+                                .setPositiveButton(R.string.yes) { d, _ ->
+                                    FirebaseAuthentication.signOut()
+                                    d.dismiss()
+                                }
+                                .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
+                                .show()
+                        } ?: FirebaseAuthentication.signIn(activity)
+                    },
+                    endIcon = {}
+                )
+
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
+
+            item {
+                CompositionLocalProvider(
+                    LocalContentColor provides MaterialTheme.colorScheme.primary
+                ) {
+                    PreferenceSetting(
+                        settingTitle = "About",
+                        settingIcon = {
+                            Image(
+                                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                                null
+                            )
+                        }
+                    )
+                }
+
+                val appUpdate by appUpdateCheck.subscribeAsState(null)
+                /* {
+                    p.summary = getString(R.string.currentVersion, it.update_real_version.orEmpty())
+                    val appVersion = AppUpdate.checkForUpdate(
+                        context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty(),
+                        it.update_real_version.orEmpty()
+                    )
+                    p.isVisible = appVersion
+                }*/
+
+                PreferenceSetting(
+                    settingTitle = stringResource(
+                        R.string.currentVersion,
+                        context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
+                    )
+                )
+
+                ShowWhen(
+                    visibility = AppUpdate.checkForUpdate(
+                        context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty(),
+                        appUpdate?.update_real_version.orEmpty()
+                    )
+                ) {
+                    var showDialog by remember { mutableStateOf(false) }
+
+                    if (showDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDialog = false },
+                            title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+                            text = { Text(stringResource(R.string.please_update_for_latest_features)) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        activity.requestPermissions(
+                                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                            Manifest.permission.READ_EXTERNAL_STORAGE
+                                        ) {
+                                            if (it.isGranted) {
+                                                appUpdateCheck.value
+                                                    ?.let { a ->
+                                                        val isApkAlreadyThere = File(
+                                                            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                                            a.let(genericInfo.apkString).toString()
+                                                        )
+                                                        if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                                        DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                                    }
+                                            }
+                                        }
+                                        showDialog = false
+                                    }
+                                ) { Text(stringResource(R.string.update)) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
+                                TextButton(
+                                    onClick = {
+                                        context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                                        showDialog = false
+                                    }
+                                ) { Text(stringResource(R.string.gotoBrowser)) }
+                            }
+                        )
+                    }
+
+                    PreferenceSetting(
+                        settingTitle = stringResource(R.string.update_available),
+                        summaryValue = stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty()),
+                        endIcon = {},
+                        onClick = { showDialog = true },
+                        settingIcon = {
+                            Icon(
+                                Icons.Default.SystemUpdateAlt,
+                                null,
+                                tint = Color(0xFF00E676)
+                            )
+                        }
+                    )
+                }
+
+                val time by Observables.combineLatest(
+                    updateCheckPublish.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
+                    updateCheckPublishEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+                )
+                    .map { "${it.first}\n${it.second}" }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeAsState(
+                        listOfNotNull(
+                            context.lastUpdateCheck?.let { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
+                            context.lastUpdateCheckEnd?.let { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+                        ).joinToString("\n")
+                    )
+
+                PreferenceSetting(
+                    settingTitle = "Last Time Updates Were Checked",
+                    summaryValue = time,
+                    onClick = {
+                        WorkManager.getInstance(context)
+                            .enqueueUniqueWork(
+                                "oneTimeUpdate",
+                                ExistingWorkPolicy.KEEP,
+                                OneTimeWorkRequestBuilder<UpdateWorker>()
+                                    .setConstraints(
+                                        Constraints.Builder()
+                                            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                                            .setRequiresBatteryNotLow(false)
+                                            .setRequiresCharging(false)
+                                            .setRequiresDeviceIdle(false)
+                                            .setRequiresStorageNotLow(false)
+                                            .build()
+                                    )
+                                    .build()
+                            )
+                    },
+                    endIcon = {}
+                )
+
+                val periodicCheck by context.shouldCheckFlow.collectAsState(initial = false)
+
+                SwitchSetting(
+                    settingTitle = "Check for Updates Periodically",
+                    value = periodicCheck,
+                    updateValue = {
+                        scope.launch { context.updatePref(SHOULD_CHECK, it) }
+                        //OtakuApp.updateSetup(context)
+                    }
+                )
+
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
+        }
+    }
+
 }

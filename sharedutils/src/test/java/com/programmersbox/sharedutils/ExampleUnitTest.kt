@@ -3,6 +3,8 @@ package com.programmersbox.sharedutils
 import androidx.compose.ui.util.*
 import com.jakewharton.picnic.table
 import com.lordcodes.turtle.shellRun
+import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.containsDuplicates
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -14,6 +16,24 @@ import java.io.File
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun gsonTest() {
+
+        val f = "asdf\nasdf\""
+        println(f)
+        println("---")
+        val j = f.toJson()
+        println(j)
+        println("---")
+        val s = j.fromJson<String>()
+        println(s)
+        println("---")
+        println("""asdfadsfadsf \n adsfasdfasd"f""".trimIndent())
+        println("---")
+        println("""asdf\nasdf$f asdf""")
+
+    }
 
     @Test
     fun newUpdateCheckTest() {
