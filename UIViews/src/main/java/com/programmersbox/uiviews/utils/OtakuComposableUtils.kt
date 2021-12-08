@@ -283,30 +283,24 @@ fun M3CoverCard(
         tonalElevation = 5.dp,
         shape = MaterialTheme.shapes.medium
     ) {
-        Box {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             GlideImage(
                 imageModel = imageUrl,
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                contentScale = ContentScale.FillBounds,
                 loading = {
                     Image(
                         bitmap = AppCompatResources.getDrawable(context, placeHolder)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        contentDescription = name
                     )
                 },
                 failure = {
                     Image(
                         bitmap = AppCompatResources.getDrawable(context, error)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        contentDescription = name
                     )
                 }
             )

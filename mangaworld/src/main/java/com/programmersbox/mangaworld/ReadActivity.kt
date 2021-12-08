@@ -19,8 +19,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateOffsetAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -45,15 +48,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -61,6 +68,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
@@ -473,6 +481,7 @@ class ReadActivityCompose : ComponentActivity() {
                         ) {
 
                             Box(Modifier.fillMaxSize()) {
+                                //TODO: Add a setting for webtoon or ltr/rtl..Which another setting would be rtl or ltr
                                 LazyColumn(
                                     state = listState,
                                     verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp),
@@ -482,129 +491,14 @@ class ReadActivityCompose : ComponentActivity() {
                                     )
                                 ) {
 
-                                    items(pages) {
-                                        var scale by remember { mutableStateOf(1f) }
-                                        var offset by remember { mutableStateOf(Offset.Zero) }
-                                        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-                                            scale = (scale * zoomChange).coerceAtLeast(1f)
-                                            offset += offsetChange
-                                        }
-
-                                        Box(
-                                            modifier = Modifier
-                                                // add transformable to listen to multitouch transformation events
-                                                // after offset
-                                                .transformable(state = state)
-                                                //TODO: For some reason this is causing the weird performance issue
-                                                // it is a known issue: https://issuetracker.google.com/issues/204328131
-                                                // when that gets resolved, look into adding back the nestedScrollConnection by scrollBehavior
-                                                .combinedClickable(
-                                                    onClick = {
-                                                        showInfo = !showInfo
-                                                        if (!showInfo) {
-                                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
-                                                            topBarOffsetHeightPx.value = -topBarHeightPx
-                                                        }
-                                                    },
-                                                    onDoubleClick = {
-                                                        scale = 1f
-                                                        offset = Offset.Zero
-                                                    },
-                                                    onLongClick = {},
-                                                    indication = null,
-                                                    interactionSource = remember { MutableInteractionSource() }
-                                                )
-                                        ) {
-                                            Text(
-                                                stringResource(R.string.doubleTapToReset),
-                                                modifier = Modifier.align(Alignment.Center),
-                                                textAlign = TextAlign.Center
-                                            )
-                                            val scaleAnim = animateFloatAsState(scale).value
-                                            val (x, y) = animateOffsetAsState(targetValue = offset).value
-
-                                            /*GlideImage(
-                                                imageModel = it,
-                                                contentScale = ContentScale.FillWidth,
-                                                loading = {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.align(Alignment.Center),
-                                                        color = M3MaterialTheme.colorScheme.primary
-                                                    )
-                                                },
-                                                success = {
-                                                    val byteArray = remember {
-                                                        val stream = ByteArrayOutputStream()
-                                                        it.drawable?.toBitmap()?.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                                                        val b = stream.toByteArray()
-                                                        ByteArrayInputStream(b)
-                                                    }
-                                                    SubSampledImage(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                                                            .align(Alignment.Center)
-                                                            .clipToBounds(),
-                                                        imageSource = rememberInputStreamImageSource(inputStream = byteArray)
-                                                    )
-                                                },
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                                                    .align(Alignment.Center)
-                                                    .clipToBounds()
-                                            )*/
-
-                                            GlideImage(
-                                                imageModel = it,
-                                                contentScale = ContentScale.FillWidth,
-                                                loading = {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.align(Alignment.Center),
-                                                        color = M3MaterialTheme.colorScheme.primary
-                                                    )
-                                                },
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                                                    .align(Alignment.Center)
-                                                    .clipToBounds()
-                                                    .graphicsLayer(
-                                                        scaleX = scaleAnim,
-                                                        scaleY = scaleAnim,
-                                                        translationX = x,
-                                                        translationY = y
-                                                    )
-                                            )
+                                    reader(pages) {
+                                        showInfo = !showInfo
+                                        if (!showInfo) {
+                                            toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                            topBarOffsetHeightPx.value = -topBarHeightPx
                                         }
                                     }
 
-                                    item {
-                                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                            if (currentChapter <= 0) {
-                                                Text(
-                                                    stringResource(id = R.string.reachedLastChapter),
-                                                    style = M3MaterialTheme.typography.headlineSmall,
-                                                    textAlign = TextAlign.Center,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .align(Alignment.CenterHorizontally)
-                                                )
-                                            }
-                                            if (!BuildConfig.DEBUG) {
-                                                AndroidView(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    factory = {
-                                                        AdView(it).apply {
-                                                            adSize = AdSize.BANNER
-                                                            adUnitId = getString(R.string.ad_unit_id)
-                                                            loadAd(ad)
-                                                        }
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
                                 }
 
                                 val animateTopBar by animateFloatAsState(
@@ -636,6 +530,143 @@ class ReadActivityCompose : ComponentActivity() {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun LazyListScope.reader(pages: List<String>, onClick: () -> Unit) {
+
+        /*items(pages) {
+            var scale by remember { mutableStateOf(1f) }
+            var offset by remember { mutableStateOf(Offset.Zero) }
+            val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+                scale = (scale * zoomChange).coerceAtLeast(1f)
+                offset += offsetChange
+            }
+
+            Box(
+                modifier = Modifier
+                    // add transformable to listen to multitouch transformation events
+                    // after offset
+                    .transformable(state = state)
+                    //TODO: For some reason this is causing the weird performance issue
+                    // it is a known issue: https://issuetracker.google.com/issues/204328131
+                    // when that gets resolved, look into adding back the nestedScrollConnection by scrollBehavior
+                    .combinedClickable(
+                        onClick = {
+                            showInfo = !showInfo
+                            if (!showInfo) {
+                                toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                topBarOffsetHeightPx.value = -topBarHeightPx
+                            }
+                        },
+                        onDoubleClick = {
+                            scale = 1f
+                            offset = Offset.Zero
+                        },
+                        onLongClick = {},
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    )
+            ) {
+                Text(
+                    stringResource(R.string.doubleTapToReset),
+                    modifier = Modifier.align(Alignment.Center),
+                    textAlign = TextAlign.Center
+                )
+                val scaleAnim = animateFloatAsState(scale).value
+                val (x, y) = animateOffsetAsState(targetValue = offset).value
+
+                *//*GlideImage(
+                    imageModel = it,
+                    contentScale = ContentScale.FillWidth,
+                    loading = {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = M3MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    success = {
+                        val byteArray = remember {
+                            val stream = ByteArrayOutputStream()
+                            it.drawable?.toBitmap()?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                            val b = stream.toByteArray()
+                            ByteArrayInputStream(b)
+                        }
+                        SubSampledImage(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                                .align(Alignment.Center)
+                                .clipToBounds(),
+                            imageSource = rememberInputStreamImageSource(inputStream = byteArray)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                )*//*
+
+                GlideImage(
+                    imageModel = it,
+                    contentScale = ContentScale.FillWidth,
+                    loading = {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = M3MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                        .graphicsLayer(
+                            scaleX = scaleAnim,
+                            scaleY = scaleAnim,
+                            translationX = x,
+                            translationY = y
+                        )
+                )
+            }
+        }*/
+
+        items(pages) { ChapterPage(it, onClick) }
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    stringResource(id = R.string.lastPage),
+                    style = M3MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                )
+                if (currentChapter <= 0) {
+                    Text(
+                        stringResource(id = R.string.reachedLastChapter),
+                        style = M3MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    )
+                }
+                if (!BuildConfig.DEBUG) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxWidth(),
+                        factory = {
+                            AdView(it).apply {
+                                adSize = AdSize.BANNER
+                                adUnitId = getString(R.string.ad_unit_id)
+                                loadAd(ad)
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -983,6 +1014,133 @@ class ReadActivityCompose : ComponentActivity() {
                 scope.launch { updatePref(preference, sliderValue.toInt()) }
             },
             settingIcon = { Icon(settingIcon, null) }
+        )
+    }
+
+    @Composable
+    fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .requiredHeightIn(min = 100.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ZoomableImage(
+                modifier = Modifier.fillMaxWidth(),
+                painter = chapterLink,
+                onClick = openCloseOverlay
+            )
+        }
+    }
+
+    @Composable
+    fun ZoomableImage(
+        modifier: Modifier = Modifier,
+        painter: String,
+        onClick: () -> Unit = {}
+    ) {
+        var centerPoint by remember { mutableStateOf(Offset.Zero) }
+
+        var scale by remember { mutableStateOf(1f) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+
+        val scaleAnim by animateFloatAsState(
+            targetValue = scale
+        ) {
+            if (scale == 1f) offset = Offset.Zero
+        }
+
+        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+            scale *= zoomChange
+            scale = scale.coerceIn(1f, 5f)
+
+            offset += offsetChange
+            offset = clampOffset(centerPoint, offset, scale)
+        }
+
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RectangleShape)
+                .onGloballyPositioned { coordinates ->
+                    val size = coordinates.size.toSize() / 2.0f
+                    centerPoint = Offset(size.width, size.height)
+                }
+                //.background(androidx.compose.ui.graphics.Color.Gray)
+                .transformable(state)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            onClick()
+                        },
+                        onDoubleTap = {
+                            when {
+                                scale > 2f -> {
+                                    scale = 1f
+                                }
+                                else -> {
+                                    scale = 3f
+
+                                    offset = (centerPoint - it) * (scale - 1)
+                                    offset = clampOffset(centerPoint, offset, scale)
+                                }
+                            }
+
+                        }
+                    )
+                }
+            /*.scrollable(
+                state = rememberScrollableState { delta ->
+                    offset += Offset(delta, 0f)
+                    val preClamp = offset
+                    offset = clampOffset(centerPoint, offset, scale)
+
+                    delta - (preClamp.x - offset.x)
+                },
+                orientation = Orientation.Horizontal
+            )*/
+            /*.scrollable(
+                state = rememberScrollableState { delta ->
+                    offset += Offset(0f, delta)
+                    val preClamp = offset
+                    offset = clampOffset(centerPoint, offset, scale)
+
+                    delta - (preClamp.y - offset.y)
+                },
+                orientation = Orientation.Vertical
+            )*/
+        ) {
+            GlideImage(
+                imageModel = painter,
+                contentScale = ContentScale.FillWidth,
+                loading = {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = M3MaterialTheme.colorScheme.primary
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                    .align(Alignment.Center)
+                    .clipToBounds()
+                    .graphicsLayer {
+                        translationX = offset.x
+                        translationY = offset.y
+
+                        scaleX = scaleAnim
+                        scaleY = scaleAnim
+                    }
+            )
+        }
+    }
+
+    private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offset {
+        val maxPosition = centerPoint * (scale - 1)
+
+        return offset.copy(
+            x = offset.x.coerceIn(-maxPosition.x, maxPosition.x),
+            y = offset.y.coerceIn(-maxPosition.y, maxPosition.y)
         )
     }
 

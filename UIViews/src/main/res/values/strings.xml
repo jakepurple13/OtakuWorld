@@ -39,6 +39,7 @@
     <string name="loadNextChapter">Next</string>
     <string name="loadPreviousChapter">Previous</string>
     <string name="reachedLastChapter">Reached Last Chapter</string>
+    <string name="lastPage">Reached Last Page</string>
     <string name="goBack">Go Back</string>
 
     <string name="searchFavorites">Search Favorites</string>
