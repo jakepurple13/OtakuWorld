@@ -334,9 +334,7 @@ fun DetailsHeader(
                         Image(
                             painter = painterResource(id = logoId),
                             contentDescription = model.title,
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
                     }
                 )
