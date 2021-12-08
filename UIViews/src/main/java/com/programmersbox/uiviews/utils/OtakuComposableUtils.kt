@@ -24,6 +24,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.ImagePainter
+import coil.compose.rememberImagePainter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
@@ -280,39 +283,24 @@ fun M3CoverCard(
         tonalElevation = 5.dp,
         shape = MaterialTheme.shapes.medium
     ) {
-        Box {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             GlideImage(
                 imageModel = imageUrl,
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
-                requestBuilder = {
-                    Glide.with(LocalView.current)
-                        .asDrawable()
-                        //.override(360, 480)
-                        .placeholder(placeHolder)
-                        .error(error)
-                        .fallback(placeHolder)
-                        .transform(RoundedCorners(5))
-                },
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                contentScale = ContentScale.FillBounds,
                 loading = {
                     Image(
                         bitmap = AppCompatResources.getDrawable(context, placeHolder)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        contentDescription = name
                     )
                 },
                 failure = {
                     Image(
                         bitmap = AppCompatResources.getDrawable(context, error)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        contentDescription = name
                     )
                 }
             )
@@ -421,6 +409,7 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @ExperimentalMaterialApi
 @Composable
 fun M3OtakuBannerBox(
@@ -447,7 +436,7 @@ fun M3OtakuBannerBox(
             ) {
                 ListItem(
                     icon = {
-                        GlideImage(
+                        /*GlideImage(
                             imageModel = itemInfo.value?.imageUrl.orEmpty(),
                             contentDescription = null,
                             contentScale = ContentScale.Fit,
@@ -466,6 +455,56 @@ fun M3OtakuBannerBox(
                                     modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 )
                             }
+                        )*/
+                        val painter = rememberImagePainter(data = itemInfo.value?.imageUrl.orEmpty())
+
+                        when (painter.state) {
+                            is ImagePainter.State.Loading -> {
+                                Image(
+                                    bitmap = placeHolderImage,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                )
+                            }
+                            is ImagePainter.State.Error -> {
+                                GlideImage(
+                                    imageModel = itemInfo.value?.imageUrl.orEmpty(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                    loading = {
+                                        Image(
+                                            bitmap = placeHolderImage,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .align(Alignment.Center)
+                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                        )
+                                    },
+                                    failure = {
+                                        Image(
+                                            bitmap = placeHolderImage,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .align(Alignment.Center)
+                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+
+                        Image(
+                            painter = painter,
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                         )
                     },
                     overlineText = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },

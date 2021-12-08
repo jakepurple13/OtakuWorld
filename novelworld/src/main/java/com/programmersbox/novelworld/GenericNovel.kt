@@ -70,7 +70,7 @@ class GenericNovel(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 
-    @ExperimentalMaterialApi
+    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
         LazyColumn {
@@ -100,9 +100,11 @@ class GenericNovel(val context: Context) : GenericInfo {
         }
     }
 
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     @Composable
     override fun ItemListView(
         list: List<ItemModel>,

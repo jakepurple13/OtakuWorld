@@ -188,6 +188,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }?.let(AppCompatDelegate::setDefaultNightMode)
         }
 
+        findPreference<SwitchPreferenceCompat>("share_chapter")?.let { p ->
+            p.setOnPreferenceChangeListener { _, newValue ->
+                if (newValue is Boolean) {
+                    lifecycleScope.launch(Dispatchers.IO) { requireContext().updatePref(SHARE_CHAPTER, newValue) }
+                }
+                true
+            }
+
+            lifecycleScope.launch {
+                requireContext().shareChapter
+                    .flowWithLifecycle(lifecycle)
+                    .collect { runOnUIThread { p.isChecked = it } }
+            }
+        }
+
         val itemDao = ItemDatabase.getInstance(requireContext()).itemDao()
 
         findPreference<PreferenceCategory>("notification_category")?.let { p ->

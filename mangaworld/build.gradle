@@ -56,7 +56,7 @@ dependencies {
     implementation constraintlayout
     implementation swiperefresh
     implementation recyclerview
-    implementation 'com.google.android.gms:play-services-ads:20.4.0'
+    implementation 'com.google.android.gms:play-services-ads:20.5.0'
     testImplementation Deps.junit
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
@@ -111,6 +111,8 @@ dependencies {
     implementation compose.compose
     implementation "com.google.accompanist:accompanist-pager:$accompanist"
     implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
+    implementation "xyz.quaver:subsampledimage:0.0.1-alpha09-SNAPSHOT"
+    implementation "io.coil-kt:coil-compose:1.4.0"
 
     implementation datastore.datastore
 }

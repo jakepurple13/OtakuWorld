@@ -1,5 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="@string/account_category_title">
 
@@ -35,8 +35,8 @@
         <Preference
             app:dependency="sync"
             app:key="reset_checker"
-            app:title="@string/clear_update_queue"
-            app:summary="@string/clear_update_queue_summary" />
+            app:summary="@string/clear_update_queue_summary"
+            app:title="@string/clear_update_queue" />
 
         <Preference
             app:icon="@drawable/ic_baseline_library_books_24"
@@ -72,8 +72,8 @@
         <Preference
             app:icon="@drawable/ic_baseline_android_24"
             app:isPreferenceVisible="false"
-            app:title="Debug Menu"
-            app:key="debugMenu" />
+            app:key="debugMenu"
+            app:title="Debug Menu" />
 
         <Preference
             app:icon="@drawable/ic_baseline_star_24"
@@ -118,6 +118,10 @@
             app:title="@string/theme_choice_title"
             app:useSimpleSummaryProvider="true" />
 
+        <SwitchPreferenceCompat
+            app:key="share_chapter"
+            app:title="@string/share_chapters" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -125,12 +129,12 @@
         app:title="@string/playSettings">
 
         <SeekBarPreference
+            android:defaultValue="20"
+            android:max="100"
+            app:defaultValue="20"
             app:icon="@drawable/ic_baseline_battery_alert_24"
             app:key="battery_alert"
             app:min="1"
-            android:max="100"
-            android:defaultValue="20"
-            app:defaultValue="20"
             app:seekBarIncrement="1"
             app:showSeekBarValue="true"
             app:summary="@string/battery_default"

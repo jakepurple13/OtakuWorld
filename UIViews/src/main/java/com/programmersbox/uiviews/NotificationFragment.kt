@@ -84,9 +84,11 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
 
-    @ExperimentalMaterial3Api
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -141,9 +143,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                         }
                                     ) { Text(stringResource(R.string.yes)) }
                                 },
-                                dismissButton = {
-                                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) }
-                                }
+                                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
                             )
 
                         }
@@ -395,7 +395,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                 painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
                                 contentDescription = item.notiTitle,
                                 modifier = Modifier
-                                    .align(Alignment.CenterVertically)
                                     .padding(5.dp)
                                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             )

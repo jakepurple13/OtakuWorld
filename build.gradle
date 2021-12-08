@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = "1.5.31"
+    ext.kotlin_version = "1.6.0"
     ext.latestAboutLibsRelease = "8.9.4"
 
     ext.coroutinesVersion = "1.5.2"
@@ -22,7 +22,7 @@ buildscript {
 
     ext.androidCore = 'androidx.core:core-ktx:1.7.0'
     ext.appCompat = 'androidx.appcompat:appcompat:1.4.0'
-    ext.material = 'com.google.android.material:material:1.5.0-beta01'
+    ext.material = 'com.google.android.material:material:1.6.0-alpha01'
 
     ext.preference = "androidx.preference:preference-ktx:1.1.1"
 
@@ -32,11 +32,11 @@ buildscript {
 
     ext.jsoup = 'org.jsoup:jsoup:1.14.3'
 
-    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.4'
+    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.5'
     ext.analytics = 'com.google.firebase:firebase-analytics:20.0.0'
 
-    ext.exoplayer_version = "2.16.0"
-    ext.room_version = "2.4.0-beta02"
+    ext.exoplayer_version = "2.16.1"
+    ext.room_version = "2.4.0-rc01"
 
     ext.nav_version = "2.4.0-beta02"
 
@@ -47,9 +47,9 @@ buildscript {
     // Koin Android - experimental builder extensions
     ext.koinAndroidExt = "io.insert-koin:koin-android-ext:$koin_version"
 
-    ext.lottieVersion = "4.2.1"
+    ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.1.0-beta03"
+    ext.jetpack = "1.1.0-beta04"
 
     ext.accompanist = "0.20.2"
 
@@ -60,7 +60,7 @@ buildscript {
     ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
     // Material Design
     ext.composeMaterial = "androidx.compose.material:material:$jetpack"
-    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha01"
+    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha02"
     // Material design icons
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
@@ -71,8 +71,9 @@ buildscript {
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
-    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.0"
-    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.3"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.1"
+    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.1"
+    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.4"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-rc02"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
     ext.materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"
@@ -110,7 +111,7 @@ buildscript {
                         composeMaterialIconsCore, composeMaterialIconsExtended,
                         composeActivity, composeLifecycle,
                         composeRuntimeLivedata, composeRuntimeRxjava2,
-                        composeMaterialThemeAdapter,
+                        composeMaterialThemeAdapter, composeMaterial3ThemeAdapter,
                         landscapistGlide,
                         composeConstraintLayout, permissions,
                         materialPlaceholder, drawablePainter, uiUtil,
@@ -132,7 +133,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:7.0.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.10'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.0'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
         classpath "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:8.9.4"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
@@ -147,7 +148,8 @@ allprojects {
         gradlePluginPortal()
         mavenCentral()
         maven { url "https://jitpack.io" }
-        maven { url "https://dl.bintray.com/piasy/maven" }
+        //maven { url "https://dl.bintray.com/piasy/maven" }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     }
 }
 

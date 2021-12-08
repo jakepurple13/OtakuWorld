@@ -10,6 +10,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -57,9 +59,11 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
     private val fetch: Fetch = Fetch.getDefaultInstance()
     private val downloadState = mutableStateListOf<DownloadData>()
 
-    @ExperimentalMaterial3Api
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+    )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -247,18 +251,11 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             if (items.isEmpty()) {
                 EmptyState()
             } else {
-                AnimatedLazyColumn(
-                    modifier = Modifier.padding(top = 5.dp),
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    items = items.fastMap { AnimatedLazyListItem(it.id.toString(), it) { DownloadItem(it, this@DownloadViewerFragment) } }
-                )
-
-                /*LazyColumn(
+                LazyColumn(
                     modifier = Modifier.padding(top = 5.dp),
                     contentPadding = p,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) { items(items) { d -> DownloadItem(d, this@DownloadViewerFragment) } }*/
+                ) { items(items) { d -> DownloadItem(d, this@DownloadViewerFragment) } }
             }
         }
     }

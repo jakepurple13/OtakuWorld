@@ -73,8 +73,10 @@ class RecentFragment : BaseFragmentCompose() {
         fun newInstance() = RecentFragment()
     }
 
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
@@ -184,8 +186,8 @@ class RecentFragment : BaseFragmentCompose() {
                     }
                 }
 
-                if (source?.canScroll == true) {
-                    InfiniteListHandler(listState = state, buffer = 1) {
+                if (source?.canScroll == true && sourceList.isNotEmpty()) {
+                    InfiniteListHandler(listState = state, buffer = 2) {
                         source?.let {
                             count++
                             sourceLoadCompose(it, count, refresh)

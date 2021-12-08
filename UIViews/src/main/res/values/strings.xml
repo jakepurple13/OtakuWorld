@@ -39,6 +39,7 @@
     <string name="loadNextChapter">Next</string>
     <string name="loadPreviousChapter">Previous</string>
     <string name="reachedLastChapter">Reached Last Chapter</string>
+    <string name="lastPage">Reached Last Page</string>
     <string name="goBack">Go Back</string>
 
     <string name="searchFavorites">Search Favorites</string>
@@ -157,6 +158,7 @@
     <string name="alternateNames">Alternative Names: %s</string>
 
     <string name="share_item">Share %s</string>
+    <string name="share_chapters">Share Chapter</string>
 
     <string name="selectDate">Select Date to be Notified At</string>
     <string name="selectTime">Select Time to be Notified At</string>

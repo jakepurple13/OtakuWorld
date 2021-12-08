@@ -42,12 +42,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
@@ -66,7 +63,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
@@ -93,10 +89,12 @@ class GlobalSearchFragment : Fragment() {
 
     data class SearchModel(val apiName: String, val data: List<ItemModel>)
 
-    @ExperimentalMaterial3Api
-    @ExperimentalAnimationApi
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
@@ -119,8 +117,6 @@ class GlobalSearchFragment : Fragment() {
 
                     val history by dao
                         .searchHistory("%$searchText%")
-                        .flowOn(Dispatchers.IO)
-                        .flowWithLifecycle(lifecycle)
                         .collectAsState(emptyList())
 
                     LaunchedEffect(Unit) {
@@ -415,7 +411,7 @@ class GlobalSearchFragment : Fragment() {
                         .map { SearchModel(a.serviceName, it) }
                         .toObservable()
                 }
-        ) { (it as Array<SearchModel>).toList().filter { s -> s.data.isNotEmpty() } }
+        ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
             .doOnSubscribe {
                 searchListPublisher.clear()
                 onSubscribe()
@@ -454,39 +450,24 @@ class GlobalSearchFragment : Fragment() {
             tonalElevation = 5.dp,
             shape = MaterialTheme.shapes.medium
         ) {
-            Box {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 GlideImage(
                     imageModel = model.imageUrl,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    requestBuilder = {
-                        Glide.with(LocalView.current)
-                            .asDrawable()
-                            //.override(360, 480)
-                            .placeholder(placeHolder)
-                            .error(error)
-                            .fallback(placeHolder)
-                            .transform(RoundedCorners(5))
-                    },
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                    contentScale = ContentScale.FillBounds,
                     loading = {
                         Image(
                             painter = rememberDrawablePainter(drawable = placeHolder),
-                            contentDescription = model.title,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            contentDescription = model.title
                         )
                     },
                     failure = {
                         Image(
                             painter = rememberDrawablePainter(drawable = error),
-                            contentDescription = model.title,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            contentDescription = model.title
                         )
                     }
                 )

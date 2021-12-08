@@ -32,7 +32,7 @@ import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.SeekBarPreference
-import androidx.preference.SwitchPreference
+import androidx.preference.SwitchPreferenceCompat
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -120,7 +120,7 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun customPreferences(preferenceScreen: SettingsDsl) {
         preferenceScreen.generalSettings { _, it ->
             it.addPreference(
-                SwitchPreference(it.context).apply {
+                SwitchPreferenceCompat(it.context).apply {
                     title = it.context.getString(R.string.showAdultSources)
                     isChecked = context.showAdult
                     setOnPreferenceChangeListener { _, newValue ->
@@ -174,7 +174,7 @@ class GenericManga(val context: Context) : GenericInfo {
             )
 
             it.addPreference(
-                SwitchPreference(it.context).apply {
+                SwitchPreferenceCompat(it.context).apply {
                     title = it.context.getString(R.string.useNewReader)
                     summary = it.context.getString(R.string.reader_summary_setting)
                     isChecked = context.useNewReader
@@ -209,8 +209,10 @@ class GenericManga(val context: Context) : GenericInfo {
         null
     }
 
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     @Composable
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
@@ -220,8 +222,10 @@ class GenericManga(val context: Context) : GenericInfo {
         ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
     }
 
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
+    @OptIn(
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
     @Composable
     override fun ItemListView(
         list: List<ItemModel>,

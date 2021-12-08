@@ -2,15 +2,21 @@ package com.programmersbox.otakuworld
 
 import android.app.Activity
 import androidx.annotation.VisibleForTesting
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.window.layout.WindowMetricsCalculator
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.merge
 
 /**
  * Opinionated set of viewport breakpoints
@@ -60,4 +66,25 @@ fun getWindowSizeClass(windowDpSize: DpSize): WindowSize = when {
     windowDpSize.width < 600.dp -> WindowSize.Compact
     windowDpSize.width < 840.dp -> WindowSize.Medium
     else -> WindowSize.Expanded
+}
+
+var currentScheme: ColorScheme by mutableStateOf(darkColorScheme())
+
+abstract class FlowViewModel<T>(protected val flow: Flow<T>) : ViewModel() {
+    protected abstract val manualFlow: MutableSharedFlow<T>
+
+    @Composable
+    fun collectAsState(initial: T): State<T> = merge(flow, manualFlow).collectAsState(initial = initial)
+
+    suspend fun emit(item: T) = manualFlow.emit(item)
+    fun tryEmit(item: T) = manualFlow.tryEmit(item)
+}
+
+class FlowStateViewModel<T>(flow: Flow<T>, initialValue: T) : FlowViewModel<T>(flow) {
+    override val manualFlow = MutableStateFlow(initialValue)
+    val value get() = manualFlow.value
+}
+
+class FlowSharedViewModel<T>(flow: Flow<T>) : FlowViewModel<T>(flow) {
+    override val manualFlow = MutableSharedFlow<T>()
 }
