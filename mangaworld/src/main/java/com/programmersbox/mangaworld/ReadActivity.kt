@@ -298,7 +298,24 @@ class ReadActivityCompose : ComponentActivity() {
                                     contentPadding = p
                                 ) {
                                     itemsIndexed(pages) { i, it ->
-                                        Box {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                                .border(
+                                                    animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                                    color = animateColorAsState(
+                                                        if (currentPage == i) M3MaterialTheme.colorScheme.primary
+                                                        else androidx.compose.ui.graphics.Color.Transparent
+                                                    ).value
+                                                )
+                                                .clickable {
+                                                    scope.launch {
+                                                        if (currentPage == i) scaffoldState.bottomSheetState.collapse()
+                                                        listState.animateScrollToItem(i)
+                                                    }
+                                                }
+                                        ) {
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.Crop,
@@ -311,20 +328,6 @@ class ReadActivityCompose : ComponentActivity() {
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .align(Alignment.Center)
-                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                                    .border(
-                                                        animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
-                                                        color = animateColorAsState(
-                                                            if (currentPage == i) M3MaterialTheme.colorScheme.primary
-                                                            else androidx.compose.ui.graphics.Color.Transparent
-                                                        ).value
-                                                    )
-                                                    .clickable {
-                                                        scope.launch {
-                                                            if (currentPage == i) scaffoldState.bottomSheetState.collapse()
-                                                            listState.animateScrollToItem(i)
-                                                        }
-                                                    }
                                             )
                                         }
                                     }

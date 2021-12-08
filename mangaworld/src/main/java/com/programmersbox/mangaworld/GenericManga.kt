@@ -219,6 +219,7 @@ class GenericManga(val context: Context) : GenericInfo {
             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp)
         ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
     }
 
