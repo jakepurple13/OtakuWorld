@@ -450,30 +450,24 @@ class GlobalSearchFragment : Fragment() {
             tonalElevation = 5.dp,
             shape = MaterialTheme.shapes.medium
         ) {
-            Box {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 GlideImage(
                     imageModel = model.imageUrl,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                    contentScale = ContentScale.FillBounds,
                     loading = {
                         Image(
                             painter = rememberDrawablePainter(drawable = placeHolder),
-                            contentDescription = model.title,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            contentDescription = model.title
                         )
                     },
                     failure = {
                         Image(
                             painter = rememberDrawablePainter(drawable = error),
-                            contentDescription = model.title,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            contentDescription = model.title
                         )
                     }
                 )

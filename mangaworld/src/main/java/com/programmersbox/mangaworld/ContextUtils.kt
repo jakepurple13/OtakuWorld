@@ -197,5 +197,4 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
 }
 
 val PAGE_PADDING = intPreferencesKey("page_padding")
-
 val Context.pagePadding get() = dataStore.data.map { it[PAGE_PADDING] ?: 4 }

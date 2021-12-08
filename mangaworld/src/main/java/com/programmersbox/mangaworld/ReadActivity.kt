@@ -479,9 +479,7 @@ class ReadActivityCompose : ComponentActivity() {
                             },
                             modifier = Modifier.padding(p)
                         ) {
-
                             Box(Modifier.fillMaxSize()) {
-                                //TODO: Add a setting for webtoon or ltr/rtl..Which another setting would be rtl or ltr
                                 LazyColumn(
                                     state = listState,
                                     verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp),
@@ -490,7 +488,6 @@ class ReadActivityCompose : ComponentActivity() {
                                         bottom = toolbarHeight
                                     )
                                 ) {
-
                                     reader(pages) {
                                         showInfo = !showInfo
                                         if (!showInfo) {
@@ -498,7 +495,6 @@ class ReadActivityCompose : ComponentActivity() {
                                             topBarOffsetHeightPx.value = -topBarHeightPx
                                         }
                                     }
-
                                 }
 
                                 val animateTopBar by animateFloatAsState(
@@ -670,6 +666,112 @@ class ReadActivityCompose : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @Composable
+    private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .requiredHeightIn(min = 100.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ZoomableImage(
+                modifier = Modifier.fillMaxWidth(),
+                painter = chapterLink,
+                onClick = openCloseOverlay
+            )
+        }
+    }
+
+    @Composable
+    private fun ZoomableImage(
+        modifier: Modifier = Modifier,
+        painter: String,
+        onClick: () -> Unit = {}
+    ) {
+        var centerPoint by remember { mutableStateOf(Offset.Zero) }
+
+        var scale by remember { mutableStateOf(1f) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+
+        val scaleAnim by animateFloatAsState(
+            targetValue = scale
+        ) {
+            if (scale == 1f) offset = Offset.Zero
+        }
+
+        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+            scale *= zoomChange
+            scale = scale.coerceIn(1f, 5f)
+
+            offset += offsetChange
+            offset = clampOffset(centerPoint, offset, scale)
+        }
+
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RectangleShape)
+                .onGloballyPositioned { coordinates ->
+                    val size = coordinates.size.toSize() / 2.0f
+                    centerPoint = Offset(size.width, size.height)
+                }
+                .transformable(state)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            onClick()
+                        },
+                        onDoubleTap = {
+                            when {
+                                scale > 2f -> {
+                                    scale = 1f
+                                }
+                                else -> {
+                                    scale = 3f
+
+                                    offset = (centerPoint - it) * (scale - 1)
+                                    offset = clampOffset(centerPoint, offset, scale)
+                                }
+                            }
+
+                        }
+                    )
+                }
+        ) {
+            GlideImage(
+                imageModel = painter,
+                contentScale = ContentScale.FillWidth,
+                loading = {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = M3MaterialTheme.colorScheme.primary
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                    .align(Alignment.Center)
+                    .clipToBounds()
+                    .graphicsLayer {
+                        translationX = offset.x
+                        translationY = offset.y
+
+                        scaleX = scaleAnim
+                        scaleY = scaleAnim
+                    }
+            )
+        }
+    }
+
+    private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offset {
+        val maxPosition = centerPoint * (scale - 1)
+
+        return offset.copy(
+            x = offset.x.coerceIn(-maxPosition.x, maxPosition.x),
+            y = offset.y.coerceIn(-maxPosition.y, maxPosition.y)
+        )
     }
 
     @ExperimentalAnimationApi
@@ -1014,133 +1116,6 @@ class ReadActivityCompose : ComponentActivity() {
                 scope.launch { updatePref(preference, sliderValue.toInt()) }
             },
             settingIcon = { Icon(settingIcon, null) }
-        )
-    }
-
-    @Composable
-    fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .requiredHeightIn(min = 100.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            ZoomableImage(
-                modifier = Modifier.fillMaxWidth(),
-                painter = chapterLink,
-                onClick = openCloseOverlay
-            )
-        }
-    }
-
-    @Composable
-    fun ZoomableImage(
-        modifier: Modifier = Modifier,
-        painter: String,
-        onClick: () -> Unit = {}
-    ) {
-        var centerPoint by remember { mutableStateOf(Offset.Zero) }
-
-        var scale by remember { mutableStateOf(1f) }
-        var offset by remember { mutableStateOf(Offset.Zero) }
-
-        val scaleAnim by animateFloatAsState(
-            targetValue = scale
-        ) {
-            if (scale == 1f) offset = Offset.Zero
-        }
-
-        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-            scale *= zoomChange
-            scale = scale.coerceIn(1f, 5f)
-
-            offset += offsetChange
-            offset = clampOffset(centerPoint, offset, scale)
-        }
-
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(RectangleShape)
-                .onGloballyPositioned { coordinates ->
-                    val size = coordinates.size.toSize() / 2.0f
-                    centerPoint = Offset(size.width, size.height)
-                }
-                //.background(androidx.compose.ui.graphics.Color.Gray)
-                .transformable(state)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = {
-                            onClick()
-                        },
-                        onDoubleTap = {
-                            when {
-                                scale > 2f -> {
-                                    scale = 1f
-                                }
-                                else -> {
-                                    scale = 3f
-
-                                    offset = (centerPoint - it) * (scale - 1)
-                                    offset = clampOffset(centerPoint, offset, scale)
-                                }
-                            }
-
-                        }
-                    )
-                }
-            /*.scrollable(
-                state = rememberScrollableState { delta ->
-                    offset += Offset(delta, 0f)
-                    val preClamp = offset
-                    offset = clampOffset(centerPoint, offset, scale)
-
-                    delta - (preClamp.x - offset.x)
-                },
-                orientation = Orientation.Horizontal
-            )*/
-            /*.scrollable(
-                state = rememberScrollableState { delta ->
-                    offset += Offset(0f, delta)
-                    val preClamp = offset
-                    offset = clampOffset(centerPoint, offset, scale)
-
-                    delta - (preClamp.y - offset.y)
-                },
-                orientation = Orientation.Vertical
-            )*/
-        ) {
-            GlideImage(
-                imageModel = painter,
-                contentScale = ContentScale.FillWidth,
-                loading = {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = M3MaterialTheme.colorScheme.primary
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                    .align(Alignment.Center)
-                    .clipToBounds()
-                    .graphicsLayer {
-                        translationX = offset.x
-                        translationY = offset.y
-
-                        scaleX = scaleAnim
-                        scaleY = scaleAnim
-                    }
-            )
-        }
-    }
-
-    private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offset {
-        val maxPosition = centerPoint * (scale - 1)
-
-        return offset.copy(
-            x = offset.x.coerceIn(-maxPosition.x, maxPosition.x),
-            y = offset.y.coerceIn(-maxPosition.y, maxPosition.y)
         )
     }
 
