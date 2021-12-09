@@ -165,7 +165,7 @@ class MainActivity : AppCompatActivity() {
                             ) {
                                 Divider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value)
 
-                                PreferenceSetting(settingTitle = "") {
+                                PreferenceSetting(settingTitle = { Text("") }) {
                                     androidx.compose.material3.IconButton(onClick = showSettings) {
                                         androidx.compose.material3.Icon(Icons.Default.Settings, null)
                                     }
@@ -182,9 +182,9 @@ class MainActivity : AppCompatActivity() {
                                 val context = LocalContext.current
 
                                 SwitchSetting(
-                                    summaryValue = "Current Theme: ${if (themeSetting) "Dark" else "Light"}",
+                                    summaryValue = { Text("Current Theme: ${if (themeSetting) "Dark" else "Light"}") },
                                     settingIcon = { androidx.compose.material3.Icon(Icons.Default.SettingsBrightness, null) },
-                                    settingTitle = "Theme",
+                                    settingTitle = { Text("Theme") },
                                     value = themeSetting,
                                     updateValue = {
                                         themeSetting = it
@@ -198,9 +198,9 @@ class MainActivity : AppCompatActivity() {
                                 )
 
                                 PreferenceSetting(
-                                    settingTitle = "System Settings",
+                                    settingTitle = { Text("System Settings") },
                                     settingIcon = { androidx.compose.material3.Icon(Icons.Default.Settings, null) },
-                                    onClick = showSettings
+                                    modifier = Modifier.clickable { showSettings }
                                 ) { androidx.compose.material3.Icon(Icons.Default.ChevronRight, null) }
                             }
                         }

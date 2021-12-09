@@ -53,6 +53,7 @@
         <entry key="UIViews/src/main/res/drawable/ic_baseline_palette_24.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/ic_baseline_settings_brightness_24.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/ic_baseline_star_24.xml" value="0.23778501628664495" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_system_update_alt_24.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/layout/base_main_activity.xml" value="0.19375" />
         <entry key="UIViews/src/main/res/layout/chapter_item.xml" value="0.22" />
         <entry key="UIViews/src/main/res/layout/details_fragment.xml" value="0.175" />

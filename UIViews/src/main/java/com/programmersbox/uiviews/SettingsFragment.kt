@@ -10,22 +10,26 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.SystemUpdateAlt
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.flowWithLifecycle
@@ -520,32 +524,28 @@ fun SettingScreen(logo: MainLogo, genericInfo: GenericInfo, activity: ComponentA
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
-    LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
-
     val scrollBehavior = remember { TopAppBarDefaults.exitUntilCollapsedScrollBehavior(exponentialDecay()) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Settings") },
-                navigationIcon = { IconButton(onClick = { }) { Icon(Icons.Default.ArrowBack, null) } },
+                title = { Text(stringResource(R.string.settings)) },
+                navigationIcon = { IconButton(onClick = { /*TODO*/ }) { Icon(Icons.Default.ArrowBack, null) } },
                 scrollBehavior = scrollBehavior
             )
         }
     ) { p ->
-        LazyColumn(
-            contentPadding = p
-        ) {
+        LazyColumn(contentPadding = p) {
 
             item {
-                CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.primary
-                ) { PreferenceSetting(settingTitle = "Account") }
+                CategorySetting { Text(stringResource(R.string.account_category_title)) }
+
+                var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
+                LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
 
                 PreferenceSetting(
-                    settingTitle = accountInfo?.displayName ?: "User",
+                    settingTitle = { Text(accountInfo?.displayName ?: "User") },
                     settingIcon = {
                         GlideImage(
                             imageModel = accountInfo?.photoUrl ?: logo.logoId,
@@ -554,7 +554,10 @@ fun SettingScreen(logo: MainLogo, genericInfo: GenericInfo, activity: ComponentA
                             requestBuilder = { Glide.with(LocalView.current).asDrawable().circleCrop() },
                         )
                     },
-                    onClick = {
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
                         FirebaseAuthentication.currentUser?.let {
                             MaterialAlertDialogBuilder(context)
                                 .setTitle(R.string.logOut)
@@ -566,43 +569,41 @@ fun SettingScreen(logo: MainLogo, genericInfo: GenericInfo, activity: ComponentA
                                 .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
                                 .show()
                         } ?: FirebaseAuthentication.signIn(activity)
-                    },
-                    endIcon = {}
+                    }
                 )
 
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
 
             item {
-                CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.primary
-                ) {
-                    PreferenceSetting(
-                        settingTitle = "About",
-                        settingIcon = {
-                            Image(
-                                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
-                                null
-                            )
-                        }
-                    )
-                }
+                CategorySetting(
+                    settingTitle = { Text(stringResource(R.string.about)) },
+                    settingIcon = {
+                        Image(
+                            bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                            null
+                        )
+                    }
+                )
 
                 val appUpdate by appUpdateCheck.subscribeAsState(null)
-                /* {
-                    p.summary = getString(R.string.currentVersion, it.update_real_version.orEmpty())
-                    val appVersion = AppUpdate.checkForUpdate(
-                        context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty(),
-                        it.update_real_version.orEmpty()
-                    )
-                    p.isVisible = appVersion
-                }*/
 
                 PreferenceSetting(
-                    settingTitle = stringResource(
-                        R.string.currentVersion,
-                        context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
-                    )
+                    settingTitle = {
+                        Text(
+                            stringResource(
+                                R.string.currentVersion,
+                                context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
+                            )
+                        )
+                    },
+                    summaryValue = { Text(stringResource(R.string.press_to_check_for_updates)) },
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        /*TODO*/
+                    }
                 )
 
                 ShowWhen(
@@ -654,10 +655,12 @@ fun SettingScreen(logo: MainLogo, genericInfo: GenericInfo, activity: ComponentA
                     }
 
                     PreferenceSetting(
-                        settingTitle = stringResource(R.string.update_available),
-                        summaryValue = stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty()),
-                        endIcon = {},
-                        onClick = { showDialog = true },
+                        settingTitle = { Text(stringResource(R.string.update_available)) },
+                        summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+                        modifier = Modifier.clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { showDialog = true },
                         settingIcon = {
                             Icon(
                                 Icons.Default.SystemUpdateAlt,
@@ -683,9 +686,12 @@ fun SettingScreen(logo: MainLogo, genericInfo: GenericInfo, activity: ComponentA
                     )
 
                 PreferenceSetting(
-                    settingTitle = "Last Time Updates Were Checked",
-                    summaryValue = time,
-                    onClick = {
+                    settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
+                    summaryValue = { Text(time) },
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
                         WorkManager.getInstance(context)
                             .enqueueUniqueWork(
                                 "oneTimeUpdate",
@@ -702,19 +708,155 @@ fun SettingScreen(logo: MainLogo, genericInfo: GenericInfo, activity: ComponentA
                                     )
                                     .build()
                             )
-                    },
-                    endIcon = {}
+                    }
                 )
 
                 val periodicCheck by context.shouldCheckFlow.collectAsState(initial = false)
 
                 SwitchSetting(
-                    settingTitle = "Check for Updates Periodically",
+                    settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
                     value = periodicCheck,
                     updateValue = {
                         scope.launch { context.updatePref(SHOULD_CHECK, it) }
+                        /*TODO*/
                         //OtakuApp.updateSetup(context)
                     }
+                )
+
+                ShowWhen(periodicCheck) {
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.clear_update_queue)) },
+                        summaryValue = { Text(stringResource(R.string.clear_update_queue_summary)) },
+                        modifier = Modifier
+                            .alpha(if (periodicCheck) 1f else .38f)
+                            .clickable(
+                                enabled = periodicCheck,
+                                indication = rememberRipple(),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                val work = WorkManager.getInstance(context)
+                                work.cancelUniqueWork("updateChecks")
+                                work.pruneWork()
+                                /*TODO*/
+                                //OtakuApp.updateSetup(context)
+                                Toast
+                                    .makeText(context, R.string.cleared, Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                    )
+                }
+
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(R.string.view_libraries_used)) },
+                    settingIcon = { Icon(Icons.Default.LibraryBooks, null) },
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        /*TODO*/
+                    }
+                )
+
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(R.string.view_on_github)) },
+                    settingIcon = { Icon(painterResource(R.drawable.github_icon), null) },
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+                )
+
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
+
+            item {
+                val dao = remember { ItemDatabase.getInstance(context).itemDao() }
+                val savedNotifications by dao.getAllNotificationCount().subscribeAsState(0)
+                ShowWhen(savedNotifications > 0) {
+                    CategorySetting { Text(stringResource(R.string.notifications_category_title)) }
+
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
+                        summaryValue = { Text(stringResource(R.string.pending_saved_notifications, savedNotifications)) },
+                        modifier = Modifier.clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            /*TODO*/
+                        }
+                    )
+
+                    var showDialog by remember { mutableStateOf(false) }
+
+                    if (showDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDialog = false },
+                            title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        scope.launch {
+                                            val number = dao.deleteAllNotificationsFlow()
+                                            launch(Dispatchers.Main) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.deleted_notifications, number),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                context.notificationManager.cancel(42)
+                                            }
+                                        }
+                                        showDialog = false
+                                    }
+                                ) { Text(stringResource(R.string.yes)) }
+                            },
+                            dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.no)) } }
+                        )
+                    }
+
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.delete_saved_notifications_title)) },
+                        summaryValue = { Text(stringResource(R.string.delete_notifications_summary)) },
+                        modifier = Modifier.clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { showDialog = true }
+                    )
+
+                    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                }
+            }
+
+            item {
+                CategorySetting { Text(stringResource(R.string.view_menu_category_title)) }
+
+                if (BuildConfig.DEBUG) {
+                    PreferenceSetting(
+                        settingTitle = { Text("Debug Menu") },
+                        settingIcon = { Icon(Icons.Default.Android, null) },
+                        modifier = Modifier.clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { /*TODO*/ }
+                    )
+                }
+
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(R.string.viewFavoritesMenu)) },
+                    settingIcon = { Icon(Icons.Default.Star, null) },
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { /*TODO*/ }
+                )
+
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(R.string.history)) },
+                    settingIcon = { Icon(Icons.Default.History, null) },
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { /*TODO*/ }
                 )
 
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))

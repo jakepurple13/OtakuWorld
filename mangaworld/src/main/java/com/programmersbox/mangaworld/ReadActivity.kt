@@ -1001,7 +1001,6 @@ class ReadActivityCompose : ComponentActivity() {
         ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }
     }
 
-    //TODO: Will be testing this out
     @Composable
     private fun NoRippleOutlinedButton(
         onClick: () -> Unit,
@@ -1111,8 +1110,8 @@ class ReadActivityCompose : ComponentActivity() {
 
         SliderSetting(
             sliderValue = sliderValue,
-            settingTitle = stringResource(id = settingTitle),
-            settingSummary = stringResource(id = settingSummary),
+            settingTitle = { Text(stringResource(id = settingTitle)) },
+            settingSummary = { Text(stringResource(id = settingSummary)) },
             range = range,
             updateValue = {
                 sliderValue = it

@@ -17,7 +17,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -69,10 +68,10 @@ fun defaultSliderColors() = SliderDefaults.colors(
 fun <T> ListSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    dialogTitle: String,
-    cancelText: String? = null,
-    confirmText: String,
+    settingTitle: @Composable () -> Unit,
+    dialogTitle: @Composable () -> Unit,
+    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
     radioButtonColors: androidx.compose.material3.RadioButtonColors = androidx.compose.material3.RadioButtonDefaults.colors(),
     value: T,
     options: List<T>,
@@ -86,7 +85,7 @@ fun <T> ListSetting(
         AlertDialog(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { dialogPopup.value = false },
-            title = { Text(dialogTitle) },
+            title = dialogTitle,
             text = {
                 LazyColumn {
                     items(options) {
@@ -114,15 +113,15 @@ fun <T> ListSetting(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { dialogPopup.value = false }) { Text(confirmText) } },
-            dismissButton = cancelText?.let { { TextButton(onClick = { dialogPopup.value = false }) { Text(it) } } }
+            confirmButton = { confirmText(dialogPopup) },
+            dismissButton = cancelText?.let { { it(dialogPopup) } }
         )
 
     }
 
     PreferenceSetting(
         settingTitle = settingTitle,
-        summaryValue = viewText(value),
+        summaryValue = { Text(viewText(value)) },
         settingIcon = settingIcon,
         modifier = Modifier
             .clickable(
@@ -139,11 +138,11 @@ fun <T> ListSetting(
 fun <T> MultiSelectListSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    settingSummary: String? = null,
-    dialogTitle: String,
-    cancelText: String? = null,
-    confirmText: String,
+    settingTitle: @Composable () -> Unit,
+    settingSummary: (@Composable () -> Unit)? = null,
+    dialogTitle: @Composable () -> Unit,
+    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
     checkboxColors: androidx.compose.material3.CheckboxColors = androidx.compose.material3.CheckboxDefaults.colors(),
     values: List<T>,
     options: List<T>,
@@ -157,7 +156,7 @@ fun <T> MultiSelectListSetting(
         AlertDialog(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { dialogPopup.value = false },
-            title = { Text(dialogTitle) },
+            title = dialogTitle,
             text = {
                 LazyColumn {
                     items(options) {
@@ -185,8 +184,8 @@ fun <T> MultiSelectListSetting(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { dialogPopup.value = false }) { Text(confirmText) } },
-            dismissButton = cancelText?.let { { TextButton(onClick = { dialogPopup.value = false }) { Text(it) } } }
+            confirmButton = { confirmText(dialogPopup) },
+            dismissButton = cancelText?.let { { it(dialogPopup) } }
         )
 
     }
@@ -209,71 +208,36 @@ fun <T> MultiSelectListSetting(
 fun PreferenceSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    summaryValue: String? = null,
-    onClick: (() -> Unit)? = null,
-    endIcon: @Composable () -> Unit
+    settingTitle: @Composable () -> Unit,
+    summaryValue: (@Composable () -> Unit)? = null,
+    endIcon: (@Composable () -> Unit)? = null
 ) = DefaultPreferenceLayout(
     modifier = modifier,
     settingIcon = settingIcon,
     settingTitle = settingTitle,
     summaryValue = summaryValue,
-    onClick = onClick,
     content = endIcon
 )
-
-@ExperimentalMaterialApi
-@Composable
-fun PreferenceSetting(
-    modifier: Modifier = Modifier,
-    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    summaryValue: String? = null
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(modifier)
-            .padding(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(8.dp)
-                .requiredWidth(32.dp)
-        ) { settingIcon?.invoke(this) }
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-                .padding(start = 8.dp)
-        ) {
-            Text(
-                settingTitle,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
-            summaryValue?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-        }
-    }
-}
 
 @ExperimentalMaterialApi
 @Composable
 fun SwitchSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    summaryValue: String? = null,
+    settingTitle: @Composable () -> Unit,
+    summaryValue: (@Composable () -> Unit)? = null,
     switchColors: SwitchColors = defaultSwitchColors(),
     value: Boolean,
     updateValue: (Boolean) -> Unit
 ) {
     DefaultPreferenceLayout(
-        modifier = modifier,
+        modifier = modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { updateValue(!value) },
         settingIcon = settingIcon,
         settingTitle = settingTitle,
-        summaryValue = summaryValue,
-        onClick = { updateValue(!value) }
+        summaryValue = summaryValue
     ) {
         Switch(
             checked = value,
@@ -288,18 +252,20 @@ fun SwitchSetting(
 fun CheckBoxSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    summaryValue: String? = null,
+    settingTitle: @Composable () -> Unit,
+    summaryValue: (@Composable () -> Unit)? = null,
     checkboxColors: androidx.compose.material3.CheckboxColors = androidx.compose.material3.CheckboxDefaults.colors(),
     value: Boolean,
     updateValue: (Boolean) -> Unit
 ) {
     DefaultPreferenceLayout(
-        modifier = modifier,
+        modifier = modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { updateValue(!value) },
         settingIcon = settingIcon,
         settingTitle = settingTitle,
-        summaryValue = summaryValue,
-        onClick = { updateValue(!value) }
+        summaryValue = summaryValue
     ) {
         androidx.compose.material3.Checkbox(
             checked = value,
@@ -314,8 +280,8 @@ fun SliderSetting(
     modifier: Modifier = Modifier,
     sliderValue: Float,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    settingSummary: String? = null,
+    settingTitle: @Composable () -> Unit,
+    settingSummary: (@Composable () -> Unit)? = null,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
     colors: SliderColors = defaultSliderColors(),
@@ -355,19 +321,11 @@ fun SliderSetting(
                 width = Dimension.fillToConstraints
             }
         ) {
-            Text(
-                settingTitle,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Start,
-                fontWeight = FontWeight.Bold
-            )
-
+            androidx.compose.material3.ProvideTextStyle(
+                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold, textAlign = TextAlign.Start)
+            ) { settingTitle() }
             settingSummary?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Start
-                )
+                androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
             }
         }
 
@@ -404,18 +362,20 @@ fun SliderSetting(
 fun ShowMoreSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    summaryValue: String? = null,
+    settingTitle: @Composable () -> Unit,
+    summaryValue: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         var showMore by remember { mutableStateOf(false) }
         DefaultPreferenceLayout(
-            modifier = modifier,
+            modifier = modifier.clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { showMore = !showMore },
             settingIcon = settingIcon,
             settingTitle = settingTitle,
-            summaryValue = summaryValue,
-            onClick = { showMore = !showMore }
+            summaryValue = summaryValue
         ) {
             Icon(
                 Icons.Default.ArrowDropDown,
@@ -431,30 +391,20 @@ fun ShowMoreSetting(
 private fun DefaultPreferenceLayout(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: String,
-    summaryValue: String? = null,
-    onClick: (() -> Unit)? = null,
-    content: @Composable () -> Unit
+    settingTitle: @Composable () -> Unit,
+    summaryValue: (@Composable () -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null
 ) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()
-            .let {
-                onClick?.let { c ->
-                    it.clickable(
-                        indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) { c() }
-                } ?: it
-            }
-            .padding(8.dp)
             .then(modifier)
     ) {
         val (icon, text, endIcon) = createRefs()
 
         Box(
             modifier = Modifier
-                .padding(8.dp)
+                .padding(16.dp)
                 .size(32.dp)
                 .constrainAs(icon) {
                     start.linkTo(parent.start)
@@ -465,28 +415,20 @@ private fun DefaultPreferenceLayout(
         ) { settingIcon?.invoke(this) }
 
         Column(
-            modifier = Modifier
-                .padding(8.dp)
-                .constrainAs(text) {
-                    start.linkTo(icon.end, 8.dp)
-                    end.linkTo(endIcon.start, 8.dp)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    width = Dimension.fillToConstraints
-                }
+            modifier = Modifier.constrainAs(text) {
+                start.linkTo(icon.end, 8.dp)
+                end.linkTo(endIcon.start, 8.dp)
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                centerVerticallyTo(parent)
+                width = Dimension.fillToConstraints
+            }
         ) {
-            Text(
-                settingTitle,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Start,
-            )
+            androidx.compose.material3.ProvideTextStyle(
+                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start)
+            ) { settingTitle() }
             summaryValue?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Start
-                )
+                androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
             }
         }
 
@@ -498,8 +440,20 @@ private fun DefaultPreferenceLayout(
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                 }
-        ) { content() }
+        ) { content?.invoke() }
     }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun CategorySetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingTitle: @Composable () -> Unit
+) {
+    CompositionLocalProvider(
+        androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary
+    ) { DefaultPreferenceLayout(modifier = modifier, settingTitle = settingTitle, settingIcon = settingIcon) }
 }
 
 @Composable
