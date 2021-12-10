@@ -723,9 +723,7 @@ class ReadActivityCompose : ComponentActivity() {
                 .transformable(state)
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = {
-                            onClick()
-                        },
+                        onTap = { onClick() },
                         onDoubleTap = {
                             when {
                                 scale > 2f -> {
