@@ -14,8 +14,10 @@ import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseUIStyle
-import com.programmersbox.uiviews.utils.shouldCheck
+import com.programmersbox.uiviews.utils.shouldCheckFlow
 import io.reactivex.plugins.RxJavaPlugins
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
@@ -110,7 +112,8 @@ abstract class OtakuApp : Application() {
         fun updateSetup(context: Context) {
             val work = WorkManager.getInstance(context)
             //work.cancelAllWork()
-            if (context.shouldCheck) {
+            //if (context.shouldCheck) {
+            if (runBlocking { context.shouldCheckFlow.first() }) {
                 work.enqueueUniquePeriodicWork(
                     "updateChecks",
                     ExistingPeriodicWorkPolicy.KEEP,

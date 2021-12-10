@@ -56,17 +56,31 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
             M3MaterialTheme(currentColorScheme) {
+
+                /*var choice by remember { mutableStateOf(false) }
+
+                Column {
+                    SwitchSetting(settingTitle = { Text("Debug or Setting") }, value = choice, updateValue = { choice = it })
+
+                    if(choice) DebugView() else SettingScreenTest()
+                }*/
                 DebugView()
-                //SettingScreenTest()
             }
         }
     }
 
+    @ExperimentalComposeUiApi
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @Composable
     private fun SettingScreenTest() {
-        SettingScreen(logo = get(), genericInfo = genericInfo, activity = requireActivity())
+        SettingScreen(
+            navController = findNavController(),
+            logo = get(),
+            genericInfo = genericInfo,
+            activity = requireActivity(),
+            fragment = this
+        )
     }
 
     @ExperimentalComposeUiApi

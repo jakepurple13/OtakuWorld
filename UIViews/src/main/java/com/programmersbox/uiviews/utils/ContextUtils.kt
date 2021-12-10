@@ -30,10 +30,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -89,6 +86,9 @@ val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true 
 
 val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
 val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
+
+val THEME_SETTING = stringPreferencesKey("theme")
+val Context.themeSetting get() = dataStore.data.map { it[THEME_SETTING] ?: "System" }
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 

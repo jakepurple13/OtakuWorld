@@ -119,6 +119,7 @@
             app:useSimpleSummaryProvider="true" />
 
         <SwitchPreferenceCompat
+            app:icon="@drawable/ic_baseline_share_24"
             app:key="share_chapter"
             app:title="@string/share_chapters" />
 

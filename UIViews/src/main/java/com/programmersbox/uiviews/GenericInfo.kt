@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -22,6 +23,7 @@ interface GenericInfo {
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
     fun customPreferences(preferenceScreen: SettingsDsl) = Unit
+    fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
     fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context)
 
     @Composable

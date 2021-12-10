@@ -42,7 +42,7 @@ typealias SessionCallback = (Int) -> Unit
 typealias SimpleCallback = () -> Unit
 
 class CastOptions : OptionsProvider {
-    override fun getCastOptions(context: Context?): CastOptions {
+    override fun getCastOptions(context: Context): CastOptions {
         val notificationOptions = NotificationOptions.Builder()
             .setTargetActivityClassName(ExpandedControlsActivity::class.java.name)
             .build()
@@ -56,7 +56,7 @@ class CastOptions : OptionsProvider {
             .build()
     }
 
-    override fun getAdditionalSessionProviders(p0: Context?): MutableList<SessionProvider>? {
+    override fun getAdditionalSessionProviders(p0: Context): MutableList<SessionProvider>? {
         return null
     }
 }
@@ -216,7 +216,7 @@ class CastHelper {
         movieMetadata.addImage(WebImage(Uri.parse(remoteImageFileName)))
 
         buildSubtitle(srtFile) { mediaTracks ->
-            val mediaInfo = MediaInfo.Builder(remoteFileName)
+            val mediaInfo = MediaInfo.Builder(remoteFileName.orEmpty())
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
                 .setContentType("videos/mp4")
                 .setMetadata(movieMetadata)
@@ -322,39 +322,39 @@ class CastHelper {
 
     private fun setUpCastListener() {
         mSessionManagerListener = object : SessionManagerListener<CastSession> {
-            override fun onSessionStarted(session: CastSession?, p1: String?) {
+            override fun onSessionStarted(session: CastSession, p1: String) {
                 onApplicationConnected(session)
             }
 
-            override fun onSessionResumeFailed(p0: CastSession?, p1: Int) {
+            override fun onSessionResumeFailed(p0: CastSession, p1: Int) {
                 onApplicationDisconnected()
             }
 
-            override fun onSessionEnded(p0: CastSession?, p1: Int) {
+            override fun onSessionEnded(p0: CastSession, p1: Int) {
                 onApplicationDisconnected()
             }
 
-            override fun onSessionResumed(session: CastSession?, p1: Boolean) {
+            override fun onSessionResumed(session: CastSession, p1: Boolean) {
                 onApplicationConnected(session)
             }
 
-            override fun onSessionStartFailed(p0: CastSession?, p1: Int) {
+            override fun onSessionStartFailed(p0: CastSession, p1: Int) {
                 onApplicationDisconnected()
             }
 
-            override fun onSessionSuspended(p0: CastSession?, p1: Int) {}
+            override fun onSessionSuspended(p0: CastSession, p1: Int) {}
 
-            override fun onSessionStarting(castSession: CastSession?) {
+            override fun onSessionStarting(castSession: CastSession) {
                 mCastSession = castSession
             }
 
-            override fun onSessionResuming(castSession: CastSession?, p1: String?) {
+            override fun onSessionResuming(castSession: CastSession, p1: String) {
                 mCastSession = castSession
             }
 
-            override fun onSessionEnding(p0: CastSession?) {}
+            override fun onSessionEnding(p0: CastSession) {}
 
-            private fun onApplicationConnected(castSession: CastSession?) {
+            private fun onApplicationConnected(castSession: CastSession) {
                 mCastSession = castSession
                 mActivity.get()?.invalidateOptionsMenu()
             }
@@ -370,7 +370,7 @@ class CastHelper {
 
         if (mediaRouteMenuItem != null && mediaRouteMenuItem.isVisible)
             mIntroductoryOverlay = IntroductoryOverlay.Builder(
-                mActivity.get(), mediaRouteMenuItem
+                mActivity.get()!!, mediaRouteMenuItem
             )
                 .setTitleText(R.string.castIntro)
                 .setSingleTime()

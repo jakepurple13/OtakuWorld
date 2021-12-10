@@ -58,7 +58,9 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -305,7 +307,10 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                             indication = rememberRipple(),
                             onClick = {
                                 activity?.startActivity(
-                                    Intent(context, if (context.useNewReader) ReadActivityCompose::class.java else ReadActivity::class.java).apply {
+                                    Intent(
+                                        context,
+                                        if (runBlocking { context.useNewReaderFlow.first() }) ReadActivityCompose::class.java else ReadActivity::class.java
+                                    ).apply {
                                         putExtra("downloaded", true)
                                         putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
                                     }

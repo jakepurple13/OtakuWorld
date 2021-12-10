@@ -34,14 +34,14 @@ import androidx.constraintlayout.compose.Dimension
 
 @Composable
 fun defaultSwitchColors() = SwitchDefaults.colors(
-    checkedThumbColor = MaterialTheme.colorScheme.secondary,
-    checkedTrackColor = MaterialTheme.colorScheme.secondary,
+    checkedThumbColor = MaterialTheme.colorScheme.primary,
+    checkedTrackColor = MaterialTheme.colorScheme.primary,
     uncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface,
     uncheckedTrackColor = MaterialTheme.colorScheme.onSurface,
-    disabledCheckedThumbColor = MaterialTheme.colorScheme.secondary
+    disabledCheckedThumbColor = MaterialTheme.colorScheme.primary
         .copy(alpha = ContentAlpha.disabled)
         .compositeOver(MaterialTheme.colorScheme.inverseSurface),
-    disabledCheckedTrackColor = MaterialTheme.colorScheme.secondary
+    disabledCheckedTrackColor = MaterialTheme.colorScheme.primary
         .copy(alpha = ContentAlpha.disabled)
         .compositeOver(MaterialTheme.colorScheme.inverseSurface),
     disabledUncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface
@@ -68,8 +68,10 @@ fun defaultSliderColors() = SliderDefaults.colors(
 fun <T> ListSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    summaryValue: (@Composable () -> Unit)? = null,
     settingTitle: @Composable () -> Unit,
     dialogTitle: @Composable () -> Unit,
+    dialogIcon: (@Composable () -> Unit)? = null,
     cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
     confirmText: @Composable (MutableState<Boolean>) -> Unit,
     radioButtonColors: androidx.compose.material3.RadioButtonColors = androidx.compose.material3.RadioButtonDefaults.colors(),
@@ -86,6 +88,7 @@ fun <T> ListSetting(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { dialogPopup.value = false },
             title = dialogTitle,
+            icon = dialogIcon,
             text = {
                 LazyColumn {
                     items(options) {
@@ -121,7 +124,7 @@ fun <T> ListSetting(
 
     PreferenceSetting(
         settingTitle = settingTitle,
-        summaryValue = { Text(viewText(value)) },
+        summaryValue = summaryValue,
         settingIcon = settingIcon,
         modifier = Modifier
             .clickable(
@@ -141,6 +144,7 @@ fun <T> MultiSelectListSetting(
     settingTitle: @Composable () -> Unit,
     settingSummary: (@Composable () -> Unit)? = null,
     dialogTitle: @Composable () -> Unit,
+    dialogIcon: (@Composable () -> Unit)? = null,
     cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
     confirmText: @Composable (MutableState<Boolean>) -> Unit,
     checkboxColors: androidx.compose.material3.CheckboxColors = androidx.compose.material3.CheckboxDefaults.colors(),
@@ -157,6 +161,7 @@ fun <T> MultiSelectListSetting(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { dialogPopup.value = false },
             title = dialogTitle,
+            icon = dialogIcon,
             text = {
                 LazyColumn {
                     items(options) {
@@ -322,7 +327,7 @@ fun SliderSetting(
             }
         ) {
             androidx.compose.material3.ProvideTextStyle(
-                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold, textAlign = TextAlign.Start)
+                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
             ) { settingTitle() }
             settingSummary?.let {
                 androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
@@ -410,6 +415,7 @@ private fun DefaultPreferenceLayout(
                     start.linkTo(parent.start)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
+                    centerVerticallyTo(parent)
                 },
             contentAlignment = Alignment.Center
         ) { settingIcon?.invoke(this) }
@@ -425,7 +431,7 @@ private fun DefaultPreferenceLayout(
             }
         ) {
             androidx.compose.material3.ProvideTextStyle(
-                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start)
+                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
             ) { settingTitle() }
             summaryValue?.let {
                 androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
@@ -439,6 +445,7 @@ private fun DefaultPreferenceLayout(
                     end.linkTo(parent.end)
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
+                    centerVerticallyTo(parent)
                 }
         ) { content?.invoke() }
     }
@@ -453,7 +460,43 @@ fun CategorySetting(
 ) {
     CompositionLocalProvider(
         androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary
-    ) { DefaultPreferenceLayout(modifier = modifier, settingTitle = settingTitle, settingIcon = settingIcon) }
+    ) {
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(modifier)
+        ) {
+            val (icon, text) = createRefs()
+
+            Box(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .size(32.dp)
+                    .constrainAs(icon) {
+                        start.linkTo(parent.start)
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom)
+                        centerVerticallyTo(parent)
+                    },
+                contentAlignment = Alignment.Center
+            ) { settingIcon?.invoke(this) }
+
+            Column(
+                modifier = Modifier.constrainAs(text) {
+                    start.linkTo(icon.end, 8.dp)
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                    centerVerticallyTo(parent)
+                    width = Dimension.fillToConstraints
+                }
+            ) {
+                androidx.compose.material3.ProvideTextStyle(
+                    MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start)
+                ) { settingTitle() }
+            }
+        }
+    }
 }
 
 @Composable
