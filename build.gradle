@@ -32,7 +32,7 @@ buildscript {
 
     ext.jsoup = 'org.jsoup:jsoup:1.14.3'
 
-    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.5'
+    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.6'
     ext.analytics = 'com.google.firebase:firebase-analytics:20.0.1'
     ext.play_services = 'com.google.android.gms:play-services-auth:19.2.0'
 
@@ -52,7 +52,7 @@ buildscript {
 
     ext.jetpack = "1.1.0-beta04"
 
-    ext.accompanist = "0.20.2"
+    ext.accompanist = "0.20.3"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
