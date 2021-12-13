@@ -435,8 +435,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         val animated by updateAnimatedItemsState(newList = list)
         LazyColumn(
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             animatedItems(
                 animated,

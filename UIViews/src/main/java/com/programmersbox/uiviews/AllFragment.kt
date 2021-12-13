@@ -18,17 +18,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -162,180 +161,194 @@ class AllFragment : BaseFragmentCompose() {
             scope.launch { scaffoldState.bottomSheetState.collapse() }
         }
 
-        when {
-            !isConnected -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        Icons.Default.CloudOff,
-                        null,
-                        modifier = Modifier.size(50.dp, 50.dp),
-                        colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+        var showBanner by remember { mutableStateOf(false) }
+        M3OtakuBannerBox(
+            showBanner = showBanner,
+            placeholder = logo.logoId
+        ) { itemInfo ->
+            val source by sourcePublish.subscribeAsState(initial = null)
+            val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+            Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
+                topBar = {
+                    SmallTopAppBar(
+                        title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                        scrollBehavior = scrollBehaviorTop
                     )
-                    Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                 }
-            }
-            else -> {
-                val state = rememberLazyListState()
-                val refresh = rememberSwipeRefreshState(isRefreshing = false)
-                val source by sourcePublish.subscribeAsState(initial = null)
-                val focusManager = LocalFocusManager.current
-                val searchList by searchPublisher.subscribeAsState(initial = emptyList())
-                var searchText by rememberSaveable { mutableStateOf("") }
-                val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-                var showBanner by remember { mutableStateOf(false) }
-                M3OtakuBannerBox(
-                    showBanner = showBanner,
-                    placeholder = logo.logoId
-                ) { itemInfo ->
-                    BottomSheetScaffold(
-                        backgroundColor = M3MaterialTheme.colorScheme.background,
-                        contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
-                        scaffoldState = scaffoldState,
-                        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
-                        sheetContent = {
-                            var isSearching by remember { mutableStateOf(false) }
-                            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-                            Scaffold(
-                                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                                topBar = {
-                                    Column(
-                                        modifier = Modifier
-                                            .background(
-                                                TopAppBarDefaults.smallTopAppBarColors()
-                                                    .containerColor(scrollBehavior.scrollFraction).value
-                                            )
-                                    ) {
-                                        Button(
-                                            onClick = {
-                                                scope.launch {
-                                                    if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
-                                                    else scaffoldState.bottomSheetState.collapse()
-                                                }
-                                            },
+            ) { p1 ->
+                when {
+                    !isConnected -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(p1),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                Icons.Default.CloudOff,
+                                null,
+                                modifier = Modifier.size(50.dp, 50.dp),
+                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                            )
+                            Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                        }
+                    }
+                    else -> {
+                        val state = rememberLazyListState()
+                        val refresh = rememberSwipeRefreshState(isRefreshing = false)
+                        val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+                        BottomSheetScaffold(
+                            modifier = Modifier.padding(p1),
+                            backgroundColor = M3MaterialTheme.colorScheme.background,
+                            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
+                            scaffoldState = scaffoldState,
+                            sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+                            sheetContent = {
+                                val focusManager = LocalFocusManager.current
+                                val searchList by searchPublisher.subscribeAsState(initial = emptyList())
+                                var searchText by rememberSaveable { mutableStateOf("") }
+                                var isSearching by remember { mutableStateOf(false) }
+                                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                                Scaffold(
+                                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                                    topBar = {
+                                        Column(
                                             modifier = Modifier
-                                                .fillMaxWidth()
-                                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                                            shape = RoundedCornerShape(0f)
-                                        ) { Text(stringResource(R.string.search)) }
-
-                                        MdcTheme {
-                                            OutlinedTextField(
-                                                value = searchText,
-                                                onValueChange = { searchText = it },
-                                                label = {
-                                                    androidx.compose.material.Text(
-                                                        stringResource(
-                                                            R.string.searchFor,
-                                                            source?.serviceName.orEmpty()
-                                                        )
-                                                    )
-                                                },
-                                                trailingIcon = {
-                                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                                        androidx.compose.material.Text(searchList.size.toString())
-                                                        IconButton(onClick = { searchText = "" }) {
-                                                            androidx.compose.material.Icon(Icons.Default.Cancel, null)
-                                                        }
+                                                .background(
+                                                    TopAppBarDefaults.smallTopAppBarColors()
+                                                        .containerColor(scrollBehavior.scrollFraction).value
+                                                )
+                                        ) {
+                                            Button(
+                                                onClick = {
+                                                    scope.launch {
+                                                        if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                                        else scaffoldState.bottomSheetState.collapse()
                                                     }
                                                 },
                                                 modifier = Modifier
-                                                    .padding(5.dp)
-                                                    .fillMaxWidth(),
-                                                singleLine = true,
-                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                keyboardActions = KeyboardActions(onSearch = {
-                                                    focusManager.clearFocus()
-                                                    sourcePublish.value
-                                                        ?.searchList(searchText, 1, sourceList)
-                                                        ?.subscribeOn(Schedulers.io())
-                                                        ?.observeOn(AndroidSchedulers.mainThread())
-                                                        ?.doOnSubscribe { isSearching = true }
-                                                        ?.onErrorReturnItem(sourceList)
-                                                        ?.subscribeBy {
-                                                            searchPublisher.onNext(it)
-                                                            isSearching = false
+                                                    .fillMaxWidth()
+                                                    .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                                                shape = RoundedCornerShape(0f)
+                                            ) { Text(stringResource(R.string.search)) }
+
+                                            MdcTheme {
+                                                OutlinedTextField(
+                                                    value = searchText,
+                                                    onValueChange = { searchText = it },
+                                                    label = {
+                                                        androidx.compose.material.Text(
+                                                            stringResource(
+                                                                R.string.searchFor,
+                                                                source?.serviceName.orEmpty()
+                                                            )
+                                                        )
+                                                    },
+                                                    trailingIcon = {
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            androidx.compose.material.Text(searchList.size.toString())
+                                                            IconButton(onClick = { searchText = "" }) {
+                                                                androidx.compose.material.Icon(Icons.Default.Cancel, null)
+                                                            }
                                                         }
-                                                        ?.addTo(disposable)
-                                                })
-                                            )
+                                                    },
+                                                    modifier = Modifier
+                                                        .padding(5.dp)
+                                                        .fillMaxWidth(),
+                                                    singleLine = true,
+                                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                    keyboardActions = KeyboardActions(onSearch = {
+                                                        focusManager.clearFocus()
+                                                        sourcePublish.value
+                                                            ?.searchList(searchText, 1, sourceList)
+                                                            ?.subscribeOn(Schedulers.io())
+                                                            ?.observeOn(AndroidSchedulers.mainThread())
+                                                            ?.doOnSubscribe { isSearching = true }
+                                                            ?.onErrorReturnItem(sourceList)
+                                                            ?.subscribeBy {
+                                                                searchPublisher.onNext(it)
+                                                                isSearching = false
+                                                            }
+                                                            ?.addTo(disposable)
+                                                    })
+                                                )
+                                            }
+                                        }
+                                    }
+                                ) { p ->
+                                    Box(modifier = Modifier.padding(p)) {
+                                        SwipeRefresh(
+                                            state = rememberSwipeRefreshState(isRefreshing = isSearching),
+                                            onRefresh = {},
+                                            swipeEnabled = false
+                                        ) {
+                                            info.ItemListView(
+                                                list = searchList,
+                                                listState = rememberLazyListState(),
+                                                favorites = favoriteList,
+                                                onLongPress = { item, c ->
+                                                    itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                                    showBanner = c == ComponentState.Pressed
+                                                }
+                                            ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                                         }
                                     }
                                 }
-                            ) { p ->
-                                Box(modifier = Modifier.padding(p)) {
-                                    SwipeRefresh(
-                                        state = rememberSwipeRefreshState(isRefreshing = isSearching),
-                                        onRefresh = {},
-                                        swipeEnabled = false
+                            },
+                            floatingActionButton = {
+                                AnimatedVisibility(
+                                    visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
+                                    enter = slideInVertically(initialOffsetY = { it / 2 }),
+                                    exit = slideOutVertically(targetOffsetY = { it / 2 })
+                                ) {
+                                    FloatingActionButton(
+                                        onClick = { scope.launch { state.animateScrollToItem(0) } },
+                                        containerColor = androidx.compose.material3.ButtonDefaults.buttonColors().containerColor(enabled = true).value
                                     ) {
-                                        info.ItemListView(
-                                            list = searchList,
-                                            listState = rememberLazyListState(),
-                                            favorites = favoriteList,
-                                            onLongPress = { item, c ->
-                                                itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                                showBanner = c == ComponentState.Pressed
-                                            }
-                                        ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
+                                        Icon(
+                                            imageVector = Icons.Default.KeyboardArrowUp,
+                                            contentDescription = null,
+                                            modifier = Modifier.padding(5.dp),
+                                        )
                                     }
                                 }
-                            }
-                        },
-                        floatingActionButton = {
-                            AnimatedVisibility(
-                                visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
-                                enter = slideInVertically(initialOffsetY = { it / 2 }),
-                                exit = slideOutVertically(targetOffsetY = { it / 2 })
-                            ) {
-                                FloatingActionButton(
-                                    onClick = { scope.launch { state.animateScrollToItem(0) } },
-                                    containerColor = androidx.compose.material3.ButtonDefaults.buttonColors().containerColor(enabled = true).value
+                            },
+                            floatingActionButtonPosition = androidx.compose.material.FabPosition.End
+                        ) { p ->
+                            if (sourceList.isEmpty()) {
+                                info.ComposeShimmerItem()
+                            } else {
+                                SwipeRefresh(
+                                    modifier = Modifier.padding(p),
+                                    state = refresh,
+                                    onRefresh = {
+                                        source?.let {
+                                            count = 1
+                                            sourceList.clear()
+                                            sourceLoadCompose(it, count, refresh)
+                                        }
+                                    }
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowUp,
-                                        contentDescription = null,
-                                        modifier = Modifier.padding(5.dp),
-                                    )
+                                    info.ItemListView(
+                                        list = sourceList,
+                                        listState = state,
+                                        favorites = favoriteList,
+                                        onLongPress = { item, c ->
+                                            itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                            showBanner = c == ComponentState.Pressed
+                                        }
+                                    ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                                 }
                             }
-                        },
-                        floatingActionButtonPosition = FabPosition.End
-                    ) { p ->
-                        if (sourceList.isEmpty()) {
-                            info.ComposeShimmerItem()
-                        } else {
-                            SwipeRefresh(
-                                modifier = Modifier.padding(p),
-                                state = refresh,
-                                onRefresh = {
+
+                            if (source?.canScrollAll == true && sourceList.isNotEmpty()) {
+                                InfiniteListHandler(listState = state, buffer = 2) {
                                     source?.let {
-                                        count = 1
-                                        sourceList.clear()
+                                        count++
                                         sourceLoadCompose(it, count, refresh)
                                     }
-                                }
-                            ) {
-                                info.ItemListView(
-                                    list = sourceList,
-                                    listState = state,
-                                    favorites = favoriteList,
-                                    onLongPress = { item, c ->
-                                        itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                        showBanner = c == ComponentState.Pressed
-                                    }
-                                ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
-                            }
-                        }
-
-                        if (source?.canScrollAll == true && sourceList.isNotEmpty()) {
-                            InfiniteListHandler(listState = state, buffer = 2) {
-                                source?.let {
-                                    count++
-                                    sourceLoadCompose(it, count, refresh)
                                 }
                             }
                         }

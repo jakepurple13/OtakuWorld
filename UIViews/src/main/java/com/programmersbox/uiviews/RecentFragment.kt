@@ -6,20 +6,21 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
@@ -75,7 +76,8 @@ class RecentFragment : BaseFragmentCompose() {
 
     @OptIn(
         ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalFoundationApi::class,
+        ExperimentalMaterial3Api::class
     )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
@@ -128,6 +130,7 @@ class RecentFragment : BaseFragmentCompose() {
             .addTo(disposable)
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
@@ -141,56 +144,70 @@ class RecentFragment : BaseFragmentCompose() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(initial = true)
 
-        when {
-            !isConnected -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        Icons.Default.CloudOff,
-                        null,
-                        modifier = Modifier.size(50.dp, 50.dp),
-                        colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+        var showBanner by remember { mutableStateOf(false) }
+        M3OtakuBannerBox(
+            showBanner = showBanner,
+            placeholder = logo.logoId
+        ) { itemInfo ->
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+            Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    SmallTopAppBar(
+                        title = { androidx.compose.material3.Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                        scrollBehavior = scrollBehavior
                     )
-                    Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                 }
-            }
-            sourceList.isEmpty() -> info.ComposeShimmerItem()
-            else -> {
-                SwipeRefresh(
-                    state = refresh,
-                    onRefresh = {
-                        source?.let {
-                            count = 1
-                            sourceList.clear()
-                            sourceLoadCompose(it, count, refresh)
+            ) { p ->
+                when {
+                    !isConnected -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(p),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                Icons.Default.CloudOff,
+                                null,
+                                modifier = Modifier.size(50.dp, 50.dp),
+                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                            )
+                            androidx.compose.material3.Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                         }
                     }
-                ) {
-                    var showBanner by remember { mutableStateOf(false) }
-                    M3OtakuBannerBox(
-                        showBanner = showBanner,
-                        placeholder = logo.logoId
-                    ) { itemInfo ->
-                        info.ItemListView(
-                            list = sourceList,
-                            listState = state,
-                            favorites = favoriteList,
-                            onLongPress = { item, c ->
-                                itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                showBanner = c == ComponentState.Pressed
+                    sourceList.isEmpty() -> info.ComposeShimmerItem()
+                    else -> {
+                        SwipeRefresh(
+                            modifier = Modifier.padding(p),
+                            state = refresh,
+                            onRefresh = {
+                                source?.let {
+                                    count = 1
+                                    sourceList.clear()
+                                    sourceLoadCompose(it, count, refresh)
+                                }
                             }
-                        ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
-                    }
-                }
+                        ) {
+                            info.ItemListView(
+                                list = sourceList,
+                                listState = state,
+                                favorites = favoriteList,
+                                onLongPress = { item, c ->
+                                    itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                    showBanner = c == ComponentState.Pressed
+                                }
+                            ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
+                        }
 
-                if (source?.canScroll == true && sourceList.isNotEmpty()) {
-                    InfiniteListHandler(listState = state, buffer = 2) {
-                        source?.let {
-                            count++
-                            sourceLoadCompose(it, count, refresh)
+                        if (source?.canScroll == true && sourceList.isNotEmpty()) {
+                            InfiniteListHandler(listState = state, buffer = 2) {
+                                source?.let {
+                                    count++
+                                    sourceLoadCompose(it, count, refresh)
+                                }
+                            }
                         }
                     }
                 }

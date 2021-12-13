@@ -248,8 +248,8 @@ class GenericManga(val context: Context) : GenericInfo {
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
+        //TODO: See if you can modify this to perform better
         LazyVerticalGrid(
-            modifier = Modifier.padding(vertical = 4.dp),
             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
