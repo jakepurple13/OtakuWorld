@@ -530,7 +530,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
             PreferenceSetting(
                 settingTitle = { androidx.compose.material3.Text(stringResource(R.string.folder_location)) },
-                summaryValue = { androidx.compose.material3.Text(context.folderLocation) },
+                summaryValue = { androidx.compose.material3.Text(folderLocation) },
                 settingIcon = { androidx.compose.material3.Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),

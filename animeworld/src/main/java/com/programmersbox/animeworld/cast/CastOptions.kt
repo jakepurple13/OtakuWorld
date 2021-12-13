@@ -27,7 +27,7 @@ import com.google.android.gms.common.images.WebImage
 import com.programmersbox.animeworld.R
 import io.github.dkbai.tinyhttpd.nanohttpd.webserver.SimpleWebServer
 import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -104,11 +104,11 @@ class CastHelper {
     private var onNeedToShowIntroductoryOverlay: SimpleCallback? = null
     private var onSessionConnected: () -> Unit = {}
 
-    private val sessionConnected = PublishSubject.create<Boolean>()
+    private val sessionConnected = BehaviorSubject.createDefault(false)
 
     fun sessionConnected(): Observable<Boolean> = sessionConnected
 
-    private val sessionStatus = PublishSubject.create<Boolean>()
+    private val sessionStatus = BehaviorSubject.createDefault(false)
 
     fun sessionStatus(): Observable<Boolean> = sessionStatus
 
