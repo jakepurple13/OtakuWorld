@@ -7,8 +7,6 @@ import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,9 +19,9 @@ import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -166,6 +164,8 @@ class AllFragment : BaseFragmentCompose() {
             showBanner = showBanner,
             placeholder = logo.logoId
         ) { itemInfo ->
+            val state = rememberLazyListState()
+            val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
             val source by sourcePublish.subscribeAsState(initial = null)
             val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior() }
             Scaffold(
@@ -173,6 +173,13 @@ class AllFragment : BaseFragmentCompose() {
                 topBar = {
                     SmallTopAppBar(
                         title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                        actions = {
+                            AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
+                                androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                                    Icon(Icons.Default.ArrowUpward, null)
+                                }
+                            }
+                        },
                         scrollBehavior = scrollBehaviorTop
                     )
                 }
@@ -196,9 +203,7 @@ class AllFragment : BaseFragmentCompose() {
                         }
                     }
                     else -> {
-                        val state = rememberLazyListState()
                         val refresh = rememberSwipeRefreshState(isRefreshing = false)
-                        val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
                         BottomSheetScaffold(
                             modifier = Modifier.padding(p1),
                             backgroundColor = M3MaterialTheme.colorScheme.background,
@@ -296,26 +301,7 @@ class AllFragment : BaseFragmentCompose() {
                                         }
                                     }
                                 }
-                            },
-                            floatingActionButton = {
-                                AnimatedVisibility(
-                                    visible = showButton && scaffoldState.bottomSheetState.isCollapsed,
-                                    enter = slideInVertically(initialOffsetY = { it / 2 }),
-                                    exit = slideOutVertically(targetOffsetY = { it / 2 })
-                                ) {
-                                    FloatingActionButton(
-                                        onClick = { scope.launch { state.animateScrollToItem(0) } },
-                                        containerColor = androidx.compose.material3.ButtonDefaults.buttonColors().containerColor(enabled = true).value
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.KeyboardArrowUp,
-                                            contentDescription = null,
-                                            modifier = Modifier.padding(5.dp),
-                                        )
-                                    }
-                                }
-                            },
-                            floatingActionButtonPosition = androidx.compose.material.FabPosition.End
+                            }
                         ) { p ->
                             if (sourceList.isEmpty()) {
                                 info.ComposeShimmerItem()

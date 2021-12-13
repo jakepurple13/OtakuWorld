@@ -4,17 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
@@ -46,6 +45,7 @@ import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -136,6 +136,7 @@ class RecentFragment : BaseFragmentCompose() {
     @Composable
     private fun RecentView() {
         val state = rememberLazyListState()
+        val scope = rememberCoroutineScope()
         val source by sourcePublish.subscribeAsState(initial = null)
         val refresh = rememberSwipeRefreshState(isRefreshing = false)
 
@@ -150,11 +151,19 @@ class RecentFragment : BaseFragmentCompose() {
             placeholder = logo.logoId
         ) { itemInfo ->
             val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+            val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     SmallTopAppBar(
-                        title = { androidx.compose.material3.Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                        title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                        actions = {
+                            AnimatedVisibility(visible = showButton) {
+                                IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                                    Icon(Icons.Default.ArrowUpward, null)
+                                }
+                            }
+                        },
                         scrollBehavior = scrollBehavior
                     )
                 }
@@ -174,7 +183,7 @@ class RecentFragment : BaseFragmentCompose() {
                                 modifier = Modifier.size(50.dp, 50.dp),
                                 colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                             )
-                            androidx.compose.material3.Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                            Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                         }
                     }
                     sourceList.isEmpty() -> info.ComposeShimmerItem()
