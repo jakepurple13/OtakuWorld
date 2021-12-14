@@ -253,7 +253,7 @@ class GenericManga(val context: Context) : GenericInfo {
             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            state = listState,
+            state = listState
         ) {
             items(list) {
                 M3CoverCard(

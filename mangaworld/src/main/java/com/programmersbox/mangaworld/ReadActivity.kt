@@ -288,6 +288,22 @@ class ReadActivityCompose : ComponentActivity() {
                                         }
                                     }
                                 )
+                            },
+                            bottomBar = {
+                                if (!BuildConfig.DEBUG) {
+                                    AndroidView(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 4.dp),
+                                        factory = {
+                                            AdView(it).apply {
+                                                adSize = AdSize.BANNER
+                                                adUnitId = getString(R.string.ad_unit_id)
+                                                loadAd(ad)
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         ) { p ->
                             if (scaffoldState.bottomSheetState.isExpanded) {
@@ -348,6 +364,22 @@ class ReadActivityCompose : ComponentActivity() {
                                         title = { Text(title) },
                                         actions = { PageIndicator(Modifier, list.size - currentChapter, list.size) }
                                     )
+                                },
+                                bottomBar = {
+                                    if (!BuildConfig.DEBUG) {
+                                        AndroidView(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 4.dp),
+                                            factory = {
+                                                AdView(it).apply {
+                                                    adSize = AdSize.BANNER
+                                                    adUnitId = getString(R.string.ad_unit_id)
+                                                    loadAd(ad)
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             ) { p ->
                                 if (scaffoldState.drawerState.isOpen) {
@@ -407,7 +439,7 @@ class ReadActivityCompose : ComponentActivity() {
                     } else null
                 ) {
 
-                    val showItems = showInfo || listState.isScrolledToTheEnd() || listState.isScrolledNearToTheEnd()
+                    val showItems = showInfo || listState.isScrolledToTheEnd()
 
                     /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
                     //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
@@ -987,8 +1019,6 @@ class ReadActivityCompose : ComponentActivity() {
     private fun Context.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
     private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
-
-    private fun LazyListState.isScrolledNearToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 2
 
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
