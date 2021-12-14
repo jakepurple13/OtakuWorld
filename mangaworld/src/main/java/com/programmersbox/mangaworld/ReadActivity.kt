@@ -288,6 +288,22 @@ class ReadActivityCompose : ComponentActivity() {
                                         }
                                     }
                                 )
+                            },
+                            bottomBar = {
+                                if (!BuildConfig.DEBUG) {
+                                    AndroidView(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 4.dp),
+                                        factory = {
+                                            AdView(it).apply {
+                                                adSize = AdSize.BANNER
+                                                adUnitId = getString(R.string.ad_unit_id)
+                                                loadAd(ad)
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         ) { p ->
                             if (scaffoldState.bottomSheetState.isExpanded) {
@@ -298,7 +314,24 @@ class ReadActivityCompose : ComponentActivity() {
                                     contentPadding = p
                                 ) {
                                     itemsIndexed(pages) { i, it ->
-                                        Box {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                                .border(
+                                                    animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                                    color = animateColorAsState(
+                                                        if (currentPage == i) M3MaterialTheme.colorScheme.primary
+                                                        else androidx.compose.ui.graphics.Color.Transparent
+                                                    ).value
+                                                )
+                                                .clickable {
+                                                    scope.launch {
+                                                        if (currentPage == i) scaffoldState.bottomSheetState.collapse()
+                                                        listState.animateScrollToItem(i)
+                                                    }
+                                                }
+                                        ) {
                                             GlideImage(
                                                 imageModel = it,
                                                 contentScale = ContentScale.Crop,
@@ -311,20 +344,6 @@ class ReadActivityCompose : ComponentActivity() {
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .align(Alignment.Center)
-                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                                    .border(
-                                                        animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
-                                                        color = animateColorAsState(
-                                                            if (currentPage == i) M3MaterialTheme.colorScheme.primary
-                                                            else androidx.compose.ui.graphics.Color.Transparent
-                                                        ).value
-                                                    )
-                                                    .clickable {
-                                                        scope.launch {
-                                                            if (currentPage == i) scaffoldState.bottomSheetState.collapse()
-                                                            listState.animateScrollToItem(i)
-                                                        }
-                                                    }
                                             )
                                         }
                                     }
@@ -345,6 +364,22 @@ class ReadActivityCompose : ComponentActivity() {
                                         title = { Text(title) },
                                         actions = { PageIndicator(Modifier, list.size - currentChapter, list.size) }
                                     )
+                                },
+                                bottomBar = {
+                                    if (!BuildConfig.DEBUG) {
+                                        AndroidView(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 4.dp),
+                                            factory = {
+                                                AdView(it).apply {
+                                                    adSize = AdSize.BANNER
+                                                    adUnitId = getString(R.string.ad_unit_id)
+                                                    loadAd(ad)
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             ) { p ->
                                 if (scaffoldState.drawerState.isOpen) {
@@ -404,7 +439,7 @@ class ReadActivityCompose : ComponentActivity() {
                     } else null
                 ) {
 
-                    val showItems = showInfo || listState.isScrolledToTheEnd() || listState.isScrolledNearToTheEnd()
+                    val showItems = showInfo || listState.isScrolledToTheEnd()
 
                     /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
                     //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
@@ -720,9 +755,7 @@ class ReadActivityCompose : ComponentActivity() {
                 .transformable(state)
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = {
-                            onClick()
-                        },
+                        onTap = { onClick() },
                         onDoubleTap = {
                             when {
                                 scale > 2f -> {
@@ -987,8 +1020,6 @@ class ReadActivityCompose : ComponentActivity() {
 
     private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
 
-    private fun LazyListState.isScrolledNearToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 2
-
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
         NoRippleOutlinedButton(
@@ -998,7 +1029,6 @@ class ReadActivityCompose : ComponentActivity() {
         ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }
     }
 
-    //TODO: Will be testing this out
     @Composable
     private fun NoRippleOutlinedButton(
         onClick: () -> Unit,
@@ -1108,8 +1138,8 @@ class ReadActivityCompose : ComponentActivity() {
 
         SliderSetting(
             sliderValue = sliderValue,
-            settingTitle = stringResource(id = settingTitle),
-            settingSummary = stringResource(id = settingSummary),
+            settingTitle = { Text(stringResource(id = settingTitle)) },
+            settingSummary = { Text(stringResource(id = settingSummary)) },
             range = range,
             updateValue = {
                 sliderValue = it

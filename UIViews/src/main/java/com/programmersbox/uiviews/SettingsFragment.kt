@@ -1,13 +1,53 @@
 package com.programmersbox.uiviews
 
 import android.Manifest
+import android.content.Context
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Environment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.rxjava2.subscribeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.graphics.drawable.toBitmap
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.preference.*
@@ -24,12 +64,14 @@ import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.models.ApiService
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.utils.*
+import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -39,12 +81,13 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import org.koin.android.ext.android.inject
 import java.io.File
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class SettingsFragment : PreferenceFragmentCompat() {
+class SettingsFragment1 : PreferenceFragmentCompat() {
 
     private val disposable: CompositeDisposable = CompositeDisposable()
 
@@ -82,7 +125,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             fun accountChanges(user: FirebaseUser?) {
                 activity?.let {
-                    Glide.with(this@SettingsFragment)
+                    Glide.with(this@SettingsFragment1)
                         .load(user?.photoUrl)
                         .placeholder(logo.logoId)
                         .error(logo.logoId)
@@ -103,7 +146,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             p.setOnPreferenceClickListener {
                 FirebaseAuthentication.currentUser?.let {
-                    MaterialAlertDialogBuilder(this@SettingsFragment.requireContext())
+                    MaterialAlertDialogBuilder(this@SettingsFragment1.requireContext())
                         .setTitle(R.string.logOut)
                         .setMessage(R.string.areYouSureLogOut)
                         .setPositiveButton(R.string.yes) { d, _ ->
@@ -332,7 +375,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             p.setOnPreferenceClickListener {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(getString(R.string.updateTo, p.summary))
-                    .setMessage(R.string.please_update_for_leatest_features)
+                    .setMessage(R.string.please_update_for_latest_features)
                     .setPositiveButton(R.string.update) { d, _ ->
                         activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) {
                             if (it.isGranted) {
@@ -454,27 +497,27 @@ class SettingsFragment : PreferenceFragmentCompat() {
 }
 
 class SettingsDsl {
-    internal var generalSettings: (SettingsFragment, PreferenceCategory) -> Unit = { _, _ -> }
+    internal var generalSettings: (SettingsFragment1, PreferenceCategory) -> Unit = { _, _ -> }
 
-    fun generalSettings(block: (SettingsFragment, PreferenceCategory) -> Unit) {
+    fun generalSettings(block: (SettingsFragment1, PreferenceCategory) -> Unit) {
         generalSettings = block
     }
 
-    internal var viewSettings: (SettingsFragment, PreferenceCategory) -> Unit = { _, _ -> }
+    internal var viewSettings: (SettingsFragment1, PreferenceCategory) -> Unit = { _, _ -> }
 
-    fun viewSettings(block: (SettingsFragment, PreferenceCategory) -> Unit) {
+    fun viewSettings(block: (SettingsFragment1, PreferenceCategory) -> Unit) {
         viewSettings = block
     }
 
-    internal var navigationSetup: (SettingsFragment) -> Unit = {}
+    internal var navigationSetup: (SettingsFragment1) -> Unit = {}
 
-    fun navigationSetup(block: (SettingsFragment) -> Unit) {
+    fun navigationSetup(block: (SettingsFragment1) -> Unit) {
         navigationSetup = block
     }
 
-    internal var playSettings: (SettingsFragment, PreferenceCategory) -> Unit = { _, _ -> }
+    internal var playSettings: (SettingsFragment1, PreferenceCategory) -> Unit = { _, _ -> }
 
-    fun playSettings(block: (SettingsFragment, PreferenceCategory) -> Unit) {
+    fun playSettings(block: (SettingsFragment1, PreferenceCategory) -> Unit) {
         playSettings = block
     }
 
@@ -488,4 +531,750 @@ class SettingsDsl {
             }
         }
     }
+}
+
+class SettingsFragment : Fragment() {
+
+    companion object {
+        @JvmStatic
+        fun newInstance() = SettingsFragment()
+    }
+
+    private val genericInfo: GenericInfo by inject()
+    private val logo: MainLogo by inject()
+
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class,
+        ExperimentalComposeUiApi::class
+    )
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MaterialTheme(currentColorScheme) {
+                    SettingScreen(
+                        navController = findNavController(),
+                        logo = logo,
+                        genericInfo = genericInfo,
+                        fragment = this@SettingsFragment,
+                        activity = requireActivity(),
+                        usedLibraryClick = {
+                            findNavController()
+                                .navigate(
+                                    SettingsFragmentDirections.actionXToAboutLibs(
+                                        LibsBuilder()
+                                            .withSortEnabled(true)
+                                            .customUtils("loggingutils", "LoggingUtils")
+                                            //.customUtils("flowutils", "FlowUtils")
+                                            .customUtils("gsonutils", "GsonUtils")
+                                            .customUtils("helpfulutils", "HelpfulUtils")
+                                            .customUtils("dragswipe", "DragSwipe")
+                                            .customUtils("funutils", "FunUtils")
+                                            .customUtils("rxutils", "RxUtils")
+                                            //.customUtils("thirdpartyutils", "ThirdPartyUtils")
+                                            .withShowLoadingProgress(true)
+                                    )
+                                )
+                        },
+                        debugMenuClick = {
+                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToDebugFragment())
+                        },
+                        notificationClick = {
+                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToNotificationFragment())
+                        },
+                        favoritesClick = {
+                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
+                        },
+                        historyClick = {
+                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToHistoryFragment())
+                        },
+                        globalSearchClick = {
+                            findNavController().navigate(GlobalNavDirections.showGlobalSearch())
+                        }
+                    )
+                }
+            }
+        }
+
+    private fun LibsBuilder.customUtils(libraryName: String, newName: String) =
+        withLibraryModification(
+            libraryName,
+            Libs.LibraryFields.LIBRARY_REPOSITORY_LINK,
+            "https://www.github.com/jakepurple13/HelpfulTools"
+        )
+            .withLibraryModification(
+                libraryName,
+                Libs.LibraryFields.LIBRARY_NAME,
+                newName
+            )
+}
+
+class ComposeSettingsDsl {
+
+    internal var generalSettings: (@Composable () -> Unit)? = null
+    internal var viewSettings: (@Composable () -> Unit)? = null
+    internal var playerSettings: (@Composable () -> Unit)? = null
+
+    fun generalSettings(block: @Composable () -> Unit) {
+        generalSettings = block
+    }
+
+    fun viewSettings(block: @Composable () -> Unit) {
+        viewSettings = block
+    }
+
+    fun playerSettings(block: @Composable () -> Unit) {
+        playerSettings = block
+    }
+
+    internal var navigationSetup: (Fragment, NavController) -> Unit = { _, _ -> }
+
+    fun navigationSetup(block: (Fragment, NavController) -> Unit) {
+        navigationSetup = block
+    }
+
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@ExperimentalMaterial3Api
+@Composable
+fun SettingScreen(
+    navController: NavController,
+    logo: MainLogo,
+    genericInfo: GenericInfo,
+    fragment: Fragment,
+    activity: ComponentActivity,
+    usedLibraryClick: () -> Unit = {},
+    debugMenuClick: () -> Unit = {},
+    notificationClick: () -> Unit = {},
+    favoritesClick: () -> Unit = {},
+    historyClick: () -> Unit = {},
+    globalSearchClick: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
+    LaunchedEffect(Unit) { customPreferences.navigationSetup(fragment, navController) }
+
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val listState = rememberScrollState()
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            SmallTopAppBar(
+                title = { Text(stringResource(R.string.settings)) },
+                scrollBehavior = scrollBehavior
+            )
+        }
+    ) { p ->
+        Column(
+            modifier = Modifier
+                .verticalScroll(listState)
+                .padding(p)
+                .padding(bottom = 10.dp)
+        ) {
+
+            /*Account*/
+            AccountSettings(
+                context = context,
+                activity = activity,
+                logo = logo
+            )
+
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+
+            /*About*/
+            AboutSettings(
+                context = context,
+                scope = scope,
+                activity = activity,
+                genericInfo = genericInfo,
+                logo = logo,
+                usedLibraryClick = usedLibraryClick
+            )
+
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+
+            /*Notifications*/
+            NotificationSettings(
+                context = context,
+                scope = scope,
+                notificationClick = notificationClick
+            )
+
+            /*View*/
+            ViewSettings(
+                customSettings = customPreferences.viewSettings,
+                debugMenuClick = debugMenuClick,
+                favoritesClick = favoritesClick,
+                historyClick = historyClick
+            )
+
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+
+            /*General*/
+            GeneralSettings(
+                context = context,
+                scope = scope,
+                activity = activity,
+                genericInfo = genericInfo,
+                customSettings = customPreferences.generalSettings,
+                globalSearchClick = globalSearchClick
+            )
+
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+
+            /*Player*/
+            PlaySettings(
+                context = context,
+                scope = scope,
+                customSettings = customPreferences.playerSettings
+            )
+
+        }
+    }
+
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun AccountSettings(context: Context, activity: ComponentActivity, logo: MainLogo) {
+    CategorySetting { Text(stringResource(R.string.account_category_title)) }
+
+    var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
+    LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
+
+    PreferenceSetting(
+        settingTitle = { Text(accountInfo?.displayName ?: "User") },
+        settingIcon = {
+            GlideImage(
+                imageModel = accountInfo?.photoUrl ?: logo.logoId,
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                requestBuilder = { Glide.with(LocalView.current).asDrawable().circleCrop() },
+            )
+        },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) {
+            FirebaseAuthentication.currentUser?.let {
+                MaterialAlertDialogBuilder(context)
+                    .setTitle(R.string.logOut)
+                    .setMessage(R.string.areYouSureLogOut)
+                    .setPositiveButton(R.string.yes) { d, _ ->
+                        FirebaseAuthentication.signOut()
+                        d.dismiss()
+                    }
+                    .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
+                    .show()
+            } ?: FirebaseAuthentication.signIn(activity)
+        }
+    )
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun AboutSettings(
+    context: Context,
+    scope: CoroutineScope,
+    activity: ComponentActivity,
+    genericInfo: GenericInfo,
+    logo: MainLogo,
+    usedLibraryClick: () -> Unit
+) {
+    CategorySetting(
+        settingTitle = { Text(stringResource(R.string.about)) },
+        settingIcon = {
+            Image(
+                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                null,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    )
+
+    val appUpdate by appUpdateCheck.subscribeAsState(null)
+
+    PreferenceSetting(
+        settingTitle = {
+            Text(
+                stringResource(
+                    R.string.currentVersion,
+                    context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
+                )
+            )
+        },
+        //summaryValue = { Text(stringResource(R.string.press_to_check_for_updates)) },
+        /*modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) {
+            *//*TODO*//*
+        }*/
+    )
+
+    ShowWhen(
+        visibility = AppUpdate.checkForUpdate(
+            context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty(),
+            appUpdate?.update_real_version.orEmpty()
+        )
+    ) {
+        var showDialog by remember { mutableStateOf(false) }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+                text = { Text(stringResource(R.string.please_update_for_latest_features)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            activity.requestPermissions(
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.READ_EXTERNAL_STORAGE
+                            ) {
+                                if (it.isGranted) {
+                                    appUpdateCheck.value
+                                        ?.let { a ->
+                                            val isApkAlreadyThere = File(
+                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                                a.let(genericInfo.apkString).toString()
+                                            )
+                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                        }
+                                }
+                            }
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.update)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
+                    TextButton(
+                        onClick = {
+                            context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.gotoBrowser)) }
+                }
+            )
+        }
+
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.update_available)) },
+            summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+            modifier = Modifier.clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { showDialog = true },
+            settingIcon = {
+                Icon(
+                    Icons.Default.SystemUpdateAlt,
+                    null,
+                    tint = Color(0xFF00E676),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        )
+    }
+
+    val time by Observables.combineLatest(
+        updateCheckPublish.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
+        updateCheckPublishEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+    )
+        .map { "${it.first}\n${it.second}" }
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribeAsState(
+            listOfNotNull(
+                context.lastUpdateCheck?.let { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
+                context.lastUpdateCheckEnd?.let { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+            ).joinToString("\n")
+        )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
+        summaryValue = { Text(time) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) {
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork(
+                    "oneTimeUpdate",
+                    ExistingWorkPolicy.KEEP,
+                    OneTimeWorkRequestBuilder<UpdateWorker>()
+                        .setConstraints(
+                            Constraints.Builder()
+                                .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                                .setRequiresBatteryNotLow(false)
+                                .setRequiresCharging(false)
+                                .setRequiresDeviceIdle(false)
+                                .setRequiresStorageNotLow(false)
+                                .build()
+                        )
+                        .build()
+                )
+        }
+    )
+
+    val periodicCheck by context.shouldCheckFlow.collectAsState(initial = false)
+
+    SwitchSetting(
+        settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
+        value = periodicCheck,
+        updateValue = {
+            scope.launch { context.updatePref(SHOULD_CHECK, it) }
+            /*TODO*/
+            OtakuApp.updateSetup(context)
+        }
+    )
+
+    ShowWhen(periodicCheck) {
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.clear_update_queue)) },
+            summaryValue = { Text(stringResource(R.string.clear_update_queue_summary)) },
+            modifier = Modifier
+                .alpha(if (periodicCheck) 1f else .38f)
+                .clickable(
+                    enabled = periodicCheck,
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
+                    val work = WorkManager.getInstance(context)
+                    work.cancelUniqueWork("updateChecks")
+                    work.pruneWork()
+                    /*TODO*/
+                    OtakuApp.updateSetup(context)
+                    Toast
+                        .makeText(context, R.string.cleared, Toast.LENGTH_SHORT)
+                        .show()
+                }
+        )
+    }
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.view_libraries_used)) },
+        settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = usedLibraryClick
+        )
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.view_on_github)) },
+        settingIcon = { Icon(painterResource(R.drawable.github_icon), null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+    )
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun NotificationSettings(
+    context: Context,
+    scope: CoroutineScope,
+    notificationClick: () -> Unit
+) {
+    val dao = remember { ItemDatabase.getInstance(context).itemDao() }
+    val savedNotifications by dao.getAllNotificationCount().subscribeAsState(0)
+    ShowWhen(savedNotifications > 0) {
+        CategorySetting { Text(stringResource(R.string.notifications_category_title)) }
+
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
+            summaryValue = { Text(stringResource(R.string.pending_saved_notifications, savedNotifications)) },
+            modifier = Modifier.clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = notificationClick
+            )
+        )
+
+        var showDialog by remember { mutableStateOf(false) }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                val number = dao.deleteAllNotificationsFlow()
+                                launch(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.deleted_notifications, number),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    context.notificationManager.cancel(42)
+                                }
+                            }
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.yes)) }
+                },
+                dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.no)) } }
+            )
+        }
+
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.delete_saved_notifications_title)) },
+            summaryValue = { Text(stringResource(R.string.delete_notifications_summary)) },
+            modifier = Modifier
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { showDialog = true }
+                .padding(bottom = 16.dp, top = 8.dp)
+        )
+
+        Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun ViewSettings(
+    customSettings: (@Composable () -> Unit)?,
+    debugMenuClick: () -> Unit,
+    favoritesClick: () -> Unit,
+    historyClick: () -> Unit
+) {
+    CategorySetting { Text(stringResource(R.string.view_menu_category_title)) }
+
+    if (BuildConfig.DEBUG) {
+        PreferenceSetting(
+            settingTitle = { Text("Debug Menu") },
+            settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
+            modifier = Modifier.clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = debugMenuClick
+            )
+        )
+    }
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.viewFavoritesMenu)) },
+        settingIcon = { Icon(Icons.Default.Star, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = favoritesClick
+        )
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.history)) },
+        settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = historyClick
+        )
+    )
+
+    customSettings?.invoke()
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+private fun GeneralSettings(
+    context: Context,
+    scope: CoroutineScope,
+    activity: ComponentActivity,
+    genericInfo: GenericInfo,
+    customSettings: (@Composable () -> Unit)?,
+    globalSearchClick: () -> Unit
+) {
+    CategorySetting { Text(stringResource(R.string.general_menu_title)) }
+
+    val source: ApiService? by sourcePublish.subscribeAsState(initial = null)
+
+    DynamicListSetting(
+        settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+        dialogTitle = { Text(stringResource(R.string.chooseASource)) },
+        settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
+        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.done)) } },
+        value = source,
+        options = { genericInfo.sourceList() },
+        updateValue = { service, d ->
+            service?.let {
+                sourcePublish.onNext(it)
+                context.currentService = it.serviceName
+            }
+            d.value = false
+        }
+    )
+
+    ShowWhen(source != null) {
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
+            settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
+            modifier = Modifier.clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                source?.baseUrl?.let {
+                    context.openInCustomChromeBrowser(it) {
+                        setStartAnimations(context, R.anim.slide_in_right, R.anim.slide_out_left)
+                    }
+                }
+            }
+        )
+    }
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.global_search)) },
+        settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = globalSearchClick
+        )
+    )
+
+    val theme by activity.themeSetting.collectAsState(initial = "System")
+
+    ListSetting(
+        settingTitle = { Text(stringResource(R.string.theme_choice_title)) },
+        dialogIcon = { Icon(Icons.Default.SettingsBrightness, null) },
+        settingIcon = { Icon(Icons.Default.SettingsBrightness, null, modifier = Modifier.fillMaxSize()) },
+        dialogTitle = { Text(stringResource(R.string.choose_a_theme)) },
+        summaryValue = { Text(theme) },
+        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
+        value = theme,
+        options = listOf("System", "Light", "Dark"),
+        updateValue = { it, d ->
+            d.value = false
+            scope.launch { context.updatePref(THEME_SETTING, it) }
+            when (it) {
+                "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                "Light" -> AppCompatDelegate.MODE_NIGHT_NO
+                "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                else -> null
+            }?.let(AppCompatDelegate::setDefaultNightMode)
+        }
+    )
+
+    val shareChapter by context.shareChapter.collectAsState(initial = true)
+
+    SwitchSetting(
+        settingTitle = { Text(stringResource(R.string.share_chapters)) },
+        settingIcon = { Icon(Icons.Default.Share, null, modifier = Modifier.fillMaxSize()) },
+        value = shareChapter,
+        updateValue = { scope.launch { context.updatePref(SHARE_CHAPTER, it) } }
+    )
+
+    customSettings?.invoke()
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings: (@Composable () -> Unit)?) {
+    CategorySetting { Text(stringResource(R.string.playSettings)) }
+
+    var sliderValue by remember { mutableStateOf(runBlocking { context.batteryPercent.first().toFloat() }) }
+
+    SliderSetting(
+        sliderValue = sliderValue,
+        settingTitle = { Text(stringResource(R.string.battery_alert_percentage)) },
+        settingSummary = { Text(stringResource(R.string.battery_default)) },
+        settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
+        range = 1f..100f,
+        updateValue = {
+            sliderValue = it
+            scope.launch { context.updatePref(BATTERY_PERCENT, sliderValue.toInt()) }
+        }
+    )
+
+    customSettings?.invoke()
+}
+
+@ExperimentalComposeUiApi
+@ExperimentalMaterialApi
+@Composable
+fun <T> DynamicListSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    summaryValue: (@Composable () -> Unit)? = null,
+    settingTitle: @Composable () -> Unit,
+    dialogTitle: @Composable () -> Unit,
+    dialogIcon: (@Composable () -> Unit)? = null,
+    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
+    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
+    value: T,
+    options: () -> List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, MutableState<Boolean>) -> Unit
+) {
+    val dialogPopup = remember { mutableStateOf(false) }
+
+    if (dialogPopup.value) {
+
+        AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            onDismissRequest = { dialogPopup.value = false },
+            title = dialogTitle,
+            icon = dialogIcon,
+            text = {
+                LazyColumn {
+                    items(options()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = rememberRipple(),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { updateValue(it, dialogPopup) }
+                                .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
+                        ) {
+                            RadioButton(
+                                selected = it == value,
+                                onClick = { updateValue(it, dialogPopup) },
+                                modifier = Modifier.padding(8.dp),
+                                colors = radioButtonColors
+                            )
+                            Text(
+                                viewText(it),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = { confirmText(dialogPopup) },
+            dismissButton = cancelText?.let { { it(dialogPopup) } }
+        )
+
+    }
+
+    PreferenceSetting(
+        settingTitle = settingTitle,
+        summaryValue = summaryValue,
+        settingIcon = settingIcon,
+        modifier = Modifier
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { dialogPopup.value = true }
+            .then(modifier)
+    )
 }

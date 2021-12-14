@@ -8,29 +8,31 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
+import androidx.navigation.NavController
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
@@ -51,6 +53,7 @@ import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
@@ -432,8 +435,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         val animated by updateAnimatedItemsState(newList = list)
         LazyColumn(
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             animatedItems(
                 animated,
@@ -468,4 +470,119 @@ class GenericAnime(val context: Context) : GenericInfo {
             }
         }
     }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
+
+        viewSettings {
+            val context = LocalContext.current
+
+            PreferenceSetting(
+                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.video_menu_title)) },
+                settingIcon = { androidx.compose.material3.Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { navController.navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
+            )
+
+            val connectionStatus by MainActivity.cast.sessionConnected().subscribeAsState(false)
+            val sessionStatus by MainActivity.cast.sessionStatus().subscribeAsState(false)
+
+            ShowWhen(connectionStatus) {
+                PreferenceSetting(
+                    settingTitle = { androidx.compose.material3.Text(stringResource(R.string.cast_menu_title)) },
+                    settingIcon = {
+                        androidx.compose.material3.Icon(
+                            if (sessionStatus) Icons.Default.CastConnected else Icons.Default.Cast,
+                            null,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    },
+                    modifier = Modifier.clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        if (MainActivity.cast.isCastActive()) {
+                            context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
+                        } else {
+                            MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
+                                .also { it.routeSelector = CastContext.getSharedInstance(context).mergedSelector }
+                                .show(MainActivity.activity.supportFragmentManager, "media_chooser")
+                        }
+                    }
+                )
+            }
+
+            PreferenceSetting(
+                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.downloads_menu_title)) },
+                settingIcon = { androidx.compose.material3.Icon(Icons.Default.Download, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { navController.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
+            )
+        }
+
+        generalSettings {
+            val context = LocalContext.current
+            var folderLocation by remember { mutableStateOf(context.folderLocation) }
+
+            PreferenceSetting(
+                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.folder_location)) },
+                summaryValue = { androidx.compose.material3.Text(folderLocation) },
+                settingIcon = { androidx.compose.material3.Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
+                    MainActivity.activity.requestPermissions(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    ) {
+                        if (it.isGranted) {
+                            ChooserDialog(context)
+                                .withIcon(R.mipmap.ic_launcher)
+                                .withResources(R.string.choose_a_directory, R.string.chooseText, R.string.cancelText)
+                                .withFilter(true, false)
+                                .withStartFile(context.folderLocation)
+                                .enableOptions(true)
+                                .withChosenListener { dir, _ ->
+                                    context.folderLocation = "$dir/"
+                                    println(dir)
+                                    folderLocation = context.folderLocation
+                                }
+                                .build()
+                                .show()
+                        }
+                    }
+                }
+            )
+
+        }
+
+        navigationSetup { fragment, navController ->
+            navController
+                .graph
+                .addDestination(
+                    FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = DownloadViewerFragment::class.java.hashCode()
+                        setClassName(DownloadViewerFragment::class.java.name)
+                        addDeepLink(MainActivity.VIEW_DOWNLOADS)
+                    }
+                )
+
+            navController
+                .graph
+                .addDestination(
+                    FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = ViewVideosFragment::class.java.hashCode()
+                        setClassName(ViewVideosFragment::class.java.name)
+                        addDeepLink(MainActivity.VIEW_VIDEOS)
+                    }
+                )
+        }
+
+    }
+
 }

@@ -35,6 +35,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -53,7 +54,33 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        setContent { M3MaterialTheme(currentColorScheme) { DebugView() } }
+        setContent {
+            M3MaterialTheme(currentColorScheme) {
+
+                /*var choice by remember { mutableStateOf(false) }
+
+                Column {
+                    SwitchSetting(settingTitle = { Text("Debug or Setting") }, value = choice, updateValue = { choice = it })
+
+                    if(choice) DebugView() else SettingScreenTest()
+                }*/
+                DebugView()
+            }
+        }
+    }
+
+    @ExperimentalComposeUiApi
+    @ExperimentalMaterial3Api
+    @ExperimentalMaterialApi
+    @Composable
+    private fun SettingScreenTest() {
+        SettingScreen(
+            navController = findNavController(),
+            logo = get(),
+            genericInfo = genericInfo,
+            activity = requireActivity(),
+            fragment = this
+        )
     }
 
     @ExperimentalComposeUiApi
@@ -99,8 +126,8 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                         )
 
                     PreferenceSetting(
-                        settingTitle = "Last Time Updates Were Checked",
-                        summaryValue = time
+                        settingTitle = { Text("Last Time Updates Were Checked") },
+                        summaryValue = { Text(time) }
                     )
                 }
 
@@ -111,8 +138,8 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                     SliderSetting(
                         sliderValue = batteryPercent,
                         settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
-                        settingTitle = stringResource(R.string.battery_alert_percentage),
-                        settingSummary = stringResource(R.string.battery_default),
+                        settingTitle = { Text(stringResource(R.string.battery_alert_percentage)) },
+                        settingSummary = { Text(stringResource(R.string.battery_default)) },
                         range = 1f..100f,
                         updateValue = {
                             batteryPercent = it
@@ -126,9 +153,9 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                     var value by remember { mutableStateOf(sourcePublish.value) }
                     ListSetting(
                         settingIcon = { Icon(Icons.Default.Deck, null) },
-                        settingTitle = "Current Source",
-                        dialogTitle = "Choose a Source",
-                        confirmText = "OK",
+                        settingTitle = { Text("Current Source") },
+                        dialogTitle = { Text("Choose a Source") },
+                        confirmText = { TextButton(onClick = { it.value = false }) { Text("OK") } },
                         value = value,
                         options = genericInfo.sourceList(),
                         updateValue = { it, d ->
@@ -145,9 +172,9 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
 
                     MultiSelectListSetting(
                         settingIcon = { Icon(Icons.Default.Deck, null) },
-                        settingTitle = "Current Source",
-                        dialogTitle = "Choose a Source",
-                        confirmText = "OK",
+                        settingTitle = { Text("Current Source") },
+                        dialogTitle = { Text("Choose a Source") },
+                        confirmText = { TextButton(onClick = { it.value = false }) { Text("OK") } },
                         values = value,
                         options = genericInfo.sourceList(),
                         updateValue = { it, d -> if (d) value.add(it) else value.remove(it) }
@@ -158,19 +185,19 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
 
                 item {
                     PreferenceSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         settingIcon = { Icon(Icons.Default.Deck, null) }
                     )
 
                     PreferenceSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary"
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                     )
 
                     PreferenceSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         settingIcon = { Icon(Icons.Default.Deck, null) },
                         modifier = Modifier.clickable(
                             indication = rememberRipple(),
@@ -185,7 +212,7 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                     var showMoreOptions by remember { mutableStateOf(false) }
 
                     SwitchSetting(
-                        settingTitle = "Show More",
+                        settingTitle = { Text("Show More") },
                         settingIcon = { Icon(Icons.Default.Deck, null) },
                         value = showMoreOptions,
                         updateValue = { showMoreOptions = it }
@@ -193,20 +220,20 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
 
                     ShowWhen(showMoreOptions) {
                         PreferenceSetting(
-                            settingTitle = "Title",
-                            summaryValue = "Summary",
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
                             settingIcon = { Icon(Icons.Default.Deck, null) }
                         )
 
                         PreferenceSetting(
-                            settingTitle = "Title",
-                            summaryValue = "Summary",
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
                             settingIcon = { Icon(Icons.Default.Deck, null) }
                         )
 
                         PreferenceSetting(
-                            settingTitle = "Title",
-                            summaryValue = "Summary",
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
                             settingIcon = { Icon(Icons.Default.Deck, null) }
                         )
                     }
@@ -216,25 +243,25 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
 
                 item {
                     ShowMoreSetting(
-                        settingTitle = "Show More",
-                        summaryValue = "More Options Here",
+                        settingTitle = { Text("Show More") },
+                        summaryValue = { Text("More Options Here") },
                         settingIcon = { Icon(Icons.Default.Deck, null) }
                     ) {
                         PreferenceSetting(
-                            settingTitle = "Title",
-                            summaryValue = "Summary",
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
                             settingIcon = { Icon(Icons.Default.Deck, null) }
                         )
 
                         PreferenceSetting(
-                            settingTitle = "Title",
-                            summaryValue = "Summary",
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
                             settingIcon = { Icon(Icons.Default.Deck, null) }
                         )
 
                         PreferenceSetting(
-                            settingTitle = "Title",
-                            summaryValue = "Summary",
+                            settingTitle = { Text("Title") },
+                            summaryValue = { Text("Summary") },
                             settingIcon = { Icon(Icons.Default.Deck, null) }
                         )
                     }
@@ -246,24 +273,23 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                     var value by remember { mutableStateOf(false) }
 
                     SwitchSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         settingIcon = { Icon(Icons.Default.Deck, null) },
                         value = value,
                         updateValue = { value = it }
                     )
 
                     SwitchSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         value = value,
                         updateValue = { value = it }
                     )
 
-
                     SwitchSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         settingIcon = { Icon(Icons.Default.Deck, null) },
                         value = value,
                         updateValue = { value = it }
@@ -276,24 +302,24 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
                     var value by remember { mutableStateOf(false) }
 
                     CheckBoxSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         settingIcon = { Icon(Icons.Default.Deck, null) },
                         value = value,
                         updateValue = { value = it }
                     )
 
                     CheckBoxSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         value = value,
                         updateValue = { value = it }
                     )
 
 
                     CheckBoxSetting(
-                        settingTitle = "Title",
-                        summaryValue = "Summary",
+                        settingTitle = { Text("Title") },
+                        summaryValue = { Text("Summary") },
                         settingIcon = { Icon(Icons.Default.Deck, null) },
                         value = value,
                         updateValue = { value = it }

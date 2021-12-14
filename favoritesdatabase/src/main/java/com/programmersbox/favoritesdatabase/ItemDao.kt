@@ -58,6 +58,9 @@ interface ItemDao {
     @Query("DELETE FROM Notifications")
     fun deleteAllNotifications(): Single<Int>
 
+    @Query("DELETE FROM Notifications")
+    suspend fun deleteAllNotificationsFlow(): Int
+
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItem(url: String): NotificationItem
 

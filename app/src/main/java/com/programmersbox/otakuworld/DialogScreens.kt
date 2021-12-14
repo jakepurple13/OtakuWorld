@@ -147,9 +147,9 @@ fun TestView(closeClick: () -> Unit) {
             LazyColumn(contentPadding = p) {
                 item {
                     PreferenceSetting(
-                        settingTitle = "Switch Settings",
+                        settingTitle = { Text("Switch Settings") },
                         settingIcon = { Icon(Icons.Default.SwapHoriz, null) },
-                        onClick = {
+                        modifier = Modifier.clickable {
                             location = SettingLocation.SWITCH
                             scope.launch { state.bottomSheetState.expand() }
                         }
@@ -158,9 +158,9 @@ fun TestView(closeClick: () -> Unit) {
 
                 item {
                     PreferenceSetting(
-                        settingTitle = "Check Settings",
+                        settingTitle = { Text("Check Settings") },
                         settingIcon = { Icon(Icons.Default.Check, null) },
-                        onClick = {
+                        modifier = Modifier.clickable {
                             location = SettingLocation.CHECK
                             scope.launch { state.bottomSheetState.expand() }
                         }
@@ -169,9 +169,9 @@ fun TestView(closeClick: () -> Unit) {
 
                 item {
                     PreferenceSetting(
-                        settingTitle = "Pager Settings",
+                        settingTitle = { Text("Pager Settings") },
                         settingIcon = { Icon(Icons.Default.ViewArray, null) },
-                        onClick = {
+                        modifier = Modifier.clickable {
                             location = SettingLocation.PAGER
                             scope.launch { state.bottomSheetState.expand() }
                         }
@@ -180,9 +180,9 @@ fun TestView(closeClick: () -> Unit) {
 
                 item {
                     PreferenceSetting(
-                        settingTitle = "Optimistic Settings",
+                        settingTitle = { Text("Optimistic Settings") },
                         settingIcon = { Icon(Icons.Default.Update, null) },
-                        onClick = {
+                        modifier = Modifier.clickable {
                             location = SettingLocation.OPTIMISTIC
                             scope.launch { state.bottomSheetState.expand() }
                         }
@@ -223,7 +223,7 @@ fun SwitchView(closeClick: () -> Unit) {
                 val (value, updateValue) = remember { mutableStateOf(false) }
 
                 SwitchSetting(
-                    settingTitle = "Change the Thing",
+                    settingTitle = { Text("Change the Thing") },
                     value = value,
                     updateValue = updateValue
                 )
@@ -262,7 +262,7 @@ fun CheckView(closeClick: () -> Unit) {
                 val (value, updateValue) = remember { mutableStateOf(false) }
 
                 CheckBoxSetting(
-                    settingTitle = "Change the Thing",
+                    settingTitle = { Text("Change the Thing") },
                     value = value,
                     updateValue = updateValue
                 )
@@ -330,7 +330,7 @@ fun PagerView(closeClick: () -> Unit) {
                                 val (value, updateValue) = remember { mutableStateOf(false) }
 
                                 CheckBoxSetting(
-                                    settingTitle = "Change the Thing",
+                                    settingTitle = { Text("Change the Thing") },
                                     value = value,
                                     updateValue = updateValue
                                 )
@@ -341,7 +341,7 @@ fun PagerView(closeClick: () -> Unit) {
                                 val (value, updateValue) = remember { mutableStateOf(false) }
 
                                 SwitchSetting(
-                                    settingTitle = "Switch the Thing",
+                                    settingTitle = { Text("Switch the Thing") },
                                     value = value,
                                     updateValue = updateValue
                                 )
@@ -350,8 +350,8 @@ fun PagerView(closeClick: () -> Unit) {
                         2 -> {
                             item {
                                 SwitchSetting(
-                                    settingTitle = "Dropdown or Dialog",
-                                    summaryValue = if (popUpOrDialog) "Dropdown" else "Dialog",
+                                    settingTitle = { Text("Dropdown or Dialog") },
+                                    summaryValue = { Text(if (popUpOrDialog) "Dropdown" else "Dialog") },
                                     value = popUpOrDialog,
                                     updateValue = { popUpOrDialog = it }
                                 )
@@ -360,7 +360,7 @@ fun PagerView(closeClick: () -> Unit) {
                             item {
                                 var timeout by remember { mutableStateOf(false) }
                                 SwitchSetting(
-                                    settingTitle = "Timeout",
+                                    settingTitle = { Text("Timeout") },
                                     value = timeout,
                                     updateValue = { timeout = it }
                                 )
@@ -417,8 +417,8 @@ fun PagerView(closeClick: () -> Unit) {
                                 val optionsList = remember { mutableStateOf(SettingLocation.values()) }
 
                                 PreferenceSetting(
-                                    settingTitle = "Favorite Setting",
-                                    onClick = { showPopup = true },
+                                    settingTitle = { Text("Favorite Setting") },
+                                    modifier = Modifier.clickable { showPopup = true },
                                     endIcon = {
                                         Row(
                                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -461,17 +461,17 @@ fun PagerView(closeClick: () -> Unit) {
                         }
                         3 -> {
                             items(5) {
-                                PreferenceSetting(settingTitle = "A Thing")
+                                PreferenceSetting(settingTitle = { Text("A Thing") })
                             }
                         }
                         4 -> {
                             items(20) {
-                                PreferenceSetting(settingTitle = "A Thing2")
+                                PreferenceSetting(settingTitle = { Text("A Thing") })
                             }
 
                             items(3) {
                                 PreferenceSetting(
-                                    settingTitle = "Text!",
+                                    settingTitle = { Text("Text!") },
                                     endIcon = { Text("More Text!") }
                                 )
                             }
@@ -494,7 +494,7 @@ fun PagerView(closeClick: () -> Unit) {
                                 }
 
                                 PreferenceSetting(
-                                    settingTitle = "Text $it!",
+                                    settingTitle = { Text("Text $it!") },
                                     endIcon = {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically
@@ -569,7 +569,7 @@ class MinimumTouchTargetModifierCustom(val size: DpSize) : LayoutModifier {
 fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     PreferenceSetting(
-        settingTitle = "Text Field",
+        settingTitle = { Text("Text Field") },
         endIcon = {
             TextField(
                 value = value,
@@ -665,7 +665,7 @@ fun OptimisticView(closeClick: () -> Unit) {
 
                 SliderSetting(
                     sliderValue = lowerFlow,
-                    settingTitle = "Lower",
+                    settingTitle = { Text("Lower") },
                     range = 0f..75f,
                     updateValue = {
                         scope.launch {
@@ -682,8 +682,8 @@ fun OptimisticView(closeClick: () -> Unit) {
 
                 SliderSetting(
                     sliderValue = upperFlow,
-                    settingTitle = "Upper",
-                    settingSummary = "Must be $difference above Lower",
+                    settingTitle = { Text("Upper") },
+                    settingSummary = { Text("Must be $difference above Lower") },
                     format = { "${it.toInt()}%" },
                     range = 50f..100f,
                     updateValue = {

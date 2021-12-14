@@ -5,22 +5,22 @@ import android.net.Uri
 import android.os.Bundle
 import android.webkit.URLUtil
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.appUpdateCheck
-import com.programmersbox.uiviews.utils.currentDetailsUrl
-import com.programmersbox.uiviews.utils.currentScreen
-import com.programmersbox.uiviews.utils.currentService
-import com.programmersbox.uiviews.utils.setupWithNavController
+import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 
 abstract class BaseMainActivity : AppCompatActivity() {
@@ -42,6 +42,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             setupBottomNavBar()
         }
+
+        when (runBlocking { themeSetting.first() }) {
+            "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            "Light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> null
+        }?.let(AppCompatDelegate::setDefaultNightMode)
 
         onCreate()
 

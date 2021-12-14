@@ -62,6 +62,7 @@ dependencies {
 
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
+    implementation 'com.google.android.gms:play-services-ads:20.5.0'
 
     implementation project(':UIViews')
     implementation project(':Models')

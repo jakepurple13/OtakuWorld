@@ -3,7 +3,6 @@ package com.programmersbox.novelworld
 import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -12,19 +11,18 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -59,6 +57,10 @@ import androidx.core.text.HtmlCompat
 import androidx.datastore.preferences.core.Preferences
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.material.textview.MaterialTextView
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
@@ -126,6 +128,8 @@ class ReadingActivity : ComponentActivity() {
     private val pageList = mutableStateOf("")
     private var isLoadingPages = mutableStateOf(false)
 
+    private val ad by lazy { AdRequest.Builder().build() }
+
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalMaterialApi::class,
@@ -163,7 +167,6 @@ class ReadingActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
                 val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
 
-                val listState = rememberLazyListState()
                 var showInfo by remember { mutableStateOf(false) }
 
                 var settingsPopup by remember { mutableStateOf(false) }
@@ -200,9 +203,9 @@ class ReadingActivity : ComponentActivity() {
                     runOnUiThread { Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
                 }
 
-                val showItems = showInfo || listState.isScrolledToTheEnd()
+                val showItems = showInfo
 
-                val scaffoldState = rememberScaffoldState()
+                val scaffoldState = rememberBottomSheetScaffoldState()
 
                 BackHandler(scaffoldState.drawerState.isOpen) {
                     scope.launch {
@@ -220,7 +223,6 @@ class ReadingActivity : ComponentActivity() {
                 val fabHeight = 72.dp
                 val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
                 val fabOffsetHeightPx = remember { mutableStateOf(0f) }
-                val animateFab by animateIntAsState(if (showItems) 0 else (-fabOffsetHeightPx.value.roundToInt()))
 
                 val topBarHeight = 28.dp
                 val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
@@ -247,10 +249,15 @@ class ReadingActivity : ComponentActivity() {
                     }
                 }
 
-                Scaffold(
+                BottomSheetScaffold(
+                    sheetContent = {},
+                    sheetPeekHeight = 0.dp,
+                    sheetGesturesEnabled = false,
                     modifier = Modifier.nestedScroll(nestedScrollConnection),
                     scaffoldState = scaffoldState,
-                    /*drawerContent = if (list.size > 1) {
+                    backgroundColor = M3MaterialTheme.colorScheme.surface,
+                    contentColor = M3MaterialTheme.colorScheme.onSurface,
+                    drawerContent = if (list.size > 1) {
                         {
                             val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
@@ -261,6 +268,22 @@ class ReadingActivity : ComponentActivity() {
                                         actions = { PageIndicator(list.size - currentChapter, list.size) },
                                         scrollBehavior = scrollBehavior
                                     )
+                                },
+                                bottomBar = {
+                                    if (!BuildConfig.DEBUG) {
+                                        AndroidView(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 4.dp),
+                                            factory = {
+                                                AdView(it).apply {
+                                                    adSize = AdSize.BANNER
+                                                    adUnitId = getString(R.string.ad_unit_id)
+                                                    loadAd(ad)
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             ) { p ->
                                 if (scaffoldState.drawerState.isOpen) {
@@ -317,16 +340,7 @@ class ReadingActivity : ComponentActivity() {
                                 }
                             }
                         }
-                    } else null,*/
-                    floatingActionButton = {
-                        FloatingActionButton(
-                            onClick = { scope.launch { listState.animateScrollToItem(0) } },
-                            modifier = Modifier
-                                .padding(bottom = 56.dp)
-                                .offset { IntOffset(x = animateFab, y = 0) },
-                            containerColor = androidx.compose.material3.ButtonDefaults.buttonColors().containerColor(enabled = true).value
-                        ) { Icon(Icons.Default.VerticalAlignTop, null) }
-                    }
+                    } else null
                 ) { p ->
                     //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
                     SwipeRefresh(
@@ -343,51 +357,55 @@ class ReadingActivity : ComponentActivity() {
                         modifier = Modifier.padding(p)
                     ) {
                         Box(Modifier.fillMaxSize()) {
-                            LazyColumn(
-                                state = listState,
+                            Column(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                                contentPadding = PaddingValues(
-                                    top = topBarHeight,
-                                    bottom = toolbarHeight
-                                )
+                                modifier = Modifier
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(PaddingValues(top = topBarHeight))
                             ) {
+                                AndroidView(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(5.dp)
+                                        .clickable(
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            onClick = {
+                                                showInfo = !showInfo
+                                                if (!showInfo) {
+                                                    toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                                    topBarOffsetHeightPx.value = -topBarHeightPx
+                                                    fabOffsetHeightPx.value = -fabHeightPx
+                                                }
+                                            }
+                                        ),
+                                    factory = { MaterialTextView(it) },
+                                    update = { it.text = HtmlCompat.fromHtml(pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
+                                )
 
-                                item {
-                                    AndroidView(
+                                if (currentChapter <= 0) {
+                                    Text(
+                                        stringResource(id = R.string.reachedLastChapter),
+                                        style = M3MaterialTheme.typography.headlineSmall,
+                                        textAlign = TextAlign.Center,
+                                        color = M3MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(5.dp)
-                                            .clickable(
-                                                indication = null,
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                onClick = {
-                                                    showInfo = !showInfo
-                                                    if (!showInfo) {
-                                                        toolbarOffsetHeightPx.value = -toolbarHeightPx
-                                                        topBarOffsetHeightPx.value = -topBarHeightPx
-                                                        fabOffsetHeightPx.value = -fabHeightPx
-                                                    }
-                                                }
-                                            ),
-                                        factory = { TextView(it) },
-                                        update = { it.text = HtmlCompat.fromHtml(pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
+                                            .align(Alignment.CenterHorizontally)
                                     )
                                 }
 
-                                item {
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        if (currentChapter <= 0) {
-                                            Text(
-                                                stringResource(id = R.string.reachedLastChapter),
-                                                style = M3MaterialTheme.typography.headlineSmall,
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .align(Alignment.CenterHorizontally)
-                                            )
+                                if (!BuildConfig.DEBUG) {
+                                    AndroidView(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        factory = {
+                                            AdView(it).apply {
+                                                adSize = AdSize.BANNER
+                                                adUnitId = getString(R.string.ad_unit_id)
+                                                loadAd(ad)
+                                            }
                                         }
-                                        GoBackButton(modifier = Modifier.fillMaxWidth())
-                                    }
+                                    )
                                 }
                             }
 
@@ -530,7 +548,13 @@ class ReadingActivity : ComponentActivity() {
                                 IconButton(
                                     onClick = { settingsPopup = true },
                                     modifier = Modifier.weight(2f)
-                                ) { Icon(Icons.Default.Settings, null) }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Settings,
+                                        null,
+                                        tint = M3MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }

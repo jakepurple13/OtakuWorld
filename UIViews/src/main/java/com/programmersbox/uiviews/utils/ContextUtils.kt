@@ -30,10 +30,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -76,13 +73,22 @@ var Context.lastUpdateCheckEnd: Long? by sharedPrefDelegate(null)
 val updateCheckPublish = BehaviorSubject.create<Long>()
 val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore("otakuworld")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    "otakuworld",
+    //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
+)
 
 val BATTERY_PERCENT = intPreferencesKey("battery_percent")
 val Context.batteryPercent get() = dataStore.data.map { it[BATTERY_PERCENT] ?: 20 }
 
 val SHARE_CHAPTER = booleanPreferencesKey("share_chapter")
 val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true }
+
+val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
+val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
+
+val THEME_SETTING = stringPreferencesKey("theme")
+val Context.themeSetting get() = dataStore.data.map { it[THEME_SETTING] ?: "System" }
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 

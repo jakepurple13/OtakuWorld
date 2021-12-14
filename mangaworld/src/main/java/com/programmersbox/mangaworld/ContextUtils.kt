@@ -11,6 +11,7 @@ import android.os.Handler
 import android.provider.MediaStore
 import android.util.AttributeSet
 import android.view.View
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -23,6 +24,12 @@ import kotlinx.coroutines.launch
 
 var Context.showAdult by sharedPrefNotNullDelegate(false)
 var Context.useNewReader by sharedPrefNotNullDelegate(true)
+
+val SHOW_ADULT = booleanPreferencesKey("showAdultSources")
+val Context.showAdultFlow get() = dataStore.data.map { it[SHOW_ADULT] ?: false }
+
+val USER_NEW_READER = booleanPreferencesKey("useNewReader")
+val Context.useNewReaderFlow get() = dataStore.data.map { it[USER_NEW_READER] ?: true }
 
 val DOWNLOAD_FILE_PATH get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"
 

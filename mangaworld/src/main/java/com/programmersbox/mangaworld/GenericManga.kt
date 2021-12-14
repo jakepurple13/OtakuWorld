@@ -6,7 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Environment
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyListState
@@ -14,13 +17,16 @@ import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
@@ -28,6 +34,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
@@ -43,6 +50,7 @@ import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
@@ -52,7 +60,9 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 import java.io.File
 
@@ -71,7 +81,10 @@ class GenericManga(val context: Context) : GenericInfo {
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         context.startActivity(
-            Intent(context, if (context.useNewReader) ReadActivityCompose::class.java else ReadActivity::class.java).apply {
+            Intent(
+                context,
+                if (runBlocking { context.useNewReaderFlow.first() }) ReadActivityCompose::class.java else ReadActivity::class.java
+            ).apply {
                 putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                 putExtra("mangaTitle", infoModel.title)
@@ -125,7 +138,7 @@ class GenericManga(val context: Context) : GenericInfo {
                     isChecked = context.showAdult
                     setOnPreferenceChangeListener { _, newValue ->
                         context.showAdult = newValue as Boolean
-                        if (!newValue && sourcePublish.value == Sources.TSUMINO) {
+                        if (!newValue && (sourcePublish.value as? Sources)?.isAdult == true) {
                             sourcePublish.onNext(Sources.values().random())
                         }
                         true
@@ -201,7 +214,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     override fun sourceList(): List<ApiService> =
-        if (context.showAdult) Sources.values().toList() else Sources.values().filterNot(Sources::isAdult).toList()
+        if (runBlocking { context.showAdultFlow.first() }) Sources.values().toList() else Sources.values().filterNot(Sources::isAdult).toList()
 
     override fun toSource(s: String): ApiService? = try {
         Sources.valueOf(s)
@@ -219,6 +232,7 @@ class GenericManga(val context: Context) : GenericInfo {
             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp)
         ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
     }
 
@@ -234,12 +248,12 @@ class GenericManga(val context: Context) : GenericInfo {
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
+        //TODO: See if you can modify this to perform better
         LazyVerticalGrid(
-            modifier = Modifier.padding(vertical = 4.dp),
             cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            state = listState,
+            state = listState
         ) {
             items(list) {
                 M3CoverCard(
@@ -266,6 +280,78 @@ class GenericManga(val context: Context) : GenericInfo {
                 ) { onClick(it) }
             }
         }
+    }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
+
+        viewSettings {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
+                settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { navController.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
+            )
+        }
+
+        generalSettings {
+            val scope = rememberCoroutineScope()
+            val context = LocalContext.current
+            val showAdult by context.showAdultFlow.collectAsState(false)
+
+            SwitchSetting(
+                settingTitle = { Text(stringResource(R.string.showAdultSources)) },
+                value = showAdult,
+                settingIcon = { Icon(Icons.Default.TextFormat, null, modifier = Modifier.fillMaxSize()) },
+                updateValue = {
+                    scope.launch { context.updatePref(SHOW_ADULT, it) }
+                    if (!it && (sourcePublish.value as? Sources)?.isAdult == true) {
+                        sourcePublish.onNext(sourceList().random())
+                    }
+                }
+            )
+        }
+
+        playerSettings {
+            val scope = rememberCoroutineScope()
+            val context = LocalContext.current
+
+            var padding by remember { mutableStateOf(runBlocking { context.pagePadding.first().toFloat() }) }
+
+            SliderSetting(
+                sliderValue = padding,
+                settingTitle = { Text(stringResource(R.string.reader_padding_between_pages)) },
+                settingSummary = { Text(stringResource(R.string.default_padding_summary)) },
+                settingIcon = { Icon(Icons.Default.FormatLineSpacing, null) },
+                range = 0f..10f,
+                updateValue = { padding = it },
+                onValueChangedFinished = { scope.launch { context.updatePref(BATTERY_PERCENT, padding.toInt()) } }
+            )
+
+            val reader by context.useNewReaderFlow.collectAsState(true)
+
+            SwitchSetting(
+                settingTitle = { Text(stringResource(R.string.useNewReader)) },
+                summaryValue = { Text(stringResource(R.string.reader_summary_setting)) },
+                settingIcon = { Icon(Icons.Default.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
+                value = reader,
+                updateValue = { scope.launch { context.updatePref(USER_NEW_READER, it) } }
+            )
+        }
+
+        navigationSetup { context, navController ->
+            navController
+                .graph
+                .addDestination(
+                    FragmentNavigator(context.requireContext(), context.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                        id = DownloadViewerFragment::class.java.hashCode()
+                        setClassName(DownloadViewerFragment::class.java.name)
+                    }
+                )
+        }
+
     }
 
 }
