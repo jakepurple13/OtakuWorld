@@ -7,4 +7,7 @@
     <string name="removedChapterItem">Removed Chapter</string>
     <string name="playSettings">Reader Settings</string>
     <string name="changeToChapter">Change to %s</string>
+
+    <string name="ad_id" translatable="false">ca-app-pub-4987825622505192~7843810394</string>
+    <string name="ad_unit_id" translatable="false">ca-app-pub-4987825622505192/2824252159</string>
 </resources>
