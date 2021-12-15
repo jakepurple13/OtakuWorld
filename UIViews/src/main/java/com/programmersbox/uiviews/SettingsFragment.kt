@@ -45,8 +45,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -60,6 +63,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
@@ -779,6 +783,17 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
     )
 }
 
+class AboutViewModel : ViewModel() {
+
+    var canCheck by mutableStateOf(false)
+
+    fun init(context: Context) {
+        viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
+        //context.shouldCheckFlow//.collectAsState(initial = false)
+    }
+
+}
+
 @ExperimentalMaterialApi
 @Composable
 private fun AboutSettings(
@@ -926,11 +941,12 @@ private fun AboutSettings(
         }
     )
 
-    val periodicCheck by context.shouldCheckFlow.collectAsState(initial = false)
+    val aboutViewModel: AboutViewModel = viewModel()
+    LaunchedEffect(Unit) { aboutViewModel.init(context) }
 
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
-        value = periodicCheck,
+        value = aboutViewModel.canCheck,
         updateValue = {
             scope.launch { context.updatePref(SHOULD_CHECK, it) }
             /*TODO*/
@@ -938,14 +954,14 @@ private fun AboutSettings(
         }
     )
 
-    ShowWhen(periodicCheck) {
+    ShowWhen(aboutViewModel.canCheck) {
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.clear_update_queue)) },
             summaryValue = { Text(stringResource(R.string.clear_update_queue_summary)) },
             modifier = Modifier
-                .alpha(if (periodicCheck) 1f else .38f)
+                .alpha(if (aboutViewModel.canCheck) 1f else .38f)
                 .clickable(
-                    enabled = periodicCheck,
+                    enabled = aboutViewModel.canCheck,
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
@@ -981,6 +997,26 @@ private fun AboutSettings(
     )
 }
 
+class NotificationViewModel : ViewModel() {
+
+    var savedNotifications by mutableStateOf(0)
+
+    private val disposable = CompositeDisposable()
+
+    fun dispose() {
+        disposable.dispose()
+    }
+
+    fun init(dao: ItemDao) {
+        dao.getAllNotificationCount()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy { savedNotifications = it }
+            .addTo(disposable)
+    }
+
+}
+
 @ExperimentalMaterialApi
 @Composable
 private fun NotificationSettings(
@@ -988,14 +1024,21 @@ private fun NotificationSettings(
     scope: CoroutineScope,
     notificationClick: () -> Unit
 ) {
+    val notiViewModel: NotificationViewModel = viewModel()
     val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-    val savedNotifications by dao.getAllNotificationCount().subscribeAsState(0)
-    ShowWhen(savedNotifications > 0) {
+
+    DisposableEffect(Unit) {
+        notiViewModel.init(dao)
+        onDispose { notiViewModel.dispose() }
+    }
+
+    //val savedNotifications by dao.getAllNotificationCount().subscribeAsState(0)
+    ShowWhen(notiViewModel.savedNotifications > 0) {
         CategorySetting { Text(stringResource(R.string.notifications_category_title)) }
 
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
-            summaryValue = { Text(stringResource(R.string.pending_saved_notifications, savedNotifications)) },
+            summaryValue = { Text(stringResource(R.string.pending_saved_notifications, notiViewModel.savedNotifications)) },
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() },

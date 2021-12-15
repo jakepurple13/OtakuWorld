@@ -101,7 +101,7 @@ class ReadingActivity : ComponentActivity() {
             .orEmpty().also(::println)
     }
 
-    private val mangaUrl by lazy { intent.getStringExtra("novelInfoUrl") ?: "" }
+    private val novelUrl by lazy { intent.getStringExtra("novelInfoUrl") ?: "" }
 
     private var currentChapter: Int by mutableStateOf(0)
 
@@ -619,7 +619,7 @@ class ReadingActivity : ComponentActivity() {
 
     private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
         list.getOrNull(chapterNum)?.let { item ->
-            ChapterWatched(item.url, item.name, mangaUrl)
+            ChapterWatched(item.url, item.name, novelUrl)
                 .let {
                     Completable.mergeArray(
                         FirebaseDb.insertEpisodeWatched(it),

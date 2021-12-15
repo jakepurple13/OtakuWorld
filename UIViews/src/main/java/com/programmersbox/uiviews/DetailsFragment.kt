@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.animation.ValueAnimator
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -59,7 +60,9 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -70,6 +73,7 @@ import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.*
@@ -130,40 +134,66 @@ class DetailsFragment : Fragment() {
             ?.also { info ->
                 currentDetailsUrl = info.url
                 setContent {
-                    M3MaterialTheme(currentColorScheme) {
-                        Scaffold(
-                            topBar = {
-                                SmallTopAppBar(
-                                    modifier = Modifier.zIndex(2f),
-                                    title = { Text(info.title) },
-                                    navigationIcon = {
-                                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                                    },
-                                    actions = {
-                                        IconButton(
-                                            onClick = {
-                                                startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                                    type = "text/plain"
-                                                    putExtra(Intent.EXTRA_TEXT, info.url)
-                                                    putExtra(Intent.EXTRA_TITLE, info.title)
-                                                }, getString(R.string.share_item, info.title)))
-                                            }
-                                        ) { Icon(Icons.Default.Share, null) }
 
-                                        IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
-                                    },
-                                )
-                            }
-                        ) { PlaceHolderHeader() }
+                    val details: DetailViewModel = viewModel()
+                    DisposableEffect(Unit) {
+                        details.init(info, context)
+                        onDispose { details.dispose() }
+                    }
+
+                    M3MaterialTheme(currentColorScheme) {
+                        if (details.info == null) {
+                            Scaffold(
+                                topBar = {
+                                    SmallTopAppBar(
+                                        modifier = Modifier.zIndex(2f),
+                                        title = { Text(info.title) },
+                                        navigationIcon = {
+                                            IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                                        },
+                                        actions = {
+                                            IconButton(
+                                                onClick = {
+                                                    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                                        type = "text/plain"
+                                                        putExtra(Intent.EXTRA_TEXT, info.url)
+                                                        putExtra(Intent.EXTRA_TITLE, info.title)
+                                                    }, getString(R.string.share_item, info.title)))
+                                                }
+                                            ) { Icon(Icons.Default.Share, null) }
+
+                                            IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
+                                        },
+                                    )
+                                }
+                            ) { PlaceHolderHeader() }
+                        } else if (details.info != null) {
+                            DetailsView(details.info!!)
+                        }
                     }
                 }
             }
-            ?.toInfoModel()
-            ?.doOnError { context?.showErrorToast() }
-            ?.subscribeOn(Schedulers.io())
-            ?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribeBy { info -> setContent { M3MaterialTheme(currentColorScheme) { DetailsView(info) } } }
-            ?.addTo(disposable)
+    }
+
+    class DetailViewModel : ViewModel() {
+
+        var info: InfoModel? by mutableStateOf(null)
+
+        private val disposable = CompositeDisposable()
+
+        fun init(itemModel: ItemModel?, context: Context?) {
+            itemModel
+                ?.toInfoModel()
+                ?.doOnError { context?.showErrorToast() }
+                ?.subscribeOn(Schedulers.io())
+                ?.observeOn(AndroidSchedulers.mainThread())
+                ?.subscribeBy { info = it }
+                ?.addTo(disposable)
+        }
+
+        fun dispose() {
+            disposable.dispose()
+        }
     }
 
     @Composable
