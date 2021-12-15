@@ -64,7 +64,7 @@ dependencies {
     implementation firebaseCrash.crash
 
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
-    implementation "com.anggrayudi:storage:0.13.0"
+    implementation "com.anggrayudi:storage:0.14.0"
     implementation 'de.helmbold:rxfilewatcher:1.0.0'
 
     implementation project(':UIViews')
