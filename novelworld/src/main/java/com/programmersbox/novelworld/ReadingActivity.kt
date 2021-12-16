@@ -95,11 +95,7 @@ class ReadingActivity : ComponentActivity() {
     private val disposable = CompositeDisposable()
     private val dao by lazy { ItemDatabase.getInstance(this).itemDao() }
 
-    private val list by lazy {
-        intent.getStringExtra("allChapters")
-            ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-            .orEmpty().also(::println)
-    }
+    private val list by lazy { ChapterList(this, genericInfo).get().orEmpty() }
 
     private val novelUrl by lazy { intent.getStringExtra("novelInfoUrl") ?: "" }
 

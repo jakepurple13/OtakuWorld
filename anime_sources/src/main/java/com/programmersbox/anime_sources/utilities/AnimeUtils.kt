@@ -62,7 +62,6 @@ sealed class ApiResponse {
     data class Failed(val code: Int) : ApiResponse()
 }
 
-
 inline fun <reified T> String?.debugJson(): T? = try {
     Gson().fromJson(this, object : TypeToken<T>() {}.type)
 } catch (e: Exception) {
