@@ -496,6 +496,7 @@ fun M3OtakuBannerBox(
                                     }
                                 )
                             }
+                            else -> {}
                         }
 
                         Image(

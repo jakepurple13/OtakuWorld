@@ -37,9 +37,9 @@ buildscript {
     ext.play_services = 'com.google.android.gms:play-services-auth:19.2.0'
 
     ext.exoplayer_version = "2.16.1"
-    ext.room_version = "2.4.0-rc01"
+    ext.room_version = "2.4.0"
 
-    ext.nav_version = "2.4.0-beta02"
+    ext.nav_version = "2.4.0-rc01"
 
     def koin_version = "3.0.2"
 
@@ -50,7 +50,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.1.0-beta04"
+    ext.jetpack = "1.1.0-rc01"
 
     ext.accompanist = "0.20.3"
 

@@ -81,8 +81,8 @@ dependencies {
     // If using insets-ui
     implementation "com.google.accompanist:accompanist-insets-ui:$accompanist"
 
-    implementation "androidx.window:window:1.0.0-beta04"
+    implementation "androidx.window:window:1.0.0-rc01"
 
     // For RxJava2 integration
-    implementation "androidx.window:window-rxjava2:1.0.0-beta04"
+    implementation "androidx.window:window-rxjava2:1.0.0-rc01"
 }

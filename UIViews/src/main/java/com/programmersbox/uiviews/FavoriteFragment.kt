@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,23 +34,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.models.ApiService
-import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -67,17 +65,17 @@ class FavoriteFragment : Fragment() {
     }
 
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-    private val disposable = CompositeDisposable()
 
     private val genericInfo by inject<GenericInfo>()
     private val logo: MainLogo by inject()
-    private val fireListener = FirebaseDb.FirebaseListener()
 
-    private val favoriteList = PublishSubject.create<List<DbModel>>()
+    class FavoriteViewModel(dao: ItemDao) : ViewModel() {
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        Flowables.combineLatest(
+        private val fireListener = FirebaseDb.FirebaseListener()
+        var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
+            private set
+
+        private val sub = Flowables.combineLatest(
             fireListener.getAllShowsFlowable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread()),
@@ -89,8 +87,14 @@ class FavoriteFragment : Fragment() {
             .refCount(1, TimeUnit.SECONDS)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(favoriteList::onNext)
-            .addTo(disposable)
+            .subscribe { favoriteList = it }
+
+        override fun onCleared() {
+            super.onCleared()
+            sub.dispose()
+            fireListener.unregister()
+        }
+
     }
 
     @OptIn(
@@ -105,34 +109,36 @@ class FavoriteFragment : Fragment() {
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
-            M3MaterialTheme(currentColorScheme) { FavoriteUi(favoriteItems = favoriteList.toLatestFlowable(), allSources = genericInfo.sourceList()) }
-        }
-    }
+            M3MaterialTheme(currentColorScheme) {
+                val viewModel: FavoriteViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            if (modelClass.isAssignableFrom(FavoriteViewModel::class.java)) {
+                                return FavoriteViewModel(dao) as T
+                            }
+                            throw IllegalArgumentException("Unknown class name")
+                        }
+                    }
+                )
 
-    override fun onDestroy() {
-        disposable.dispose()
-        fireListener.unregister()
-        super.onDestroy()
+                FavoriteUi(favoriteItems = viewModel.favoriteList, allSources = genericInfo.sourceList())
+            }
+        }
     }
 
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
-    fun FavoriteUi(favoriteItems: Flowable<List<DbModel>>, allSources: List<ApiService>) {
+    fun FavoriteUi(favoriteItems: List<DbModel>, allSources: List<ApiService>) {
 
         val focusManager = LocalFocusManager.current
 
         var searchText by rememberSaveable { mutableStateOf("") }
 
-        val favorites by favoriteItems
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(initial = emptyList())
-
         val selectedSources = rememberMutableStateListOf(*allSources.fastMap(ApiService::serviceName).toTypedArray())
 
-        val showing = favorites.filter { it.title.contains(searchText, true) && it.source in selectedSources }
+        val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in selectedSources }
 
         var sortedBy by remember { mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE) }
         var reverse by remember { mutableStateOf(false) }

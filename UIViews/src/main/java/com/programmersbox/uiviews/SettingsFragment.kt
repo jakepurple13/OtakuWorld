@@ -45,10 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
@@ -789,7 +786,6 @@ class AboutViewModel : ViewModel() {
 
     fun init(context: Context) {
         viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
-        //context.shouldCheckFlow//.collectAsState(initial = false)
     }
 
 }
@@ -997,22 +993,19 @@ private fun AboutSettings(
     )
 }
 
-class NotificationViewModel : ViewModel() {
+class NotificationViewModel(dao: ItemDao) : ViewModel() {
 
     var savedNotifications by mutableStateOf(0)
+        private set
 
-    private val disposable = CompositeDisposable()
+    private val sub = dao.getAllNotificationCount()
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribeBy { savedNotifications = it }
 
-    fun dispose() {
-        disposable.dispose()
-    }
-
-    fun init(dao: ItemDao) {
-        dao.getAllNotificationCount()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeBy { savedNotifications = it }
-            .addTo(disposable)
+    override fun onCleared() {
+        super.onCleared()
+        sub.dispose()
     }
 
 }
@@ -1024,15 +1017,18 @@ private fun NotificationSettings(
     scope: CoroutineScope,
     notificationClick: () -> Unit
 ) {
-    val notiViewModel: NotificationViewModel = viewModel()
     val dao = remember { ItemDatabase.getInstance(context).itemDao() }
+    val notiViewModel: NotificationViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(NotificationViewModel::class.java)) {
+                    return NotificationViewModel(dao = dao) as T
+                }
+                throw IllegalArgumentException("Unknown class name")
+            }
+        }
+    )
 
-    DisposableEffect(Unit) {
-        notiViewModel.init(dao)
-        onDispose { notiViewModel.dispose() }
-    }
-
-    //val savedNotifications by dao.getAllNotificationCount().subscribeAsState(0)
     ShowWhen(notiViewModel.savedNotifications > 0) {
         CategorySetting { Text(stringResource(R.string.notifications_category_title)) }
 
