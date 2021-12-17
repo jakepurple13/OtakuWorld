@@ -821,14 +821,7 @@ private fun AboutSettings(
                     context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
                 )
             )
-        },
-        //summaryValue = { Text(stringResource(R.string.press_to_check_for_updates)) },
-        /*modifier = Modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) {
-            *//*TODO*//*
-        }*/
+        }
     )
 
     ShowWhen(

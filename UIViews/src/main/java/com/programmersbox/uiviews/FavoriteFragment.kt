@@ -69,7 +69,7 @@ class FavoriteFragment : Fragment() {
     private val genericInfo by inject<GenericInfo>()
     private val logo: MainLogo by inject()
 
-    class FavoriteViewModel(dao: ItemDao) : ViewModel() {
+    class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : ViewModel() {
 
         private val fireListener = FirebaseDb.FirebaseListener()
         var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
@@ -95,6 +95,25 @@ class FavoriteFragment : Fragment() {
             fireListener.unregister()
         }
 
+        var sortedBy by mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE)
+        var reverse by mutableStateOf(false)
+
+        val selectedSources = mutableStateListOf(*genericInfo.sourceList().fastMap(ApiService::serviceName).toTypedArray())
+
+        fun newSource(item: String) {
+            if (item in selectedSources) selectedSources.remove(item) else selectedSources.add(item)
+        }
+
+        fun singleSource(item: String) {
+            selectedSources.clear()
+            selectedSources.add(item)
+        }
+
+        fun resetSources() {
+            selectedSources.clear()
+            selectedSources.addAll(genericInfo.sourceList().fastMap(ApiService::serviceName))
+        }
+
     }
 
     @OptIn(
@@ -114,14 +133,14 @@ class FavoriteFragment : Fragment() {
                     factory = object : ViewModelProvider.Factory {
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
                             if (modelClass.isAssignableFrom(FavoriteViewModel::class.java)) {
-                                return FavoriteViewModel(dao) as T
+                                return FavoriteViewModel(dao, genericInfo) as T
                             }
                             throw IllegalArgumentException("Unknown class name")
                         }
                     }
                 )
 
-                FavoriteUi(favoriteItems = viewModel.favoriteList, allSources = genericInfo.sourceList())
+                FavoriteUi(viewModel = viewModel, favoriteItems = viewModel.favoriteList, allSources = genericInfo.sourceList())
             }
         }
     }
@@ -130,18 +149,13 @@ class FavoriteFragment : Fragment() {
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
-    fun FavoriteUi(favoriteItems: List<DbModel>, allSources: List<ApiService>) {
+    fun FavoriteUi(viewModel: FavoriteViewModel, favoriteItems: List<DbModel>, allSources: List<ApiService>) {
 
         val focusManager = LocalFocusManager.current
 
         var searchText by rememberSaveable { mutableStateOf("") }
 
-        val selectedSources = rememberMutableStateListOf(*allSources.fastMap(ApiService::serviceName).toTypedArray())
-
-        val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in selectedSources }
-
-        var sortedBy by remember { mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE) }
-        var reverse by remember { mutableStateOf(false) }
+        val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
 
         var showBanner by remember { mutableStateOf(false) }
 
@@ -167,11 +181,11 @@ class FavoriteFragment : Fragment() {
                             actions = {
 
                                 val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                                    animateFloatAsState(if (it == sortedBy && reverse) 180f else 0f).value
+                                    animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
                                 }
 
                                 GroupButton(
-                                    selected = sortedBy,
+                                    selected = viewModel.sortedBy,
                                     options = listOf(
                                         GroupButtonModel(SortFavoritesBy.TITLE) {
                                             Icon(
@@ -195,7 +209,7 @@ class FavoriteFragment : Fragment() {
                                             )
                                         }
                                     )
-                                ) { if (sortedBy != it) sortedBy = it else reverse = !reverse }
+                                ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
                             }
                         )
 
@@ -236,11 +250,8 @@ class FavoriteFragment : Fragment() {
                                     "ALL",
                                     modifier = Modifier
                                         .combinedClickable(
-                                            onClick = {
-                                                selectedSources.clear()
-                                                selectedSources.addAll(allSources.fastMap(ApiService::serviceName))
-                                            },
-                                            onLongClick = { selectedSources.clear() }
+                                            onClick = { viewModel.resetSources() },
+                                            onLongClick = { viewModel.selectedSources.clear() }
                                         ),
                                     backgroundColor = M3MaterialTheme.colorScheme.primary,
                                     textColor = M3MaterialTheme.colorScheme.onPrimary
@@ -257,21 +268,15 @@ class FavoriteFragment : Fragment() {
                                     "${it.first}: ${it.second.size - 1}",
                                     modifier = Modifier
                                         .combinedClickable(
-                                            onClick = {
-                                                if (it.first in selectedSources) selectedSources.remove(it.first)
-                                                else selectedSources.add(it.first)
-                                            },
-                                            onLongClick = {
-                                                selectedSources.clear()
-                                                selectedSources.add(it.first)
-                                            }
+                                            onClick = { viewModel.newSource(it.first) },
+                                            onLongClick = { viewModel.singleSource(it.first) }
                                         ),
                                     backgroundColor = animateColorAsState(
-                                        if (it.first in selectedSources) M3MaterialTheme.colorScheme.primary
+                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
                                         else M3MaterialTheme.colorScheme.surface
                                     ).value,
                                     textColor = animateColorAsState(
-                                        if (it.first in selectedSources) M3MaterialTheme.colorScheme.onPrimary
+                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
                                         else M3MaterialTheme.colorScheme.onSurface
                                     ).value
                                 )
@@ -334,13 +339,13 @@ class FavoriteFragment : Fragment() {
                                     .groupBy(DbModel::title)
                                     .entries
                                     .let {
-                                        when (val s = sortedBy) {
+                                        when (val s = viewModel.sortedBy) {
                                             is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
                                             is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
                                             is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
                                         }
                                     }
-                                    .let { if (reverse) it.reversed() else it }
+                                    .let { if (viewModel.reverse) it.reversed() else it }
                                     .toTypedArray()
                             ) { info ->
                                 M3CoverCard(
@@ -351,7 +356,7 @@ class FavoriteFragment : Fragment() {
                                         } else null
                                         showBanner = c == ComponentState.Pressed
                                     },
-                                    imageUrl = remember { info.value.random().imageUrl },
+                                    imageUrl = info.value.randomOrNull()?.imageUrl.orEmpty(),
                                     name = info.key,
                                     placeHolder = logo.logoId,
                                     favoriteIcon = {

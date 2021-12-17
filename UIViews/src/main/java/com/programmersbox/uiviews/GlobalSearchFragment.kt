@@ -204,12 +204,7 @@ class GlobalSearchFragment : Fragment() {
                                 Column(modifier = Modifier.padding(5.dp)) {
                                     SmallTopAppBar(
                                         navigationIcon = {
-                                            IconButton(onClick = { findNavController().popBackStack() }) {
-                                                Icon(
-                                                    Icons.Default.ArrowBack,
-                                                    null
-                                                )
-                                            }
+                                            IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
                                         },
                                         title = { Text(stringResource(R.string.global_search)) }
                                     )
