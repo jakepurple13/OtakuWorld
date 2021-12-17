@@ -32,17 +32,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
@@ -54,15 +54,13 @@ import com.programmersbox.helpfulutils.*
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
-import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class ViewVideosFragment : BaseBottomSheetDialogFragment() {
-
-    private val disposable = CompositeDisposable()
 
     @OptIn(
         ExperimentalMaterial3Api::class,
@@ -78,26 +76,46 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
         setContent {
             M3MaterialTheme(currentColorScheme) {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    LaunchedEffect(Unit) {
-                        val v = VideoGet.getInstance(requireContext())
-                        v?.loadVideos(lifecycleScope, VideoGet.externalContentUri)
-                    }
-
-                    VideoLoad()
+                    val context = LocalContext.current
+                    val viewModel: DownloadViewModel = viewModel(
+                        factory = object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                if (modelClass.isAssignableFrom(DownloadViewModel::class.java)) {
+                                    return DownloadViewModel(context) as T
+                                }
+                                throw IllegalArgumentException("Unknown class name")
+                            }
+                        }
+                    )
+                    VideoLoad(viewModel)
                 }
             }
         }
+    }
+
+    class DownloadViewModel(context: Context) : ViewModel() {
+
+        var videos by mutableStateOf<List<VideoContent>>(emptyList())
+
+        private val v = VideoGet.getInstance(context).also { v ->
+            v?.loadVideos(viewModelScope, VideoGet.externalContentUri)
+            viewModelScope.launch { v?.videos2?.collect { videos = it } }
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            v?.unregister()
+        }
+
     }
 
     @ExperimentalMaterial3Api
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun VideoLoad() {
+    private fun VideoLoad(viewModel: DownloadViewModel) {
 
-        val v = remember { VideoGet.getInstance(requireContext()) }
-
-        val items by v!!.videos2.collectAsState(emptyList())
+        val items = viewModel.videos
 
         val state = rememberBottomSheetScaffoldState()
         val scope = rememberCoroutineScope()
@@ -174,7 +192,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                         modifier = Modifier.padding(5.dp),
                         icon = {
                             Box {
-
                                 /*convert millis to appropriate time*/
                                 val runTimeString = remember {
                                     val duration = item.videoDuration
@@ -491,12 +508,6 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 }
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-        VideoGet.getInstance(requireContext())?.unregister()
     }
 
 }
