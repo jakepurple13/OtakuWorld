@@ -38,7 +38,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -66,7 +68,6 @@ class HistoryFragment : Fragment() {
     }
 
     private val dao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
-
     private val info by inject<GenericInfo>()
     private val logo: MainLogo by inject()
     private val disposable = CompositeDisposable()
@@ -81,17 +82,18 @@ class HistoryFragment : Fragment() {
             setContent { M3MaterialTheme(currentColorScheme) { RecentlyViewedUi() } }
         }
 
+    class HistoryViewModel : ViewModel() {
+        var sortedChoice by mutableStateOf<SortRecentlyBy<*>>(SortRecentlyBy.TIMESTAMP)
+        var reverse by mutableStateOf(false)
+    }
+
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @Composable
-    private fun RecentlyViewedUi() {
+    private fun RecentlyViewedUi(hm: HistoryViewModel = viewModel()) {
 
         val recentItems by dao.getRecentlyViewed().collectAsState(initial = emptyList())
         val scope = rememberCoroutineScope()
-
-        var sortedChoice by remember { mutableStateOf<SortRecentlyBy<*>>(SortRecentlyBy.TIMESTAMP) }
-
-        var reverse by remember { mutableStateOf(false) }
 
         var clearAllDialog by remember { mutableStateOf(false) }
 
@@ -122,7 +124,9 @@ class HistoryFragment : Fragment() {
             topBar = {
                 MediumTopAppBar(
                     scrollBehavior = scrollBehavior,
-                    navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    navigationIcon = {
+                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                    },
                     title = { Text(stringResource(R.string.history)) },
                     actions = {
 
@@ -130,13 +134,13 @@ class HistoryFragment : Fragment() {
 
                         val rotateIcon: @Composable (SortRecentlyBy<*>) -> Float = {
                             animateFloatAsState(
-                                if (it == sortedChoice && reverse) 180f else 0f,
+                                if (it == hm.sortedChoice && hm.reverse) 180f else 0f,
                                 animationSpec = tween(500)
                             ).value
                         }
 
                         GroupButton(
-                            selected = sortedChoice,
+                            selected = hm.sortedChoice,
                             options = listOf(
                                 GroupButtonModel(SortRecentlyBy.TITLE) {
                                     Icon(
@@ -153,7 +157,7 @@ class HistoryFragment : Fragment() {
                                     )
                                 }
                             )
-                        ) { if (sortedChoice != it) sortedChoice = it else reverse = !reverse }
+                        ) { if (hm.sortedChoice != it) hm.sortedChoice = it else hm.reverse = !hm.reverse }
                     }
                 )
             }
@@ -163,12 +167,12 @@ class HistoryFragment : Fragment() {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 items = recentItems
                     .let {
-                        when (val s = sortedChoice) {
+                        when (val s = hm.sortedChoice) {
                             is SortRecentlyBy.TITLE -> it.sortedBy(s.sort)
                             is SortRecentlyBy.TIMESTAMP -> it.sortedByDescending(s.sort)
                         }
                     }
-                    .let { if (reverse) it.reversed() else it }
+                    .let { if (hm.reverse) it.reversed() else it }
                     .fastMap { AnimatedLazyListItem(it.url, it) { HistoryItem(it, scope) } }
             )
             /*LazyColumn(
@@ -178,12 +182,12 @@ class HistoryFragment : Fragment() {
                 items(
                     recentItems
                         .let {
-                            when (val s = sortedChoice) {
+                            when (val s = hm.sortedChoice) {
                                 is SortRecentlyBy.TITLE -> it.sortedBy(s.sort)
                                 is SortRecentlyBy.TIMESTAMP -> it.sortedByDescending(s.sort)
                             }
                         }
-                        .let { if (reverse) it.reversed() else it }
+                        .let { if (hm.reverse) it.reversed() else it }
                 ) { HistoryItem(it, scope) }
             }*/
         }

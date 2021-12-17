@@ -938,7 +938,6 @@ private fun AboutSettings(
         value = aboutViewModel.canCheck,
         updateValue = {
             scope.launch { context.updatePref(SHOULD_CHECK, it) }
-            /*TODO*/
             OtakuApp.updateSetup(context)
         }
     )
@@ -957,7 +956,6 @@ private fun AboutSettings(
                     val work = WorkManager.getInstance(context)
                     work.cancelUniqueWork("updateChecks")
                     work.pruneWork()
-                    /*TODO*/
                     OtakuApp.updateSetup(context)
                     Toast
                         .makeText(context, R.string.cleared, Toast.LENGTH_SHORT)
