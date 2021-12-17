@@ -40,7 +40,6 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
@@ -77,16 +76,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             M3MaterialTheme(currentColorScheme) {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     val context = LocalContext.current
-                    val viewModel: DownloadViewModel = viewModel(
-                        factory = object : ViewModelProvider.Factory {
-                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                if (modelClass.isAssignableFrom(DownloadViewModel::class.java)) {
-                                    return DownloadViewModel(context) as T
-                                }
-                                throw IllegalArgumentException("Unknown class name")
-                            }
-                        }
-                    )
+                    val viewModel: DownloadViewModel = viewModel(factory = factoryCreate { DownloadViewModel(context) })
                     VideoLoad(viewModel)
                 }
             }

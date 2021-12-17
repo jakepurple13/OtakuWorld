@@ -743,13 +743,36 @@ fun SettingScreen(
 
 }
 
+class AccountViewModel : ViewModel() {
+
+    var accountInfo by mutableStateOf<FirebaseUser?>(null)
+
+    init {
+        FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser }
+    }
+
+    fun signInOrOut(context: Context, activity: ComponentActivity) {
+        FirebaseAuthentication.currentUser?.let {
+            MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.logOut)
+                .setMessage(R.string.areYouSureLogOut)
+                .setPositiveButton(R.string.yes) { d, _ ->
+                    FirebaseAuthentication.signOut()
+                    d.dismiss()
+                }
+                .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
+                .show()
+        } ?: FirebaseAuthentication.signIn(activity)
+    }
+}
+
 @ExperimentalMaterialApi
 @Composable
 private fun AccountSettings(context: Context, activity: ComponentActivity, logo: MainLogo) {
     CategorySetting { Text(stringResource(R.string.account_category_title)) }
 
-    var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
-    LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
+    val viewModel: AccountViewModel = viewModel()
+    val accountInfo = viewModel.accountInfo
 
     PreferenceSetting(
         settingTitle = { Text(accountInfo?.displayName ?: "User") },
@@ -764,19 +787,7 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) {
-            FirebaseAuthentication.currentUser?.let {
-                MaterialAlertDialogBuilder(context)
-                    .setTitle(R.string.logOut)
-                    .setMessage(R.string.areYouSureLogOut)
-                    .setPositiveButton(R.string.yes) { d, _ ->
-                        FirebaseAuthentication.signOut()
-                        d.dismiss()
-                    }
-                    .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                    .show()
-            } ?: FirebaseAuthentication.signIn(activity)
-        }
+        ) { viewModel.signInOrOut(context, activity) }
     )
 }
 
@@ -1009,16 +1020,7 @@ private fun NotificationSettings(
     notificationClick: () -> Unit
 ) {
     val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-    val notiViewModel: NotificationViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                if (modelClass.isAssignableFrom(NotificationViewModel::class.java)) {
-                    return NotificationViewModel(dao = dao) as T
-                }
-                throw IllegalArgumentException("Unknown class name")
-            }
-        }
-    )
+    val notiViewModel: NotificationViewModel = viewModel(factory = factoryCreate { NotificationViewModel(dao = dao) })
 
     ShowWhen(notiViewModel.savedNotifications > 0) {
         CategorySetting { Text(stringResource(R.string.notifications_category_title)) }

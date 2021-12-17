@@ -35,7 +35,6 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -129,16 +128,7 @@ class FavoriteFragment : Fragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
             M3MaterialTheme(currentColorScheme) {
-                val viewModel: FavoriteViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            if (modelClass.isAssignableFrom(FavoriteViewModel::class.java)) {
-                                return FavoriteViewModel(dao, genericInfo) as T
-                            }
-                            throw IllegalArgumentException("Unknown class name")
-                        }
-                    }
-                )
+                val viewModel: FavoriteViewModel = viewModel(factory = factoryCreate { FavoriteViewModel(dao, genericInfo) })
 
                 FavoriteUi(viewModel = viewModel, favoriteItems = viewModel.favoriteList, allSources = genericInfo.sourceList())
             }

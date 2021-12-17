@@ -1,6 +1,5 @@
 package com.programmersbox.models
 
-import androidx.lifecycle.ViewModel
 import io.reactivex.Single
 import io.reactivex.subjects.BehaviorSubject
 import java.io.Serializable
@@ -11,7 +10,7 @@ data class ItemModel(
     val url: String,
     val imageUrl: String,
     val source: ApiService
-) : ViewModel(), Serializable {
+) : Serializable {
     val extras = mutableMapOf<String, Any>()
     fun toInfoModel() = source.getItemInfo(this)
 }
@@ -25,7 +24,7 @@ data class InfoModel(
     val genres: List<String>,
     val alternativeNames: List<String>,
     val source: ApiService
-) : ViewModel()
+)
 
 data class ChapterModel(
     val name: String,
@@ -33,7 +32,7 @@ data class ChapterModel(
     val uploaded: String,
     val sourceUrl: String,
     val source: ApiService
-) : ViewModel(), Serializable {
+) : Serializable {
     var uploadedTime: Long? = null
     fun getChapterInfo() = source.getChapterInfo(this)
     val extras = mutableMapOf<String, Any>()
@@ -51,7 +50,7 @@ data class Storage(
     val headers = mutableMapOf<String, String>()
 }
 
-data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?) : ViewModel()
+data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?)
 
 interface ApiService: Serializable {
     val baseUrl: String
@@ -64,7 +63,7 @@ interface ApiService: Serializable {
     fun getList(page: Int = 1): Single<List<ItemModel>>
     fun getItemInfo(model: ItemModel): Single<InfoModel>
     fun searchList(searchText: CharSequence, page: Int = 1, list: List<ItemModel>): Single<List<ItemModel>> =
-        Single.create { it.onSuccess(list.filter { it.title.contains(searchText, true) }) }
+        Single.create { e -> e.onSuccess(list.filter { it.title.contains(searchText, true) }) }
 
     fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>>
 

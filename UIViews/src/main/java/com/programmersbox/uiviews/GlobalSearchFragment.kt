@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.findNavController
@@ -170,19 +169,14 @@ class GlobalSearchFragment : Fragment() {
                         .subscribeAsState(initial = true)
 
                     val viewModel: GlobalSearchViewModel = viewModel(
-                        factory = object : ViewModelProvider.Factory {
-                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                if (modelClass.isAssignableFrom(GlobalSearchViewModel::class.java)) {
-                                    return GlobalSearchViewModel(
-                                        info = info,
-                                        initialSearch = args.searchFor,
-                                        disposable = disposable,
-                                        onSubscribe = { isRefreshing = true },
-                                        subscribe = { isRefreshing = false }
-                                    ) as T
-                                }
-                                throw IllegalArgumentException("Unknown class name")
-                            }
+                        factory = factoryCreate {
+                            GlobalSearchViewModel(
+                                info = info,
+                                initialSearch = args.searchFor,
+                                disposable = disposable,
+                                onSubscribe = { isRefreshing = true },
+                                subscribe = { isRefreshing = false }
+                            )
                         }
                     )
 
