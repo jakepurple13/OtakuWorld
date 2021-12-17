@@ -60,6 +60,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
+import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
@@ -1110,8 +1111,13 @@ private fun ViewSettings(
         )
     )
 
+    val context = LocalContext.current
+    val dao = remember { HistoryDatabase.getInstance(context).historyDao() }
+    val historyCount by dao.getAllRecentHistoryCount().collectAsState(initial = 0)
+
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.history)) },
+        summaryValue = { Text(historyCount.toString()) },
         settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),

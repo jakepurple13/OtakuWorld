@@ -85,6 +85,10 @@ class HistoryFragment : Fragment() {
     class HistoryViewModel : ViewModel() {
         var sortedChoice by mutableStateOf<SortRecentlyBy<*>>(SortRecentlyBy.TIMESTAMP)
         var reverse by mutableStateOf(false)
+
+        fun sortChange(item: SortRecentlyBy<*>) {
+            if (sortedChoice != item) sortedChoice = item else reverse = !reverse
+        }
     }
 
     @ExperimentalMaterial3Api
@@ -156,8 +160,9 @@ class HistoryFragment : Fragment() {
                                         modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
                                     )
                                 }
-                            )
-                        ) { if (hm.sortedChoice != it) hm.sortedChoice = it else hm.reverse = !hm.reverse }
+                            ),
+                            onClick = hm::sortChange
+                        )
                     }
                 )
             }
