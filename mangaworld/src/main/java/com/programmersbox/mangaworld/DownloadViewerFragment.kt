@@ -1,6 +1,7 @@
 package com.programmersbox.mangaworld
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -47,7 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.uiviews.BaseMainActivity
@@ -58,8 +62,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -85,14 +91,48 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
         setContent {
             M3MaterialTheme(currentColorScheme) {
                 PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    LaunchedEffect(Unit) {
-                        val c = ChaptersGet.getInstance(requireContext())
-                        c?.loadChapters(lifecycleScope, defaultPathname.absolutePath)
-                    }
-                    DownloadViewer()
+                    val context = LocalContext.current
+                    val viewModel: DownloadViewModel = viewModel(
+                        factory = object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                if (modelClass.isAssignableFrom(DownloadViewModel::class.java)) {
+                                    return DownloadViewModel(context, defaultPathname) as T
+                                }
+                                throw IllegalArgumentException("Unknown class name")
+                            }
+                        }
+                    )
+                    DownloadViewer(viewModel)
                 }
             }
         }
+    }
+
+    class DownloadViewModel(context: Context, defaultPathname: File) : ViewModel() {
+
+        var fileList by mutableStateOf<Map<String, Map<String, List<ChaptersGet.Chapters>>>>(emptyMap())
+
+        private val c = ChaptersGet.getInstance(context).also { c ->
+            c?.loadChapters(viewModelScope, defaultPathname.absolutePath)
+            viewModelScope.launch {
+                c?.chapters2
+                    ?.map { f ->
+                        f
+                            .groupBy { it.folder }
+                            .entries
+                            .toList()
+                            .fastMap { it.key to it.value.groupBy { c -> c.chapterFolder } }
+                            .toMap()
+                    }
+                    ?.collect { fileList = it }
+            }
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            c?.unregister()
+        }
+
     }
 
     @ExperimentalMaterial3Api
@@ -100,20 +140,9 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun DownloadViewer() {
+    private fun DownloadViewer(viewModel: DownloadViewModel) {
 
-        val c = remember { ChaptersGet.getInstance(requireContext()) }
-
-        val fileList by c!!.chapters2
-            .map { f ->
-                f
-                    .groupBy { it.folder }
-                    .entries
-                    .toList()
-                    .fastMap { it.key to it.value.groupBy { c -> c.chapterFolder } }
-                    .toMap()
-            }
-            .collectAsState(initial = emptyMap())
+        val fileList = viewModel.fileList
 
         val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
@@ -334,7 +363,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
-        ChaptersGet.getInstance(requireContext())?.unregister()
     }
 
 }
