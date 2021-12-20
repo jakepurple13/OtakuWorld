@@ -513,13 +513,6 @@ class GlobalSearchFragment : Fragment() {
                                 startY = 50f
                             )
                         )
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp),
-                    contentAlignment = Alignment.BottomCenter
                 ) {
                     Text(
                         model.title,
@@ -530,6 +523,7 @@ class GlobalSearchFragment : Fragment() {
                         maxLines = 2,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(4.dp)
                             .align(Alignment.BottomCenter)
                     )
                 }

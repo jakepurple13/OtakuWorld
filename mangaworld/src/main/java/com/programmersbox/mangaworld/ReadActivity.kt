@@ -19,10 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -51,6 +48,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -345,6 +343,32 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .fillMaxWidth()
                                                     .align(Alignment.Center)
                                             )
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .background(
+                                                        brush = Brush.verticalGradient(
+                                                            colors = listOf(
+                                                                androidx.compose.ui.graphics.Color.Transparent,
+                                                                androidx.compose.ui.graphics.Color.Black
+                                                            ),
+                                                            startY = 50f
+                                                        )
+                                                    )
+                                            ) {
+                                                Text(
+                                                    (i + 1).toString(),
+                                                    style = M3MaterialTheme
+                                                        .typography
+                                                        .bodyLarge
+                                                        .copy(textAlign = TextAlign.Center, color = androidx.compose.ui.graphics.Color.White),
+                                                    maxLines = 2,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .align(Alignment.Center)
+                                                )
+                                            }
                                         }
                                     }
                                 }
