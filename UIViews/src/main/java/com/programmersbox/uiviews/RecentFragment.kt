@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,17 +22,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefreshState
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
@@ -56,22 +60,71 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
  */
 class RecentFragment : BaseFragmentCompose() {
 
-    private val info: GenericInfo by inject()
-
-    private val disposable: CompositeDisposable = CompositeDisposable()
-    private val sourceList = mutableStateListOf<ItemModel>()
-    private val favoriteList = mutableStateListOf<DbModel>()
-
-    private var count = 1
-
-    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-    private val itemListener = FirebaseDb.FirebaseListener()
-
-    private val logo: MainLogo by inject()
-
     companion object {
         @JvmStatic
         fun newInstance() = RecentFragment()
+    }
+
+    private val info: GenericInfo by inject()
+    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
+    private val logo: MainLogo by inject()
+
+    class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
+
+        var isRefreshing by mutableStateOf(false)
+        val sourceList = mutableStateListOf<ItemModel>()
+        val favoriteList = mutableStateListOf<DbModel>()
+
+        var count = 1
+
+        private val disposable: CompositeDisposable = CompositeDisposable()
+        private val itemListener = FirebaseDb.FirebaseListener()
+
+        private val sub = Flowables.combineLatest(
+            itemListener.getAllShowsFlowable(),
+            dao.getAllFavorites()
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                favoriteList.clear()
+                favoriteList.addAll(it)
+            }
+
+        init {
+            sourcePublish
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    count = 1
+                    sourceList.clear()
+                    sourceLoadCompose(context, it)
+                }
+                .addTo(disposable)
+        }
+
+        fun sourceLoadCompose(context: Context?, sources: ApiService) {
+            sources
+                .getRecent(count)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnError { context?.showErrorToast() }
+                .onErrorReturnItem(emptyList())
+                .doOnSubscribe { isRefreshing = true }
+                .subscribeBy {
+                    sourceList.addAll(it)
+                    isRefreshing = false
+                }
+                .addTo(disposable)
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            itemListener.unregister()
+            sub.dispose()
+            disposable.dispose()
+        }
+
     }
 
     @OptIn(
@@ -86,59 +139,19 @@ class RecentFragment : BaseFragmentCompose() {
         }
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
-        sourcePublish
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                count = 1
-                sourceList.clear()
-                sourceLoadCompose(it)
-            }
-            .addTo(disposable)
 
-        Flowables.combineLatest(
-            itemListener.getAllShowsFlowable(),
-            dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                favoriteList.clear()
-                favoriteList.addAll(it)
-            }
-            .addTo(disposable)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-        itemListener.unregister()
-    }
-
-    private fun sourceLoadCompose(sources: ApiService, page: Int = 1, refreshState: SwipeRefreshState? = null) {
-        sources
-            .getRecent(page)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnError { context?.showErrorToast() }
-            .onErrorReturnItem(emptyList())
-            .doOnSubscribe { refreshState?.isRefreshing = true }
-            .subscribeBy {
-                sourceList.addAll(it)
-                refreshState?.isRefreshing = false
-            }
-            .addTo(disposable)
     }
 
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
-    private fun RecentView() {
+    private fun RecentView(recentVm: RecentViewModel = viewModel(factory = factoryCreate { RecentViewModel(dao, context) })) {
+        val context = LocalContext.current
         val state = rememberLazyListState()
         val scope = rememberCoroutineScope()
         val source by sourcePublish.subscribeAsState(initial = null)
-        val refresh = rememberSwipeRefreshState(isRefreshing = false)
+        val refresh = rememberSwipeRefreshState(isRefreshing = recentVm.isRefreshing)
 
         val isConnected by ReactiveNetwork.observeInternetConnectivity()
             .subscribeOn(Schedulers.io())
@@ -186,23 +199,23 @@ class RecentFragment : BaseFragmentCompose() {
                             Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                         }
                     }
-                    sourceList.isEmpty() -> info.ComposeShimmerItem()
+                    recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
                     else -> {
                         SwipeRefresh(
                             modifier = Modifier.padding(p),
                             state = refresh,
                             onRefresh = {
                                 source?.let {
-                                    count = 1
-                                    sourceList.clear()
-                                    sourceLoadCompose(it, count, refresh)
+                                    recentVm.count = 1
+                                    recentVm.sourceList.clear()
+                                    recentVm.sourceLoadCompose(context, it)
                                 }
                             }
                         ) {
                             info.ItemListView(
-                                list = sourceList,
+                                list = recentVm.sourceList,
                                 listState = state,
-                                favorites = favoriteList,
+                                favorites = recentVm.favoriteList,
                                 onLongPress = { item, c ->
                                     itemInfo.value = if (c == ComponentState.Pressed) item else null
                                     showBanner = c == ComponentState.Pressed
@@ -210,11 +223,11 @@ class RecentFragment : BaseFragmentCompose() {
                             ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
                         }
 
-                        if (source?.canScroll == true && sourceList.isNotEmpty()) {
+                        if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
                             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
                                 source?.let {
-                                    count++
-                                    sourceLoadCompose(it, count, refresh)
+                                    recentVm.count++
+                                    recentVm.sourceLoadCompose(context, it)
                                 }
                             }
                         }
