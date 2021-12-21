@@ -296,9 +296,7 @@ class HistoryFragment : Fragment() {
                                 modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                                 failure = {
                                     Image(
-                                        painter = rememberDrawablePainter(
-                                            AppCompatResources.getDrawable(LocalContext.current, logo.logoId)
-                                        ),
+                                        painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
                                         contentDescription = null,
                                         modifier = Modifier
                                             .padding(5.dp)
@@ -310,10 +308,7 @@ class HistoryFragment : Fragment() {
                     },
                     trailing = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { showPopup = true }) {
-                                Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-                            }
-
+                            IconButton(onClick = { showPopup = true }) { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
                             IconButton(
                                 onClick = {
                                     info.toSource(item.source)
@@ -321,8 +316,7 @@ class HistoryFragment : Fragment() {
                                         ?.subscribeOn(Schedulers.io())
                                         ?.observeOn(AndroidSchedulers.mainThread())
                                         ?.subscribeBy { m ->
-                                            findNavController()
-                                                .navigate(HistoryFragmentDirections.actionHistoryFragmentToDetailsFragment(m))
+                                            findNavController().navigate(HistoryFragmentDirections.actionHistoryFragmentToDetailsFragment(m))
                                         }
                                         ?.addTo(disposable)
                                 }

@@ -103,7 +103,18 @@ class RecentFragment : BaseFragmentCompose() {
                 .addTo(disposable)
         }
 
-        fun sourceLoadCompose(context: Context?, sources: ApiService) {
+        fun reset(context: Context?, sources: ApiService) {
+            count = 1
+            sourceList.clear()
+            sourceLoadCompose(context, sources)
+        }
+
+        fun loadMore(context: Context?, sources: ApiService) {
+            count++
+            sourceLoadCompose(context, sources)
+        }
+
+        private fun sourceLoadCompose(context: Context?, sources: ApiService) {
             sources
                 .getRecent(count)
                 .subscribeOn(Schedulers.io())
@@ -204,13 +215,7 @@ class RecentFragment : BaseFragmentCompose() {
                         SwipeRefresh(
                             modifier = Modifier.padding(p),
                             state = refresh,
-                            onRefresh = {
-                                source?.let {
-                                    recentVm.count = 1
-                                    recentVm.sourceList.clear()
-                                    recentVm.sourceLoadCompose(context, it)
-                                }
-                            }
+                            onRefresh = { source?.let { recentVm.reset(context, it) } }
                         ) {
                             info.ItemListView(
                                 list = recentVm.sourceList,
@@ -225,10 +230,7 @@ class RecentFragment : BaseFragmentCompose() {
 
                         if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
                             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                source?.let {
-                                    recentVm.count++
-                                    recentVm.sourceLoadCompose(context, it)
-                                }
+                                source?.let { recentVm.loadMore(context, it) }
                             }
                         }
                     }

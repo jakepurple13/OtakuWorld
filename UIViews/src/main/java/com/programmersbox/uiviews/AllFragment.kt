@@ -120,7 +120,18 @@ class AllFragment : BaseFragmentCompose() {
                 .addTo(disposable)
         }
 
-        fun sourceLoadCompose(context: Context?, sources: ApiService) {
+        fun reset(context: Context?, sources: ApiService) {
+            count = 1
+            sourceList.clear()
+            sourceLoadCompose(context, sources)
+        }
+
+        fun loadMore(context: Context?, sources: ApiService) {
+            count++
+            sourceLoadCompose(context, sources)
+        }
+
+        private fun sourceLoadCompose(context: Context?, sources: ApiService) {
             sources
                 .getList(count)
                 .subscribeOn(Schedulers.io())
@@ -333,13 +344,7 @@ class AllFragment : BaseFragmentCompose() {
                                 SwipeRefresh(
                                     modifier = Modifier.padding(p),
                                     state = refresh,
-                                    onRefresh = {
-                                        source?.let {
-                                            allVm.count = 1
-                                            allVm.sourceList.clear()
-                                            allVm.sourceLoadCompose(context, it)
-                                        }
-                                    }
+                                    onRefresh = { source?.let { allVm.reset(context, it) } }
                                 ) {
                                     info.ItemListView(
                                         list = allVm.sourceList,
@@ -355,10 +360,7 @@ class AllFragment : BaseFragmentCompose() {
 
                             if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
                                 InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                    source?.let {
-                                        allVm.count++
-                                        allVm.sourceLoadCompose(context, it)
-                                    }
+                                    source?.let { allVm.loadMore(context, it) }
                                 }
                             }
                         }
