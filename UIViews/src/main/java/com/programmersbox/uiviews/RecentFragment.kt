@@ -211,7 +211,7 @@ class RecentFragment : BaseFragmentCompose() {
                         }
 
                         if (source?.canScroll == true && sourceList.isNotEmpty()) {
-                            InfiniteListHandler(listState = state, buffer = 2) {
+                            InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
                                 source?.let {
                                     count++
                                     sourceLoadCompose(it, count, refresh)

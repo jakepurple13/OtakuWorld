@@ -17,6 +17,7 @@ import com.programmersbox.uiviews.utils.ComponentState
 interface GenericInfo {
 
     val apkString: AppUpdate.AppUpdates.() -> String?
+    val scrollBuffer: Int get() = 2
 
     fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context)
     fun sourceList(): List<ApiService>
