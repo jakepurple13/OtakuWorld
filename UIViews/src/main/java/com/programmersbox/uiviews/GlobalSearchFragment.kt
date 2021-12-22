@@ -102,7 +102,6 @@ class GlobalSearchFragment : Fragment() {
             if (initialSearch.isNotEmpty()) {
                 searchForItems(
                     disposable = disposable,
-                    searchText = initialSearch,
                     onSubscribe = onSubscribe,
                     subscribe = subscribe
                 )
@@ -111,7 +110,6 @@ class GlobalSearchFragment : Fragment() {
 
         fun searchForItems(
             disposable: CompositeDisposable,
-            searchText: String,
             onSubscribe: () -> Unit,
             subscribe: () -> Unit
         ) {
@@ -234,7 +232,6 @@ class GlobalSearchFragment : Fragment() {
                                                     focusManager.clearFocus()
                                                     viewModel.searchForItems(
                                                         disposable = disposable,
-                                                        searchText = viewModel.searchText,
                                                         onSubscribe = { isRefreshing = true },
                                                         subscribe = { isRefreshing = false }
                                                     )
@@ -271,7 +268,6 @@ class GlobalSearchFragment : Fragment() {
                                                         }
                                                         viewModel.searchForItems(
                                                             disposable = disposable,
-                                                            searchText = viewModel.searchText,
                                                             onSubscribe = { isRefreshing = true },
                                                             subscribe = { isRefreshing = false }
                                                         )
