@@ -116,7 +116,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -157,8 +156,6 @@ class ReadActivityCompose : ComponentActivity() {
 
     private val title by lazy { intent.getStringExtra("mangaTitle") ?: "" }
 
-    private var batteryInfo: BroadcastReceiver? = null
-
     private val batteryInformation by lazy { BatteryInformation(this) }
 
     private var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
@@ -191,17 +188,20 @@ class ReadActivityCompose : ComponentActivity() {
             batteryIcon = it.second
         }
 
-        batteryInfo = battery {
-            batteryPercent = it.percent
-            batteryInformation.batteryLevelAlert(it.percent)
-            batteryInformation.batteryInfoItem(it)
-        }
-
         enableImmersiveMode()
 
         loadPages(model)
 
         setContent {
+
+            DisposableEffect(LocalContext.current) {
+                val batteryInfo = battery {
+                    batteryPercent = it.percent
+                    batteryInformation.batteryLevelAlert(it.percent)
+                    batteryInformation.batteryInfoItem(it)
+                }
+                onDispose { unregisterReceiver(batteryInfo) }
+            }
 
             M3MaterialTheme(currentColorScheme) {
 
@@ -1175,7 +1175,6 @@ class ReadActivityCompose : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(batteryInfo)
         disposable.dispose()
         Glide.get(this).clearMemory()
     }
