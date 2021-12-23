@@ -106,11 +106,7 @@ class ReadingActivity : ComponentActivity() {
 
     private val ad by lazy { AdRequest.Builder().build() }
 
-    class ReadViewModel(
-        activity: ComponentActivity,
-        genericInfo: GenericInfo,
-        model: Single<List<String>>?
-    ) : ViewModel() {
+    class ReadViewModel(activity: ComponentActivity, genericInfo: GenericInfo) : ViewModel() {
 
         private val dao by lazy { ItemDatabase.getInstance(activity).itemDao() }
 
@@ -192,7 +188,7 @@ class ReadingActivity : ComponentActivity() {
 
         setContent {
 
-            val readVm: ReadViewModel = viewModel(factory = factoryCreate { ReadViewModel(this, genericInfo, model) })
+            val readVm: ReadViewModel = viewModel(factory = factoryCreate { ReadViewModel(this, genericInfo) })
 
             LaunchedEffect(Unit) { loadPages(readVm, model) }
 
