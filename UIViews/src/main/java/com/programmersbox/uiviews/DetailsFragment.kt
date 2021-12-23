@@ -166,9 +166,6 @@ class DetailsFragment : Fragment() {
                             ) { PlaceHolderHeader() }
                         } else if (details.info != null) {
 
-                            val windowSize = requireActivity().rememberWindowSizeClass()
-                            val orientation = LocalConfiguration.current.orientation
-
                             val isSaved by dao.doesNotificationExist(info.url)
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
@@ -185,6 +182,9 @@ class DetailsFragment : Fragment() {
                                     systemUiController.setStatusBarColor(color = s, darkIcons = s.luminance() > .5f)
                                 }
                             }
+
+                            val windowSize = requireActivity().rememberWindowSizeClass()
+                            val orientation = LocalConfiguration.current.orientation
 
                             if (
                                 windowSize == WindowSize.Medium ||
