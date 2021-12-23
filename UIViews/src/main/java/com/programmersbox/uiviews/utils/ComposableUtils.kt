@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.utils
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -48,6 +50,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -56,6 +59,7 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.window.PopupProperties
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
+import androidx.window.layout.WindowMetricsCalculator
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -63,7 +67,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
@@ -1067,3 +1070,52 @@ val currentColorScheme: ColorScheme
             )
         }
     }
+
+/**
+ * Opinionated set of viewport breakpoints
+ *     - Compact: Most phones in portrait mode
+ *     - Medium: Most foldables and tablets in portrait mode
+ *     - Expanded: Most tablets in landscape mode
+ *
+ * More info: https://material.io/archive/guidelines/layout/responsive-ui.html
+ */
+enum class WindowSize { Compact, Medium, Expanded }
+
+/**
+ * Remembers the [WindowSize] class for the window corresponding to the current window metrics.
+ */
+@Composable
+fun Activity.rememberWindowSizeClass(): WindowSize {
+    // Get the size (in pixels) of the window
+    val windowSize = rememberWindowSize()
+
+    // Convert the window size to [Dp]
+    val windowDpSize = with(LocalDensity.current) {
+        windowSize.toDpSize()
+    }
+
+    // Calculate the window size class
+    return getWindowSizeClass(windowDpSize)
+}
+
+/**
+ * Remembers the [Size] in pixels of the window corresponding to the current window metrics.
+ */
+@Composable
+private fun Activity.rememberWindowSize(): Size {
+    val configuration = LocalConfiguration.current
+    // WindowMetricsCalculator implicitly depends on the configuration through the activity,
+    // so re-calculate it upon changes.
+    val windowMetrics = remember(configuration) { WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(this) }
+    return windowMetrics.bounds.toComposeRect().size
+}
+
+/**
+ * Partitions a [DpSize] into a enumerated [WindowSize] class.
+ */
+fun getWindowSizeClass(windowDpSize: DpSize): WindowSize = when {
+    windowDpSize.width < 0.dp -> throw IllegalArgumentException("Dp value cannot be negative")
+    windowDpSize.width < 600.dp -> WindowSize.Compact
+    windowDpSize.width < 840.dp -> WindowSize.Medium
+    else -> WindowSize.Expanded
+}
