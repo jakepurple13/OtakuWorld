@@ -64,6 +64,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
@@ -114,9 +115,6 @@ class DetailsFragment : Fragment() {
 
     private val genericInfo by inject<GenericInfo>()
 
-    private val itemListener = FirebaseDb.FirebaseListener()
-    private val chapterListener = FirebaseDb.FirebaseListener()
-
     private val logo: NotificationLogo by inject()
 
     @OptIn(
@@ -137,11 +135,8 @@ class DetailsFragment : Fragment() {
                 currentDetailsUrl = info.url
                 setContent {
 
-                    val details: DetailViewModel = viewModel()
-                    DisposableEffect(Unit) {
-                        details.init(info, context)
-                        onDispose { details.dispose() }
-                    }
+                    val localContext = LocalContext.current
+                    val details: DetailViewModel = viewModel(factory = factoryCreate { DetailViewModel(info, localContext) })
 
                     M3MaterialTheme(currentColorScheme) {
                         if (details.info == null) {
@@ -171,31 +166,48 @@ class DetailsFragment : Fragment() {
                             ) { PlaceHolderHeader() }
                         } else if (details.info != null) {
 
-                            val favoriteListener by combine(
-                                itemListener.findItemByUrlFlow(details.info!!.url),
-                                dao.containsItemFlow(details.info!!.url)
-                            ) { f, d -> f || d }
-                                .collectAsState(initial = false)
-
-                            val chapters by Flowables.combineLatest(
-                                chapterListener.getAllEpisodesByShow(details.info!!.url),
-                                dao.getAllChapters(details.info!!.url).subscribeOn(Schedulers.io())
-                            ) { f, d -> (f + d).distinctBy { it.url } }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeAsState(initial = emptyList())
-
                             val windowSize = requireActivity().rememberWindowSizeClass()
                             val orientation = LocalConfiguration.current.orientation
+
+                            val isSaved by dao.doesNotificationExist(info.url)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeAsState(false)
+
+                            val shareChapter by localContext.shareChapter.collectAsState(initial = true)
+                            val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
+
+                            val systemUiController = rememberSystemUiController()
+                            val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
+
+                            LaunchedEffect(statusBarColor) {
+                                statusBarColor?.value?.let { s ->
+                                    systemUiController.setStatusBarColor(color = s, darkIcons = s.luminance() > .5f)
+                                }
+                            }
 
                             if (
                                 windowSize == WindowSize.Medium ||
                                 windowSize == WindowSize.Expanded ||
                                 orientation == Configuration.ORIENTATION_LANDSCAPE
                             ) {
-                                DetailsViewLandscape(details.info!!, chapters, favoriteListener)
+                                DetailsViewLandscape(
+                                    details.info!!,
+                                    details.chapters,
+                                    details.favoriteListener,
+                                    isSaved,
+                                    shareChapter,
+                                    swatchInfo
+                                )
                             } else {
-                                DetailsView(details.info!!, chapters, favoriteListener)
+                                DetailsView(
+                                    details.info!!,
+                                    details.chapters,
+                                    details.favoriteListener,
+                                    isSaved,
+                                    shareChapter,
+                                    swatchInfo
+                                )
                             }
 
                         }
@@ -204,24 +216,59 @@ class DetailsFragment : Fragment() {
             }
     }
 
-    class DetailViewModel : ViewModel() {
+    class DetailViewModel(
+        itemModel: ItemModel? = null,
+        context: Context,
+    ) : ViewModel() {
 
         var info: InfoModel? by mutableStateOf(null)
 
         private val disposable = CompositeDisposable()
+        private val dao = ItemDatabase.getInstance(context).itemDao()
 
-        fun init(itemModel: ItemModel?, context: Context?) {
-            itemModel
-                ?.toInfoModel()
-                ?.doOnError { context?.showErrorToast() }
-                ?.subscribeOn(Schedulers.io())
-                ?.observeOn(AndroidSchedulers.mainThread())
-                ?.subscribeBy { info = it }
-                ?.addTo(disposable)
+        private val itemListener = FirebaseDb.FirebaseListener()
+        private val chapterListener = FirebaseDb.FirebaseListener()
+
+        var favoriteListener by mutableStateOf(false)
+        var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
+
+        private val itemSub = itemModel
+            ?.toInfoModel()
+            ?.doOnError { context.showErrorToast() }
+            ?.subscribeOn(Schedulers.io())
+            ?.observeOn(AndroidSchedulers.mainThread())
+            ?.subscribeBy {
+                info = it
+                setup(it)
+            }
+
+        private fun setup(info: InfoModel) {
+
+            viewModelScope.launch(Dispatchers.IO) {
+                combine(
+                    itemListener.findItemByUrlFlow(info.url),
+                    dao.containsItemFlow(info.url)
+                ) { f, d -> f || d }
+                    .collect { favoriteListener = it }
+            }
+
+            Flowables.combineLatest(
+                chapterListener.getAllEpisodesByShow(info.url),
+                dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
+            ) { f, d -> (f + d).distinctBy { it.url } }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy { chapters = it }
+                .addTo(disposable)
+
         }
 
-        fun dispose() {
+        override fun onCleared() {
+            super.onCleared()
+            itemSub?.dispose()
             disposable.dispose()
+            itemListener.unregister()
+            chapterListener.unregister()
         }
     }
 
@@ -234,29 +281,14 @@ class DetailsFragment : Fragment() {
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun DetailsViewLandscape(info: InfoModel, chapters: List<ChapterWatched>, favoriteListener: Boolean) {
-
-        val isSaved by dao.doesNotificationExist(info.url)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(false)
-
-        val shareChapter by LocalContext.current.shareChapter.collectAsState(initial = true)
-
-        val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
-
-        val systemUiController = rememberSystemUiController()
-
-        val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
-
-        LaunchedEffect(statusBarColor) {
-            statusBarColor?.value?.let { s ->
-                systemUiController.setStatusBarColor(
-                    color = s,
-                    darkIcons = s.luminance() > .5f
-                )
-            }
-        }
+    private fun DetailsViewLandscape(
+        info: InfoModel,
+        chapters: List<ChapterWatched>,
+        favoriteListener: Boolean,
+        isSaved: Boolean,
+        shareChapter: Boolean,
+        swatchInfo: MutableState<SwatchInfo?>
+    ) {
 
         var reverseChapters by remember { mutableStateOf(false) }
 
@@ -613,29 +645,14 @@ class DetailsFragment : Fragment() {
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun DetailsView(info: InfoModel, chapters: List<ChapterWatched>, favoriteListener: Boolean) {
-
-        val isSaved by dao.doesNotificationExist(info.url)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(false)
-
-        val shareChapter by LocalContext.current.shareChapter.collectAsState(initial = true)
-
-        val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
-
-        val systemUiController = rememberSystemUiController()
-
-        val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
-
-        LaunchedEffect(statusBarColor) {
-            statusBarColor?.value?.let { s ->
-                systemUiController.setStatusBarColor(
-                    color = s,
-                    darkIcons = s.luminance() > .5f
-                )
-            }
-        }
+    private fun DetailsView(
+        info: InfoModel,
+        chapters: List<ChapterWatched>,
+        favoriteListener: Boolean,
+        isSaved: Boolean,
+        shareChapter: Boolean,
+        swatchInfo: MutableState<SwatchInfo?>
+    ) {
 
         var reverseChapters by remember { mutableStateOf(false) }
 
@@ -1491,8 +1508,6 @@ class DetailsFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
-        itemListener.unregister()
-        chapterListener.unregister()
         val window = requireActivity().window
         ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorPrimaryVariant))
             .apply { addUpdateListener { window.statusBarColor = it.animatedValue as Int } }
