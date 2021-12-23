@@ -1,6 +1,5 @@
 package com.programmersbox.novelworld
 
-import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.widget.Toast
@@ -15,7 +14,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
@@ -55,6 +53,8 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.text.HtmlCompat
 import androidx.datastore.preferences.core.Preferences
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
@@ -93,17 +93,6 @@ class ReadingActivity : ComponentActivity() {
 
     private val genericInfo by inject<GenericInfo>()
     private val disposable = CompositeDisposable()
-    private val dao by lazy { ItemDatabase.getInstance(this).itemDao() }
-
-    private val list by lazy {
-        intent.getStringExtra("allChapters")
-            ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-            .orEmpty().also(::println)
-    }
-
-    private val mangaUrl by lazy { intent.getStringExtra("novelInfoUrl") ?: "" }
-
-    private var currentChapter: Int by mutableStateOf(0)
 
     private val model by lazy {
         intent.getStringExtra("currentChapter")
@@ -115,20 +104,76 @@ class ReadingActivity : ComponentActivity() {
             ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }
     }
 
-    private val title by lazy { intent.getStringExtra("novelTitle") ?: "" }
-
-    private var batteryInfo: BroadcastReceiver? = null
-
-    private val batteryInformation by lazy { BatteryInformation(this) }
-
-    private var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
-    private var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
-    private var batteryPercent by mutableStateOf(0f)
-
-    private val pageList = mutableStateOf("")
-    private var isLoadingPages = mutableStateOf(false)
-
     private val ad by lazy { AdRequest.Builder().build() }
+
+    class ReadViewModel(activity: ComponentActivity, genericInfo: GenericInfo) : ViewModel() {
+
+        private val dao by lazy { ItemDatabase.getInstance(activity).itemDao() }
+
+        private val disposable = CompositeDisposable()
+
+        val list by lazy { ChapterList(activity, genericInfo).get().orEmpty() }
+
+        private val novelUrl by lazy { activity.intent.getStringExtra("novelInfoUrl") ?: "" }
+        val title by lazy { activity.intent.getStringExtra("novelTitle") ?: "" }
+
+        var currentChapter: Int by mutableStateOf(0)
+
+        var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
+        var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
+        var batteryPercent by mutableStateOf(0f)
+
+        val batteryInformation by lazy { BatteryInformation(activity) }
+
+        init {
+            batteryInformation.composeSetup(
+                disposable,
+                androidx.compose.ui.graphics.Color.White
+            ) {
+                batteryColor = it.first
+                batteryIcon = it.second
+            }
+
+            val url = activity.intent.getStringExtra("novelUrl") ?: ""
+            currentChapter = list.indexOfFirst { l -> l.url == url }
+        }
+
+        val pageList = mutableStateOf("")
+        var isLoadingPages = mutableStateOf(false)
+            private set
+
+        fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
+            currentChapter = newChapter
+            list.getOrNull(newChapter)?.let { item ->
+                ChapterWatched(item.url, item.name, novelUrl)
+                    .let {
+                        Completable.mergeArray(
+                            FirebaseDb.insertEpisodeWatched(it),
+                            dao.insertChapter(it)
+                        )
+                    }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .subscribe(chapter)
+                    .addTo(disposable)
+
+                item
+                    .getChapterInfo()
+                    .map { it.mapNotNull(Storage::link) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnSubscribe { pageList.value = "" }
+                    .subscribeBy { pages: List<String> -> pageList.value = pages.firstOrNull().orEmpty() }
+                    .addTo(disposable)
+            }
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            disposable.dispose()
+        }
+
+    }
 
     @OptIn(
         ExperimentalMaterial3Api::class,
@@ -139,33 +184,27 @@ class ReadingActivity : ComponentActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val url = intent.getStringExtra("novelUrl") ?: ""
-        currentChapter = list.indexOfFirst { l -> l.url == url }
-
-        batteryInformation.composeSetup(
-            disposable,
-            androidx.compose.ui.graphics.Color.White
-        ) {
-            batteryColor = it.first
-            batteryIcon = it.second
-        }
-
-        batteryInfo = battery {
-            batteryPercent = it.percent
-            batteryInformation.batteryLevelAlert(it.percent)
-            batteryInformation.batteryInfoItem(it)
-        }
-
         enableImmersiveMode()
 
-        loadPages(model)
-
         setContent {
+
+            val readVm: ReadViewModel = viewModel(factory = factoryCreate { ReadViewModel(this, genericInfo) })
+
+            LaunchedEffect(Unit) { loadPages(readVm, model) }
+
             M3MaterialTheme(currentColorScheme) {
 
+                DisposableEffect(LocalContext.current) {
+                    val batteryInfo = battery {
+                        readVm.batteryPercent = it.percent
+                        readVm.batteryInformation.batteryLevelAlert(it.percent)
+                        readVm.batteryInformation.batteryInfoItem(it)
+                    }
+                    onDispose { unregisterReceiver(batteryInfo) }
+                }
+
                 val scope = rememberCoroutineScope()
-                val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
+                val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages.value)
 
                 var showInfo by remember { mutableStateOf(false) }
 
@@ -217,12 +256,8 @@ class ReadingActivity : ComponentActivity() {
 
                 val contentScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-                //56 is default FabSize
                 //56 is the bottom app bar size
                 //16 is the scaffold padding
-                val fabHeight = 72.dp
-                val fabHeightPx = with(LocalDensity.current) { fabHeight.roundToPx().toFloat() }
-                val fabOffsetHeightPx = remember { mutableStateOf(0f) }
 
                 val topBarHeight = 28.dp
                 val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
@@ -235,9 +270,6 @@ class ReadingActivity : ComponentActivity() {
                     object : NestedScrollConnection by contentScrollBehavior.nestedScrollConnection {
                         override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                             val delta = available.y
-
-                            val newFabOffset = fabOffsetHeightPx.value + delta
-                            fabOffsetHeightPx.value = newFabOffset.coerceIn(-fabHeightPx, 0f)
 
                             val newOffset = toolbarOffsetHeightPx.value + delta
                             toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
@@ -257,15 +289,15 @@ class ReadingActivity : ComponentActivity() {
                     scaffoldState = scaffoldState,
                     backgroundColor = M3MaterialTheme.colorScheme.surface,
                     contentColor = M3MaterialTheme.colorScheme.onSurface,
-                    drawerContent = if (list.size > 1) {
+                    drawerContent = if (readVm.list.size > 1) {
                         {
                             val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
                                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                 topBar = {
                                     SmallTopAppBar(
-                                        title = { Text(title) },
-                                        actions = { PageIndicator(list.size - currentChapter, list.size) },
+                                        title = { Text(readVm.title) },
+                                        actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
                                         scrollBehavior = scrollBehavior
                                     )
                                 },
@@ -288,11 +320,11 @@ class ReadingActivity : ComponentActivity() {
                             ) { p ->
                                 if (scaffoldState.drawerState.isOpen) {
                                     LazyColumn(
-                                        state = rememberLazyListState(currentChapter.coerceIn(0, list.lastIndex)),
+                                        state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
                                         contentPadding = p,
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        itemsIndexed(list) { i, c ->
+                                        itemsIndexed(readVm.list) { i, c ->
 
                                             var showChangeChapter by remember { mutableStateOf(false) }
 
@@ -304,8 +336,7 @@ class ReadingActivity : ComponentActivity() {
                                                         TextButton(
                                                             onClick = {
                                                                 showChangeChapter = false
-                                                                currentChapter = i
-                                                                addChapterToWatched(currentChapter, ::showToast)
+                                                                readVm.addChapterToWatched(i, ::showToast)
                                                             }
                                                         ) { Text(stringResource(R.string.yes)) }
                                                     },
@@ -320,7 +351,7 @@ class ReadingActivity : ComponentActivity() {
                                                 border = BorderStroke(
                                                     1.dp,
                                                     animateColorAsState(
-                                                        if (currentChapter == i) M3MaterialTheme.colorScheme.onSurface
+                                                        if (readVm.currentChapter == i) M3MaterialTheme.colorScheme.onSurface
                                                         else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                                     ).value
                                                 ),
@@ -329,7 +360,7 @@ class ReadingActivity : ComponentActivity() {
                                             ) {
                                                 ListItem(
                                                     text = { Text(c.name) },
-                                                    icon = if (currentChapter == i) {
+                                                    icon = if (readVm.currentChapter == i) {
                                                         { Icon(Icons.Default.ArrowRight, null) }
                                                     } else null,
                                                     modifier = Modifier.clickable { showChangeChapter = true }
@@ -347,7 +378,8 @@ class ReadingActivity : ComponentActivity() {
                         state = swipeState,
                         onRefresh = {
                             loadPages(
-                                list.getOrNull(currentChapter)
+                                readVm,
+                                readVm.list.getOrNull(readVm.currentChapter)
                                     ?.getChapterInfo()
                                     ?.map { it.mapNotNull(Storage::link) }
                                     ?.subscribeOn(Schedulers.io())
@@ -375,15 +407,14 @@ class ReadingActivity : ComponentActivity() {
                                                 if (!showInfo) {
                                                     toolbarOffsetHeightPx.value = -toolbarHeightPx
                                                     topBarOffsetHeightPx.value = -topBarHeightPx
-                                                    fabOffsetHeightPx.value = -fabHeightPx
                                                 }
                                             }
                                         ),
                                     factory = { MaterialTextView(it) },
-                                    update = { it.text = HtmlCompat.fromHtml(pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
+                                    update = { it.text = HtmlCompat.fromHtml(readVm.pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
                                 )
 
-                                if (currentChapter <= 0) {
+                                if (readVm.currentChapter <= 0) {
                                     Text(
                                         stringResource(id = R.string.reachedLastChapter),
                                         style = M3MaterialTheme.typography.headlineSmall,
@@ -424,15 +455,15 @@ class ReadingActivity : ComponentActivity() {
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
-                                            batteryIcon.composeIcon,
+                                            readVm.batteryIcon.composeIcon,
                                             contentDescription = null,
                                             tint = animateColorAsState(
-                                                if (batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
-                                                else batteryColor
+                                                if (readVm.batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
+                                                else readVm.batteryColor
                                             ).value
                                         )
                                         AnimatedContent(
-                                            targetState = batteryPercent.toInt(),
+                                            targetState = readVm.batteryPercent.toInt(),
                                             transitionSpec = {
                                                 if (targetState > initialState) {
                                                     slideInVertically { height -> height } + fadeIn() with
@@ -474,7 +505,7 @@ class ReadingActivity : ComponentActivity() {
                                         )
                                     }
                                 },
-                                actions = { PageIndicator(list.size - currentChapter, list.size) }
+                                actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) }
                             )
 
                             val animateBar by animateIntAsState(if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt()))
@@ -491,15 +522,16 @@ class ReadingActivity : ComponentActivity() {
                                     .titleContentColor(scrollFraction = contentScrollBehavior.scrollFraction).value
                             ) {
 
-                                val prevShown = currentChapter < list.lastIndex
-                                val nextShown = currentChapter > 0
+                                val prevShown = readVm.currentChapter < readVm.list.lastIndex
+                                val nextShown = readVm.currentChapter > 0
 
                                 AnimatedVisibility(
-                                    visible = prevShown && list.size > 1,
+                                    visible = prevShown && readVm.list.size > 1,
                                     enter = expandHorizontally(expandFrom = Alignment.Start),
                                     exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
                                 ) {
                                     PreviousButton(
+                                        viewModel = readVm,
                                         modifier = Modifier
                                             .padding(horizontal = 4.dp)
                                             .weight(
@@ -527,11 +559,12 @@ class ReadingActivity : ComponentActivity() {
                                 )
 
                                 AnimatedVisibility(
-                                    visible = nextShown && list.size > 1,
+                                    visible = nextShown && readVm.list.size > 1,
                                     enter = expandHorizontally(),
                                     exit = shrinkHorizontally()
                                 ) {
                                     NextButton(
+                                        viewModel = readVm,
                                         modifier = Modifier
                                             .padding(horizontal = 4.dp)
                                             .weight(
@@ -593,20 +626,18 @@ class ReadingActivity : ComponentActivity() {
         }
     }
 
-    private fun loadPages(modelPath: Single<List<String>>?) {
+    private fun loadPages(viewModel: ReadViewModel, modelPath: Single<List<String>>?) {
         modelPath
             ?.doOnSubscribe {
-                isLoadingPages.value = true
-                pageList.value = ""
+                viewModel.isLoadingPages.value = true
+                viewModel.pageList.value = ""
             }
             ?.subscribeBy {
-                pageList.value = it.firstOrNull().orEmpty()
-                isLoadingPages.value = false
+                viewModel.pageList.value = it.firstOrNull().orEmpty()
+                viewModel.isLoadingPages.value = false
             }
             ?.addTo(disposable)
     }
-
-    private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
 
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
@@ -617,44 +648,19 @@ class ReadingActivity : ComponentActivity() {
         ) { Text(stringResource(id = R.string.goBack), color = M3MaterialTheme.colorScheme.primary) }
     }
 
-    private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
-        list.getOrNull(chapterNum)?.let { item ->
-            ChapterWatched(item.url, item.name, mangaUrl)
-                .let {
-                    Completable.mergeArray(
-                        FirebaseDb.insertEpisodeWatched(it),
-                        dao.insertChapter(it)
-                    )
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(chapter)
-                .addTo(disposable)
-
-            item
-                .getChapterInfo()
-                .map { it.mapNotNull(Storage::link) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { pageList.value = "" }
-                .subscribeBy { pages: List<String> -> pageList.value = pages.firstOrNull().orEmpty() }
-                .addTo(disposable)
-        }
-    }
-
     @Composable
-    private fun NextButton(modifier: Modifier = Modifier, nextChapter: () -> Unit) {
+    private fun NextButton(viewModel: ReadViewModel, modifier: Modifier = Modifier, nextChapter: () -> Unit) {
         Button(
-            onClick = { addChapterToWatched(--currentChapter, nextChapter) },
+            onClick = { viewModel.addChapterToWatched(viewModel.currentChapter - 1, nextChapter) },
             modifier = modifier,
             border = BorderStroke(ButtonDefaults.outlinedButtonBorder.width, M3MaterialTheme.colorScheme.primary)
         ) { Text(stringResource(id = R.string.loadNextChapter)) }
     }
 
     @Composable
-    private fun PreviousButton(modifier: Modifier = Modifier, previousChapter: () -> Unit) {
+    private fun PreviousButton(viewModel: ReadViewModel, modifier: Modifier = Modifier, previousChapter: () -> Unit) {
         TextButton(
-            onClick = { addChapterToWatched(++currentChapter, previousChapter) },
+            onClick = { viewModel.addChapterToWatched(viewModel.currentChapter + 1, previousChapter) },
             modifier = modifier
         ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
     }
@@ -761,7 +767,6 @@ class ReadingActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(batteryInfo)
         disposable.dispose()
     }
 }

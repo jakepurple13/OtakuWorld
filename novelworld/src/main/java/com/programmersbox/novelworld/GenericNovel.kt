@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.toJson
+import com.programmersbox.gsonutils.*
+import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -44,13 +45,26 @@ val appModule = module {
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 
+class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
+    fun set(item: List<ChapterModel>?) {
+        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
+        context.defaultSharedPref.edit().putString("chapterList", i).commit()
+    }
+
+    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
+        "chapterList",
+        null,
+        ChapterModel::class.java to ChapterModelDeserializer(genericInfo)
+    )
+}
+
 class GenericNovel(val context: Context) : GenericInfo {
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         context.startActivity(
             Intent(context, ReadingActivity::class.java).apply {
                 putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                ChapterList(context, this@GenericNovel).set(allChapters)
                 putExtra("novelTitle", model.name)
                 putExtra("novelUrl", model.url)
                 putExtra("novelInfoUrl", model.sourceUrl)

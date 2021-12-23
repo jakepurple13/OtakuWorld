@@ -1,7 +1,9 @@
 package com.programmersbox.uiviews
 
 import android.animation.ValueAnimator
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -44,6 +46,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
@@ -59,7 +62,10 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -70,6 +76,7 @@ import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.*
@@ -108,9 +115,6 @@ class DetailsFragment : Fragment() {
 
     private val genericInfo by inject<GenericInfo>()
 
-    private val itemListener = FirebaseDb.FirebaseListener()
-    private val chapterListener = FirebaseDb.FirebaseListener()
-
     private val logo: NotificationLogo by inject()
 
     @OptIn(
@@ -130,40 +134,142 @@ class DetailsFragment : Fragment() {
             ?.also { info ->
                 currentDetailsUrl = info.url
                 setContent {
-                    M3MaterialTheme(currentColorScheme) {
-                        Scaffold(
-                            topBar = {
-                                SmallTopAppBar(
-                                    modifier = Modifier.zIndex(2f),
-                                    title = { Text(info.title) },
-                                    navigationIcon = {
-                                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                                    },
-                                    actions = {
-                                        IconButton(
-                                            onClick = {
-                                                startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                                    type = "text/plain"
-                                                    putExtra(Intent.EXTRA_TEXT, info.url)
-                                                    putExtra(Intent.EXTRA_TITLE, info.title)
-                                                }, getString(R.string.share_item, info.title)))
-                                            }
-                                        ) { Icon(Icons.Default.Share, null) }
 
-                                        IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
-                                    },
+                    val localContext = LocalContext.current
+                    val details: DetailViewModel = viewModel(factory = factoryCreate { DetailViewModel(info, localContext) })
+
+                    M3MaterialTheme(currentColorScheme) {
+                        if (details.info == null) {
+                            Scaffold(
+                                topBar = {
+                                    SmallTopAppBar(
+                                        modifier = Modifier.zIndex(2f),
+                                        title = { Text(info.title) },
+                                        navigationIcon = {
+                                            IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                                        },
+                                        actions = {
+                                            IconButton(
+                                                onClick = {
+                                                    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                                        type = "text/plain"
+                                                        putExtra(Intent.EXTRA_TEXT, info.url)
+                                                        putExtra(Intent.EXTRA_TITLE, info.title)
+                                                    }, getString(R.string.share_item, info.title)))
+                                                }
+                                            ) { Icon(Icons.Default.Share, null) }
+
+                                            IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
+                                        },
+                                    )
+                                }
+                            ) { PlaceHolderHeader() }
+                        } else if (details.info != null) {
+
+                            val isSaved by dao.doesNotificationExist(info.url)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeAsState(false)
+
+                            val shareChapter by localContext.shareChapter.collectAsState(initial = true)
+                            val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
+
+                            val systemUiController = rememberSystemUiController()
+                            val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
+
+                            LaunchedEffect(statusBarColor) {
+                                statusBarColor?.value?.let { s ->
+                                    systemUiController.setStatusBarColor(color = s, darkIcons = s.luminance() > .5f)
+                                }
+                            }
+
+                            val windowSize = requireActivity().rememberWindowSizeClass()
+                            val orientation = LocalConfiguration.current.orientation
+
+                            if (
+                                windowSize == WindowSize.Medium ||
+                                windowSize == WindowSize.Expanded ||
+                                orientation == Configuration.ORIENTATION_LANDSCAPE
+                            ) {
+                                DetailsViewLandscape(
+                                    details.info!!,
+                                    details.chapters,
+                                    details.favoriteListener,
+                                    isSaved,
+                                    shareChapter,
+                                    swatchInfo
+                                )
+                            } else {
+                                DetailsView(
+                                    details.info!!,
+                                    details.chapters,
+                                    details.favoriteListener,
+                                    isSaved,
+                                    shareChapter,
+                                    swatchInfo
                                 )
                             }
-                        ) { PlaceHolderHeader() }
+
+                        }
                     }
                 }
             }
+    }
+
+    class DetailViewModel(
+        itemModel: ItemModel? = null,
+        context: Context,
+    ) : ViewModel() {
+
+        var info: InfoModel? by mutableStateOf(null)
+
+        private val disposable = CompositeDisposable()
+        private val dao = ItemDatabase.getInstance(context).itemDao()
+
+        private val itemListener = FirebaseDb.FirebaseListener()
+        private val chapterListener = FirebaseDb.FirebaseListener()
+
+        var favoriteListener by mutableStateOf(false)
+        var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
+
+        private val itemSub = itemModel
             ?.toInfoModel()
-            ?.doOnError { context?.showErrorToast() }
+            ?.doOnError { context.showErrorToast() }
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribeBy { info -> setContent { M3MaterialTheme(currentColorScheme) { DetailsView(info) } } }
-            ?.addTo(disposable)
+            ?.subscribeBy {
+                info = it
+                setup(it)
+            }
+
+        private fun setup(info: InfoModel) {
+
+            viewModelScope.launch(Dispatchers.IO) {
+                combine(
+                    itemListener.findItemByUrlFlow(info.url),
+                    dao.containsItemFlow(info.url)
+                ) { f, d -> f || d }
+                    .collect { favoriteListener = it }
+            }
+
+            Flowables.combineLatest(
+                chapterListener.getAllEpisodesByShow(info.url),
+                dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
+            ) { f, d -> (f + d).distinctBy { it.url } }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy { chapters = it }
+                .addTo(disposable)
+
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            itemSub?.dispose()
+            disposable.dispose()
+            itemListener.unregister()
+            chapterListener.unregister()
+        }
     }
 
     @Composable
@@ -175,42 +281,378 @@ class DetailsFragment : Fragment() {
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun DetailsView(info: InfoModel) {
-        val favoriteListener by combine(
-            itemListener.findItemByUrlFlow(info.url),
-            dao.containsItemFlow(info.url)
-        ) { f, d -> f || d }
-            .collectAsState(initial = false)
+    private fun DetailsViewLandscape(
+        info: InfoModel,
+        chapters: List<ChapterWatched>,
+        favoriteListener: Boolean,
+        isSaved: Boolean,
+        shareChapter: Boolean,
+        swatchInfo: MutableState<SwatchInfo?>
+    ) {
 
-        val chapters by Flowables.combineLatest(
-            chapterListener.getAllEpisodesByShow(info.url),
-            dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
-        ) { f, d -> (f + d).distinctBy { it.url } }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(initial = emptyList())
+        var reverseChapters by remember { mutableStateOf(false) }
 
-        val isSaved by dao.doesNotificationExist(info.url)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(false)
+        val scope = rememberCoroutineScope()
+        val scaffoldState = rememberBottomSheetScaffoldState()
 
-        val shareChapter by LocalContext.current.shareChapter.collectAsState(initial = true)
-
-        val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
-
-        val systemUiController = rememberSystemUiController()
-
-        val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
-
-        LaunchedEffect(statusBarColor) {
-            statusBarColor?.value?.let { s ->
-                systemUiController.setStatusBarColor(
-                    color = s,
-                    darkIcons = s.luminance() > .5f
-                )
+        BackHandler(scaffoldState.bottomSheetState.isExpanded && findNavController().graph.id == currentScreen.value) {
+            scope.launch {
+                try {
+                    scaffoldState.bottomSheetState.collapse()
+                } catch (e: Exception) {
+                    findNavController().popBackStack()
+                }
             }
         }
+
+        fun showSnackBar(text: Int, duration: SnackbarDuration = SnackbarDuration.Short) {
+            scope.launch {
+                scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                scaffoldState.snackbarHostState.showSnackbar(getString(text), null, duration)
+            }
+        }
+
+        val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+            ?: M3MaterialTheme.colorScheme.onSurface
+
+        BottomSheetScaffold(
+            backgroundColor = Color.Transparent,
+            sheetContent = {
+                Scaffold(
+                    topBar = {
+                        SmallTopAppBar(
+                            title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
+                            colors = TopAppBarDefaults.smallTopAppBarColors(
+                                containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                            ),
+                            navigationIcon = {
+                                IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
+                                    Icon(Icons.Default.Close, null, tint = topBarColor)
+                                }
+                            }
+                        )
+                    },
+                ) { p ->
+                    LazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        items(info.chapters) { c ->
+                            fun markAs(b: Boolean) {
+                                ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
+                                    .let {
+                                        Completable.mergeArray(
+                                            if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                                            if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                                        )
+                                    }
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe {}
+                                    .addTo(disposable)
+                            }
+
+                            Surface(
+                                onClick = { markAs(!chapters.fastAny { it.url == c.url }) },
+                                shape = RoundedCornerShape(0.dp),
+                                tonalElevation = 5.dp,
+                                modifier = Modifier.fillMaxWidth(),
+                                indication = rememberRipple(),
+                                color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                            ) {
+                                ListItem(
+                                    modifier = Modifier.padding(horizontal = 4.dp),
+                                    text = {
+                                        Text(
+                                            c.name,
+                                            color = swatchInfo.value
+                                                ?.bodyColor
+                                                ?.toComposeColor()
+                                                ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
+                                        )
+                                    },
+                                    icon = {
+                                        androidx.compose.material3.Checkbox(
+                                            checked = chapters.fastAny { it.url == c.url },
+                                            onCheckedChange = { b -> markAs(b) },
+                                            colors = androidx.compose.material3.CheckboxDefaults.colors(
+                                                checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                    ?: M3MaterialTheme.colorScheme.secondary,
+                                                uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                                    ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                                checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
+                                                    ?: M3MaterialTheme.colorScheme.surface
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            sheetPeekHeight = 0.dp,
+            sheetGesturesEnabled = false,
+            scaffoldState = scaffoldState,
+            topBar = {
+                SmallTopAppBar(
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        titleContentColor = topBarColor,
+                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                    ),
+                    modifier = Modifier.zIndex(2f),
+                    title = { Text(info.title) },
+                    navigationIcon = {
+                        IconButton(onClick = { findNavController().popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                        }
+                    },
+                    actions = {
+                        var showDropDown by remember { mutableStateOf(false) }
+
+                        val dropDownDismiss = { showDropDown = false }
+
+                        MdcTheme {
+                            DropdownMenu(
+                                expanded = showDropDown,
+                                onDismissRequest = dropDownDismiss,
+                            ) {
+
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        scope.launch { scaffoldState.bottomSheetState.expand() }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.markAs))
+                                }
+
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.OpenInBrowser,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.fallback_menu_item_open_in_browser))
+                                }
+
+                                if (!isSaved) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            dropDownDismiss()
+                                            lifecycleScope.launch(Dispatchers.IO) {
+                                                dao.insertNotification(
+                                                    NotificationItem(
+                                                        id = info.hashCode(),
+                                                        url = info.url,
+                                                        summaryText = requireContext()
+                                                            .getString(
+                                                                R.string.hadAnUpdate,
+                                                                info.title,
+                                                                info.chapters.firstOrNull()?.name.orEmpty()
+                                                            ),
+                                                        notiTitle = info.title,
+                                                        imageUrl = info.imageUrl,
+                                                        source = info.source.serviceName,
+                                                        contentTitle = info.title
+                                                    )
+                                                ).subscribe()
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Save,
+                                            null,
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        )
+                                        Text(stringResource(id = R.string.save_for_later))
+                                    }
+                                }
+
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.global_search_by_name))
+                                }
+
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        reverseChapters = !reverseChapters
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Sort,
+                                        null,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(stringResource(id = R.string.reverseOrder))
+                                }
+                            }
+                        }
+
+                        IconButton(
+                            onClick = {
+                                startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, info.url)
+                                    putExtra(Intent.EXTRA_TITLE, info.title)
+                                }, getString(R.string.share_item, info.title)))
+                            }
+                        ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
+
+                        IconButton(onClick = { showDropDown = true }) {
+                            Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+                        }
+                    }
+                )
+            },
+            snackbarHost = {
+                SnackbarHost(it) { data ->
+                    val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
+                    val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
+                    Snackbar(
+                        elevation = 15.dp,
+                        backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), M3MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
+                        contentColor = font,
+                        snackbarData = data
+                    )
+                }
+            },
+            modifier = Modifier
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            swatchInfo.value?.rgb
+                                ?.toComposeColor()
+                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
+                            M3MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        ) { p ->
+
+            Row(
+                modifier = Modifier.padding(p)
+            ) {
+
+                DetailsHeader(
+                    modifier = Modifier.weight(1f),
+                    model = info,
+                    logo = painterResource(id = logo.notificationId),
+                    isFavorite = favoriteListener,
+                    swatchInfo = swatchInfo
+                ) { b ->
+                    fun addItem(model: InfoModel) {
+                        val db = model.toDbModel(model.chapters.size)
+                        Completable.concatArray(
+                            FirebaseDb.insertShow(db),
+                            dao.insertFavorite(db).subscribeOn(Schedulers.io())
+                        )
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe()
+                            .addTo(disposable)
+                    }
+
+                    fun removeItem(model: InfoModel) {
+                        val db = model.toDbModel(model.chapters.size)
+                        Completable.concatArray(
+                            FirebaseDb.removeShow(db),
+                            dao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
+                        )
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe()
+                            .addTo(disposable)
+                    }
+
+                    (if (b) ::removeItem else ::addItem)(info)
+                }
+
+                val listState = rememberLazyListState()
+
+                var descriptionVisibility by remember { mutableStateOf(false) }
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .padding(vertical = 5.dp),
+                    state = listState
+                ) {
+
+                    if (info.description.isNotEmpty()) {
+                        item {
+                            Text(
+                                info.description,
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = rememberRipple()
+                                    ) { descriptionVisibility = !descriptionVisibility }
+                                    .padding(horizontal = 5.dp)
+                                    //.fillMaxWidth()
+                                    .animateContentSize(),
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                style = M3MaterialTheme.typography.bodyMedium,
+                                color = M3MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                        ChapterItem(
+                            infoModel = info,
+                            c = c,
+                            read = chapters,
+                            chapters = info.chapters,
+                            swatchInfo = swatchInfo,
+                            shareChapter = shareChapter,
+                            snackbar = ::showSnackBar
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @ExperimentalComposeUiApi
+    @ExperimentalMaterial3Api
+    @ExperimentalAnimationApi
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    @Composable
+    private fun DetailsView(
+        info: InfoModel,
+        chapters: List<ChapterWatched>,
+        favoriteListener: Boolean,
+        isSaved: Boolean,
+        shareChapter: Boolean,
+        swatchInfo: MutableState<SwatchInfo?>
+    ) {
 
         var reverseChapters by remember { mutableStateOf(false) }
 
@@ -798,6 +1240,7 @@ class DetailsFragment : Fragment() {
     @ExperimentalMaterialApi
     @Composable
     private fun DetailsHeader(
+        modifier: Modifier = Modifier,
         model: InfoModel,
         logo: Any?,
         isFavorite: Boolean,
@@ -832,6 +1275,7 @@ class DetailsFragment : Fragment() {
             modifier = Modifier
                 .fillMaxSize()
                 .animateContentSize()
+                .then(modifier)
         ) {
 
             GlideImage(
@@ -1064,8 +1508,6 @@ class DetailsFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
-        itemListener.unregister()
-        chapterListener.unregister()
         val window = requireActivity().window
         ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorPrimaryVariant))
             .apply { addUpdateListener { window.statusBarColor = it.animatedValue as Int } }

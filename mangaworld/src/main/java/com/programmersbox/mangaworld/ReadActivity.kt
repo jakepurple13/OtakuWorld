@@ -19,10 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -51,6 +48,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -118,7 +116,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -159,8 +156,6 @@ class ReadActivityCompose : ComponentActivity() {
 
     private val title by lazy { intent.getStringExtra("mangaTitle") ?: "" }
 
-    private var batteryInfo: BroadcastReceiver? = null
-
     private val batteryInformation by lazy { BatteryInformation(this) }
 
     private var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
@@ -193,17 +188,20 @@ class ReadActivityCompose : ComponentActivity() {
             batteryIcon = it.second
         }
 
-        batteryInfo = battery {
-            batteryPercent = it.percent
-            batteryInformation.batteryLevelAlert(it.percent)
-            batteryInformation.batteryInfoItem(it)
-        }
-
         enableImmersiveMode()
 
         loadPages(model)
 
         setContent {
+
+            DisposableEffect(LocalContext.current) {
+                val batteryInfo = battery {
+                    batteryPercent = it.percent
+                    batteryInformation.batteryLevelAlert(it.percent)
+                    batteryInformation.batteryInfoItem(it)
+                }
+                onDispose { unregisterReceiver(batteryInfo) }
+            }
 
             M3MaterialTheme(currentColorScheme) {
 
@@ -345,6 +343,32 @@ class ReadActivityCompose : ComponentActivity() {
                                                     .fillMaxWidth()
                                                     .align(Alignment.Center)
                                             )
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .background(
+                                                        brush = Brush.verticalGradient(
+                                                            colors = listOf(
+                                                                androidx.compose.ui.graphics.Color.Transparent,
+                                                                androidx.compose.ui.graphics.Color.Black
+                                                            ),
+                                                            startY = 50f
+                                                        )
+                                                    )
+                                            ) {
+                                                Text(
+                                                    (i + 1).toString(),
+                                                    style = M3MaterialTheme
+                                                        .typography
+                                                        .bodyLarge
+                                                        .copy(textAlign = TextAlign.Center, color = androidx.compose.ui.graphics.Color.White),
+                                                    maxLines = 2,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .align(Alignment.Center)
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -1151,7 +1175,6 @@ class ReadActivityCompose : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(batteryInfo)
         disposable.dispose()
         Glide.get(this).clearMemory()
     }

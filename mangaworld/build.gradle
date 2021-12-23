@@ -64,7 +64,7 @@ dependencies {
     implementation firebaseCrash.crash
 
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
-    implementation "com.anggrayudi:storage:0.13.0"
+    implementation "com.anggrayudi:storage:0.14.0"
     implementation 'de.helmbold:rxfilewatcher:1.0.0'
 
     implementation project(':UIViews')
@@ -111,7 +111,7 @@ dependencies {
     implementation compose.compose
     implementation "com.google.accompanist:accompanist-pager:$accompanist"
     implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
-    implementation "xyz.quaver:subsampledimage:0.0.1-alpha09-SNAPSHOT"
+    implementation "xyz.quaver:subsampledimage:0.0.1-alpha10-SNAPSHOT"
     implementation "io.coil-kt:coil-compose:1.4.0"
 
     implementation datastore.datastore

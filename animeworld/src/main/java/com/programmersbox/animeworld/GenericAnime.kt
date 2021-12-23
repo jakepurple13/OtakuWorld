@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.NavController
@@ -471,6 +473,21 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
+    class CastingViewModel : ViewModel() {
+
+        var connection by mutableStateOf(false)
+        var session by mutableStateOf(false)
+
+        private val connectionStatus = MainActivity.cast.sessionConnected().subscribe { connection = it }
+        private val sessionStatus = MainActivity.cast.sessionStatus().subscribe { session = it }
+
+        override fun onCleared() {
+            super.onCleared()
+            connectionStatus.dispose()
+            sessionStatus.dispose()
+        }
+    }
+
     @OptIn(ExperimentalMaterialApi::class)
     override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
 
@@ -486,15 +503,14 @@ class GenericAnime(val context: Context) : GenericInfo {
                 ) { navController.navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
             )
 
-            val connectionStatus by MainActivity.cast.sessionConnected().subscribeAsState(false)
-            val sessionStatus by MainActivity.cast.sessionStatus().subscribeAsState(false)
+            val castingViewModel: CastingViewModel = viewModel()
 
-            ShowWhen(connectionStatus) {
+            ShowWhen(castingViewModel.connection) {
                 PreferenceSetting(
                     settingTitle = { androidx.compose.material3.Text(stringResource(R.string.cast_menu_title)) },
                     settingIcon = {
                         androidx.compose.material3.Icon(
-                            if (sessionStatus) Icons.Default.CastConnected else Icons.Default.Cast,
+                            if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
                             null,
                             modifier = Modifier.fillMaxSize()
                         )

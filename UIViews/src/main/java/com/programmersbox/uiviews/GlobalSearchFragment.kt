@@ -25,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -42,7 +41,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -83,9 +84,61 @@ class GlobalSearchFragment : Fragment() {
     private val info: GenericInfo by inject()
     private val logo: NotificationLogo by inject()
     private val mainLogo: MainLogo by inject()
-    private val searchListPublisher = mutableStateListOf<SearchModel>()
     private val dao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
     private val args: GlobalSearchFragmentArgs by navArgs()
+
+    class GlobalSearchViewModel(
+        val info: GenericInfo,
+        initialSearch: String,
+        disposable: CompositeDisposable,
+        onSubscribe: () -> Unit,
+        subscribe: () -> Unit
+    ) : ViewModel() {
+
+        var searchText by mutableStateOf(initialSearch)
+        val searchListPublisher = mutableStateListOf<SearchModel>()
+
+        init {
+            if (initialSearch.isNotEmpty()) {
+                searchForItems(
+                    disposable = disposable,
+                    onSubscribe = onSubscribe,
+                    subscribe = subscribe
+                )
+            }
+        }
+
+        fun searchForItems(
+            disposable: CompositeDisposable,
+            onSubscribe: () -> Unit,
+            subscribe: () -> Unit
+        ) {
+            Observable.combineLatest(
+                info.searchList()
+                    .fastMap { a ->
+                        a
+                            .searchList(searchText, list = emptyList())
+                            .timeout(5, TimeUnit.SECONDS)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .onErrorReturnItem(emptyList())
+                            .map { SearchModel(a.serviceName, it) }
+                            .toObservable()
+                    }
+            ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
+                .doOnSubscribe {
+                    searchListPublisher.clear()
+                    onSubscribe()
+                }
+                .onErrorReturnItem(emptyList())
+                .subscribe {
+                    searchListPublisher.addAll(it)
+                    subscribe()
+                }
+                .addTo(disposable)
+        }
+
+    }
 
     data class SearchModel(val apiName: String, val data: List<ItemModel>)
 
@@ -100,8 +153,6 @@ class GlobalSearchFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
             setContent {
                 M3MaterialTheme(currentColorScheme) {
-
-                    var searchText by rememberSaveable { mutableStateOf(args.searchFor) }
                     var isRefreshing by remember { mutableStateOf(false) }
                     val focusManager = LocalFocusManager.current
                     val listState = rememberLazyListState()
@@ -115,19 +166,21 @@ class GlobalSearchFragment : Fragment() {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeAsState(initial = true)
 
-                    val history by dao
-                        .searchHistory("%$searchText%")
-                        .collectAsState(emptyList())
-
-                    LaunchedEffect(Unit) {
-                        if (args.searchFor.isNotEmpty()) {
-                            searchForItems(
-                                searchText = args.searchFor,
+                    val viewModel: GlobalSearchViewModel = viewModel(
+                        factory = factoryCreate {
+                            GlobalSearchViewModel(
+                                info = info,
+                                initialSearch = args.searchFor,
+                                disposable = disposable,
                                 onSubscribe = { isRefreshing = true },
                                 subscribe = { isRefreshing = false }
                             )
                         }
-                    }
+                    )
+
+                    val history by dao
+                        .searchHistory("%${viewModel.searchText}%")
+                        .collectAsState(emptyList())
 
                     var showBanner by remember { mutableStateOf(false) }
 
@@ -143,12 +196,7 @@ class GlobalSearchFragment : Fragment() {
                                 Column(modifier = Modifier.padding(5.dp)) {
                                     SmallTopAppBar(
                                         navigationIcon = {
-                                            IconButton(onClick = { findNavController().popBackStack() }) {
-                                                Icon(
-                                                    Icons.Default.ArrowBack,
-                                                    null
-                                                )
-                                            }
+                                            IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
                                         },
                                         title = { Text(stringResource(R.string.global_search)) }
                                     )
@@ -179,29 +227,29 @@ class GlobalSearchFragment : Fragment() {
                                                 boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
 
                                                 onItemSelected {
-                                                    searchText = it.value.searchText
-                                                    filter(searchText)
+                                                    viewModel.searchText = it.value.searchText
+                                                    filter(viewModel.searchText)
                                                     focusManager.clearFocus()
-                                                    searchForItems(
-                                                        searchText = searchText,
+                                                    viewModel.searchForItems(
+                                                        disposable = disposable,
                                                         onSubscribe = { isRefreshing = true },
                                                         subscribe = { isRefreshing = false }
                                                     )
                                                 }
 
                                                 OutlinedTextField(
-                                                    value = searchText,
+                                                    value = viewModel.searchText,
                                                     onValueChange = {
-                                                        searchText = it
+                                                        viewModel.searchText = it
                                                         filter(it)
                                                     },
                                                     label = { androidx.compose.material.Text(stringResource(id = R.string.search)) },
                                                     trailingIcon = {
                                                         androidx.compose.material.IconButton(
                                                             onClick = {
-                                                                searchText = ""
+                                                                viewModel.searchText = ""
                                                                 filter("")
-                                                                searchListPublisher.clear()
+                                                                viewModel.searchListPublisher.clear()
                                                             }
                                                         ) { androidx.compose.material.Icon(Icons.Default.Cancel, null) }
                                                     },
@@ -213,13 +261,13 @@ class GlobalSearchFragment : Fragment() {
                                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                                     keyboardActions = KeyboardActions(onSearch = {
                                                         focusManager.clearFocus()
-                                                        if (searchText.isNotEmpty()) {
+                                                        if (viewModel.searchText.isNotEmpty()) {
                                                             lifecycleScope.launch(Dispatchers.IO) {
-                                                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), searchText))
+                                                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
                                                             }
                                                         }
-                                                        searchForItems(
-                                                            searchText = searchText,
+                                                        viewModel.searchForItems(
+                                                            disposable = disposable,
                                                             onSubscribe = { isRefreshing = true },
                                                             subscribe = { isRefreshing = false }
                                                         )
@@ -322,8 +370,8 @@ class GlobalSearchFragment : Fragment() {
                                                         }
                                                     }
                                                 }
-                                            } else if (searchListPublisher.isNotEmpty()) {
-                                                items(searchListPublisher) { i ->
+                                            } else if (viewModel.searchListPublisher.isNotEmpty()) {
+                                                items(viewModel.searchListPublisher) { i ->
                                                     Surface(
                                                         onClick = {
                                                             searchModelBottom = i
@@ -355,7 +403,10 @@ class GlobalSearchFragment : Fragment() {
                                                                     modifier = Modifier.align(Alignment.CenterEnd)
                                                                 ) { Icon(Icons.Default.ChevronRight, null) }
                                                             }
-                                                            LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                            LazyRow(
+                                                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                                            ) {
                                                                 items(i.data) { m ->
                                                                     SearchCoverCard(
                                                                         modifier = Modifier.padding(bottom = 4.dp),
@@ -397,32 +448,6 @@ class GlobalSearchFragment : Fragment() {
                 }
             }
         }
-
-    private fun searchForItems(searchText: String, onSubscribe: () -> Unit, subscribe: () -> Unit) {
-        Observable.combineLatest(
-            info.searchList()
-                .fastMap { a ->
-                    a
-                        .searchList(searchText, list = emptyList())
-                        .timeout(5, TimeUnit.SECONDS)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .onErrorReturnItem(emptyList())
-                        .map { SearchModel(a.serviceName, it) }
-                        .toObservable()
-                }
-        ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
-            .doOnSubscribe {
-                searchListPublisher.clear()
-                onSubscribe()
-            }
-            .onErrorReturnItem(emptyList())
-            .subscribe {
-                searchListPublisher.addAll(it)
-                subscribe()
-            }
-            .addTo(disposable)
-    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -484,13 +509,6 @@ class GlobalSearchFragment : Fragment() {
                                 startY = 50f
                             )
                         )
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp),
-                    contentAlignment = Alignment.BottomCenter
                 ) {
                     Text(
                         model.title,
@@ -501,6 +519,7 @@ class GlobalSearchFragment : Fragment() {
                         maxLines = 2,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(4.dp)
                             .align(Alignment.BottomCenter)
                     )
                 }

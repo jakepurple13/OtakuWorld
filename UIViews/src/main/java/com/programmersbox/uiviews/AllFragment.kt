@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
@@ -41,13 +43,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefreshState
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
@@ -74,20 +78,96 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
  */
 class AllFragment : BaseFragmentCompose() {
 
-    private val disposable: CompositeDisposable = CompositeDisposable()
-    private var count = 1
-
     private val info: GenericInfo by inject()
-
-    private val searchPublisher = BehaviorSubject.createDefault<List<ItemModel>>(emptyList())
-
-    private val sourceList = mutableStateListOf<ItemModel>()
-    private val favoriteList = mutableStateListOf<DbModel>()
-
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-    private val itemListener = FirebaseDb.FirebaseListener()
-
     private val logo: MainLogo by inject()
+
+    class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
+
+        val searchPublisher = BehaviorSubject.createDefault<List<ItemModel>>(emptyList())
+
+        var isSearching by mutableStateOf(false)
+
+        var isRefreshing by mutableStateOf(false)
+        val sourceList = mutableStateListOf<ItemModel>()
+        val favoriteList = mutableStateListOf<DbModel>()
+
+        var count = 1
+
+        private val disposable: CompositeDisposable = CompositeDisposable()
+        private val itemListener = FirebaseDb.FirebaseListener()
+
+        private val sub = Flowables.combineLatest(
+            itemListener.getAllShowsFlowable(),
+            dao.getAllFavorites()
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                favoriteList.clear()
+                favoriteList.addAll(it)
+            }
+
+        init {
+            sourcePublish
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    count = 1
+                    sourceList.clear()
+                    sourceLoadCompose(context, it)
+                }
+                .addTo(disposable)
+        }
+
+        fun reset(context: Context?, sources: ApiService) {
+            count = 1
+            sourceList.clear()
+            sourceLoadCompose(context, sources)
+        }
+
+        fun loadMore(context: Context?, sources: ApiService) {
+            count++
+            sourceLoadCompose(context, sources)
+        }
+
+        private fun sourceLoadCompose(context: Context?, sources: ApiService) {
+            sources
+                .getList(count)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnError { context?.showErrorToast() }
+                .onErrorReturnItem(emptyList())
+                .doOnSubscribe { isRefreshing = true }
+                .subscribeBy {
+                    sourceList.addAll(it)
+                    isRefreshing = false
+                }
+                .addTo(disposable)
+        }
+
+        fun search(searchText: String) {
+            sourcePublish.value
+                ?.searchList(searchText, 1, sourceList)
+                ?.subscribeOn(Schedulers.io())
+                ?.observeOn(AndroidSchedulers.mainThread())
+                ?.doOnSubscribe { isSearching = true }
+                ?.onErrorReturnItem(sourceList)
+                ?.subscribeBy {
+                    searchPublisher.onNext(it)
+                    isSearching = false
+                }
+                ?.addTo(disposable)
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            itemListener.unregister()
+            sub.dispose()
+            disposable.dispose()
+        }
+
+    }
 
     @OptIn(
         ExperimentalMaterial3Api::class,
@@ -102,43 +182,7 @@ class AllFragment : BaseFragmentCompose() {
         }
 
     override fun viewCreated(view: View, savedInstanceState: Bundle?) {
-        sourcePublish
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                count = 1
-                sourceList.clear()
-                searchPublisher.onNext(emptyList())
-                sourceLoadCompose(it)
-            }
-            .addTo(disposable)
 
-        Flowables.combineLatest(
-            itemListener.getAllShowsFlowable(),
-            dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                favoriteList.clear()
-                favoriteList.addAll(it)
-            }
-            .addTo(disposable)
-    }
-
-    private fun sourceLoadCompose(sources: ApiService, page: Int = 1, refreshState: SwipeRefreshState? = null) {
-        sources
-            .getList(page)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnError { context?.showErrorToast() }
-            .onErrorReturnItem(emptyList())
-            .doOnSubscribe { refreshState?.isRefreshing = true }
-            .subscribeBy {
-                sourceList.addAll(it)
-                refreshState?.isRefreshing = false
-            }
-            .addTo(disposable)
     }
 
     @ExperimentalMaterial3Api
@@ -146,7 +190,9 @@ class AllFragment : BaseFragmentCompose() {
     @ExperimentalMaterialApi
     @ExperimentalFoundationApi
     @Composable
-    private fun AllView() {
+    private fun AllView(allVm: AllViewModel = viewModel(factory = factoryCreate { AllViewModel(dao, context) })) {
+        val context = LocalContext.current
+
         val isConnected by ReactiveNetwork.observeInternetConnectivity()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -203,7 +249,6 @@ class AllFragment : BaseFragmentCompose() {
                         }
                     }
                     else -> {
-                        val refresh = rememberSwipeRefreshState(isRefreshing = false)
                         BottomSheetScaffold(
                             modifier = Modifier.padding(p1),
                             backgroundColor = M3MaterialTheme.colorScheme.background,
@@ -212,9 +257,8 @@ class AllFragment : BaseFragmentCompose() {
                             sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
                             sheetContent = {
                                 val focusManager = LocalFocusManager.current
-                                val searchList by searchPublisher.subscribeAsState(initial = emptyList())
+                                val searchList by allVm.searchPublisher.subscribeAsState(initial = emptyList())
                                 var searchText by rememberSaveable { mutableStateOf("") }
-                                var isSearching by remember { mutableStateOf(false) }
                                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                                 Scaffold(
                                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -266,17 +310,7 @@ class AllFragment : BaseFragmentCompose() {
                                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                                     keyboardActions = KeyboardActions(onSearch = {
                                                         focusManager.clearFocus()
-                                                        sourcePublish.value
-                                                            ?.searchList(searchText, 1, sourceList)
-                                                            ?.subscribeOn(Schedulers.io())
-                                                            ?.observeOn(AndroidSchedulers.mainThread())
-                                                            ?.doOnSubscribe { isSearching = true }
-                                                            ?.onErrorReturnItem(sourceList)
-                                                            ?.subscribeBy {
-                                                                searchPublisher.onNext(it)
-                                                                isSearching = false
-                                                            }
-                                                            ?.addTo(disposable)
+                                                        allVm.search(searchText)
                                                     })
                                                 )
                                             }
@@ -285,14 +319,14 @@ class AllFragment : BaseFragmentCompose() {
                                 ) { p ->
                                     Box(modifier = Modifier.padding(p)) {
                                         SwipeRefresh(
-                                            state = rememberSwipeRefreshState(isRefreshing = isSearching),
+                                            state = rememberSwipeRefreshState(isRefreshing = allVm.isSearching),
                                             onRefresh = {},
                                             swipeEnabled = false
                                         ) {
                                             info.ItemListView(
                                                 list = searchList,
                                                 listState = rememberLazyListState(),
-                                                favorites = favoriteList,
+                                                favorites = allVm.favoriteList,
                                                 onLongPress = { item, c ->
                                                     itemInfo.value = if (c == ComponentState.Pressed) item else null
                                                     showBanner = c == ComponentState.Pressed
@@ -303,24 +337,19 @@ class AllFragment : BaseFragmentCompose() {
                                 }
                             }
                         ) { p ->
-                            if (sourceList.isEmpty()) {
+                            if (allVm.sourceList.isEmpty()) {
                                 info.ComposeShimmerItem()
                             } else {
+                                val refresh = rememberSwipeRefreshState(isRefreshing = allVm.isRefreshing)
                                 SwipeRefresh(
                                     modifier = Modifier.padding(p),
                                     state = refresh,
-                                    onRefresh = {
-                                        source?.let {
-                                            count = 1
-                                            sourceList.clear()
-                                            sourceLoadCompose(it, count, refresh)
-                                        }
-                                    }
+                                    onRefresh = { source?.let { allVm.reset(context, it) } }
                                 ) {
                                     info.ItemListView(
-                                        list = sourceList,
+                                        list = allVm.sourceList,
                                         listState = state,
-                                        favorites = favoriteList,
+                                        favorites = allVm.favoriteList,
                                         onLongPress = { item, c ->
                                             itemInfo.value = if (c == ComponentState.Pressed) item else null
                                             showBanner = c == ComponentState.Pressed
@@ -329,12 +358,9 @@ class AllFragment : BaseFragmentCompose() {
                                 }
                             }
 
-                            if (source?.canScrollAll == true && sourceList.isNotEmpty()) {
-                                InfiniteListHandler(listState = state, buffer = 2) {
-                                    source?.let {
-                                        count++
-                                        sourceLoadCompose(it, count, refresh)
-                                    }
+                            if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
+                                InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                                    source?.let { allVm.loadMore(context, it) }
                                 }
                             }
                         }
@@ -342,12 +368,6 @@ class AllFragment : BaseFragmentCompose() {
                 }
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-        itemListener.unregister()
     }
 
     companion object {

@@ -317,13 +317,6 @@ fun M3CoverCard(
                             startY = 50f
                         )
                     )
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                contentAlignment = Alignment.BottomCenter
             ) {
                 Text(
                     name,
@@ -334,6 +327,7 @@ fun M3CoverCard(
                     maxLines = 2,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
                 )
             }
@@ -496,6 +490,7 @@ fun M3OtakuBannerBox(
                                     }
                                 )
                             }
+                            else -> {}
                         }
 
                         Image(

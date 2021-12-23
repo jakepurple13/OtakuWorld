@@ -45,8 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
@@ -60,6 +60,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
+import com.programmersbox.favoritesdatabase.HistoryDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
@@ -80,7 +82,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import org.koin.android.ext.android.inject
 import java.io.File
@@ -742,13 +743,36 @@ fun SettingScreen(
 
 }
 
+class AccountViewModel : ViewModel() {
+
+    var accountInfo by mutableStateOf<FirebaseUser?>(null)
+
+    init {
+        FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser }
+    }
+
+    fun signInOrOut(context: Context, activity: ComponentActivity) {
+        FirebaseAuthentication.currentUser?.let {
+            MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.logOut)
+                .setMessage(R.string.areYouSureLogOut)
+                .setPositiveButton(R.string.yes) { d, _ ->
+                    FirebaseAuthentication.signOut()
+                    d.dismiss()
+                }
+                .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
+                .show()
+        } ?: FirebaseAuthentication.signIn(activity)
+    }
+}
+
 @ExperimentalMaterialApi
 @Composable
 private fun AccountSettings(context: Context, activity: ComponentActivity, logo: MainLogo) {
     CategorySetting { Text(stringResource(R.string.account_category_title)) }
 
-    var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
-    LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
+    val viewModel: AccountViewModel = viewModel()
+    val accountInfo = viewModel.accountInfo
 
     PreferenceSetting(
         settingTitle = { Text(accountInfo?.displayName ?: "User") },
@@ -763,20 +787,18 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) {
-            FirebaseAuthentication.currentUser?.let {
-                MaterialAlertDialogBuilder(context)
-                    .setTitle(R.string.logOut)
-                    .setMessage(R.string.areYouSureLogOut)
-                    .setPositiveButton(R.string.yes) { d, _ ->
-                        FirebaseAuthentication.signOut()
-                        d.dismiss()
-                    }
-                    .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                    .show()
-            } ?: FirebaseAuthentication.signIn(activity)
-        }
+        ) { viewModel.signInOrOut(context, activity) }
     )
+}
+
+class AboutViewModel : ViewModel() {
+
+    var canCheck by mutableStateOf(false)
+
+    fun init(context: Context) {
+        viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
+    }
+
 }
 
 @ExperimentalMaterialApi
@@ -810,14 +832,7 @@ private fun AboutSettings(
                     context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
                 )
             )
-        },
-        //summaryValue = { Text(stringResource(R.string.press_to_check_for_updates)) },
-        /*modifier = Modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) {
-            *//*TODO*//*
-        }*/
+        }
     )
 
     ShowWhen(
@@ -926,33 +941,32 @@ private fun AboutSettings(
         }
     )
 
-    val periodicCheck by context.shouldCheckFlow.collectAsState(initial = false)
+    val aboutViewModel: AboutViewModel = viewModel()
+    LaunchedEffect(Unit) { aboutViewModel.init(context) }
 
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
-        value = periodicCheck,
+        value = aboutViewModel.canCheck,
         updateValue = {
             scope.launch { context.updatePref(SHOULD_CHECK, it) }
-            /*TODO*/
             OtakuApp.updateSetup(context)
         }
     )
 
-    ShowWhen(periodicCheck) {
+    ShowWhen(aboutViewModel.canCheck) {
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.clear_update_queue)) },
             summaryValue = { Text(stringResource(R.string.clear_update_queue_summary)) },
             modifier = Modifier
-                .alpha(if (periodicCheck) 1f else .38f)
+                .alpha(if (aboutViewModel.canCheck) 1f else .38f)
                 .clickable(
-                    enabled = periodicCheck,
+                    enabled = aboutViewModel.canCheck,
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
                     val work = WorkManager.getInstance(context)
                     work.cancelUniqueWork("updateChecks")
                     work.pruneWork()
-                    /*TODO*/
                     OtakuApp.updateSetup(context)
                     Toast
                         .makeText(context, R.string.cleared, Toast.LENGTH_SHORT)
@@ -979,6 +993,32 @@ private fun AboutSettings(
             interactionSource = remember { MutableInteractionSource() }
         ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
     )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.join_discord)) },
+        settingIcon = { Icon(painterResource(R.drawable.ic_baseline_discord_24), null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { context.openInCustomChromeBrowser("https://discord.gg/MhhHMWqryg") }
+    )
+}
+
+class NotificationViewModel(dao: ItemDao) : ViewModel() {
+
+    var savedNotifications by mutableStateOf(0)
+        private set
+
+    private val sub = dao.getAllNotificationCount()
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribeBy { savedNotifications = it }
+
+    override fun onCleared() {
+        super.onCleared()
+        sub.dispose()
+    }
+
 }
 
 @ExperimentalMaterialApi
@@ -989,13 +1029,14 @@ private fun NotificationSettings(
     notificationClick: () -> Unit
 ) {
     val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-    val savedNotifications by dao.getAllNotificationCount().subscribeAsState(0)
-    ShowWhen(savedNotifications > 0) {
+    val notiViewModel: NotificationViewModel = viewModel(factory = factoryCreate { NotificationViewModel(dao = dao) })
+
+    ShowWhen(notiViewModel.savedNotifications > 0) {
         CategorySetting { Text(stringResource(R.string.notifications_category_title)) }
 
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
-            summaryValue = { Text(stringResource(R.string.pending_saved_notifications, savedNotifications)) },
+            summaryValue = { Text(stringResource(R.string.pending_saved_notifications, notiViewModel.savedNotifications)) },
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() },
@@ -1078,8 +1119,13 @@ private fun ViewSettings(
         )
     )
 
+    val context = LocalContext.current
+    val dao = remember { HistoryDatabase.getInstance(context).historyDao() }
+    val historyCount by dao.getAllRecentHistoryCount().collectAsState(initial = 0)
+
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.history)) },
+        summaryValue = { Text(historyCount.toString()) },
         settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),

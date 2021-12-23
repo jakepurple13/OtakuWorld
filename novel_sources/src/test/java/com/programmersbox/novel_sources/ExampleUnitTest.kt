@@ -1,8 +1,11 @@
 package com.programmersbox.novel_sources
 
+import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.novel_sources.novels.WuxiaWorld
 import kotlinx.coroutines.runBlocking
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.junit.Test
 
 /**
@@ -30,6 +33,68 @@ class ExampleUnitTest {
         )
 
     }
+
+    @Test
+    fun wuxiaworldTest2() = runBlocking {
+
+        //val f = WuxiaWorld.getList(2).blockingGet()
+
+        //println(f)
+
+        //https://wuxiaworld.online/236130/start-a-dungeon
+
+        //println(WuxiaWorld.getSourceByUrl("https://wuxiaworld.online/236130/start-a-dungeon"))
+
+        /*println(
+            WuxiaWorld.getRecent()
+                .blockingGet()
+                .joinToString("\n")
+        )*/
+
+        val b = "https://www.wuxiaworld.com"
+        val url = "$b/api/novels/search"
+
+        //Count here is how many are in the response
+        val formBody =
+            "{\"title\":\"\",\"tags\":[],\"language\":\"Any\",\"genres\":[],\"active\":null,\"sortType\":\"New\",\"sortAsc\":false,\"searchAfter\":null,\"count\":150}"
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+        val j = postApi(url, formBody)
+
+        println(j)
+
+        val i = j.let { (it as? ApiResponse.Success)?.body?.fromJson<Wux>() }
+
+        println(i)
+
+        val c = i?.items
+
+        println(c?.joinToString("\n"))
+
+        val g = "$b/novel/${c?.randomOrNull()?.slug}"
+
+        println(g)
+
+    }
+
+    data class Wux(val total: Number?, val items: List<Items>?, val result: Boolean?)
+
+    data class Items(
+        val id: Number?,
+        val name: String?,
+        val slug: String?,
+        val coverUrl: String?,
+        val abbreviation: String?,
+        val synopsis: String?,
+        val language: String?,
+        val timeCreated: Number?,
+        val sneakPeek: Boolean?,
+        val status: Number?,
+        val chapterCount: Number?,
+        val reviewScore: Number?,
+        val tags: List<String>?,
+        val genres: List<String>?
+    )
 
     @Test
     fun novelTest() {

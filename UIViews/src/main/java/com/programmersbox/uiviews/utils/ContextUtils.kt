@@ -32,6 +32,8 @@ import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.gson.*
@@ -320,6 +322,14 @@ fun Context.getSystemDateTimeFormat() = SimpleDateFormat(
     Locale.getDefault()
 )
 
+inline fun <reified V : ViewModel> factoryCreate(crossinline build: () -> V) = object : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(V::class.java)) {
+            return build() as T
+        }
+        throw IllegalArgumentException("Unknown class name")
+    }
+}
 
 class DownloadUpdate(private val context: Context, private val packageName: String) : KoinComponent {
 

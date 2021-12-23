@@ -3,7 +3,7 @@ buildscript {
     ext.kotlin_version = "1.6.0"
     ext.latestAboutLibsRelease = "8.9.4"
 
-    ext.coroutinesVersion = "1.5.2"
+    ext.coroutinesVersion = "1.6.0"
 
     ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
     ext.coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
@@ -33,13 +33,13 @@ buildscript {
     ext.jsoup = 'org.jsoup:jsoup:1.14.3'
 
     ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.6'
-    ext.analytics = 'com.google.firebase:firebase-analytics:20.0.1'
+    ext.analytics = 'com.google.firebase:firebase-analytics:20.0.2'
     ext.play_services = 'com.google.android.gms:play-services-auth:19.2.0'
 
     ext.exoplayer_version = "2.16.1"
-    ext.room_version = "2.4.0-rc01"
+    ext.room_version = "2.4.0"
 
-    ext.nav_version = "2.4.0-beta02"
+    ext.nav_version = "2.4.0-rc01"
 
     def koin_version = "3.0.2"
 
@@ -50,7 +50,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.1.0-beta04"
+    ext.jetpack = "1.1.0-rc01"
 
     ext.accompanist = "0.20.3"
 
@@ -72,8 +72,8 @@ buildscript {
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
-    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.1"
-    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.1"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.2"
+    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.2"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.4"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0-rc02"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
