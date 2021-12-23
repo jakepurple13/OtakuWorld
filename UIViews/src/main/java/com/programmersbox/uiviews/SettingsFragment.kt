@@ -82,7 +82,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import org.koin.android.ext.android.inject
 import java.io.File
@@ -993,6 +992,15 @@ private fun AboutSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
         ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.join_discord)) },
+        settingIcon = { Icon(painterResource(R.drawable.ic_baseline_discord_24), null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { context.openInCustomChromeBrowser("https://discord.gg/MhhHMWqryg") }
     )
 }
 
