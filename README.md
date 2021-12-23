@@ -2,7 +2,7 @@
  ![visitors](https://page-views.glitch.me/badge?page_id=jakepurple13.OtakuWorld)
  ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
  
- [Discord Link](https://discord.gg/gurnDk9X) There's a discord now!!! This is something that will probably be changed and modified since it's the first time I've done this.
+ [Discord Link](https://discord.gg/MhhHMWqryg) There's a discord now!!! This is something that will probably be changed and modified since it's the first time I've done this.
  
 A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld) apps. This was created because there were a ton of shared elements between the two apps so I combined them, allowing two separate apps but a lot of the same base logic.
 
