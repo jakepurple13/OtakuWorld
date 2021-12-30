@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CustomCast">
+        <attr name="customCastBackgroundColor" format="color" />
+    </declare-styleable>
+
+    <style name="customCastDefColor">
+        <item name="customCastBackgroundColor">?attr/colorPrimary</item>
+    </style>
+</resources>

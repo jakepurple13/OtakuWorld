@@ -56,9 +56,7 @@ class CastOptions : OptionsProvider {
             .build()
     }
 
-    override fun getAdditionalSessionProviders(p0: Context): MutableList<SessionProvider>? {
-        return null
-    }
+    override fun getAdditionalSessionProviders(p0: Context): MutableList<SessionProvider> = mutableListOf()
 }
 
 
