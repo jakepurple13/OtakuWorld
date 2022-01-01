@@ -92,6 +92,9 @@ val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: tru
 val THEME_SETTING = stringPreferencesKey("theme")
 val Context.themeSetting get() = dataStore.data.map { it[THEME_SETTING] ?: "System" }
 
+val SHOW_ALL = booleanPreferencesKey("show_all")
+val Context.showAll get() = dataStore.data.map { it[SHOW_ALL] ?: true }
+
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 
 @JvmInline

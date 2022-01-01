@@ -7,6 +7,7 @@ import android.webkit.URLUtil
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.models.sourcePublish
@@ -20,6 +21,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 
@@ -85,10 +87,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavBar() {
+        //TODO: Look into doing a recreate and if for the all_nav when showAll is changed
         val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav, R.navigation.setting_nav)
         currentScreen.value = R.id.recent_nav
         val controller = findViewById<BottomNavigationView>(R.id.navLayout2)
             .also { b ->
+                lifecycleScope.launch { showAll.collect { runOnUiThread { b.menu.findItem(R.id.all_nav)?.isVisible = it } } }
                 appUpdateCheck
                     .filter {
                         AppUpdate.checkForUpdate(

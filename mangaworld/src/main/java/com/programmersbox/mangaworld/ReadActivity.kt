@@ -689,7 +689,7 @@ class ReadActivityCompose : ComponentActivity() {
             }
         }*/
 
-        items(pages) { ChapterPage(it, onClick) }
+        items(pages, key = { it }) { ChapterPage(it, onClick) }
 
         item {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
