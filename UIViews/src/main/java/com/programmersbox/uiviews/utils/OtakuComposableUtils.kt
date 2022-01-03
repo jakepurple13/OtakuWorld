@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -287,22 +288,17 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            GlideImage(
-                imageModel = imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-                loading = {
-                    Image(
-                        bitmap = AppCompatResources.getDrawable(context, placeHolder)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name
-                    )
+            Image(
+                painter = rememberImagePainter(imageUrl) {
+                    placeholder(AppCompatResources.getDrawable(context, placeHolder)!!)
+                    error(AppCompatResources.getDrawable(context, error)!!)
+                    crossfade(true)
+                    lifecycle(LocalLifecycleOwner.current)
+                    size(480, 360)
+
                 },
-                failure = {
-                    Image(
-                        bitmap = AppCompatResources.getDrawable(context, error)!!.toBitmap().asImageBitmap(),
-                        contentDescription = name
-                    )
-                }
+                contentDescription = name,
+                modifier = Modifier.matchParentSize()
             )
 
             Box(
