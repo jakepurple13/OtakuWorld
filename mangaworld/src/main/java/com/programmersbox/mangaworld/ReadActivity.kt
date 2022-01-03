@@ -8,9 +8,7 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -67,6 +65,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -199,7 +200,23 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
             batteryIcon = it.second
         }
 
-        //activity?.enableImmersiveMode()
+        dialog?.window?.decorView?.let { w ->
+            val windowInsetsController = ViewCompat.getWindowInsetsController(w) ?: return@let
+            // Configure the behavior of the hidden system bars
+            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            // Hide both the status bar and the navigation bar
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        }
+
+        dialog?.apply {
+            window?.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            window?.decorView?.setOnSystemUiVisibilityChangeListener { visibility ->
+                if (visibility != 0) return@setOnSystemUiVisibilityChangeListener
+
+                window?.decorView?.systemUiVisibility =
+                    (View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+            }
+        }
 
         loadPages(model)
 

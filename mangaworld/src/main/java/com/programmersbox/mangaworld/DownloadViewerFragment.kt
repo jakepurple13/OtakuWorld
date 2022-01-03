@@ -331,10 +331,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                                     }.showNow(MainActivity.activity.supportFragmentManager, "reader")
                                 } else {
                                     context.startActivity(
-                                        Intent(
-                                            context,
-                                            ReadActivity::class.java
-                                        ).apply {
+                                        Intent(context, ReadActivity::class.java).apply {
                                             putExtra("downloaded", true)
                                             putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
                                         }

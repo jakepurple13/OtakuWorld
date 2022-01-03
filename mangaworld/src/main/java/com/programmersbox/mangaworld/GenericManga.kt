@@ -90,10 +90,7 @@ class GenericManga(val context: Context) : GenericInfo {
             }.showNow(MainActivity.activity.supportFragmentManager, "reader")
         } else {
             context.startActivity(
-                Intent(
-                    context,
-                    ReadActivity::class.java
-                ).apply {
+                Intent(context, ReadActivity::class.java).apply {
                     putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                     putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
                     putExtra("mangaTitle", infoModel.title)
