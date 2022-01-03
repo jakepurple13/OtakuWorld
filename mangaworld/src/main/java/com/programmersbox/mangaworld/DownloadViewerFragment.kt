@@ -61,7 +61,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -325,15 +324,22 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                             tonalElevation = 4.dp,
                             indication = rememberRipple(),
                             onClick = {
-                                activity?.startActivity(
-                                    Intent(
-                                        context,
-                                        if (runBlocking { context.useNewReaderFlow.first() }) ReadActivityCompose::class.java else ReadActivity::class.java
-                                    ).apply {
-                                        putExtra("downloaded", true)
-                                        putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                    }
-                                )
+                                if (runBlocking { context.useNewReaderFlow.first() }) {
+                                    ReadActivityComposeFragment.newInstance {
+                                        putBoolean("downloaded", true)
+                                        putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                    }.showNow(MainActivity.activity.supportFragmentManager, "reader")
+                                } else {
+                                    context.startActivity(
+                                        Intent(
+                                            context,
+                                            ReadActivity::class.java
+                                        ).apply {
+                                            putExtra("downloaded", true)
+                                            putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                        }
+                                    )
+                                }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
