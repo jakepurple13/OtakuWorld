@@ -20,6 +20,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
     VIDSTREAMING(Vidstreaming), VIDEMBED(VidEmbed),
 
     CRUNCHYROLL(CrunchyRoll),
+    ANIMEFLICK(AnimeFlick),
 
     PUTLOCKERTV(PutlockerTV), PUTLOCKERANIME(PutlockerAnime), PUTLOCKERCARTOONS(PutlockerCartoons), PUTLOCKERMOVIES(PutlockerMovies),
 
@@ -42,6 +43,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
                 WCOSTREAM,
                 GOGOANIME_VC,
                 KAWAIIFU,
+                ANIMEFLICK,
                 ANIMEKISA_SUBBED,
                 HDM,
                 WCOSTREAMCC,
