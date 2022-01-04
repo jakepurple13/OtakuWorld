@@ -629,9 +629,9 @@ class ExampleUnitTest {
 
         //println(WcoDubbed.getSourceByUrl("https://www.wcostream.com/anime/mushi-shi-english-dubbed-guide"))
 
-        val f = WcoDubbed.searchList("one", list = emptyList()).blockingGet()
+        /*val f = WcoDubbed.searchList("one", list = emptyList()).blockingGet()
 
-        println(f.joinToString("\n"))
+        println(f.joinToString("\n"))*/
 
     }
 
@@ -805,6 +805,141 @@ object DubbedAnimeBiz : ShowApi(
             }
 
         emitter.onSuccess(listOf(f))
+    }
+
+    @Test
+    fun afdahTopTest() {
+        /*object AfdahTop : ShowApi(
+            baseUrl = "https://afdah.top",
+            recentPath = "", allPath = ""
+        ) {
+            override val serviceName: String get() = "AFDAH"
+            override val canDownload: Boolean get() = false
+
+            override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { s ->
+                doc
+                    .select("div.items")
+                    .select("article.tvshows")
+                    .fastMap {
+                        ItemModel(
+                            title = it.select("div.poster").select("img").attr("alt"),
+                            description = "",
+                            imageUrl = it.select("div.poster").select("img").attr("abs:src"),
+                            url = it.select("a").attr("href").orEmpty(),
+                            source = Sources.AFDAH
+                        )
+                    }
+                    .let(s::onSuccess)
+            }
+
+            override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { s ->
+                doc
+                    .select("div.items")
+                    .select("article.movies")
+                    .fastMap {
+                        ItemModel(
+                            title = it.select("div.poster").select("img").attr("alt"),
+                            description = "",
+                            imageUrl = it.select("div.poster").select("img").attr("abs:src"),
+                            url = it.select("a").attr("href").orEmpty(),
+                            source = Sources.AFDAH
+                        )
+                    }
+                    .let(s::onSuccess)
+            }
+
+            override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
+                val poster = doc.select("div.sheader").select("div.poster").select("img").attr("src")
+                val title = source.title
+                val description = doc.select("p").text()
+                val genres = doc.select("div.sgeneros").select("a").eachText()
+                val episodes = doc.select("div#episodes")
+                    .select("li")
+                    .fastMap {
+                        val name = it.select("a").text()
+                        val link = it.select("a").attr("abs:href")
+                        ChapterModel(
+                            name,
+                            link,
+                            it.select("span.date").text(),
+                            source.url,
+                            Sources.AFDAH
+                        )
+                    }
+                    .reversed()
+
+                InfoModel(
+                    source = Sources.AFDAH,
+                    title = title,
+                    url = source.url,
+                    alternativeNames = emptyList(),
+                    description = description,
+                    imageUrl = poster,
+                    genres = genres,
+                    chapters = episodes
+                )
+                    .let(emitter::onSuccess)
+            }
+
+            override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
+                //https://hlspanel.xyz/player/index.php?data=b110ae3636fc62aee44893300d695f99&do=getVideo
+
+                val data = chapterModel.url
+                val doc = data.toJsoup()
+                //println(doc)
+
+                val shortLink = doc.select("link[rel=shortlink]").attr("href")
+                println(shortLink)
+                val id = shortLink.split("=").lastOrNull()
+                println(id)
+                val j = post(
+                    "$baseUrl/wp-admin/admin-ajax.php",
+                    headers = mapOf("referer" to data),
+                    data = mapOf("body" to "action=doo_player_ajax&post=$id&nume=1&type=tv")
+                )
+                println(j)
+                *//*val url = doc
+                    .select("div.pframe")
+                    .select("iframe")
+                    .attr("src")
+                println(url)*//*
+
+                //val json = get("https://hlspanel.xyz/player/index.php?data=$url&do=getVideo")
+                //println(json)
+
+                emitter.onSuccess(emptyList())
+            }
+
+            override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> =
+                Single.create<List<ItemModel>> { s ->
+                    //"https://afdah.top/?s={search_term_string}"
+                    Jsoup.connect("$baseUrl/search.php?search=$searchText").get()
+                        .select(".row.mt-2")
+                        .fastMap {
+                            ItemModel(
+                                title = it.selectFirst("h5 > a")?.text().orEmpty(),
+                                description = "",
+                                imageUrl = baseUrl + it.selectFirst("img")?.attr("src")?.replace("70x110", "225x320").orEmpty(),
+                                url = baseUrl + it.selectFirst("a")?.attr("href").orEmpty(),
+                                source = Sources.ANIMEFLICK
+                            )
+                        }
+                        .let(s::onSuccess)
+                }
+                    .onErrorResumeNext(super.searchList(searchText, page, list))
+
+            override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
+                val doc = url.toJsoup()
+                ItemModel(
+                    title = doc.select("h2.title").text(),
+                    description = doc.select("p").text(),
+                    imageUrl = baseUrl + doc.select("img.rounded").attr("src"),
+                    url = url,
+                    source = this
+                ).let(emitter::onSuccess)
+            }
+
+        }*/
     }
 
 }

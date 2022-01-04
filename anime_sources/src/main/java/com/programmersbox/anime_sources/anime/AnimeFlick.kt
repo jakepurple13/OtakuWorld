@@ -73,7 +73,6 @@ object AnimeFlick : ShowApi(
             .onErrorResumeNext(super.searchList(searchText, page, list))
 
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
-
         val poster = baseUrl + doc.select("img.rounded").attr("src")
         val title = doc.select("h2.title").text()
         val description = doc.select("p").text()
@@ -116,17 +115,16 @@ object AnimeFlick : ShowApi(
         emitter.onSuccess(d)
     }
 
-    /*override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
         val doc = url.toJsoup()
         ItemModel(
-            title = doc.selectFirst(".title")?.text().orEmpty(),
-            description = doc.select(".sub-desc p")
-                .filter { it.select("strong").isEmpty() && it.select("iframe").isEmpty() }
-                .joinToString("\n") { it.text() },
-            imageUrl = doc.selectFirst("a.thumb > img")?.attr("src").orEmpty(),
+            title = doc.select("h2.title").text(),
+            description = doc.select("p").text(),
+            imageUrl = baseUrl + doc.select("img.rounded").attr("src"),
             url = url,
             source = this
         ).let(emitter::onSuccess)
-    }*/
+    }
 
 }
+
