@@ -183,7 +183,7 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
             description = plot,
             imageUrl = posterUrl,
             genres = emptyList(),
-            chapters = episodes
+            chapters = episodes.reversed()
         )
             .let(emitter::onSuccess)
     }
