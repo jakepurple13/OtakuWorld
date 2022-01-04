@@ -191,6 +191,8 @@ class AllFragment : BaseFragmentCompose() {
     @ExperimentalFoundationApi
     @Composable
     private fun AllView(allVm: AllViewModel = viewModel(factory = factoryCreate { AllViewModel(dao, context) })) {
+        //TODO: MAYBE have an option to show or hide the All screen.
+        // maybe if possible, have it show for certain sources that the user can choose
         val context = LocalContext.current
 
         val isConnected by ReactiveNetwork.observeInternetConnectivity()

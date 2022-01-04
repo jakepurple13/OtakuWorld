@@ -46,6 +46,7 @@ dependencies {
     implementation gson
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
+    implementation "io.karn:khttp-android:0.1.2" //okhttp instead
     implementation Deps.gsonutils
     implementation Deps.helpfulutils
     implementation Deps.rxutils

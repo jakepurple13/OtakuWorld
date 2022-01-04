@@ -1227,6 +1227,15 @@ private fun GeneralSettings(
         updateValue = { scope.launch { context.updatePref(SHARE_CHAPTER, it) } }
     )
 
+    val showAllScreen by context.showAll.collectAsState(initial = true)
+
+    SwitchSetting(
+        settingTitle = { Text(stringResource(R.string.show_all_screen)) },
+        settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
+        value = showAllScreen,
+        updateValue = { scope.launch { context.updatePref(SHOW_ALL, it) } }
+    )
+
     customSettings?.invoke()
 }
 

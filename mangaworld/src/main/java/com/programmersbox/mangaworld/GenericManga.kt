@@ -59,7 +59,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -81,18 +80,25 @@ class GenericManga(val context: Context) : GenericInfo {
     override val scrollBuffer: Int = 4
 
     override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
-        context.startActivity(
-            Intent(
-                context,
-                if (runBlocking { context.useNewReaderFlow.first() }) ReadActivityCompose::class.java else ReadActivity::class.java
-            ).apply {
-                putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                putExtra("mangaTitle", infoModel.title)
-                putExtra("mangaUrl", model.url)
-                putExtra("mangaInfoUrl", model.sourceUrl)
-            }
-        )
+        if (runBlocking { context.useNewReaderFlow.first() }) {
+            ReadActivityComposeFragment.newInstance {
+                putString("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                putString("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                putString("mangaTitle", infoModel.title)
+                putString("mangaUrl", model.url)
+                putString("mangaInfoUrl", model.sourceUrl)
+            }.showNow(MainActivity.activity.supportFragmentManager, "reader")
+        } else {
+            context.startActivity(
+                Intent(context, ReadActivity::class.java).apply {
+                    putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("mangaTitle", infoModel.title)
+                    putExtra("mangaUrl", model.url)
+                    putExtra("mangaInfoUrl", model.sourceUrl)
+                }
+            )
+        }
     }
 
     private fun downloadFullChapter(model: ChapterModel, title: String) {

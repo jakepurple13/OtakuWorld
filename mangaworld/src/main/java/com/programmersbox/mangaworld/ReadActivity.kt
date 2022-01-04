@@ -8,12 +8,10 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.view.View
+import android.view.*
 import android.widget.RelativeLayout
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
@@ -23,19 +21,14 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -50,7 +43,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -59,10 +51,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -72,6 +65,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -123,40 +119,46 @@ import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.ProvideTextStyle as M3ProvideTextStyle
+import androidx.compose.material3.OutlinedButton as M3OutlinedButton
 
-class ReadActivityCompose : ComponentActivity() {
+class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
+
+    companion object {
+        fun newInstance(block: Bundle.() -> Unit) = ReadActivityComposeFragment().apply {
+            arguments = Bundle().apply(block)
+        }
+    }
 
     private val genericInfo by inject<GenericInfo>()
     private val disposable = CompositeDisposable()
-    private val dao by lazy { ItemDatabase.getInstance(this).itemDao() }
+    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
 
     private val list by lazy {
-        intent.getStringExtra("allChapters")
+        arguments?.getString("allChapters")
             ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
             .orEmpty().also(::println)
     }
 
-    private val mangaUrl by lazy { intent.getStringExtra("mangaInfoUrl") ?: "" }
+    private val mangaUrl by lazy { arguments?.getString("mangaInfoUrl") ?: "" }
 
     private var currentChapter: Int by mutableStateOf(0)
 
     private val model by lazy {
-        intent.getStringExtra("currentChapter")
+        arguments?.getString("currentChapter")
             ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
             ?.getChapterInfo()
             ?.map { it.mapNotNull(Storage::link) }
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
-            ?.doOnError { Toast.makeText(this, it.localizedMessage, Toast.LENGTH_SHORT).show() }
+            ?.doOnError { Toast.makeText(requireContext(), it.localizedMessage, Toast.LENGTH_SHORT).show() }
     }
 
-    private val isDownloaded by lazy { intent.getBooleanExtra("downloaded", false) }
-    private val filePath by lazy { intent.getSerializableExtra("filePath") as? File }
+    private val isDownloaded by lazy { arguments?.getBoolean("downloaded", false) }
+    private val filePath by lazy { arguments?.getSerializable("filePath") as? File }
 
-    private val title by lazy { intent.getStringExtra("mangaTitle") ?: "" }
+    private val title by lazy { arguments?.getString("mangaTitle") ?: "" }
 
-    private val batteryInformation by lazy { BatteryInformation(this) }
+    private val batteryInformation by lazy { BatteryInformation(requireContext()) }
 
     private var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
     private var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
@@ -174,10 +176,20 @@ class ReadActivityCompose : ComponentActivity() {
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View = readView()
 
-        val url = intent.getStringExtra("mangaUrl") ?: ""
+    @ExperimentalMaterial3Api
+    @ExperimentalMaterialApi
+    @ExperimentalComposeUiApi
+    @ExperimentalAnimationApi
+    @ExperimentalFoundationApi
+    private fun readView() = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
+
+        val url = arguments?.getString("mangaUrl") ?: ""
         currentChapter = list.indexOfFirst { l -> l.url == url }
 
         batteryInformation.composeSetup(
@@ -188,19 +200,35 @@ class ReadActivityCompose : ComponentActivity() {
             batteryIcon = it.second
         }
 
-        enableImmersiveMode()
+        dialog?.window?.decorView?.let { w ->
+            val windowInsetsController = ViewCompat.getWindowInsetsController(w) ?: return@let
+            // Configure the behavior of the hidden system bars
+            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            // Hide both the status bar and the navigation bar
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        }
+
+        dialog?.apply {
+            window?.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            window?.decorView?.setOnSystemUiVisibilityChangeListener { visibility ->
+                if (visibility != 0) return@setOnSystemUiVisibilityChangeListener
+
+                window?.decorView?.systemUiVisibility =
+                    (View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+            }
+        }
 
         loadPages(model)
 
         setContent {
 
             DisposableEffect(LocalContext.current) {
-                val batteryInfo = battery {
+                val batteryInfo = activity?.battery {
                     batteryPercent = it.percent
                     batteryInformation.batteryLevelAlert(it.percent)
                     batteryInformation.batteryInfoItem(it)
                 }
-                onDispose { unregisterReceiver(batteryInfo) }
+                onDispose { activity?.unregisterReceiver(batteryInfo) }
             }
 
             M3MaterialTheme(currentColorScheme) {
@@ -216,7 +244,7 @@ class ReadActivityCompose : ComponentActivity() {
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
                 var showInfo by remember { mutableStateOf(false) }
 
-                val paddingPage by pagePadding.collectAsState(initial = 4)
+                val paddingPage by requireContext().pagePadding.collectAsState(initial = 4)
                 var settingsPopup by remember { mutableStateOf(false) }
 
                 if (settingsPopup) {
@@ -235,7 +263,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     settingTitle = R.string.battery_alert_percentage,
                                     settingSummary = R.string.battery_default,
                                     preference = BATTERY_PERCENT,
-                                    initialValue = runBlocking { dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
+                                    initialValue = runBlocking { requireContext().dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
                                     range = 1f..100f
                                 )
                                 Divider(color = M3MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
@@ -245,7 +273,7 @@ class ReadActivityCompose : ComponentActivity() {
                                     settingTitle = R.string.reader_padding_between_pages,
                                     settingSummary = R.string.default_padding_summary,
                                     preference = PAGE_PADDING,
-                                    initialValue = runBlocking { dataStore.data.first()[PAGE_PADDING] ?: 4 },
+                                    initialValue = runBlocking { requireContext().dataStore.data.first()[PAGE_PADDING] ?: 4 },
                                     range = 0f..10f
                                 )
                             }
@@ -255,7 +283,7 @@ class ReadActivityCompose : ComponentActivity() {
                 }
 
                 fun showToast() {
-                    runOnUiThread { Toast.makeText(this, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
+                    activity?.runOnUiThread { Toast.makeText(requireContext(), R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
                 }
 
                 val scaffoldState = rememberBottomSheetScaffoldState()
@@ -541,7 +569,7 @@ class ReadActivityCompose : ComponentActivity() {
                             Box(Modifier.fillMaxSize()) {
                                 LazyColumn(
                                     state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(dpToPx(paddingPage).dp),
+                                    verticalArrangement = Arrangement.spacedBy(requireContext().dpToPx(paddingPage).dp),
                                     contentPadding = PaddingValues(
                                         top = topBarHeight,
                                         bottom = toolbarHeight
@@ -689,7 +717,7 @@ class ReadActivityCompose : ComponentActivity() {
             }
         }*/
 
-        items(pages) { ChapterPage(it, onClick) }
+        items(pages, key = { it }) { ChapterPage(it, onClick) }
 
         item {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -872,8 +900,8 @@ class ReadActivityCompose : ComponentActivity() {
                 var time by remember { mutableStateOf(System.currentTimeMillis()) }
 
                 DisposableEffect(LocalContext.current) {
-                    val timeReceiver = timeTick { _, _ -> time = System.currentTimeMillis() }
-                    onDispose { unregisterReceiver(timeReceiver) }
+                    val timeReceiver = activity?.timeTick { _, _ -> time = System.currentTimeMillis() }
+                    onDispose { activity?.unregisterReceiver(timeReceiver) }
                 }
 
                 AnimatedContent(
@@ -1015,7 +1043,7 @@ class ReadActivityCompose : ComponentActivity() {
     }
 
     private fun loadPages(modelPath: Single<List<String>>?) {
-        if (isDownloaded && filePath != null) {
+        if (isDownloaded == true && filePath != null) {
             Single.create<List<String>> {
                 filePath
                     ?.listFiles()
@@ -1046,65 +1074,11 @@ class ReadActivityCompose : ComponentActivity() {
 
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
-        NoRippleOutlinedButton(
-            onClick = { finish() },
+        M3OutlinedButton(
+            onClick = { dismiss() },
             modifier = modifier,
             border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)
         ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }
-    }
-
-    @Composable
-    private fun NoRippleOutlinedButton(
-        onClick: () -> Unit,
-        modifier: Modifier = Modifier,
-        enabled: Boolean = true,
-        interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-        elevation: ButtonElevation? = null,
-        shape: Shape = RoundedCornerShape(20.0.dp),
-        border: BorderStroke? = ButtonDefaults.outlinedButtonBorder,
-        colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
-        contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-        content: @Composable RowScope.() -> Unit
-    ) {
-        val containerColor = colors.containerColor(enabled).value
-        val contentColor = colors.contentColor(enabled).value
-        val shadowElevation = elevation?.shadowElevation(enabled, interactionSource)?.value ?: 0.dp
-        val tonalElevation = elevation?.tonalElevation(enabled, interactionSource)?.value ?: 0.dp
-
-        Surface(
-            modifier = modifier,
-            shape = shape,
-            color = containerColor,
-            contentColor = contentColor,
-            shadowElevation = shadowElevation,
-            tonalElevation = tonalElevation,
-            border = border,
-        ) {
-            val clickAndSemanticsModifier = Modifier.clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = true,
-                onClickLabel = null,
-                role = Role.Button,
-                onClick = onClick
-            )
-            CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides contentColor) {
-                M3ProvideTextStyle(value = M3MaterialTheme.typography.labelLarge) {
-                    Row(
-                        Modifier
-                            .defaultMinSize(
-                                minWidth = ButtonDefaults.MinWidth,
-                                minHeight = ButtonDefaults.MinHeight
-                            )
-                            .then(clickAndSemanticsModifier)
-                            .padding(contentPadding),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        content = content
-                    )
-                }
-            }
-        }
     }
 
     private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
@@ -1167,7 +1141,7 @@ class ReadActivityCompose : ComponentActivity() {
             range = range,
             updateValue = {
                 sliderValue = it
-                scope.launch { updatePref(preference, sliderValue.toInt()) }
+                scope.launch { activity?.updatePref(preference, sliderValue.toInt()) }
             },
             settingIcon = { Icon(settingIcon, null) }
         )
@@ -1176,7 +1150,7 @@ class ReadActivityCompose : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         disposable.dispose()
-        Glide.get(this).clearMemory()
+        Glide.get(requireActivity()).clearMemory()
     }
 }
 

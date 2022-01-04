@@ -161,6 +161,8 @@
     <string name="share_item">Share %s</string>
     <string name="share_chapters">Share Chapter</string>
 
+    <string name="show_all_screen">Show All Screen</string>
+
     <string name="selectDate">Select Date to be Notified At</string>
     <string name="selectTime">Select Time to be Notified At</string>
     <string name="notifyAtTime">Notify At…</string>
