@@ -9,12 +9,12 @@ import io.reactivex.schedulers.Schedulers
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-enum class Sources(private val api: ApiService) : ApiService by api {
+enum class Sources(private val api: ApiService, val notWorking: Boolean = false) : ApiService by api {
     //GOGOANIME(GogoAnimeApi),
 
     GOGOANIME_VC(GogoAnimeVC),
     KAWAIIFU(Kawaiifu),
-    HDM(Hdm),
+    HDM(Hdm, true),
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
     VIDSTREAMING(Vidstreaming), VIDEMBED(VidEmbed),
@@ -45,7 +45,7 @@ enum class Sources(private val api: ApiService) : ApiService by api {
                 KAWAIIFU,
                 ANIMEFLICK,
                 ANIMEKISA_SUBBED,
-                HDM,
+                //HDM,
                 WCOSTREAMCC,
                 CRUNCHYROLL
             )

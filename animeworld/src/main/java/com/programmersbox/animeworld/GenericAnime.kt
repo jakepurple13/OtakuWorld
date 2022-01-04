@@ -237,7 +237,7 @@ class GenericAnime(val context: Context) : GenericInfo {
             .addTo(disposable)
     }
 
-    override fun sourceList(): List<ApiService> = Sources.values().toList()
+    override fun sourceList(): List<ApiService> = Sources.values().filterNot(Sources::notWorking).toList()
 
     override fun searchList(): List<ApiService> = Sources.searchSources
 
