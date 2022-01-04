@@ -8,6 +8,7 @@ import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.asJsoup
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.anime_sources.utilities.WcoStreamExtractor
+import com.programmersbox.anime_sources.utilities.fixUrl
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -397,22 +398,6 @@ object WcoStreamCC : ShowApi(
         val regex = "watch/([a-zA-Z\\-0-9]*)-episode".toRegex()
         val (aniId) = regex.find(url)!!.destructured
         return "$baseUrl/anime/$aniId"
-    }
-
-    private fun fixUrl(url: String): String {
-        if (url.startsWith("http")) {
-            return url
-        }
-
-        val startsWithNoHttp = url.startsWith("//")
-        if (startsWithNoHttp) {
-            return "https:$url"
-        } else {
-            if (url.startsWith('/')) {
-                return baseUrl + url
-            }
-            return "$baseUrl/$url"
-        }
     }
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create { emitter ->

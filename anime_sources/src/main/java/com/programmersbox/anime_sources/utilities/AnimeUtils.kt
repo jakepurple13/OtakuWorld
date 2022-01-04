@@ -2,6 +2,7 @@ package com.programmersbox.anime_sources.utilities
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.programmersbox.anime_sources.ShowApi
 import okhttp3.*
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -582,5 +583,21 @@ fun fixUrl(url: String, baseUrl: String): String {
             return baseUrl + url
         }
         return "${baseUrl}/$url"
+    }
+}
+
+fun ShowApi.fixUrl(url: String): String {
+    if (url.startsWith("http")) {
+        return url
+    }
+
+    val startsWithNoHttp = url.startsWith("//")
+    if (startsWithNoHttp) {
+        return "https:$url"
+    } else {
+        if (url.startsWith('/')) {
+            return baseUrl + url
+        }
+        return "$baseUrl/$url"
     }
 }

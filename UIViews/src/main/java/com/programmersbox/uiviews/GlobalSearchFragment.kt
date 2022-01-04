@@ -401,7 +401,12 @@ class GlobalSearchFragment : Fragment() {
                                                                         scope.launch { bottomScaffold.bottomSheetState.expand() }
                                                                     },
                                                                     modifier = Modifier.align(Alignment.CenterEnd)
-                                                                ) { Icon(Icons.Default.ChevronRight, null) }
+                                                                ) {
+                                                                    Row {
+                                                                        Text(i.data.size.toString())
+                                                                        Icon(Icons.Default.ChevronRight, null)
+                                                                    }
+                                                                }
                                                             }
                                                             LazyRow(
                                                                 horizontalArrangement = Arrangement.spacedBy(4.dp),

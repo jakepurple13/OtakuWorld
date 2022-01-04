@@ -18,6 +18,8 @@ enum class Sources(private val api: ApiService, val notWorking: Boolean = false)
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
     VIDSTREAMING(Vidstreaming), VIDEMBED(VidEmbed),
+    DOPEBOX(Dopebox),
+    SFLIX(SflixS),
 
     CRUNCHYROLL(CrunchyRoll),
     ANIMEFLICK(AnimeFlick),
@@ -40,6 +42,8 @@ enum class Sources(private val api: ApiService, val notWorking: Boolean = false)
                 VIDEMBED,
                 PUTLOCKERTV,
                 //WCO_SUBBED,
+                DOPEBOX,
+                SFLIX,
                 WCOSTREAM,
                 GOGOANIME_VC,
                 KAWAIIFU,

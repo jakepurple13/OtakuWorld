@@ -7,6 +7,7 @@ import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.anime_sources.utilities.JsUnpacker
 import com.programmersbox.anime_sources.utilities.extractors
+import com.programmersbox.anime_sources.utilities.fixUrl
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -186,22 +187,6 @@ object GogoAnimeVC : ShowApi(
     }
 
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.never()
-
-    private fun fixUrl(url: String): String {
-        if (url.startsWith("http")) {
-            return url
-        }
-
-        val startsWithNoHttp = url.startsWith("//")
-        if (startsWithNoHttp) {
-            return "https:$url"
-        } else {
-            if (url.startsWith('/')) {
-                return baseUrl + url
-            }
-            return "$baseUrl/$url"
-        }
-    }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { s ->
         val doc = Jsoup.connect(chapterModel.url).get()

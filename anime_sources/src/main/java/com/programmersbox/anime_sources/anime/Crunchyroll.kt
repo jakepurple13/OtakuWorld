@@ -5,6 +5,7 @@ import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.utilities.M3u8Helper
+import com.programmersbox.anime_sources.utilities.fixUrl
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.similarity
@@ -229,22 +230,6 @@ object CrunchyRoll : ShowApi(
     )
 
     private data class CrunchyJson(val data: List<CrunchyAnimeData>)
-
-    private fun fixUrl(url: String): String {
-        if (url.startsWith("http")) {
-            return url
-        }
-
-        val startsWithNoHttp = url.startsWith("//")
-        if (startsWithNoHttp) {
-            return "https:$url"
-        } else {
-            if (url.startsWith('/')) {
-                return baseUrl + url
-            }
-            return "$baseUrl/$url"
-        }
-    }
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create<List<ItemModel>> {
         val json = crUnblock.geoBypassRequest("http://www.crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates")
