@@ -24,7 +24,10 @@ enum class Sources(private val api: ApiService, val notWorking: Boolean = false)
     CRUNCHYROLL(CrunchyRoll),
     ANIMEFLICK(AnimeFlick),
 
-    PUTLOCKERTV(PutlockerTV), PUTLOCKERANIME(PutlockerAnime), PUTLOCKERCARTOONS(PutlockerCartoons), PUTLOCKERMOVIES(PutlockerMovies),
+    PUTLOCKERTV(PutlockerTV, true),
+    PUTLOCKERANIME(PutlockerAnime, true),
+    PUTLOCKERCARTOONS(PutlockerCartoons, true),
+    PUTLOCKERMOVIES(PutlockerMovies, true),
 
     ANIMEKISA_SUBBED(AnimeKisaSubbed), ANIMEKISA_DUBBED(AnimeKisaDubbed), ANIMEKISA_MOVIES(AnimeKisaMovies),
 
@@ -40,7 +43,7 @@ enum class Sources(private val api: ApiService, val notWorking: Boolean = false)
             get() = listOf(
                 VIDSTREAMING,
                 VIDEMBED,
-                PUTLOCKERTV,
+                //PUTLOCKERTV,
                 //WCO_SUBBED,
                 DOPEBOX,
                 SFLIX,

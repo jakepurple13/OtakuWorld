@@ -295,7 +295,6 @@ fun M3CoverCard(
                     crossfade(true)
                     lifecycle(LocalLifecycleOwner.current)
                     size(480, 360)
-
                 },
                 contentDescription = name,
                 modifier = Modifier.matchParentSize()

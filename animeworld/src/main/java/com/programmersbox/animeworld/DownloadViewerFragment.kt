@@ -285,7 +285,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
                     Button(
                         onClick = {
-                            dismiss()
+                            findNavController().popBackStack()
                             (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
                         },
                         modifier = Modifier

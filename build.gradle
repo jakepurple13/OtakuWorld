@@ -81,6 +81,7 @@ buildscript {
     ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
     ext.permissions = "com.google.accompanist:accompanist-permissions:$accompanist"
     ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
+    ext.coilCompose = "io.coil-kt:coil-compose:1.4.0"
 
     ext.datastore = "androidx.datastore:datastore:1.0.0"
     ext.datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
@@ -113,7 +114,7 @@ buildscript {
                         composeActivity, composeLifecycle,
                         composeRuntimeLivedata, composeRuntimeRxjava2,
                         composeMaterialThemeAdapter, composeMaterial3ThemeAdapter,
-                        landscapistGlide,
+                        landscapistGlide, coilCompose,
                         composeConstraintLayout, permissions,
                         materialPlaceholder, drawablePainter, uiUtil,
                         materialYou

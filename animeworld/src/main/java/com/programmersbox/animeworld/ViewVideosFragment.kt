@@ -53,7 +53,6 @@ import com.programmersbox.helpfulutils.*
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -298,7 +297,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
                     Button(
                         onClick = {
-                            dismiss()
+                            findNavController().popBackStack()
                             (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
                         },
                         modifier = Modifier
