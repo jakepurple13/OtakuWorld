@@ -325,7 +325,7 @@ class AllFragment : BaseFragmentCompose() {
                                             onRefresh = {},
                                             swipeEnabled = false
                                         ) {
-                                            info.ItemListView(
+                                            info.SearchListView(
                                                 list = searchList,
                                                 listState = rememberLazyListState(),
                                                 favorites = allVm.favoriteList,
@@ -348,7 +348,7 @@ class AllFragment : BaseFragmentCompose() {
                                     state = refresh,
                                     onRefresh = { source?.let { allVm.reset(context, it) } }
                                 ) {
-                                    info.ItemListView(
+                                    info.AllListView(
                                         list = allVm.sourceList,
                                         listState = state,
                                         favorites = allVm.favoriteList,

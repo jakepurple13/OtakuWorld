@@ -43,6 +43,24 @@ interface GenericInfo {
         onClick: (ItemModel) -> Unit
     )
 
+    @Composable
+    fun AllListView(
+        list: List<ItemModel>,
+        favorites: List<DbModel>,
+        listState: LazyListState,
+        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onClick: (ItemModel) -> Unit
+    ) = ItemListView(list, favorites, listState, onLongPress, onClick)
+
+    @Composable
+    fun SearchListView(
+        list: List<ItemModel>,
+        favorites: List<DbModel>,
+        listState: LazyListState,
+        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onClick: (ItemModel) -> Unit
+    ) = ItemListView(list, favorites, listState, onLongPress, onClick)
+
     fun debugMenuItem(context: Context): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
 }
