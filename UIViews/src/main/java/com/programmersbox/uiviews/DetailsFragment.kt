@@ -42,7 +42,10 @@ import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
@@ -178,9 +181,7 @@ class DetailsFragment : Fragment() {
                             val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
 
                             LaunchedEffect(statusBarColor) {
-                                statusBarColor?.value?.let { s ->
-                                    systemUiController.setStatusBarColor(color = s, darkIcons = s.luminance() > .5f)
-                                }
+                                statusBarColor?.value?.let { s -> systemUiController.setStatusBarColor(color = s) }
                             }
 
                             val windowSize = requireActivity().rememberWindowSizeClass()
@@ -1509,7 +1510,7 @@ class DetailsFragment : Fragment() {
         super.onDestroy()
         disposable.dispose()
         val window = requireActivity().window
-        ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorPrimaryVariant))
+        ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorSurface))
             .apply { addUpdateListener { window.statusBarColor = it.animatedValue as Int } }
             .start()
     }
