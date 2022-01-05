@@ -434,6 +434,9 @@ class GenericAnime(val context: Context) : GenericInfo {
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
+
+        //TODO: Add in setting to show grid or list for recent and all screens
+
         val animated by updateAnimatedItemsState(newList = list)
         LazyColumn(
             state = listState,

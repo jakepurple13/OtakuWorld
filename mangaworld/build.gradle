@@ -116,5 +116,5 @@ dependencies {
 
     implementation datastore.datastore
 
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
+    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
 }

@@ -57,6 +57,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
@@ -747,8 +748,10 @@ class AccountViewModel : ViewModel() {
 
     var accountInfo by mutableStateOf<FirebaseUser?>(null)
 
+    private val listener: FirebaseAuth.AuthStateListener = FirebaseAuth.AuthStateListener { p0 -> accountInfo = p0.currentUser }
+
     init {
-        FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser }
+        FirebaseAuthentication.auth.addAuthStateListener(listener)
     }
 
     fun signInOrOut(context: Context, activity: ComponentActivity) {
@@ -763,6 +766,11 @@ class AccountViewModel : ViewModel() {
                 .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
                 .show()
         } ?: FirebaseAuthentication.signIn(activity)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        FirebaseAuthentication.auth.removeAuthStateListener(listener)
     }
 }
 
