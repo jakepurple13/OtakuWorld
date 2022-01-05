@@ -90,4 +90,6 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation koin.koin
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
 }

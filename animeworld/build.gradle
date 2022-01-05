@@ -127,4 +127,6 @@ dependencies {
     implementation koin.koin
 
     implementation compose.compose
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
 }

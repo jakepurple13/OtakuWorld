@@ -115,4 +115,6 @@ dependencies {
     implementation "io.coil-kt:coil-compose:1.4.0"
 
     implementation datastore.datastore
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
 }
