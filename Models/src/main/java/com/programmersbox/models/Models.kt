@@ -68,7 +68,7 @@ interface ApiService: Serializable {
     fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>>
 
     fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        it.onSuccess(ItemModel("", "", "", "", this))
+        it.onSuccess(ItemModel("", "", url, "", this))
     }
 
     val serviceName: String get() = this::class.java.name

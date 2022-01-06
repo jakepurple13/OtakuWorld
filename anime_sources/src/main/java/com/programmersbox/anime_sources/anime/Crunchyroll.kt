@@ -44,7 +44,7 @@ class HttpSession {
         }
     }
 
-    val sessionCookies = CookieJar()
+    private val sessionCookies = CookieJar()
 
     fun get(
         url: String,
@@ -235,16 +235,16 @@ object CrunchyRoll : ShowApi(
         val json = crUnblock.geoBypassRequest("http://www.crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates")
             .text
             .split("*/")[0].replace("\\/", "/")
-            .split("\n").mapNotNull { if (!it.startsWith("/")) it else null }.joinToString("\n")
+            .split("\n").mapNotNull { s -> if (!s.startsWith("/")) s else null }.joinToString("\n")
             .fromJson<CrunchyJson>()
             ?.data
             ?.filter { data -> data.name.similarity(searchText.toString()) >= .6 || data.name.contains(searchText, true) }
-            ?.fastMap {
+            ?.fastMap { d ->
                 ItemModel(
-                    title = it.name,
+                    title = d.name,
                     description = "",
-                    imageUrl = it.img.replace("small", "full"),
-                    url = fixUrl(it.link),
+                    imageUrl = d.img.replace("small", "full"),
+                    url = fixUrl(d.link),
                     source = Sources.CRUNCHYROLL
                 )
             }
@@ -253,9 +253,32 @@ object CrunchyRoll : ShowApi(
     }
         .onErrorResumeNext(super.searchList(searchText, page, list))
 
+
+    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
+        try {
+            val doc = Jsoup.parse(crUnblock.geoBypassRequest(fixUrl(url)).text)
+            val p = doc.select(".description")
+
+            val description = if (p.select(".more").text().trim().isNotEmpty()) {
+                p.select(".more").text().trim()
+            } else {
+                p.select("span").text().trim()
+            }
+            ItemModel(
+                source = Sources.CRUNCHYROLL,
+                title = doc.selectFirst("#showview-content-header .ellipsis")?.text()?.trim().orEmpty(),
+                url = url,
+                description = description,
+                imageUrl = doc.selectFirst(".poster")?.attr("src").orEmpty(),
+            )
+                .let(emitter::onSuccess)
+        } catch (e: Exception) {
+            emitter.onError(e)
+        }
+    }
+
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
 
-        val source = model
         val doc = Jsoup.parse(crUnblock.geoBypassRequest(fixUrl(model.url)).text)
 
         val sub = ArrayList<ChapterModel>()
@@ -274,7 +297,7 @@ object CrunchyRoll : ShowApi(
                             "$epNum: $epTitle",
                             fixUrl(ep.attr("href")),
                             ep.select("div.episode-progress-bar").select("div.episode_progress").attr("media_id"),
-                            source.url,
+                            model.url,
                             Sources.CRUNCHYROLL
                         )
                         sub.add(epi)
@@ -285,7 +308,7 @@ object CrunchyRoll : ShowApi(
                             "$epNum: $epTitle (Dub)",
                             fixUrl(ep.attr("href")),
                             ep.select("div.episode-progress-bar").select("div.episode_progress").attr("media_id"),
-                            source.url,
+                            model.url,
                             Sources.CRUNCHYROLL
                         )
                         dub.add(epi)
@@ -294,7 +317,7 @@ object CrunchyRoll : ShowApi(
                             "$epNum: $epTitle",
                             fixUrl(ep.attr("href")),
                             ep.select("div.episode-progress-bar").select("div.episode_progress").attr("media_id"),
-                            source.url,
+                            model.url,
                             Sources.CRUNCHYROLL
                         )
                         sub.add(epi)
@@ -316,11 +339,11 @@ object CrunchyRoll : ShowApi(
 
         InfoModel(
             source = Sources.CRUNCHYROLL,
-            title = source.title,
-            url = source.url,
+            title = model.title,
+            url = model.url,
             alternativeNames = emptyList(),
             description = description,
-            imageUrl = source.imageUrl,
+            imageUrl = model.imageUrl,
             genres = doc.select(".large-margin-bottom > ul:nth-child(2) li:nth-child(2) a").map { it.text() },
             chapters = sub + dub
         )
