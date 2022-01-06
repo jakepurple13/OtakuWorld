@@ -65,14 +65,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -273,15 +271,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
     @ExperimentalFoundationApi
     private fun readView() = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-
-        dialog?.window?.decorView?.let { w ->
-            val windowInsetsController = ViewCompat.getWindowInsetsController(w) ?: return@let
-            // Configure the behavior of the hidden system bars
-            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            // Hide both the status bar and the navigation bar
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
-
+        //TODO: Test with this commented out
         dialog?.apply {
             window?.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
             window?.decorView?.setOnSystemUiVisibilityChangeListener { visibility ->
@@ -1149,7 +1139,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
         M3OutlinedButton(
-            onClick = { dismiss() },
+            onClick = { findNavController().popBackStack() },
             modifier = modifier,
             border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)
         ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }

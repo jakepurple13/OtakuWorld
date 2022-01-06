@@ -632,12 +632,6 @@ class ComposeSettingsDsl {
         playerSettings = block
     }
 
-    internal var navigationSetup: (Fragment, NavController) -> Unit = { _, _ -> }
-
-    fun navigationSetup(block: (Fragment, NavController) -> Unit) {
-        navigationSetup = block
-    }
-
 }
 
 @ExperimentalComposeUiApi
@@ -661,7 +655,6 @@ fun SettingScreen(
     val scope = rememberCoroutineScope()
 
     val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
-    LaunchedEffect(Unit) { customPreferences.navigationSetup(fragment, navController) }
 
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
     val listState = rememberScrollState()

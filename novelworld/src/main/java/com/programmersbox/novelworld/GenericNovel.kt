@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import androidx.navigation.NavController
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.*
@@ -60,7 +61,13 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
 
 class GenericNovel(val context: Context) : GenericInfo {
 
-    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+    override fun chapterOnClick(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        navController: NavController
+    ) {
         context.startActivity(
             Intent(context, ReadingActivity::class.java).apply {
                 putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))

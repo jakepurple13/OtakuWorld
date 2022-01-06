@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.os.Environment
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -32,6 +33,7 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -79,15 +81,26 @@ class GenericManga(val context: Context) : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { manga_file }
     override val scrollBuffer: Int = 4
 
-    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+    override fun chapterOnClick(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        navController: NavController
+    ) {
         if (runBlocking { context.useNewReaderFlow.first() }) {
-            ReadActivityComposeFragment.newInstance {
-                putString("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                putString("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                putString("mangaTitle", infoModel.title)
-                putString("mangaUrl", model.url)
-                putString("mangaInfoUrl", model.sourceUrl)
-            }.showNow(MainActivity.activity.supportFragmentManager, "reader")
+            navController
+                .navigate(
+                    ReadActivityComposeFragment::class.java.hashCode(),
+                    Bundle().apply {
+                        putString("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                        putString("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                        putString("mangaTitle", infoModel.title)
+                        putString("mangaUrl", model.url)
+                        putString("mangaInfoUrl", model.sourceUrl)
+                    },
+                    SettingsDsl.customAnimationOptions
+                )
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
@@ -348,17 +361,60 @@ class GenericManga(val context: Context) : GenericInfo {
             )
         }
 
-        navigationSetup { context, navController ->
-            navController
-                .graph
-                .addDestination(
-                    FragmentNavigator(context.requireContext(), context.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                        id = DownloadViewerFragment::class.java.hashCode()
-                        setClassName(DownloadViewerFragment::class.java.name)
-                    }
-                )
-        }
+    }
 
+    override fun recentNavSetup(fragment: Fragment, navController: NavController) {
+        navController
+            .graph
+            .addDestination(
+                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.recent_nav).createDestination().apply {
+                    id = ReadActivityComposeFragment::class.java.hashCode()
+                    setClassName(ReadActivityComposeFragment::class.java.name)
+                }
+            )
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
+        }
+    }
+
+    override fun allNavSetup(fragment: Fragment, navController: NavController) {
+        navController
+            .graph
+            .addDestination(
+                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.all_nav).createDestination().apply {
+                    id = ReadActivityComposeFragment::class.java.hashCode()
+                    setClassName(ReadActivityComposeFragment::class.java.name)
+                }
+            )
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
+        }
+    }
+
+    override fun settingNavSetup(fragment: Fragment, navController: NavController) {
+        navController
+            .graph
+            .addDestination(
+                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                    id = ReadActivityComposeFragment::class.java.hashCode()
+                    setClassName(ReadActivityComposeFragment::class.java.name)
+                }
+            )
+
+        navController
+            .graph
+            .addDestination(
+                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                    id = DownloadViewerFragment::class.java.hashCode()
+                    setClassName(DownloadViewerFragment::class.java.name)
+                }
+            )
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
+        }
     }
 
 }

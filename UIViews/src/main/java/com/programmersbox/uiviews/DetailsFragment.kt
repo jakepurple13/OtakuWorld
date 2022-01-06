@@ -1173,7 +1173,7 @@ class DetailsFragment : Fragment() {
                     if (infoModel.source.canPlay) {
                         OutlinedButton(
                             onClick = {
-                                genericInfo.chapterOnClick(c, chapters, infoModel, context)
+                                genericInfo.chapterOnClick(c, chapters, infoModel, context, findNavController())
                                 insertRecent()
                                 if (!read.fastAny { it.url == c.url }) markAs(true)
                             },

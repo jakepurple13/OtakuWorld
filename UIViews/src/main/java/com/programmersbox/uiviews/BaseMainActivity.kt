@@ -107,7 +107,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 navGraphIds = navGraphIds,
                 fragmentManager = supportFragmentManager,
                 containerId = R.id.mainShows,
-                intent = intent
+                intent = intent,
+                dynamicDestinations = mapOf(
+                    R.navigation.recent_nav to { f, n -> genericInfo.recentNavSetup(f, n) },
+                    R.navigation.all_nav to { f, n -> genericInfo.allNavSetup(f, n) },
+                    R.navigation.setting_nav to { f, n -> genericInfo.settingNavSetup(f, n) }
+                )
             )
 
         currentNavController = controller
