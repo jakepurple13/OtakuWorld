@@ -96,6 +96,7 @@
     <string name="updating_dots">Updating…</string>
     <string name="finishedDownloading">Finished Downloading</string>
     <string name="errorTryAgain">Error: Try Again</string>
+    <string name="loading">Loading…</string>
 
     <string-array name="theme_items">
         <item>System</item>

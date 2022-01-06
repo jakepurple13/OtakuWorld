@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -37,6 +38,8 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
@@ -267,14 +270,44 @@ class HistoryFragment : Fragment() {
                 }
             }
         ) {
+
+            var showLoadingDialog by remember { mutableStateOf(false) }
+
+            if (showLoadingDialog) {
+                Dialog(
+                    onDismissRequest = { showLoadingDialog = false },
+                    DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .background(M3MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
+                    ) {
+                        Column {
+                            CircularProgressIndicator(
+                                color = M3MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                            Text(text = stringResource(id = R.string.loading), Modifier.align(Alignment.CenterHorizontally))
+                        }
+                    }
+                }
+            }
+
             Surface(
                 onClick = {
                     info.toSource(item.source)
                         ?.getSourceByUrl(item.url)
                         ?.subscribeOn(Schedulers.io())
                         ?.observeOn(AndroidSchedulers.mainThread())
-                        ?.doOnError { context?.showErrorToast() }
+                        ?.doOnError {
+                            showLoadingDialog = false
+                            context?.showErrorToast()
+                        }
+                        ?.doOnSubscribe { showLoadingDialog = true }
                         ?.subscribeBy { m ->
+                            showLoadingDialog = false
                             findNavController().navigate(HistoryFragmentDirections.actionHistoryFragmentToDetailsFragment(m))
                         }
                         ?.addTo(disposable)
