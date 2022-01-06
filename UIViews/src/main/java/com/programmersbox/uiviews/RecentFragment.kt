@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -169,6 +170,10 @@ class RecentFragment : BaseFragmentCompose() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(initial = true)
 
+        LaunchedEffect(isConnected) {
+            if (recentVm.sourceList.isEmpty() && source != null && isConnected) recentVm.reset(context, source!!)
+        }
+
         var showBanner by remember { mutableStateOf(false) }
         M3OtakuBannerBox(
             showBanner = showBanner,
@@ -192,45 +197,51 @@ class RecentFragment : BaseFragmentCompose() {
                     )
                 }
             ) { p ->
-                when {
-                    !isConnected -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(p),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                Icons.Default.CloudOff,
-                                null,
-                                modifier = Modifier.size(50.dp, 50.dp),
-                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                            )
-                            Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                Crossfade(targetState = isConnected) { connected ->
+                    when (connected) {
+                        false -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(p),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    Icons.Default.CloudOff,
+                                    null,
+                                    modifier = Modifier.size(50.dp, 50.dp),
+                                    colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                                )
+                                Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                            }
                         }
-                    }
-                    recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
-                    else -> {
-                        SwipeRefresh(
-                            modifier = Modifier.padding(p),
-                            state = refresh,
-                            onRefresh = { source?.let { recentVm.reset(context, it) } }
-                        ) {
-                            info.ItemListView(
-                                list = recentVm.sourceList,
-                                listState = state,
-                                favorites = recentVm.favoriteList,
-                                onLongPress = { item, c ->
-                                    itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                    showBanner = c == ComponentState.Pressed
-                                }
-                            ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
-                        }
+                        true -> {
+                            when {
+                                recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
+                                else -> {
+                                    SwipeRefresh(
+                                        modifier = Modifier.padding(p),
+                                        state = refresh,
+                                        onRefresh = { source?.let { recentVm.reset(context, it) } }
+                                    ) {
+                                        info.ItemListView(
+                                            list = recentVm.sourceList,
+                                            listState = state,
+                                            favorites = recentVm.favoriteList,
+                                            onLongPress = { item, c ->
+                                                itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                                showBanner = c == ComponentState.Pressed
+                                            }
+                                        ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
+                                    }
 
-                        if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
-                            InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                source?.let { recentVm.loadMore(context, it) }
+                                    if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
+                                        InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                                            source?.let { recentVm.loadMore(context, it) }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

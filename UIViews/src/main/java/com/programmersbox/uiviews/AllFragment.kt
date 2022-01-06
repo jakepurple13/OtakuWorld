@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -200,6 +201,12 @@ class AllFragment : BaseFragmentCompose() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(initial = true)
 
+        val source by sourcePublish.subscribeAsState(initial = null)
+
+        LaunchedEffect(isConnected) {
+            if (allVm.sourceList.isEmpty() && source != null && isConnected) allVm.reset(context, source!!)
+        }
+
         val scaffoldState = rememberBottomSheetScaffoldState()
         val scope = rememberCoroutineScope()
 
@@ -214,7 +221,6 @@ class AllFragment : BaseFragmentCompose() {
         ) { itemInfo ->
             val state = rememberLazyListState()
             val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-            val source by sourcePublish.subscribeAsState(initial = null)
             val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior() }
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
@@ -232,137 +238,139 @@ class AllFragment : BaseFragmentCompose() {
                     )
                 }
             ) { p1 ->
-                when {
-                    !isConnected -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(p1),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                Icons.Default.CloudOff,
-                                null,
-                                modifier = Modifier.size(50.dp, 50.dp),
-                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                            )
-                            Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                Crossfade(targetState = isConnected) { connected ->
+                    when (connected) {
+                        false -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(p1),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    Icons.Default.CloudOff,
+                                    null,
+                                    modifier = Modifier.size(50.dp, 50.dp),
+                                    colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                                )
+                                Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                            }
                         }
-                    }
-                    else -> {
-                        BottomSheetScaffold(
-                            modifier = Modifier.padding(p1),
-                            backgroundColor = M3MaterialTheme.colorScheme.background,
-                            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
-                            scaffoldState = scaffoldState,
-                            sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
-                            sheetContent = {
-                                val focusManager = LocalFocusManager.current
-                                val searchList by allVm.searchPublisher.subscribeAsState(initial = emptyList())
-                                var searchText by rememberSaveable { mutableStateOf("") }
-                                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-                                Scaffold(
-                                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                                    topBar = {
-                                        Column(
-                                            modifier = Modifier
-                                                .background(
-                                                    TopAppBarDefaults.smallTopAppBarColors()
-                                                        .containerColor(scrollBehavior.scrollFraction).value
-                                                )
-                                        ) {
-                                            Button(
-                                                onClick = {
-                                                    scope.launch {
-                                                        if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
-                                                        else scaffoldState.bottomSheetState.collapse()
-                                                    }
-                                                },
+                        true -> {
+                            BottomSheetScaffold(
+                                modifier = Modifier.padding(p1),
+                                backgroundColor = M3MaterialTheme.colorScheme.background,
+                                contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
+                                scaffoldState = scaffoldState,
+                                sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+                                sheetContent = {
+                                    val focusManager = LocalFocusManager.current
+                                    val searchList by allVm.searchPublisher.subscribeAsState(initial = emptyList())
+                                    var searchText by rememberSaveable { mutableStateOf("") }
+                                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                                    Scaffold(
+                                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                                        topBar = {
+                                            Column(
                                                 modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                                                shape = RoundedCornerShape(0f)
-                                            ) { Text(stringResource(R.string.search)) }
-
-                                            MdcTheme {
-                                                OutlinedTextField(
-                                                    value = searchText,
-                                                    onValueChange = { searchText = it },
-                                                    label = {
-                                                        androidx.compose.material.Text(
-                                                            stringResource(
-                                                                R.string.searchFor,
-                                                                source?.serviceName.orEmpty()
-                                                            )
-                                                        )
-                                                    },
-                                                    trailingIcon = {
-                                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                                            androidx.compose.material.Text(searchList.size.toString())
-                                                            IconButton(onClick = { searchText = "" }) {
-                                                                androidx.compose.material.Icon(Icons.Default.Cancel, null)
-                                                            }
+                                                    .background(
+                                                        TopAppBarDefaults.smallTopAppBarColors()
+                                                            .containerColor(scrollBehavior.scrollFraction).value
+                                                    )
+                                            ) {
+                                                Button(
+                                                    onClick = {
+                                                        scope.launch {
+                                                            if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
+                                                            else scaffoldState.bottomSheetState.collapse()
                                                         }
                                                     },
                                                     modifier = Modifier
-                                                        .padding(5.dp)
-                                                        .fillMaxWidth(),
-                                                    singleLine = true,
-                                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                    keyboardActions = KeyboardActions(onSearch = {
-                                                        focusManager.clearFocus()
-                                                        allVm.search(searchText)
-                                                    })
-                                                )
+                                                        .fillMaxWidth()
+                                                        .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                                                    shape = RoundedCornerShape(0f)
+                                                ) { Text(stringResource(R.string.search)) }
+
+                                                MdcTheme {
+                                                    OutlinedTextField(
+                                                        value = searchText,
+                                                        onValueChange = { searchText = it },
+                                                        label = {
+                                                            androidx.compose.material.Text(
+                                                                stringResource(
+                                                                    R.string.searchFor,
+                                                                    source?.serviceName.orEmpty()
+                                                                )
+                                                            )
+                                                        },
+                                                        trailingIcon = {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                androidx.compose.material.Text(searchList.size.toString())
+                                                                IconButton(onClick = { searchText = "" }) {
+                                                                    androidx.compose.material.Icon(Icons.Default.Cancel, null)
+                                                                }
+                                                            }
+                                                        },
+                                                        modifier = Modifier
+                                                            .padding(5.dp)
+                                                            .fillMaxWidth(),
+                                                        singleLine = true,
+                                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                        keyboardActions = KeyboardActions(onSearch = {
+                                                            focusManager.clearFocus()
+                                                            allVm.search(searchText)
+                                                        })
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    ) { p ->
+                                        Box(modifier = Modifier.padding(p)) {
+                                            SwipeRefresh(
+                                                state = rememberSwipeRefreshState(isRefreshing = allVm.isSearching),
+                                                onRefresh = {},
+                                                swipeEnabled = false
+                                            ) {
+                                                info.SearchListView(
+                                                    list = searchList,
+                                                    listState = rememberLazyListState(),
+                                                    favorites = allVm.favoriteList,
+                                                    onLongPress = { item, c ->
+                                                        itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                                        showBanner = c == ComponentState.Pressed
+                                                    }
+                                                ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                                             }
                                         }
                                     }
-                                ) { p ->
-                                    Box(modifier = Modifier.padding(p)) {
-                                        SwipeRefresh(
-                                            state = rememberSwipeRefreshState(isRefreshing = allVm.isSearching),
-                                            onRefresh = {},
-                                            swipeEnabled = false
-                                        ) {
-                                            info.SearchListView(
-                                                list = searchList,
-                                                listState = rememberLazyListState(),
-                                                favorites = allVm.favoriteList,
-                                                onLongPress = { item, c ->
-                                                    itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                                    showBanner = c == ComponentState.Pressed
-                                                }
-                                            ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
-                                        }
+                                }
+                            ) { p ->
+                                if (allVm.sourceList.isEmpty()) {
+                                    info.ComposeShimmerItem()
+                                } else {
+                                    val refresh = rememberSwipeRefreshState(isRefreshing = allVm.isRefreshing)
+                                    SwipeRefresh(
+                                        modifier = Modifier.padding(p),
+                                        state = refresh,
+                                        onRefresh = { source?.let { allVm.reset(context, it) } }
+                                    ) {
+                                        info.AllListView(
+                                            list = allVm.sourceList,
+                                            listState = state,
+                                            favorites = allVm.favoriteList,
+                                            onLongPress = { item, c ->
+                                                itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                                showBanner = c == ComponentState.Pressed
+                                            }
+                                        ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
                                     }
                                 }
-                            }
-                        ) { p ->
-                            if (allVm.sourceList.isEmpty()) {
-                                info.ComposeShimmerItem()
-                            } else {
-                                val refresh = rememberSwipeRefreshState(isRefreshing = allVm.isRefreshing)
-                                SwipeRefresh(
-                                    modifier = Modifier.padding(p),
-                                    state = refresh,
-                                    onRefresh = { source?.let { allVm.reset(context, it) } }
-                                ) {
-                                    info.AllListView(
-                                        list = allVm.sourceList,
-                                        listState = state,
-                                        favorites = allVm.favoriteList,
-                                        onLongPress = { item, c ->
-                                            itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                            showBanner = c == ComponentState.Pressed
-                                        }
-                                    ) { findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it)) }
-                                }
-                            }
 
-                            if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
-                                InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                    source?.let { allVm.loadMore(context, it) }
+                                if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
+                                    InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                                        source?.let { allVm.loadMore(context, it) }
+                                    }
                                 }
                             }
                         }

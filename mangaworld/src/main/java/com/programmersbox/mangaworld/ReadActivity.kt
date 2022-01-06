@@ -8,7 +8,9 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -271,16 +273,6 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
     @ExperimentalFoundationApi
     private fun readView() = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        //TODO: Test with this commented out
-        dialog?.apply {
-            window?.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
-            window?.decorView?.setOnSystemUiVisibilityChangeListener { visibility ->
-                if (visibility != 0) return@setOnSystemUiVisibilityChangeListener
-
-                window?.decorView?.systemUiVisibility =
-                    (View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-            }
-        }
 
         setContent {
 
