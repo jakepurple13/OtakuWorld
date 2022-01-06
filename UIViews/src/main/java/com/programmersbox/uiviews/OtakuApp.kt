@@ -9,6 +9,7 @@ import androidx.annotation.RequiresApi
 import androidx.work.*
 import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
+import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
@@ -16,7 +17,11 @@ import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import io.reactivex.plugins.RxJavaPlugins
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -79,6 +84,13 @@ abstract class OtakuApp : Application() {
         updateSetup(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
+
+        GlobalScope.launch {
+            ItemDatabase.getInstance(this@OtakuApp).itemDao()
+                .getAllNotificationsFlow()
+                .onEach { notiPublish = it }
+                .collect()
+        }
 
     }
 

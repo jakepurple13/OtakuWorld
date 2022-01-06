@@ -136,6 +136,8 @@ dependencies {
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
     implementation "me.onebone:toolbar-compose:2.3.0"
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:1.0.3'
+    implementation "androidx.glance:glance:1.0.0-alpha01"
+    implementation "androidx.glance:glance-appwidget:1.0.0-alpha01"
 
     implementation datastore.datastore
 }
