@@ -214,30 +214,30 @@ class AllFragment : BaseFragmentCompose() {
             scope.launch { scaffoldState.bottomSheetState.collapse() }
         }
 
-        var showBanner by remember { mutableStateOf(false) }
-        M3OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = logo.logoId
-        ) { itemInfo ->
-            val state = rememberLazyListState()
-            val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-            val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
-                topBar = {
-                    SmallTopAppBar(
-                        title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                        actions = {
-                            AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
-                                androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
-                                    Icon(Icons.Default.ArrowUpward, null)
-                                }
+        val state = rememberLazyListState()
+        val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+        val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
+            topBar = {
+                SmallTopAppBar(
+                    title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                    actions = {
+                        AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
+                            androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                                Icon(Icons.Default.ArrowUpward, null)
                             }
-                        },
-                        scrollBehavior = scrollBehaviorTop
-                    )
-                }
-            ) { p1 ->
+                        }
+                    },
+                    scrollBehavior = scrollBehaviorTop
+                )
+            }
+        ) { p1 ->
+            var showBanner by remember { mutableStateOf(false) }
+            M3OtakuBannerBox(
+                showBanner = showBanner,
+                placeholder = logo.logoId
+            ) { itemInfo ->
                 Crossfade(targetState = isConnected) { connected ->
                     when (connected) {
                         false -> {

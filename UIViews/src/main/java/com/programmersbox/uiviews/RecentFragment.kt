@@ -174,29 +174,29 @@ class RecentFragment : BaseFragmentCompose() {
             if (recentVm.sourceList.isEmpty() && source != null && isConnected) recentVm.reset(context, source!!)
         }
 
-        var showBanner by remember { mutableStateOf(false) }
-        M3OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = logo.logoId
-        ) { itemInfo ->
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-            val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                topBar = {
-                    SmallTopAppBar(
-                        title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                        actions = {
-                            AnimatedVisibility(visible = showButton) {
-                                IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
-                                    Icon(Icons.Default.ArrowUpward, null)
-                                }
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                SmallTopAppBar(
+                    title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                    actions = {
+                        AnimatedVisibility(visible = showButton) {
+                            IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                                Icon(Icons.Default.ArrowUpward, null)
                             }
-                        },
-                        scrollBehavior = scrollBehavior
-                    )
-                }
-            ) { p ->
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+            }
+        ) { p ->
+            var showBanner by remember { mutableStateOf(false) }
+            M3OtakuBannerBox(
+                showBanner = showBanner,
+                placeholder = logo.logoId
+            ) { itemInfo ->
                 Crossfade(targetState = isConnected) { connected ->
                     when (connected) {
                         false -> {
