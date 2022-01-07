@@ -30,13 +30,15 @@ object MangaPark : ApiService, KoinComponent {
 
     private val helper: NetworkHelper by inject()
 
+    private fun String.v3Url() = if (startsWith("https://v35.")) this else replace("https://", "https://v35.")
+
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
         if (searchText.isBlank()) {
             super.searchList(searchText, page, list)
         } else {
             Single.create { emitter ->
                 emitter.onSuccess(
-                    cloudflare(helper, "$baseUrl/search?word=$searchText&page=$page").execute().asJsoup()
+                    cloudflare(helper, "${baseUrl.v3Url()}/search?word=$searchText&page=$page").execute().asJsoup()
                         .browseToItemModel("div#search-list div.col")
                 )
             }
@@ -47,13 +49,13 @@ object MangaPark : ApiService, KoinComponent {
     }
 
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare(helper, "$baseUrl/browse?sort=d007&page=$page").execute().asJsoup()
+        cloudflare(helper, "${baseUrl.v3Url()}/browse?sort=d007&page=$page").execute().asJsoup()
             .browseToItemModel()
             .let { emitter.onSuccess(it) }
     }
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare(helper, "$baseUrl/browse?sort=update&page=$page").execute().asJsoup()
+        cloudflare(helper, "${baseUrl.v3Url()}/browse?sort=update&page=$page").execute().asJsoup()
             .browseToItemModel()
             .let { emitter.onSuccess(it) }
     }
@@ -70,7 +72,7 @@ object MangaPark : ApiService, KoinComponent {
         }
 
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = cloudflare(helper, model.url).execute().asJsoup()
+        val doc = cloudflare(helper, model.url.v3Url()).execute().asJsoup()
         try {
             val infoElement = doc.select("div#mainer div.container-fluid")
             emitter.onSuccess(
@@ -79,7 +81,7 @@ object MangaPark : ApiService, KoinComponent {
                     description = model.description,
                     url = model.url,
                     imageUrl = model.imageUrl,
-                    chapters = chapterListParse(helper.cloudflareClient.newCall(chapterListRequest(model)).execute(), model.url),
+                    chapters = chapterListParse(helper.cloudflareClient.newCall(chapterListRequest(model)).execute(), model.url.v3Url()),
                     genres = infoElement.select("div.attr-item:contains(genres) span span").fastMap { it.text().trim() },
                     alternativeNames = emptyList(),
                     source = this
@@ -112,7 +114,7 @@ object MangaPark : ApiService, KoinComponent {
 
     private fun chapterListRequest(manga: ItemModel): Request {
 
-        val url = manga.url.replace(baseUrl, "")
+        val url = manga.url.v3Url().replace(baseUrl.v3Url(), "")
         val sid = url.split("/")[2]
 
         val jsonPayload = buildJsonObject {
@@ -122,7 +124,7 @@ object MangaPark : ApiService, KoinComponent {
 
         val requestBody = jsonPayload.toString().toRequestBody("application/json;charset=UTF-8".toMediaType())
 
-        val refererUrl = "$baseUrl/$url".toHttpUrlOrNull()!!.newBuilder()
+        val refererUrl = "${baseUrl.v3Url()}/$url".toHttpUrlOrNull()!!.newBuilder()
             .toString()
         val newHeaders = MangaUtils.headersBuilder()
             .add("Content-Length", requestBody.contentLength().toString())
@@ -131,7 +133,7 @@ object MangaPark : ApiService, KoinComponent {
             .build()
 
         return POST(
-            "$baseUrl/ajax.reader.subject.episodes.by.serial",
+            "${baseUrl.v3Url()}/ajax.reader.subject.episodes.by.serial",
             headers = newHeaders,
             body = requestBody
         )
@@ -183,7 +185,7 @@ object MangaPark : ApiService, KoinComponent {
         return (chapters + chapters.getMissingChapters(mangaBySource.flatten())).sortedByDescending { it.chapterNumber }.fastMap {
             ChapterModel(
                 name = it.name,
-                url = "${baseUrl}${it.url}",
+                url = "${baseUrl.v3Url()}${it.url}",
                 uploaded = it.originalDate,
                 sourceUrl = mangaUrl,
                 source = this
@@ -201,7 +203,7 @@ object MangaPark : ApiService, KoinComponent {
                 dateUploaded = parseDate(time)
             }
             originalDate = time
-            url = baseUrl + urlElement.attr("href")
+            url = baseUrl.v3Url() + urlElement.attr("href")
         }
     }
 
