@@ -374,13 +374,6 @@ object CrunchyRoll : ShowApi(
     )
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create<List<Storage>> { emitter ->
-
-        //TODO: Look into using CloudStream's video player
-        // https://github.com/LagradOst/CloudStream-3/blob/master/app/src/main/java/com/lagradost/cloudstream3/ui/player/PlayerFragment.kt
-        // It looks to handle things and casting better
-
-        //TODO: ALSO! Look into adding a bar above the nav bar for AnimeWorld only! This will ONLY show when casting
-
         val contentRegex = Regex("""vilos\.config\.media = (\{.+\})""")
         val response = crUnblock.geoBypassRequest(chapterModel.url)
 
@@ -431,7 +424,7 @@ object CrunchyRoll : ShowApi(
             }
         } else emptyList()
 
-        emitter.onSuccess(f)
+        emitter.onSuccess(f.distinctBy { it.link })
     }
         .timeout(15, TimeUnit.SECONDS)
         .onErrorReturnItem(emptyList())

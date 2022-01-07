@@ -196,7 +196,7 @@ class MainFragment : BrowseSupportFragment() {
         /*val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)*/
         gridRowAdapter.add(resources.getString(R.string.favorites))
-        //gridRowAdapter.add(resources.getString(R.string.history)) //TODO: Don't forget to put this in
+        //gridRowAdapter.add(resources.getString(R.string.history))
         //gridRowAdapter.add(resources.getString(R.string.grid_view))
         //gridRowAdapter.add(getString(R.string.error_fragment))
         gridRowAdapter.add(resources.getString(R.string.personal_settings))

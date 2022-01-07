@@ -2,7 +2,8 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
     id 'kotlin-kapt'
-    //id 'com.google.devtools.ksp' version "1.5.31-1.0.0" //TODO: When room 2.4.0 goes stable, try this out again
+    //TODO: In order to use ksp, EVERYTHING needs to use it. So the removal of kapt would be needed
+    //id 'com.google.devtools.ksp' version "1.6.0-1.0.1"
 }
 
 android {
@@ -55,6 +56,7 @@ dependencies {
     //implementation "androidx.room:room-runtime:$room_version"
     // For Kotlin use kapt instead of annotationProcessor
     kapt "androidx.room:room-compiler:$room_version"
+    //ksp "androidx.room:room-compiler:$room_version"
     // optional - Kotlin Extensions and Coroutines support for Room
     //implementation "androidx.room:room-ktx:$room_version"
     //implementation "androidx.room:room-rxjava2:$room_version"
