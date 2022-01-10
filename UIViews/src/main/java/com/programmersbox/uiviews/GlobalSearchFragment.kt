@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -182,104 +183,111 @@ class GlobalSearchFragment : Fragment() {
                         .searchHistory("%${viewModel.searchText}%")
                         .collectAsState(emptyList())
 
-                    var showBanner by remember { mutableStateOf(false) }
-
-                    M3OtakuBannerBox(
-                        showBanner = showBanner,
-                        placeholder = this@GlobalSearchFragment.mainLogo.logoId
-                    ) { itemInfo ->
-                        CollapsingToolbarScaffold(
-                            modifier = Modifier,
-                            state = rememberCollapsingToolbarScaffoldState(),
-                            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-                            toolbar = {
-                                Column(modifier = Modifier.padding(5.dp)) {
-                                    SmallTopAppBar(
-                                        navigationIcon = {
-                                            IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                                        },
-                                        title = { Text(stringResource(R.string.global_search)) }
+                    CollapsingToolbarScaffold(
+                        modifier = Modifier,
+                        state = rememberCollapsingToolbarScaffoldState(),
+                        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                        toolbar = {
+                            Column(
+                                modifier = Modifier
+                                    .background(
+                                        TopAppBarDefaults
+                                            .smallTopAppBarColors()
+                                            .containerColor(0f).value
                                     )
-                                    MdcTheme {
-                                        AutoCompleteBox(
-                                            items = history.asAutoCompleteEntities { _, _ -> true },
-                                            itemContent = {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    androidx.compose.material.Text(
-                                                        text = it.value.searchText,
-                                                        style = MaterialTheme.typography.subtitle2,
-                                                        modifier = Modifier
-                                                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                                                            .weight(.9f)
-                                                    )
+                                    .padding(5.dp)
+                            ) {
+                                SmallTopAppBar(
+                                    navigationIcon = {
+                                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                                    },
+                                    title = { Text(stringResource(R.string.global_search)) }
+                                )
+                                MdcTheme {
+                                    AutoCompleteBox(
+                                        items = history.asAutoCompleteEntities { _, _ -> true },
+                                        itemContent = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                androidx.compose.material.Text(
+                                                    text = it.value.searchText,
+                                                    style = MaterialTheme.typography.subtitle2,
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                                        .weight(.9f)
+                                                )
+                                                androidx.compose.material.IconButton(
+                                                    onClick = { scope.launch { dao.deleteHistory(it.value) } },
+                                                    modifier = Modifier.weight(.1f)
+                                                ) { androidx.compose.material.Icon(Icons.Default.Cancel, null) }
+                                            }
+                                        },
+                                        content = {
+
+                                            boxWidthPercentage = 1f
+                                            boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
+
+                                            onItemSelected {
+                                                viewModel.searchText = it.value.searchText
+                                                filter(viewModel.searchText)
+                                                focusManager.clearFocus()
+                                                viewModel.searchForItems(
+                                                    disposable = disposable,
+                                                    onSubscribe = { isRefreshing = true },
+                                                    subscribe = { isRefreshing = false }
+                                                )
+                                            }
+
+                                            OutlinedTextField(
+                                                value = viewModel.searchText,
+                                                onValueChange = {
+                                                    viewModel.searchText = it
+                                                    filter(it)
+                                                },
+                                                label = { androidx.compose.material.Text(stringResource(id = R.string.search)) },
+                                                trailingIcon = {
                                                     androidx.compose.material.IconButton(
-                                                        onClick = { scope.launch { dao.deleteHistory(it.value) } },
-                                                        modifier = Modifier.weight(.1f)
+                                                        onClick = {
+                                                            viewModel.searchText = ""
+                                                            filter("")
+                                                            viewModel.searchListPublisher.clear()
+                                                        }
                                                     ) { androidx.compose.material.Icon(Icons.Default.Cancel, null) }
-                                                }
-                                            },
-                                            content = {
-
-                                                boxWidthPercentage = 1f
-                                                boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
-
-                                                onItemSelected {
-                                                    viewModel.searchText = it.value.searchText
-                                                    filter(viewModel.searchText)
+                                                },
+                                                modifier = Modifier
+                                                    .padding(5.dp)
+                                                    .fillMaxWidth()
+                                                    .onFocusChanged { isSearching = it.isFocused },
+                                                singleLine = true,
+                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                keyboardActions = KeyboardActions(onSearch = {
                                                     focusManager.clearFocus()
+                                                    if (viewModel.searchText.isNotEmpty()) {
+                                                        lifecycleScope.launch(Dispatchers.IO) {
+                                                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                                        }
+                                                    }
                                                     viewModel.searchForItems(
                                                         disposable = disposable,
                                                         onSubscribe = { isRefreshing = true },
                                                         subscribe = { isRefreshing = false }
                                                     )
-                                                }
-
-                                                OutlinedTextField(
-                                                    value = viewModel.searchText,
-                                                    onValueChange = {
-                                                        viewModel.searchText = it
-                                                        filter(it)
-                                                    },
-                                                    label = { androidx.compose.material.Text(stringResource(id = R.string.search)) },
-                                                    trailingIcon = {
-                                                        androidx.compose.material.IconButton(
-                                                            onClick = {
-                                                                viewModel.searchText = ""
-                                                                filter("")
-                                                                viewModel.searchListPublisher.clear()
-                                                            }
-                                                        ) { androidx.compose.material.Icon(Icons.Default.Cancel, null) }
-                                                    },
-                                                    modifier = Modifier
-                                                        .padding(5.dp)
-                                                        .fillMaxWidth()
-                                                        .onFocusChanged { isSearching = it.isFocused },
-                                                    singleLine = true,
-                                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                    keyboardActions = KeyboardActions(onSearch = {
-                                                        focusManager.clearFocus()
-                                                        if (viewModel.searchText.isNotEmpty()) {
-                                                            lifecycleScope.launch(Dispatchers.IO) {
-                                                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
-                                                            }
-                                                        }
-                                                        viewModel.searchForItems(
-                                                            disposable = disposable,
-                                                            onSubscribe = { isRefreshing = true },
-                                                            subscribe = { isRefreshing = false }
-                                                        )
-                                                    })
-                                                )
-                                            }
-                                        )
-                                    }
+                                                })
+                                            )
+                                        }
+                                    )
                                 }
                             }
-                        ) {
+                        }
+                    ) {
+                        var showBanner by remember { mutableStateOf(false) }
 
+                        M3OtakuBannerBox(
+                            showBanner = showBanner,
+                            placeholder = this@GlobalSearchFragment.mainLogo.logoId
+                        ) { itemInfo ->
                             val bottomScaffold = rememberBottomSheetScaffoldState()
                             var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
@@ -332,91 +340,122 @@ class GlobalSearchFragment : Fragment() {
                                 } ?: {},
                                 sheetPeekHeight = 0.dp,
                             ) {
-                                if (networkState) {
-                                    SwipeRefresh(
-                                        state = swipeRefreshState,
-                                        onRefresh = {},
-                                        swipeEnabled = false,
-                                        modifier = Modifier.padding(it)
-                                    ) {
-                                        LazyColumn(
-                                            state = listState,
-                                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                                        ) {
-                                            if (swipeRefreshState.isRefreshing) {
-                                                items(3) {
-                                                    val placeholderColor = contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
-                                                        .copy(0.1f)
-                                                        .compositeOver(M3MaterialTheme.colorScheme.surface)
-                                                    Surface(
-                                                        modifier = Modifier.placeholder(true, color = placeholderColor),
-                                                        tonalElevation = 5.dp,
-                                                        shape = MaterialTheme.shapes.medium
-                                                    ) {
-                                                        Column {
-                                                            Box(modifier = Modifier.fillMaxWidth()) {
-                                                                Text(
-                                                                    "Otaku",
-                                                                    modifier = Modifier
-                                                                        .align(Alignment.CenterStart)
-                                                                        .padding(start = 5.dp)
-                                                                )
-                                                                IconButton(
-                                                                    onClick = {},
-                                                                    modifier = Modifier.align(Alignment.CenterEnd)
-                                                                ) { Icon(Icons.Default.ChevronRight, null) }
-                                                            }
-                                                            LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
-                                                        }
-                                                    }
-                                                }
-                                            } else if (viewModel.searchListPublisher.isNotEmpty()) {
-                                                items(viewModel.searchListPublisher) { i ->
-                                                    Surface(
-                                                        onClick = {
-                                                            searchModelBottom = i
-                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                        },
-                                                        tonalElevation = 5.dp,
-                                                        shape = MaterialTheme.shapes.medium
-                                                    ) {
-                                                        Column {
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .clickable {
-                                                                        searchModelBottom = i
-                                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                Crossfade(targetState = networkState) { network ->
+                                    when (network) {
+                                        false -> {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .padding(it),
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Center
+                                            ) {
+                                                Image(
+                                                    Icons.Default.CloudOff,
+                                                    null,
+                                                    modifier = Modifier.size(50.dp, 50.dp),
+                                                    colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                                                )
+                                                Text(
+                                                    stringResource(R.string.you_re_offline),
+                                                    style = M3MaterialTheme.typography.titleLarge,
+                                                    color = M3MaterialTheme.colorScheme.onBackground
+                                                )
+                                            }
+                                        }
+                                        true -> {
+                                            SwipeRefresh(
+                                                state = swipeRefreshState,
+                                                onRefresh = {},
+                                                swipeEnabled = false,
+                                                modifier = Modifier.padding(it)
+                                            ) {
+                                                LazyColumn(
+                                                    state = listState,
+                                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                                ) {
+                                                    if (swipeRefreshState.isRefreshing) {
+                                                        items(3) {
+                                                            val placeholderColor =
+                                                                contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
+                                                                    .copy(0.1f)
+                                                                    .compositeOver(M3MaterialTheme.colorScheme.surface)
+                                                            Surface(
+                                                                modifier = Modifier.placeholder(true, color = placeholderColor),
+                                                                tonalElevation = 5.dp,
+                                                                shape = MaterialTheme.shapes.medium
+                                                            ) {
+                                                                Column {
+                                                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                                                        Text(
+                                                                            "Otaku",
+                                                                            modifier = Modifier
+                                                                                .align(Alignment.CenterStart)
+                                                                                .padding(start = 5.dp)
+                                                                        )
+                                                                        IconButton(
+                                                                            onClick = {},
+                                                                            modifier = Modifier.align(Alignment.CenterEnd)
+                                                                        ) { Icon(Icons.Default.ChevronRight, null) }
                                                                     }
-                                                            ) {
-                                                                Text(
-                                                                    i.apiName,
-                                                                    modifier = Modifier
-                                                                        .align(Alignment.CenterStart)
-                                                                        .padding(start = 5.dp)
-                                                                )
-                                                                IconButton(
-                                                                    onClick = {
-                                                                        searchModelBottom = i
-                                                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                                    },
-                                                                    modifier = Modifier.align(Alignment.CenterEnd)
-                                                                ) { Icon(Icons.Default.ChevronRight, null) }
+                                                                    LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = logo.notificationId) } }
+                                                                }
                                                             }
-                                                            LazyRow(
-                                                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                                        }
+                                                    } else if (viewModel.searchListPublisher.isNotEmpty()) {
+                                                        items(viewModel.searchListPublisher) { i ->
+                                                            Surface(
+                                                                onClick = {
+                                                                    searchModelBottom = i
+                                                                    scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                                },
+                                                                tonalElevation = 5.dp,
+                                                                shape = MaterialTheme.shapes.medium
                                                             ) {
-                                                                items(i.data) { m ->
-                                                                    SearchCoverCard(
-                                                                        modifier = Modifier.padding(bottom = 4.dp),
-                                                                        model = m,
-                                                                        placeHolder = mainLogo,
-                                                                        onLongPress = { c ->
-                                                                            itemInfo.value = if (c == ComponentState.Pressed) m else null
-                                                                            showBanner = c == ComponentState.Pressed
+                                                                Column {
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .fillMaxWidth()
+                                                                            .clickable {
+                                                                                searchModelBottom = i
+                                                                                scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                                            }
+                                                                    ) {
+                                                                        Text(
+                                                                            i.apiName,
+                                                                            modifier = Modifier
+                                                                                .align(Alignment.CenterStart)
+                                                                                .padding(start = 5.dp)
+                                                                        )
+                                                                        IconButton(
+                                                                            onClick = {
+                                                                                searchModelBottom = i
+                                                                                scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                                            },
+                                                                            modifier = Modifier.align(Alignment.CenterEnd)
+                                                                        ) {
+                                                                            Row {
+                                                                                Text(i.data.size.toString())
+                                                                                Icon(Icons.Default.ChevronRight, null)
+                                                                            }
                                                                         }
-                                                                    ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                                    }
+                                                                    LazyRow(
+                                                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                                                    ) {
+                                                                        items(i.data) { m ->
+                                                                            SearchCoverCard(
+                                                                                modifier = Modifier.padding(bottom = 4.dp),
+                                                                                model = m,
+                                                                                placeHolder = mainLogo,
+                                                                                onLongPress = { c ->
+                                                                                    itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                                                    showBanner = c == ComponentState.Pressed
+                                                                                }
+                                                                            ) { findNavController().navigate(GlobalNavDirections.showDetails(m)) }
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -424,22 +463,6 @@ class GlobalSearchFragment : Fragment() {
                                                 }
                                             }
                                         }
-                                    }
-                                } else {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(it),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        Image(
-                                            Icons.Default.CloudOff,
-                                            null,
-                                            modifier = Modifier.size(50.dp, 50.dp),
-                                            colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                                        )
-                                        Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                                     }
                                 }
                             }

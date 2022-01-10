@@ -9,20 +9,25 @@ import io.reactivex.schedulers.Schedulers
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-enum class Sources(private val api: ApiService) : ApiService by api {
+enum class Sources(private val api: ApiService, val notWorking: Boolean = false) : ApiService by api {
     //GOGOANIME(GogoAnimeApi),
 
     GOGOANIME_VC(GogoAnimeVC),
     KAWAIIFU(Kawaiifu),
-    HDM(Hdm),
+    HDM(Hdm, true),
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
     VIDSTREAMING(Vidstreaming), VIDEMBED(VidEmbed),
+    DOPEBOX(Dopebox),
+    SFLIX(SflixS),
 
     CRUNCHYROLL(CrunchyRoll),
     ANIMEFLICK(AnimeFlick),
 
-    PUTLOCKERTV(PutlockerTV), PUTLOCKERANIME(PutlockerAnime), PUTLOCKERCARTOONS(PutlockerCartoons), PUTLOCKERMOVIES(PutlockerMovies),
+    PUTLOCKERTV(PutlockerTV, true),
+    PUTLOCKERANIME(PutlockerAnime, true),
+    PUTLOCKERCARTOONS(PutlockerCartoons, true),
+    PUTLOCKERMOVIES(PutlockerMovies, true),
 
     ANIMEKISA_SUBBED(AnimeKisaSubbed), ANIMEKISA_DUBBED(AnimeKisaDubbed), ANIMEKISA_MOVIES(AnimeKisaMovies),
 
@@ -38,14 +43,16 @@ enum class Sources(private val api: ApiService) : ApiService by api {
             get() = listOf(
                 VIDSTREAMING,
                 VIDEMBED,
-                PUTLOCKERTV,
+                //PUTLOCKERTV,
                 //WCO_SUBBED,
+                DOPEBOX,
+                SFLIX,
                 WCOSTREAM,
                 GOGOANIME_VC,
                 KAWAIIFU,
                 ANIMEFLICK,
                 ANIMEKISA_SUBBED,
-                HDM,
+                //HDM,
                 WCOSTREAMCC,
                 CRUNCHYROLL
             )

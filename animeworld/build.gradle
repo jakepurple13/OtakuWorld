@@ -59,8 +59,8 @@ dependencies {
     implementation recyclerview
     implementation swiperefresh
     testImplementation Deps.junit
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation Deps.androidJunit
+    androidTestImplementation Deps.androidEspresso
 
     implementation "com.airbnb.android:lottie:$lottieVersion"
     implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
@@ -102,7 +102,7 @@ dependencies {
     implementation "io.github.kaustubhpatange:autobindings:$autoBinding"
     kapt "io.github.kaustubhpatange:autobindings-compiler:$autoBinding"
 
-    implementation "com.google.android.gms:play-services-cast-framework:21.0.0"
+    implementation "com.google.android.gms:play-services-cast-framework:21.0.1"
 
     implementation "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 
@@ -127,4 +127,6 @@ dependencies {
     implementation koin.koin
 
     implementation compose.compose
+
+    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
 }

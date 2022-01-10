@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -325,10 +326,15 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                             indication = rememberRipple(),
                             onClick = {
                                 if (runBlocking { context.useNewReaderFlow.first() }) {
-                                    ReadActivityComposeFragment.newInstance {
-                                        putBoolean("downloaded", true)
-                                        putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                    }.showNow(MainActivity.activity.supportFragmentManager, "reader")
+                                    findNavController()
+                                        .navigate(
+                                            ReadActivityComposeFragment::class.java.hashCode(),
+                                            Bundle().apply {
+                                                putBoolean("downloaded", true)
+                                                putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                            },
+                                            SettingsDsl.customAnimationOptions
+                                        )
                                 } else {
                                     context.startActivity(
                                         Intent(context, ReadActivity::class.java).apply {

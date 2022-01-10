@@ -20,7 +20,8 @@ fun BottomNavigationView.setupWithNavController(
     navGraphIds: List<Int>,
     fragmentManager: FragmentManager,
     containerId: Int,
-    intent: Intent
+    intent: Intent,
+    dynamicDestinations: Map<Int, (Fragment, NavController) -> Unit> = emptyMap()
 ): LiveData<NavController> {
 
     // Map of tags
@@ -46,6 +47,8 @@ fun BottomNavigationView.setupWithNavController(
 
         // Save to the map
         graphIdToTagMap[graphId] = fragmentTag
+
+        dynamicDestinations[navGraphId]?.invoke(navHostFragment, navHostFragment.navController)
 
         // Show or hide nav host fragment depending on whether it's the selected item.
         if (this.selectedItemId == graphId) {

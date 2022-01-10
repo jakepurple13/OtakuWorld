@@ -147,134 +147,135 @@ class FavoriteFragment : Fragment() {
 
         val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
 
-        var showBanner by remember { mutableStateOf(false) }
-
         val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-        M3OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = logo.logoId
-        ) { itemInfo ->
-            CollapsingToolbarScaffold(
-                modifier = Modifier,
-                state = rememberCollapsingToolbarScaffoldState(),
-                scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-                toolbar = {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.scrollFraction).value)
-                    ) {
-                        SmallTopAppBar(
-                            scrollBehavior = scrollBehavior,
-                            navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
-                            title = { Text(stringResource(R.string.viewFavoritesMenu)) },
-                            actions = {
 
-                                val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                                    animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
-                                }
+        CollapsingToolbarScaffold(
+            modifier = Modifier,
+            state = rememberCollapsingToolbarScaffoldState(),
+            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+            toolbar = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.scrollFraction).value)
+                ) {
+                    SmallTopAppBar(
+                        scrollBehavior = scrollBehavior,
+                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                        title = { Text(stringResource(R.string.viewFavoritesMenu)) },
+                        actions = {
 
-                                GroupButton(
-                                    selected = viewModel.sortedBy,
-                                    options = listOf(
-                                        GroupButtonModel(SortFavoritesBy.TITLE) {
-                                            Icon(
-                                                Icons.Default.SortByAlpha,
-                                                null,
-                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
-                                            )
-                                        },
-                                        GroupButtonModel(SortFavoritesBy.COUNT) {
-                                            Icon(
-                                                Icons.Default.Sort,
-                                                null,
-                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
-                                            )
-                                        },
-                                        GroupButtonModel(SortFavoritesBy.CHAPTERS) {
-                                            Icon(
-                                                Icons.Default.ReadMore,
-                                                null,
-                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
-                                            )
-                                        }
-                                    )
-                                ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
+                            val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
+                                animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
                             }
-                        )
 
-                        MdcTheme {
-                            OutlinedTextField(
-                                value = searchText,
-                                onValueChange = { searchText = it },
-                                label = {
-                                    androidx.compose.material.Text(
-                                        resources.getQuantityString(
-                                            R.plurals.numFavorites,
-                                            showing.size,
-                                            showing.size
+                            GroupButton(
+                                selected = viewModel.sortedBy,
+                                options = listOf(
+                                    GroupButtonModel(SortFavoritesBy.TITLE) {
+                                        Icon(
+                                            Icons.Default.SortByAlpha,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
                                         )
-                                    )
-                                },
-                                trailingIcon = {
-                                    androidx.compose.material.IconButton(onClick = { searchText = "" }) {
-                                        androidx.compose.material.Icon(Icons.Default.Cancel, null)
+                                    },
+                                    GroupButtonModel(SortFavoritesBy.COUNT) {
+                                        Icon(
+                                            Icons.Default.Sort,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
+                                        )
+                                    },
+                                    GroupButtonModel(SortFavoritesBy.CHAPTERS) {
+                                        Icon(
+                                            Icons.Default.ReadMore,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
+                                        )
                                     }
-                                },
+                                )
+                            ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
+                        }
+                    )
+
+                    MdcTheme {
+                        OutlinedTextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            label = {
+                                androidx.compose.material.Text(
+                                    resources.getQuantityString(
+                                        R.plurals.numFavorites,
+                                        showing.size,
+                                        showing.size
+                                    )
+                                )
+                            },
+                            trailingIcon = {
+                                androidx.compose.material.IconButton(onClick = { searchText = "" }) {
+                                    androidx.compose.material.Icon(Icons.Default.Cancel, null)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 5.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                        )
+                    }
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                    ) {
+
+                        item {
+                            CustomChip(
+                                "ALL",
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 5.dp),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                                    .combinedClickable(
+                                        onClick = { viewModel.resetSources() },
+                                        onLongClick = { viewModel.selectedSources.clear() }
+                                    ),
+                                backgroundColor = M3MaterialTheme.colorScheme.primary,
+                                textColor = M3MaterialTheme.colorScheme.onPrimary
                             )
                         }
 
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                        items(
+                            (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
+                                .groupBy { it }
+                                .toList()
+                                .sortedBy { it.first }
                         ) {
-
-                            item {
-                                CustomChip(
-                                    "ALL",
-                                    modifier = Modifier
-                                        .combinedClickable(
-                                            onClick = { viewModel.resetSources() },
-                                            onLongClick = { viewModel.selectedSources.clear() }
-                                        ),
-                                    backgroundColor = M3MaterialTheme.colorScheme.primary,
-                                    textColor = M3MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-
-                            items(
-                                (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                    .groupBy { it }
-                                    .toList()
-                                    .sortedBy { it.first }
-                            ) {
-                                CustomChip(
-                                    "${it.first}: ${it.second.size - 1}",
-                                    modifier = Modifier
-                                        .combinedClickable(
-                                            onClick = { viewModel.newSource(it.first) },
-                                            onLongClick = { viewModel.singleSource(it.first) }
-                                        ),
-                                    backgroundColor = animateColorAsState(
-                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
-                                        else M3MaterialTheme.colorScheme.surface
-                                    ).value,
-                                    textColor = animateColorAsState(
-                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
-                                        else M3MaterialTheme.colorScheme.onSurface
-                                    ).value
-                                )
-                            }
+                            CustomChip(
+                                "${it.first}: ${it.second.size - 1}",
+                                modifier = Modifier
+                                    .combinedClickable(
+                                        onClick = { viewModel.newSource(it.first) },
+                                        onLongClick = { viewModel.singleSource(it.first) }
+                                    ),
+                                backgroundColor = animateColorAsState(
+                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
+                                    else M3MaterialTheme.colorScheme.surface
+                                ).value,
+                                textColor = animateColorAsState(
+                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
+                                    else M3MaterialTheme.colorScheme.onSurface
+                                ).value
+                            )
                         }
                     }
                 }
-            ) {
+            }
+        ) {
+            var showBanner by remember { mutableStateOf(false) }
+
+            M3OtakuBannerBox(
+                showBanner = showBanner,
+                placeholder = logo.logoId
+            ) { itemInfo ->
                 Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) { p ->
                     if (showing.isEmpty()) {
                         Box(

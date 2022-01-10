@@ -295,7 +295,6 @@ fun M3CoverCard(
                     crossfade(true)
                     lifecycle(LocalLifecycleOwner.current)
                     size(480, 360)
-
                 },
                 contentDescription = name,
                 modifier = Modifier.matchParentSize()
@@ -411,8 +410,8 @@ fun M3OtakuBannerBox(
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
     val placeHolderImage = remember {
         AppCompatResources
-            .getDrawable(context, placeholder)!!
-            .toBitmap().asImageBitmap()
+            .getDrawable(context, placeholder)
+            ?.toBitmap()?.asImageBitmap()
     }
 
     BannerBox(
@@ -450,13 +449,15 @@ fun M3OtakuBannerBox(
 
                         when (painter.state) {
                             is ImagePainter.State.Loading -> {
-                                Image(
-                                    bitmap = placeHolderImage,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                )
+                                placeHolderImage?.let {
+                                    Image(
+                                        bitmap = it,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .align(Alignment.Center)
+                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                    )
+                                }
                             }
                             is ImagePainter.State.Error -> {
                                 GlideImage(
@@ -467,22 +468,26 @@ fun M3OtakuBannerBox(
                                         .align(Alignment.Center)
                                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                                     loading = {
-                                        Image(
-                                            bitmap = placeHolderImage,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .align(Alignment.Center)
-                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                        )
+                                        placeHolderImage?.let { it1 ->
+                                            Image(
+                                                bitmap = it1,
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .align(Alignment.Center)
+                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                            )
+                                        }
                                     },
                                     failure = {
-                                        Image(
-                                            bitmap = placeHolderImage,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .align(Alignment.Center)
-                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                        )
+                                        placeHolderImage?.let { it1 ->
+                                            Image(
+                                                bitmap = it1,
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .align(Alignment.Center)
+                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                            )
+                                        }
                                     }
                                 )
                             }

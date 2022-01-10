@@ -3,6 +3,7 @@ package com.programmersbox.otakumanager
 import android.content.Context
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.ApiService
@@ -45,7 +46,13 @@ val appModule = module {
         object : GenericInfo {
             override val apkString: AppUpdate.AppUpdates.() -> String? get() = { otakumanager_file }
 
-            override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+            override fun chapterOnClick(
+                model: ChapterModel,
+                allChapters: List<ChapterModel>,
+                infoModel: InfoModel,
+                context: Context,
+                navController: NavController
+            ) {
                 throw Exception("This should not be seen")
             }
 

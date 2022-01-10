@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.utils
 
 import android.app.Activity
+import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -9,6 +10,7 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -63,6 +65,7 @@ import androidx.window.layout.WindowMetricsCalculator
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.uiviews.R
@@ -833,7 +836,8 @@ class ListBottomSheet<T>(
                         stickyHeader {
                             TopAppBar(
                                 title = { Text(title) },
-                                navigationIcon = { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.Close, null) } }
+                                navigationIcon = { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.Close, null) } },
+                                actions = { if (list.isNotEmpty()) Text("(${list.size})") }
                             )
                         }
 
@@ -853,6 +857,16 @@ class ListBottomSheet<T>(
                         }
                     }
                 }
+            }
+        }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = super.onCreateDialog(savedInstanceState)
+        .apply {
+            setOnShowListener {
+                val sheet = findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
+                val bottomSheet = BottomSheetBehavior.from(sheet)
+                bottomSheet.skipCollapsed = true
+                bottomSheet.isHideable = false
             }
         }
 }

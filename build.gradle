@@ -34,7 +34,7 @@ buildscript {
 
     ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.6'
     ext.analytics = 'com.google.firebase:firebase-analytics:20.0.2'
-    ext.play_services = 'com.google.android.gms:play-services-auth:19.2.0'
+    ext.play_services = 'com.google.android.gms:play-services-auth:20.0.1'
 
     ext.exoplayer_version = "2.16.1"
     ext.room_version = "2.4.0"
@@ -81,6 +81,7 @@ buildscript {
     ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
     ext.permissions = "com.google.accompanist:accompanist-permissions:$accompanist"
     ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
+    ext.coilCompose = "io.coil-kt:coil-compose:1.4.0"
 
     ext.datastore = "androidx.datastore:datastore:1.0.0"
     ext.datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
@@ -113,7 +114,7 @@ buildscript {
                         composeActivity, composeLifecycle,
                         composeRuntimeLivedata, composeRuntimeRxjava2,
                         composeMaterialThemeAdapter, composeMaterial3ThemeAdapter,
-                        landscapistGlide,
+                        landscapistGlide, coilCompose,
                         composeConstraintLayout, permissions,
                         materialPlaceholder, drawablePainter, uiUtil,
                         materialYou

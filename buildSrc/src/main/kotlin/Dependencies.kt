@@ -1,5 +1,5 @@
 object Deps {
-    const val otakuVersionName = "29.2.4"
+    const val otakuVersionName = "29.2.5"
     const val compileVersion = 31
     const val minimumSdk = 23
     const val targetSdk = 31
@@ -22,4 +22,6 @@ object Deps {
 
     const val palette = "androidx.palette:palette-ktx:1.0.0"
     const val junit = "junit:junit:4.+"
+    const val androidJunit = "androidx.test.ext:junit:1.1.3"
+    const val androidEspresso = "androidx.test.espresso:espresso-core:3.4.0"
 }

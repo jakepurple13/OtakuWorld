@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
@@ -81,7 +82,13 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
 
-    override fun chapterOnClick(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+    override fun chapterOnClick(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        navController: NavController
+    ) {
         if ((model.source as? ShowApi)?.canPlay == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
             return
@@ -237,7 +244,7 @@ class GenericAnime(val context: Context) : GenericInfo {
             .addTo(disposable)
     }
 
-    override fun sourceList(): List<ApiService> = Sources.values().toList()
+    override fun sourceList(): List<ApiService> = Sources.values().filterNot(Sources::notWorking).toList()
 
     override fun searchList(): List<ApiService> = Sources.searchSources
 
@@ -434,6 +441,9 @@ class GenericAnime(val context: Context) : GenericInfo {
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
+
+        //TODO: Add in setting to show grid or list for recent and all screens
+
         val animated by updateAnimatedItemsState(newList = list)
         LazyColumn(
             state = listState,
@@ -577,28 +587,28 @@ class GenericAnime(val context: Context) : GenericInfo {
 
         }
 
-        navigationSetup { fragment, navController ->
-            navController
-                .graph
-                .addDestination(
-                    FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                        id = DownloadViewerFragment::class.java.hashCode()
-                        setClassName(DownloadViewerFragment::class.java.name)
-                        addDeepLink(MainActivity.VIEW_DOWNLOADS)
-                    }
-                )
+    }
 
-            navController
-                .graph
-                .addDestination(
-                    FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                        id = ViewVideosFragment::class.java.hashCode()
-                        setClassName(ViewVideosFragment::class.java.name)
-                        addDeepLink(MainActivity.VIEW_VIDEOS)
-                    }
-                )
-        }
+    override fun settingNavSetup(fragment: Fragment, navController: NavController) {
+        navController
+            .graph
+            .addDestination(
+                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                    id = ViewVideosFragment::class.java.hashCode()
+                    setClassName(ViewVideosFragment::class.java.name)
+                    addDeepLink(MainActivity.VIEW_VIDEOS)
+                }
+            )
 
+        navController
+            .graph
+            .addDestination(
+                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
+                    id = DownloadViewerFragment::class.java.hashCode()
+                    setClassName(DownloadViewerFragment::class.java.name)
+                    addDeepLink(MainActivity.VIEW_DOWNLOADS)
+                }
+            )
     }
 
 }

@@ -57,8 +57,8 @@ dependencies {
     implementation recyclerview
     implementation preference
     testImplementation Deps.junit
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation Deps.androidJunit
+    androidTestImplementation Deps.androidEspresso
 
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
@@ -90,4 +90,6 @@ dependencies {
     implementation jakepurple13Tools.helpfultools
 
     implementation koin.koin
+
+    //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
 }

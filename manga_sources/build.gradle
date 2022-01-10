@@ -36,8 +36,8 @@ dependencies {
     implementation androidCore
     implementation appCompat
     testImplementation Deps.junit
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation Deps.androidJunit
+    androidTestImplementation Deps.androidEspresso
 
     testImplementation 'org.mockito:mockito-core:4.2.0'
     // required if you want to use Mockito for Android tests

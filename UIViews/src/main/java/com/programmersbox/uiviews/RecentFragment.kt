@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -169,68 +170,78 @@ class RecentFragment : BaseFragmentCompose() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeAsState(initial = true)
 
-        var showBanner by remember { mutableStateOf(false) }
-        M3OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = logo.logoId
-        ) { itemInfo ->
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-            val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                topBar = {
-                    SmallTopAppBar(
-                        title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                        actions = {
-                            AnimatedVisibility(visible = showButton) {
-                                IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
-                                    Icon(Icons.Default.ArrowUpward, null)
-                                }
-                            }
-                        },
-                        scrollBehavior = scrollBehavior
-                    )
-                }
-            ) { p ->
-                when {
-                    !isConnected -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(p),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                Icons.Default.CloudOff,
-                                null,
-                                modifier = Modifier.size(50.dp, 50.dp),
-                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                            )
-                            Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
-                        }
-                    }
-                    recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
-                    else -> {
-                        SwipeRefresh(
-                            modifier = Modifier.padding(p),
-                            state = refresh,
-                            onRefresh = { source?.let { recentVm.reset(context, it) } }
-                        ) {
-                            info.ItemListView(
-                                list = recentVm.sourceList,
-                                listState = state,
-                                favorites = recentVm.favoriteList,
-                                onLongPress = { item, c ->
-                                    itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                    showBanner = c == ComponentState.Pressed
-                                }
-                            ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
-                        }
+        LaunchedEffect(isConnected) {
+            if (recentVm.sourceList.isEmpty() && source != null && isConnected) recentVm.reset(context, source!!)
+        }
 
-                        if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
-                            InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                source?.let { recentVm.loadMore(context, it) }
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                SmallTopAppBar(
+                    title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                    actions = {
+                        AnimatedVisibility(visible = showButton) {
+                            IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                                Icon(Icons.Default.ArrowUpward, null)
+                            }
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+            }
+        ) { p ->
+            var showBanner by remember { mutableStateOf(false) }
+            M3OtakuBannerBox(
+                showBanner = showBanner,
+                placeholder = logo.logoId
+            ) { itemInfo ->
+                Crossfade(targetState = isConnected) { connected ->
+                    when (connected) {
+                        false -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(p),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    Icons.Default.CloudOff,
+                                    null,
+                                    modifier = Modifier.size(50.dp, 50.dp),
+                                    colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                                )
+                                Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                            }
+                        }
+                        true -> {
+                            when {
+                                recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
+                                else -> {
+                                    SwipeRefresh(
+                                        modifier = Modifier.padding(p),
+                                        state = refresh,
+                                        onRefresh = { source?.let { recentVm.reset(context, it) } }
+                                    ) {
+                                        info.ItemListView(
+                                            list = recentVm.sourceList,
+                                            listState = state,
+                                            favorites = recentVm.favoriteList,
+                                            onLongPress = { item, c ->
+                                                itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                                showBanner = c == ComponentState.Pressed
+                                            }
+                                        ) { findNavController().navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it)) }
+                                    }
+
+                                    if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
+                                        InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                                            source?.let { recentVm.loadMore(context, it) }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

@@ -8,7 +8,9 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.text.format.DateFormat
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -65,12 +67,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.datastore.preferences.core.Preferences
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -130,18 +132,6 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
     }
 
     private val genericInfo by inject<GenericInfo>()
-    private val disposable = CompositeDisposable()
-    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-
-    private val list by lazy {
-        arguments?.getString("allChapters")
-            ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-            .orEmpty().also(::println)
-    }
-
-    private val mangaUrl by lazy { arguments?.getString("mangaInfoUrl") ?: "" }
-
-    private var currentChapter: Int by mutableStateOf(0)
 
     private val model by lazy {
         arguments?.getString("currentChapter")
@@ -158,16 +148,111 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
 
     private val title by lazy { arguments?.getString("mangaTitle") ?: "" }
 
-    private val batteryInformation by lazy { BatteryInformation(requireContext()) }
-
-    private var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
-    private var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
-    private var batteryPercent by mutableStateOf(0f)
-
-    private val pageList = mutableStateListOf<String>()
-    private var isLoadingPages = mutableStateOf(false)
-
     private val ad by lazy { AdRequest.Builder().build() }
+
+    class ReadViewModel(
+        context: Context,
+        arguments: Bundle?,
+        genericInfo: GenericInfo,
+        modelPath: Single<List<String>>?
+    ) : ViewModel() {
+
+        private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
+
+        private val disposable = CompositeDisposable()
+
+        val list by lazy {
+            arguments?.getString("allChapters")
+                ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+                .orEmpty().also(::println)
+        }
+
+        private val mangaUrl by lazy { arguments?.getString("mangaInfoUrl") ?: "" }
+
+        var currentChapter: Int by mutableStateOf(0)
+
+        var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
+        var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
+        var batteryPercent by mutableStateOf(0f)
+
+        val batteryInformation by lazy { BatteryInformation(context) }
+
+        val pageList = mutableStateListOf<String>()
+        var isLoadingPages = mutableStateOf(false)
+            private set
+
+        init {
+            batteryInformation.composeSetup(
+                disposable,
+                androidx.compose.ui.graphics.Color.White
+            ) {
+                batteryColor = it.first
+                batteryIcon = it.second
+            }
+
+            val url = arguments?.getString("mangaUrl") ?: ""
+            currentChapter = list.indexOfFirst { l -> l.url == url }
+
+            loadPages(modelPath)
+        }
+
+        var showInfo by mutableStateOf(false)
+
+        fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
+            currentChapter = newChapter
+            list.getOrNull(newChapter)?.let { item ->
+                ChapterWatched(item.url, item.name, mangaUrl)
+                    .let {
+                        Completable.mergeArray(
+                            FirebaseDb.insertEpisodeWatched(it),
+                            dao.insertChapter(it)
+                        )
+                    }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .subscribe(chapter)
+                    .addTo(disposable)
+
+                item
+                    .getChapterInfo()
+                    .map { it.mapNotNull(Storage::link) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnSubscribe { pageList.clear() }
+                    .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
+                    .addTo(disposable)
+            }
+        }
+
+        private fun loadPages(modelPath: Single<List<String>>?) {
+            modelPath
+                ?.doOnSubscribe {
+                    isLoadingPages.value = true
+                    pageList.clear()
+                }
+                ?.subscribeBy {
+                    pageList.addAll(it)
+                    isLoadingPages.value = false
+                }
+                ?.addTo(disposable)
+        }
+
+        fun refresh() {
+            loadPages(
+                list.getOrNull(currentChapter)
+                    ?.getChapterInfo()
+                    ?.map { it.mapNotNull(Storage::link) }
+                    ?.subscribeOn(Schedulers.io())
+                    ?.observeOn(AndroidSchedulers.mainThread())
+            )
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            disposable.dispose()
+        }
+
+    }
 
     @OptIn(
         ExperimentalMaterial3Api::class,
@@ -189,60 +274,54 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
     private fun readView() = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
 
-        val url = arguments?.getString("mangaUrl") ?: ""
-        currentChapter = list.indexOfFirst { l -> l.url == url }
-
-        batteryInformation.composeSetup(
-            disposable,
-            androidx.compose.ui.graphics.Color.White
-        ) {
-            batteryColor = it.first
-            batteryIcon = it.second
-        }
-
-        dialog?.window?.decorView?.let { w ->
-            val windowInsetsController = ViewCompat.getWindowInsetsController(w) ?: return@let
-            // Configure the behavior of the hidden system bars
-            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            // Hide both the status bar and the navigation bar
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
-
-        dialog?.apply {
-            window?.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
-            window?.decorView?.setOnSystemUiVisibilityChangeListener { visibility ->
-                if (visibility != 0) return@setOnSystemUiVisibilityChangeListener
-
-                window?.decorView?.systemUiVisibility =
-                    (View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-            }
-        }
-
-        loadPages(model)
-
         setContent {
 
-            DisposableEffect(LocalContext.current) {
-                val batteryInfo = activity?.battery {
-                    batteryPercent = it.percent
-                    batteryInformation.batteryLevelAlert(it.percent)
-                    batteryInformation.batteryInfoItem(it)
+            val context = LocalContext.current
+
+            val readVm: ReadViewModel = viewModel(
+                factory = factoryCreate {
+                    ReadViewModel(
+                        context,
+                        arguments,
+                        genericInfo,
+                        if (isDownloaded == true && filePath != null) {
+                            Single.create<List<String>> {
+                                filePath
+                                    ?.listFiles()
+                                    ?.sortedBy { f -> f.name.split(".").first().toInt() }
+                                    ?.fastMap(File::toUri)
+                                    ?.fastMap(Uri::toString)
+                                    ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
+                            }
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                        } else {
+                            model
+                        }
+                    )
                 }
-                onDispose { activity?.unregisterReceiver(batteryInfo) }
+            )
+
+            DisposableEffect(LocalContext.current) {
+                val batteryInfo = context.battery {
+                    readVm.batteryPercent = it.percent
+                    readVm.batteryInformation.batteryLevelAlert(it.percent)
+                    readVm.batteryInformation.batteryInfoItem(it)
+                }
+                onDispose { context.unregisterReceiver(batteryInfo) }
             }
 
             M3MaterialTheme(currentColorScheme) {
 
                 val scope = rememberCoroutineScope()
-                val swipeState = rememberSwipeRefreshState(isRefreshing = isLoadingPages.value)
+                val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages.value)
 
-                val pages = pageList
+                val pages = readVm.pageList
 
-                LaunchedEffect(pageList) { BigImageViewer.prefetch(*pageList.fastMap(Uri::parse).toTypedArray()) }
+                LaunchedEffect(readVm.pageList) { BigImageViewer.prefetch(*readVm.pageList.fastMap(Uri::parse).toTypedArray()) }
 
                 val listState = rememberLazyListState()
                 val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
-                var showInfo by remember { mutableStateOf(false) }
 
                 val paddingPage by requireContext().pagePadding.collectAsState(initial = 4)
                 var settingsPopup by remember { mutableStateOf(false) }
@@ -306,7 +385,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                             topBar = {
                                 SmallTopAppBar(
                                     scrollBehavior = sheetScrollBehavior,
-                                    title = { Text(list.getOrNull(currentChapter)?.name.orEmpty()) },
+                                    title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
                                     actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
                                     navigationIcon = {
                                         IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
@@ -405,7 +484,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                     },
                     sheetGesturesEnabled = false,
                     sheetPeekHeight = 0.dp,
-                    drawerContent = if (list.size > 1) {
+                    drawerContent = if (readVm.list.size > 1) {
                         {
                             val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
                             Scaffold(
@@ -414,7 +493,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                     LargeTopAppBar(
                                         scrollBehavior = drawerScrollBehavior,
                                         title = { Text(title) },
-                                        actions = { PageIndicator(Modifier, list.size - currentChapter, list.size) }
+                                        actions = { PageIndicator(Modifier, readVm.list.size - readVm.currentChapter, readVm.list.size) }
                                     )
                                 },
                                 bottomBar = {
@@ -436,11 +515,11 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                             ) { p ->
                                 if (scaffoldState.drawerState.isOpen) {
                                     LazyColumn(
-                                        state = rememberLazyListState(currentChapter.coerceIn(0, list.lastIndex)),
+                                        state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
                                         contentPadding = p,
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        itemsIndexed(list) { i, c ->
+                                        itemsIndexed(readVm.list) { i, c ->
 
                                             var showChangeChapter by remember { mutableStateOf(false) }
 
@@ -452,8 +531,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                                         TextButton(
                                                             onClick = {
                                                                 showChangeChapter = false
-                                                                currentChapter = i
-                                                                addChapterToWatched(currentChapter, ::showToast)
+                                                                readVm.currentChapter = i
+                                                                readVm.addChapterToWatched(readVm.currentChapter, ::showToast)
                                                             }
                                                         ) { Text(stringResource(R.string.yes)) }
                                                     },
@@ -470,14 +549,14 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                                 border = BorderStroke(
                                                     1.dp,
                                                     animateColorAsState(
-                                                        if (currentChapter == i) M3MaterialTheme.colorScheme.onSurface
+                                                        if (readVm.currentChapter == i) M3MaterialTheme.colorScheme.onSurface
                                                         else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                                     ).value
                                                 )
                                             ) {
                                                 ListItem(
                                                     text = { Text(c.name) },
-                                                    icon = if (currentChapter == i) {
+                                                    icon = if (readVm.currentChapter == i) {
                                                         { Icon(Icons.Default.ArrowRight, null) }
                                                     } else null,
                                                     modifier = Modifier.clickable { showChangeChapter = true }
@@ -491,7 +570,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                     } else null
                 ) {
 
-                    val showItems = showInfo || listState.isScrolledToTheEnd()
+                    val showItems = readVm.showInfo || listState.isScrolledToTheEnd()
 
                     /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
                     //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
@@ -555,15 +634,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                         //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
                         SwipeRefresh(
                             state = swipeState,
-                            onRefresh = {
-                                loadPages(
-                                    list.getOrNull(currentChapter)
-                                        ?.getChapterInfo()
-                                        ?.map { it.mapNotNull(Storage::link) }
-                                        ?.subscribeOn(Schedulers.io())
-                                        ?.observeOn(AndroidSchedulers.mainThread())
-                                )
-                            },
+                            onRefresh = { readVm.refresh() },
                             modifier = Modifier.padding(p)
                         ) {
                             Box(Modifier.fillMaxSize()) {
@@ -575,9 +646,9 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                         bottom = toolbarHeight
                                     )
                                 ) {
-                                    reader(pages) {
-                                        showInfo = !showInfo
-                                        if (!showInfo) {
+                                    reader(pages, readVm) {
+                                        readVm.showInfo = !readVm.showInfo
+                                        if (!readVm.showInfo) {
                                             toolbarOffsetHeightPx.value = -toolbarHeightPx
                                             topBarOffsetHeightPx.value = -topBarHeightPx
                                         }
@@ -596,7 +667,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                         .align(Alignment.TopCenter)
                                         .alpha(animateTopBar),
                                     pages = pages,
-                                    currentPage = currentPage
+                                    currentPage = currentPage,
+                                    vm = readVm
                                 )
 
                                 BottomBar(
@@ -608,7 +680,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                     scrollBehavior = scrollBehavior,
                                     onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
                                     onSettingsClick = { settingsPopup = true },
-                                    chapterChange = ::showToast
+                                    chapterChange = ::showToast,
+                                    vm = readVm
                                 )
                             }
                         }
@@ -618,7 +691,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
         }
     }
 
-    private fun LazyListScope.reader(pages: List<String>, onClick: () -> Unit) {
+    private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
 
         /*items(pages) {
             var scale by remember { mutableStateOf(1f) }
@@ -729,7 +802,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally)
                 )
-                if (currentChapter <= 0) {
+                if (vm.currentChapter <= 0) {
                     Text(
                         stringResource(id = R.string.reachedLastChapter),
                         style = M3MaterialTheme.typography.headlineSmall,
@@ -861,7 +934,13 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
 
     @ExperimentalAnimationApi
     @Composable
-    private fun TopBar(modifier: Modifier = Modifier, scrollBehavior: TopAppBarScrollBehavior, pages: List<String>, currentPage: Int) {
+    private fun TopBar(
+        modifier: Modifier = Modifier,
+        scrollBehavior: TopAppBarScrollBehavior,
+        pages: List<String>,
+        currentPage: Int,
+        vm: ReadViewModel
+    ) {
         CenterAlignedTopAppBar(
             scrollBehavior = scrollBehavior,
             modifier = modifier,
@@ -871,15 +950,15 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        batteryIcon.composeIcon,
+                        vm.batteryIcon.composeIcon,
                         contentDescription = null,
                         tint = animateColorAsState(
-                            if (batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
-                            else batteryColor
+                            if (vm.batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
+                            else vm.batteryColor
                         ).value
                     )
                     AnimatedContent(
-                        targetState = batteryPercent.toInt(),
+                        targetState = vm.batteryPercent.toInt(),
                         transitionSpec = {
                             if (targetState > initialState) {
                                 slideInVertically { height -> height } + fadeIn() with slideOutVertically { height -> -height } + fadeOut()
@@ -926,13 +1005,14 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                     currentPage + 1,
                     pages.size
                 )
-            },
+            }
         )
     }
 
     @Composable
     private fun BottomBar(
         modifier: Modifier = Modifier,
+        vm: ReadViewModel,
         scrollBehavior: TopAppBarScrollBehavior,
         onPageSelectClick: () -> Unit,
         onSettingsClick: () -> Unit,
@@ -945,11 +1025,11 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
             contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                 .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
         ) {
-            val prevShown = currentChapter < list.lastIndex
-            val nextShown = currentChapter > 0
+            val prevShown = vm.currentChapter < vm.list.lastIndex
+            val nextShown = vm.currentChapter > 0
 
             AnimatedVisibility(
-                visible = prevShown && list.size > 1,
+                visible = prevShown && vm.list.size > 1,
                 enter = expandHorizontally(expandFrom = Alignment.Start),
                 exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
             ) {
@@ -963,7 +1043,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                 else -> 4f
                             }
                         ),
-                    previousChapter = chapterChange
+                    previousChapter = chapterChange,
+                    vm = vm
                 )
             }
 
@@ -981,7 +1062,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
             )
 
             AnimatedVisibility(
-                visible = nextShown && list.size > 1,
+                visible = nextShown && vm.list.size > 1,
                 enter = expandHorizontally(),
                 exit = shrinkHorizontally()
             ) {
@@ -995,7 +1076,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                 else -> 4f
                             }
                         ),
-                    nextChapter = chapterChange
+                    nextChapter = chapterChange,
+                    vm = vm
                 )
             }
             //The three buttons above will equal 8f
@@ -1042,32 +1124,6 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
         }
     }
 
-    private fun loadPages(modelPath: Single<List<String>>?) {
-        if (isDownloaded == true && filePath != null) {
-            Single.create<List<String>> {
-                filePath
-                    ?.listFiles()
-                    ?.sortedBy { f -> f.name.split(".").first().toInt() }
-                    ?.fastMap(File::toUri)
-                    ?.fastMap(Uri::toString)
-                    ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
-            }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-        } else {
-            modelPath
-        }
-            ?.doOnSubscribe {
-                isLoadingPages.value = true
-                pageList.clear()
-            }
-            ?.subscribeBy {
-                pageList.addAll(it)
-                isLoadingPages.value = false
-            }
-            ?.addTo(disposable)
-    }
-
     private fun Context.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
     private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
@@ -1075,49 +1131,24 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
     @Composable
     private fun GoBackButton(modifier: Modifier = Modifier) {
         M3OutlinedButton(
-            onClick = { dismiss() },
+            onClick = { findNavController().popBackStack() },
             modifier = modifier,
             border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)
         ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }
     }
 
-    private fun addChapterToWatched(chapterNum: Int, chapter: () -> Unit) {
-        list.getOrNull(chapterNum)?.let { item ->
-            ChapterWatched(item.url, item.name, mangaUrl)
-                .let {
-                    Completable.mergeArray(
-                        FirebaseDb.insertEpisodeWatched(it),
-                        dao.insertChapter(it)
-                    )
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(chapter)
-                .addTo(disposable)
-
-            item
-                .getChapterInfo()
-                .map { it.mapNotNull(Storage::link) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { pageList.clear() }
-                .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                .addTo(disposable)
-        }
-    }
-
     @Composable
-    private fun NextButton(modifier: Modifier = Modifier, nextChapter: () -> Unit) {
+    private fun NextButton(modifier: Modifier = Modifier, vm: ReadViewModel, nextChapter: () -> Unit) {
         Button(
-            onClick = { addChapterToWatched(--currentChapter, nextChapter) },
+            onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
             modifier = modifier
         ) { Text(stringResource(id = R.string.loadNextChapter)) }
     }
 
     @Composable
-    private fun PreviousButton(modifier: Modifier = Modifier, previousChapter: () -> Unit) {
+    private fun PreviousButton(modifier: Modifier = Modifier, vm: ReadViewModel, previousChapter: () -> Unit) {
         TextButton(
-            onClick = { addChapterToWatched(++currentChapter, previousChapter) },
+            onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
             modifier = modifier
         ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
     }
@@ -1149,7 +1180,6 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        disposable.dispose()
         Glide.get(requireActivity()).clearMemory()
     }
 }
