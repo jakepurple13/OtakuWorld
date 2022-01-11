@@ -47,8 +47,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
+import coil.compose.rememberImagePainter
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -58,7 +58,6 @@ import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
-import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -502,22 +501,17 @@ class GlobalSearchFragment : Fragment() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                GlideImage(
-                    imageModel = model.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.FillBounds,
-                    loading = {
-                        Image(
-                            painter = rememberDrawablePainter(drawable = placeHolder),
-                            contentDescription = model.title
-                        )
+                Image(
+                    painter = rememberImagePainter(data = model.imageUrl) {
+                        placeholder(placeHolder)
+                        error(error)
+                        crossfade(true)
+                        lifecycle(LocalLifecycleOwner.current)
+                        size(480, 360)
                     },
-                    failure = {
-                        Image(
-                            painter = rememberDrawablePainter(drawable = error),
-                            contentDescription = model.title
-                        )
-                    }
+                    contentDescription = model.title,
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                 )
 
                 Box(

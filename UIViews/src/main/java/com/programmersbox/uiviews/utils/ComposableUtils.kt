@@ -547,6 +547,7 @@ private fun <T> DeleteItemView(
         androidx.compose.material3.Surface(
             tonalElevation = 5.dp,
             modifier = Modifier.fillMaxSize(),
+            shape = MaterialTheme.shapes.medium,
             indication = rememberRipple(),
             border = BorderStroke(
                 animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,

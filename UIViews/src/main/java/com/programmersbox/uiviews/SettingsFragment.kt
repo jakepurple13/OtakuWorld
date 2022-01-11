@@ -34,11 +34,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -55,6 +51,8 @@ import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import coil.compose.rememberImagePainter
+import coil.transform.CircleCropTransformation
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
@@ -74,7 +72,6 @@ import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.utils.*
-import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -778,11 +775,14 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
     PreferenceSetting(
         settingTitle = { Text(accountInfo?.displayName ?: "User") },
         settingIcon = {
-            GlideImage(
-                imageModel = accountInfo?.photoUrl ?: logo.logoId,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                requestBuilder = { Glide.with(LocalView.current).asDrawable().circleCrop() },
+            Image(
+                painter = rememberImagePainter(data = accountInfo?.photoUrl) {
+                    error(logo.logoId)
+                    crossfade(true)
+                    lifecycle(LocalLifecycleOwner.current)
+                    transformations(CircleCropTransformation())
+                },
+                contentDescription = null
             )
         },
         modifier = Modifier.clickable(

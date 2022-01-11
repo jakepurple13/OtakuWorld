@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
@@ -27,11 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
@@ -44,9 +39,7 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import coil.compose.rememberImagePainter
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -59,7 +52,6 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
-import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -67,7 +59,6 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -184,27 +175,16 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         ListItem(
                             modifier = Modifier.padding(5.dp),
                             icon = {
-                                GlideImage(
-                                    imageModel = item.imageUrl.orEmpty(),
-                                    contentDescription = "",
-                                    contentScale = ContentScale.Crop,
-                                    requestBuilder = {
-                                        Glide.with(LocalView.current)
-                                            .asDrawable()
-                                            .override(360, 480)
-                                            .thumbnail(0.5f)
-                                            .transform(RoundedCorners(15))
+                                Image(
+                                    painter = rememberImagePainter(data = item.imageUrl.orEmpty()) {
+                                        placeholder(logo.logoId)
+                                        error(logo.logoId)
+                                        crossfade(true)
+                                        lifecycle(LocalLifecycleOwner.current)
+                                        size(480, 360)
                                     },
-                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                    failure = {
-                                        Image(
-                                            painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                                            contentDescription = item.notiTitle,
-                                            modifier = Modifier
-                                                .padding(5.dp)
-                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                        )
-                                    }
+                                    contentDescription = item.notiTitle,
+                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 )
                             },
                             overlineText = { Text(item.source) },
@@ -383,22 +363,18 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             ) {
 
                 Row {
-                    GlideImage(
-                        imageModel = item.imageUrl.orEmpty(),
-                        contentDescription = "",
-                        contentScale = ContentScale.Crop,
+                    Image(
+                        painter = rememberImagePainter(data = item.imageUrl.orEmpty()) {
+                            placeholder(logo.logoId)
+                            error(logo.logoId)
+                            crossfade(true)
+                            lifecycle(LocalLifecycleOwner.current)
+                            size(480, 360)
+                        },
+                        contentDescription = item.notiTitle,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                        failure = {
-                            Image(
-                                painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                                contentDescription = item.notiTitle,
-                                modifier = Modifier
-                                    .padding(5.dp)
-                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            )
-                        }
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     )
 
                     Column(
