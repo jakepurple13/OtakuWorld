@@ -111,7 +111,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                     .subscribe {
                         val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
                         p.summary = if (AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty()))
-                            getString(R.string.updateVersionAvailable, it.update_real_version?.toString().orEmpty())
+                            getString(R.string.updateVersionAvailable, it.update_real_version.orEmpty())
                         else ""
                     }
                     .addTo(disposable)
@@ -144,7 +144,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
             findPreference<Preference>("current_source")?.let { p ->
 
                 p.setOnPreferenceClickListener {
-                    val list = Sources.values()
+                    val list = Sources.values().filterNot(Sources::notWorking)
                     val service = requireContext().currentService
                     MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MaterialComponents)
                         .setTitle(R.string.chooseASource)

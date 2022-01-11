@@ -33,7 +33,7 @@ class MainActivity : BaseMainActivity() {
         }
 
         if (currentService == null) {
-            val s = Sources.values().random()
+            val s = Sources.values().filterNot(Sources::notWorking).random()
             sourcePublish.onNext(s)
             currentService = s.serviceName
         }

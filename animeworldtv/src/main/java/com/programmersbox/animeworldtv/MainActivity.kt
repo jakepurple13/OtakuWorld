@@ -23,7 +23,7 @@ class MainActivity : FragmentActivity() {
         setContentView(R.layout.activity_main)
 
         if (currentService == null) {
-            val s = Sources.values().random()
+            val s = Sources.values().filterNot(Sources::notWorking).random()
             sourcePublish.onNext(s)
             currentService = s.serviceName
         } else if (currentService != null) {
