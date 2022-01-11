@@ -441,11 +441,12 @@ class GlobalSearchFragment : Fragment() {
                                                                     }
                                                                     LazyRow(
                                                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                                                        modifier = Modifier
+                                                                            .padding(horizontal = 4.dp)
+                                                                            .padding(bottom = 4.dp)
                                                                     ) {
                                                                         items(i.data) { m ->
                                                                             SearchCoverCard(
-                                                                                modifier = Modifier.padding(bottom = 4.dp),
                                                                                 model = m,
                                                                                 placeHolder = mainLogo,
                                                                                 onLongPress = { c ->
@@ -507,7 +508,7 @@ class GlobalSearchFragment : Fragment() {
                         error(error)
                         crossfade(true)
                         lifecycle(LocalLifecycleOwner.current)
-                        size(480, 360)
+                        size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                     },
                     contentDescription = model.title,
                     contentScale = ContentScale.FillBounds,

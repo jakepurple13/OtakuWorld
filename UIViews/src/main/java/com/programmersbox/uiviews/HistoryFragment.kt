@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -325,8 +326,9 @@ class HistoryFragment : Fragment() {
                                     error(logo.logoId)
                                     crossfade(true)
                                     lifecycle(LocalLifecycleOwner.current)
-                                    size(480, 360)
+                                    size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                                 },
+                                contentScale = ContentScale.FillBounds,
                                 contentDescription = item.title,
                                 modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             )

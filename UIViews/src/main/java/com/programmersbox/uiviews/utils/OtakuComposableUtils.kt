@@ -36,8 +36,10 @@ import com.skydoves.landscapist.glide.GlideImage
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 object ComposableUtils {
-    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
-    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { 480.toDp() }
+    val IMAGE_WIDTH_PX = 360
+    val IMAGE_HEIGHT_PX = 480
+    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { IMAGE_WIDTH_PX.toDp() }
+    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { IMAGE_HEIGHT_PX.toDp() }
 }
 
 @ExperimentalMaterialApi

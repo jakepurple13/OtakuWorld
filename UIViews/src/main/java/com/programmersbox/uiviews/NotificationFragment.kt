@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -181,8 +182,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                         error(logo.logoId)
                                         crossfade(true)
                                         lifecycle(LocalLifecycleOwner.current)
-                                        size(480, 360)
+                                        size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                                     },
+                                    contentScale = ContentScale.FillBounds,
                                     contentDescription = item.notiTitle,
                                     modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 )
@@ -369,8 +371,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             error(logo.logoId)
                             crossfade(true)
                             lifecycle(LocalLifecycleOwner.current)
-                            size(480, 360)
+                            size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                         },
+                        contentScale = ContentScale.FillBounds,
                         contentDescription = item.notiTitle,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
