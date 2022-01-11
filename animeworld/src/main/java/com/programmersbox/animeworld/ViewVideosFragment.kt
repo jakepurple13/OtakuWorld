@@ -437,10 +437,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                             },
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .size(
-                                    with(LocalDensity.current) { 480.toDp() },
-                                    with(LocalDensity.current) { 360.toDp() }
-                                ),
+                                .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH),
                             failure = { Text(text = "image request failed.") }
                         )
 
