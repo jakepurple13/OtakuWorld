@@ -36,8 +36,8 @@ import com.skydoves.landscapist.glide.GlideImage
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 object ComposableUtils {
-    val IMAGE_WIDTH_PX = 360
-    val IMAGE_HEIGHT_PX = 480
+    const val IMAGE_WIDTH_PX = 360
+    const val IMAGE_HEIGHT_PX = 480
     val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { IMAGE_WIDTH_PX.toDp() }
     val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { IMAGE_HEIGHT_PX.toDp() }
 }
@@ -292,11 +292,11 @@ fun M3CoverCard(
         ) {
             Image(
                 painter = rememberImagePainter(imageUrl) {
-                    placeholder(AppCompatResources.getDrawable(context, placeHolder)!!)
-                    error(AppCompatResources.getDrawable(context, error)!!)
+                    placeholder(placeHolder)
+                    error(error)
                     crossfade(true)
                     lifecycle(LocalLifecycleOwner.current)
-                    size(480, 360)
+                    size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                 },
                 contentDescription = name,
                 modifier = Modifier.matchParentSize()

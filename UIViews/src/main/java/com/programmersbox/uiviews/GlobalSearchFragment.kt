@@ -512,7 +512,7 @@ class GlobalSearchFragment : Fragment() {
                     },
                     contentDescription = model.title,
                     contentScale = ContentScale.FillBounds,
-                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    modifier = Modifier.matchParentSize()
                 )
 
                 Box(

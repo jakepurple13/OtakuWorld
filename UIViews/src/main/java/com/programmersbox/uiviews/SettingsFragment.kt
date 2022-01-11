@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -1169,11 +1170,13 @@ private fun GeneralSettings(
         }
     )
 
-    ShowWhen(source != null) {
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
-            settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
+        settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier
+            .alpha(animateFloatAsState(targetValue = if (source != null) 1f else 0f).value)
+            .clickable(
+                enabled = source != null,
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) {
@@ -1183,8 +1186,7 @@ private fun GeneralSettings(
                     }
                 }
             }
-        )
-    }
+    )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.global_search)) },

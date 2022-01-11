@@ -371,9 +371,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             error(logo.logoId)
                             crossfade(true)
                             lifecycle(LocalLifecycleOwner.current)
-                            size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                         },
-                        contentScale = ContentScale.FillBounds,
+                        contentScale = ContentScale.Crop,
                         contentDescription = item.notiTitle,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
