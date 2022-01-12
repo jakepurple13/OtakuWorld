@@ -1,8 +1,9 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.LazyGridState
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
@@ -42,29 +43,32 @@ interface GenericInfo {
     @Composable
     fun ComposeShimmerItem()
 
+    @ExperimentalFoundationApi
     @Composable
     fun ItemListView(
         list: List<ItemModel>,
         favorites: List<DbModel>,
-        listState: LazyListState,
+        listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     )
 
+    @ExperimentalFoundationApi
     @Composable
     fun AllListView(
         list: List<ItemModel>,
         favorites: List<DbModel>,
-        listState: LazyListState,
+        listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) = ItemListView(list, favorites, listState, onLongPress, onClick)
 
+    @ExperimentalFoundationApi
     @Composable
     fun SearchListView(
         list: List<ItemModel>,
         favorites: List<DbModel>,
-        listState: LazyListState,
+        listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) = ItemListView(list, favorites, listState, onLongPress, onClick)

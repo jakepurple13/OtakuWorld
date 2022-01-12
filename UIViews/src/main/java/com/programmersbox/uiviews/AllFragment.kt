@@ -13,7 +13,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -214,7 +214,7 @@ class AllFragment : BaseFragmentCompose() {
             scope.launch { scaffoldState.bottomSheetState.collapse() }
         }
 
-        val state = rememberLazyListState()
+        val state = rememberLazyGridState()
         val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
         val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior() }
         Scaffold(
@@ -334,7 +334,7 @@ class AllFragment : BaseFragmentCompose() {
                                             ) {
                                                 info.SearchListView(
                                                     list = searchList,
-                                                    listState = rememberLazyListState(),
+                                                    listState = rememberLazyGridState(),
                                                     favorites = allVm.favoriteList,
                                                     onLongPress = { item, c ->
                                                         itemInfo.value = if (c == ComponentState.Pressed) item else null

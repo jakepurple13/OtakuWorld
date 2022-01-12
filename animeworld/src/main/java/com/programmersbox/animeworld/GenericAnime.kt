@@ -11,8 +11,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -440,23 +439,16 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun ItemListView(
         list: List<ItemModel>,
         favorites: List<DbModel>,
-        listState: LazyListState,
+        listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
-
-        //TODO: Add in setting to show grid or list for recent and all screens
-
-        val animated by updateAnimatedItemsState(newList = list)
-        LazyColumn(
+        LazyVerticalGrid(
+            cells = GridCells.Fixed(1),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            animatedItems(
-                animated,
-                enterTransition = fadeIn(),
-                exitTransition = fadeOut()
-            ) {
+            items(list) {
                 androidx.compose.material3.Surface(
                     modifier = Modifier
                         .fillMaxWidth()

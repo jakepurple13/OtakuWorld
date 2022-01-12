@@ -3,14 +3,11 @@ package com.programmersbox.novelworld
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
@@ -19,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
@@ -130,20 +126,16 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun ItemListView(
         list: List<ItemModel>,
         favorites: List<DbModel>,
-        listState: LazyListState,
+        listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
-        val animated by updateAnimatedItemsState(newList = list)
-        LazyColumn(
+        LazyVerticalGrid(
+            cells = GridCells.Fixed(1),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            animatedItems(
-                animated,
-                enterTransition = fadeIn(),
-                exitTransition = fadeOut()
-            ) {
+            items(list) {
                 androidx.compose.material3.Surface(
                     modifier = Modifier
                         .fillMaxWidth()

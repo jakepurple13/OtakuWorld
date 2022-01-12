@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyGridState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
@@ -264,7 +264,7 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun ItemListView(
         list: List<ItemModel>,
         favorites: List<DbModel>,
-        listState: LazyListState,
+        listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {

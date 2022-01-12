@@ -138,6 +138,8 @@ class DetailsFragment : Fragment() {
                 currentDetailsUrl = info.url
                 setContent {
 
+                    //TODO: Change all this to its own function so we can preview it
+
                     val localContext = LocalContext.current
                     val details: DetailViewModel = viewModel(factory = factoryCreate { DetailViewModel(info, localContext) })
 

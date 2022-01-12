@@ -1,7 +1,8 @@
 package com.programmersbox.otakumanager
 
 import android.content.Context
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.lazy.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.DbModel
@@ -38,6 +39,8 @@ class OtakuManagerApp : OtakuApp() {
     }
 }
 
+
+@OptIn(ExperimentalFoundationApi::class)
 val appModule = module {
     single { NetworkHelper(get()) }
     single { MainLogo(R.mipmap.ic_launcher) }
@@ -82,7 +85,7 @@ val appModule = module {
             override fun ItemListView(
                 list: List<ItemModel>,
                 favorites: List<DbModel>,
-                listState: LazyListState,
+                listState: LazyGridState,
                 onLongPress: (ItemModel, ComponentState) -> Unit,
                 onClick: (ItemModel) -> Unit
             ) {

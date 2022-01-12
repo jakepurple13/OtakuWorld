@@ -811,6 +811,31 @@ fun InfiniteListHandler(
     }
 }
 
+@ExperimentalFoundationApi
+@Composable
+fun InfiniteListHandler(
+    listState: LazyGridState,
+    buffer: Int = 2,
+    onLoadMore: () -> Unit
+) {
+    val loadMore = remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItemsNumber = layoutInfo.totalItemsCount
+            val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+
+            lastVisibleItemIndex > (totalItemsNumber - buffer)
+        }
+    }
+
+    LaunchedEffect(loadMore) {
+        snapshotFlow { loadMore.value }
+            .drop(1)
+            .distinctUntilChanged()
+            .collect { onLoadMore() }
+    }
+}
+
 class ListBottomSheetItemModel(
     val primaryText: String,
     val overlineText: String? = null,

@@ -149,7 +149,6 @@ class FavoriteFragment : Fragment() {
 
         val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-
         CollapsingToolbarScaffold(
             modifier = Modifier,
             state = rememberCollapsingToolbarScaffoldState(),
@@ -323,7 +322,7 @@ class FavoriteFragment : Fragment() {
                             contentPadding = p,
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            state = rememberLazyListState()
+                            state = rememberLazyGridState()
                         ) {
                             items(
                                 showing
