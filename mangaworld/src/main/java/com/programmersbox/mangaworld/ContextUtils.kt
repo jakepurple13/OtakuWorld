@@ -243,7 +243,7 @@ fun BottomNavigationView.show() {
     drawable.setBounds(left, parent.height, right, parent.height + height)
     parent.overlay.add(drawable)
     ValueAnimator.ofInt(parent.height, top).apply {
-        startDelay = 100L
+        //startDelay = 100L
         duration = 300L
         interpolator = AnimationUtils.loadInterpolator(
             context,
@@ -279,7 +279,7 @@ fun BottomNavigationView.hide() {
     parent.overlay.add(drawable)
     visibility = View.GONE
     ValueAnimator.ofInt(top, parent.height).apply {
-        startDelay = 100L
+        startDelay = 200L
         duration = 200L
         interpolator = AnimationUtils.loadInterpolator(
             context,

@@ -244,7 +244,6 @@ class DetailsFragment : Fragment() {
             }
 
         private fun setup(info: InfoModel) {
-
             viewModelScope.launch(Dispatchers.IO) {
                 combine(
                     itemListener.findItemByUrlFlow(info.url),
@@ -261,7 +260,6 @@ class DetailsFragment : Fragment() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy { chapters = it }
                 .addTo(disposable)
-
         }
 
         override fun onCleared() {
