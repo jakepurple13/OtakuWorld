@@ -363,11 +363,11 @@ class GenericManga(val context: Context) : GenericInfo {
 
     }
 
-    override fun recentNavSetup(fragment: Fragment, navController: NavController) {
+    private fun readerNavSetup(fragment: Fragment, navController: NavController, navId: Int) {
         navController
             .graph
             .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.recent_nav).createDestination().apply {
+                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, navId).createDestination().apply {
                     id = ReadActivityComposeFragment::class.java.hashCode()
                     setClassName(ReadActivityComposeFragment::class.java.name)
                 }
@@ -376,32 +376,18 @@ class GenericManga(val context: Context) : GenericInfo {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
         }
+    }
+
+    override fun recentNavSetup(fragment: Fragment, navController: NavController) {
+        readerNavSetup(fragment, navController, R.id.recent_nav)
     }
 
     override fun allNavSetup(fragment: Fragment, navController: NavController) {
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.all_nav).createDestination().apply {
-                    id = ReadActivityComposeFragment::class.java.hashCode()
-                    setClassName(ReadActivityComposeFragment::class.java.name)
-                }
-            )
-
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
-        }
+        readerNavSetup(fragment, navController, R.id.all_nav)
     }
 
     override fun settingNavSetup(fragment: Fragment, navController: NavController) {
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                    id = ReadActivityComposeFragment::class.java.hashCode()
-                    setClassName(ReadActivityComposeFragment::class.java.name)
-                }
-            )
+        readerNavSetup(fragment, navController, R.id.setting_nav)
 
         navController
             .graph
@@ -411,10 +397,6 @@ class GenericManga(val context: Context) : GenericInfo {
                     setClassName(DownloadViewerFragment::class.java.name)
                 }
             )
-
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
-        }
     }
 
 }
