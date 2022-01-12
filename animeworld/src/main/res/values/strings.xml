@@ -98,4 +98,6 @@
     <string name="castIntro">Cast!\nStream an episode straight to any Chromecast device!</string>
 
     <string name="loading_please_wait">Loading, Please Wait</string>
+
+    <string name="ignore_ssl">Ignore SSL</string>
 </resources>

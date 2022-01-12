@@ -51,6 +51,7 @@ import com.programmersbox.anime_sources.utilities.Qualities
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.*
@@ -66,6 +67,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
@@ -112,6 +114,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                         putExtra("showPath", it.link)
                         putExtra("showName", model.name)
                         putExtra("referer", it.headers["referer"])
+                        putExtra("chapterModel", it.toJson())
                         putExtra("downloadOrStream", false)
                     }
                 )
@@ -584,6 +587,20 @@ class GenericAnime(val context: Context) : GenericInfo {
                     }
                 }
             )
+
+        }
+
+        playerSettings {
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+
+            val ignoreSsl by context.ignoreSsl.collectAsState(initial = true)
+
+            SwitchSetting(
+                settingTitle = { androidx.compose.material3.Text(stringResource(id = R.string.ignore_ssl)) },
+                settingIcon = { androidx.compose.material3.Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
+                value = ignoreSsl
+            ) { scope.launch { context.updatePref(IGNORE_SSL, it) } }
 
         }
 
