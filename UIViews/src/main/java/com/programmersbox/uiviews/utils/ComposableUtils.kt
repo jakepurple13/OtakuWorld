@@ -1052,8 +1052,18 @@ fun Coordinator(
 fun BannerBox(
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    bannerEnter: EnterTransition = slideInVertically { -it },
-    bannerExit: ExitTransition = slideOutVertically { -it },
+    bannerEnter: EnterTransition = slideInVertically(
+        animationSpec = tween(
+            durationMillis = 200,
+            easing = LinearOutSlowInEasing
+        )
+    ) { -it },
+    bannerExit: ExitTransition = slideOutVertically(
+        animationSpec = tween(
+            durationMillis = 200,
+            easing = LinearOutSlowInEasing
+        )
+    ) { -it },
     banner: @Composable BoxScope.() -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
