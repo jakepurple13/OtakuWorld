@@ -133,6 +133,8 @@
     <string name="save_for_later">Save for Later</string>
     <string name="view_on_github">View on Github</string>
     <string name="join_discord">Join the Discord</string>
+    <string name="support">Support the Developer</string>
+    <string name="support_summary">Support the developer by donating! Buy him a coffee!</string>
     <string name="get_started">Get Started</string>
     <string name="get_started_info">Favorite something for it to show up here</string>
     <string name="add_a_favorite">Add a Favorite</string>

@@ -833,6 +833,17 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
             interactionSource = remember { MutableInteractionSource() }
         ) { context.openInCustomChromeBrowser("https://discord.gg/MhhHMWqryg") }
     )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.support)) },
+        summaryValue = { Text(stringResource(R.string.support_summary)) },
+        settingIcon = { Icon(Icons.Default.AttachMoney, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { context.openInCustomChromeBrowser("https://ko-fi.com/V7V3D3JI") }
+    )
+
 }
 
 @ExperimentalComposeUiApi
