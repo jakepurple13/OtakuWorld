@@ -281,7 +281,7 @@ object WcoStreamExtractor : Extractor {
 
         val html = get(url, headers = mapOf("Referer" to "https://wcostream.cc/")).text
         val (Id) = "/e/(.*?)?domain".toRegex().find(url)!!.destructured
-        val (skey) = """skey\s=\s['"](.*?)['"];""".toRegex().find(html.orEmpty())!!.destructured
+        val (skey) = """skey\s=\s['"](.*?)['"];""".toRegex().find(html)!!.destructured
 
         val apiLink = "$baseUrl/info/$Id?domain=wcostream.cc&skey=$skey"
         val referrer = "$baseUrl/e/$Id?domain=wcostream.cc"
