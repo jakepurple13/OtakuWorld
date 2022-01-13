@@ -4,6 +4,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -421,32 +422,12 @@ fun M3OtakuBannerBox(
         banner = {
             androidx.compose.material3.Surface(
                 modifier = Modifier.align(Alignment.TopCenter),
-                shape = MaterialTheme.shapes.medium,
+                shape = MaterialTheme.shapes.medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp)),
                 tonalElevation = 5.dp,
                 shadowElevation = 10.dp
             ) {
                 ListItem(
                     icon = {
-                        /*GlideImage(
-                            imageModel = itemInfo.value?.imageUrl.orEmpty(),
-                            contentDescription = null,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                            loading = {
-                                Image(
-                                    bitmap = placeHolderImage,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                )
-                            },
-                            failure = {
-                                Image(
-                                    bitmap = placeHolderImage,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                )
-                            }
-                        )*/
                         val painter = rememberImagePainter(data = itemInfo.value?.imageUrl.orEmpty())
 
                         when (painter.state) {

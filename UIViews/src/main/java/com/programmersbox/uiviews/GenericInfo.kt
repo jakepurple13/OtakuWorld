@@ -32,13 +32,11 @@ interface GenericInfo {
     fun sourceList(): List<ApiService>
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
-    fun customPreferences(preferenceScreen: SettingsDsl) = Unit
     fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
     fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context)
 
     @Composable
-    fun DetailActions(infoModel: InfoModel, tint: Color) {
-    }
+    fun DetailActions(infoModel: InfoModel, tint: Color) = Unit
 
     @Composable
     fun ComposeShimmerItem()

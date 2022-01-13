@@ -28,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,8 +35,6 @@ import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.NavController
 import androidx.navigation.fragment.FragmentNavigator
-import androidx.navigation.fragment.findNavController
-import androidx.preference.Preference
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -254,117 +251,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         Sources.valueOf(s)
     } catch (e: IllegalArgumentException) {
         null
-    }
-
-    override fun customPreferences(preferenceScreen: SettingsDsl) {
-
-        preferenceScreen.viewSettings { s, it ->
-            it.addPreference(
-                Preference(it.context).apply {
-                    title = context.getString(R.string.video_menu_title)
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_video_library_24)
-                    setOnPreferenceClickListener {
-                        s.findNavController()
-                            .navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
-                        true
-                    }
-                }
-            )
-
-            val casting = Preference(it.context).apply {
-                title = context.getString(R.string.cast_menu_title)
-                icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_cast_24)
-                setOnPreferenceClickListener {
-                    if (MainActivity.cast.isCastActive()) {
-                        context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
-                    } else {
-                        MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                            .also { it.routeSelector = CastContext.getSharedInstance(context).mergedSelector }
-                            .show(MainActivity.activity.supportFragmentManager, "media_chooser")
-                    }
-                    true
-                }
-            }
-
-            MainActivity.cast.sessionConnected()
-                .subscribe(casting::setVisible)
-                .addTo(disposable)
-
-            MainActivity.cast.sessionStatus()
-                .map { if (it) R.drawable.ic_baseline_cast_connected_24 else R.drawable.ic_baseline_cast_24 }
-                .subscribe(casting::setIcon)
-                .addTo(disposable)
-
-            it.addPreference(casting)
-
-            it.addPreference(
-                Preference(it.context).apply {
-                    title = context.getString(R.string.downloads_menu_title)
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_download_24)
-                    setOnPreferenceClickListener {
-                        s.findNavController()
-                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
-                        true
-                    }
-                }
-            )
-        }
-
-        preferenceScreen.generalSettings { _, it ->
-            it.addPreference(
-                Preference(it.context).apply {
-                    title = context.getString(R.string.folder_location)
-                    summary = it.context.folderLocation
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_folder_24)
-                    setOnPreferenceClickListener {
-                        MainActivity.activity.requestPermissions(
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        ) {
-                            if (it.isGranted) {
-                                ChooserDialog(context)
-                                    .withIcon(R.mipmap.ic_launcher)
-                                    .withResources(R.string.choose_a_directory, R.string.chooseText, R.string.cancelText)
-                                    .withFilter(true, false)
-                                    .withStartFile(context.folderLocation)
-                                    .enableOptions(true)
-                                    .withChosenListener { dir, _ ->
-                                        context.folderLocation = "$dir/"
-                                        println(dir)
-                                        summary = context.folderLocation
-                                    }
-                                    .build()
-                                    .show()
-                            }
-                        }
-                        true
-                    }
-                }
-            )
-        }
-
-        preferenceScreen.navigationSetup {
-            it.findNavController()
-                .graph
-                .addDestination(
-                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                        id = DownloadViewerFragment::class.java.hashCode()
-                        setClassName(DownloadViewerFragment::class.java.name)
-                        addDeepLink(MainActivity.VIEW_DOWNLOADS)
-                    }
-                )
-
-            it.findNavController()
-                .graph
-                .addDestination(
-                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                        id = ViewVideosFragment::class.java.hashCode()
-                        setClassName(ViewVideosFragment::class.java.name)
-                        addDeepLink(MainActivity.VIEW_VIDEOS)
-                    }
-                )
-        }
-
     }
 
     @OptIn(ExperimentalAnimationApi::class)

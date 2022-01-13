@@ -31,22 +31,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.FragmentNavigator
-import androidx.navigation.fragment.findNavController
-import androidx.preference.Preference
-import androidx.preference.SeekBarPreference
-import androidx.preference.SwitchPreferenceCompat
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.models.*
@@ -60,7 +52,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -147,89 +138,6 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
         MainActivity.activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) downloadFullChapter(model, infoModel.title)
-        }
-    }
-
-    override fun customPreferences(preferenceScreen: SettingsDsl) {
-        preferenceScreen.generalSettings { _, it ->
-            it.addPreference(
-                SwitchPreferenceCompat(it.context).apply {
-                    title = it.context.getString(R.string.showAdultSources)
-                    isChecked = context.showAdult
-                    setOnPreferenceChangeListener { _, newValue ->
-                        context.showAdult = newValue as Boolean
-                        if (!newValue && (sourcePublish.value as? Sources)?.isAdult == true) {
-                            sourcePublish.onNext(Sources.values().random())
-                        }
-                        true
-                    }
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_text_format_24)
-                }
-            )
-        }
-
-        preferenceScreen.viewSettings { s, it ->
-            it.addPreference(
-                Preference(it.context).apply {
-                    title = it.context.getString(R.string.downloaded_manga)
-                    setOnPreferenceClickListener {
-                        s.findNavController()
-                            .navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
-                        true
-                    }
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_library_books_24)
-                }
-            )
-        }
-
-        preferenceScreen.playSettings { fragment, it ->
-            it.addPreference(
-                SeekBarPreference(it.context).apply {
-                    title = it.context.getString(R.string.reader_padding_between_pages)
-                    summary = it.context.getString(R.string.default_padding_summary)
-                    setOnPreferenceChangeListener { _, newValue ->
-                        if (newValue is Int) {
-                            fragment.lifecycleScope.launch(Dispatchers.IO) { it.context.updatePref(PAGE_PADDING, newValue) }
-                        }
-                        true
-                    }
-                    setDefaultValue(4)
-                    showSeekBarValue = true
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_format_line_spacing_24)
-                    min = 0
-                    max = 10
-                    fragment.lifecycleScope.launch {
-                        it.context.pagePadding
-                            .flowWithLifecycle(fragment.lifecycle)
-                            .collect { runOnUIThread { value = it } }
-                    }
-                }
-            )
-
-            it.addPreference(
-                SwitchPreferenceCompat(it.context).apply {
-                    title = it.context.getString(R.string.useNewReader)
-                    summary = it.context.getString(R.string.reader_summary_setting)
-                    isChecked = context.useNewReader
-                    setOnPreferenceChangeListener { _, newValue ->
-                        context.useNewReader = newValue as Boolean
-                        true
-                    }
-                    icon = ContextCompat.getDrawable(it.context, R.drawable.ic_baseline_chrome_reader_mode_24)
-                }
-            )
-
-        }
-
-        preferenceScreen.navigationSetup {
-            it.findNavController()
-                .graph
-                .addDestination(
-                    FragmentNavigator(it.requireContext(), it.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                        id = DownloadViewerFragment::class.java.hashCode()
-                        setClassName(DownloadViewerFragment::class.java.name)
-                    }
-                )
         }
     }
 
