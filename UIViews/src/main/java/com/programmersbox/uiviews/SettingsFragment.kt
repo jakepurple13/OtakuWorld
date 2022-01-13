@@ -248,11 +248,10 @@ fun SettingScreen(
                 scope = scope,
                 activity = activity,
                 genericInfo = genericInfo,
-                logo = logo,
-                usedLibraryClick = usedLibraryClick
+                logo = logo
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), modifier = Modifier.padding(top = 5.dp))
 
             /*Notifications*/
             NotificationSettings(
@@ -290,6 +289,13 @@ fun SettingScreen(
                 customSettings = customPreferences.playerSettings
             )
 
+            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), modifier = Modifier.padding(top = 5.dp))
+
+            /*More Info*/
+            InfoSettings(
+                context = context,
+                usedLibraryClick = usedLibraryClick
+            )
         }
     }
 
@@ -370,8 +376,7 @@ private fun AboutSettings(
     scope: CoroutineScope,
     activity: ComponentActivity,
     genericInfo: GenericInfo,
-    logo: MainLogo,
-    usedLibraryClick: () -> Unit
+    logo: MainLogo
 ) {
     CategorySetting(
         settingTitle = { Text(stringResource(R.string.about)) },
@@ -536,34 +541,6 @@ private fun AboutSettings(
                 }
         )
     }
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.view_libraries_used)) },
-        settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() },
-            onClick = usedLibraryClick
-        )
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.view_on_github)) },
-        settingIcon = { Icon(painterResource(R.drawable.github_icon), null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.join_discord)) },
-        settingIcon = { Icon(painterResource(R.drawable.ic_baseline_discord_24), null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://discord.gg/MhhHMWqryg") }
-    )
 }
 
 class NotificationViewModel(dao: ItemDao) : ViewModel() {
@@ -822,6 +799,40 @@ private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings
     )
 
     customSettings?.invoke()
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
+    CategorySetting(settingTitle = { Text(stringResource(R.string.more_info_category)) })
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.view_libraries_used)) },
+        settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = usedLibraryClick
+        )
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.view_on_github)) },
+        settingIcon = { Icon(painterResource(R.drawable.github_icon), null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.join_discord)) },
+        settingIcon = { Icon(painterResource(R.drawable.ic_baseline_discord_24), null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { context.openInCustomChromeBrowser("https://discord.gg/MhhHMWqryg") }
+    )
 }
 
 @ExperimentalComposeUiApi

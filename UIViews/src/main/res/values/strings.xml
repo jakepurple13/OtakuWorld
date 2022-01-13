@@ -74,6 +74,7 @@
     <string name="startingCheck">Starting Check</string>
     <string name="checking">Checking</string>
     <string name="about">About</string>
+    <string name="more_info_category">More Info</string>
     <string name="account_category_title">Account</string>
     <string name="last_update_check_time">Last Time Updates Were Checked</string>
     <string name="check_for_periodic_updates">Check for Updates Periodically</string>
