@@ -21,7 +21,7 @@ buildscript {
     ext.rxbindingKotlin = 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0'
 
     ext.androidCore = 'androidx.core:core-ktx:1.7.0'
-    ext.appCompat = 'androidx.appcompat:appcompat:1.4.0'
+    ext.appCompat = 'androidx.appcompat:appcompat:1.4.1'
     ext.material = 'com.google.android.material:material:1.6.0-alpha01'
 
     ext.preference = "androidx.preference:preference-ktx:1.1.1"
@@ -37,7 +37,7 @@ buildscript {
     ext.play_services = 'com.google.android.gms:play-services-auth:20.0.1'
 
     ext.exoplayer_version = "2.16.1"
-    ext.room_version = "2.4.0"
+    ext.room_version = "2.4.1"
 
     ext.nav_version = "2.4.0-rc01"
 
