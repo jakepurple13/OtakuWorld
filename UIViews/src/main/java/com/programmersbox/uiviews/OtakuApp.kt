@@ -110,29 +110,7 @@ abstract class OtakuApp : Application() {
     companion object {
 
         fun updateSetup(context: Context) {
-            val work = WorkManager.getInstance(context)
-            //work.cancelAllWork()
-            //if (context.shouldCheck) {
-            if (runBlocking { context.shouldCheckFlow.first() }) {
-                work.enqueueUniquePeriodicWork(
-                    "updateChecks",
-                    ExistingPeriodicWorkPolicy.KEEP,
-                    PeriodicWorkRequestBuilder<UpdateWorker>(
-                        1, TimeUnit.HOURS,
-                        5, TimeUnit.MINUTES
-                    )
-                        .setConstraints(
-                            Constraints.Builder()
-                                .setRequiredNetworkType(NetworkType.CONNECTED)
-                                .build()
-                        )
-                        .setInitialDelay(10, TimeUnit.SECONDS)
-                        .build()
-                ).state.observeForever { println(it) }
-            } else {
-                work.cancelUniqueWork("updateChecks")
-                work.pruneWork()
-            }
+            updateSetupNow(context, runBlocking { context.shouldCheckFlow.first() })
         }
 
         fun updateSetupNow(context: Context, check: Boolean) {
