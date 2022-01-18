@@ -194,17 +194,17 @@ class GenericAnime(val context: Context) : GenericInfo {
             .create()
 
         model.getChapterInfo()
+            .doOnSubscribe { runOnUIThread { dialog.show() } }
+            .onErrorReturnItem(emptyList())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .timeout(15, TimeUnit.SECONDS)
             .doOnError {
                 runOnUIThread {
                     Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
             }
-            .doOnSubscribe { runOnUIThread { dialog.show() } }
-            .onErrorReturnItem(emptyList())
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .timeout(15, TimeUnit.SECONDS)
             .map { it.filter(filter) }
             .subscribeBy { c ->
                 dialog.dismiss()

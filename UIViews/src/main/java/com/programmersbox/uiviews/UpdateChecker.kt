@@ -69,8 +69,9 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
             it.onSuccess(Result.success())
         }
     }
-        .onErrorReturn { Result.success() }
         .timeout(1, TimeUnit.MINUTES)
+        .onErrorReturn { Result.success() }
+
 
 }
 
@@ -164,12 +165,12 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
                 update.sendFinishedNotification()
                 Result.success()
             }
+            .timeout(5, TimeUnit.MINUTES)
             .onErrorReturn {
                 println(it)
                 update.sendFinishedNotification()
                 Result.success()
             }
-            .timeout(5, TimeUnit.MINUTES)
     }
 
 }
@@ -363,8 +364,8 @@ class NotifySingleWorker(context: Context, workerParams: WorkerParameters) : RxW
 
         it.onSuccess(Result.success())
     }
-        .onErrorReturn { Result.success() }
         .timeout(1, TimeUnit.MINUTES)
+        .onErrorReturn { Result.success() }
 
 }
 

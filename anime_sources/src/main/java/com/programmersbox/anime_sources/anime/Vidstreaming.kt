@@ -29,7 +29,7 @@ object Vidstreaming : VidstreamingTemplate(
 }
 
 object VidEmbed : VidstreamingTemplate(
-    "https://vidembed.cc",
+    "https://vidembed.io",
     "movies",
     "series"
 ) {
