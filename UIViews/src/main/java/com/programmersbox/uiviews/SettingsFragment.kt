@@ -515,8 +515,10 @@ private fun AboutSettings(
         settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
         value = aboutViewModel.canCheck,
         updateValue = {
-            scope.launch { context.updatePref(SHOULD_CHECK, it) }
-            OtakuApp.updateSetup(context)
+            scope.launch {
+                context.updatePref(SHOULD_CHECK, it)
+                OtakuApp.updateSetupNow(context, it)
+            }
         }
     )
 
