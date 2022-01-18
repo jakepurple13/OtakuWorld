@@ -77,7 +77,7 @@ class HttpSession {
         sessionCookies.putAll(
             CookieJar(
                 *res.headers
-                    .filter { it.key.toLowerCase() == "set-cookie" }
+                    .filter { it.key.lowercase() == "set-cookie" }
                     .map { Cookie(it.value) }
                     .toTypedArray()
             )
@@ -116,7 +116,7 @@ class HttpSession {
         sessionCookies.putAll(
             CookieJar(
                 *res.headers
-                    .filter { it.key.toLowerCase() == "set-cookie" }
+                    .filter { it.key.lowercase() == "set-cookie" }
                     .map { Cookie(it.value) }
                     .toTypedArray()
             )
@@ -125,7 +125,7 @@ class HttpSession {
     }
 }
 
-private fun String.toAscii() = this.map { it.toInt() }.joinToString()
+private fun String.toAscii() = this.map { it.code }.joinToString()
 
 class CrunchyrollGeoBypasser {
     companion object {

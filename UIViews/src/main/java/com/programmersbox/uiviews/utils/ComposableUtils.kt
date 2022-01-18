@@ -547,6 +547,7 @@ private fun <T> DeleteItemView(
         androidx.compose.material3.Surface(
             tonalElevation = 5.dp,
             modifier = Modifier.fillMaxSize(),
+            shape = MaterialTheme.shapes.medium,
             indication = rememberRipple(),
             border = BorderStroke(
                 animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
@@ -810,6 +811,31 @@ fun InfiniteListHandler(
     }
 }
 
+@ExperimentalFoundationApi
+@Composable
+fun InfiniteListHandler(
+    listState: LazyGridState,
+    buffer: Int = 2,
+    onLoadMore: () -> Unit
+) {
+    val loadMore = remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItemsNumber = layoutInfo.totalItemsCount
+            val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
+
+            lastVisibleItemIndex > (totalItemsNumber - buffer)
+        }
+    }
+
+    LaunchedEffect(loadMore) {
+        snapshotFlow { loadMore.value }
+            .drop(1)
+            .distinctUntilChanged()
+            .collect { onLoadMore() }
+    }
+}
+
 class ListBottomSheetItemModel(
     val primaryText: String,
     val overlineText: String? = null,
@@ -1026,8 +1052,18 @@ fun Coordinator(
 fun BannerBox(
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    bannerEnter: EnterTransition = slideInVertically { -it },
-    bannerExit: ExitTransition = slideOutVertically { -it },
+    bannerEnter: EnterTransition = slideInVertically(
+        animationSpec = tween(
+            durationMillis = 200,
+            easing = LinearOutSlowInEasing
+        )
+    ) { -it },
+    bannerExit: ExitTransition = slideOutVertically(
+        animationSpec = tween(
+            durationMillis = 200,
+            easing = LinearOutSlowInEasing
+        )
+    ) { -it },
     banner: @Composable BoxScope.() -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {

@@ -11,7 +11,6 @@ import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
@@ -25,6 +24,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.alorma.settings.composables.SettingsGroup
@@ -191,7 +191,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                 }
 
                 SettingsMenuLink(
-                    icon = { Image(painter = painterResource(id = R.drawable.ic_baseline_system_update_alt_24), contentDescription = null) },
+                    icon = { Icon(Icons.Default.Update, contentDescription = null) },
                     title = { Text(text = stringResource(id = R.string.update_available), modifier = Modifier.padding(start = 5.dp)) },
                     subtitle = {
                         Text(
@@ -292,11 +292,11 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
             val themeList = arrayOf("System", "Light", "Dark")
 
             SettingsMenuLink(
-                icon = { Image(painter = painterResource(id = R.drawable.ic_baseline_settings_brightness_24), contentDescription = null) },
+                icon = { Icon(Icons.Default.SettingsBrightness, contentDescription = null) },
                 title = { Text(text = stringResource(id = R.string.theme_choice_title), modifier = Modifier.padding(start = 5.dp)) },
                 subtitle = { Text(text = theme, modifier = Modifier.padding(start = 5.dp)) },
                 onClick = {
-                    MaterialAlertDialogBuilder(activity)
+                    /*MaterialAlertDialogBuilder(activity)
                         .setTitle(R.string.choose_a_theme)
                         .setIcon(R.drawable.ic_baseline_settings_brightness_24)
                         .setSingleChoiceItems(themeList, themeList.indexOf(theme)) { d, i ->
@@ -310,7 +310,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                             d.dismiss()
                         }
                         .setNegativeButton(R.string.cancel) { d, _ -> d.dismiss() }
-                        .show()
+                        .show()*/
                 }
             )
 

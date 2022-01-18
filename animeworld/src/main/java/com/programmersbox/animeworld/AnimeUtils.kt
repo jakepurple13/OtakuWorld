@@ -36,16 +36,22 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
+import com.programmersbox.uiviews.utils.dataStore
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 var Context.folderLocation: String by sharedPrefNotNullDelegate(
     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString() + "/AnimeWorld/"
 )
+
+val IGNORE_SSL = booleanPreferencesKey("ignore_ssl")
+val Context.ignoreSsl get() = dataStore.data.map { it[IGNORE_SSL] ?: true }
 
 data class VideoContent(
     var videoId: Long = 0,

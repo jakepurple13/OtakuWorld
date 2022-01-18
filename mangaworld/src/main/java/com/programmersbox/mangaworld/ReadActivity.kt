@@ -593,10 +593,12 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                 val delta = available.y
 
                                 val newTopOffset = topBarOffsetHeightPx.value + delta
-                                topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
+                                if (topBarOffsetHeightPx.value != newTopOffset)
+                                    topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
 
                                 val newOffset = toolbarOffsetHeightPx.value + delta
-                                toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
+                                if (toolbarOffsetHeightPx.value != newOffset)
+                                    toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
 
                                 return scrollBehavior.nestedScrollConnection.onPreScroll(available, source)//Offset.Zero
                             }

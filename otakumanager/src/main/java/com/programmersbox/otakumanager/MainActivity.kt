@@ -303,7 +303,7 @@ class MainActivity : ComponentActivity() {
                     LazyVerticalGrid(
                         cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                         contentPadding = it,
-                        state = rememberLazyListState()
+                        //state = rememberLazyListState()
                     ) {
                         items(
                             showing

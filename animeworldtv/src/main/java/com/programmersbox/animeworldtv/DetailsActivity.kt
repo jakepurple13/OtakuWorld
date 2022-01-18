@@ -14,7 +14,7 @@ class DetailsActivity : FragmentActivity() {
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.details_fragment, VideoDetailsFragment())
-                .commitNow();
+                .commitNow()
         }
     }
 

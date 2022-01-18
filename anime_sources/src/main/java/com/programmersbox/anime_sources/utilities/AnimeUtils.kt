@@ -438,7 +438,7 @@ val Response.url: String
 val Response.cookies: Map<String, String>
     get() {
         val cookieList =
-            this.headers.filter { it.first.toLowerCase(Locale.ROOT) == "set-cookie" }.getOrNull(0)?.second?.split(";")
+            this.headers.filter { it.first.lowercase(Locale.ROOT) == "set-cookie" }.getOrNull(0)?.second?.split(";")
         return cookieList?.associate {
             val split = it.split("=")
             (split.getOrNull(0)?.trim() ?: "") to (split.getOrNull(1)?.trim() ?: "")

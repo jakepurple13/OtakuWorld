@@ -74,6 +74,7 @@
     <string name="startingCheck">Starting Check</string>
     <string name="checking">Checking</string>
     <string name="about">About</string>
+    <string name="more_info_category">More Info</string>
     <string name="account_category_title">Account</string>
     <string name="last_update_check_time">Last Time Updates Were Checked</string>
     <string name="check_for_periodic_updates">Check for Updates Periodically</string>
@@ -132,6 +133,8 @@
     <string name="save_for_later">Save for Later</string>
     <string name="view_on_github">View on Github</string>
     <string name="join_discord">Join the Discord</string>
+    <string name="support">Support the Developer</string>
+    <string name="support_summary">Support the developer by donating! Buy him a coffee!</string>
     <string name="get_started">Get Started</string>
     <string name="get_started_info">Favorite something for it to show up here</string>
     <string name="add_a_favorite">Add a Favorite</string>

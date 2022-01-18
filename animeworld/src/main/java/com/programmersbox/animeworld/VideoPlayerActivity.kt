@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.github.rubensousa.previewseekbar.PreviewBar
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
@@ -32,12 +33,24 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.animeworld.databinding.*
+import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.*
+import com.programmersbox.models.ChapterModel
 import com.programmersbox.rxutils.invoke
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
+import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.toolTipText
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.koin.android.ext.android.inject
+import java.security.cert.X509Certificate
 import java.util.*
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSession
+import javax.net.ssl.X509TrustManager
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -133,6 +146,13 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val retriever = MediaMetadataRetriever()
     private var showPath: String? = null
 
+    private val genericInfo: GenericInfo by inject()
+
+    private val chapterModel: ChapterModel? by lazy {
+        intent.getStringExtra("chapterModel")
+            ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+    }
+
     private lateinit var videoBinding: ActivityVideoPlayerBinding
     private lateinit var exoBinding: ExoControlsBinding
 
@@ -225,8 +245,17 @@ class VideoPlayerActivity : AppCompatActivity() {
             //stream
             //fun buildMediaSource(uri: Uri): MediaSource =
             //ProgressiveMediaSource.Factory(DefaultHttpDataSourceFactory("exoplayer-codelab")).createMediaSource(uri)
-            val headers = intent.getStringExtra("referer")
-            getMediaSource(showPath!!.toUri(), false, headers)!!
+
+            if (runBlocking { ignoreSsl.first() }) {
+                val sslContext: SSLContext = SSLContext.getInstance("TLS")
+                sslContext.init(null, arrayOf(SSLTrustManager()), java.security.SecureRandom())
+                sslContext.createSSLEngine()
+                HttpsURLConnection.setDefaultHostnameVerifier { _: String, _: SSLSession -> true }
+                HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+            }
+
+            val headers = intent.getStringExtra("referer") ?: chapterModel?.url ?: ""
+            getMediaSource(showPath!!.toUri(), false, headers)
         }
         player.setMediaSource(source, true)
         player.prepare()
@@ -521,34 +550,47 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val bandwidthMeter by lazy { DefaultBandwidthMeter.Builder(this).build() }
 
-    private fun getMediaSource(url: Uri, preview: Boolean, header: String?): MediaSource? =
+    private fun getMediaSource(url: Uri, preview: Boolean, header: String): MediaSource =
         when (Util.inferContentType(url.lastPathSegment.toString())) {
-            C.TYPE_SS -> SsMediaSource.Factory(
-                DefaultDataSourceFactory(
-                    this, null,
-                    getHttpDataSourceFactory(preview, header)
-                )
-            )//.createMediaSource(url)
-            C.TYPE_DASH -> DashMediaSource.Factory(
-                DefaultDataSourceFactory(
-                    this, null,
-                    getHttpDataSourceFactory(preview, header)
-                )
-            )//.createMediaSource(url)
-            C.TYPE_HLS -> HlsMediaSource.Factory(getDataSourceFactory(preview, header))//.createMediaSource(uri)
-            C.TYPE_OTHER -> ProgressiveMediaSource.Factory(getDataSourceFactory(preview, header))//.createMediaSource(uri)
-            else -> null
-        }?.createMediaSource(MediaItem.fromUri(url))
+            C.TYPE_SS -> SsMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(url)
+            C.TYPE_DASH -> DashMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(url)
+            C.TYPE_HLS -> HlsMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(uri)
+            C.TYPE_OTHER -> ProgressiveMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(uri)
+            else -> DefaultMediaSourceFactory(getHttpDataSourceFactory(preview, header))
+        }.createMediaSource(MediaItem.fromUri(url))
 
-    private fun getDataSourceFactory(preview: Boolean, header: String?): DataSource.Factory = DefaultDataSourceFactory(
+    private fun getDataSourceFactory(preview: Boolean, header: String): DataSource.Factory = DefaultDataSourceFactory(
         this, if (preview) null else bandwidthMeter,
         getHttpDataSourceFactory(preview, header)
     )
 
-    private fun getHttpDataSourceFactory(preview: Boolean, header: String?): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
+    private fun getHttpDataSourceFactory(preview: Boolean, header: String): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
         setUserAgent(Util.getUserAgent(this@VideoPlayerActivity, "AnimeWorld"))
         setTransferListener(if (preview) null else bandwidthMeter)
-        header?.let { setDefaultRequestProperties(hashMapOf("Referer" to it)) }
+        //header?.let { setDefaultRequestProperties(hashMapOf("Referer" to it)) }
+        setDefaultRequestProperties(
+            mapOf(
+                "referer" to header,
+                "accept" to "*/*",
+                "sec-ch-ua" to "\"Chromium\";v=\"91\", \" Not;A Brand\";v=\"99\"",
+                "sec-ch-ua-mobile" to "?0",
+                "sec-fetch-user" to "?1",
+                "sec-fetch-mode" to "navigate",
+                "sec-fetch-dest" to "video"
+            )
+        )
+    }
+
+    class SSLTrustManager : X509TrustManager {
+        override fun checkClientTrusted(p0: Array<out X509Certificate>?, p1: String?) {
+        }
+
+        override fun checkServerTrusted(p0: Array<out X509Certificate>?, p1: String?) {
+        }
+
+        override fun getAcceptedIssuers(): Array<X509Certificate> {
+            return arrayOf()
+        }
     }
 
 }

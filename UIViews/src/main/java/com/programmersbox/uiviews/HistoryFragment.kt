@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.exponentialDecay
@@ -33,7 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -45,12 +44,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import coil.compose.rememberImagePainter
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
-import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -322,20 +320,17 @@ class HistoryFragment : Fragment() {
                     secondaryText = { Text(requireContext().getSystemDateTimeFormat().format(item.timestamp)) },
                     icon = {
                         Surface(shape = MaterialTheme.shapes.medium) {
-                            GlideImage(
-                                imageModel = item.imageUrl,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                failure = {
-                                    Image(
-                                        painter = rememberDrawablePainter(AppCompatResources.getDrawable(LocalContext.current, logo.logoId)),
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .padding(5.dp)
-                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                    )
-                                }
+                            Image(
+                                painter = rememberImagePainter(data = item.imageUrl) {
+                                    placeholder(logo.logoId)
+                                    error(logo.logoId)
+                                    crossfade(true)
+                                    lifecycle(LocalLifecycleOwner.current)
+                                    size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                },
+                                contentScale = ContentScale.FillBounds,
+                                contentDescription = item.title,
+                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             )
                         }
                     },

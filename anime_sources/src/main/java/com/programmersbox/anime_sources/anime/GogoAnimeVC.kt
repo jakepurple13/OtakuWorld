@@ -17,9 +17,8 @@ import io.reactivex.Single
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-
 object GogoAnimeVC : ShowApi(
-    baseUrl = "https://gogoanime.wiki",
+    baseUrl = "https://gogoanime.film",
     recentPath = "",
     allPath = ""
 ) {

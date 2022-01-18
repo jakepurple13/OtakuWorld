@@ -4,6 +4,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -36,8 +37,10 @@ import com.skydoves.landscapist.glide.GlideImage
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 object ComposableUtils {
-    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { 360.toDp() }
-    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { 480.toDp() }
+    const val IMAGE_WIDTH_PX = 360
+    const val IMAGE_HEIGHT_PX = 480
+    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { IMAGE_WIDTH_PX.toDp() }
+    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { IMAGE_HEIGHT_PX.toDp() }
 }
 
 @ExperimentalMaterialApi
@@ -290,11 +293,11 @@ fun M3CoverCard(
         ) {
             Image(
                 painter = rememberImagePainter(imageUrl) {
-                    placeholder(AppCompatResources.getDrawable(context, placeHolder)!!)
-                    error(AppCompatResources.getDrawable(context, error)!!)
+                    placeholder(placeHolder)
+                    error(error)
                     crossfade(true)
                     lifecycle(LocalLifecycleOwner.current)
-                    size(480, 360)
+                    size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                 },
                 contentDescription = name,
                 modifier = Modifier.matchParentSize()
@@ -419,32 +422,12 @@ fun M3OtakuBannerBox(
         banner = {
             androidx.compose.material3.Surface(
                 modifier = Modifier.align(Alignment.TopCenter),
-                shape = MaterialTheme.shapes.medium,
+                shape = MaterialTheme.shapes.medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp)),
                 tonalElevation = 5.dp,
                 shadowElevation = 10.dp
             ) {
                 ListItem(
                     icon = {
-                        /*GlideImage(
-                            imageModel = itemInfo.value?.imageUrl.orEmpty(),
-                            contentDescription = null,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                            loading = {
-                                Image(
-                                    bitmap = placeHolderImage,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                )
-                            },
-                            failure = {
-                                Image(
-                                    bitmap = placeHolderImage,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                )
-                            }
-                        )*/
                         val painter = rememberImagePainter(data = itemInfo.value?.imageUrl.orEmpty())
 
                         when (painter.state) {

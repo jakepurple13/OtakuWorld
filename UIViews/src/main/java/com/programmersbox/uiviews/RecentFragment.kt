@@ -10,7 +10,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.rememberLazyGridState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -160,7 +160,7 @@ class RecentFragment : BaseFragmentCompose() {
     @Composable
     private fun RecentView(recentVm: RecentViewModel = viewModel(factory = factoryCreate { RecentViewModel(dao, context) })) {
         val context = LocalContext.current
-        val state = rememberLazyListState()
+        val state = rememberLazyGridState()
         val scope = rememberCoroutineScope()
         val source by sourcePublish.subscribeAsState(initial = null)
         val refresh = rememberSwipeRefreshState(isRefreshing = recentVm.isRefreshing)
