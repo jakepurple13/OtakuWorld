@@ -98,6 +98,8 @@
     <string name="finishedDownloading">Finished Downloading</string>
     <string name="errorTryAgain">Error: Try Again</string>
     <string name="loading">Loading…</string>
+    <string name="history_save_title">History Limit</string>
+    <string name="history_save_summary">The number of items to save in history. (Default is 50)</string>
 
     <string-array name="theme_items">
         <item>System</item>

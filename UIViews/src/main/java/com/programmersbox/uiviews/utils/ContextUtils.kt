@@ -95,6 +95,9 @@ val Context.themeSetting get() = dataStore.data.map { it[THEME_SETTING] ?: "Syst
 val SHOW_ALL = booleanPreferencesKey("show_all")
 val Context.showAll get() = dataStore.data.map { it[SHOW_ALL] ?: true }
 
+val HISTORY_SAVE = intPreferencesKey("history_save")
+val Context.historySave get() = dataStore.data.map { it[HISTORY_SAVE] ?: 50 }
+
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 
 @JvmInline

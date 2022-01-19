@@ -51,13 +51,12 @@ dependencies {
 
     implementation project(':Models')
 
-    //def room_version = "2.3.0"
     implementation room.room
-    //implementation "androidx.room:room-runtime:$room_version"
     // For Kotlin use kapt instead of annotationProcessor
     kapt "androidx.room:room-compiler:$room_version"
-    //ksp "androidx.room:room-compiler:$room_version"
-    // optional - Kotlin Extensions and Coroutines support for Room
-    //implementation "androidx.room:room-ktx:$room_version"
-    //implementation "androidx.room:room-rxjava2:$room_version"
+
+    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
+    // alternatively - without Android dependencies for tests
+    testImplementation "androidx.paging:paging-common-ktx:$paging_version"
+    implementation "androidx.room:room-paging:2.4.1"
 }

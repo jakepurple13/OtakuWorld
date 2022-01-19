@@ -7,10 +7,10 @@ import android.view.ViewGroup
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.exponentialDecay
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -26,9 +26,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
@@ -36,7 +36,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.Fragment
@@ -44,7 +43,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
+import androidx.paging.*
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import coil.compose.rememberImagePainter
+import com.google.accompanist.placeholder.material.placeholder
+import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
@@ -83,21 +87,21 @@ class HistoryFragment : Fragment() {
             setContent { M3MaterialTheme(currentColorScheme) { RecentlyViewedUi() } }
         }
 
-    class HistoryViewModel : ViewModel() {
-        var sortedChoice by mutableStateOf<SortRecentlyBy<*>>(SortRecentlyBy.TIMESTAMP)
-        var reverse by mutableStateOf(false)
-
-        fun sortChange(item: SortRecentlyBy<*>) {
-            if (sortedChoice != item) sortedChoice = item else reverse = !reverse
-        }
+    class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
+        val historyItems = Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                enablePlaceholders = true
+            )
+        ) { dao.getRecentlyViewedPaging() }
     }
 
     @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @Composable
-    private fun RecentlyViewedUi(hm: HistoryViewModel = viewModel()) {
+    private fun RecentlyViewedUi(hm: HistoryViewModel = viewModel(factory = factoryCreate { HistoryViewModel(dao) })) {
 
-        val recentItems by dao.getRecentlyViewed().collectAsState(initial = emptyList())
+        val recentItems = hm.historyItems.flow.collectAsLazyPagingItems()
         val scope = rememberCoroutineScope()
 
         var clearAllDialog by remember { mutableStateOf(false) }
@@ -134,68 +138,23 @@ class HistoryFragment : Fragment() {
                     },
                     title = { Text(stringResource(R.string.history)) },
                     actions = {
-
                         IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
-
-                        val rotateIcon: @Composable (SortRecentlyBy<*>) -> Float = {
-                            animateFloatAsState(
-                                if (it == hm.sortedChoice && hm.reverse) 180f else 0f,
-                                animationSpec = tween(500)
-                            ).value
-                        }
-
-                        GroupButton(
-                            selected = hm.sortedChoice,
-                            options = listOf(
-                                GroupButtonModel(SortRecentlyBy.TITLE) {
-                                    Icon(
-                                        Icons.Default.SortByAlpha,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TITLE))
-                                    )
-                                },
-                                GroupButtonModel(SortRecentlyBy.TIMESTAMP) {
-                                    Icon(
-                                        Icons.Default.CalendarToday,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(SortRecentlyBy.TIMESTAMP))
-                                    )
-                                }
-                            ),
-                            onClick = hm::sortChange
-                        )
                     }
                 )
             }
         ) { p ->
-            AnimatedLazyColumn(
-                contentPadding = p,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                items = recentItems
-                    .let {
-                        when (val s = hm.sortedChoice) {
-                            is SortRecentlyBy.TITLE -> it.sortedBy(s.sort)
-                            is SortRecentlyBy.TIMESTAMP -> it.sortedByDescending(s.sort)
-                        }
-                    }
-                    .let { if (hm.reverse) it.reversed() else it }
-                    .fastMap { AnimatedLazyListItem(it.url, it) { HistoryItem(it, scope) } }
-            )
-            /*LazyColumn(
+            LazyColumn(
                 contentPadding = p,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(
-                    recentItems
-                        .let {
-                            when (val s = hm.sortedChoice) {
-                                is SortRecentlyBy.TITLE -> it.sortedBy(s.sort)
-                                is SortRecentlyBy.TIMESTAMP -> it.sortedByDescending(s.sort)
-                            }
-                        }
-                        .let { if (hm.reverse) it.reversed() else it }
-                ) { HistoryItem(it, scope) }
-            }*/
+                items(recentItems) { item ->
+                    if (item != null) {
+                        HistoryItem(item, scope)
+                    } else {
+                        HistoryItemPlaceholder()
+                    }
+                }
+            }
         }
 
     }
@@ -353,6 +312,42 @@ class HistoryFragment : Fragment() {
                     }
                 )
             }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @Composable
+    private fun HistoryItemPlaceholder() {
+        val placeholderColor = androidx.compose.material3.contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
+            .copy(0.1f)
+            .compositeOver(M3MaterialTheme.colorScheme.surface)
+
+        Surface(
+            tonalElevation = 5.dp,
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.placeholder(true, color = placeholderColor)
+        ) {
+            ListItem(
+                modifier = Modifier.placeholder(true, color = placeholderColor),
+                text = { Text("Otaku") },
+                overlineText = { Text("Otaku") },
+                secondaryText = { Text("Otaku") },
+                icon = {
+                    Surface(shape = MaterialTheme.shapes.medium) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    }
+                },
+                trailing = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = null)
+                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+                    }
+                }
+            )
         }
     }
 

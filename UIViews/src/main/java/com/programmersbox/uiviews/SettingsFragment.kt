@@ -778,6 +778,20 @@ private fun GeneralSettings(
         updateValue = { scope.launch { context.updatePref(SHOW_ALL, it) } }
     )
 
+    var sliderValue by remember { mutableStateOf(runBlocking { context.historySave.first().toFloat() }) }
+
+    SliderSetting(
+        sliderValue = sliderValue,
+        settingTitle = { Text(stringResource(R.string.history_save_title)) },
+        settingSummary = { Text(stringResource(R.string.history_save_summary)) },
+        settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
+        range = -1f..100f,
+        updateValue = {
+            sliderValue = it
+            scope.launch { context.updatePref(HISTORY_SAVE, sliderValue.toInt()) }
+        }
+    )
+
     customSettings?.invoke()
 }
 

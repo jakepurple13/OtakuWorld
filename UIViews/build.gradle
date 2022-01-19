@@ -136,6 +136,11 @@ dependencies {
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
     implementation "me.onebone:toolbar-compose:2.3.0"
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:1.0.3'
+    implementation "androidx.paging:paging-compose:1.0.0-alpha14"
+
+    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
+    // alternatively - without Android dependencies for tests
+    testImplementation "androidx.paging:paging-common-ktx:$paging_version"
 
     implementation datastore.datastore
 }

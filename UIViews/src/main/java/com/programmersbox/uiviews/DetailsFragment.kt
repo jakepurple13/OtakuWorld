@@ -94,7 +94,9 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -1046,7 +1048,8 @@ class DetailsFragment : Fragment() {
                         timestamp = System.currentTimeMillis()
                     )
                 )
-                historyDao.removeOldData()
+                val save = runBlocking { context.historySave.first() }
+                if (save != -1) historyDao.removeOldData(save)
             }
         }
 

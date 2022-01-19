@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
 import android.content.Context
+import androidx.paging.PagingSource
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
@@ -51,14 +52,17 @@ interface HistoryDao {
     @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp ASC")
     fun getRecentlyViewed(): Flow<List<RecentModel>>
 
+    @Query("SELECT * FROM RecentlyViewed ORDER BY timestamp DESC")
+    fun getRecentlyViewedPaging(): PagingSource<Int, RecentModel>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRecentlyViewed(model: RecentModel)
 
     @Delete
     suspend fun deleteRecent(model: RecentModel)
 
-    @Query("DELETE FROM RecentlyViewed WHERE url IN (SELECT url FROM RecentlyViewed ORDER BY timestamp DESC LIMIT 1 OFFSET 20)")
-    suspend fun removeOldData()
+    @Query("DELETE FROM RecentlyViewed WHERE url IN (SELECT url FROM RecentlyViewed ORDER BY timestamp DESC LIMIT 1 OFFSET :limit)")
+    suspend fun removeOldData(limit: Int)
 
     @Query("DELETE FROM RecentlyViewed")
     suspend fun deleteAllRecentHistory(): Int

@@ -1054,13 +1054,13 @@ fun BannerBox(
     showBanner: Boolean = false,
     bannerEnter: EnterTransition = slideInVertically(
         animationSpec = tween(
-            durationMillis = 200,
+            durationMillis = 150,
             easing = LinearOutSlowInEasing
         )
     ) { -it },
     bannerExit: ExitTransition = slideOutVertically(
         animationSpec = tween(
-            durationMillis = 200,
+            durationMillis = 150,
             easing = LinearOutSlowInEasing
         )
     ) { -it },
