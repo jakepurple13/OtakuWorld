@@ -11,6 +11,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -30,12 +31,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -47,6 +53,7 @@ import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.gsonutils.toJson
@@ -76,6 +83,19 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
 
+    class NotificationViewModel(private val dao: ItemDao) : ViewModel() {
+
+        val notificationItems = Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                enablePlaceholders = false
+            )
+        ) { dao.getAllNotificationsFlowPaging() }
+
+        val notificationCount = dao.getAllNotificationCountFlow()
+
+    }
+
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalMaterialApi::class,
@@ -89,7 +109,10 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         setContent {
             M3MaterialTheme(currentColorScheme) {
 
-                val items by db.getAllNotificationsFlow().collectAsState(emptyList())
+                val vm: NotificationViewModel = viewModel(factory = factoryCreate { NotificationViewModel(db) })
+
+                val items = vm.notificationItems.flow.collectAsLazyPagingItems()
+                val itemCount by vm.notificationCount.collectAsState(0)
 
                 val state = rememberBottomSheetScaffoldState()
                 val scope = rememberCoroutineScope()
@@ -100,7 +123,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-                BottomSheetDeleteScaffold(
+                BottomSheetDeleteScaffoldPaging(
                     listOfItems = items,
                     state = state,
                     multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
@@ -142,7 +165,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                         SmallTopAppBar(
                             scrollBehavior = scrollBehavior,
-                            title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                            title = { Text(stringResource(id = R.string.current_notification_count, itemCount)) },
                             actions = {
                                 IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
                                 IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
@@ -172,6 +195,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             .subscribe { d.clear() }
                             .addTo(disposable)
                     },
+                    deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
                     itemUi = { item ->
                         ListItem(
                             modifier = Modifier.padding(5.dp),
@@ -204,7 +228,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                             onClick = {
                                                 Completable.merge(
                                                     items
-                                                        .filter { it.notiTitle == item.notiTitle }
+                                                        .itemSnapshotList
+                                                        .filter { it?.notiTitle == item.notiTitle }
+                                                        .filterNotNull()
                                                         .map {
                                                             cancelNotification(it)
                                                             db.deleteNotification(it)
@@ -227,20 +253,21 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         )
                     }
                 ) { p, itemList ->
-                    AnimatedLazyColumn(
+
+                    /*AnimatedLazyColumn(
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp),
                         items = itemList.fastMap {
                             AnimatedLazyListItem(key = it.url, value = it) { NotificationItem(item = it, navController = findNavController()) }
                         }
-                    )
-                    //TODO: This will be used when native lazycolumn/lazyrow gains support for animations
-                    /*LazyColumn(
+                    )*/
+
+                    LazyColumn(
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp)
-                    ) { items(itemList) { NotificationItem(item = it, navController = findNavController()) } }*/
+                    ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }
                 }
             }
         }

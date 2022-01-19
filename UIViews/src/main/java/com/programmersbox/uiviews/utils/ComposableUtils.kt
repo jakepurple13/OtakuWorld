@@ -2,11 +2,13 @@ package com.programmersbox.uiviews.utils
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.LruCache
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -59,9 +61,17 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.graphics.drawable.toBitmap
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.items
+import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.window.layout.WindowMetricsCalculator
+import coil.Coil
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import coil.size.Scale
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -554,6 +564,237 @@ private fun <T> DeleteItemView(
                 animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
             ),
             onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
+        ) { itemUi(item) }
+    }
+
+}
+
+//TODO: For paging animation, map the data around the AnimatedItem
+// along with modifying an animatedItems for the LazyPagingItems
+
+@ExperimentalMaterial3Api
+@ExperimentalMaterialApi
+@Composable
+fun <T : Any> BottomSheetDeleteScaffoldPaging(
+    listOfItems: LazyPagingItems<T>,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    multipleTitle: String,
+    onRemove: (T) -> Unit,
+    onMultipleRemove: (SnapshotStateList<T>) -> Unit,
+    customSingleRemoveDialog: (T) -> Boolean = { true },
+    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    topBar: @Composable (() -> Unit)? = null,
+    itemUi: @Composable (T) -> Unit,
+    mainView: @Composable (PaddingValues, LazyPagingItems<T>) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    BottomSheetScaffold(
+        scaffoldState = state,
+        modifier = Modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
+        topBar = topBar,
+        backgroundColor = M3MaterialTheme.colorScheme.background,
+        contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
+        sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
+        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+        sheetContent = {
+
+            val itemsToDelete = remember { mutableStateListOf<T>() }
+
+            LaunchedEffect(state) {
+                snapshotFlow { state.bottomSheetState.isCollapsed }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { itemsToDelete.clear() }
+            }
+
+            var showPopup by remember { mutableStateOf(false) }
+
+            if (showPopup) {
+
+                val onDismiss = { showPopup = false }
+
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = onDismiss,
+                    title = { androidx.compose.material3.Text(multipleTitle) },
+                    text = {
+                        androidx.compose.material3.Text(
+                            context.resources.getQuantityString(
+                                R.plurals.areYouSureRemove,
+                                itemsToDelete.size,
+                                itemsToDelete.size
+                            )
+                        )
+                    },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(
+                            onClick = {
+                                onDismiss()
+                                scope.launch { state.bottomSheetState.collapse() }
+                                onMultipleRemove(itemsToDelete)
+                            }
+                        ) { androidx.compose.material3.Text(stringResource(R.string.yes)) }
+                    },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { androidx.compose.material3.Text(stringResource(R.string.no)) } }
+                )
+
+            }
+
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+            androidx.compose.material3.Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            scope.launch {
+                                if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
+                                else state.bottomSheetState.collapse()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                    ) { androidx.compose.material3.Text(stringResource(R.string.delete_multiple)) }
+                },
+                bottomBar = {
+                    BottomAppBar(
+                        contentPadding = PaddingValues(0.dp),
+                        backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                            .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+                        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                            .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
+                    ) {
+                        androidx.compose.material3.Button(
+                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 5.dp)
+                        ) { androidx.compose.material3.Text(stringResource(id = R.string.cancel)) }
+
+                        androidx.compose.material3.Button(
+                            onClick = { showPopup = true },
+                            enabled = itemsToDelete.isNotEmpty(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 5.dp)
+                        ) { androidx.compose.material3.Text(stringResource(id = R.string.remove)) }
+                    }
+                }
+            ) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = it,
+                    modifier = Modifier.padding(5.dp)
+                ) {
+                    items(listOfItems, key = { i -> i.hashCode().toString() }) { i ->
+                        i?.let { d ->
+                            DeleteItemView(
+                                item = d,
+                                selectedForDeletion = d in itemsToDelete,
+                                onClick = { item -> if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item) },
+                                customSingleRemoveDialog = customSingleRemoveDialog,
+                                deleteTitle = deleteTitle,
+                                onRemove = onRemove,
+                                itemUi = itemUi
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    ) { mainView(it, listOfItems) }
+}
+
+@ExperimentalMaterialApi
+@Composable
+private fun <T : Any> DeleteItemView(
+    item: T,
+    selectedForDeletion: Boolean,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    onClick: (T) -> Unit,
+    customSingleRemoveDialog: (T) -> Boolean,
+    onRemove: (T) -> Unit,
+    itemUi: @Composable (T) -> Unit
+) {
+
+    var showPopup by remember { mutableStateOf(false) }
+
+    if (showPopup) {
+
+        val onDismiss = { showPopup = false }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { androidx.compose.material3.Text(deleteTitle(item)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        onDismiss()
+                        onRemove(item)
+                    }
+                ) { androidx.compose.material3.Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { androidx.compose.material3.Text(stringResource(R.string.no)) } }
+        )
+
+    }
+
+    val dismissState = rememberDismissState(
+        confirmStateChange = {
+            if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+                if (customSingleRemoveDialog(item)) {
+                    showPopup = true
+                }
+            }
+            false
+        }
+    )
+
+    SwipeToDismiss(
+        state = dismissState,
+        background = {
+            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    DismissValue.Default -> Color.Transparent
+                    DismissValue.DismissedToEnd -> Color.Red
+                    DismissValue.DismissedToStart -> Color.Red
+                }
+            )
+            val alignment = when (direction) {
+                DismissDirection.StartToEnd -> Alignment.CenterStart
+                DismissDirection.EndToStart -> Alignment.CenterEnd
+            }
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
+            ) {
+                androidx.compose.material3.Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.scale(scale)
+                )
+            }
+        }
+    ) {
+        androidx.compose.material3.Surface(
+            tonalElevation = 5.dp,
+            modifier = Modifier.fillMaxSize(),
+            shape = MaterialTheme.shapes.medium,
+            indication = rememberRipple(),
+            border = BorderStroke(
+                animateDpAsState(targetValue = if (selectedForDeletion) 5.dp else 1.dp).value,
+                animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
+            ),
+            onClick = { onClick(item) },
         ) { itemUi(item) }
     }
 
@@ -1168,4 +1409,184 @@ fun getWindowSizeClass(windowDpSize: DpSize): WindowSize = when {
     windowDpSize.width < 600.dp -> WindowSize.Compact
     windowDpSize.width < 840.dp -> WindowSize.Medium
     else -> WindowSize.Expanded
+}
+
+fun Color.contrastAgainst(background: Color): Float {
+    val fg = if (alpha < 1f) compositeOver(background) else this
+
+    val fgLuminance = fg.luminance() + 0.05f
+    val bgLuminance = background.luminance() + 0.05f
+
+    return kotlin.math.max(fgLuminance, bgLuminance) / kotlin.math.min(fgLuminance, bgLuminance)
+}
+
+@Composable
+fun rememberDominantColorState(
+    context: Context = LocalContext.current,
+    defaultColor: Color = M3MaterialTheme.colorScheme.primary,
+    defaultOnColor: Color = M3MaterialTheme.colorScheme.onPrimary,
+    cacheSize: Int = 12,
+    isColorValid: (Color) -> Boolean = { true }
+): DominantColorState = remember {
+    DominantColorState(context, defaultColor, defaultOnColor, cacheSize, isColorValid)
+}
+
+//TODO: Try converting DetailsFragment to use this
+
+/*
+val surfaceColor = M3MaterialTheme.colorScheme.surface
+val dominantColor = rememberDominantColorState { color ->
+    // We want a color which has sufficient contrast against the surface color
+    color.contrastAgainst(surfaceColor) >= 3f
+}
+
+DynamicThemePrimaryColorsFromImage(dominantColor) {
+    LaunchedEffect(item.imageUrl) {
+        if (item.imageUrl != null) {
+            dominantColor.updateColorsFromImageUrl(item.imageUrl)
+        } else {
+            dominantColor.reset()
+        }
+    }
+    HistoryItem(item, scope)
+}
+ */
+
+/**
+ * A composable which allows dynamic theming of the [androidx.compose.material.Colors.primary]
+ * color from an image.
+ */
+@Composable
+fun DynamicThemePrimaryColorsFromImage(
+    dominantColorState: DominantColorState = rememberDominantColorState(),
+    content: @Composable () -> Unit
+) {
+    val colors = M3MaterialTheme.colorScheme.copy(
+        primary = animateColorAsState(
+            dominantColorState.color,
+            spring(stiffness = Spring.StiffnessLow)
+        ).value,
+        onPrimary = animateColorAsState(
+            dominantColorState.onColor,
+            spring(stiffness = Spring.StiffnessLow)
+        ).value,
+        surface = animateColorAsState(
+            dominantColorState.color,
+            spring(stiffness = Spring.StiffnessLow)
+        ).value,
+        onSurface = animateColorAsState(
+            dominantColorState.onColor,
+            spring(stiffness = Spring.StiffnessLow)
+        ).value
+    )
+    M3MaterialTheme(colorScheme = colors, content = content)
+}
+
+/**
+ * A class which stores and caches the result of any calculated dominant colors
+ * from images.
+ *
+ * @param context Android context
+ * @param defaultColor The default color, which will be used if [calculateDominantColor] fails to
+ * calculate a dominant color
+ * @param defaultOnColor The default foreground 'on color' for [defaultColor].
+ * @param cacheSize The size of the [LruCache] used to store recent results. Pass `0` to
+ * disable the cache.
+ * @param isColorValid A lambda which allows filtering of the calculated image colors.
+ */
+@Stable
+class DominantColorState(
+    private val context: Context,
+    private val defaultColor: Color,
+    private val defaultOnColor: Color,
+    cacheSize: Int = 12,
+    private val isColorValid: (Color) -> Boolean = { true }
+) {
+    var color by mutableStateOf(defaultColor)
+        private set
+    var onColor by mutableStateOf(defaultOnColor)
+        private set
+
+    private val cache = when {
+        cacheSize > 0 -> LruCache<String, DominantColors>(cacheSize)
+        else -> null
+    }
+
+    suspend fun updateColorsFromImageUrl(url: String) {
+        val result = calculateDominantColor(url)
+        color = result?.color ?: defaultColor
+        onColor = result?.onColor ?: defaultOnColor
+    }
+
+    private suspend fun calculateDominantColor(url: String): DominantColors? {
+        val cached = cache?.get(url)
+        if (cached != null) {
+            // If we already have the result cached, return early now...
+            return cached
+        }
+
+        // Otherwise we calculate the swatches in the image, and return the first valid color
+        return calculateSwatchesInImage(context, url)
+            // First we want to sort the list by the color's population
+            .sortedByDescending { swatch -> swatch.population }
+            // Then we want to find the first valid color
+            .firstOrNull { swatch -> isColorValid(Color(swatch.rgb)) }
+            // If we found a valid swatch, wrap it in a [DominantColors]
+            ?.let { swatch ->
+                DominantColors(
+                    color = Color(swatch.rgb),
+                    onColor = Color(swatch.bodyTextColor).copy(alpha = 1f)
+                )
+            }
+            // Cache the resulting [DominantColors]
+            ?.also { result -> cache?.put(url, result) }
+    }
+
+    /**
+     * Reset the color values to [defaultColor].
+     */
+    fun reset() {
+        color = defaultColor
+        onColor = defaultColor
+    }
+}
+
+@Immutable
+private data class DominantColors(val color: Color, val onColor: Color)
+
+/**
+ * Fetches the given [imageUrl] with [Coil], then uses [Palette] to calculate the dominant color.
+ */
+private suspend fun calculateSwatchesInImage(
+    context: Context,
+    imageUrl: String
+): List<Palette.Swatch> {
+    val r = ImageRequest.Builder(context)
+        .data(imageUrl)
+        // We scale the image to cover 128px x 128px (i.e. min dimension == 128px)
+        .size(128).scale(Scale.FILL)
+        // Disable hardware bitmaps, since Palette uses Bitmap.getPixels()
+        .allowHardware(false)
+        .build()
+
+    val bitmap = when (val result = Coil.execute(r)) {
+        is SuccessResult -> result.drawable.toBitmap()
+        else -> null
+    }
+
+    return bitmap?.let {
+        withContext(Dispatchers.Default) {
+            val palette = Palette.Builder(bitmap)
+                // Disable any bitmap resizing in Palette. We've already loaded an appropriately
+                // sized bitmap through Coil
+                .resizeBitmapArea(0)
+                // Clear any built-in filters. We want the unfiltered dominant color
+                .clearFilters()
+                // We reduce the maximum color count down to 8
+                .maximumColorCount(8)
+                .generate()
+
+            palette.vibrantSwatch?.let { listOfNotNull(it) } ?: palette.swatches
+        }
+    } ?: emptyList()
 }
