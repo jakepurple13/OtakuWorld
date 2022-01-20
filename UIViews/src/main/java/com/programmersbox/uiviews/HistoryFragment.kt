@@ -94,6 +94,8 @@ class HistoryFragment : Fragment() {
                 enablePlaceholders = true
             )
         ) { dao.getRecentlyViewedPaging() }
+
+        val historyCount = dao.getAllRecentHistoryCount()
     }
 
     @ExperimentalMaterial3Api
@@ -102,6 +104,7 @@ class HistoryFragment : Fragment() {
     private fun RecentlyViewedUi(hm: HistoryViewModel = viewModel(factory = factoryCreate { HistoryViewModel(dao) })) {
 
         val recentItems = hm.historyItems.flow.collectAsLazyPagingItems()
+        val recentSize by hm.historyCount.collectAsState(initial = 0)
         val scope = rememberCoroutineScope()
 
         var clearAllDialog by remember { mutableStateOf(false) }
@@ -138,11 +141,22 @@ class HistoryFragment : Fragment() {
                     },
                     title = { Text(stringResource(R.string.history)) },
                     actions = {
+                        Text("$recentSize")
                         IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
                     }
                 )
             }
         ) { p ->
+
+            /*AnimatedLazyColumn(
+                contentPadding = p,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(vertical = 4.dp),
+                items = recentItems.itemSnapshotList.fastMap { item ->
+                    AnimatedLazyListItem(key = item!!.url, value = item) { HistoryItem(item, scope) }
+                }
+            )*/
+
             LazyColumn(
                 contentPadding = p,
                 verticalArrangement = Arrangement.spacedBy(4.dp)

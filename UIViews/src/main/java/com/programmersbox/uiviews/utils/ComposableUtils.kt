@@ -569,9 +569,6 @@ private fun <T> DeleteItemView(
 
 }
 
-//TODO: For paging animation, map the data around the AnimatedItem
-// along with modifying an animatedItems for the LazyPagingItems
-
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @Composable

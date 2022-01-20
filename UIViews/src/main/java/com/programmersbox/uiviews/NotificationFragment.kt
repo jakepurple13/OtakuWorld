@@ -258,8 +258,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp),
-                        items = itemList.fastMap {
-                            AnimatedLazyListItem(key = it.url, value = it) { NotificationItem(item = it, navController = findNavController()) }
+                        items = itemList.itemSnapshotList.fastMap {
+                            AnimatedLazyListItem(key = it!!.url, value = it) { NotificationItem(item = it, navController = findNavController()) }
                         }
                     )*/
 
