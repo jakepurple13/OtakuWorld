@@ -114,7 +114,9 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
@@ -1333,13 +1335,14 @@ class ReadActivity : AppCompatActivity() {
         lifecycleScope.launch {
             pagePadding
                 .flowWithLifecycle(lifecycle)
-                .collect {
+                .onEach {
                     runOnUiThread {
                         binding.readView.removeItemDecoration(decor)
                         decor = VerticalSpaceItemDecoration(it)
                         binding.readView.addItemDecoration(decor)
                     }
                 }
+                .collect()
         }
 
         binding.readerSettings.setOnClickListener {
