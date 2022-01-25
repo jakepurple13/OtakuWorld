@@ -204,7 +204,7 @@ class AllFragment : BaseFragmentCompose() {
         val source by sourcePublish.subscribeAsState(initial = null)
 
         LaunchedEffect(isConnected) {
-            if (allVm.sourceList.isEmpty() && source != null && isConnected) allVm.reset(context, source!!)
+            if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(context, source!!)
         }
 
         val scaffoldState = rememberBottomSheetScaffoldState()

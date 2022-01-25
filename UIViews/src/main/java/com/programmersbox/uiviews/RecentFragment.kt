@@ -171,7 +171,7 @@ class RecentFragment : BaseFragmentCompose() {
             .subscribeAsState(initial = true)
 
         LaunchedEffect(isConnected) {
-            if (recentVm.sourceList.isEmpty() && source != null && isConnected) recentVm.reset(context, source!!)
+            if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context, source!!)
         }
 
         val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }

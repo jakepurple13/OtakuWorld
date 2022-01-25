@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyGridState
 import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -183,7 +183,7 @@ class GenericManga(val context: Context) : GenericInfo {
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             state = listState
         ) {
-            items(list) {
+            itemsIndexed(list, key = { i, it -> "${it.url}$i" }) { _, it ->
                 M3CoverCard(
                     onLongPress = { c -> onLongPress(it, c) },
                     imageUrl = it.imageUrl,
