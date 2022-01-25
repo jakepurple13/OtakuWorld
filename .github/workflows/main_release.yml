@@ -109,7 +109,6 @@ jobs:
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
           cp ${{ steps.otakumanager_sign.outputs.signedReleaseFile }} otakumanager-release.apk
 
-
       - uses: actions/upload-artifact@v2
         with:
           name: Signed Manga App
