@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -92,7 +93,7 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
 }
 
 enum class SettingLocation {
-    CHECK, SWITCH, PAGER, OPTIMISTIC, MOTIONLAYOUT
+    CHECK, SWITCH, PAGER, OPTIMISTIC, MOTIONLAYOUT, THEME
 }
 
 @ExperimentalMotionApi
@@ -140,6 +141,7 @@ fun TestView(closeClick: () -> Unit) {
                     SettingLocation.PAGER -> PagerView { scope.launch { state.bottomSheetState.collapse() } }
                     SettingLocation.OPTIMISTIC -> OptimisticView { scope.launch { state.bottomSheetState.collapse() } }
                     SettingLocation.MOTIONLAYOUT -> MotionLayoutView { scope.launch { state.bottomSheetState.collapse() } }
+                    SettingLocation.THEME -> ThemeingView { scope.launch { state.bottomSheetState.collapse() } }
                     else -> {}
                 }
             }
@@ -205,6 +207,18 @@ fun TestView(closeClick: () -> Unit) {
                             scope.launch { state.bottomSheetState.expand() }
                         }
                     ) { Icon(Icons.Default.ChevronRight, null) }
+                }
+
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text("Theme Settings") },
+                        settingIcon = { Icon(Icons.Default.SettingsBrightness, null) },
+                        modifier = Modifier.clickable {
+                            location = SettingLocation.THEME
+                            scope.launch { state.bottomSheetState.expand() }
+                        }
+                    ) { Icon(Icons.Default.ChevronRight, null) }
+
                 }
             }
         }
@@ -806,6 +820,93 @@ fun MotionLayoutView(closeClick: () -> Unit) {
             androidx.compose.material3.Button(onClick = { animateToEnd = !animateToEnd }) {
                 androidx.compose.material3.Text(text = "Run")
             }
+        }
+    }
+}
+
+@ExperimentalMaterial3Api
+@ExperimentalFoundationApi
+@Composable
+fun ThemeingView(closeClick: () -> Unit) {
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        topBar = {
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Theme Views") },
+                    actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
+                    scrollBehavior = scrollBehavior
+                )
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { p ->
+
+        val current = currentColorScheme
+
+        val dominantColor = rememberDynamicColorState()
+        val url: String? = remember {
+            "https://upload.wikimedia.org/wikipedia/en/c/c3/OnePunchMan_manga_cover.png"
+        }
+        LaunchedEffect(url) {
+            if (url != null) {
+                dominantColor.updateColorsFromImageUrl(url)
+            } else {
+                dominantColor.reset()
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(p),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            stickyHeader {
+                Row {
+                    Text("Option", modifier = Modifier.weight(1f))
+                    Text("M3", modifier = Modifier.weight(1f))
+                    Text("Dynamic", modifier = Modifier.weight(1f))
+                }
+            }
+
+            fun LazyListScope.row(type: String, choice: ColorScheme.() -> Color) {
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(type, modifier = Modifier.weight(1f))
+
+                        MaterialTheme(current) {
+                            Box(
+                                modifier = Modifier
+                                    .height(15.dp)
+                                    .weight(1f)
+                                    .background(MaterialTheme.colorScheme.choice())
+                            )
+                        }
+
+                        FullDynamicThemePrimaryColorsFromImage(dominantColor) {
+                            Box(
+                                modifier = Modifier
+                                    .height(15.dp)
+                                    .weight(1f)
+                                    .background(MaterialTheme.colorScheme.choice())
+                            )
+                        }
+                    }
+                }
+            }
+
+            row("Primary") { primary }
+            row("onPrimary") { onPrimary }
+            row("surface") { surface }
+            row("onSurface") { onSurface }
+            row("Background") { background }
+            row("onBackground") { onBackground }
+
         }
     }
 }
