@@ -22,21 +22,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
@@ -56,6 +54,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastAny
@@ -102,6 +101,7 @@ import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import org.koin.android.ext.android.inject
+import kotlin.math.ln
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
@@ -687,20 +687,30 @@ class DetailsFragment : Fragment() {
         BottomSheetScaffold(
             backgroundColor = Color.Transparent,
             sheetContent = {
+                val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
                 Scaffold(
                     topBar = {
                         SmallTopAppBar(
                             title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
                             colors = TopAppBarDefaults.smallTopAppBarColors(
-                                containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                                containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+                                scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
+                                    M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
+                                } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
+                                    backgroundColor = M3MaterialTheme.colorScheme.surface,
+                                    elevation = 1.dp
+                                )
                             ),
                             navigationIcon = {
                                 IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
                                     Icon(Icons.Default.Close, null, tint = topBarColor)
                                 }
-                            }
+                            },
+                            scrollBehavior = scrollBehaviorMarkAs
                         )
                     },
+                    modifier = Modifier.nestedScroll(scrollBehaviorMarkAs.nestedScrollConnection)
                 ) { p ->
                     LazyColumn(
                         contentPadding = p,
@@ -768,7 +778,13 @@ class DetailsFragment : Fragment() {
                 SmallTopAppBar(
                     colors = TopAppBarDefaults.smallTopAppBarColors(
                         titleContentColor = topBarColor,
-                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
+                            M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
+                        } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
+                            backgroundColor = M3MaterialTheme.colorScheme.surface,
+                            elevation = 1.dp
+                        )
                     ),
                     modifier = Modifier.zIndex(2f),
                     scrollBehavior = scrollBehavior,
@@ -1507,6 +1523,44 @@ class DetailsFragment : Fragment() {
 
             }
         }
+    }
+
+
+    /**
+     * Returns the new background [Color] to use, representing the original background [color] with an
+     * overlay corresponding to [elevation] applied. The overlay will only be applied to
+     * [ColorScheme.surface].
+     */
+    private fun ColorScheme.applyTonalElevation(backgroundColor: Color, elevation: Dp): Color {
+        return if (backgroundColor == surface) {
+            surfaceColorAtElevation(elevation)
+        } else {
+            backgroundColor
+        }
+    }
+
+    /**
+     * Returns the [ColorScheme.surface] color with an alpha of the [ColorScheme.primary] color overlaid
+     * on top of it.
+     * Computes the surface tonal color at different elevation levels e.g. surface1 through surface5.
+     *
+     * @param elevation Elevation value used to compute alpha of the color overlay layer.
+     */
+    private fun ColorScheme.surfaceColorAtElevation(
+        elevation: Dp,
+    ): Color {
+        if (elevation == 0.dp) return surface
+        val alpha = ((4.5f * ln(elevation.value + 1)) + 2f) / 100f
+        return primary.copy(alpha = alpha).compositeOver(surface)
+    }
+
+    private fun Color.surfaceColorAtElevation(
+        elevation: Dp,
+        surface: Color
+    ): Color {
+        if (elevation == 0.dp) return surface
+        val alpha = ((4.5f * ln(elevation.value + 1)) + 2f) / 100f
+        return copy(alpha = alpha).compositeOver(surface)
     }
 
     override fun onDestroy() {
