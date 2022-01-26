@@ -44,31 +44,97 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Build APK
-        run: bash ./gradlew assembleRelease --stacktrace
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
+      - name: Build all artifacts
+        id: buildAllApks
+        uses: eskatos/gradle-command-action@v1.3.3
         with:
-          name: apk
-          path: animeworld/build/outputs/apk/release/animeworld-release.apk
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: mangaworld/build/outputs/apk/release/mangaworld-release.apk
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: novelworld/build/outputs/apk/release/novelworld-release.apk
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: animeworldtv/build/outputs/apk/release/animeworldtv-release.apk
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: otakumanager/build/outputs/apk/release/otakumanager-release.apk
+          gradle-version: 7.0.2
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: assembleRelease
+
+          - uses: r0adkll/sign-android-release@v1
+            name: Sign app APK
+            id: manga_sign
+            with:
+              releaseDirectory: mangaworld/build/outputs/apk/release
+              signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+              alias: ${{ secrets.ALIAS }}
+              keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+              keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+          - uses: r0adkll/sign-android-release@v1
+            name: Sign app APK
+            id: anime_sign
+            with:
+              releaseDirectory: animeworld/build/outputs/apk/release
+              signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+              alias: ${{ secrets.ALIAS }}
+              keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+              keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+          - uses: r0adkll/sign-android-release@v1
+            name: Sign app APK
+            id: novel_sign
+            with:
+              releaseDirectory: novelworld/build/outputs/apk/release
+              signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+              alias: ${{ secrets.ALIAS }}
+              keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+              keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+          - uses: r0adkll/sign-android-release@v1
+            name: Sign app APK
+            id: animetv_sign
+            with:
+              releaseDirectory: animeworldtv/build/outputs/apk/release
+              signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+              alias: ${{ secrets.ALIAS }}
+              keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+              keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+          - uses: r0adkll/sign-android-release@v1
+            name: Sign app APK
+            id: otakumanager_sign
+            with:
+              releaseDirectory: otakumanager/build/outputs/apk/release
+              signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+              alias: ${{ secrets.ALIAS }}
+              keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+              keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+          # ${{steps.sign_app.outputs.signedReleaseFile}}
+          - name: Clean up build artifacts
+            run: |
+              cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+              cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
+              cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
+              cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
+              cp ${{ steps.otakumanager_sign.outputs.signedReleaseFile }} otakumanager-release.apk
+
+          - uses: actions/upload-artifact@v2
+            with:
+              name: Signed Manga App
+              path: mangaworld-release.apk
+
+          - uses: actions/upload-artifact@v2
+            with:
+              name: Signed Anime App
+              path: animeworld-release.apk
+
+          - uses: actions/upload-artifact@v2
+            with:
+              name: Signed Novel App
+              path: novelworld-release.apk
+
+          - uses: actions/upload-artifact@v2
+            with:
+              name: Signed AnimeTV App
+              path: animeworldtv-release.apk
+
+          - uses: actions/upload-artifact@v2
+            with:
+              name: Signed OtakuManager App
+              path: otakumanager-release.apk
