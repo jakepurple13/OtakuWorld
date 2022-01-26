@@ -151,17 +151,6 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        gradlePluginPortal()
-        mavenCentral()
-        maven { url "https://jitpack.io" }
-        //maven { url "https://dl.bintray.com/piasy/maven" }
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-    }
-}
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
