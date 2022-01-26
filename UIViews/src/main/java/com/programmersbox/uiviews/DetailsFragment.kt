@@ -1038,6 +1038,7 @@ class DetailsFragment : Fragment() {
         }
     }
 
+    @ExperimentalMaterial3Api
     @ExperimentalMaterialApi
     @Composable
     private fun ChapterItem(

@@ -347,7 +347,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                     initialValue = runBlocking { requireContext().dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
                                     range = 1f..100f
                                 )
-                                Divider(color = M3MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
+                                androidx.compose.material3.Divider()
                                 SliderSetting(
                                     scope = scope,
                                     settingIcon = Icons.Default.FormatLineSpacing,
@@ -443,10 +443,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                                 imageModel = it,
                                                 contentScale = ContentScale.Crop,
                                                 loading = {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.align(Alignment.Center),
-                                                        color = M3MaterialTheme.colorScheme.primary
-                                                    )
+                                                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                                                 },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
@@ -906,10 +903,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                 imageModel = painter,
                 contentScale = ContentScale.FillWidth,
                 loading = {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = M3MaterialTheme.colorScheme.primary
-                    )
+                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 },
                 modifier = Modifier
                     .fillMaxSize()

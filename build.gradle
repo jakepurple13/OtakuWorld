@@ -41,7 +41,7 @@ buildscript {
     ext.exoplayer_version = "2.16.1"
     ext.room_version = "2.4.1"
 
-    ext.nav_version = "2.4.0-rc01"
+    ext.nav_version = "2.4.0"
 
     def koin_version = "3.0.2"
 
@@ -52,7 +52,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.2.0-alpha01"
+    ext.jetpack = "1.2.0-alpha02"
 
     ext.accompanist = "0.20.3"
 
@@ -63,7 +63,7 @@ buildscript {
     ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
     // Material Design
     ext.composeMaterial = "androidx.compose.material:material:$jetpack"
-    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha03"
+    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha04"
     // Material design icons
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
@@ -147,6 +147,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+        //Note: Update this to the alpha version in order to be able to upgrade the gradle to 7.1.0
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
     }
 }

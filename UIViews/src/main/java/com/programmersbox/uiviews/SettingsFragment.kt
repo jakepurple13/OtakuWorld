@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -34,19 +33,22 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
-import androidx.preference.*
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -74,11 +76,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
-import java.util.*
 
 class SettingsDsl {
     companion object {
@@ -240,7 +244,7 @@ fun SettingScreen(
                 logo = logo
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            androidx.compose.material3.Divider()
 
             /*About*/
             AboutSettings(
@@ -251,7 +255,7 @@ fun SettingScreen(
                 logo = logo
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), modifier = Modifier.padding(top = 5.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(top = 5.dp))
 
             /*Notifications*/
             NotificationSettings(
@@ -268,7 +272,7 @@ fun SettingScreen(
                 historyClick = historyClick
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            androidx.compose.material3.Divider()
 
             /*General*/
             GeneralSettings(
@@ -280,7 +284,7 @@ fun SettingScreen(
                 globalSearchClick = globalSearchClick
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            androidx.compose.material3.Divider()
 
             /*Player*/
             PlaySettings(
@@ -289,7 +293,7 @@ fun SettingScreen(
                 customSettings = customPreferences.playerSettings
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), modifier = Modifier.padding(top = 5.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(top = 5.dp))
 
             /*More Info*/
             InfoSettings(
@@ -624,7 +628,7 @@ private fun NotificationSettings(
                 .padding(bottom = 16.dp, top = 8.dp)
         )
 
-        Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+        androidx.compose.material3.Divider()
     }
 }
 
@@ -678,6 +682,7 @@ private fun ViewSettings(
     customSettings?.invoke()
 }
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @Composable
@@ -862,6 +867,7 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
 
 }
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @Composable

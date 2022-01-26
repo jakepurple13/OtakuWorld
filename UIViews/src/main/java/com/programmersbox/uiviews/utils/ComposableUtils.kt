@@ -1117,7 +1117,7 @@ class ListBottomSheet<T>(
                                 secondaryText = c.secondaryText?.let { i -> { Text(i) } },
                                 overlineText = c.overlineText?.let { i -> { Text(i) } }
                             )
-                            if (index < list.size - 1) Divider()
+                            if (index < list.size - 1) androidx.compose.material.Divider()
                         }
                     }
                 }

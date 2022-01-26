@@ -14,15 +14,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +49,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
-import androidx.paging.*
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import coil.compose.rememberImagePainter
@@ -60,9 +67,9 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import java.util.*
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class HistoryFragment : Fragment() {
@@ -94,6 +101,8 @@ class HistoryFragment : Fragment() {
                 enablePlaceholders = true
             )
         ) { dao.getRecentlyViewedPaging() }
+            .flow
+            .flowOn(Dispatchers.IO)
 
         val historyCount = dao.getAllRecentHistoryCount()
     }
@@ -103,7 +112,7 @@ class HistoryFragment : Fragment() {
     @Composable
     private fun RecentlyViewedUi(hm: HistoryViewModel = viewModel(factory = factoryCreate { HistoryViewModel(dao) })) {
 
-        val recentItems = hm.historyItems.flow.collectAsLazyPagingItems()
+        val recentItems = hm.historyItems.collectAsLazyPagingItems()
         val recentSize by hm.historyCount.collectAsState(initial = 0)
         val scope = rememberCoroutineScope()
 
@@ -256,8 +265,7 @@ class HistoryFragment : Fragment() {
                             .background(M3MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
                     ) {
                         Column {
-                            CircularProgressIndicator(
-                                color = M3MaterialTheme.colorScheme.primary,
+                            androidx.compose.material3.CircularProgressIndicator(
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
                             Text(text = stringResource(id = R.string.loading), Modifier.align(Alignment.CenterHorizontally))
