@@ -9,13 +9,19 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,7 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -46,7 +55,7 @@ import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.CoverCard
-import com.programmersbox.uiviews.utils.CustomChip
+import com.programmersbox.uiviews.utils.CustomChip2
 import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -247,7 +256,7 @@ class MainActivity : ComponentActivity() {
                         LazyRow {
 
                             item {
-                                CustomChip(
+                                CustomChip2(
                                     "ALL",
                                     modifier = Modifier
                                         .combinedClickable(
@@ -271,7 +280,7 @@ class MainActivity : ComponentActivity() {
                                     .sortedBy { it.first }
                             ) {
 
-                                CustomChip(
+                                CustomChip2(
                                     "${it.first}: ${it.second.size - 1}",
                                     modifier = Modifier
                                         .combinedClickable(

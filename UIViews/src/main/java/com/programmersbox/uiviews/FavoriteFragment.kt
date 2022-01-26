@@ -14,11 +14,14 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -231,15 +234,15 @@ class FavoriteFragment : Fragment() {
 
                         item {
                             CustomChip(
-                                "ALL",
-                                modifier = Modifier
-                                    .combinedClickable(
-                                        onClick = { viewModel.resetSources() },
-                                        onLongClick = { viewModel.selectedSources.clear() }
-                                    ),
-                                backgroundColor = M3MaterialTheme.colorScheme.primary,
-                                textColor = M3MaterialTheme.colorScheme.onPrimary
-                            )
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { viewModel.resetSources() },
+                                    onLongClick = { viewModel.selectedSources.clear() }
+                                ),
+                                colors = ChipDefaults.outlinedChipColors(
+                                    backgroundColor = M3MaterialTheme.colorScheme.primary,
+                                    contentColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
+                                )
+                            ) { Text("ALL") }
                         }
 
                         items(
@@ -249,21 +252,23 @@ class FavoriteFragment : Fragment() {
                                 .sortedBy { it.first }
                         ) {
                             CustomChip(
-                                "${it.first}: ${it.second.size - 1}",
-                                modifier = Modifier
-                                    .combinedClickable(
-                                        onClick = { viewModel.newSource(it.first) },
-                                        onLongClick = { viewModel.singleSource(it.first) }
-                                    ),
-                                backgroundColor = animateColorAsState(
-                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
-                                    else M3MaterialTheme.colorScheme.surface
-                                ).value,
-                                textColor = animateColorAsState(
-                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
-                                    else M3MaterialTheme.colorScheme.onSurface
-                                ).value
-                            )
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { viewModel.newSource(it.first) },
+                                    onLongClick = { viewModel.singleSource(it.first) }
+                                ),
+                                colors = ChipDefaults.outlinedChipColors(
+                                    backgroundColor = animateColorAsState(
+                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
+                                        else M3MaterialTheme.colorScheme.surface
+                                    ).value,
+                                    contentColor = animateColorAsState(
+                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
+                                        else M3MaterialTheme.colorScheme.onSurface
+                                    ).value
+                                        .copy(alpha = ChipDefaults.ContentOpacity)
+                                ),
+                                leadingIcon = { Text("${it.second.size - 1}") }
+                            ) { Text(it.first) }
                         }
                     }
                 }

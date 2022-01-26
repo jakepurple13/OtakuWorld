@@ -1382,12 +1382,15 @@ class DetailsFragment : Fragment() {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         items(model.genres) {
                             CustomChip(
-                                category = it,
-                                textColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface).animate().value,
-                                backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
-                                    .animate().value,
-                                modifier = Modifier.fadeInAnimation()
-                            )
+                                modifier = Modifier.fadeInAnimation(),
+                                colors = ChipDefaults.outlinedChipColors(
+                                    backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
+                                        .animate().value,
+                                    contentColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
+                                        .animate().value
+                                        .copy(alpha = ChipDefaults.ContentOpacity)
+                                )
+                            ) { Text(it) }
                         }
                     }
 

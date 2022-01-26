@@ -187,7 +187,7 @@ private fun shortestColumn(colHeights: IntArray): Int {
 fun Int.toComposeColor() = Color(this)
 
 @Composable
-fun CustomChip(
+fun CustomChip2(
     category: String,
     modifier: Modifier = Modifier,
     textColor: Color = MaterialTheme.colors.onSurface,
@@ -209,6 +209,61 @@ fun CustomChip(
                     .align(Alignment.CenterVertically),
                 textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun CustomChip(
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = MaterialTheme.shapes.small.copy(CornerSize(percent = 50)),
+    border: BorderStroke? = null,
+    colors: ChipColors = ChipDefaults.chipColors(),
+    leadingIcon: @Composable (() -> Unit)? = null,
+    content: @Composable RowScope.() -> Unit
+) {
+    val contentColor by colors.contentColor(enabled)
+    androidx.compose.material3.Surface(
+        modifier = modifier,
+        shape = shape,
+        color = colors.backgroundColor(enabled).value,
+        contentColor = contentColor.copy(1.0f),
+        border = border,
+        tonalElevation = 8.dp
+    ) {
+        CompositionLocalProvider(LocalContentAlpha provides contentColor.alpha) {
+            ProvideTextStyle(
+                value = M3MaterialTheme.typography.bodyMedium
+            ) {
+                Row(
+                    Modifier
+                        .defaultMinSize(
+                            minHeight = ChipDefaults.MinHeight
+                        )
+                        .padding(
+                            start = if (leadingIcon == null) {
+                                12.dp
+                            } else 0.dp,
+                            end = 12.dp,
+                        ),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (leadingIcon != null) {
+                        Spacer(Modifier.width(4.dp))
+                        val leadingIconContentColor by colors.leadingIconContentColor(enabled)
+                        CompositionLocalProvider(
+                            androidx.compose.material3.LocalContentColor provides leadingIconContentColor,
+                            LocalContentAlpha provides leadingIconContentColor.alpha,
+                            content = leadingIcon
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    content()
+                }
+            }
         }
     }
 }

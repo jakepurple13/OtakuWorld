@@ -17,12 +17,15 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,10 +43,12 @@ import androidx.compose.ui.util.fastMap
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.net.toUri
 import androidx.navigation.fragment.findNavController
-import com.programmersbox.dragswipe.*
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
+import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.currentColorScheme
+import com.programmersbox.uiviews.utils.currentScreen
 import com.tonyodev.fetch2.*
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
@@ -236,9 +241,8 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             val progress = download.download.progress.coerceAtLeast(0)
                             Text(stringResource(R.string.percent_progress, progress))
-                            LinearProgressIndicator(
+                            androidx.compose.material3.LinearProgressIndicator(
                                 progress = animateFloatAsState(targetValue = progress.toFloat() / 100f).value,
-                                color = M3MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
                                     .fillMaxWidth()
@@ -380,9 +384,8 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
                     val prog = download.download.progress.coerceAtLeast(0)
 
-                    LinearProgressIndicator(
+                    androidx.compose.material3.LinearProgressIndicator(
                         progress = animateFloatAsState(targetValue = prog.toFloat() / 100f).value,
-                        color = M3MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .constrainAs(progress) {
                                 start.linkTo(parent.start)
