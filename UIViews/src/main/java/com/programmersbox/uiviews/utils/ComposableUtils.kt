@@ -391,6 +391,7 @@ suspend fun calculateDiff(
 @ExperimentalMaterialApi
 @Composable
 fun <T> BottomSheetDeleteScaffold(
+    modifier: Modifier = Modifier,
     listOfItems: List<T>,
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
@@ -407,7 +408,9 @@ fun <T> BottomSheetDeleteScaffold(
 
     BottomSheetScaffold(
         scaffoldState = state,
-        modifier = Modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
+            .then(modifier),
         topBar = topBar,
         backgroundColor = M3MaterialTheme.colorScheme.background,
         contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
@@ -628,6 +631,7 @@ private fun <T> DeleteItemView(
 @ExperimentalMaterialApi
 @Composable
 fun <T : Any> BottomSheetDeleteScaffoldPaging(
+    modifier: Modifier = Modifier,
     listOfItems: LazyPagingItems<T>,
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
@@ -645,7 +649,9 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 
     BottomSheetScaffold(
         scaffoldState = state,
-        modifier = Modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
+            .then(modifier),
         topBar = topBar,
         backgroundColor = M3MaterialTheme.colorScheme.background,
         contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
