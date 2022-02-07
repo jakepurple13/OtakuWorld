@@ -163,7 +163,9 @@ class MainActivity : AppCompatActivity() {
                                         androidx.compose.material3.contentColorFor(androidx.compose.material3.MaterialTheme.colorScheme.surface)
                                             .animate().value
                             ) {
-                                Divider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value)
+                                androidx.compose.material3.Divider(
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value
+                                )
 
                                 PreferenceSetting(settingTitle = { Text("") }) {
                                     androidx.compose.material3.IconButton(onClick = showSettings) {
@@ -212,7 +214,9 @@ class MainActivity : AppCompatActivity() {
                                 title = { androidx.compose.material3.Text("Fun Playground") },
                                 scrollBehavior = scrollBehavior
                             )
-                            Divider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value)
+                            androidx.compose.material3.Divider(
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value
+                            )
                         }
                     },
                     backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background.animate().value,
@@ -804,7 +808,7 @@ fun InfoCard(
 
             }
 
-            Divider(
+            androidx.compose.material3.Divider(
                 thickness = 0.5.dp,
                 color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.onSurface.copy(alpha = .12f)
             )

@@ -127,7 +127,7 @@ fun TestView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         sheetPeekHeight = 0.dp,
@@ -245,7 +245,7 @@ fun SwitchView(closeClick: () -> Unit) {
                     },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -284,7 +284,7 @@ fun CheckView(closeClick: () -> Unit) {
                     },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -325,7 +325,7 @@ fun PagerView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -480,7 +480,7 @@ fun PagerView(closeClick: () -> Unit) {
                                                     },
                                                 ) { Text(settingLocation.toString()) }
                                                 if (index < optionsList.value.size - 1)
-                                                    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                                                    androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                                             }
                                         }
                                     }
@@ -631,7 +631,7 @@ fun OptimisticView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -682,7 +682,7 @@ fun OptimisticView(closeClick: () -> Unit) {
                     onClick = { scope.launch { count2.emit(++count) } }
                 ) { Text("Hi: $timer") }
 
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
 
             item {
@@ -750,7 +750,7 @@ fun MotionLayoutView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -839,7 +839,7 @@ fun ThemeingView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider()
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
