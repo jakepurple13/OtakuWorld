@@ -341,7 +341,8 @@ class FavoriteFragment : Fragment() {
                                         }
                                     }
                                     .let { if (viewModel.reverse) it.reversed() else it }
-                                    .toTypedArray()
+                                    .toTypedArray(),
+                                key = { it.key }
                             ) { info ->
                                 M3CoverCard(
                                     onLongPress = { c ->
