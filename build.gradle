@@ -11,7 +11,7 @@ buildscript {
 
     ext.gson = 'com.google.code.gson:gson:2.8.9'
 
-    ext.glideVersion = "4.12.0"
+    ext.glideVersion = "4.13.0"
     ext.glide = "com.github.bumptech.glide:glide:$glideVersion"
     ext.glideCompiler = "com.github.bumptech.glide:compiler:$glideVersion"
 
@@ -76,7 +76,7 @@ buildscript {
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.3"
     ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.3"
-    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.6"
+    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.4.7"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
     ext.materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"
