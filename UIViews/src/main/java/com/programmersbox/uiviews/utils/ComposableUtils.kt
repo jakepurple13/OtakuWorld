@@ -397,6 +397,7 @@ fun <T> BottomSheetDeleteScaffold(
     multipleTitle: String,
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
     topBar: @Composable (() -> Unit)? = null,
@@ -511,6 +512,7 @@ fun <T> BottomSheetDeleteScaffold(
                             DeleteItemView(
                                 item = i,
                                 deleteItemList = itemsToDelete,
+                                deleteTitle = deleteTitle,
                                 customSingleRemoveDialog = customSingleRemoveDialog,
                                 onRemove = onRemove,
                                 itemUi = itemUi
@@ -544,6 +546,7 @@ private fun <T> DeleteItemView(
     item: T,
     deleteItemList: SnapshotStateList<T>,
     customSingleRemoveDialog: (T) -> Boolean,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     onRemove: (T) -> Unit,
     itemUi: @Composable (T) -> Unit
 ) {
@@ -555,7 +558,7 @@ private fun <T> DeleteItemView(
         val onDismiss = { showPopup = false }
         androidx.compose.material3.AlertDialog(
             onDismissRequest = onDismiss,
-            title = { androidx.compose.material3.Text(stringResource(R.string.remove)) },
+            title = { androidx.compose.material3.Text(deleteTitle(item)) },
             confirmButton = {
                 androidx.compose.material3.TextButton(
                     onClick = {

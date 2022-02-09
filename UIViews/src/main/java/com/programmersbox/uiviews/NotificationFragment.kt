@@ -13,7 +13,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -41,17 +40,12 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -63,7 +57,6 @@ import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.gsonutils.toJson
@@ -78,7 +71,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.*
@@ -94,21 +86,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
 
-    class NotificationViewModel(private val dao: ItemDao) : ViewModel() {
-
-        val notificationItems = Pager(
-            config = PagingConfig(
-                pageSize = 10,
-                enablePlaceholders = false
-            )
-        ) { dao.getAllNotificationsFlowPaging() }
-            .flow
-            .flowOn(Dispatchers.IO)
-
-        val notificationCount = dao.getAllNotificationCountFlow()
-
-    }
-
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalMaterialApi::class,
@@ -121,11 +98,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
             M3MaterialTheme(currentColorScheme) {
-
-                val vm: NotificationViewModel = viewModel(factory = factoryCreate { NotificationViewModel(db) })
-
-                val items = vm.notificationItems.collectAsLazyPagingItems()
-                val itemCount by vm.notificationCount.collectAsState(0)
+                val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
 
                 val state = rememberBottomSheetScaffoldState()
                 val scope = rememberCoroutineScope()
@@ -136,7 +109,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-                BottomSheetDeleteScaffoldPaging(
+                BottomSheetDeleteScaffold(
                     listOfItems = items,
                     state = state,
                     multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
@@ -178,7 +151,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                         SmallTopAppBar(
                             scrollBehavior = scrollBehavior,
-                            title = { Text(stringResource(id = R.string.current_notification_count, itemCount)) },
+                            title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
                             actions = {
                                 IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
                                 IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
@@ -241,9 +214,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                             onClick = {
                                                 Completable.merge(
                                                     items
-                                                        .itemSnapshotList
-                                                        .filter { it?.notiTitle == item.notiTitle }
-                                                        .filterNotNull()
+                                                        .filter { it.notiTitle == item.notiTitle }
                                                         .map {
                                                             cancelNotification(it)
                                                             db.deleteNotification(it)
@@ -267,20 +238,20 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     }
                 ) { p, itemList ->
 
-                    /*AnimatedLazyColumn(
+                    AnimatedLazyColumn(
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp),
-                        items = itemList.itemSnapshotList.fastMap {
-                            AnimatedLazyListItem(key = it!!.url, value = it) { NotificationItem(item = it, navController = findNavController()) }
+                        items = itemList.fastMap {
+                            AnimatedLazyListItem(key = it.url, value = it) { NotificationItem(item = it, navController = findNavController()) }
                         }
-                    )*/
+                    )
 
-                    LazyColumn(
+                    /*LazyColumn(
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp)
-                    ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }
+                    ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
                 }
             }
         }
