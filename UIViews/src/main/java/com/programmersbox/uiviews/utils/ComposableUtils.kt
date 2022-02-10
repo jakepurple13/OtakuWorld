@@ -17,12 +17,12 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -540,6 +540,7 @@ fun <T> BottomSheetDeleteScaffold(
     ) { mainView(it, listOfItems) }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 private fun <T> DeleteItemView(
@@ -615,16 +616,17 @@ private fun <T> DeleteItemView(
             }
         }
     ) {
-        androidx.compose.material3.Surface(
-            tonalElevation = 5.dp,
-            modifier = Modifier.fillMaxSize(),
-            shape = MaterialTheme.shapes.medium,
-            indication = rememberRipple(),
+        androidx.compose.material3.OutlinedCard(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
             border = BorderStroke(
                 animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
-                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else Color.Transparent).value
-            ),
-            onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
+                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else M3MaterialTheme.colorScheme.outline).value
+            )
         ) { itemUi(item) }
     }
 
@@ -848,14 +850,17 @@ private fun <T : Any> DeleteItemView(
     ) {
         androidx.compose.material3.Surface(
             tonalElevation = 5.dp,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { onClick(item) },
             shape = MaterialTheme.shapes.medium,
-            indication = rememberRipple(),
             border = BorderStroke(
                 animateDpAsState(targetValue = if (selectedForDeletion) 5.dp else 1.dp).value,
                 animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
-            ),
-            onClick = { onClick(item) },
+            )
         ) { itemUi(item) }
     }
 
@@ -925,6 +930,8 @@ fun <T> List<T>.asAutoCompleteEntities(filter: CustomFilter<T>): List<ValueAutoC
 fun <T : AutoCompleteEntity> AutoCompleteBox(
     items: List<T>,
     itemContent: @Composable (T) -> Unit,
+    trailingIcon: (@Composable (T) -> Unit)? = null,
+    leadingIcon: (@Composable (T) -> Unit)? = null,
     content: @Composable AutoCompleteScope<T>.() -> Unit
 ) {
     val autoCompleteState = remember { AutoCompleteState(startItems = items) }
@@ -935,13 +942,20 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
     ) {
         autoCompleteState.content()
 
-        DropdownMenu(
+        androidx.compose.material3.DropdownMenu(
             expanded = autoCompleteState.isSearching && items.isNotEmpty(),
             onDismissRequest = { },
             modifier = Modifier.autoComplete(autoCompleteState),
             properties = PopupProperties(focusable = false)
         ) {
-            items.fastForEach { item -> DropdownMenuItem(onClick = { autoCompleteState.selectItem(item) }) { itemContent(item) } }
+            items.fastForEach { item ->
+                androidx.compose.material3.DropdownMenuItem(
+                    onClick = { autoCompleteState.selectItem(item) },
+                    text = { itemContent(item) },
+                    trailingIcon = trailingIcon?.let { { it.invoke(item) } },
+                    leadingIcon = leadingIcon?.let { { it.invoke(item) } }
+                )
+            }
         }
     }
 }
@@ -1042,40 +1056,37 @@ fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> 
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NeedsPermissions(onClick: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
-        Card(
+        androidx.compose.material3.Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(5.dp),
-            elevation = 5.dp,
             shape = RoundedCornerShape(5.dp)
         ) {
             Column(modifier = Modifier) {
-                Text(
+                androidx.compose.material3.Text(
                     text = stringResource(R.string.please_enable_permissions),
-                    style = MaterialTheme.typography.h5,
+                    style = M3MaterialTheme.typography.titleLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
-                Text(
+                androidx.compose.material3.Text(
                     text = stringResource(R.string.need_permissions_to_work),
-                    style = MaterialTheme.typography.body2,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    style = M3MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(horizontal = 4.dp)
                 )
 
-                Button(
+                androidx.compose.material3.Button(
                     onClick = onClick,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 5.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.enable),
-                        style = MaterialTheme.typography.button
-                    )
-                }
+                ) { androidx.compose.material3.Text(text = stringResource(R.string.enable)) }
             }
         }
     }

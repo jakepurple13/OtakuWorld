@@ -16,6 +16,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
@@ -319,7 +320,8 @@ class GenericAnime(val context: Context) : GenericInfo {
     @OptIn(
         ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalFoundationApi::class,
+        ExperimentalMaterial3Api::class,
     )
     @Composable
     override fun ItemListView(
@@ -335,16 +337,14 @@ class GenericAnime(val context: Context) : GenericInfo {
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             items(list) {
-                androidx.compose.material3.Surface(
+                androidx.compose.material3.ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 5.dp)
                         .combineClickableWithIndication(
                             onLongPress = { c -> onLongPress(it, c) },
                             onClick = { onClick(it) }
-                        ),
-                    tonalElevation = 5.dp,
-                    shape = androidx.compose.material.MaterialTheme.shapes.medium
+                        )
                 ) {
                     ListItem(
                         icon = {

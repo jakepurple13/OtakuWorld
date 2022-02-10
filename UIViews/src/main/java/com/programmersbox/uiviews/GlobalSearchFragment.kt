@@ -10,6 +10,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -202,43 +203,39 @@ class GlobalSearchFragment : Fragment() {
                                     },
                                     title = { Text(stringResource(R.string.global_search)) }
                                 )
-                                MdcTheme {
-                                    AutoCompleteBox(
-                                        items = history.asAutoCompleteEntities { _, _ -> true },
-                                        itemContent = {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                androidx.compose.material.Text(
-                                                    text = it.value.searchText,
-                                                    style = MaterialTheme.typography.subtitle2,
-                                                    modifier = Modifier
-                                                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                                                        .weight(.9f)
-                                                )
-                                                androidx.compose.material.IconButton(
-                                                    onClick = { scope.launch { dao.deleteHistory(it.value) } },
-                                                    modifier = Modifier.weight(.1f)
-                                                ) { androidx.compose.material.Icon(Icons.Default.Cancel, null) }
-                                            }
-                                        },
-                                        content = {
+                                AutoCompleteBox(
+                                    items = history.asAutoCompleteEntities { _, _ -> true },
+                                    trailingIcon = {
+                                        androidx.compose.material3.IconButton(
+                                            onClick = { scope.launch { dao.deleteHistory(it.value) } },
+                                            modifier = Modifier.weight(.1f)
+                                        ) { androidx.compose.material3.Icon(Icons.Default.Cancel, null) }
+                                    },
+                                    itemContent = {
+                                        androidx.compose.material3.Text(
+                                            text = it.value.searchText,
+                                            style = M3MaterialTheme.typography.titleSmall,
+                                            modifier = Modifier
+                                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                                .weight(.9f)
+                                        )
+                                    },
+                                    content = {
 
-                                            boxWidthPercentage = 1f
-                                            boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
+                                        boxWidthPercentage = 1f
+                                        boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
 
-                                            onItemSelected {
-                                                viewModel.searchText = it.value.searchText
-                                                filter(viewModel.searchText)
-                                                focusManager.clearFocus()
-                                                viewModel.searchForItems(
-                                                    disposable = disposable,
-                                                    onSubscribe = { isRefreshing = true },
-                                                    subscribe = { isRefreshing = false }
-                                                )
-                                            }
-
+                                        onItemSelected {
+                                            viewModel.searchText = it.value.searchText
+                                            filter(viewModel.searchText)
+                                            focusManager.clearFocus()
+                                            viewModel.searchForItems(
+                                                disposable = disposable,
+                                                onSubscribe = { isRefreshing = true },
+                                                subscribe = { isRefreshing = false }
+                                            )
+                                        }
+                                        MdcTheme {
                                             OutlinedTextField(
                                                 value = viewModel.searchText,
                                                 onValueChange = {
@@ -276,8 +273,8 @@ class GlobalSearchFragment : Fragment() {
                                                 })
                                             )
                                         }
-                                    )
-                                }
+                                    }
+                                )
                             }
                         }
                     ) {
@@ -404,7 +401,8 @@ class GlobalSearchFragment : Fragment() {
                                                     } else if (viewModel.searchListPublisher.isNotEmpty()) {
                                                         items(viewModel.searchListPublisher) { i ->
                                                             Surface(
-                                                                onClick = {
+                                                                interactionSource = remember { MutableInteractionSource() },
+                                                                modifier = Modifier.clickable {
                                                                     searchModelBottom = i
                                                                     scope.launch { bottomScaffold.bottomSheetState.expand() }
                                                                 },
@@ -477,6 +475,7 @@ class GlobalSearchFragment : Fragment() {
         disposable.dispose()
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @ExperimentalMaterialApi
     @Composable
     fun SearchCoverCard(
@@ -487,16 +486,14 @@ class GlobalSearchFragment : Fragment() {
         onLongPress: (ComponentState) -> Unit,
         onClick: () -> Unit = {}
     ) {
-        Surface(
+        androidx.compose.material3.ElevatedCard(
             modifier = Modifier
                 .size(
                     ComposableUtils.IMAGE_WIDTH,
                     ComposableUtils.IMAGE_HEIGHT
                 )
                 .combineClickableWithIndication(onLongPress, onClick)
-                .then(modifier),
-            tonalElevation = 5.dp,
-            shape = MaterialTheme.shapes.medium
+                .then(modifier)
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),

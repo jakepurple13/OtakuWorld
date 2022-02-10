@@ -12,6 +12,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -25,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SmallTopAppBar
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,7 +52,6 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import coil.compose.rememberImagePainter
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -205,31 +205,30 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             trailing = {
                                 var showDropDown by remember { mutableStateOf(false) }
 
-                                MdcTheme {
-                                    DropdownMenu(
-                                        expanded = showDropDown,
-                                        onDismissRequest = { showDropDown = false }
-                                    ) {
-                                        DropdownMenuItem(
-                                            onClick = {
-                                                Completable.merge(
-                                                    items
-                                                        .filter { it.notiTitle == item.notiTitle }
-                                                        .map {
-                                                            cancelNotification(it)
-                                                            db.deleteNotification(it)
-                                                        }
-                                                )
-                                                    .subscribeOn(Schedulers.io())
-                                                    .observeOn(AndroidSchedulers.mainThread())
-                                                    .subscribe {
-                                                        showDropDown = false
-                                                        Toast.makeText(requireContext(), R.string.done, Toast.LENGTH_SHORT).show()
+                                androidx.compose.material3.DropdownMenu(
+                                    expanded = showDropDown,
+                                    onDismissRequest = { showDropDown = false }
+                                ) {
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text(stringResource(id = R.string.remove_same_name)) },
+                                        onClick = {
+                                            Completable.merge(
+                                                items
+                                                    .filter { it.notiTitle == item.notiTitle }
+                                                    .map {
+                                                        cancelNotification(it)
+                                                        db.deleteNotification(it)
                                                     }
-                                                    .addTo(disposable)
-                                            }
-                                        ) { Text(stringResource(id = R.string.remove_same_name)) }
-                                    }
+                                            )
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe {
+                                                    showDropDown = false
+                                                    Toast.makeText(requireContext(), R.string.done, Toast.LENGTH_SHORT).show()
+                                                }
+                                                .addTo(disposable)
+                                        }
+                                    )
                                 }
 
                                 IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
@@ -281,6 +280,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         disposable.dispose()
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @ExperimentalMaterialApi
     @Composable
     private fun NotificationItem(item: NotificationItem, navController: NavController) {
@@ -358,23 +358,27 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             }
         ) {
 
-            Surface(
-                onClick = {
-                    genericInfo.toSource(item.source)
-                        ?.getSourceByUrl(item.url)
-                        ?.subscribeOn(Schedulers.io())
-                        ?.doOnError { context?.showErrorToast() }
-                        ?.observeOn(AndroidSchedulers.mainThread())
-                        ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
-                        ?.addTo(disposable)
-                },
-                tonalElevation = 5.dp,
-                indication = rememberRipple(),
-                onClickLabel = item.notiTitle,
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.padding(horizontal = 5.dp)
-            ) {
+            val interactionSource = remember { MutableInteractionSource() }
 
+            androidx.compose.material3.ElevatedCard(
+                interactionSource = interactionSource,
+                modifier = Modifier
+                    .padding(horizontal = 5.dp)
+                    .clickable(
+                        onClickLabel = item.notiTitle,
+                        interactionSource = interactionSource,
+                        indication = rememberRipple()
+                    ) {
+                        genericInfo
+                            .toSource(item.source)
+                            ?.getSourceByUrl(item.url)
+                            ?.subscribeOn(Schedulers.io())
+                            ?.doOnError { context?.showErrorToast() }
+                            ?.observeOn(AndroidSchedulers.mainThread())
+                            ?.subscribeBy { navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it)) }
+                            ?.addTo(disposable)
+                    }
+            ) {
                 Row {
                     Image(
                         painter = rememberImagePainter(data = item.imageUrl.orEmpty()) {
@@ -410,88 +414,89 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        MdcTheme {
-                            DropdownMenu(
-                                expanded = showDropDown,
-                                onDismissRequest = dropDownDismiss
-                            ) {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        lifecycleScope.launch(Dispatchers.IO) {
-                                            SavedNotifications.viewNotificationFromDb(requireContext(), item, notificationLogo, genericInfo)
-                                        }
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss
+                        ) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.notify)) },
+                                onClick = {
+                                    dropDownDismiss()
+                                    lifecycleScope.launch(Dispatchers.IO) {
+                                        SavedNotifications.viewNotificationFromDb(requireContext(), item, notificationLogo, genericInfo)
                                     }
-                                ) { Text(stringResource(R.string.notify)) }
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        val datePicker = MaterialDatePicker.Builder.datePicker()
-                                            .setTitleText(R.string.selectDate)
-                                            .setCalendarConstraints(
-                                                CalendarConstraints.Builder()
-                                                    .setOpenAt(System.currentTimeMillis())
-                                                    .setValidator(DateValidatorPointForward.now())
-                                                    .build()
+                                }
+                            )
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.notifyAtTime)) },
+                                onClick = {
+                                    dropDownDismiss()
+                                    val datePicker = MaterialDatePicker.Builder.datePicker()
+                                        .setTitleText(R.string.selectDate)
+                                        .setCalendarConstraints(
+                                            CalendarConstraints.Builder()
+                                                .setOpenAt(System.currentTimeMillis())
+                                                .setValidator(DateValidatorPointForward.now())
+                                                .build()
+                                        )
+                                        .setSelection(System.currentTimeMillis())
+                                        .build()
+
+                                    datePicker.addOnPositiveButtonClickListener {
+                                        val c = Calendar.getInstance()
+                                        val timePicker = MaterialTimePicker.Builder()
+                                            .setTitleText(R.string.selectTime)
+                                            .setPositiveButtonText(R.string.ok)
+                                            .setTimeFormat(
+                                                if (DateFormat.is24HourFormat(requireContext())) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
                                             )
-                                            .setSelection(System.currentTimeMillis())
+                                            .setHour(c[Calendar.HOUR_OF_DAY])
+                                            .setMinute(c[Calendar.MINUTE])
                                             .build()
 
-                                        datePicker.addOnPositiveButtonClickListener {
-                                            val c = Calendar.getInstance()
-                                            val timePicker = MaterialTimePicker.Builder()
-                                                .setTitleText(R.string.selectTime)
-                                                .setPositiveButtonText(R.string.ok)
-                                                .setTimeFormat(
-                                                    if (DateFormat.is24HourFormat(requireContext())) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
+                                        timePicker.addOnPositiveButtonClickListener { _ ->
+                                            c.timeInMillis = it
+                                            c.add(Calendar.DAY_OF_YEAR, 1)
+                                            c[Calendar.HOUR_OF_DAY] = timePicker.hour
+                                            c[Calendar.MINUTE] = timePicker.minute
+
+                                            WorkManager.getInstance(requireContext())
+                                                .enqueueUniqueWork(
+                                                    item.notiTitle,
+                                                    ExistingWorkPolicy.REPLACE,
+                                                    OneTimeWorkRequestBuilder<NotifySingleWorker>()
+                                                        .setInputData(
+                                                            Data.Builder()
+                                                                .putString("notiData", item.toJson())
+                                                                .build()
+                                                        )
+                                                        .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                                                        .build()
                                                 )
-                                                .setHour(c[Calendar.HOUR_OF_DAY])
-                                                .setMinute(c[Calendar.MINUTE])
-                                                .build()
 
-                                            timePicker.addOnPositiveButtonClickListener { _ ->
-                                                c.timeInMillis = it
-                                                c.add(Calendar.DAY_OF_YEAR, 1)
-                                                c[Calendar.HOUR_OF_DAY] = timePicker.hour
-                                                c[Calendar.MINUTE] = timePicker.minute
-
-                                                WorkManager.getInstance(requireContext())
-                                                    .enqueueUniqueWork(
-                                                        item.notiTitle,
-                                                        ExistingWorkPolicy.REPLACE,
-                                                        OneTimeWorkRequestBuilder<NotifySingleWorker>()
-                                                            .setInputData(
-                                                                Data.Builder()
-                                                                    .putString("notiData", item.toJson())
-                                                                    .build()
-                                                            )
-                                                            .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                                                            .build()
-                                                    )
-
-                                                Toast.makeText(
-                                                    requireContext(),
-                                                    getString(
-                                                        R.string.willNotifyAt,
-                                                        requireContext().getSystemDateTimeFormat().format(c.timeInMillis)
-                                                    ),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-
-                                            timePicker.show(parentFragmentManager, "timePicker")
+                                            Toast.makeText(
+                                                requireContext(),
+                                                getString(
+                                                    R.string.willNotifyAt,
+                                                    requireContext().getSystemDateTimeFormat().format(c.timeInMillis)
+                                                ),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
 
-                                        datePicker.show(parentFragmentManager, "datePicker")
+                                        timePicker.show(parentFragmentManager, "timePicker")
                                     }
-                                ) { Text(stringResource(R.string.notifyAtTime)) }
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        showPopup = true
-                                    }
-                                ) { Text(stringResource(R.string.remove)) }
-                            }
+
+                                    datePicker.show(parentFragmentManager, "datePicker")
+                                }
+                            )
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    showPopup = true
+                                },
+                                text = { Text(stringResource(R.string.remove)) }
+                            )
                         }
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }

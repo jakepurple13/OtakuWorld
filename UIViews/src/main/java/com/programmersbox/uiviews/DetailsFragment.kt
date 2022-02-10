@@ -73,7 +73,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.ChapterModel
@@ -357,11 +356,14 @@ class DetailsFragment : Fragment() {
                             }
 
                             Surface(
-                                onClick = { markAs(!chapters.fastAny { it.url == c.url }) },
                                 shape = RoundedCornerShape(0.dp),
                                 tonalElevation = 5.dp,
-                                modifier = Modifier.fillMaxWidth(),
-                                indication = rememberRipple(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(
+                                        indication = rememberRipple(),
+                                        interactionSource = remember { MutableInteractionSource() },
+                                    ) { markAs(!chapters.fastAny { it.url == c.url }) },
                                 color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
                             ) {
                                 ListItem(
@@ -416,101 +418,74 @@ class DetailsFragment : Fragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        MdcTheme {
-                            DropdownMenu(
-                                expanded = showDropDown,
-                                onDismissRequest = dropDownDismiss,
-                            ) {
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss,
+                        ) {
 
-                                DropdownMenuItem(
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    scope.launch { scaffoldState.bottomSheetState.expand() }
+                                },
+                                text = { Text(stringResource(id = R.string.markAs)) },
+                                leadingIcon = { Icon(Icons.Default.Check, null) }
+                            )
+
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                },
+                                text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
+                                leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+                            )
+
+                            if (!isSaved) {
+                                androidx.compose.material3.DropdownMenuItem(
                                     onClick = {
                                         dropDownDismiss()
-                                        scope.launch { scaffoldState.bottomSheetState.expand() }
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.markAs))
-                                }
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.OpenInBrowser,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.fallback_menu_item_open_in_browser))
-                                }
-
-                                if (!isSaved) {
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            dropDownDismiss()
-                                            lifecycleScope.launch(Dispatchers.IO) {
-                                                dao.insertNotification(
-                                                    NotificationItem(
-                                                        id = info.hashCode(),
-                                                        url = info.url,
-                                                        summaryText = requireContext()
-                                                            .getString(
-                                                                R.string.hadAnUpdate,
-                                                                info.title,
-                                                                info.chapters.firstOrNull()?.name.orEmpty()
-                                                            ),
-                                                        notiTitle = info.title,
-                                                        imageUrl = info.imageUrl,
-                                                        source = info.source.serviceName,
-                                                        contentTitle = info.title
-                                                    )
-                                                ).subscribe()
-                                            }
+                                        lifecycleScope.launch(Dispatchers.IO) {
+                                            dao.insertNotification(
+                                                NotificationItem(
+                                                    id = info.hashCode(),
+                                                    url = info.url,
+                                                    summaryText = requireContext()
+                                                        .getString(
+                                                            R.string.hadAnUpdate,
+                                                            info.title,
+                                                            info.chapters.firstOrNull()?.name.orEmpty()
+                                                        ),
+                                                    notiTitle = info.title,
+                                                    imageUrl = info.imageUrl,
+                                                    source = info.source.serviceName,
+                                                    contentTitle = info.title
+                                                )
+                                            ).subscribe()
                                         }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Save,
-                                            null,
-                                            modifier = Modifier.padding(end = 8.dp)
-                                        )
-                                        Text(stringResource(id = R.string.save_for_later))
-                                    }
-                                }
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Search,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.global_search_by_name))
-                                }
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        reverseChapters = !reverseChapters
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Sort,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.reverseOrder))
-                                }
+                                    },
+                                    text = { Text(stringResource(id = R.string.save_for_later)) },
+                                    leadingIcon = { Icon(Icons.Default.Save, null) }
+                                )
                             }
+
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
+                                },
+                                text = { Text(stringResource(id = R.string.global_search_by_name)) },
+                                leadingIcon = { Icon(Icons.Default.Search, null) }
+                            )
+
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    reverseChapters = !reverseChapters
+                                },
+                                text = { Text(stringResource(id = R.string.reverseOrder)) },
+                                leadingIcon = { Icon(Icons.Default.Sort, null) }
+                            )
                         }
 
                         IconButton(
@@ -733,11 +708,14 @@ class DetailsFragment : Fragment() {
                             }
 
                             Surface(
-                                onClick = { markAs(!chapters.fastAny { it.url == c.url }) },
                                 shape = RoundedCornerShape(0.dp),
                                 tonalElevation = 5.dp,
-                                modifier = Modifier.fillMaxWidth(),
-                                indication = rememberRipple(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = rememberRipple()
+                                    ) { markAs(!chapters.fastAny { it.url == c.url }) },
                                 color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
                             ) {
                                 ListItem(
@@ -799,101 +777,74 @@ class DetailsFragment : Fragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        MdcTheme {
-                            DropdownMenu(
-                                expanded = showDropDown,
-                                onDismissRequest = dropDownDismiss,
-                            ) {
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss,
+                        ) {
 
-                                DropdownMenuItem(
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    scope.launch { scaffoldState.bottomSheetState.expand() }
+                                },
+                                text = { Text(stringResource(id = R.string.markAs)) },
+                                leadingIcon = { Icon(Icons.Default.Check, null) }
+                            )
+
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                },
+                                text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
+                                leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+                            )
+
+                            if (!isSaved) {
+                                androidx.compose.material3.DropdownMenuItem(
                                     onClick = {
                                         dropDownDismiss()
-                                        scope.launch { scaffoldState.bottomSheetState.expand() }
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.markAs))
-                                }
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        requireContext().openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.OpenInBrowser,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.fallback_menu_item_open_in_browser))
-                                }
-
-                                if (!isSaved) {
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            dropDownDismiss()
-                                            lifecycleScope.launch(Dispatchers.IO) {
-                                                dao.insertNotification(
-                                                    NotificationItem(
-                                                        id = info.hashCode(),
-                                                        url = info.url,
-                                                        summaryText = requireContext()
-                                                            .getString(
-                                                                R.string.hadAnUpdate,
-                                                                info.title,
-                                                                info.chapters.firstOrNull()?.name.orEmpty()
-                                                            ),
-                                                        notiTitle = info.title,
-                                                        imageUrl = info.imageUrl,
-                                                        source = info.source.serviceName,
-                                                        contentTitle = info.title
-                                                    )
-                                                ).subscribe()
-                                            }
+                                        lifecycleScope.launch(Dispatchers.IO) {
+                                            dao.insertNotification(
+                                                NotificationItem(
+                                                    id = info.hashCode(),
+                                                    url = info.url,
+                                                    summaryText = requireContext()
+                                                        .getString(
+                                                            R.string.hadAnUpdate,
+                                                            info.title,
+                                                            info.chapters.firstOrNull()?.name.orEmpty()
+                                                        ),
+                                                    notiTitle = info.title,
+                                                    imageUrl = info.imageUrl,
+                                                    source = info.source.serviceName,
+                                                    contentTitle = info.title
+                                                )
+                                            ).subscribe()
                                         }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Save,
-                                            null,
-                                            modifier = Modifier.padding(end = 8.dp)
-                                        )
-                                        Text(stringResource(id = R.string.save_for_later))
-                                    }
-                                }
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Search,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.global_search_by_name))
-                                }
-
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        reverseChapters = !reverseChapters
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Sort,
-                                        null,
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    )
-                                    Text(stringResource(id = R.string.reverseOrder))
-                                }
+                                    },
+                                    text = { Text(stringResource(id = R.string.save_for_later)) },
+                                    leadingIcon = { Icon(Icons.Default.Save, null) }
+                                )
                             }
+
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    findNavController().navigate(GlobalNavDirections.showGlobalSearch(info.title))
+                                },
+                                text = { Text(stringResource(id = R.string.global_search_by_name)) },
+                                leadingIcon = { Icon(Icons.Default.Search, null) }
+                            )
+
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    reverseChapters = !reverseChapters
+                                },
+                                text = { Text(stringResource(id = R.string.reverseOrder)) },
+                                leadingIcon = { Icon(Icons.Default.Sort, null) }
+                            )
                         }
 
                         IconButton(
@@ -1084,13 +1035,18 @@ class DetailsFragment : Fragment() {
                 .addTo(disposable)
         }
 
-        Surface(
-            onClick = { markAs(!read.fastAny { it.url == c.url }) },
-            shape = RoundedCornerShape(0.dp),
-            indication = rememberRipple(),
-            modifier = Modifier.fillMaxWidth(),
-            color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
-            tonalElevation = 5.dp,
+        val interactionSource = remember { MutableInteractionSource() }
+
+        androidx.compose.material3.ElevatedCard(
+            shape = RoundedCornerShape(2.dp),
+            interactionSource = interactionSource,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = interactionSource,
+                ) { markAs(!read.fastAny { it.url == c.url }) },
+            containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
 
@@ -1455,6 +1411,7 @@ class DetailsFragment : Fragment() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
@@ -1468,7 +1425,7 @@ class DetailsFragment : Fragment() {
 
             Row(modifier = Modifier.padding(5.dp)) {
 
-                Card(
+                androidx.compose.material3.Card(
                     shape = RoundedCornerShape(5.dp),
                     modifier = Modifier.padding(5.dp)
                 ) {
@@ -1476,7 +1433,7 @@ class DetailsFragment : Fragment() {
                         imageVector = Icons.Default.CloudOff,
                         contentDescription = null,
                         modifier = Modifier
-                            .align(Alignment.CenterVertically)
+                            .align(Alignment.CenterHorizontally)
                             .placeholder(true, color = placeholderColor)
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     )

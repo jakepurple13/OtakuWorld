@@ -41,7 +41,7 @@ buildscript {
     ext.exoplayer_version = "2.16.1"
     ext.room_version = "2.4.1"
 
-    ext.nav_version = "2.4.0"
+    ext.nav_version = "2.4.1"
 
     def koin_version = "3.0.2"
 
@@ -52,7 +52,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.2.0-alpha02"
+    ext.jetpack = "1.2.0-alpha03"
 
     ext.accompanist = "0.20.3"
 
@@ -63,14 +63,14 @@ buildscript {
     ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
     // Material Design
     ext.composeMaterial = "androidx.compose.material:material:$jetpack"
-    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha04"
+    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha05"
     // Material design icons
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
     // Integration with activities
     ext.composeActivity = 'androidx.activity:activity-compose:1.4.0'
     // Integration with ViewModels
-    ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.0'
+    ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
@@ -139,7 +139,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.10'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
@@ -147,7 +147,6 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
-        //Note: Update this to the alpha version in order to be able to upgrade the gradle to 7.1.0
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
     }
 }

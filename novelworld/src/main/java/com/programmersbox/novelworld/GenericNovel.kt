@@ -23,7 +23,8 @@ import androidx.compose.ui.util.fastAny
 import androidx.navigation.NavController
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.*
+import com.programmersbox.gsonutils.getObject
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -164,5 +165,4 @@ class GenericNovel(val context: Context) : GenericInfo {
             }
         }
     }
-
 }

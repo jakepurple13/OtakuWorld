@@ -9,6 +9,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -275,7 +277,12 @@ class HistoryFragment : Fragment() {
             }
 
             Surface(
-                onClick = {
+                tonalElevation = 5.dp,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.clickable(
+                    indication = rememberRipple(),
+                    interactionSource = remember { MutableInteractionSource() },
+                ) {
                     info.toSource(item.source)
                         ?.getSourceByUrl(item.url)
                         ?.subscribeOn(Schedulers.io())
@@ -290,10 +297,7 @@ class HistoryFragment : Fragment() {
                             findNavController().navigate(HistoryFragmentDirections.actionHistoryFragmentToDetailsFragment(m))
                         }
                         ?.addTo(disposable)
-                },
-                tonalElevation = 5.dp,
-                shape = MaterialTheme.shapes.medium,
-                indication = rememberRipple()
+                }
             ) {
                 ListItem(
                     text = { Text(item.title) },

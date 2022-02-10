@@ -14,6 +14,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -89,10 +91,25 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
             M3MaterialTheme(currentColorScheme) {
-                PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    val context = LocalContext.current
-                    val viewModel: DownloadViewModel = viewModel(factory = factoryCreate { DownloadViewModel(context, defaultPathname) })
-                    DownloadViewer(viewModel)
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+                Scaffold(
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        SmallTopAppBar(
+                            scrollBehavior = scrollBehavior,
+                            title = { Text(stringResource(R.string.downloaded_chapters)) },
+                            navigationIcon = {
+                                IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                            }
+                        )
+                    }
+                ) { p1 ->
+                    PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        val context = LocalContext.current
+                        val viewModel: DownloadViewModel = viewModel(factory = factoryCreate { DownloadViewModel(context, defaultPathname) })
+                        DownloadViewer(viewModel, p1)
+                    }
                 }
             }
         }
@@ -130,38 +147,23 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun DownloadViewer(viewModel: DownloadViewModel) {
-
+    private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
         val fileList = viewModel.fileList
 
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val f by updateAnimatedItemsState(newList = fileList.entries.toList())
 
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                SmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(stringResource(R.string.downloaded_chapters)) },
-                    navigationIcon = {
-                        IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                    }
-                )
-            }
-        ) { p1 ->
-            val f by updateAnimatedItemsState(newList = fileList.entries.toList())
-
-            if (fileList.isEmpty()) EmptyState()
-            else LazyColumn(
-                contentPadding = p1,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
-            ) {
-                animatedItems(
-                    f,
-                    enterTransition = fadeIn(),
-                    exitTransition = fadeOut()
-                ) { file -> ChapterItem(file) }
-            }
+        if (fileList.isEmpty()) EmptyState()
+        else LazyColumn(
+            contentPadding = p1,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+        ) {
+            //TODO: Change this to having a sticky header...same concept of animating the expand/close
+            animatedItems(
+                f,
+                enterTransition = fadeIn(),
+                exitTransition = fadeOut()
+            ) { file -> ChapterItem(file) }
         }
     }
 
@@ -215,11 +217,14 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             androidx.compose.material3.Surface(
-                indication = rememberRipple(),
                 shape = MaterialTheme.shapes.medium,
                 tonalElevation = 4.dp,
-                onClick = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { expanded = !expanded }
             ) {
                 ListItem(
                     modifier = Modifier.padding(5.dp),
@@ -323,28 +328,31 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                         androidx.compose.material3.Surface(
                             shape = MaterialTheme.shapes.medium,
                             tonalElevation = 4.dp,
-                            indication = rememberRipple(),
-                            onClick = {
-                                if (runBlocking { context.useNewReaderFlow.first() }) {
-                                    findNavController()
-                                        .navigate(
-                                            ReadActivityComposeFragment::class.java.hashCode(),
-                                            Bundle().apply {
-                                                putBoolean("downloaded", true)
-                                                putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                            },
-                                            SettingsDsl.customAnimationOptions
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = rememberRipple(),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    if (runBlocking { context.useNewReaderFlow.first() }) {
+                                        findNavController()
+                                            .navigate(
+                                                ReadActivityComposeFragment::class.java.hashCode(),
+                                                Bundle().apply {
+                                                    putBoolean("downloaded", true)
+                                                    putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                                },
+                                                SettingsDsl.customAnimationOptions
+                                            )
+                                    } else {
+                                        context.startActivity(
+                                            Intent(context, ReadActivity::class.java).apply {
+                                                putExtra("downloaded", true)
+                                                putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                            }
                                         )
-                                } else {
-                                    context.startActivity(
-                                        Intent(context, ReadActivity::class.java).apply {
-                                            putExtra("downloaded", true)
-                                            putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                        }
-                                    )
+                                    }
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth()
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(5.dp),

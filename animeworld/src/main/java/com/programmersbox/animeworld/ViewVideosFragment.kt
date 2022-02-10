@@ -14,12 +14,19 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
@@ -32,7 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,9 +57,7 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.android.material.composethemeadapter.MdcTheme
-import com.programmersbox.dragswipe.*
-import com.programmersbox.helpfulutils.*
+import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
@@ -143,6 +151,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             state = state,
             listOfItems = items,
             multipleTitle = stringResource(id = R.string.delete),
+            deleteTitle = { it.videoName.orEmpty() },
             onRemove = {
                 itemToDelete = it
                 showDialog.value = true
@@ -311,6 +320,7 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @ExperimentalAnimationApi
     @ExperimentalMaterialApi
     @Composable
@@ -381,29 +391,32 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
                 }
             }
         ) {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                indication = rememberRipple(),
-                onClick = {
-                    if (MainActivity.cast.isCastActive()) {
-                        MainActivity.cast.loadMedia(
-                            File(item.path!!),
-                            context?.getSharedPreferences("videos", Context.MODE_PRIVATE)?.getLong(item.assetFileStringUri, 0) ?: 0L,
-                            null, null
-                        )
-                    } else {
-                        context?.startActivity(
-                            Intent(context, VideoPlayerActivity::class.java).apply {
-                                putExtra("showPath", item.assetFileStringUri)
-                                putExtra("showName", item.videoName)
-                                putExtra("downloadOrStream", true)
-                                data = item.assetFileStringUri?.toUri()
-                            }
-                        )
+            androidx.compose.material3.ElevatedCard(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        if (MainActivity.cast.isCastActive()) {
+                            MainActivity.cast.loadMedia(
+                                File(item.path!!),
+                                context
+                                    ?.getSharedPreferences("videos", Context.MODE_PRIVATE)
+                                    ?.getLong(item.assetFileStringUri, 0) ?: 0L,
+                                null, null
+                            )
+                        } else {
+                            context?.startActivity(
+                                Intent(context, VideoPlayerActivity::class.java).apply {
+                                    putExtra("showPath", item.assetFileStringUri)
+                                    putExtra("showName", item.videoName)
+                                    putExtra("downloadOrStream", true)
+                                    data = item.assetFileStringUri?.toUri()
+                                }
+                            )
+                        }
                     }
-                },
-                shape = MaterialTheme.shapes.medium,
-                tonalElevation = 5.dp
             ) {
                 Row {
                     Box {
@@ -474,18 +487,17 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
                         val dropDownDismiss = { showDropDown = false }
 
-                        MdcTheme {
-                            DropdownMenu(
-                                expanded = showDropDown,
-                                onDismissRequest = dropDownDismiss
-                            ) {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        showDialog.value = true
-                                    }
-                                ) { Text(stringResource(R.string.remove)) }
-                            }
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss
+                        ) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    showDialog.value = true
+                                },
+                                text = { Text(stringResource(R.string.remove)) }
+                            )
                         }
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
@@ -494,5 +506,4 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             }
         }
     }
-
 }
