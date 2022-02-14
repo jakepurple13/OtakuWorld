@@ -9,7 +9,7 @@ buildscript {
     ext.coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
     ext.coroutinesRX =  "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion"
 
-    ext.gson = 'com.google.code.gson:gson:2.8.9'
+    ext.gson = 'com.google.code.gson:gson:2.9.0'
 
     ext.glideVersion = "4.13.0"
     ext.glide = "com.github.bumptech.glide:glide:$glideVersion"
