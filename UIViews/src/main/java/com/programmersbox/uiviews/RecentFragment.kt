@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
@@ -46,10 +47,10 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -81,18 +82,18 @@ class RecentFragment : BaseFragmentCompose() {
         private val disposable: CompositeDisposable = CompositeDisposable()
         private val itemListener = FirebaseDb.FirebaseListener()
 
-        private val sub = Flowables.combineLatest(
-            itemListener.getAllShowsFlowable(),
-            dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                favoriteList.clear()
-                favoriteList.addAll(it)
+        init {
+            viewModelScope.launch {
+                combine(
+                    itemListener.getAllShowsFlow(),
+                    dao.getAllFavoritesFlow()
+                ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+                    .collect {
+                        favoriteList.clear()
+                        favoriteList.addAll(it)
+                    }
             }
 
-        init {
             sourcePublish
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -133,7 +134,6 @@ class RecentFragment : BaseFragmentCompose() {
         override fun onCleared() {
             super.onCleared()
             itemListener.unregister()
-            sub.dispose()
             disposable.dispose()
         }
 

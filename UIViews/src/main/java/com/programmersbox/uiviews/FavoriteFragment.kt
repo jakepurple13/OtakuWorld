@@ -38,6 +38,7 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -49,14 +50,12 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import org.koin.android.ext.android.inject
-import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class FavoriteFragment : Fragment() {
@@ -77,23 +76,18 @@ class FavoriteFragment : Fragment() {
         var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
             private set
 
-        private val sub = Flowables.combineLatest(
-            fireListener.getAllShowsFlowable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread()),
-            dao.getAllFavorites()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-            .replay(1)
-            .refCount(1, TimeUnit.SECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { favoriteList = it }
+        init {
+            viewModelScope.launch {
+                combine(
+                    fireListener.getAllShowsFlow(),
+                    dao.getAllFavoritesFlow()
+                ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+                    .collect { favoriteList = it }
+            }
+        }
 
         override fun onCleared() {
             super.onCleared()
-            sub.dispose()
             fireListener.unregister()
         }
 

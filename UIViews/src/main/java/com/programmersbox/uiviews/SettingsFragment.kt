@@ -515,13 +515,38 @@ private fun AboutSettings(
     val aboutViewModel: AboutViewModel = viewModel()
     LaunchedEffect(Unit) { aboutViewModel.init(context) }
 
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(stringResource(R.string.are_you_sure_stop_checking)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            context.updatePref(SHOULD_CHECK, false)
+                            OtakuApp.updateSetupNow(context, false)
+                        }
+                        showDialog = false
+                    }
+                ) { Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.no)) } }
+        )
+    }
+
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
         value = aboutViewModel.canCheck,
         updateValue = {
-            scope.launch {
-                context.updatePref(SHOULD_CHECK, it)
-                OtakuApp.updateSetupNow(context, it)
+            if (!it) {
+                showDialog = true
+            } else {
+                scope.launch {
+                    context.updatePref(SHOULD_CHECK, it)
+                    OtakuApp.updateSetupNow(context, it)
+                }
             }
         }
     )

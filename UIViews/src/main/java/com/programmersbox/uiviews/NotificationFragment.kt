@@ -71,6 +71,7 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.*
@@ -98,7 +99,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
             M3MaterialTheme(currentColorScheme) {
-                val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
+                val items by db.getAllNotificationsFlow()
+                    .flowOn(Dispatchers.IO)
+                    .collectAsState(initial = emptyList())
 
                 val state = rememberBottomSheetScaffoldState()
                 val scope = rememberCoroutineScope()

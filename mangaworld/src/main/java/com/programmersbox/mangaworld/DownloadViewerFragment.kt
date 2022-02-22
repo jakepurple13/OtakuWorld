@@ -158,7 +158,6 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
         ) {
-            //TODO: Change this to having a sticky header...same concept of animating the expand/close
             animatedItems(
                 f,
                 enterTransition = fadeIn(),

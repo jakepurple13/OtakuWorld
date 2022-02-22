@@ -9,7 +9,7 @@ buildscript {
     ext.coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
     ext.coroutinesRX =  "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion"
 
-    ext.gson = 'com.google.code.gson:gson:2.8.9'
+    ext.gson = 'com.google.code.gson:gson:2.9.0'
 
     ext.glideVersion = "4.13.0"
     ext.glide = "com.github.bumptech.glide:glide:$glideVersion"
@@ -34,8 +34,8 @@ buildscript {
 
     ext.jsoup = 'org.jsoup:jsoup:1.14.3'
 
-    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.7'
-    ext.analytics = 'com.google.firebase:firebase-analytics:20.0.2'
+    ext.crashlytics = 'com.google.firebase:firebase-crashlytics:18.2.8'
+    ext.analytics = 'com.google.firebase:firebase-analytics:20.1.0'
     ext.play_services = 'com.google.android.gms:play-services-auth:20.1.0'
 0
     ext.exoplayer_version = "2.16.1"
