@@ -17,6 +17,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SliderColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
@@ -54,7 +55,7 @@ fun defaultSwitchColors() = SwitchDefaults.colors(
 )
 
 @Composable
-fun defaultSliderColors() = SliderDefaults.colors(
+fun defaultSliderColors() = androidx.compose.material3.SliderDefaults.colors(
     thumbColor = MaterialTheme.colorScheme.primary,
     disabledThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
         .compositeOver(MaterialTheme.colorScheme.surface),
@@ -293,7 +294,7 @@ fun SliderSetting(
     settingSummary: (@Composable () -> Unit)? = null,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
-    colors: SliderColors = defaultSliderColors(),
+    colors: SliderColors = androidx.compose.material3.SliderDefaults.colors(),
     format: (Float) -> String = { it.toInt().toString() },
     onValueChangedFinished: (() -> Unit)? = null,
     updateValue: (Float) -> Unit
@@ -338,7 +339,7 @@ fun SliderSetting(
             }
         }
 
-        Slider(
+        androidx.compose.material3.Slider(
             value = sliderValue,
             onValueChange = updateValue,
             onValueChangeFinished = onValueChangedFinished,

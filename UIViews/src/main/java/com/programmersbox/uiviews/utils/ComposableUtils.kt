@@ -481,7 +481,7 @@ fun <T> BottomSheetDeleteScaffold(
                 bottomBar = {
                     BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
-                        backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                             .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
                         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                             .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
@@ -726,7 +726,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                 bottomBar = {
                     BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
-                        backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                             .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
                         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                             .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value

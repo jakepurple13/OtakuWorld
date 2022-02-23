@@ -1018,7 +1018,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
     ) {
         BottomAppBar(
             modifier = modifier,
-            backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+            containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                 .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
             contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                 .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
