@@ -23,18 +23,18 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.material.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -58,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -541,26 +543,17 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                                 )
                                             }
 
-                                            Surface(
-                                                modifier = Modifier.padding(horizontal = 5.dp),
-                                                tonalElevation = 4.dp,
-                                                shape = MaterialTheme.shapes.medium,
-                                                border = BorderStroke(
-                                                    1.dp,
-                                                    animateColorAsState(
-                                                        if (readVm.currentChapter == i) M3MaterialTheme.colorScheme.onSurface
-                                                        else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                                                    ).value
-                                                )
-                                            ) {
-                                                ListItem(
-                                                    text = { Text(c.name) },
-                                                    icon = if (readVm.currentChapter == i) {
-                                                        { Icon(Icons.Default.ArrowRight, null) }
-                                                    } else null,
-                                                    modifier = Modifier.clickable { showChangeChapter = true }
-                                                )
-                                            }
+                                            WrapHeightNavigationDrawerItem(
+                                                modifier = Modifier
+                                                    .padding(bottom = 4.dp)
+                                                    .padding(horizontal = 4.dp),
+                                                label = { Text(c.name) },
+                                                selected = readVm.currentChapter == i,
+                                                onClick = { showChangeChapter = true },
+                                                shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
+                                            )
+
+                                            if (i < readVm.list.lastIndex) androidx.compose.material3.Divider()
                                         }
                                     }
                                 }
@@ -1089,6 +1082,56 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                 onClick = onSettingsClick,
                 modifier = Modifier.weight(1f)
             ) { Icon(Icons.Default.Settings, null) }
+        }
+    }
+
+    @Composable
+    @ExperimentalMaterial3Api
+    private fun WrapHeightNavigationDrawerItem(
+        label: @Composable () -> Unit,
+        selected: Boolean,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier,
+        icon: (@Composable () -> Unit)? = null,
+        badge: (@Composable () -> Unit)? = null,
+        shape: Shape = CircleShape,
+        colors: NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(),
+        interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    ) {
+        Surface(
+            shape = shape,
+            color = colors.containerColor(selected).value,
+            interactionSource = interactionSource,
+            modifier = modifier
+                .heightIn(min = 56.dp)
+                .fillMaxWidth()
+                .selectable(
+                    selected = selected,
+                    onClick = onClick,
+                    interactionSource = interactionSource,
+                    role = Role.Tab,
+                    indication = null
+                )
+        ) {
+            Row(
+                Modifier.padding(start = 16.dp, end = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (icon != null) {
+                    val iconColor = colors.iconColor(selected).value
+                    CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides iconColor, content = icon)
+                    Spacer(Modifier.width(12.dp))
+                }
+                Box(Modifier.weight(1f)) {
+                    val labelColor = colors.textColor(selected).value
+                    CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides labelColor, content = label)
+                }
+                if (badge != null) {
+                    Spacer(Modifier.width(12.dp))
+                    val badgeColor = colors.badgeColor(selected).value
+                    CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides badgeColor, content = badge)
+                }
+            }
         }
     }
 

@@ -36,7 +36,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -87,7 +86,6 @@ import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import kotlin.math.roundToInt
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class ReadingActivity : ComponentActivity() {
 
@@ -516,7 +514,7 @@ class ReadingActivity : ComponentActivity() {
                                     .align(Alignment.BottomCenter)
                                     .alpha(1f - (animateBar / toolbarHeightPx))
                                     .offset { IntOffset(x = 0, y = animateBar) },
-                                backgroundColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                                containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                                     .containerColor(scrollFraction = contentScrollBehavior.scrollFraction).value,
                                 contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
                                     .titleContentColor(scrollFraction = contentScrollBehavior.scrollFraction).value
@@ -727,7 +725,7 @@ class ReadingActivity : ComponentActivity() {
 
             var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
 
-            Slider(
+            androidx.compose.material3.Slider(
                 value = sliderValue,
                 onValueChange = {
                     sliderValue = it
@@ -735,15 +733,6 @@ class ReadingActivity : ComponentActivity() {
                 },
                 valueRange = range,
                 steps = steps,
-                colors = SliderDefaults.colors(
-                    thumbColor = M3MaterialTheme.colorScheme.primary,
-                    disabledThumbColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-                        .compositeOver(M3MaterialTheme.colorScheme.surface),
-                    activeTrackColor = M3MaterialTheme.colorScheme.primary,
-                    disabledActiveTrackColor = M3MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
-                    activeTickColor = m3ContentColorFor(M3MaterialTheme.colorScheme.primary)
-                        .copy(alpha = SliderDefaults.TickAlpha)
-                ),
                 modifier = Modifier.constrainAs(slider) {
                     top.linkTo(summary.bottom)
                     end.linkTo(value.start)
