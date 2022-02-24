@@ -11,7 +11,7 @@ buildscript {
 
     ext.gson = 'com.google.code.gson:gson:2.9.0'
 
-    ext.glideVersion = "4.13.0"
+    ext.glideVersion = "4.13.1"
     ext.glide = "com.github.bumptech.glide:glide:$glideVersion"
     ext.glideCompiler = "com.github.bumptech.glide:compiler:$glideVersion"
 
@@ -139,7 +139,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.1'
+        classpath 'com.android.tools.build:gradle:7.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.10'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
