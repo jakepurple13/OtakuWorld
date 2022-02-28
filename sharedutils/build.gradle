@@ -37,7 +37,7 @@ dependencies {
     implementation appCompat
     implementation material
     testImplementation Deps.junit
-    testImplementation "com.jakewharton.picnic:picnic:0.5.0"
+    testImplementation "com.jakewharton.picnic:picnic:0.6.0"
     testImplementation 'com.lordcodes.turtle:turtle:0.6.0'
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
