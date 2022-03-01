@@ -121,22 +121,22 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private val fetch = Fetch.getDefaultInstance()
 
-    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment) {
         if ((model.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(
-                context,
-                context.getString(R.string.source_no_download, model.source.serviceName),
+                fragment.requireContext(),
+                fragment.getString(R.string.source_no_download, model.source.serviceName),
                 Toast.LENGTH_SHORT
             ).show()
             return
         }
-        MainActivity.activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
+        fragment.activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
-                Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
+                Toast.makeText(fragment.requireContext(), R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
                 getEpisodes(
                     R.string.source_no_download,
                     model,
-                    context,
+                    fragment.requireContext(),
                     { !it.link.orEmpty().endsWith(".m3u8") }
                 ) { fetchIt(it, model) }
             }

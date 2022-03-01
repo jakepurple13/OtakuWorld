@@ -33,7 +33,7 @@ interface GenericInfo {
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
     fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
-    fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context)
+    fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment)
 
     @Composable
     fun DetailActions(infoModel: InfoModel, tint: Color) = Unit

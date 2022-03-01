@@ -93,6 +93,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.onebone.toolbar.CollapsingToolbarScaffold
@@ -826,6 +827,19 @@ class DetailsFragment : Fragment() {
                                     text = { Text(stringResource(id = R.string.save_for_later)) },
                                     leadingIcon = { Icon(Icons.Default.Save, null) }
                                 )
+                            } else {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        lifecycleScope.launch(Dispatchers.IO) {
+                                            dao.getNotificationItemFlow(info.url)
+                                                .firstOrNull()
+                                                ?.let { dao.deleteNotification(it).subscribe() }
+                                        }
+                                    },
+                                    text = { Text(stringResource(R.string.removeNotification)) },
+                                    leadingIcon = { Icon(Icons.Default.Delete, null) }
+                                )
                             }
 
                             androidx.compose.material3.DropdownMenuItem(
@@ -1180,7 +1194,7 @@ class DetailsFragment : Fragment() {
                     if (infoModel.source.canDownload) {
                         OutlinedButton(
                             onClick = {
-                                genericInfo.downloadChapter(c, chapters, infoModel, context)
+                                genericInfo.downloadChapter(c, chapters, infoModel, this@DetailsFragment)
                                 insertRecent()
                                 if (!read.fastAny { it.url == c.url }) markAs(true)
                             },

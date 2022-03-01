@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyGridState
 import androidx.compose.runtime.Composable
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.manga_sources.utilities.NetworkHelper
@@ -72,7 +73,7 @@ val appModule = module {
                 null
             }
 
-            override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+            override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment) {
                 throw Exception("This should not be seen")
             }
 

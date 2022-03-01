@@ -65,6 +65,9 @@ interface ItemDao {
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItem(url: String): NotificationItem
 
+    @Query("SELECT * FROM Notifications where url = :url")
+    fun getNotificationItemFlow(url: String): Flow<NotificationItem?>
+
     @Query("SELECT * FROM Notifications")
     fun getAllNotifications(): Single<List<NotificationItem>>
 

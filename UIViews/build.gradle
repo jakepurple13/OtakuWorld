@@ -143,4 +143,6 @@ dependencies {
     testImplementation "androidx.paging:paging-common-ktx:$paging_version"
 
     implementation datastore.datastore
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8.1'
 }

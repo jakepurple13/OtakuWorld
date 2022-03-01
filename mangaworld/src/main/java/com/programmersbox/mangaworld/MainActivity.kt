@@ -15,13 +15,7 @@ import io.reactivex.rxkotlin.addTo
 
 class MainActivity : BaseMainActivity() {
 
-    companion object {
-        lateinit var activity: MainActivity
-    }
-
     override fun onCreate() {
-
-        activity = this
 
         BigImageViewer.initialize(GlideImageLoader.with(applicationContext))
 
