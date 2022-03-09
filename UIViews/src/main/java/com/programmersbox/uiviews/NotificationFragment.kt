@@ -364,7 +364,6 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
             val interactionSource = remember { MutableInteractionSource() }
 
             androidx.compose.material3.ElevatedCard(
-                interactionSource = interactionSource,
                 modifier = Modifier
                     .padding(horizontal = 5.dp)
                     .clickable(

@@ -2,8 +2,8 @@ package com.programmersbox.uiviews
 
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.lazy.LazyGridState
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment

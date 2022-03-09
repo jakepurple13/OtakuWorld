@@ -10,9 +10,13 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -315,7 +319,7 @@ class GlobalSearchFragment : Fragment() {
                                             }
                                         ) { p ->
                                             LazyVerticalGrid(
-                                                cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                                                columns = adaptiveGridCell(),
                                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                                                 contentPadding = p
@@ -400,8 +404,7 @@ class GlobalSearchFragment : Fragment() {
                                                         }
                                                     } else if (viewModel.searchListPublisher.isNotEmpty()) {
                                                         items(viewModel.searchListPublisher) { i ->
-                                                            Surface(
-                                                                interactionSource = remember { MutableInteractionSource() },
+                                                            androidx.compose.material3.Surface(
                                                                 modifier = Modifier.clickable {
                                                                     searchModelBottom = i
                                                                     scope.launch { bottomScaffold.bottomSheetState.expand() }

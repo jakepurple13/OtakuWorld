@@ -1053,7 +1053,6 @@ class DetailsFragment : Fragment() {
 
         androidx.compose.material3.ElevatedCard(
             shape = RoundedCornerShape(2.dp),
-            interactionSource = interactionSource,
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(

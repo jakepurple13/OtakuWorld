@@ -41,9 +41,12 @@
         <entry key="../../../../layout/compose-model-1634727939029.xml" value="0.3158783783783784" />
         <entry key="../../../../layout/compose-model-1634925929693.xml" value="0.15614548494983277" />
         <entry key="../../../../layout/compose-model-1635856669735.xml" value="0.1" />
+        <entry key="../../../../layout/compose-model-1642007315769.xml" value="0.3158783783783784" />
+        <entry key="../../../../layout/compose-model-1642602093485.xml" value="0.22" />
         <entry key="UIViews/src/main/res/drawable/action_chapter.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/github_icon.xml" value="0.23541666666666666" />
         <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
+        <entry key="UIViews/src/main/res/drawable/ic_baseline_android_24.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/ic_baseline_bubble_chart_24.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/ic_baseline_cached_24.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/ic_baseline_desktop_windows_24.xml" value="0.23778501628664495" />
@@ -66,13 +69,16 @@
         <entry key="UIViews/src/main/res/layout/fragment_notification.xml" value="0.1305921052631579" />
         <entry key="UIViews/src/main/res/layout/fragment_recent.xml" value="0.21805555555555556" />
         <entry key="UIViews/src/main/res/layout/notification_item.xml" value="0.1305921052631579" />
+        <entry key="UIViews/src/main/res/layout/notification_widget.xml" value="0.21889250814332248" />
         <entry key="UIViews/src/main/res/layout/search_item.xml" value="0.2325657894736842" />
         <entry key="UIViews/src/main/res/menu/details_menu.xml" value="0.225" />
         <entry key="UIViews/src/main/res/menu/main_menu.xml" value="0.2299342105263158" />
+        <entry key="UIViews/src/main/res/xml/first_glance_widget_info.xml" value="0.2299342105263158" />
         <entry key="UIViews/src/main/res/xml/root_preferences.xml" value="0.25" />
         <entry key="animeworld/src/main/res/drawable/ic_baseline_article_24.xml" value="0.23778501628664495" />
         <entry key="animeworld/src/main/res/drawable/progress_bar.xml" value="0.24039087947882737" />
         <entry key="animeworld/src/main/res/layout/anime_list_item.xml" value="0.23029315960912053" />
+        <entry key="animeworld/src/main/res/layout/base_main_activity.xml" value="0.2299342105263158" />
         <entry key="animeworld/src/main/res/layout/delete_dialog_layout.xml" value="0.2048611111111111" />
         <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
         <entry key="animeworld/src/main/res/layout/download_viewer_fragment.xml" value="0.21736111111111112" />
@@ -80,6 +86,7 @@
         <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
         <entry key="animeworld/src/main/res/layout/item_torrent_download.xml" value="0.12894736842105264" />
         <entry key="animeworld/src/main/res/layout/item_torrent_download_1.xml" value="0.12894736842105264" />
+        <entry key="animeworld/src/main/res/layout/player_custom_layout.xml" value="0.2299342105263158" />
         <entry key="animeworld/src/main/res/layout/shimmer_item.xml" value="0.21805555555555556" />
         <entry key="animeworld/src/main/res/layout/shimmer_row.xml" value="0.2325657894736842" />
         <entry key="animeworld/src/main/res/layout/video_layout.xml" value="0.2028688524590164" />

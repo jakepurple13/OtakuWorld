@@ -52,7 +52,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.2.0-alpha04"
+    ext.jetpack = "1.2.0-alpha05"
 
     ext.accompanist = "0.23.1"
 
@@ -63,7 +63,7 @@ buildscript {
     ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
     // Material Design
     ext.composeMaterial = "androidx.compose.material:material:$jetpack"
-    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha06"
+    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha07"
     // Material design icons
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"

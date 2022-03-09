@@ -26,6 +26,8 @@ import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -417,10 +419,10 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                         ) { p ->
                             if (scaffoldState.bottomSheetState.isExpanded) {
                                 LazyVerticalGrid(
-                                    cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                                    columns = adaptiveGridCell(),
+                                    contentPadding = p,
                                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    contentPadding = p
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     itemsIndexed(pages) { i, it ->
                                         Box(
@@ -445,7 +447,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                                 imageModel = it,
                                                 contentScale = ContentScale.Crop,
                                                 loading = {
-                                                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                                                 },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
@@ -1101,7 +1103,6 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
         Surface(
             shape = shape,
             color = colors.containerColor(selected).value,
-            interactionSource = interactionSource,
             modifier = modifier
                 .heightIn(min = 56.dp)
                 .fillMaxWidth()

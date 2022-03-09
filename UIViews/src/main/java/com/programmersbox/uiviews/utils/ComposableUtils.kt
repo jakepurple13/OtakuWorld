@@ -20,6 +20,8 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -53,10 +55,7 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
@@ -1802,5 +1801,43 @@ private suspend fun calculateAllSwatchesInImage(
             // muted
             palette
         }
+    }
+}
+
+@Composable
+fun adaptiveGridCell(): GridCells = CustomAdaptive(ComposableUtils.IMAGE_WIDTH)
+
+class CustomAdaptive(private val minSize: Dp) : GridCells {
+    init {
+        require(minSize > 0.dp)
+    }
+
+    override fun Density.calculateCrossAxisCellSizes(
+        availableSize: Int,
+        spacing: Int
+    ): List<Int> {
+        val count = maxOf((availableSize + spacing) / (minSize.roundToPx() + spacing), 1) + 1
+        return calculateCellsCrossAxisSizeImpl(availableSize, count, spacing)
+    }
+
+    override fun hashCode(): Int {
+        return minSize.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is CustomAdaptive && minSize == other.minSize
+    }
+}
+
+private fun calculateCellsCrossAxisSizeImpl(
+    gridSize: Int,
+    slotCount: Int,
+    spacing: Int
+): List<Int> {
+    val gridSizeWithoutSpacing = gridSize - spacing * (slotCount - 1)
+    val slotSize = gridSizeWithoutSpacing / slotCount
+    val remainingPixels = gridSizeWithoutSpacing % slotCount
+    return List(slotCount) {
+        slotSize + if (it < remainingPixels) 1 else 0
     }
 }

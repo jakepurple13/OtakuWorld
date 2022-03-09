@@ -11,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -317,11 +319,11 @@ class FavoriteFragment : Fragment() {
                         }
                     } else {
                         LazyVerticalGrid(
-                            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                            columns = adaptiveGridCell(),
+                            state = rememberLazyGridState(),
                             contentPadding = p,
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            state = rememberLazyGridState()
                         ) {
                             items(
                                 showing

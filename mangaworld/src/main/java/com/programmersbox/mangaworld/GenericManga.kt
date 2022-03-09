@@ -12,10 +12,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyGridState
-import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -157,10 +156,10 @@ class GenericManga(val context: Context) : GenericInfo {
     @Composable
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
-            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+            columns = adaptiveGridCell(),
+            modifier = Modifier.padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
     }
 
@@ -178,10 +177,10 @@ class GenericManga(val context: Context) : GenericInfo {
     ) {
         //TODO: See if you can modify this to perform better
         LazyVerticalGrid(
-            cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+            columns = adaptiveGridCell(),
+            state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            state = listState
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             itemsIndexed(list, key = { i, it -> "${it.url}$i" }) { _, it ->
                 M3CoverCard(
