@@ -465,7 +465,7 @@ fun PagerView(closeClick: () -> Unit) {
                                             )
                                         }
 
-                                        DropdownMenu(
+                                        androidx.compose.material3.DropdownMenu(
                                             expanded = showPopup && popUpOrDialog,
                                             onDismissRequest = { showPopup = false },
                                             modifier = Modifier
@@ -473,12 +473,13 @@ fun PagerView(closeClick: () -> Unit) {
                                                 .border(1.dp, MaterialTheme.colorScheme.outline)
                                         ) {
                                             optionsList.value.forEachIndexed { index, settingLocation ->
-                                                DropdownMenuItem(
+                                                androidx.compose.material3.DropdownMenuItem(
                                                     onClick = {
                                                         dropDownSetting = settingLocation
                                                         showPopup = false
                                                     },
-                                                ) { Text(settingLocation.toString()) }
+                                                    text = { androidx.compose.material3.Text(settingLocation.toString()) }
+                                                )
                                                 if (index < optionsList.value.size - 1)
                                                     androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                                             }
