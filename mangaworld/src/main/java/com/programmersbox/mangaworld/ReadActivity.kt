@@ -116,13 +116,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
@@ -894,25 +891,44 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                     )
                 }
         ) {
-            GlideImage(
-                imageModel = painter,
-                contentScale = ContentScale.FillWidth,
-                loading = {
-                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                    .align(Alignment.Center)
-                    .clipToBounds()
-                    .graphicsLayer {
-                        translationX = offset.x
-                        translationY = offset.y
 
-                        scaleX = scaleAnim
-                        scaleY = scaleAnim
-                    }
-            )
+            val scope = rememberCoroutineScope()
+            var showTheThing by remember { mutableStateOf(true) }
+
+            if (showTheThing)
+                GlideImage(
+                    imageModel = painter,
+                    contentScale = ContentScale.FillWidth,
+                    loading = {
+                        androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    },
+                    failure = {
+                        Text(
+                            stringResource(R.string.pressToRefresh),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .clickable {
+                                    scope.launch {
+                                        showTheThing = false
+                                        delay(1000)
+                                        showTheThing = true
+                                    }
+                                }
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                        .graphicsLayer {
+                            translationX = offset.x
+                            translationY = offset.y
+
+                            scaleX = scaleAnim
+                            scaleY = scaleAnim
+                        }
+                )
         }
     }
 
