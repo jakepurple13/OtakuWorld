@@ -2,8 +2,10 @@ package com.programmersbox.uiviews.utils
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -1840,4 +1842,54 @@ private fun calculateCellsCrossAxisSizeImpl(
     return List(slotCount) {
         slotSize + if (it < remainingPixels) 1 else 0
     }
+}
+
+/**
+ * Registers a broadcast receiver and unregisters at the end of the composable lifecycle
+ *
+ * @param defaultValue the default value that this starts as
+ * @param intentFilter the filter for intents
+ * @see IntentFilter
+ * @param tick the callback from the broadcast receiver
+ */
+@Composable
+fun <T : Any> broadcastReceiver(defaultValue: T, intentFilter: IntentFilter, tick: (context: Context, intent: Intent) -> T): State<T> {
+    val item: MutableState<T> = remember { mutableStateOf(defaultValue) }
+    val context = LocalContext.current
+
+    DisposableEffect(context) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                item.value = tick(context, intent)
+            }
+        }
+        context.registerReceiver(receiver, intentFilter)
+        onDispose { context.unregisterReceiver(receiver) }
+    }
+    return item
+}
+
+/**
+ * Registers a broadcast receiver and unregisters at the end of the composable lifecycle
+ *
+ * @param defaultValue the default value that this starts as
+ * @param intentFilter the filter for intents.
+ * @see IntentFilter
+ * @param tick the callback from the broadcast receiver
+ */
+@Composable
+fun <T : Any> broadcastReceiverNullable(defaultValue: T?, intentFilter: IntentFilter, tick: (context: Context, intent: Intent) -> T?): State<T?> {
+    val item: MutableState<T?> = remember { mutableStateOf(defaultValue) }
+    val context = LocalContext.current
+
+    DisposableEffect(context) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                item.value = tick(context, intent)
+            }
+        }
+        context.registerReceiver(receiver, intentFilter)
+        onDispose { context.unregisterReceiver(receiver) }
+    }
+    return item
 }
