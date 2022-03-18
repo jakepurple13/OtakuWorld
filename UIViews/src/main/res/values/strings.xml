@@ -174,4 +174,7 @@
     <string name="selectTime">Select Time to be Notified At</string>
     <string name="notifyAtTime">Notify At…</string>
     <string name="willNotifyAt">Will Notify at %s</string>
+
+    <string name="viewTranslationModels">View Translation Models</string>
+    <string name="chooseModelToDelete">Choose a Model to Delete</string>
 </resources>

@@ -58,6 +58,8 @@ import coil.transform.CircleCropTransformation
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.mlkit.common.model.RemoteModelManager
+import com.google.mlkit.nl.translate.TranslateRemoteModel
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -83,6 +85,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
+import java.util.*
 
 class SettingsDsl {
     companion object {
@@ -279,6 +282,7 @@ fun SettingScreen(
                 context = context,
                 scope = scope,
                 activity = activity,
+                fragment = fragment,
                 genericInfo = genericInfo,
                 customSettings = customPreferences.generalSettings,
                 globalSearchClick = globalSearchClick
@@ -715,11 +719,14 @@ private fun GeneralSettings(
     context: Context,
     scope: CoroutineScope,
     activity: ComponentActivity,
+    fragment: Fragment,
     genericInfo: GenericInfo,
     customSettings: (@Composable () -> Unit)?,
     globalSearchClick: () -> Unit
 ) {
     CategorySetting { Text(stringResource(R.string.general_menu_title)) }
+
+    val vm: GeneralViewModel = viewModel()
 
     val source: ApiService? by sourcePublish.subscribeAsState(initial = null)
 
@@ -755,6 +762,33 @@ private fun GeneralSettings(
                     }
                 }
             }
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
+        settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = {
+                vm.getModels {
+                    ListBottomSheet(
+                        title = fragment.getString(R.string.chooseModelToDelete),
+                        list = vm.translationModels.toList(),
+                        onClick = { item -> vm.deleteModel(item) }
+                    ) {
+                        ListBottomSheetItemModel(
+                            primaryText = it.language,
+                            overlineText = try {
+                                Locale.forLanguageTag(it.language).displayLanguage
+                            } catch (e: Exception) {
+                                null
+                            }
+                        )
+                    }.show(fragment.parentFragmentManager, "sourceChooser")
+                }
+            }
+        )
     )
 
     PreferenceSetting(
@@ -823,6 +857,28 @@ private fun GeneralSettings(
     )
 
     customSettings?.invoke()
+}
+
+class GeneralViewModel : ViewModel() {
+
+    var translationModels: Set<TranslateRemoteModel> by mutableStateOf(emptySet())
+        private set
+
+    private val modelManager by lazy { RemoteModelManager.getInstance() }
+
+    fun getModels(onSuccess: () -> Unit) {
+        modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
+            .addOnSuccessListener { models ->
+                translationModels = models
+                onSuccess()
+            }
+            .addOnFailureListener { }
+    }
+
+    fun deleteModel(model: TranslateRemoteModel) {
+        modelManager.deleteDownloadedModel(model).addOnSuccessListener {}
+    }
+
 }
 
 @ExperimentalMaterialApi

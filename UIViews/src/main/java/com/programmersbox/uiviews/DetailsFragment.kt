@@ -1048,7 +1048,7 @@ class DetailsFragment : Fragment() {
                                     val progress = remember { mutableStateOf(false) }
 
                                     Text(
-                                        details.description,//info.description,
+                                        details.description,
                                         modifier = Modifier
                                             .combinedClickable(
                                                 interactionSource = remember { MutableInteractionSource() },
@@ -1056,10 +1056,6 @@ class DetailsFragment : Fragment() {
                                                 onClick = { descriptionVisibility = !descriptionVisibility },
                                                 onLongClick = { details.translateDescription(progress) }
                                             )
-                                            /*.clickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = rememberRipple()
-                                            ) { descriptionVisibility = !descriptionVisibility }*/
                                             .padding(horizontal = 5.dp)
                                             .fillMaxWidth()
                                             .animateContentSize(),
