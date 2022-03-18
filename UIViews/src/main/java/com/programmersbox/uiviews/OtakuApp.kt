@@ -18,13 +18,11 @@ import com.programmersbox.uiviews.utils.shouldCheckFlow
 import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import leakcanary.LeakCanary
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
-import shark.AndroidReferenceMatchers
 import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application() {
@@ -34,15 +32,6 @@ abstract class OtakuApp : Application() {
         //This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
 
-        LeakCanary.config = LeakCanary.config.copy(
-            referenceMatchers = AndroidReferenceMatchers.appDefaults +
-                    AndroidReferenceMatchers.staticFieldLeak(
-                        className = "com.google.firebase.auth",
-                        fieldName = "sContext",
-                        description = "We know about this",
-                        patternApplies = { true }
-                    )
-        )
 
         if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 

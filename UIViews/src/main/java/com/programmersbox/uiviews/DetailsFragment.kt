@@ -73,6 +73,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.nl.languageid.LanguageIdentification
+import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.Translator
+import com.google.mlkit.nl.translate.TranslatorOptions
 import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.ChapterModel
@@ -209,6 +215,7 @@ class DetailsFragment : Fragment() {
                                     details.info!!,
                                     details.chapters,
                                     details.favoriteListener,
+                                    details,
                                     isSaved,
                                     shareChapter,
                                     swatchInfo
@@ -237,6 +244,8 @@ class DetailsFragment : Fragment() {
         var favoriteListener by mutableStateOf(false)
         var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
 
+        var description: String by mutableStateOf("")
+
         private val itemSub = itemModel
             ?.toInfoModel()
             ?.doOnError { context.showErrorToast() }
@@ -244,8 +253,73 @@ class DetailsFragment : Fragment() {
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribeBy {
                 info = it
+                description = it.description
                 setup(it)
             }
+
+        private var englishTranslator: Translator? = null
+
+        fun translateDescription(progress: MutableState<Boolean>) {
+            progress.value = true
+            val languageIdentifier = LanguageIdentification.getClient()
+            languageIdentifier.identifyLanguage(info!!.description)
+                .addOnSuccessListener { languageCode ->
+                    if (languageCode == "und") {
+                        println("Can't identify language.")
+                    } else if (languageCode != "en") {
+                        println("Language: $languageCode")
+
+                        if (englishTranslator == null) {
+                            val options = TranslatorOptions.Builder()
+                                .setSourceLanguage(TranslateLanguage.fromLanguageTag(languageCode)!!)
+                                .setTargetLanguage(TranslateLanguage.ENGLISH)
+                                .build()
+                            englishTranslator = Translation.getClient(options)
+
+                            val conditions = DownloadConditions.Builder()
+                                .requireWifi()
+                                .build()
+
+                            englishTranslator!!.downloadModelIfNeeded(conditions)
+                                .addOnSuccessListener { _ ->
+                                    // Model downloaded successfully. Okay to start translating.
+                                    // (Set a flag, unhide the translation UI, etc.)
+                                    englishTranslator!!.translate(info!!.description)
+                                        .addOnSuccessListener { translated ->
+                                            // Model downloaded successfully. Okay to start translating.
+                                            // (Set a flag, unhide the translation UI, etc.)
+
+                                            description = translated
+                                            progress.value = false
+                                        }
+                                }
+                                .addOnFailureListener { exception ->
+                                    // Model couldn’t be downloaded or other internal error.
+                                    // ...
+                                    progress.value = false
+                                }
+                        } else {
+                            englishTranslator!!.translate(info!!.description)
+                                .addOnSuccessListener { translated ->
+                                    // Model downloaded successfully. Okay to start translating.
+                                    // (Set a flag, unhide the translation UI, etc.)
+
+                                    description = translated
+                                    progress.value = false
+                                }
+                                .addOnFailureListener { progress.value = false }
+                        }
+
+                    } else {
+                        progress.value = false
+                    }
+                }
+                .addOnFailureListener {
+                    // Model couldn’t be loaded or other internal error.
+                    // ...
+                    progress.value = false
+                }
+        }
 
         private fun setup(info: InfoModel) {
             viewModelScope.launch(Dispatchers.IO) {
@@ -272,6 +346,7 @@ class DetailsFragment : Fragment() {
             disposable.dispose()
             itemListener.unregister()
             chapterListener.unregister()
+            englishTranslator?.close()
         }
     }
 
@@ -628,6 +703,7 @@ class DetailsFragment : Fragment() {
         info: InfoModel,
         chapters: List<ChapterWatched>,
         favoriteListener: Boolean,
+        details: DetailViewModel,
         isSaved: Boolean,
         shareChapter: Boolean,
         swatchInfo: MutableState<SwatchInfo?>
@@ -968,21 +1044,37 @@ class DetailsFragment : Fragment() {
 
                         if (info.description.isNotEmpty()) {
                             item {
-                                Text(
-                                    info.description,
-                                    modifier = Modifier
-                                        .clickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = rememberRipple()
-                                        ) { descriptionVisibility = !descriptionVisibility }
-                                        .padding(horizontal = 5.dp)
-                                        .fillMaxWidth()
-                                        .animateContentSize(),
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                    style = M3MaterialTheme.typography.bodyMedium,
-                                    color = M3MaterialTheme.colorScheme.onSurface
-                                )
+                                Box {
+                                    val progress = remember { mutableStateOf(false) }
+
+                                    Text(
+                                        details.description,//info.description,
+                                        modifier = Modifier
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = rememberRipple(),
+                                                onClick = { descriptionVisibility = !descriptionVisibility },
+                                                onLongClick = { details.translateDescription(progress) }
+                                            )
+                                            /*.clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = rememberRipple()
+                                            ) { descriptionVisibility = !descriptionVisibility }*/
+                                            .padding(horizontal = 5.dp)
+                                            .fillMaxWidth()
+                                            .animateContentSize(),
+                                        overflow = TextOverflow.Ellipsis,
+                                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                        style = M3MaterialTheme.typography.bodyMedium,
+                                        color = M3MaterialTheme.colorScheme.onSurface
+                                    )
+
+                                    if (progress.value) {
+                                        androidx.compose.material3.CircularProgressIndicator(
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
+                                }
                             }
                         }
 

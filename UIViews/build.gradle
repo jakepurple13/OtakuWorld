@@ -144,5 +144,6 @@ dependencies {
 
     implementation datastore.datastore
 
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8.1'
+    implementation 'com.google.mlkit:translate:17.0.0'
+    implementation 'com.google.mlkit:language-id:17.0.3'
 }
