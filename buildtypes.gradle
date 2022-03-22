@@ -10,13 +10,8 @@ android {
     easylauncher {
         defaultFlavorNaming true
         buildTypes {
-            debug {
-                filters blueRibbonFilter()
-            }
-            beta {
-                enable true
-                filters blueRibbonFilter()
-            }
+            debug { filters blueRibbonFilter() }
+            beta { enable false }
         }
     }
 }
