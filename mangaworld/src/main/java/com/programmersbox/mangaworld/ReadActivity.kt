@@ -398,7 +398,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                 )
                             },
                             bottomBar = {
-                                if (!BuildConfig.DEBUG) {
+                                if (BuildConfig.BUILD_TYPE == "release") {
                                     AndroidView(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -497,7 +497,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                     )
                                 },
                                 bottomBar = {
-                                    if (!BuildConfig.DEBUG) {
+                                    if (BuildConfig.BUILD_TYPE == "release") {
                                         AndroidView(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -805,7 +805,7 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                             .align(Alignment.CenterHorizontally)
                     )
                 }
-                if (!BuildConfig.DEBUG) {
+                if (BuildConfig.BUILD_TYPE == "release") {
                     AndroidView(
                         modifier = Modifier.fillMaxWidth(),
                         factory = {
