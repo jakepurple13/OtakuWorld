@@ -6,6 +6,7 @@ plugins {
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
     id 'com.mikepenz.aboutlibraries.plugin'
+    id "com.starter.easylauncher" version "5.0.1"
 }
 
 android {
@@ -132,3 +133,5 @@ dependencies {
 
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8'
 }
+
+apply from: "$rootDir/buildtypes.gradle"

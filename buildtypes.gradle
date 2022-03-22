@@ -1,0 +1,22 @@
+android {
+    buildTypes {
+        beta {
+            initWith debug
+            matchingFallbacks = ['debug', 'release']
+            debuggable false
+        }
+    }
+
+    easylauncher {
+        defaultFlavorNaming true
+        buildTypes {
+            debug {
+                filters blueRibbonFilter()
+            }
+            beta {
+                enable true
+                filters blueRibbonFilter()
+            }
+        }
+    }
+}
