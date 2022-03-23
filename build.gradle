@@ -24,7 +24,7 @@ buildscript {
 
     ext.androidCore = 'androidx.core:core-ktx:1.7.0'
     ext.appCompat = 'androidx.appcompat:appcompat:1.4.1'
-    ext.material = 'com.google.android.material:material:1.6.0-alpha03'
+    ext.material = 'com.google.android.material:material:1.6.0-beta01'
 
     ext.preference = "androidx.preference:preference-ktx:1.2.0"
 
