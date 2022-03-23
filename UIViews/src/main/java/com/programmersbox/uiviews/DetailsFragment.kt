@@ -4,10 +4,12 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsetsController
 import androidx.activity.compose.BackHandler
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -40,10 +42,7 @@ import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
@@ -62,6 +61,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
@@ -1630,7 +1630,27 @@ class DetailsFragment : Fragment() {
         disposable.dispose()
         val window = requireActivity().window
         ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorSurface))
-            .apply { addUpdateListener { window.statusBarColor = it.animatedValue as Int } }
+            .apply {
+                addUpdateListener { window.statusBarColor = it.animatedValue as Int }
+                doOnEnd {
+                    val isLightStatusBar = window.statusBarColor.toComposeColor().luminance() > .5f
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        val systemUiAppearance = if (isLightStatusBar) {
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        } else {
+                            0
+                        }
+                        window.insetsController?.setSystemBarsAppearance(systemUiAppearance, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS)
+                    } else {
+                        val systemUiVisibilityFlags = if (isLightStatusBar) {
+                            window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                        } else {
+                            window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                        }
+                        window.decorView.systemUiVisibility = systemUiVisibilityFlags
+                    }
+                }
+            }
             .start()
     }
 
