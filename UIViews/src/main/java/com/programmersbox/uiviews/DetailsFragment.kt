@@ -33,6 +33,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -508,6 +509,8 @@ class DetailsFragment : Fragment() {
                                 leadingIcon = { Icon(Icons.Default.Check, null) }
                             )
 
+                            MenuDefaults.Divider()
+
                             androidx.compose.material3.DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
@@ -516,6 +519,8 @@ class DetailsFragment : Fragment() {
                                 text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
                                 leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
                             )
+
+                            MenuDefaults.Divider()
 
                             if (!isSaved) {
                                 androidx.compose.material3.DropdownMenuItem(
@@ -543,6 +548,8 @@ class DetailsFragment : Fragment() {
                                     text = { Text(stringResource(id = R.string.save_for_later)) },
                                     leadingIcon = { Icon(Icons.Default.Save, null) }
                                 )
+
+                                MenuDefaults.Divider()
                             }
 
                             androidx.compose.material3.DropdownMenuItem(
@@ -553,6 +560,8 @@ class DetailsFragment : Fragment() {
                                 text = { Text(stringResource(id = R.string.global_search_by_name)) },
                                 leadingIcon = { Icon(Icons.Default.Search, null) }
                             )
+
+                            MenuDefaults.Divider()
 
                             androidx.compose.material3.DropdownMenuItem(
                                 onClick = {

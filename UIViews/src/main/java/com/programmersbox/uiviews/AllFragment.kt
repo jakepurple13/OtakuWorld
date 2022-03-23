@@ -51,7 +51,6 @@ import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -292,37 +291,35 @@ class AllFragment : BaseFragmentCompose() {
                                                     shape = RoundedCornerShape(0f)
                                                 ) { Text(stringResource(R.string.search)) }
 
-                                                MdcTheme {
-                                                    OutlinedTextField(
-                                                        value = searchText,
-                                                        onValueChange = { searchText = it },
-                                                        label = {
-                                                            androidx.compose.material.Text(
-                                                                stringResource(
-                                                                    R.string.searchFor,
-                                                                    source?.serviceName.orEmpty()
-                                                                )
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = searchText,
+                                                    onValueChange = { searchText = it },
+                                                    label = {
+                                                        Text(
+                                                            stringResource(
+                                                                R.string.searchFor,
+                                                                source?.serviceName.orEmpty()
                                                             )
-                                                        },
-                                                        trailingIcon = {
-                                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                                androidx.compose.material.Text(searchList.size.toString())
-                                                                IconButton(onClick = { searchText = "" }) {
-                                                                    androidx.compose.material.Icon(Icons.Default.Cancel, null)
-                                                                }
+                                                        )
+                                                    },
+                                                    trailingIcon = {
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Text(searchList.size.toString())
+                                                            IconButton(onClick = { searchText = "" }) {
+                                                                Icon(Icons.Default.Cancel, null)
                                                             }
-                                                        },
-                                                        modifier = Modifier
-                                                            .padding(5.dp)
-                                                            .fillMaxWidth(),
-                                                        singleLine = true,
-                                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                        keyboardActions = KeyboardActions(onSearch = {
-                                                            focusManager.clearFocus()
-                                                            allVm.search(searchText)
-                                                        })
-                                                    )
-                                                }
+                                                        }
+                                                    },
+                                                    modifier = Modifier
+                                                        .padding(5.dp)
+                                                        .fillMaxWidth(),
+                                                    singleLine = true,
+                                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                                    keyboardActions = KeyboardActions(onSearch = {
+                                                        focusManager.clearFocus()
+                                                        allVm.search(searchText)
+                                                    })
+                                                )
                                             }
                                         }
                                     ) { p ->

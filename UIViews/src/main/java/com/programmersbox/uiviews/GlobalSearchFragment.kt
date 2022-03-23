@@ -57,7 +57,6 @@ import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
@@ -239,44 +238,43 @@ class GlobalSearchFragment : Fragment() {
                                                 subscribe = { isRefreshing = false }
                                             )
                                         }
-                                        MdcTheme {
-                                            OutlinedTextField(
-                                                value = viewModel.searchText,
-                                                onValueChange = {
-                                                    viewModel.searchText = it
-                                                    filter(it)
-                                                },
-                                                label = { androidx.compose.material.Text(stringResource(id = R.string.search)) },
-                                                trailingIcon = {
-                                                    androidx.compose.material.IconButton(
-                                                        onClick = {
-                                                            viewModel.searchText = ""
-                                                            filter("")
-                                                            viewModel.searchListPublisher.clear()
-                                                        }
-                                                    ) { androidx.compose.material.Icon(Icons.Default.Cancel, null) }
-                                                },
-                                                modifier = Modifier
-                                                    .padding(5.dp)
-                                                    .fillMaxWidth()
-                                                    .onFocusChanged { isSearching = it.isFocused },
-                                                singleLine = true,
-                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                keyboardActions = KeyboardActions(onSearch = {
-                                                    focusManager.clearFocus()
-                                                    if (viewModel.searchText.isNotEmpty()) {
-                                                        lifecycleScope.launch(Dispatchers.IO) {
-                                                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
-                                                        }
+
+                                        androidx.compose.material3.OutlinedTextField(
+                                            value = viewModel.searchText,
+                                            onValueChange = {
+                                                viewModel.searchText = it
+                                                filter(it)
+                                            },
+                                            label = { Text(stringResource(id = R.string.search)) },
+                                            trailingIcon = {
+                                                IconButton(
+                                                    onClick = {
+                                                        viewModel.searchText = ""
+                                                        filter("")
+                                                        viewModel.searchListPublisher.clear()
                                                     }
-                                                    viewModel.searchForItems(
-                                                        disposable = disposable,
-                                                        onSubscribe = { isRefreshing = true },
-                                                        subscribe = { isRefreshing = false }
-                                                    )
-                                                })
-                                            )
-                                        }
+                                                ) { Icon(Icons.Default.Cancel, null) }
+                                            },
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .fillMaxWidth()
+                                                .onFocusChanged { isSearching = it.isFocused },
+                                            singleLine = true,
+                                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                            keyboardActions = KeyboardActions(onSearch = {
+                                                focusManager.clearFocus()
+                                                if (viewModel.searchText.isNotEmpty()) {
+                                                    lifecycleScope.launch(Dispatchers.IO) {
+                                                        dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                                    }
+                                                }
+                                                viewModel.searchForItems(
+                                                    disposable = disposable,
+                                                    onSubscribe = { isRefreshing = true },
+                                                    subscribe = { isRefreshing = false }
+                                                )
+                                            })
+                                        )
                                     }
                                 )
                             }

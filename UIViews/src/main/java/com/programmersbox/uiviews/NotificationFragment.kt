@@ -26,6 +26,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -429,6 +430,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                     }
                                 }
                             )
+
+                            MenuDefaults.Divider()
+
                             androidx.compose.material3.DropdownMenuItem(
                                 text = { Text(stringResource(R.string.notifyAtTime)) },
                                 onClick = {
@@ -492,6 +496,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                                     datePicker.show(parentFragmentManager, "datePicker")
                                 }
                             )
+
+                            MenuDefaults.Divider()
+
                             androidx.compose.material3.DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()

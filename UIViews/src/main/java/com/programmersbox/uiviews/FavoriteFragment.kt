@@ -43,7 +43,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -196,32 +195,30 @@ class FavoriteFragment : Fragment() {
                         }
                     )
 
-                    MdcTheme {
-                        OutlinedTextField(
-                            value = searchText,
-                            onValueChange = { searchText = it },
-                            label = {
-                                androidx.compose.material.Text(
-                                    resources.getQuantityString(
-                                        R.plurals.numFavorites,
-                                        showing.size,
-                                        showing.size
-                                    )
+                    androidx.compose.material3.OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        label = {
+                            Text(
+                                resources.getQuantityString(
+                                    R.plurals.numFavorites,
+                                    showing.size,
+                                    showing.size
                                 )
-                            },
-                            trailingIcon = {
-                                androidx.compose.material.IconButton(onClick = { searchText = "" }) {
-                                    androidx.compose.material.Icon(Icons.Default.Cancel, null)
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 5.dp),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                        )
-                    }
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { searchText = "" }) {
+                                Icon(Icons.Default.Cancel, null)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                    )
 
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(5.dp),

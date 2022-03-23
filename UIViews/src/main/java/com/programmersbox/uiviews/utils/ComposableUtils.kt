@@ -37,6 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -898,7 +899,7 @@ class AutoCompleteState<T : AutoCompleteEntity>(private val startItems: List<T>)
     override var isSearching by mutableStateOf(false)
     override var boxWidthPercentage by mutableStateOf(.9f)
     override var shouldWrapContentHeight by mutableStateOf(false)
-    override var boxMaxHeight: Dp by mutableStateOf(TextFieldDefaults.MinHeight * 3)
+    override var boxMaxHeight: Dp by mutableStateOf(androidx.compose.material3.TextFieldDefaults.MinHeight * 3)
     override var boxBorderStroke by mutableStateOf(BorderStroke(2.dp, Color.Black))
     override var boxShape: Shape by mutableStateOf(RoundedCornerShape(8.dp))
 
@@ -949,13 +950,14 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
             modifier = Modifier.autoComplete(autoCompleteState),
             properties = PopupProperties(focusable = false)
         ) {
-            items.fastForEach { item ->
+            items.fastForEachIndexed { i, item ->
                 androidx.compose.material3.DropdownMenuItem(
                     onClick = { autoCompleteState.selectItem(item) },
                     text = { itemContent(item) },
                     trailingIcon = trailingIcon?.let { { it.invoke(item) } },
                     leadingIcon = leadingIcon?.let { { it.invoke(item) } }
                 )
+                if (i < items.size - 1) MenuDefaults.Divider()
             }
         }
     }
