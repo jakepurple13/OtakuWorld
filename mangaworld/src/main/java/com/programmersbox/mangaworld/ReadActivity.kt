@@ -658,7 +658,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                                     modifier = Modifier
                                         .height(topBarHeight)
                                         .align(Alignment.TopCenter)
-                                        .alpha(animateTopBar),
+                                        .alpha(animateTopBar)
+                                        .offset { IntOffset(x = 0, y = if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt())) },
                                     pages = pages,
                                     currentPage = currentPage,
                                     vm = readVm
