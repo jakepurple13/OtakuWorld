@@ -4,8 +4,12 @@ import android.Manifest
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,9 +23,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +36,8 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.FragmentNavigator
+import com.google.accompanist.permissions.PermissionsRequired
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -56,6 +60,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 import java.io.File
+
 
 val appModule = module {
     single<GenericInfo> { GenericManga(get()) }
@@ -105,6 +110,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     private fun downloadFullChapter(model: ChapterModel, title: String) {
+        //val fileLocation = runBlocking { context.folderLocationFlow.first() }
         val fileLocation = DOWNLOAD_FILE_PATH
 
         val direct = File("$fileLocation$title/${model.name}/")
@@ -116,7 +122,12 @@ class GenericManga(val context: Context) : GenericInfo {
             .map { it.mapNotNull(Storage::link) }
             .map {
                 it.mapIndexed { index, s ->
+                    //val location = "/$fileLocation/$title/${model.name}"
+
+                    //val file = File(Environment.getExternalStorageDirectory().path + location, "${String.format("%03d", index)}.png")
+
                     DownloadManager.Request(s.toUri())
+                        //.setDestinationUri(file.toUri())
                         .setDestinationInExternalPublicDir(
                             Environment.DIRECTORY_DOWNLOADS,
                             "MangaWorld/$title/${model.name}/${String.format("%03d", index)}"
@@ -209,7 +220,7 @@ class GenericManga(val context: Context) : GenericInfo {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
+    @OptIn(ExperimentalMaterialApi::class, com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
     override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {
@@ -239,6 +250,96 @@ class GenericManga(val context: Context) : GenericInfo {
                     }
                 }
             )
+
+            if (BuildConfig.DEBUG) {
+
+                val folderLocation by context.folderLocationFlow.collectAsState(initial = DOWNLOAD_FILE_PATH)
+
+                val folderIntent = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+                    uri?.path?.removePrefix("/tree/primary:")?.let {
+                        //context.folderLocation = "$it/"
+                        scope.launch { context.updatePref(FOLDER_LOCATION, it) }
+                        println(it)
+                    }
+                }
+
+                val storagePermissions = rememberMultiplePermissionsState(
+                    listOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    )
+                )
+
+                var resetFolderDialog by remember { mutableStateOf(false) }
+
+                if (resetFolderDialog) {
+                    AlertDialog(
+                        onDismissRequest = { resetFolderDialog = false },
+                        title = { Text("Reset Folder Location to") },
+                        text = { Text(DOWNLOAD_FILE_PATH) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    scope.launch { context.updatePref(FOLDER_LOCATION, DOWNLOAD_FILE_PATH) }
+                                    resetFolderDialog = false
+                                }
+                            ) { Text("Reset") }
+                        },
+                        dismissButton = { TextButton(onClick = { resetFolderDialog = false }) { Text(stringResource(R.string.cancel)) } }
+                    )
+                }
+
+                PermissionsRequired(
+                    multiplePermissionsState = storagePermissions,
+                    permissionsNotGrantedContent = {
+                        PreferenceSetting(
+                            endIcon = {
+                                IconButton(onClick = { resetFolderDialog = true }) {
+                                    androidx.compose.material3.Icon(Icons.Default.FolderDelete, null)
+                                }
+                            },
+                            settingTitle = { androidx.compose.material3.Text(stringResource(R.string.folder_location)) },
+                            summaryValue = { androidx.compose.material3.Text(folderLocation) },
+                            settingIcon = { androidx.compose.material3.Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
+                            modifier = Modifier.clickable(
+                                indication = rememberRipple(),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { storagePermissions.launchMultiplePermissionRequest() }
+                        )
+                    },
+                    permissionsNotAvailableContent = {
+                        NeedsPermissions {
+                            context.startActivity(
+                                Intent().apply {
+                                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    data = Uri.fromParts("package", context.packageName, null)
+                                }
+                            )
+                        }
+                    }
+                ) {
+                    PreferenceSetting(
+                        endIcon = {
+                            IconButton(onClick = { resetFolderDialog = true }) {
+                                androidx.compose.material3.Icon(Icons.Default.FolderDelete, null)
+                            }
+                        },
+                        settingTitle = { androidx.compose.material3.Text(stringResource(R.string.folder_location)) },
+                        summaryValue = { androidx.compose.material3.Text(folderLocation) },
+                        settingIcon = { androidx.compose.material3.Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            if (storagePermissions.allPermissionsGranted) {
+                                folderIntent.launch(folderLocation.toUri())
+                            } else {
+                                storagePermissions.launchMultiplePermissionRequest()
+                            }
+                        }
+                    )
+                }
+            }
         }
 
         playerSettings {

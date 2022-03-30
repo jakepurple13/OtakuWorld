@@ -107,6 +107,9 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment() {
                 ) { p1 ->
                     PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                         val context = LocalContext.current
+                        /*val viewModel: DownloadViewModel = viewModel(
+                            factory = factoryCreate { DownloadViewModel(context, File(runBlocking { context.folderLocationFlow.first() })) }
+                        )*/
                         val viewModel: DownloadViewModel = viewModel(factory = factoryCreate { DownloadViewModel(context, defaultPathname) })
                         DownloadViewer(viewModel, p1)
                     }
