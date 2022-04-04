@@ -91,6 +91,7 @@ import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.Completable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.Flowables
@@ -247,8 +248,9 @@ class DetailsFragment : Fragment() {
 
         var description: String by mutableStateOf("")
 
-        private val itemSub = itemModel
-            ?.toInfoModel()
+        private val itemSub = itemModel?.url?.let { url ->
+            Cached.cache[url]?.let { Single.create { emitter -> emitter.onSuccess(it) } } ?: itemModel.toInfoModel()
+        }
             ?.doOnError { context.showErrorToast() }
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
@@ -256,6 +258,7 @@ class DetailsFragment : Fragment() {
                 info = it
                 description = it.description
                 setup(it)
+                Cached.cache[it.url] = it
             }
 
         private var englishTranslator: Translator? = null
