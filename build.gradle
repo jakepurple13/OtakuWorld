@@ -3,7 +3,7 @@ buildscript {
     ext.kotlin_version = "1.6.10"
     ext.latestAboutLibsRelease = "8.9.4"
 
-    ext.coroutinesVersion = "1.6.0"
+    ext.coroutinesVersion = "1.6.1"
 
     ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
     ext.coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
