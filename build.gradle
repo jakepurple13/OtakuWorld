@@ -41,7 +41,7 @@ buildscript {
     ext.exoplayer_version = "2.16.1"
     ext.room_version = "2.4.2"
 
-    ext.nav_version = "2.4.1"
+    ext.nav_version = "2.4.2"
 
     def koin_version = "3.0.2"
 
@@ -52,7 +52,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.2.0-alpha06"
+    ext.jetpack = "1.2.0-alpha07"
 
     ext.accompanist = "0.23.1"
 
@@ -63,7 +63,7 @@ buildscript {
     ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
     // Material Design
     ext.composeMaterial = "androidx.compose.material:material:$jetpack"
-    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha08"
+    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha09"
     // Material design icons
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
