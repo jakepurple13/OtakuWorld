@@ -426,12 +426,13 @@ fun AirBar(
     minValue: Double = 0.0,
     maxValue: Double = 100.0,
     icon: (@Composable () -> Unit)? = null,
+    valueChanged: (Double) -> Unit
 ) {
 
     /**
      * Calculate progress
      */
-    fun calculateValues(touchY: Float, touchX: Float): Pair<Double, Double> {
+    fun calculateValues(touchY: Float, touchX: Float): Double {
         val rawPercentage = if (controller.isHorizontal) {
             String.format("%.2f", (touchX.toDouble() / controller.rightX.toDouble()) * 100).toDouble()
         } else {
@@ -439,9 +440,8 @@ fun AirBar(
         }
 
         val percentage = if (rawPercentage < 0) 0.0 else if (rawPercentage > 100) 100.0 else rawPercentage
-        val value = String.format("%.2f", ((percentage / 100) * (maxValue - minValue) + minValue)).toDouble()
 
-        return Pair(percentage, value)
+        return String.format("%.2f", ((percentage / 100) * (maxValue - minValue) + minValue)).toDouble()
     }
 
     Box(modifier = modifier, contentAlignment = if (controller.isHorizontal) Alignment.CenterStart else Alignment.BottomCenter) {
@@ -449,21 +449,15 @@ fun AirBar(
             if (!controller.isHorizontal) {
                 when {
                     event.y in 0.0..controller.bottomY.toDouble() -> {
-                        controller.progressCoordinates = event.y
-                        val values = calculateValues(event.y, event.x)
-                        controller.internalProgress = values.second
+                        valueChanged(calculateValues(event.y, event.x))
                         true
                     }
                     event.y > 100 -> {
-                        controller.progressCoordinates = controller.bottomY
-                        val values = calculateValues(event.y, event.x)
-                        controller.internalProgress = values.second
+                        valueChanged(calculateValues(event.y, event.x))
                         true
                     }
                     event.y < 0 -> {
-                        controller.progressCoordinates = 0F
-                        val values = calculateValues(event.y, event.x)
-                        controller.internalProgress = values.second
+                        valueChanged(calculateValues(event.y, event.x))
                         true
                     }
                     else -> false
@@ -471,21 +465,15 @@ fun AirBar(
             } else {
                 when {
                     event.x in 0.0..controller.rightX.toDouble() -> {
-                        controller.progressCoordinates = event.x
-                        val values = calculateValues(event.y, event.x)
-                        controller.internalProgress = values.second
+                        valueChanged(calculateValues(event.y, event.x))
                         true
                     }
                     event.x > 100 -> {
-                        controller.progressCoordinates = controller.rightX
-                        val values = calculateValues(event.y, event.x)
-                        controller.internalProgress = values.second
+                        valueChanged(calculateValues(event.y, event.x))
                         true
                     }
                     event.x < 0 -> {
-                        controller.progressCoordinates = 0F
-                        val values = calculateValues(event.y, event.x)
-                        controller.internalProgress = values.second
+                        valueChanged(calculateValues(event.y, event.x))
                         true
                     }
                     else -> false
