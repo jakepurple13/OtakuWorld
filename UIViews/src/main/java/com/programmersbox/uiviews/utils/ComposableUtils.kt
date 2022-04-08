@@ -1975,41 +1975,45 @@ fun AirBar(
     val startToEnd = if (controller.animateProgress) animateFloatAsState(horizontal).value else horizontal
 
     Box(modifier = modifier, contentAlignment = if (controller.isHorizontal) Alignment.CenterStart else Alignment.BottomCenter) {
-        Canvas(modifier = modifier.pointerInteropFilter { event ->
-            if (!controller.isHorizontal) {
-                when {
-                    event.y in 0.0..controller.bottomY.toDouble() -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInteropFilter { event ->
+                    if (!controller.isHorizontal) {
+                        when {
+                            event.y in 0.0..controller.bottomY.toDouble() -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.y > 100 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.y < 0 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        when {
+                            event.x in 0.0..controller.rightX.toDouble() -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.x > 100 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.x < 0 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            else -> false
+                        }
                     }
-                    event.y > 100 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.y < 0 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    else -> false
                 }
-            } else {
-                when {
-                    event.x in 0.0..controller.rightX.toDouble() -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.x > 100 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.x < 0 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }) {
+        ) {
             controller.bottomY = size.height
             controller.rightX = size.width
             if (controller.internalProgress > 0.0) controller.progress = controller.internalProgress
@@ -2092,41 +2096,45 @@ fun AirBar(
     }
 
     Box(modifier = modifier, contentAlignment = if (isHorizontal) Alignment.CenterStart else Alignment.BottomCenter) {
-        Canvas(modifier = modifier.pointerInteropFilter { event ->
-            if (!isHorizontal) {
-                when {
-                    event.y in 0.0..bottomY.toDouble() -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInteropFilter { event ->
+                    if (!isHorizontal) {
+                        when {
+                            event.y in 0.0..bottomY.toDouble() -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.y > 100 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.y < 0 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        when {
+                            event.x in 0.0..rightX.toDouble() -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.x > 100 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            event.x < 0 -> {
+                                valueChanged(calculateValues(event.y, event.x))
+                                true
+                            }
+                            else -> false
+                        }
                     }
-                    event.y > 100 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.y < 0 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    else -> false
                 }
-            } else {
-                when {
-                    event.x in 0.0..rightX.toDouble() -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.x > 100 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.x < 0 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }) {
+        ) {
             bottomY = size.height
             rightX = size.width
 
