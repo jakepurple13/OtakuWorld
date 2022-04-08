@@ -380,10 +380,15 @@ fun SlideTo(
     }
 }
 
-class AirBarController(progress: Double = 0.0, progressCoordinates: Float = 0f, internal val isHorizontal: Boolean = false) {
+class AirBarController(
+    progress: Double = 0.0,
+    progressCoordinates: Float = 0f,
+    internal val isHorizontal: Boolean = false,
+    animateProgress: Boolean = true
+) {
 
+    var animateProgress by mutableStateOf(animateProgress)
     internal var internalProgress by mutableStateOf(progress)
-
     internal var progressCoordinates by mutableStateOf(progressCoordinates)
 
     var progress: Double
@@ -411,8 +416,9 @@ class AirBarController(progress: Double = 0.0, progressCoordinates: Float = 0f, 
 fun rememberAirBarController(
     progress: Double = 0.0,
     progressCoordinates: Float = 0f,
-    isHorizontal: Boolean = false
-) = remember(progressCoordinates, progress, isHorizontal) { AirBarController(progress, progressCoordinates, isHorizontal) }
+    isHorizontal: Boolean = false,
+    animateProgress: Boolean = true
+) = remember { AirBarController(progress, progressCoordinates, isHorizontal, animateProgress) }
 
 @ExperimentalComposeUiApi
 @Composable
@@ -429,9 +435,6 @@ fun AirBar(
     valueChanged: (Double) -> Unit
 ) {
 
-    /**
-     * Calculate progress
-     */
     fun calculateValues(touchY: Float, touchX: Float): Double {
         val rawPercentage = if (controller.isHorizontal) {
             String.format("%.2f", (touchX.toDouble() / controller.rightX.toDouble()) * 100).toDouble()
@@ -443,6 +446,12 @@ fun AirBar(
 
         return String.format("%.2f", ((percentage / 100) * (maxValue - minValue) + minValue)).toDouble()
     }
+
+    val vertical = if (controller.isHorizontal) 0f else controller.progressCoordinates
+    val horizontal = if (controller.isHorizontal) controller.progressCoordinates else controller.rightX
+
+    val bottomToTop = if (controller.animateProgress) animateFloatAsState(vertical).value else vertical
+    val startToEnd = if (controller.animateProgress) animateFloatAsState(horizontal).value else horizontal
 
     Box(modifier = modifier, contentAlignment = if (controller.isHorizontal) Alignment.CenterStart else Alignment.BottomCenter) {
         Canvas(modifier = modifier.pointerInteropFilter { event ->
@@ -501,8 +510,8 @@ fun AirBar(
             drawContext.canvas.clipPath(path = path, ClipOp.Intersect)
             drawContext.canvas.drawRect(
                 0F,
-                if (controller.isHorizontal) 0f else controller.progressCoordinates,
-                if (controller.isHorizontal) controller.progressCoordinates else size.width,
+                bottomToTop,
+                startToEnd,
                 size.height,
                 Paint().apply {
                     color = fillColor
