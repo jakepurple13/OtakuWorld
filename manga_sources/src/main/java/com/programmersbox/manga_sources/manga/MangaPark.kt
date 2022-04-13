@@ -2,19 +2,16 @@ package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
 import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.util.fastMaxBy
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.*
 import com.programmersbox.models.*
 import com.squareup.duktape.Duktape
 import io.reactivex.Single
-import kotlinx.serialization.json.*
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import okhttp3.MediaType.Companion.toMediaType
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.koin.core.component.KoinComponent
@@ -30,7 +27,7 @@ object MangaPark : ApiService, KoinComponent {
 
     private val helper: NetworkHelper by inject()
 
-    private fun String.v3Url() = if (startsWith("https://v35.")) this else replace("https://", "https://v35.")
+    private fun String.v3Url() = baseUrl
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
         if (searchText.isBlank()) {
@@ -113,36 +110,30 @@ object MangaPark : ApiService, KoinComponent {
     }
 
     private fun chapterListRequest(manga: ItemModel): Request {
-
-        val url = manga.url.v3Url().replace(baseUrl.v3Url(), "")
-        val sid = url.split("/")[2]
-
-        val jsonPayload = buildJsonObject {
-            put("lang", "en")
-            put("sid", sid)
-        }
-
-        val requestBody = jsonPayload.toString().toRequestBody("application/json;charset=UTF-8".toMediaType())
-
-        val refererUrl = "${baseUrl.v3Url()}/$url".toHttpUrlOrNull()!!.newBuilder()
-            .toString()
-        val newHeaders = MangaUtils.headersBuilder()
-            .add("Content-Length", requestBody.contentLength().toString())
-            .add("Content-Type", requestBody.contentType().toString())
-            .set("Referer", refererUrl)
-            .build()
-
-        return POST(
-            "${baseUrl.v3Url()}/ajax.reader.subject.episodes.by.serial",
-            headers = newHeaders,
-            body = requestBody
-        )
+        return GET(manga.url)
     }
 
     private fun chapterListParse(response: Response, mangaUrl: String): List<ChapterModel> {
-        val resToJson = Json.parseToJsonElement(response.body!!.string()).jsonObject
-        val document = Jsoup.parse(resToJson["html"]!!.jsonPrimitive.content)
-        return document.select("div.episode-item").fastMap { chapterFromElement(it) }
+        val f = "div.p-2:not(:has(.px-3))"
+        return response.asJsoup()
+            .select("div.episode-list #chap-index")
+            .flatMap { it.select(f).fastMap { chapterFromElement(it) } }
+            .fastMap {
+                ChapterModel(
+                    name = it.name,
+                    url = it.url,
+                    uploaded = it.originalDate,
+                    sourceUrl = mangaUrl,
+                    source = this
+                ).apply { uploadedTime = it.dateUploaded }
+            }
+    }
+
+    private fun chapterListParse(response: Document, mangaUrl: String): List<ChapterModel> {
+        val f = "div.p-2:not(:has(.px-3))"
+        return response
+            .select("div.episode-list #chap-index")
+            .flatMap { it.select(f).fastMap { chapterFromElement(it) } }
             .fastMap {
                 ChapterModel(
                     name = it.name,
@@ -162,42 +153,11 @@ object MangaPark : ApiService, KoinComponent {
         var originalDate: String = ""
     }
 
-    private fun chapterListParse(response: Document, mangaUrl: String): List<ChapterModel> {
-        fun List<SChapter>.getMissingChapters(allChapters: List<SChapter>): List<SChapter> {
-            val chapterNums = this.fastMap { it.chapterNumber }
-            return allChapters.filter { it.chapterNumber !in chapterNums }.distinctBy { it.chapterNumber }
-        }
-
-        val mangaBySource = response.select("div[id^=stream]")
-            .fastMap { sourceElement ->
-                var lastNum = 0F
-
-                sourceElement.select(".volume .chapter li")
-                    .reversed() // so incrementing lastNum works
-                    .fastMap { chapterElement ->
-                        chapterFromElement(chapterElement, lastNum)
-                            .also { lastNum = it.chapterNumber }
-                    }
-                    .distinctBy { it.chapterNumber } // there's even duplicate chapters within a source ( -.- )
-            }
-
-        val chapters = mangaBySource.fastMaxBy { it.count() }.orEmpty()
-        return (chapters + chapters.getMissingChapters(mangaBySource.flatten())).sortedByDescending { it.chapterNumber }.fastMap {
-            ChapterModel(
-                name = it.name,
-                url = "${baseUrl.v3Url()}${it.url}",
-                uploaded = it.originalDate,
-                sourceUrl = mangaUrl,
-                source = this
-            ).apply { uploadedTime = it.dateUploaded }
-        }
-    }
-
     private fun chapterFromElement(element: Element): SChapter {
-        val urlElement = element.select("a.chapt")
+        val urlElement = element.select("a.ms-3")
         val time = element.select("div.extra > i.ps-2").text()
         return SChapter().apply {
-            name = urlElement.text()
+            name = urlElement.text().removePrefix("Ch").trim()//urlElement.text()
             chapterNumber = urlElement.attr("href").substringAfterLast("/").toFloatOrNull() ?: 0f
             if (time != "") {
                 dateUploaded = parseDate(time)
