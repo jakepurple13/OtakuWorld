@@ -52,7 +52,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.2.0-alpha07"
+    ext.jetpack = "1.2.0-alpha06"
 
     ext.accompanist = "0.23.1"
 
@@ -74,8 +74,8 @@ buildscript {
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
-    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.6"
-    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.6"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.7"
+    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.7"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.5.0"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
