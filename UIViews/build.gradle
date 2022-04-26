@@ -58,7 +58,7 @@ dependencies {
     implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.3.0'
     implementation "androidx.browser:browser:1.4.0"
 
-    implementation 'me.zhanghai.android.fastscroll:library:1.1.6'
+    implementation 'me.zhanghai.android.fastscroll:library:1.1.8'
 
     implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.8'
 
