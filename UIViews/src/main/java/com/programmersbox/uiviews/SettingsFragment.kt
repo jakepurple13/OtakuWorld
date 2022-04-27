@@ -85,7 +85,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
-import java.util.*
 
 class SettingsDsl {
     companion object {
@@ -126,7 +125,6 @@ class SettingsFragment : Fragment() {
                         navController = findNavController(),
                         logo = logo,
                         genericInfo = genericInfo,
-                        fragment = this@SettingsFragment,
                         activity = requireActivity(),
                         usedLibraryClick = {
                             findNavController()
@@ -207,7 +205,6 @@ fun SettingScreen(
     navController: NavController,
     logo: MainLogo,
     genericInfo: GenericInfo,
-    fragment: Fragment,
     activity: ComponentActivity,
     usedLibraryClick: () -> Unit = {},
     debugMenuClick: () -> Unit = {},
@@ -281,8 +278,7 @@ fun SettingScreen(
             GeneralSettings(
                 context = context,
                 scope = scope,
-                activity = activity,
-                fragment = fragment,
+                //fragment = fragment,
                 genericInfo = genericInfo,
                 customSettings = customPreferences.generalSettings,
                 globalSearchClick = globalSearchClick
@@ -718,8 +714,7 @@ private fun ViewSettings(
 private fun GeneralSettings(
     context: Context,
     scope: CoroutineScope,
-    activity: ComponentActivity,
-    fragment: Fragment,
+    //fragment: Fragment,
     genericInfo: GenericInfo,
     customSettings: (@Composable () -> Unit)?,
     globalSearchClick: () -> Unit
@@ -771,9 +766,9 @@ private fun GeneralSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = {
-                vm.getModels {
+                /*vm.getModels {
                     ListBottomSheet(
-                        title = fragment.getString(R.string.chooseModelToDelete),
+                        title = context.getString(R.string.chooseModelToDelete),
                         list = vm.translationModels.toList(),
                         onClick = { item -> vm.deleteModel(item) }
                     ) {
@@ -786,7 +781,7 @@ private fun GeneralSettings(
                             }
                         )
                     }.show(fragment.parentFragmentManager, "sourceChooser")
-                }
+                }*/
             }
         )
     )
@@ -801,7 +796,7 @@ private fun GeneralSettings(
         )
     )
 
-    val theme by activity.themeSetting.collectAsState(initial = "System")
+    val theme by context.themeSetting.collectAsState(initial = "System")
 
     ListSetting(
         settingTitle = { Text(stringResource(R.string.theme_choice_title)) },

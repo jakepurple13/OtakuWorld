@@ -247,7 +247,8 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
             }
         ) { p, itemList ->
             Scaffold(
-                modifier = Modifier.padding(p)
+                modifier = Modifier.padding(p),
+                //bottomBar = { AndroidViewBinding(factory = MiniControllerBinding::inflate) }
             ) { p1 ->
                 if (items.isEmpty()) {
                     EmptyState()

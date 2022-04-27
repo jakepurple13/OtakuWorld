@@ -84,6 +84,9 @@ buildscript {
     ext.permissions = "com.google.accompanist:accompanist-permissions:$accompanist"
     ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
     ext.coilCompose = "io.coil-kt:coil-compose:1.4.0"
+    ext.navCompose = "androidx.navigation:navigation-compose:$nav_version"
+    ext.navMaterial = "com.google.accompanist:accompanist-navigation-material:$accompanist"
+    ext.navAnimation = "com.google.accompanist:accompanist-navigation-animation:$accompanist"
 
     ext.inset =  "com.google.accompanist:accompanist-insets:$accompanist"
     // If using insets-ui
@@ -124,7 +127,8 @@ buildscript {
                         composeConstraintLayout, permissions,
                         materialPlaceholder, drawablePainter, uiUtil,
                         materialYou,
-                        inset, insetUi
+                        inset, insetUi,
+                        navCompose, navMaterial, navAnimation
                 ]
         ]
 

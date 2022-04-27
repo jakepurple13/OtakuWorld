@@ -203,10 +203,15 @@ fun SwitchSetting(
     updateValue: (Boolean) -> Unit
 ) {
     DefaultPreferenceLayout(
-        modifier = modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) { updateValue(!value) },
+        modifier = modifier
+            /*.toggleable(
+                value = value,
+                onValueChange = updateValue
+            )*/
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { updateValue(!value) },
         settingIcon = settingIcon,
         settingTitle = settingTitle,
         summaryValue = summaryValue

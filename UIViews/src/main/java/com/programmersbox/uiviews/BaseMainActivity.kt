@@ -3,27 +3,57 @@ package com.programmersbox.uiviews
 import android.app.assist.AssistContent
 import android.net.Uri
 import android.os.Bundle
-import android.webkit.URLUtil
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.programmersbox.favoritesdatabase.HistoryDatabase
+import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.helpfulutils.notificationManager
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
-import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import com.programmersbox.uiviews.utils.Screen as SScreen
 
 abstract class BaseMainActivity : AppCompatActivity() {
 
@@ -32,18 +62,26 @@ abstract class BaseMainActivity : AppCompatActivity() {
     protected var currentNavController: LiveData<NavController>? = null
 
     protected val genericInfo: GenericInfo by inject()
+    private val logo: MainLogo by inject()
+    private val notificationLogo: NotificationLogo by inject()
+    private val dao by lazy { ItemDatabase.getInstance(this).itemDao() }
+    private val historyDao by lazy { HistoryDatabase.getInstance(this).historyDao() }
 
     protected abstract fun onCreate()
 
+    @OptIn(
+        ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
+        ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.base_main_activity)
+        //setContentView(R.layout.base_main_activity)
 
         genericInfo.toSource(currentService.orEmpty())?.let { sourcePublish.onNext(it) }
 
-        if (savedInstanceState == null) {
+        /*if (savedInstanceState == null) {
             setupBottomNavBar()
-        }
+        }*/
 
         when (runBlocking { themeSetting.first() }) {
             "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
@@ -54,7 +92,135 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         onCreate()
 
-        intent.data?.let {
+        setContent {
+            M3MaterialTheme(currentColorScheme) {
+                val showAllItem by showAll.collectAsState(false)
+
+                val bottomSheetNavigator = rememberBottomSheetNavigator()
+                val navController = rememberAnimatedNavController(bottomSheetNavigator)
+                com.google.accompanist.navigation.material.ModalBottomSheetLayout(bottomSheetNavigator) {
+                    androidx.compose.material3.Scaffold(
+                        bottomBar = {
+                            NavigationBar {
+                                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                                val currentDestination = navBackStackEntry?.destination
+                                SScreen.bottomItems.forEach { screen ->
+                                    if (screen !is SScreen.AllScreen || showAllItem) {
+                                        NavigationBarItem(
+                                            icon = {
+                                                androidx.compose.material3.Icon(
+                                                    when (screen) {
+                                                        SScreen.RecentScreen -> Icons.Default.Favorite
+                                                        SScreen.AllScreen -> Icons.Default.Settings
+                                                        SScreen.SettingsScreen -> Icons.Default.Settings
+                                                        else -> Icons.Default.BrokenImage
+                                                    },
+                                                    null
+                                                )
+                                            },
+                                            label = {
+                                                Text(
+                                                    when (screen) {
+                                                        SScreen.AllScreen -> stringResource(R.string.all)
+                                                        SScreen.RecentScreen -> stringResource(R.string.recent)
+                                                        SScreen.SettingsScreen -> stringResource(R.string.settings)
+                                                        else -> ""
+                                                    }
+                                                )
+                                            },
+                                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                            onClick = {
+                                                navController.navigate(screen.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    ) { innerPadding ->
+                        AnimatedNavHost(
+                            navController = navController,
+                            startDestination = SScreen.RecentScreen.route,
+                            modifier = Modifier.padding(innerPadding)
+                        ) {
+                            composable(
+                                SScreen.RecentScreen.route
+                            ) {
+                                val context = LocalContext.current
+                                RecentView(
+                                    recentVm = viewModel(factory = factoryCreate { RecentViewModel(dao, context) }),
+                                    info = genericInfo,
+                                    navController = navController,
+                                    logo = logo
+                                )
+                            }
+
+                            composable(
+                                SScreen.AllScreen.route
+                            ) {
+                                val context = LocalContext.current
+                                AllView(
+                                    allVm = viewModel(factory = factoryCreate { AllViewModel(dao, context) }),
+                                    info = genericInfo,
+                                    navController = navController,
+                                    logo = logo
+                                )
+                            }
+
+                            composable(
+                                SScreen.SettingsScreen.route,
+                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Start) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.End) },
+                            ) {
+                                SettingScreen(
+                                    navController = navController,
+                                    logo = logo,
+                                    genericInfo = genericInfo,
+                                    activity = this@BaseMainActivity,
+                                    notificationClick = { navController.navigate(SScreen.NotificationScreen.route) }
+                                )
+                            }
+
+                            composable(SScreen.NotificationScreen.route) {
+                                NotificationsScreen(
+                                    navController = navController,
+                                    genericInfo = genericInfo,
+                                    db = dao,
+                                    notificationManager = LocalContext.current.notificationManager,
+                                    logo = logo,
+                                    notificationLogo = notificationLogo,
+                                    fragmentManager = supportFragmentManager
+                                )
+                            }
+
+                            composable(
+                                SScreen.DetailsScreen.route + "/{model}",
+                                arguments = listOf(navArgument("model") { type = AssetParamType(genericInfo) })
+                            ) {
+                                Text("Hello ${it.arguments?.getSerializable("model") as? ItemModel}")
+                                (it.arguments?.getSerializable("model") as? ItemModel)?.let { info ->
+                                    DetailsScreen(
+                                        navController = navController,
+                                        genericInfo = genericInfo,
+                                        logo = notificationLogo,
+                                        info = info,
+                                        dao = dao,
+                                        historyDao = historyDao,
+                                        windowSize = rememberWindowSizeClass()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /*intent.data?.let {
             if (URLUtil.isValidUrl(it.toString())) {
                 currentService?.let { it1 ->
                     genericInfo.toSource(it1)?.getSourceByUrl(it.toString())
@@ -66,8 +232,22 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         ?.addTo(disposable)
                 }
             }
+        }*/
+
+    }
+
+    class AssetParamType(val info: GenericInfo) : NavType<ItemModel>(isNullableAllowed = true) {
+        override fun get(bundle: Bundle, key: String): ItemModel? {
+            return bundle.getSerializable(key) as? ItemModel
         }
 
+        override fun parseValue(value: String): ItemModel {
+            return value.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(info))!!
+        }
+
+        override fun put(bundle: Bundle, key: String, value: ItemModel) {
+            bundle.putSerializable(key, value)
+        }
     }
 
     override fun onProvideAssistContent(outContent: AssistContent?) {
@@ -77,7 +257,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        setupBottomNavBar()
+        //setupBottomNavBar()
     }
 
     enum class Screen(val id: Int) { RECENT(R.id.recent_nav), ALL(R.id.all_nav), SETTINGS(R.id.setting_nav) }
@@ -86,7 +266,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         findViewById<BottomNavigationView>(R.id.navLayout2)?.selectedItemId = screen.id
     }
 
-    private fun setupBottomNavBar() {
+    /*private fun setupBottomNavBar() {
         //TODO: Look into doing a recreate and if for the all_nav when showAll is changed
         val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav, R.navigation.setting_nav)
         currentScreen.value = R.id.recent_nav
@@ -127,7 +307,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             .addTo(disposable)
     }
 
-    override fun onSupportNavigateUp(): Boolean = currentNavController?.value?.navigateUp() ?: false
+    override fun onSupportNavigateUp(): Boolean = currentNavController?.value?.navigateUp() ?: false*/
 
     override fun onDestroy() {
         disposable.dispose()

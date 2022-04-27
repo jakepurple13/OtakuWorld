@@ -239,7 +239,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                                     else -> Icons.Default.DeviceUnknown
                                 }
                             )
-                        }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
+                        }//.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
                     }
                     else -> {
                         Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
@@ -340,6 +340,7 @@ class GenericAnime(val context: Context) : GenericInfo {
             columns = GridCells.Fixed(1),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(list) {
                 ElevatedCard(
@@ -420,7 +421,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                         } else {
                             MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
                                 .also { it.routeSelector = CastContext.getSharedInstance(context).mergedSelector }
-                                .show(MainActivity.activity.supportFragmentManager, "media_chooser")
+                            //.show(MainActivity.activity.supportFragmentManager, "media_chooser")
                         }
                     }
                 )

@@ -43,6 +43,7 @@ import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.helpfulutils.*
+import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.rxutils.toLatestFlowable
@@ -211,6 +212,20 @@ class ChapterModelDeserializer(private val genericInfo: GenericInfo) : JsonDeser
                 )
             }
         }
+    }
+}
+
+class ApiServiceSerializer : JsonSerializer<ApiService> {
+    override fun serialize(src: ApiService, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        val json = JsonObject()
+        json.addProperty("source", src.serviceName)
+        return json
+    }
+}
+
+class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ApiService? {
+        return genericInfo.toSource(json.asString)
     }
 }
 

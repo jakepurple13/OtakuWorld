@@ -71,7 +71,6 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
             logo = get(),
             genericInfo = genericInfo,
             activity = requireActivity(),
-            fragment = this
         )
     }
 

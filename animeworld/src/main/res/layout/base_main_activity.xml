@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         class="com.programmersbox.animeworld.MyMiniControllerFragment"
-        tools:ignore="FragmentTagUsage"></fragment>
+        tools:ignore="FragmentTagUsage" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/navLayout2"
