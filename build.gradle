@@ -11,7 +11,7 @@ buildscript {
 
     ext.gson = 'com.google.code.gson:gson:2.9.0'
 
-    ext.glideVersion = "4.13.1"
+    ext.glideVersion = "4.13.2"
     ext.glide = "com.github.bumptech.glide:glide:$glideVersion"
     ext.glideCompiler = "com.github.bumptech.glide:compiler:$glideVersion"
 
