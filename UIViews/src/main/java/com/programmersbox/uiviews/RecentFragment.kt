@@ -195,15 +195,14 @@ class RecentFragment : BaseFragmentCompose() {
             var showBanner by remember { mutableStateOf(false) }
             M3OtakuBannerBox(
                 showBanner = showBanner,
-                placeholder = logo.logoId
+                placeholder = logo.logoId,
+                modifier = Modifier.padding(p)
             ) { itemInfo ->
                 Crossfade(targetState = isConnected) { connected ->
                     when (connected) {
                         false -> {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(p),
+                                modifier = Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
@@ -221,7 +220,7 @@ class RecentFragment : BaseFragmentCompose() {
                                 recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
                                 else -> {
                                     SwipeRefresh(
-                                        modifier = Modifier.padding(p),
+                                        //modifier = Modifier.padding(p),
                                         state = refresh,
                                         onRefresh = { source?.let { recentVm.reset(context, it) } }
                                     ) {

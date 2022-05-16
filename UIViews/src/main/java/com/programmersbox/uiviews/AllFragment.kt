@@ -18,16 +18,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material3.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -235,15 +236,14 @@ class AllFragment : BaseFragmentCompose() {
             var showBanner by remember { mutableStateOf(false) }
             M3OtakuBannerBox(
                 showBanner = showBanner,
-                placeholder = logo.logoId
+                placeholder = logo.logoId,
+                modifier = Modifier.padding(p1)
             ) { itemInfo ->
                 Crossfade(targetState = isConnected) { connected ->
                     when (connected) {
                         false -> {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(p1),
+                                modifier = Modifier.fillMaxSize(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
@@ -258,7 +258,6 @@ class AllFragment : BaseFragmentCompose() {
                         }
                         true -> {
                             BottomSheetScaffold(
-                                modifier = Modifier.padding(p1),
                                 backgroundColor = M3MaterialTheme.colorScheme.background,
                                 contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
                                 scaffoldState = scaffoldState,

@@ -407,6 +407,7 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
 fun M3OtakuBannerBox(
     showBanner: Boolean = false,
     placeholder: Int,
+    modifier: Modifier = Modifier,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val context = LocalContext.current
@@ -418,6 +419,7 @@ fun M3OtakuBannerBox(
     }
 
     BannerBox(
+        modifier = modifier,
         showBanner = showBanner,
         banner = {
             androidx.compose.material3.Surface(
