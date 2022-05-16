@@ -231,9 +231,9 @@ class FavoriteFragment : Fragment() {
                                     onClick = { viewModel.resetSources() },
                                     onLongClick = { viewModel.selectedSources.clear() }
                                 ),
-                                colors = ChipDefaults.outlinedChipColors(
-                                    backgroundColor = M3MaterialTheme.colorScheme.primary,
-                                    contentColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = M3MaterialTheme.colorScheme.primary,
+                                    labelColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
                                 )
                             ) { Text("ALL") }
                         }
@@ -249,12 +249,12 @@ class FavoriteFragment : Fragment() {
                                     onClick = { viewModel.newSource(it.first) },
                                     onLongClick = { viewModel.singleSource(it.first) }
                                 ),
-                                colors = ChipDefaults.outlinedChipColors(
-                                    backgroundColor = animateColorAsState(
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = animateColorAsState(
                                         if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
                                         else M3MaterialTheme.colorScheme.surface
                                     ).value,
-                                    contentColor = animateColorAsState(
+                                    labelColor = animateColorAsState(
                                         if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
                                         else M3MaterialTheme.colorScheme.onSurface
                                     ).value

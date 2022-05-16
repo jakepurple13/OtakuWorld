@@ -630,7 +630,11 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                             onRefresh = { readVm.refresh() },
                             modifier = Modifier.padding(p)
                         ) {
-                            Box(Modifier.fillMaxSize()) {
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(p)
+                            ) {
                                 LazyColumn(
                                     state = listState,
                                     verticalArrangement = Arrangement.spacedBy(requireContext().dpToPx(paddingPage).dp),

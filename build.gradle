@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = "1.6.10"
+    ext.kotlin_version = "1.6.21"
     ext.latestAboutLibsRelease = "8.9.4"
 
     ext.coroutinesVersion = "1.6.1"
@@ -52,7 +52,7 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.2.0-alpha06"
+    ext.jetpack = "1.2.0-beta01"
 
     ext.accompanist = "0.23.1"
 
@@ -63,7 +63,7 @@ buildscript {
     ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
     // Material Design
     ext.composeMaterial = "androidx.compose.material:material:$jetpack"
-    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha09"
+    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha11"
     // Material design icons
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
@@ -74,8 +74,8 @@ buildscript {
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
-    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.8"
-    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.8"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.9"
+    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.9"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.5.0"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.0"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"

@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.contentColorFor
@@ -37,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
+import androidx.compose.material3.ChipColors
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
@@ -219,22 +219,22 @@ fun CustomChip2(
     }
 }
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun CustomChip(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     shape: Shape = MaterialTheme.shapes.small.copy(CornerSize(percent = 50)),
     border: BorderStroke? = null,
-    colors: ChipColors = ChipDefaults.chipColors(),
+    colors: ChipColors = AssistChipDefaults.assistChipColors(),
     leadingIcon: @Composable (() -> Unit)? = null,
     content: @Composable RowScope.() -> Unit
 ) {
-    val contentColor by colors.contentColor(enabled)
+    val contentColor by colors.labelColor(enabled)
     androidx.compose.material3.Surface(
         modifier = modifier,
         shape = shape,
-        color = colors.backgroundColor(enabled).value,
+        color = colors.containerColor(enabled).value,
         contentColor = contentColor.copy(1.0f),
         border = border,
         tonalElevation = 8.dp

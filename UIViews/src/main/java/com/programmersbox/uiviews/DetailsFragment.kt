@@ -178,7 +178,7 @@ class DetailsFragment : Fragment() {
                                         },
                                     )
                                 }
-                            ) { PlaceHolderHeader() }
+                            ) { PlaceHolderHeader(it) }
                         } else if (details.info != null) {
 
                             val isSaved by dao.doesNotificationExist(info.url)
@@ -1159,7 +1159,9 @@ class DetailsFragment : Fragment() {
                     indication = rememberRipple(),
                     interactionSource = interactionSource,
                 ) { markAs(!read.fastAny { it.url == c.url }) },
-            containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = animateColorAsState(swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface).value,
+            )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
 
@@ -1325,6 +1327,7 @@ class DetailsFragment : Fragment() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @ExperimentalComposeUiApi
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
@@ -1452,10 +1455,10 @@ class DetailsFragment : Fragment() {
                         items(model.genres) {
                             CustomChip(
                                 modifier = Modifier.fadeInAnimation(),
-                                colors = ChipDefaults.outlinedChipColors(
-                                    backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
                                         .animate().value,
-                                    contentColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
+                                    labelColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
                                         .animate().value
                                         .copy(alpha = ChipDefaults.ContentOpacity)
                                 )
@@ -1528,13 +1531,17 @@ class DetailsFragment : Fragment() {
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
-    private fun PlaceHolderHeader() {
+    private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
         val placeholderColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
             .copy(0.1f)
             .compositeOver(M3MaterialTheme.colorScheme.surface)
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
 
             Row(modifier = Modifier.padding(5.dp)) {
 
