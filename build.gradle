@@ -83,7 +83,7 @@ buildscript {
     ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
     ext.permissions = "com.google.accompanist:accompanist-permissions:$accompanist"
     ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
-    ext.coilCompose = "io.coil-kt:coil-compose:1.4.0"
+    ext.coilCompose = "io.coil-kt:coil-compose:2.1.0"
 
     ext.inset =  "com.google.accompanist:accompanist-insets:$accompanist"
     // If using insets-ui
