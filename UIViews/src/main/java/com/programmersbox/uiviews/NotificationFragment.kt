@@ -7,10 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
@@ -52,7 +53,9 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -112,6 +115,9 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                 }
 
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+                val context = LocalContext.current
+                val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
                 BottomSheetDeleteScaffold(
                     listOfItems = items,
@@ -190,14 +196,15 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                         ListItem(
                             modifier = Modifier.padding(5.dp),
                             icon = {
-                                Image(
-                                    painter = rememberImagePainter(data = item.imageUrl.orEmpty()) {
-                                        placeholder(logo.logoId)
-                                        error(logo.logoId)
-                                        crossfade(true)
-                                        lifecycle(LocalLifecycleOwner.current)
-                                        size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                                    },
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(item.imageUrl)
+                                        .lifecycle(LocalLifecycleOwner.current)
+                                        .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                        .crossfade(true)
+                                        .build(),
+                                    placeholder = rememberDrawablePainter(logoDrawable),
+                                    error = rememberDrawablePainter(logoDrawable),
                                     contentScale = ContentScale.FillBounds,
                                     contentDescription = item.notiTitle,
                                     modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -382,14 +389,17 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                             ?.addTo(disposable)
                     }
             ) {
+                val context = LocalContext.current
+                val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
                 Row {
-                    Image(
-                        painter = rememberImagePainter(data = item.imageUrl.orEmpty()) {
-                            placeholder(logo.logoId)
-                            error(logo.logoId)
-                            crossfade(true)
-                            lifecycle(LocalLifecycleOwner.current)
-                        },
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.imageUrl)
+                            .lifecycle(LocalLifecycleOwner.current)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = rememberDrawablePainter(logoDrawable),
+                        error = rememberDrawablePainter(logoDrawable),
                         contentScale = ContentScale.Crop,
                         contentDescription = item.notiTitle,
                         modifier = Modifier

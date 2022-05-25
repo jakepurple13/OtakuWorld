@@ -4,12 +4,8 @@ import android.Manifest
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,7 +19,9 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,8 +34,6 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.FragmentNavigator
-import com.google.accompanist.permissions.PermissionsRequired
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -251,7 +247,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 }
             )
 
-            if (BuildConfig.DEBUG) {
+            /*if (BuildConfig.DEBUG) {
 
                 val folderLocation by context.folderLocationFlow.collectAsState(initial = DOWNLOAD_FILE_PATH)
 
@@ -288,6 +284,8 @@ class GenericManga(val context: Context) : GenericInfo {
                         dismissButton = { TextButton(onClick = { resetFolderDialog = false }) { Text(stringResource(R.string.cancel)) } }
                     )
                 }
+
+
 
                 PermissionsRequired(
                     multiplePermissionsState = storagePermissions,
@@ -339,7 +337,7 @@ class GenericManga(val context: Context) : GenericInfo {
                         }
                     )
                 }
-            }
+            }*/
         }
 
         playerSettings {

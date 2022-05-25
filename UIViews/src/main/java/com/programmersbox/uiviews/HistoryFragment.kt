@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.exponentialDecay
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
@@ -55,7 +56,9 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -276,6 +279,9 @@ class HistoryFragment : Fragment() {
                 }
             }
 
+            val context = LocalContext.current
+            val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+
             Surface(
                 tonalElevation = 5.dp,
                 shape = MaterialTheme.shapes.medium,
@@ -305,14 +311,15 @@ class HistoryFragment : Fragment() {
                     secondaryText = { Text(requireContext().getSystemDateTimeFormat().format(item.timestamp)) },
                     icon = {
                         Surface(shape = MaterialTheme.shapes.medium) {
-                            Image(
-                                painter = rememberImagePainter(data = item.imageUrl) {
-                                    placeholder(logo.logoId)
-                                    error(logo.logoId)
-                                    crossfade(true)
-                                    lifecycle(LocalLifecycleOwner.current)
-                                    size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                                },
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(item.imageUrl)
+                                    .lifecycle(LocalLifecycleOwner.current)
+                                    .crossfade(true)
+                                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                    .build(),
+                                placeholder = rememberDrawablePainter(logoDrawable),
+                                error = rememberDrawablePainter(logoDrawable),
                                 contentScale = ContentScale.FillBounds,
                                 contentDescription = item.title,
                                 modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

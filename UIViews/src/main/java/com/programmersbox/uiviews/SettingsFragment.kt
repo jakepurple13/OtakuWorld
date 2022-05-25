@@ -53,7 +53,8 @@ import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
@@ -350,13 +351,13 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
     PreferenceSetting(
         settingTitle = { Text(accountInfo?.displayName ?: "User") },
         settingIcon = {
-            Image(
-                painter = rememberImagePainter(data = accountInfo?.photoUrl) {
-                    error(logo.logoId)
-                    crossfade(true)
-                    lifecycle(LocalLifecycleOwner.current)
-                    transformations(CircleCropTransformation())
-                },
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(accountInfo?.photoUrl)
+                    .crossfade(true)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .transformations(CircleCropTransformation())
+                    .build(),
                 contentDescription = null
             )
         },

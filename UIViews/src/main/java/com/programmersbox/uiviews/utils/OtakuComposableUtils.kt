@@ -27,8 +27,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import coil.annotation.ExperimentalCoilApi
-import coil.compose.ImagePainter
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
@@ -291,14 +291,15 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = rememberImagePainter(imageUrl) {
-                    placeholder(placeHolder)
-                    error(error)
-                    crossfade(true)
-                    lifecycle(LocalLifecycleOwner.current)
-                    size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                },
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .crossfade(true)
+                    .placeholder(placeHolder)
+                    .error(error)
+                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                    .build(),
                 contentDescription = name,
                 modifier = Modifier.matchParentSize()
             )
@@ -430,62 +431,20 @@ fun M3OtakuBannerBox(
             ) {
                 ListItem(
                     icon = {
-                        val painter = rememberImagePainter(data = itemInfo.value?.imageUrl.orEmpty())
-
-                        when (painter.state) {
-                            is ImagePainter.State.Loading -> {
-                                placeHolderImage?.let {
-                                    Image(
-                                        bitmap = it,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .align(Alignment.Center)
-                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                    )
-                                }
-                            }
-                            is ImagePainter.State.Error -> {
-                                GlideImage(
-                                    imageModel = itemInfo.value?.imageUrl.orEmpty(),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                    loading = {
-                                        placeHolderImage?.let { it1 ->
-                                            Image(
-                                                bitmap = it1,
-                                                contentDescription = null,
-                                                modifier = Modifier
-                                                    .align(Alignment.Center)
-                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                            )
-                                        }
-                                    },
-                                    failure = {
-                                        placeHolderImage?.let { it1 ->
-                                            Image(
-                                                bitmap = it1,
-                                                contentDescription = null,
-                                                modifier = Modifier
-                                                    .align(Alignment.Center)
-                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                            )
-                                        }
-                                    }
-                                )
-                            }
-                            else -> {}
-                        }
-
-                        Image(
-                            painter = painter,
-                            contentDescription = null,
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(itemInfo.value?.imageUrl.orEmpty())
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .placeholder(placeholder)
+                                .error(placeholder)
+                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                .build(),
+                            contentDescription = itemInfo.value?.title,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
                     },
                     overlineText = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },

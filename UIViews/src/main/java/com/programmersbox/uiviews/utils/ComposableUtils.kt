@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
@@ -75,12 +76,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.window.layout.WindowMetricsCalculator
 import coil.Coil
+import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import coil.size.Scale
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -1046,10 +1048,13 @@ fun CustomSwipeToDelete(
 fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> Unit) {
     val storagePermissions = rememberMultiplePermissionsState(permissionsList)
     val context = LocalContext.current
-    PermissionsRequired(
-        multiplePermissionsState = storagePermissions,
-        permissionsNotGrantedContent = { NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() } },
-        permissionsNotAvailableContent = {
+    SideEffect { storagePermissions.launchMultiplePermissionRequest() }
+    if (storagePermissions.allPermissionsGranted) {
+        content()
+    } else {
+        if (storagePermissions.permissions.fastAll { it.status.shouldShowRationale }) {
+            NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() }
+        } else {
             NeedsPermissions {
                 context.startActivity(
                     Intent().apply {
@@ -1058,9 +1063,8 @@ fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> 
                     }
                 )
             }
-        },
-        content = content
-    )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1751,7 +1755,7 @@ private suspend fun calculateSwatchesInImage(
         .allowHardware(false)
         .build()
 
-    val bitmap = when (val result = Coil.execute(r)) {
+    val bitmap = when (val result = r.context.imageLoader.execute(r)) {
         is SuccessResult -> result.drawable.toBitmap()
         else -> null
     }
@@ -1788,7 +1792,7 @@ private suspend fun calculateAllSwatchesInImage(
         .allowHardware(false)
         .build()
 
-    val bitmap = when (val result = Coil.execute(r)) {
+    val bitmap = when (val result = r.context.imageLoader.execute(r)) {
         is SuccessResult -> result.drawable.toBitmap()
         else -> null
     }
