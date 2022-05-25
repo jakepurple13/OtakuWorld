@@ -52,9 +52,9 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
-    ext.jetpack = "1.2.0-beta01"
+    ext.jetpack = "1.2.0-beta02"
 
-    ext.accompanist = "0.23.1"
+    ext.accompanist = "0.24.9-beta"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
@@ -63,7 +63,7 @@ buildscript {
     ext.composeFoundation = "androidx.compose.foundation:foundation:$jetpack"
     // Material Design
     ext.composeMaterial = "androidx.compose.material:material:$jetpack"
-    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha11"
+    ext.materialYou = "androidx.compose.material3:material3:1.0.0-alpha12"
     // Material design icons
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
@@ -83,7 +83,7 @@ buildscript {
     ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
     ext.permissions = "com.google.accompanist:accompanist-permissions:$accompanist"
     ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
-    ext.coilCompose = "io.coil-kt:coil-compose:1.4.0"
+    ext.coilCompose = "io.coil-kt:coil-compose:2.1.0"
 
     ext.inset =  "com.google.accompanist:accompanist-insets:$accompanist"
     // If using insets-ui
