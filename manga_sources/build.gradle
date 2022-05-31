@@ -41,7 +41,7 @@ dependencies {
 
     testImplementation 'org.mockito:mockito-core:4.2.0'
     // required if you want to use Mockito for Android tests
-    androidTestImplementation 'org.mockito:mockito-android:4.2.0'
+    androidTestImplementation 'org.mockito:mockito-android:4.6.0'
 
     implementation "com.squareup.okhttp3:okhttp:4.9.3"
     implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.3"
