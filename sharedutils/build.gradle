@@ -38,7 +38,7 @@ dependencies {
     implementation material
     testImplementation Deps.junit
     testImplementation "com.jakewharton.picnic:picnic:0.6.0"
-    testImplementation 'com.lordcodes.turtle:turtle:0.6.0'
+    testImplementation 'com.lordcodes.turtle:turtle:0.7.0'
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
 
