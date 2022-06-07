@@ -407,7 +407,8 @@ fun <T> BottomSheetDeleteScaffold(
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
-    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
+    topAppBarScrollState: TopAppBarScrollState = rememberTopAppBarScrollState(),
+    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) },
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit
@@ -468,7 +469,8 @@ fun <T> BottomSheetDeleteScaffold(
 
             }
 
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+            val topAppBarScrollState = rememberTopAppBarScrollState()
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
             androidx.compose.material3.Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -651,7 +653,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     customSingleRemoveDialog: (T) -> Boolean = { true },
-    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
+    bottomScrollBehavior: TopAppBarScrollBehavior,
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
@@ -713,7 +715,8 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 
             }
 
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+            val topAppBarScrollState = rememberTopAppBarScrollState()
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
             androidx.compose.material3.Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

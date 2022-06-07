@@ -145,7 +145,8 @@ class FavoriteFragment : Fragment() {
 
         val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
 
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
         CollapsingToolbarScaffold(
             modifier = Modifier,

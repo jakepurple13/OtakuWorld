@@ -746,12 +746,14 @@ class DetailsFragment : Fragment() {
         val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
             ?: M3MaterialTheme.colorScheme.onSurface
 
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
         BottomSheetScaffold(
             backgroundColor = Color.Transparent,
             sheetContent = {
-                val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                val markAsTopAppBarScrollState = rememberTopAppBarScrollState()
+                val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior(markAsTopAppBarScrollState) }
 
                 Scaffold(
                     topBar = {

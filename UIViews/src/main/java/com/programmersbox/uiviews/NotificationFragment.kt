@@ -22,15 +22,13 @@ import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,7 +73,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.*
@@ -103,9 +100,7 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
         setContent {
             M3MaterialTheme(currentColorScheme) {
-                val items by db.getAllNotificationsFlow()
-                    .flowOn(Dispatchers.IO)
-                    .collectAsState(initial = emptyList())
+                val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
 
                 val state = rememberBottomSheetScaffoldState()
                 val scope = rememberCoroutineScope()
@@ -114,7 +109,8 @@ class NotificationFragment : BaseBottomSheetDialogFragment() {
                     scope.launch { state.bottomSheetState.collapse() }
                 }
 
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                val topAppBarScrollState = rememberTopAppBarScrollState()
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
                 val context = LocalContext.current
                 val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }

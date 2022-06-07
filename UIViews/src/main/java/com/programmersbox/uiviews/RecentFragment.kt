@@ -174,7 +174,8 @@ class RecentFragment : BaseFragmentCompose() {
             if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context, source!!)
         }
 
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
         val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

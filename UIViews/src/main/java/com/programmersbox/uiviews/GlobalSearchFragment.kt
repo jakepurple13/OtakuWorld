@@ -307,7 +307,8 @@ class GlobalSearchFragment : Fragment() {
                                 scaffoldState = bottomScaffold,
                                 sheetContent = searchModelBottom?.let { s ->
                                     {
-                                        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                                        val topAppBarScrollState = rememberTopAppBarScrollState()
+                                        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
                                         Scaffold(
                                             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                             topBar = {

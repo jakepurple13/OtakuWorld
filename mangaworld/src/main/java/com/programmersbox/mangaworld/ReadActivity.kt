@@ -382,7 +382,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                 BottomSheetScaffold(
                     scaffoldState = scaffoldState,
                     sheetContent = {
-                        val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                        val sheetTopAppBarScrollState = rememberTopAppBarScrollState()
+                        val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
                         Scaffold(
                             modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                             topBar = {
@@ -486,7 +487,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                     sheetPeekHeight = 0.dp,
                     drawerContent = if (readVm.list.size > 1) {
                         {
-                            val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                            val drawerTopAppBarScrollState = rememberTopAppBarScrollState()
+                            val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
                             Scaffold(
                                 modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
                                 topBar = {
@@ -567,7 +569,8 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
                     //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
                     //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
 
-                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                    val topAppBarScrollState = rememberTopAppBarScrollState()
+                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
                     val topBarHeight = 32.dp//28.dp
                     val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
