@@ -17,15 +17,12 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SmallTopAppBar
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -203,7 +200,8 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
 
         itemToDelete?.download?.let { SlideToDeleteDialog(showDialog = showDialog, download = it) }
 
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
         BottomSheetDeleteScaffold(
             bottomScrollBehavior = scrollBehavior,

@@ -126,7 +126,8 @@ class ViewVideosFragment : BaseBottomSheetDialogFragment() {
 
         itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, video = it) }
 
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
         BottomSheetDeleteScaffold(
             bottomScrollBehavior = scrollBehavior,
