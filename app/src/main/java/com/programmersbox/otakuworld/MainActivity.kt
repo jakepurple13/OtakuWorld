@@ -142,7 +142,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }*/
 
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                val topBarState = rememberTopAppBarScrollState()
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
                 BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
