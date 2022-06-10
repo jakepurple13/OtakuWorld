@@ -1,11 +1,16 @@
 package com.programmersbox.uiviews.utils
 
 import android.net.Uri
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.darkColors
+import androidx.compose.material.lightColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
@@ -51,12 +56,27 @@ fun OtakuMaterialTheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
+    val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
+            (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     MaterialTheme(currentColorScheme) {
-        CompositionLocalProvider(
-            LocalActivity provides remember { context.findActivity() },
-            LocalNavController provides navController,
-            LocalGenericInfo provides genericInfo
-        ) { content() }
+        androidx.compose.material.MaterialTheme(
+            colors = if (darkTheme)
+                darkColors(
+                    primary = Color(0xff90CAF9),
+                    secondary = Color(0xff90CAF9)
+                )
+            else
+                lightColors(
+                    primary = Color(0xff2196F3),
+                    secondary = Color(0xff90CAF9)
+                ),
+        ) {
+            CompositionLocalProvider(
+                LocalActivity provides remember { context.findActivity() },
+                LocalNavController provides navController,
+                LocalGenericInfo provides genericInfo
+            ) { content() }
+        }
     }
 }
 
