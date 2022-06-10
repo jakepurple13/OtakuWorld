@@ -61,8 +61,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.translate.TranslateRemoteModel
-import com.mikepenz.aboutlibraries.Libs
-import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -128,22 +126,7 @@ class SettingsFragment : Fragment() {
                         genericInfo = genericInfo,
                         activity = requireActivity(),
                         usedLibraryClick = {
-                            findNavController()
-                                .navigate(
-                                    SettingsFragmentDirections.actionXToAboutLibs(
-                                        LibsBuilder()
-                                            .withSortEnabled(true)
-                                            .customUtils("loggingutils", "LoggingUtils")
-                                            //.customUtils("flowutils", "FlowUtils")
-                                            .customUtils("gsonutils", "GsonUtils")
-                                            .customUtils("helpfulutils", "HelpfulUtils")
-                                            .customUtils("dragswipe", "DragSwipe")
-                                            .customUtils("funutils", "FunUtils")
-                                            .customUtils("rxutils", "RxUtils")
-                                            //.customUtils("thirdpartyutils", "ThirdPartyUtils")
-                                            .withShowLoadingProgress(true)
-                                    )
-                                )
+
                         },
                         debugMenuClick = {
                             findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToDebugFragment())
@@ -165,7 +148,7 @@ class SettingsFragment : Fragment() {
             }
         }
 
-    private fun LibsBuilder.customUtils(libraryName: String, newName: String) =
+    /*private fun LibsBuilder.customUtils(libraryName: String, newName: String) =
         withLibraryModification(
             libraryName,
             Libs.LibraryFields.LIBRARY_REPOSITORY_LINK,
@@ -175,7 +158,7 @@ class SettingsFragment : Fragment() {
                 libraryName,
                 Libs.LibraryFields.LIBRARY_NAME,
                 newName
-            )
+            )*/
 }
 
 class ComposeSettingsDsl {

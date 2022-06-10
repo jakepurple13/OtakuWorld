@@ -4,7 +4,6 @@
     android:id="@+id/setting_nav"
     app:startDestination="@id/settingsFragment">
 
-    <include app:graph="@navigation/aboutlibs_navigation" />
     <include app:graph="@navigation/global_nav" />
 
     <fragment
@@ -19,18 +18,6 @@
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out" />
 
-        <action
-            android:id="@+id/action_x_to_about_libs"
-            app:destination="@id/about_libraries"
-            app:enterAnim="@anim/slide_in"
-            app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out">
-            <argument
-                android:name="data"
-                app:argType="java.io.Serializable"
-                app:nullable="true" />
-        </action>
         <action
             android:id="@+id/action_settingsFragment_to_notificationFragment"
             app:destination="@id/notificationFragment"

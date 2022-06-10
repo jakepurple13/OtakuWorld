@@ -205,8 +205,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     notificationClick = { navController.navigate(SScreen.NotificationScreen.route) },
                                     globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) },
                                     favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) },
-                                    historyClick = {},
-                                    usedLibraryClick = {}
+                                    historyClick = { navController.navigate(SScreen.HistoryScreen.route) },
+                                    usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) }
                                 )
                             }
 
@@ -228,6 +228,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
 
                             composable(SScreen.FavoriteScreen.route) { FavoriteUi(logo) }
+                            composable(SScreen.HistoryScreen.route) { HistoryUi(dao = historyDao, logo = logo) }
+                            composable(SScreen.AboutScreen.route) { AboutLibrariesScreen(logo) }
 
                             composable(
                                 SScreen.DetailsScreen.route + "/{model}",

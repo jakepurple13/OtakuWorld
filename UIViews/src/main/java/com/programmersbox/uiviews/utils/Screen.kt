@@ -26,6 +26,7 @@ sealed class Screen(val route: String) {
     object NotificationScreen : Screen("notifications")
     object HistoryScreen : Screen("history")
     object FavoriteScreen : Screen("favorite")
+    object AboutScreen : Screen("about")
     object DebugScreen : Screen("debug")
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
