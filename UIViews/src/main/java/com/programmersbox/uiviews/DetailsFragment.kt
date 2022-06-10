@@ -1319,11 +1319,13 @@ private fun ChapterItem(
                     .padding(5.dp)
             )
 
+            val activity = LocalActivity.current
+
             Row {
                 if (infoModel.source.canPlay) {
                     OutlinedButton(
                         onClick = {
-                            genericInfo.chapterOnClick(c, chapters, infoModel, context, navController)
+                            genericInfo.chapterOnClick(c, chapters, infoModel, context, activity, navController)
                             insertRecent()
                             if (!read.fastAny { it.url == c.url }) vm.markAs(c, true)
                         },
@@ -1354,7 +1356,7 @@ private fun ChapterItem(
                 if (infoModel.source.canDownload) {
                     OutlinedButton(
                         onClick = {
-                            //genericInfo.downloadChapter(c, chapters, infoModel, this@DetailsFragment)
+                            genericInfo.downloadChapter(c, chapters, infoModel, context, activity)
                             insertRecent()
                             if (!read.fastAny { it.url == c.url }) vm.markAs(c, true)
                         },

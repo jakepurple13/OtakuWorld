@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.programmersbox.favoritesdatabase.DbModel
@@ -27,6 +28,7 @@ interface GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
+        activity: FragmentActivity,
         navController: NavController
     )
 
@@ -34,7 +36,7 @@ interface GenericInfo {
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
     fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
-    fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment)
+    fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context, activity: FragmentActivity)
 
     @Composable
     fun DetailActions(infoModel: InfoModel, tint: Color) = Unit
@@ -79,4 +81,7 @@ interface GenericInfo {
     fun settingNavSetup(fragment: Fragment, navController: NavController) = Unit
 
     fun NavGraphBuilder.navSetup() = Unit
+
+    @Composable
+    fun BottomBarAdditions() = Unit
 }

@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navArgument
@@ -79,6 +79,7 @@ class GenericManga(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
+        activity: FragmentActivity,
         navController: NavController
     ) {
         if (runBlocking { context.useNewReaderFlow.first() }) {
@@ -144,8 +145,14 @@ class GenericManga(val context: Context) : GenericInfo {
             .addTo(disposable)
     }
 
-    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment) {
-        fragment.activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
+    override fun downloadChapter(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        activity: FragmentActivity
+    ) {
+        activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
         }
     }

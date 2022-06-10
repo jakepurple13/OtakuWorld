@@ -11,6 +11,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -116,47 +117,50 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 com.google.accompanist.navigation.material.ModalBottomSheetLayout(bottomSheetNavigator) {
                     androidx.compose.material3.Scaffold(
                         bottomBar = {
-                            AnimatedVisibility(
-                                visible = showNavBar,
-                                enter = slideInVertically { it / 2 },
-                                exit = slideOutVertically { it / 2 }
-                            ) {
-                                NavigationBar {
-                                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                                    val currentDestination = navBackStackEntry?.destination
-                                    SScreen.bottomItems.forEach { screen ->
-                                        if (screen !is SScreen.AllScreen || showAllItem) {
-                                            NavigationBarItem(
-                                                icon = {
-                                                    androidx.compose.material3.Icon(
-                                                        when (screen) {
-                                                            SScreen.RecentScreen -> Icons.Default.Favorite
-                                                            SScreen.AllScreen -> Icons.Default.Settings
-                                                            SScreen.SettingsScreen -> Icons.Default.Settings
-                                                            else -> Icons.Default.BrokenImage
-                                                        },
-                                                        null
-                                                    )
-                                                },
-                                                label = {
-                                                    Text(
-                                                        when (screen) {
-                                                            SScreen.AllScreen -> stringResource(R.string.all)
-                                                            SScreen.RecentScreen -> stringResource(R.string.recent)
-                                                            SScreen.SettingsScreen -> stringResource(R.string.settings)
-                                                            else -> ""
+                            Column {
+                                genericInfo.BottomBarAdditions()
+                                AnimatedVisibility(
+                                    visible = showNavBar,
+                                    enter = slideInVertically { it / 2 },
+                                    exit = slideOutVertically { it / 2 }
+                                ) {
+                                    NavigationBar {
+                                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                                        val currentDestination = navBackStackEntry?.destination
+                                        SScreen.bottomItems.forEach { screen ->
+                                            if (screen !is SScreen.AllScreen || showAllItem) {
+                                                NavigationBarItem(
+                                                    icon = {
+                                                        androidx.compose.material3.Icon(
+                                                            when (screen) {
+                                                                SScreen.RecentScreen -> Icons.Default.Favorite
+                                                                SScreen.AllScreen -> Icons.Default.Settings
+                                                                SScreen.SettingsScreen -> Icons.Default.Settings
+                                                                else -> Icons.Default.BrokenImage
+                                                            },
+                                                            null
+                                                        )
+                                                    },
+                                                    label = {
+                                                        Text(
+                                                            when (screen) {
+                                                                SScreen.AllScreen -> stringResource(R.string.all)
+                                                                SScreen.RecentScreen -> stringResource(R.string.recent)
+                                                                SScreen.SettingsScreen -> stringResource(R.string.settings)
+                                                                else -> ""
+                                                            }
+                                                        )
+                                                    },
+                                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                                    onClick = {
+                                                        navController.navigate(screen.route) {
+                                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                            launchSingleTop = true
+                                                            restoreState = true
                                                         }
-                                                    )
-                                                },
-                                                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                                onClick = {
-                                                    navController.navigate(screen.route) {
-                                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                                        launchSingleTop = true
-                                                        restoreState = true
                                                     }
-                                                }
-                                            )
+                                                )
+                                            }
                                         }
                                     }
                                 }

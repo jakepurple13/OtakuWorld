@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navArgument
@@ -72,6 +72,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
+        activity: FragmentActivity,
         navController: NavController
     ) {
         ChapterList(context, this@GenericNovel).set(allChapters)
@@ -92,7 +93,14 @@ class GenericNovel(val context: Context) : GenericInfo {
         null
     }
 
-    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment) {}
+    override fun downloadChapter(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        activity: FragmentActivity
+    ) {
+    }
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 
