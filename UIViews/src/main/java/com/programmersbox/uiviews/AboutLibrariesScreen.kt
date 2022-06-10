@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -35,7 +34,6 @@ import androidx.navigation.NavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.entity.Library
-import com.mikepenz.aboutlibraries.ui.compose.LibraryColors
 import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
 import com.mikepenz.aboutlibraries.ui.compose.LibraryPadding
 import com.mikepenz.aboutlibraries.ui.compose.data.fakeData
@@ -61,8 +59,8 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
     val libraries by libraryList()
     val context = LocalContext.current
 
-    var searchText by remember { mutableStateOf("") }
-    val libs = libraries?.libraries?.filter { it.name.contains(searchText, true) }
+    //var searchText by remember { mutableStateOf("") }
+    val libs = libraries?.libraries/*?.filter { it.name.contains(searchText, true) }*/.orEmpty()
 
     val state = rememberTopAppBarScrollState()
     val topAppBarScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(state) }
@@ -73,11 +71,11 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
             SmallTopAppBar(
                 title = { Text("Libraries Used") },
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
-                actions = { Text("${libs?.size ?: 0} libraries") },
+                actions = { Text("${libs.size} libraries") },
                 scrollBehavior = topAppBarScrollBehavior
             )
         },
-        bottomBar = {
+        /*bottomBar = {
             BottomAppBar {
                 OutlinedTextField(
                     value = searchText,
@@ -90,10 +88,8 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
                         .padding(horizontal = 4.dp)
                 )
             }
-        }
+        }*/
     ) { p ->
-        val colors = LibraryDefaults.libraryColors()
-
         OutlinedLibrariesContainer(
             modifier = Modifier.fillMaxSize(),
             contentPadding = p,
@@ -151,7 +147,6 @@ fun OutlinedLibrariesContainer(
     showAuthor: Boolean = true,
     showVersion: Boolean = true,
     showLicenseBadges: Boolean = true,
-    colors: LibraryColors = LibraryDefaults.libraryColors(),
     padding: LibraryPadding = LibraryDefaults.libraryPadding(),
     itemContentPadding: PaddingValues = LibraryDefaults.ContentPadding,
     verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(2.dp),

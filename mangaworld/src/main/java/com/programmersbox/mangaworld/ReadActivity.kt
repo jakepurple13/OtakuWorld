@@ -1256,7 +1256,6 @@ class ReadViewModel(
     context: Context,
     val genericInfo: GenericInfo,
     model: Single<List<String>>? = handle
-        .also { it.keys().forEach { k -> println(it[k]) } }
         .get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
         ?.getChapterInfo()
@@ -1264,9 +1263,9 @@ class ReadViewModel(
         ?.subscribeOn(Schedulers.io())
         ?.observeOn(AndroidSchedulers.mainThread())
         ?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
-    isDownloaded: Boolean = handle.get<Boolean>("downloaded") ?: false,
-    filePath: File? = handle.get<File>("filePath"),
-    modelPath: Single<List<String>>? = if (isDownloaded == true && filePath != null) {
+    isDownloaded: Boolean = handle.get<String>("downloaded")?.toBooleanStrict() ?: false,
+    filePath: File? = handle.get<String>("filePath")?.let { File(it) },
+    modelPath: Single<List<String>>? = if (isDownloaded && filePath != null) {
         Single.create<List<String>> {
             filePath
                 .listFiles()
@@ -1284,28 +1283,30 @@ class ReadViewModel(
 
     companion object {
         const val MangaReaderRoute =
-            "mangareader?currentChapter={currentChapter}&allChapters={allChapters}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}"
+            "mangareader?currentChapter={currentChapter}&allChapters={allChapters}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
 
         fun navigateToMangaReader(
             navController: NavController,
-            currentChapter: ChapterModel,
-            allChapters: List<ChapterModel>,
-            mangaTitle: String,
-            mangaUrl: String,
-            mangaInfoUrl: String
+            currentChapter: ChapterModel? = null,
+            allChapters: List<ChapterModel>? = null,
+            mangaTitle: String? = null,
+            mangaUrl: String? = null,
+            mangaInfoUrl: String? = null,
+            downloaded: Boolean = false,
+            filePath: String? = null
         ) {
-            val current = Uri.encode(currentChapter.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-            val all = Uri.encode(allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+            val current = Uri.encode(currentChapter?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+            val all = Uri.encode(allChapters?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
 
             navController.navigate(
-                "mangareader?currentChapter=$current&allChapters=$all&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}"
+                "mangareader?currentChapter=$current&allChapters=$all&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
             )
         }
     }
 
     val title by lazy { handle.get<String>("mangaTitle") ?: "" }
 
-    val ad by lazy { AdRequest.Builder().build() }
+    val ad: AdRequest by lazy { AdRequest.Builder().build() }
 
     val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 

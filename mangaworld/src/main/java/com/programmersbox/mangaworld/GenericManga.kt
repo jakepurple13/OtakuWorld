@@ -36,9 +36,9 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.composable
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -50,7 +50,6 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -61,7 +60,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 import java.io.File
-
 
 val appModule = module {
     single<GenericInfo> { GenericManga(get()) }
@@ -232,7 +230,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
+                ) { navController.navigate(DownloadViewModel.DownloadRoute) }
             )
         }
 
@@ -423,14 +421,17 @@ class GenericManga(val context: Context) : GenericInfo {
         composable(
             ReadViewModel.MangaReaderRoute,
             arguments = listOf(
-                navArgument("currentChapter") { },
-                navArgument("allChapters") { },
-                navArgument("mangaTitle") { },
-                navArgument("mangaUrl") { },
-                navArgument("mangaInfoUrl") { },
+                navArgument("currentChapter") { nullable = true },
+                navArgument("allChapters") { nullable = true },
+                navArgument("mangaTitle") { nullable = true },
+                navArgument("mangaUrl") { nullable = true },
+                navArgument("mangaInfoUrl") { nullable = true },
+                navArgument("downloaded") {},
+                navArgument("filePath") { nullable = true }
             )
         ) { ReadView() }
 
+        composable(DownloadViewModel.DownloadRoute) { DownloadScreen() }
     }
 
 }
