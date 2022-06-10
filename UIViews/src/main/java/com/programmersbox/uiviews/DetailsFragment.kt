@@ -1024,7 +1024,7 @@ private fun DetailsView(
                         androidx.compose.material3.DropdownMenuItem(
                             onClick = {
                                 dropDownDismiss()
-                                navController.navigate(GlobalNavDirections.showGlobalSearch(info.title))
+                                Screen.GlobalSearchScreen.navigate(navController, info.title)
                             },
                             text = { Text(stringResource(id = R.string.global_search_by_name)) },
                             leadingIcon = { Icon(Icons.Default.Search, null) }

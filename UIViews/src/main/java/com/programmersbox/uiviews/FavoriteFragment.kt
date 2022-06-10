@@ -30,9 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -42,7 +41,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.fragment.findNavController
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -56,7 +54,6 @@ import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
-import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class FavoriteFragment : Fragment() {
@@ -66,333 +63,325 @@ class FavoriteFragment : Fragment() {
         fun newInstance() = FavoriteFragment()
     }
 
-    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-
-    private val genericInfo by inject<GenericInfo>()
-    private val logo: MainLogo by inject()
-
-    class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : ViewModel() {
-
-        private val fireListener = FirebaseDb.FirebaseListener()
-        var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
-            private set
-
-        init {
-            viewModelScope.launch {
-                combine(
-                    fireListener.getAllShowsFlow(),
-                    dao.getAllFavoritesFlow()
-                ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-                    .collect { favoriteList = it }
-            }
-        }
-
-        override fun onCleared() {
-            super.onCleared()
-            fireListener.unregister()
-        }
-
-        var sortedBy by mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE)
-        var reverse by mutableStateOf(false)
-
-        val selectedSources = mutableStateListOf(*genericInfo.sourceList().fastMap(ApiService::serviceName).toTypedArray())
-
-        fun newSource(item: String) {
-            if (item in selectedSources) selectedSources.remove(item) else selectedSources.add(item)
-        }
-
-        fun singleSource(item: String) {
-            selectedSources.clear()
-            selectedSources.add(item)
-        }
-
-        fun resetSources() {
-            selectedSources.clear()
-            selectedSources.addAll(genericInfo.sourceList().fastMap(ApiService::serviceName))
-        }
-
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return super.onCreateView(inflater, container, savedInstanceState)
     }
 
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class
-    )
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View = ComposeView(requireContext()).apply {
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        setContent {
-            M3MaterialTheme(currentColorScheme) {
-                val viewModel: FavoriteViewModel = viewModel(factory = factoryCreate { FavoriteViewModel(dao, genericInfo) })
+}
 
-                FavoriteUi(viewModel = viewModel, favoriteItems = viewModel.favoriteList, allSources = genericInfo.sourceList())
-            }
+
+class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : ViewModel() {
+
+    private val fireListener = FirebaseDb.FirebaseListener()
+    var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
+        private set
+
+    init {
+        viewModelScope.launch {
+            combine(
+                fireListener.getAllShowsFlow(),
+                dao.getAllFavoritesFlow()
+            ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+                .collect { favoriteList = it }
         }
     }
 
-    @ExperimentalMaterial3Api
-    @ExperimentalMaterialApi
-    @ExperimentalFoundationApi
-    @Composable
-    fun FavoriteUi(viewModel: FavoriteViewModel, favoriteItems: List<DbModel>, allSources: List<ApiService>) {
+    override fun onCleared() {
+        super.onCleared()
+        fireListener.unregister()
+    }
 
-        val focusManager = LocalFocusManager.current
+    var sortedBy by mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE)
+    var reverse by mutableStateOf(false)
 
-        var searchText by rememberSaveable { mutableStateOf("") }
+    val selectedSources = mutableStateListOf(*genericInfo.sourceList().fastMap(ApiService::serviceName).toTypedArray())
 
-        val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
+    fun newSource(item: String) {
+        if (item in selectedSources) selectedSources.remove(item) else selectedSources.add(item)
+    }
 
-        val topAppBarScrollState = rememberTopAppBarScrollState()
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    fun singleSource(item: String) {
+        selectedSources.clear()
+        selectedSources.add(item)
+    }
 
-        CollapsingToolbarScaffold(
-            modifier = Modifier,
-            state = rememberCollapsingToolbarScaffoldState(),
-            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-            toolbar = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.scrollFraction).value)
-                ) {
-                    SmallTopAppBar(
-                        scrollBehavior = scrollBehavior,
-                        navigationIcon = { IconButton(onClick = { findNavController().popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
-                        title = { Text(stringResource(R.string.viewFavoritesMenu)) },
-                        actions = {
+    fun resetSources() {
+        selectedSources.clear()
+        selectedSources.addAll(genericInfo.sourceList().fastMap(ApiService::serviceName))
+    }
 
-                            val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                                animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
-                            }
+}
 
-                            GroupButton(
-                                selected = viewModel.sortedBy,
-                                options = listOf(
-                                    GroupButtonModel(SortFavoritesBy.TITLE) {
-                                        Icon(
-                                            Icons.Default.SortByAlpha,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
-                                        )
-                                    },
-                                    GroupButtonModel(SortFavoritesBy.COUNT) {
-                                        Icon(
-                                            Icons.Default.Sort,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
-                                        )
-                                    },
-                                    GroupButtonModel(SortFavoritesBy.CHAPTERS) {
-                                        Icon(
-                                            Icons.Default.ReadMore,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
-                                        )
-                                    }
-                                )
-                            ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
+
+@ExperimentalMaterial3Api
+@ExperimentalMaterialApi
+@ExperimentalFoundationApi
+@Composable
+fun FavoriteUi(logo: MainLogo) {
+
+    val genericInfo = LocalGenericInfo.current
+    val navController = LocalNavController.current
+    val activity = LocalActivity.current
+    val context = LocalContext.current
+    val dao = remember { ItemDatabase.getInstance(context).itemDao() }
+
+    val viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
+
+    val favoriteItems: List<DbModel> = viewModel.favoriteList
+    val allSources: List<ApiService> = genericInfo.sourceList()
+
+    val focusManager = LocalFocusManager.current
+
+    var searchText by rememberSaveable { mutableStateOf("") }
+
+    val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
+
+    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+
+    CollapsingToolbarScaffold(
+        modifier = Modifier,
+        state = rememberCollapsingToolbarScaffoldState(),
+        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+        toolbar = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.scrollFraction).value)
+            ) {
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    title = { Text(stringResource(R.string.viewFavoritesMenu)) },
+                    actions = {
+
+                        val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
+                            animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
                         }
-                    )
 
-                    androidx.compose.material3.OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        label = {
-                            Text(
-                                resources.getQuantityString(
-                                    R.plurals.numFavorites,
-                                    showing.size,
-                                    showing.size
-                                )
+                        GroupButton(
+                            selected = viewModel.sortedBy,
+                            options = listOf(
+                                GroupButtonModel(SortFavoritesBy.TITLE) {
+                                    Icon(
+                                        Icons.Default.SortByAlpha,
+                                        null,
+                                        modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
+                                    )
+                                },
+                                GroupButtonModel(SortFavoritesBy.COUNT) {
+                                    Icon(
+                                        Icons.Default.Sort,
+                                        null,
+                                        modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
+                                    )
+                                },
+                                GroupButtonModel(SortFavoritesBy.CHAPTERS) {
+                                    Icon(
+                                        Icons.Default.ReadMore,
+                                        null,
+                                        modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
+                                    )
+                                }
                             )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { searchText = "" }) {
-                                Icon(Icons.Default.Cancel, null)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                    )
+                        ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
+                    }
+                )
 
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                androidx.compose.material3.OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    label = {
+                        Text(
+                            context.resources.getQuantityString(
+                                R.plurals.numFavorites,
+                                showing.size,
+                                showing.size
+                            )
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { searchText = "" }) {
+                            Icon(Icons.Default.Cancel, null)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 5.dp),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                ) {
+
+                    item {
+                        CustomChip(
+                            modifier = Modifier.combinedClickable(
+                                onClick = { viewModel.resetSources() },
+                                onLongClick = { viewModel.selectedSources.clear() }
+                            ),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = M3MaterialTheme.colorScheme.primary,
+                                labelColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
+                            )
+                        ) { Text("ALL") }
+                    }
+
+                    items(
+                        (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
+                            .groupBy { it }
+                            .toList()
+                            .sortedBy { it.first }
+                    ) {
+                        CustomChip(
+                            modifier = Modifier.combinedClickable(
+                                onClick = { viewModel.newSource(it.first) },
+                                onLongClick = { viewModel.singleSource(it.first) }
+                            ),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = animateColorAsState(
+                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
+                                    else M3MaterialTheme.colorScheme.surface
+                                ).value,
+                                labelColor = animateColorAsState(
+                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
+                                    else M3MaterialTheme.colorScheme.onSurface
+                                ).value
+                                    .copy(alpha = ChipDefaults.ContentOpacity)
+                            ),
+                            leadingIcon = { Text("${it.second.size - 1}") }
+                        ) { Text(it.first) }
+                    }
+                }
+            }
+        }
+    ) {
+        var showBanner by remember { mutableStateOf(false) }
+
+        M3OtakuBannerBox(
+            showBanner = showBanner,
+            placeholder = logo.logoId
+        ) { itemInfo ->
+            Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) { p ->
+                if (showing.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(p)
                     ) {
 
-                        item {
-                            CustomChip(
-                                modifier = Modifier.combinedClickable(
-                                    onClick = { viewModel.resetSources() },
-                                    onLongClick = { viewModel.selectedSources.clear() }
-                                ),
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = M3MaterialTheme.colorScheme.primary,
-                                    labelColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
-                                )
-                            ) { Text("ALL") }
-                        }
-
-                        items(
-                            (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                .groupBy { it }
-                                .toList()
-                                .sortedBy { it.first }
-                        ) {
-                            CustomChip(
-                                modifier = Modifier.combinedClickable(
-                                    onClick = { viewModel.newSource(it.first) },
-                                    onLongClick = { viewModel.singleSource(it.first) }
-                                ),
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = animateColorAsState(
-                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
-                                        else M3MaterialTheme.colorScheme.surface
-                                    ).value,
-                                    labelColor = animateColorAsState(
-                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
-                                        else M3MaterialTheme.colorScheme.onSurface
-                                    ).value
-                                        .copy(alpha = ChipDefaults.ContentOpacity)
-                                ),
-                                leadingIcon = { Text("${it.second.size - 1}") }
-                            ) { Text(it.first) }
-                        }
-                    }
-                }
-            }
-        ) {
-            var showBanner by remember { mutableStateOf(false) }
-
-            M3OtakuBannerBox(
-                showBanner = showBanner,
-                placeholder = logo.logoId
-            ) { itemInfo ->
-                Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) { p ->
-                    if (showing.isEmpty()) {
-                        Box(
+                        Surface(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(p)
+                                .fillMaxWidth()
+                                .padding(5.dp),
+                            tonalElevation = 5.dp,
+                            shape = RoundedCornerShape(5.dp)
                         ) {
 
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(5.dp),
-                                tonalElevation = 5.dp,
-                                shape = RoundedCornerShape(5.dp)
-                            ) {
+                            Column(modifier = Modifier) {
 
-                                Column(modifier = Modifier) {
+                                Text(
+                                    text = stringResource(id = R.string.get_started),
+                                    style = M3MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
 
-                                    Text(
-                                        text = stringResource(id = R.string.get_started),
-                                        style = M3MaterialTheme.typography.headlineSmall,
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                                    )
+                                Text(
+                                    text = stringResource(R.string.get_started_info),
+                                    style = M3MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
 
-                                    Text(
-                                        text = stringResource(R.string.get_started_info),
-                                        style = M3MaterialTheme.typography.bodyLarge,
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                                    )
-
-                                    Button(
-                                        onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
-                                        modifier = Modifier
-                                            .align(Alignment.CenterHorizontally)
-                                            .padding(vertical = 5.dp)
-                                    ) { Text(text = stringResource(R.string.add_a_favorite)) }
-
-                                }
+                                Button(
+                                    onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .padding(vertical = 5.dp)
+                                ) { Text(text = stringResource(R.string.add_a_favorite)) }
 
                             }
+
                         }
-                    } else {
-                        LazyVerticalGrid(
-                            columns = adaptiveGridCell(),
-                            state = rememberLazyGridState(),
-                            contentPadding = p,
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            items(
-                                showing
-                                    .groupBy(DbModel::title)
-                                    .entries
-                                    .let {
-                                        when (val s = viewModel.sortedBy) {
-                                            is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
-                                            is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
-                                            is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
-                                        }
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = adaptiveGridCell(),
+                        state = rememberLazyGridState(),
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        items(
+                            showing
+                                .groupBy(DbModel::title)
+                                .entries
+                                .let {
+                                    when (val s = viewModel.sortedBy) {
+                                        is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
+                                        is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
+                                        is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
                                     }
-                                    .let { if (viewModel.reverse) it.reversed() else it }
-                                    .toTypedArray(),
-                                key = { it.key }
-                            ) { info ->
-                                M3CoverCard(
-                                    onLongPress = { c ->
-                                        itemInfo.value = if (c == ComponentState.Pressed) {
-                                            info.value.randomOrNull()
-                                                ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                        } else null
-                                        showBanner = c == ComponentState.Pressed
-                                    },
-                                    imageUrl = info.value.randomOrNull()?.imageUrl.orEmpty(),
-                                    name = info.key,
-                                    placeHolder = logo.logoId,
-                                    favoriteIcon = {
-                                        if (info.value.size > 1) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .align(Alignment.TopStart)
-                                                    .padding(4.dp)
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Circle,
-                                                    contentDescription = null,
-                                                    tint = M3MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.align(Alignment.Center)
-                                                )
-                                                Text(
-                                                    info.value.size.toString(),
-                                                    color = M3MaterialTheme.colorScheme.onPrimary,
-                                                    modifier = Modifier.align(Alignment.Center)
-                                                )
-                                            }
-                                        }
-                                    }
-                                ) {
-                                    if (info.value.size == 1) {
-                                        val item = info.value
-                                            .firstOrNull()
+                                }
+                                .let { if (viewModel.reverse) it.reversed() else it }
+                                .toTypedArray(),
+                            key = { it.key }
+                        ) { info ->
+                            M3CoverCard(
+                                onLongPress = { c ->
+                                    itemInfo.value = if (c == ComponentState.Pressed) {
+                                        info.value.randomOrNull()
                                             ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                        findNavController().navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(item))
-                                    } else {
-                                        ListBottomSheet(
-                                            title = getString(R.string.chooseASource),
-                                            list = info.value,
-                                            onClick = { item ->
-                                                val i = item
-                                                    .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                                findNavController()
-                                                    .navigate(FavoriteFragmentDirections.actionFavoriteFragmentToDetailsFragment(i))
-                                            }
+                                    } else null
+                                    showBanner = c == ComponentState.Pressed
+                                },
+                                imageUrl = info.value.randomOrNull()?.imageUrl.orEmpty(),
+                                name = info.key,
+                                placeHolder = logo.logoId,
+                                favoriteIcon = {
+                                    if (info.value.size > 1) {
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopStart)
+                                                .padding(4.dp)
                                         ) {
-                                            ListBottomSheetItemModel(
-                                                primaryText = it.title,
-                                                overlineText = it.source
+                                            Icon(
+                                                Icons.Default.Circle,
+                                                contentDescription = null,
+                                                tint = M3MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.align(Alignment.Center)
                                             )
-                                        }.show(parentFragmentManager, "sourceChooser")
+                                            Text(
+                                                info.value.size.toString(),
+                                                color = M3MaterialTheme.colorScheme.onPrimary,
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                        }
                                     }
+                                }
+                            ) {
+                                if (info.value.size == 1) {
+                                    info.value
+                                        .firstOrNull()
+                                        ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                        ?.let { navController.navigateToDetails(it) }
+                                } else {
+                                    ListBottomSheet(
+                                        title = context.getString(R.string.chooseASource),
+                                        list = info.value,
+                                        onClick = { item ->
+                                            item
+                                                .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                                ?.let { navController.navigateToDetails(it) }
+                                        }
+                                    ) {
+                                        ListBottomSheetItemModel(
+                                            primaryText = it.title,
+                                            overlineText = it.source
+                                        )
+                                    }.show(activity.supportFragmentManager, "sourceChooser")
                                 }
                             }
                         }
@@ -401,11 +390,10 @@ class FavoriteFragment : Fragment() {
             }
         }
     }
+}
 
-    sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> K) {
-        object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
-        object COUNT : SortFavoritesBy<Int>({ it.value.size })
-        object CHAPTERS : SortFavoritesBy<Int>({ it.value.maxOf(DbModel::numChapters) })
-    }
-
+sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> K) {
+    object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
+    object COUNT : SortFavoritesBy<Int>({ it.value.size })
+    object CHAPTERS : SortFavoritesBy<Int>({ it.value.maxOf(DbModel::numChapters) })
 }

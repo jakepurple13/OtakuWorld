@@ -25,9 +25,13 @@ sealed class Screen(val route: String) {
     object DetailsScreen : Screen("details")
     object NotificationScreen : Screen("notifications")
     object HistoryScreen : Screen("history")
-    object GlobalSearchScreen : Screen("global_search")
     object FavoriteScreen : Screen("favorite")
     object DebugScreen : Screen("debug")
+    object GlobalSearchScreen : Screen("global_search") {
+        fun navigate(navController: NavController, title: String? = null) {
+            navController.navigate("$route?searchFor=$title")
+        }
+    }
 
     companion object {
         val bottomItems = listOf(RecentScreen, AllScreen, SettingsScreen)

@@ -39,10 +39,11 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -99,7 +100,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator()
-            val navController = rememberNavController(bottomSheetNavigator)
+            val navController = rememberAnimatedNavController(bottomSheetNavigator)
 
             if (showNavBar) {
                 showSystemBars()
@@ -162,7 +163,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        NavHost(
+                        AnimatedNavHost(
                             navController = navController,
                             startDestination = SScreen.RecentScreen.route,
                             modifier = Modifier.padding(innerPadding)
@@ -201,7 +202,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     logo = logo,
                                     genericInfo = genericInfo,
                                     activity = this@BaseMainActivity,
-                                    notificationClick = { navController.navigate(SScreen.NotificationScreen.route) }
+                                    notificationClick = { navController.navigate(SScreen.NotificationScreen.route) },
+                                    globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) },
+                                    favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) },
+                                    historyClick = {},
+                                    usedLibraryClick = {}
                                 )
                             }
 
@@ -218,11 +223,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
 
                             composable(
+                                SScreen.GlobalSearchScreen.route + "?searchFor={searchFor}",
+                                arguments = listOf(navArgument("searchFor") { nullable = true })
+                            ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
+
+                            composable(SScreen.FavoriteScreen.route) { FavoriteUi(logo) }
+
+                            composable(
                                 SScreen.DetailsScreen.route + "/{model}",
-                                //arguments = listOf(navArgument("model") { type = AssetParamType(genericInfo) })
                             ) {
-                                //Text("Hello ${it.arguments?.getSerializable("model") as? ItemModel}")
-                                //(it.arguments?.getSerializable("model") as? ItemModel)?.let { info ->
                                 DetailsScreen(
                                     navController = navController,
                                     genericInfo = genericInfo,
@@ -231,7 +240,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     historyDao = historyDao,
                                     windowSize = rememberWindowSizeClass()
                                 )
-                                //}
                             }
 
                             with(genericInfo) { navSetup() }

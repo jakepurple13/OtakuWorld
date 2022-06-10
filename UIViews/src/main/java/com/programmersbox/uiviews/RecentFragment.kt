@@ -72,11 +72,6 @@ class RecentFragment : BaseFragmentCompose() {
     private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val logo: MainLogo by inject()
 
-    @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class,
-        ExperimentalMaterial3Api::class
-    )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
