@@ -6,7 +6,10 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
@@ -20,10 +23,16 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -66,19 +75,18 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected abstract fun onCreate()
 
+    companion object {
+        var showNavBar by mutableStateOf(true)
+    }
+
     @OptIn(
         ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
         ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(R.layout.base_main_activity)
 
         genericInfo.toSource(currentService.orEmpty())?.let { sourcePublish.onNext(it) }
-
-        /*if (savedInstanceState == null) {
-            setupBottomNavBar()
-        }*/
 
         when (runBlocking { themeSetting.first() }) {
             "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
@@ -92,48 +100,63 @@ abstract class BaseMainActivity : AppCompatActivity() {
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator()
             val navController = rememberNavController(bottomSheetNavigator)
-            OtakuMaterialTheme(navController) {
+
+            if (showNavBar) {
+                showSystemBars()
+                WindowCompat.setDecorFitsSystemWindows(window, true)
+            } else {
+                hideSystemBars()
+                WindowCompat.setDecorFitsSystemWindows(window, false)
+            }
+
+            OtakuMaterialTheme(navController, genericInfo) {
                 val showAllItem by showAll.collectAsState(false)
 
                 com.google.accompanist.navigation.material.ModalBottomSheetLayout(bottomSheetNavigator) {
                     androidx.compose.material3.Scaffold(
                         bottomBar = {
-                            NavigationBar {
-                                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                                val currentDestination = navBackStackEntry?.destination
-                                SScreen.bottomItems.forEach { screen ->
-                                    if (screen !is SScreen.AllScreen || showAllItem) {
-                                        NavigationBarItem(
-                                            icon = {
-                                                androidx.compose.material3.Icon(
-                                                    when (screen) {
-                                                        SScreen.RecentScreen -> Icons.Default.Favorite
-                                                        SScreen.AllScreen -> Icons.Default.Settings
-                                                        SScreen.SettingsScreen -> Icons.Default.Settings
-                                                        else -> Icons.Default.BrokenImage
-                                                    },
-                                                    null
-                                                )
-                                            },
-                                            label = {
-                                                Text(
-                                                    when (screen) {
-                                                        SScreen.AllScreen -> stringResource(R.string.all)
-                                                        SScreen.RecentScreen -> stringResource(R.string.recent)
-                                                        SScreen.SettingsScreen -> stringResource(R.string.settings)
-                                                        else -> ""
+                            AnimatedVisibility(
+                                visible = showNavBar,
+                                enter = slideInVertically { it / 2 },
+                                exit = slideOutVertically { it / 2 }
+                            ) {
+                                NavigationBar {
+                                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                                    val currentDestination = navBackStackEntry?.destination
+                                    SScreen.bottomItems.forEach { screen ->
+                                        if (screen !is SScreen.AllScreen || showAllItem) {
+                                            NavigationBarItem(
+                                                icon = {
+                                                    androidx.compose.material3.Icon(
+                                                        when (screen) {
+                                                            SScreen.RecentScreen -> Icons.Default.Favorite
+                                                            SScreen.AllScreen -> Icons.Default.Settings
+                                                            SScreen.SettingsScreen -> Icons.Default.Settings
+                                                            else -> Icons.Default.BrokenImage
+                                                        },
+                                                        null
+                                                    )
+                                                },
+                                                label = {
+                                                    Text(
+                                                        when (screen) {
+                                                            SScreen.AllScreen -> stringResource(R.string.all)
+                                                            SScreen.RecentScreen -> stringResource(R.string.recent)
+                                                            SScreen.SettingsScreen -> stringResource(R.string.settings)
+                                                            else -> ""
+                                                        }
+                                                    )
+                                                },
+                                                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                                onClick = {
+                                                    navController.navigate(screen.route) {
+                                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                        launchSingleTop = true
+                                                        restoreState = true
                                                     }
-                                                )
-                                            },
-                                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                            onClick = {
-                                                navController.navigate(screen.route) {
-                                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                                    launchSingleTop = true
-                                                    restoreState = true
                                                 }
-                                            }
-                                        )
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -232,6 +255,22 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
         }*/
 
+    }
+
+    private fun hideSystemBars() {
+        val windowInsetsController = ViewCompat.getWindowInsetsController(window.decorView) ?: return
+        // Configure the behavior of the hidden system bars
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        // Hide both the status bar and the navigation bar
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    private fun showSystemBars() {
+        val windowInsetsController = ViewCompat.getWindowInsetsController(window.decorView) ?: return
+        // Configure the behavior of the hidden system bars
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        // Hide both the status bar and the navigation bar
+        windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
     }
 
     class AssetParamType(val info: GenericInfo) : NavType<ItemModel>(isNullableAllowed = true) {

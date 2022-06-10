@@ -72,10 +72,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.datastore.preferences.core.Preferences
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -99,6 +98,7 @@ import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
@@ -106,6 +106,7 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.rxutils.invoke
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
@@ -1248,6 +1249,1130 @@ class ReadActivityComposeFragment : BaseBottomSheetDialogFragment() {
         super.onDestroy()
         Glide.get(requireActivity()).clearMemory()
     }
+}
+
+class ReadViewModel(
+    handle: SavedStateHandle,
+    context: Context,
+    val genericInfo: GenericInfo,
+    model: Single<List<String>>? = handle
+        .also { it.keys().forEach { k -> println(it[k]) } }
+        .get<String>("currentChapter")
+        ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+        ?.getChapterInfo()
+        ?.map { it.mapNotNull(Storage::link) }
+        ?.subscribeOn(Schedulers.io())
+        ?.observeOn(AndroidSchedulers.mainThread())
+        ?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
+    isDownloaded: Boolean = handle.get<Boolean>("downloaded") ?: false,
+    filePath: File? = handle.get<File>("filePath"),
+    modelPath: Single<List<String>>? = if (isDownloaded == true && filePath != null) {
+        Single.create<List<String>> {
+            filePath
+                .listFiles()
+                ?.sortedBy { f -> f.name.split(".").first().toInt() }
+                ?.fastMap(File::toUri)
+                ?.fastMap(Uri::toString)
+                ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
+        }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    } else {
+        model
+    },
+) : ViewModel() {
+
+    companion object {
+        const val MangaReaderRoute =
+            "mangareader?currentChapter={currentChapter}&allChapters={allChapters}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}"
+
+        fun navigateToMangaReader(
+            navController: NavController,
+            currentChapter: ChapterModel,
+            allChapters: List<ChapterModel>,
+            mangaTitle: String,
+            mangaUrl: String,
+            mangaInfoUrl: String
+        ) {
+            val current = Uri.encode(currentChapter.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+            val all = Uri.encode(allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+
+            navController.navigate(
+                "mangareader?currentChapter=$current&allChapters=$all&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}"
+            )
+        }
+    }
+
+    val title by lazy { handle.get<String>("mangaTitle") ?: "" }
+
+    val ad by lazy { AdRequest.Builder().build() }
+
+    val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
+
+    val disposable = CompositeDisposable()
+
+    val list by lazy {
+        handle.get<String>("allChapters")
+            ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+            .orEmpty()
+            .also(::println)
+    }
+
+    private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
+
+    var currentChapter: Int by mutableStateOf(0)
+
+    var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
+    var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
+    var batteryPercent by mutableStateOf(0f)
+
+    val batteryInformation by lazy { BatteryInformation(context) }
+
+    val pageList = mutableStateListOf<String>()
+    var isLoadingPages = mutableStateOf(false)
+        private set
+
+    init {
+        batteryInformation.composeSetup(
+            disposable,
+            androidx.compose.ui.graphics.Color.White
+        ) {
+            batteryColor = it.first
+            batteryIcon = it.second
+        }
+
+        val url = handle.get<String>("mangaUrl") ?: ""
+        currentChapter = list.indexOfFirst { l -> l.url == url }
+
+        loadPages(modelPath)
+    }
+
+    var showInfo by mutableStateOf(false)
+
+    fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
+        currentChapter = newChapter
+        list.getOrNull(newChapter)?.let { item ->
+            ChapterWatched(item.url, item.name, mangaUrl)
+                .let {
+                    Completable.mergeArray(
+                        FirebaseDb.insertEpisodeWatched(it),
+                        dao.insertChapter(it)
+                    )
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(chapter)
+                .addTo(disposable)
+
+            item
+                .getChapterInfo()
+                .map { it.mapNotNull(Storage::link) }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { pageList.clear() }
+                .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
+                .addTo(disposable)
+        }
+    }
+
+    private fun loadPages(modelPath: Single<List<String>>?) {
+        modelPath
+            ?.doOnSubscribe {
+                isLoadingPages.value = true
+                pageList.clear()
+            }
+            ?.subscribeBy {
+                pageList.addAll(it)
+                isLoadingPages.value = false
+            }
+            ?.addTo(disposable)
+    }
+
+    fun refresh() {
+        loadPages(
+            list.getOrNull(currentChapter)
+                ?.getChapterInfo()
+                ?.map { it.mapNotNull(Storage::link) }
+                ?.subscribeOn(Schedulers.io())
+                ?.observeOn(AndroidSchedulers.mainThread())
+        )
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        disposable.dispose()
+    }
+
+}
+
+@ExperimentalMaterial3Api
+@ExperimentalMaterialApi
+@ExperimentalComposeUiApi
+@ExperimentalAnimationApi
+@ExperimentalFoundationApi
+@Composable
+fun ReadView() {
+
+    LifecycleHandle(
+        onStop = { BaseMainActivity.showNavBar = true },
+        onDestroy = { BaseMainActivity.showNavBar = true },
+        onCreate = { BaseMainActivity.showNavBar = false },
+        onStart = { BaseMainActivity.showNavBar = false },
+        onResume = { BaseMainActivity.showNavBar = false }
+    )
+
+    val context = LocalContext.current
+    val genericInfo = LocalGenericInfo.current
+
+    val readVm: ReadViewModel = viewModel {
+        ReadViewModel(
+            handle = createSavedStateHandle(),
+            context = context,
+            genericInfo = genericInfo
+        )
+    }
+
+    DisposableEffect(LocalContext.current) {
+        val batteryInfo = context.battery {
+            readVm.batteryPercent = it.percent
+            readVm.batteryInformation.batteryLevelAlert(it.percent)
+            readVm.batteryInformation.batteryInfoItem(it)
+        }
+        onDispose { context.unregisterReceiver(batteryInfo) }
+    }
+
+    val scope = rememberCoroutineScope()
+    val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages.value)
+
+    val pages = readVm.pageList
+
+    LaunchedEffect(readVm.pageList) { BigImageViewer.prefetch(*readVm.pageList.fastMap(Uri::parse).toTypedArray()) }
+
+    val listState = rememberLazyListState()
+    val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
+
+    val paddingPage by context.pagePadding.collectAsState(initial = 4)
+    var settingsPopup by remember { mutableStateOf(false) }
+
+    if (settingsPopup) {
+        AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            onDismissRequest = { settingsPopup = false },
+            title = { Text(stringResource(R.string.settings)) },
+            text = {
+                Column {
+                    SliderSetting(
+                        scope = scope,
+                        settingIcon = Icons.Default.BatteryAlert,
+                        settingTitle = R.string.battery_alert_percentage,
+                        settingSummary = R.string.battery_default,
+                        preference = BATTERY_PERCENT,
+                        initialValue = runBlocking { context.dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
+                        range = 1f..100f
+                    )
+                    androidx.compose.material3.Divider()
+                    SliderSetting(
+                        scope = scope,
+                        settingIcon = Icons.Default.FormatLineSpacing,
+                        settingTitle = R.string.reader_padding_between_pages,
+                        settingSummary = R.string.default_padding_summary,
+                        preference = PAGE_PADDING,
+                        initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
+                        range = 0f..10f
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = { settingsPopup = false }) { Text(stringResource(R.string.ok)) } }
+        )
+    }
+
+    val activity = LocalActivity.current
+
+    fun showToast() {
+        activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
+    }
+
+    val scaffoldState = rememberBottomSheetScaffoldState()
+
+    BackHandler(scaffoldState.bottomSheetState.isExpanded || scaffoldState.drawerState.isOpen) {
+        scope.launch {
+            when {
+                scaffoldState.bottomSheetState.isExpanded -> scaffoldState.bottomSheetState.collapse()
+                scaffoldState.drawerState.isOpen -> scaffoldState.drawerState.close()
+            }
+        }
+    }
+
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
+        sheetContent = {
+            val sheetTopAppBarScrollState = rememberTopAppBarScrollState()
+            val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
+            Scaffold(
+                modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
+                topBar = {
+                    SmallTopAppBar(
+                        scrollBehavior = sheetScrollBehavior,
+                        title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
+                        actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
+                                Icon(Icons.Default.Close, null)
+                            }
+                        }
+                    )
+                },
+                bottomBar = {
+                    if (BuildConfig.BUILD_TYPE == "release") {
+                        AndroidView(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            factory = {
+                                AdView(it).apply {
+                                    adSize = AdSize.BANNER
+                                    adUnitId = context.getString(R.string.ad_unit_id)
+                                    loadAd(readVm.ad)
+                                }
+                            }
+                        )
+                    }
+                }
+            ) { p ->
+                if (scaffoldState.bottomSheetState.isExpanded) {
+                    LazyVerticalGrid(
+                        columns = adaptiveGridCell(),
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        itemsIndexed(pages) { i, it ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                    .border(
+                                        animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                        color = animateColorAsState(
+                                            if (currentPage == i) M3MaterialTheme.colorScheme.primary
+                                            else androidx.compose.ui.graphics.Color.Transparent
+                                        ).value
+                                    )
+                                    .clickable {
+                                        scope.launch {
+                                            if (currentPage == i) scaffoldState.bottomSheetState.collapse()
+                                            listState.animateScrollToItem(i)
+                                        }
+                                    }
+                            ) {
+                                GlideImage(
+                                    imageModel = it,
+                                    contentScale = ContentScale.Crop,
+                                    loading = {
+                                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.Center)
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            brush = Brush.verticalGradient(
+                                                colors = listOf(
+                                                    androidx.compose.ui.graphics.Color.Transparent,
+                                                    androidx.compose.ui.graphics.Color.Black
+                                                ),
+                                                startY = 50f
+                                            )
+                                        )
+                                ) {
+                                    Text(
+                                        (i + 1).toString(),
+                                        style = M3MaterialTheme
+                                            .typography
+                                            .bodyLarge
+                                            .copy(textAlign = TextAlign.Center, color = androidx.compose.ui.graphics.Color.White),
+                                        maxLines = 2,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        sheetGesturesEnabled = false,
+        sheetPeekHeight = 0.dp,
+        drawerContent = if (readVm.list.size > 1) {
+            {
+                val drawerTopAppBarScrollState = rememberTopAppBarScrollState()
+                val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
+                Scaffold(
+                    modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        LargeTopAppBar(
+                            scrollBehavior = drawerScrollBehavior,
+                            title = { Text(readVm.title) },
+                            actions = { PageIndicator(Modifier, readVm.list.size - readVm.currentChapter, readVm.list.size) }
+                        )
+                    },
+                    bottomBar = {
+                        if (BuildConfig.BUILD_TYPE == "release") {
+                            AndroidView(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+                                factory = {
+                                    AdView(it).apply {
+                                        adSize = AdSize.BANNER
+                                        adUnitId = context.getString(R.string.ad_unit_id)
+                                        loadAd(readVm.ad)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                ) { p ->
+                    if (scaffoldState.drawerState.isOpen) {
+                        LazyColumn(
+                            state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
+                            contentPadding = p,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            itemsIndexed(readVm.list) { i, c ->
+
+                                var showChangeChapter by remember { mutableStateOf(false) }
+
+                                if (showChangeChapter) {
+                                    AlertDialog(
+                                        onDismissRequest = { showChangeChapter = false },
+                                        title = { Text(stringResource(R.string.changeToChapter, c.name)) },
+                                        confirmButton = {
+                                            TextButton(
+                                                onClick = {
+                                                    showChangeChapter = false
+                                                    readVm.currentChapter = i
+                                                    readVm.addChapterToWatched(readVm.currentChapter, ::showToast)
+                                                }
+                                            ) { Text(stringResource(R.string.yes)) }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                                        }
+                                    )
+                                }
+
+                                WrapHeightNavigationDrawerItem(
+                                    modifier = Modifier
+                                        .padding(bottom = 4.dp)
+                                        .padding(horizontal = 4.dp),
+                                    label = { Text(c.name) },
+                                    selected = readVm.currentChapter == i,
+                                    onClick = { showChangeChapter = true },
+                                    shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
+                                )
+
+                                if (i < readVm.list.lastIndex) androidx.compose.material3.Divider()
+                            }
+                        }
+                    }
+                }
+            }
+        } else null
+    ) {
+
+        val showItems = readVm.showInfo || listState.isScrolledToTheEnd()
+
+        /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
+        //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
+        //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
+
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+
+        val topBarHeight = 32.dp//28.dp
+        val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
+        val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
+
+        val toolbarHeight = 64.dp
+        val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
+        val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
+
+        val nestedScrollConnection = remember {
+            object : NestedScrollConnection {
+                //by scrollBehavior.nestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    val delta = available.y
+
+                    val newTopOffset = topBarOffsetHeightPx.value + delta
+                    if (topBarOffsetHeightPx.value != newTopOffset)
+                        topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
+
+                    val newOffset = toolbarOffsetHeightPx.value + delta
+                    if (toolbarOffsetHeightPx.value != newOffset)
+                        toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
+
+                    return scrollBehavior.nestedScrollConnection.onPreScroll(available, source)//Offset.Zero
+                }
+            }
+        }
+
+        Scaffold(
+            //TODO: This stuff will be used again once we find a way to keep the top and bottom bars out when reaching the bottom
+            // and animating the top and bottom bars away
+            modifier = Modifier.nestedScroll(nestedScrollConnection),
+            /*topBar = {
+                TopBar(
+                    scrollBehavior = scrollBehavior,
+                    modifier = Modifier
+                        .height(topBarHeight)
+                        .align(Alignment.TopCenter)
+                        .alpha(animateTopBar),
+                    pages = pages,
+                    currentPage = currentPage
+                )
+            },
+            bottomBar = {
+                BottomBar(
+                    modifier = Modifier
+                        .height(toolbarHeight)
+                        .align(Alignment.BottomCenter)
+                        .alpha(animateTopBar),
+                    scrollBehavior = scrollBehavior,
+                    onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
+                    onSettingsClick = { settingsPopup = true },
+                    chapterChange = ::showToast
+                )
+            }*/
+        ) { p ->
+            //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
+            SwipeRefresh(
+                state = swipeState,
+                onRefresh = { readVm.refresh() },
+                modifier = Modifier.padding(p)
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(p)
+                ) {
+                    LazyColumn(
+                        state = listState,
+                        verticalArrangement = Arrangement.spacedBy(LocalContext.current.dpToPx(paddingPage).dp),
+                        contentPadding = PaddingValues(
+                            top = topBarHeight,
+                            bottom = toolbarHeight
+                        )
+                    ) {
+                        reader(pages, readVm) {
+                            readVm.showInfo = !readVm.showInfo
+                            if (!readVm.showInfo) {
+                                toolbarOffsetHeightPx.value = -toolbarHeightPx
+                                topBarOffsetHeightPx.value = -topBarHeightPx
+                            }
+                        }
+                    }
+
+                    val animateTopBar by animateFloatAsState(
+                        if (showItems) 1f
+                        else 1f - (-topBarOffsetHeightPx.value.roundToInt() / topBarHeightPx)
+                    )
+
+                    TopBar(
+                        scrollBehavior = scrollBehavior,
+                        modifier = Modifier
+                            .height(topBarHeight)
+                            .align(Alignment.TopCenter)
+                            .alpha(animateTopBar)
+                            .offset { IntOffset(x = 0, y = if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt())) },
+                        pages = pages,
+                        currentPage = currentPage,
+                        vm = readVm
+                    )
+
+                    BottomBar(
+                        modifier = Modifier
+                            .height(toolbarHeight)
+                            .align(Alignment.BottomCenter)
+                            .alpha(animateTopBar)
+                            .offset { IntOffset(x = 0, y = if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt())) },
+                        scrollBehavior = scrollBehavior,
+                        onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
+                        onSettingsClick = { settingsPopup = true },
+                        chapterChange = ::showToast,
+                        vm = readVm
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
+
+    /*items(pages) {
+        var scale by remember { mutableStateOf(1f) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+            scale = (scale * zoomChange).coerceAtLeast(1f)
+            offset += offsetChange
+        }
+
+        Box(
+            modifier = Modifier
+                // add transformable to listen to multitouch transformation events
+                // after offset
+                .transformable(state = state)
+                //TODO: For some reason this is causing the weird performance issue
+                // it is a known issue: https://issuetracker.google.com/issues/204328131
+                // when that gets resolved, look into adding back the nestedScrollConnection by scrollBehavior
+                .combinedClickable(
+                    onClick = {
+                        showInfo = !showInfo
+                        if (!showInfo) {
+                            toolbarOffsetHeightPx.value = -toolbarHeightPx
+                            topBarOffsetHeightPx.value = -topBarHeightPx
+                        }
+                    },
+                    onDoubleClick = {
+                        scale = 1f
+                        offset = Offset.Zero
+                    },
+                    onLongClick = {},
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                )
+        ) {
+            Text(
+                stringResource(R.string.doubleTapToReset),
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center
+            )
+            val scaleAnim = animateFloatAsState(scale).value
+            val (x, y) = animateOffsetAsState(targetValue = offset).value
+
+            *//*GlideImage(
+                    imageModel = it,
+                    contentScale = ContentScale.FillWidth,
+                    loading = {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = M3MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    success = {
+                        val byteArray = remember {
+                            val stream = ByteArrayOutputStream()
+                            it.drawable?.toBitmap()?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                            val b = stream.toByteArray()
+                            ByteArrayInputStream(b)
+                        }
+                        SubSampledImage(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                                .align(Alignment.Center)
+                                .clipToBounds(),
+                            imageSource = rememberInputStreamImageSource(inputStream = byteArray)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                )*//*
+
+                GlideImage(
+                    imageModel = it,
+                    contentScale = ContentScale.FillWidth,
+                    loading = {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = M3MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                        .graphicsLayer(
+                            scaleX = scaleAnim,
+                            scaleY = scaleAnim,
+                            translationX = x,
+                            translationY = y
+                        )
+                )
+            }
+        }*/
+
+    items(pages, key = { it }) { ChapterPage(it, onClick) }
+
+    item {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                stringResource(id = R.string.lastPage),
+                style = M3MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+            )
+            if (vm.currentChapter <= 0) {
+                Text(
+                    stringResource(id = R.string.reachedLastChapter),
+                    style = M3MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                )
+            }
+            if (BuildConfig.BUILD_TYPE == "release") {
+                val context = LocalContext.current
+                AndroidView(
+                    modifier = Modifier.fillMaxWidth(),
+                    factory = {
+                        AdView(it).apply {
+                            adSize = AdSize.BANNER
+                            adUnitId = context.getString(R.string.ad_unit_id)
+                            loadAd(vm.ad)
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .requiredHeightIn(min = 100.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        ZoomableImage(
+            modifier = Modifier.fillMaxWidth(),
+            painter = chapterLink,
+            onClick = openCloseOverlay
+        )
+    }
+}
+
+@Composable
+private fun ZoomableImage(
+    modifier: Modifier = Modifier,
+    painter: String,
+    onClick: () -> Unit = {}
+) {
+    var centerPoint by remember { mutableStateOf(Offset.Zero) }
+
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+
+    val scaleAnim by animateFloatAsState(
+        targetValue = scale
+    ) {
+        if (scale == 1f) offset = Offset.Zero
+    }
+
+    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+        scale *= zoomChange
+        scale = scale.coerceIn(1f, 5f)
+
+        offset += offsetChange
+        offset = clampOffset(centerPoint, offset, scale)
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RectangleShape)
+            .onGloballyPositioned { coordinates ->
+                val size = coordinates.size.toSize() / 2.0f
+                centerPoint = Offset(size.width, size.height)
+            }
+            .transformable(state)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick() },
+                    onDoubleTap = {
+                        when {
+                            scale > 2f -> {
+                                scale = 1f
+                            }
+                            else -> {
+                                scale = 3f
+
+                                offset = (centerPoint - it) * (scale - 1)
+                                offset = clampOffset(centerPoint, offset, scale)
+                            }
+                        }
+
+                    }
+                )
+            }
+    ) {
+
+        val scope = rememberCoroutineScope()
+        var showTheThing by remember { mutableStateOf(true) }
+
+        if (showTheThing)
+            GlideImage(
+                imageModel = painter,
+                contentScale = ContentScale.FillWidth,
+                loading = {
+                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                },
+                failure = {
+                    Text(
+                        stringResource(R.string.pressToRefresh),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .clickable {
+                                scope.launch {
+                                    showTheThing = false
+                                    delay(1000)
+                                    showTheThing = true
+                                }
+                            }
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                    .align(Alignment.Center)
+                    .clipToBounds()
+                    .graphicsLayer {
+                        translationX = offset.x
+                        translationY = offset.y
+
+                        scaleX = scaleAnim
+                        scaleY = scaleAnim
+                    }
+            )
+    }
+}
+
+private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offset {
+    val maxPosition = centerPoint * (scale - 1)
+
+    return offset.copy(
+        x = offset.x.coerceIn(-maxPosition.x, maxPosition.x),
+        y = offset.y.coerceIn(-maxPosition.y, maxPosition.y)
+    )
+}
+
+@ExperimentalAnimationApi
+@Composable
+private fun TopBar(
+    modifier: Modifier = Modifier,
+    scrollBehavior: TopAppBarScrollBehavior,
+    pages: List<String>,
+    currentPage: Int,
+    vm: ReadViewModel
+) {
+    CenterAlignedTopAppBar(
+        scrollBehavior = scrollBehavior,
+        modifier = modifier,
+        navigationIcon = {
+            Row(
+                modifier = Modifier.padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    vm.batteryIcon.composeIcon,
+                    contentDescription = null,
+                    tint = animateColorAsState(
+                        if (vm.batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
+                        else vm.batteryColor
+                    ).value
+                )
+                AnimatedContent(
+                    targetState = vm.batteryPercent.toInt(),
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            slideInVertically { height -> height } + fadeIn() with slideOutVertically { height -> -height } + fadeOut()
+                        } else {
+                            slideInVertically { height -> -height } + fadeIn() with slideOutVertically { height -> height } + fadeOut()
+                        }
+                            .using(SizeTransform(clip = false))
+                    }
+                ) { targetBattery ->
+                    Text(
+                        "$targetBattery%",
+                        style = M3MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        },
+        title = {
+            var time by remember { mutableStateOf(System.currentTimeMillis()) }
+
+            val activity = LocalActivity.current
+
+            DisposableEffect(LocalContext.current) {
+                val timeReceiver = activity.timeTick { _, _ -> time = System.currentTimeMillis() }
+                onDispose { activity.unregisterReceiver(timeReceiver) }
+            }
+
+            AnimatedContent(
+                targetState = time,
+                transitionSpec = {
+                    (slideInVertically { height -> height } + fadeIn() with slideOutVertically { height -> -height } + fadeOut())
+                        .using(SizeTransform(clip = false))
+                }
+            ) { targetTime ->
+                Text(
+                    DateFormat.getTimeFormat(LocalContext.current).format(targetTime).toString(),
+                    style = M3MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
+        },
+        actions = {
+            PageIndicator(
+                Modifier
+                    .padding(4.dp)
+                    .align(Alignment.CenterVertically),
+                currentPage + 1,
+                pages.size
+            )
+        }
+    )
+}
+
+@Composable
+private fun BottomBar(
+    modifier: Modifier = Modifier,
+    vm: ReadViewModel,
+    scrollBehavior: TopAppBarScrollBehavior,
+    onPageSelectClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    chapterChange: () -> Unit
+) {
+    BottomAppBar(
+        modifier = modifier,
+        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+            .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
+            .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
+    ) {
+        val prevShown = vm.currentChapter < vm.list.lastIndex
+        val nextShown = vm.currentChapter > 0
+
+        AnimatedVisibility(
+            visible = prevShown && vm.list.size > 1,
+            enter = expandHorizontally(expandFrom = Alignment.Start),
+            exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+        ) {
+            PreviousButton(
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .weight(
+                        when {
+                            prevShown && nextShown -> 8f / 3f
+                            prevShown -> 4f
+                            else -> 4f
+                        }
+                    ),
+                previousChapter = chapterChange,
+                vm = vm
+            )
+        }
+
+        GoBackButton(
+            modifier = Modifier
+                .weight(
+                    animateFloatAsState(
+                        when {
+                            prevShown && nextShown -> 8f / 3f
+                            prevShown || nextShown -> 4f
+                            else -> 8f
+                        }
+                    ).value
+                )
+        )
+
+        AnimatedVisibility(
+            visible = nextShown && vm.list.size > 1,
+            enter = expandHorizontally(),
+            exit = shrinkHorizontally()
+        ) {
+            NextButton(
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .weight(
+                        when {
+                            prevShown && nextShown -> 8f / 3f
+                            nextShown -> 4f
+                            else -> 4f
+                        }
+                    ),
+                nextChapter = chapterChange,
+                vm = vm
+            )
+        }
+        //The three buttons above will equal 8f
+        //So these two need to add up to 2f
+        IconButton(
+            onClick = onPageSelectClick,
+            modifier = Modifier.weight(1f)
+        ) { Icon(Icons.Default.GridOn, null) }
+
+        IconButton(
+            onClick = onSettingsClick,
+            modifier = Modifier.weight(1f)
+        ) { Icon(Icons.Default.Settings, null) }
+    }
+}
+
+@Composable
+@ExperimentalMaterial3Api
+private fun WrapHeightNavigationDrawerItem(
+    label: @Composable () -> Unit,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: (@Composable () -> Unit)? = null,
+    badge: (@Composable () -> Unit)? = null,
+    shape: Shape = CircleShape,
+    colors: NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(),
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+) {
+    Surface(
+        shape = shape,
+        color = colors.containerColor(selected).value,
+        modifier = modifier
+            .heightIn(min = 56.dp)
+            .fillMaxWidth()
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                interactionSource = interactionSource,
+                role = Role.Tab,
+                indication = null
+            )
+    ) {
+        Row(
+            Modifier.padding(start = 16.dp, end = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                val iconColor = colors.iconColor(selected).value
+                CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides iconColor, content = icon)
+                Spacer(Modifier.width(12.dp))
+            }
+            Box(Modifier.weight(1f)) {
+                val labelColor = colors.textColor(selected).value
+                CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides labelColor, content = label)
+            }
+            if (badge != null) {
+                Spacer(Modifier.width(12.dp))
+                val badgeColor = colors.badgeColor(selected).value
+                CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides badgeColor, content = badge)
+            }
+        }
+    }
+}
+
+@ExperimentalAnimationApi
+@Composable
+private fun PageIndicator(modifier: Modifier = Modifier, currentPage: Int, pageCount: Int) {
+    Row(modifier = modifier) {
+        AnimatedContent(
+            targetState = currentPage,
+            transitionSpec = {
+                if (targetState > initialState) {
+                    slideInVertically { height -> height } + fadeIn() with
+                            slideOutVertically { height -> -height } + fadeOut()
+                } else {
+                    slideInVertically { height -> -height } + fadeIn() with
+                            slideOutVertically { height -> height } + fadeOut()
+                }
+                    .using(SizeTransform(clip = false))
+            }
+        ) { targetPage ->
+            Text(
+                "$targetPage",
+                style = M3MaterialTheme.typography.bodyLarge,
+            )
+        }
+
+        Text(
+            "/$pageCount",
+            style = M3MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+private fun Context.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+
+private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
+
+@Composable
+private fun GoBackButton(modifier: Modifier = Modifier) {
+    val navController = LocalNavController.current
+    M3OutlinedButton(
+        onClick = { navController.popBackStack() },
+        modifier = modifier,
+        border = BorderStroke(androidx.compose.material.ButtonDefaults.OutlinedBorderSize, M3MaterialTheme.colorScheme.primary)
+    ) { Text(stringResource(id = R.string.goBack), style = M3MaterialTheme.typography.labelLarge, color = M3MaterialTheme.colorScheme.primary) }
+}
+
+@Composable
+private fun NextButton(modifier: Modifier = Modifier, vm: ReadViewModel, nextChapter: () -> Unit) {
+    Button(
+        onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
+        modifier = modifier
+    ) { Text(stringResource(id = R.string.loadNextChapter)) }
+}
+
+@Composable
+private fun PreviousButton(modifier: Modifier = Modifier, vm: ReadViewModel, previousChapter: () -> Unit) {
+    TextButton(
+        onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
+        modifier = modifier
+    ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
+}
+
+@Composable
+private fun SliderSetting(
+    scope: CoroutineScope,
+    settingIcon: ImageVector,
+    @StringRes settingTitle: Int,
+    @StringRes settingSummary: Int,
+    preference: Preferences.Key<Int>,
+    initialValue: Int,
+    range: ClosedFloatingPointRange<Float>
+) {
+    var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
+
+    val activity = LocalActivity.current
+
+    SliderSetting(
+        sliderValue = sliderValue,
+        settingTitle = { Text(stringResource(id = settingTitle)) },
+        settingSummary = { Text(stringResource(id = settingSummary)) },
+        range = range,
+        updateValue = {
+            sliderValue = it
+            scope.launch { activity.updatePref(preference, sliderValue.toInt()) }
+        },
+        settingIcon = { Icon(settingIcon, null) }
+    )
 }
 
 class ReadActivity : AppCompatActivity() {

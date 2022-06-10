@@ -191,7 +191,6 @@ fun DetailsScreen(
     navController: NavController,
     genericInfo: GenericInfo,
     logo: NotificationLogo,
-    //info: ItemModel,
     dao: ItemDao,
     historyDao: HistoryDao,
     windowSize: WindowSize
@@ -199,111 +198,108 @@ fun DetailsScreen(
     val localContext = LocalContext.current
     val details: DetailViewModel = viewModel { DetailViewModel(createSavedStateHandle(), genericInfo, context = localContext) }
 
-    M3MaterialTheme(currentColorScheme) {
-        if (details.info == null) {
-            Scaffold(
-                topBar = {
-                    SmallTopAppBar(
-                        modifier = Modifier.zIndex(2f),
-                        title = { Text(details.itemModel?.title.orEmpty()) },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                        },
-                        actions = {
-                            IconButton(
-                                onClick = {
-                                    localContext.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
-                                        putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
-                                    }, localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())))
-                                }
-                            ) { Icon(Icons.Default.Share, null) }
+    if (details.info == null) {
+        Scaffold(
+            topBar = {
+                SmallTopAppBar(
+                    modifier = Modifier.zIndex(2f),
+                    title = { Text(details.itemModel?.title.orEmpty()) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                localContext.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
+                                    putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
+                                }, localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())))
+                            }
+                        ) { Icon(Icons.Default.Share, null) }
 
-                            IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
-                        },
-                    )
-                }
-            ) { PlaceHolderHeader(it) }
-        } else if (details.info != null) {
-
-            val isSaved by dao.doesNotificationExist(details.itemModel!!.url)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeAsState(false)
-
-            val shareChapter by localContext.shareChapter.collectAsState(initial = true)
-            val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
-
-            val systemUiController = rememberSystemUiController()
-            val statusBar = M3MaterialTheme.colorScheme.surface
-            val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
-
-            var c by remember { mutableStateOf(statusBar) }
-            val ac by animateColorAsState(c)
-
-            LaunchedEffect(ac) { systemUiController.setStatusBarColor(ac) }
-
-            SideEffect { currentDetailsUrl = details.itemModel!!.url }
-
-            val lifecycleOwner = LocalLifecycleOwner.current
-
-            // If `lifecycleOwner` changes, dispose and reset the effect
-            DisposableEffect(lifecycleOwner, swatchInfo.value?.rgb) {
-                // Create an observer that triggers our remembered callbacks
-                // for sending analytics events
-                val observer = LifecycleEventObserver { _, event ->
-                    c = when (event) {
-                        Lifecycle.Event.ON_CREATE -> statusBarColor?.value ?: statusBar
-                        Lifecycle.Event.ON_START -> statusBarColor?.value ?: statusBar
-                        Lifecycle.Event.ON_RESUME -> statusBarColor?.value ?: statusBar
-                        Lifecycle.Event.ON_PAUSE -> statusBarColor?.value ?: statusBar
-                        Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
-                        Lifecycle.Event.ON_ANY -> statusBarColor?.value ?: statusBar
-                    }
-                }
-
-                // Add the observer to the lifecycle
-                lifecycleOwner.lifecycle.addObserver(observer)
-
-                // When the effect leaves the Composition, remove the observer
-                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-            }
-
-            val orientation = LocalConfiguration.current.orientation
-
-            if (
-                windowSize == WindowSize.Medium ||
-                windowSize == WindowSize.Expanded ||
-                orientation == Configuration.ORIENTATION_LANDSCAPE
-            ) {
-                DetailsViewLandscape(
-                    details.info!!,
-                    isSaved,
-                    shareChapter,
-                    swatchInfo,
-                    navController,
-                    dao,
-                    historyDao,
-                    details,
-                    genericInfo,
-                    logo
-                )
-            } else {
-                DetailsView(
-                    details.info!!,
-                    isSaved,
-                    shareChapter,
-                    swatchInfo,
-                    navController,
-                    dao,
-                    historyDao,
-                    details,
-                    genericInfo,
-                    logo
+                        IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
+                    },
                 )
             }
+        ) { PlaceHolderHeader(it) }
+    } else if (details.info != null) {
 
+        val isSaved by dao.doesNotificationExist(details.itemModel!!.url)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeAsState(false)
+
+        val shareChapter by localContext.shareChapter.collectAsState(initial = true)
+        val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
+
+        val systemUiController = rememberSystemUiController()
+        val statusBar = M3MaterialTheme.colorScheme.surface
+        val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
+
+        var c by remember { mutableStateOf(statusBar) }
+        val ac by animateColorAsState(c)
+
+        LaunchedEffect(ac) { systemUiController.setStatusBarColor(ac) }
+
+        SideEffect { currentDetailsUrl = details.itemModel!!.url }
+
+        val lifecycleOwner = LocalLifecycleOwner.current
+
+        // If `lifecycleOwner` changes, dispose and reset the effect
+        DisposableEffect(lifecycleOwner, swatchInfo.value?.rgb) {
+            // Create an observer that triggers our remembered callbacks
+            // for sending analytics events
+            val observer = LifecycleEventObserver { _, event ->
+                c = when (event) {
+                    Lifecycle.Event.ON_CREATE -> statusBarColor?.value ?: statusBar
+                    Lifecycle.Event.ON_START -> statusBarColor?.value ?: statusBar
+                    Lifecycle.Event.ON_RESUME -> statusBarColor?.value ?: statusBar
+                    Lifecycle.Event.ON_PAUSE -> statusBarColor?.value ?: statusBar
+                    Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
+                    Lifecycle.Event.ON_ANY -> statusBarColor?.value ?: statusBar
+                }
+            }
+
+            // Add the observer to the lifecycle
+            lifecycleOwner.lifecycle.addObserver(observer)
+
+            // When the effect leaves the Composition, remove the observer
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
+
+        val orientation = LocalConfiguration.current.orientation
+
+        if (
+            windowSize == WindowSize.Medium ||
+            windowSize == WindowSize.Expanded ||
+            orientation == Configuration.ORIENTATION_LANDSCAPE
+        ) {
+            DetailsViewLandscape(
+                details.info!!,
+                isSaved,
+                shareChapter,
+                swatchInfo,
+                navController,
+                dao,
+                historyDao,
+                details,
+                genericInfo,
+                logo
+            )
+        } else {
+            DetailsView(
+                details.info!!,
+                isSaved,
+                shareChapter,
+                swatchInfo,
+                navController,
+                dao,
+                historyDao,
+                details,
+                genericInfo,
+                logo
+            )
         }
     }
 }

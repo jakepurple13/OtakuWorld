@@ -4,8 +4,8 @@ import android.Manifest
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import android.os.Environment
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,11 +19,13 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -33,7 +35,10 @@ import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.navArgument
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -80,7 +85,7 @@ class GenericManga(val context: Context) : GenericInfo {
         navController: NavController
     ) {
         if (runBlocking { context.useNewReaderFlow.first() }) {
-            navController
+            /*navController
                 .navigate(
                     ReadActivityComposeFragment::class.java.hashCode(),
                     Bundle().apply {
@@ -91,7 +96,8 @@ class GenericManga(val context: Context) : GenericInfo {
                         putString("mangaInfoUrl", model.sourceUrl)
                     },
                     SettingsDsl.customAnimationOptions
-                )
+                )*/
+            ReadViewModel.navigateToMangaReader(navController, model, allChapters, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
@@ -403,6 +409,28 @@ class GenericManga(val context: Context) : GenericInfo {
                     setClassName(DownloadViewerFragment::class.java.name)
                 }
             )
+    }
+
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
+    override fun NavGraphBuilder.navSetup() {
+        composable(
+            ReadViewModel.MangaReaderRoute,
+            arguments = listOf(
+                navArgument("currentChapter") { },
+                navArgument("allChapters") { },
+                navArgument("mangaTitle") { },
+                navArgument("mangaUrl") { },
+                navArgument("mangaInfoUrl") { },
+            )
+        ) { ReadView() }
+
     }
 
 }

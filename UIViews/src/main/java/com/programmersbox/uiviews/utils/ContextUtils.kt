@@ -625,3 +625,5 @@ fun rememberBackStackEntry(
 val LocalNavController = staticCompositionLocalOf<NavHostController> {
     error("No NavController Found!")
 }
+
+val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }
