@@ -3,10 +3,7 @@ package com.programmersbox.uiviews.utils
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.app.DownloadManager
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.graphics.*
 import android.net.Uri
 import android.os.Build
@@ -27,13 +24,21 @@ import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavHostController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.gson.*
@@ -217,9 +222,7 @@ class ChapterModelDeserializer(private val genericInfo: GenericInfo) : JsonDeser
 
 class ApiServiceSerializer : JsonSerializer<ApiService> {
     override fun serialize(src: ApiService, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        val json = JsonObject()
-        json.addProperty("source", src.serviceName)
-        return json
+        return context.serialize(src.serviceName)
     }
 }
 
@@ -585,4 +588,40 @@ class ExpirableLRUCache<K, V>(
         private const val DEFAULT_SIZE = 100
         private const val PRESENT = true
     }
+}
+
+val LocalActivity = staticCompositionLocalOf<FragmentActivity> {
+    error("Context is not an Activity.")
+}
+
+fun Context.findActivity(): FragmentActivity {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is FragmentActivity) {
+            return currentContext
+        }
+        currentContext = currentContext.baseContext
+    }
+    error("Context is not an Activity.")
+}
+
+@Composable
+inline fun <reified VM : ViewModel> viewModelInRoute(
+    route: String,
+    noinline initializer: CreationExtras.() -> VM,
+): VM {
+    val entry = rememberBackStackEntry(route)
+    return viewModel(viewModelStoreOwner = entry, initializer = initializer)
+}
+
+@Composable
+fun rememberBackStackEntry(
+    route: String,
+): NavBackStackEntry {
+    val controller = LocalNavController.current
+    return remember { controller.getBackStackEntry(route) }
+}
+
+val LocalNavController = staticCompositionLocalOf<NavHostController> {
+    error("No NavController Found!")
 }

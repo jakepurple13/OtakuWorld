@@ -46,10 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -65,8 +62,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.fragment.navArgs
@@ -79,11 +75,9 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import com.programmersbox.favoritesdatabase.*
+import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.colorFromTheme
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.SwatchInfo
+import com.programmersbox.models.*
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
@@ -197,13 +191,13 @@ fun DetailsScreen(
     navController: NavController,
     genericInfo: GenericInfo,
     logo: NotificationLogo,
-    info: ItemModel,
+    //info: ItemModel,
     dao: ItemDao,
     historyDao: HistoryDao,
     windowSize: WindowSize
 ) {
     val localContext = LocalContext.current
-    val details: DetailViewModel = viewModel(factory = factoryCreate { DetailViewModel(info, localContext) })
+    val details: DetailViewModel = viewModel { DetailViewModel(createSavedStateHandle(), genericInfo, context = localContext) }
 
     M3MaterialTheme(currentColorScheme) {
         if (details.info == null) {
@@ -211,7 +205,7 @@ fun DetailsScreen(
                 topBar = {
                     SmallTopAppBar(
                         modifier = Modifier.zIndex(2f),
-                        title = { Text(info.title) },
+                        title = { Text(details.itemModel?.title.orEmpty()) },
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
                         },
@@ -220,9 +214,9 @@ fun DetailsScreen(
                                 onClick = {
                                     localContext.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                                         type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, info.url)
-                                        putExtra(Intent.EXTRA_TITLE, info.title)
-                                    }, localContext.getString(R.string.share_item, info.title)))
+                                        putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
+                                        putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
+                                    }, localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())))
                                 }
                             ) { Icon(Icons.Default.Share, null) }
 
@@ -233,7 +227,7 @@ fun DetailsScreen(
             ) { PlaceHolderHeader(it) }
         } else if (details.info != null) {
 
-            val isSaved by dao.doesNotificationExist(info.url)
+            val isSaved by dao.doesNotificationExist(details.itemModel!!.url)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeAsState(false)
@@ -242,10 +236,38 @@ fun DetailsScreen(
             val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
 
             val systemUiController = rememberSystemUiController()
+            val statusBar = M3MaterialTheme.colorScheme.surface
             val statusBarColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()
-            SideEffect {
-                statusBarColor?.value?.let { s -> systemUiController.setStatusBarColor(color = s) }
-                currentDetailsUrl = info.url
+
+            var c by remember { mutableStateOf(statusBar) }
+            val ac by animateColorAsState(c)
+
+            LaunchedEffect(ac) { systemUiController.setStatusBarColor(ac) }
+
+            SideEffect { currentDetailsUrl = details.itemModel!!.url }
+
+            val lifecycleOwner = LocalLifecycleOwner.current
+
+            // If `lifecycleOwner` changes, dispose and reset the effect
+            DisposableEffect(lifecycleOwner, swatchInfo.value?.rgb) {
+                // Create an observer that triggers our remembered callbacks
+                // for sending analytics events
+                val observer = LifecycleEventObserver { _, event ->
+                    c = when (event) {
+                        Lifecycle.Event.ON_CREATE -> statusBarColor?.value ?: statusBar
+                        Lifecycle.Event.ON_START -> statusBarColor?.value ?: statusBar
+                        Lifecycle.Event.ON_RESUME -> statusBarColor?.value ?: statusBar
+                        Lifecycle.Event.ON_PAUSE -> statusBarColor?.value ?: statusBar
+                        Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
+                        Lifecycle.Event.ON_ANY -> statusBarColor?.value ?: statusBar
+                    }
+                }
+
+                // Add the observer to the lifecycle
+                lifecycleOwner.lifecycle.addObserver(observer)
+
+                // When the effect leaves the Composition, remove the observer
+                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
 
             val orientation = LocalConfiguration.current.orientation
@@ -287,8 +309,11 @@ fun DetailsScreen(
 }
 
 class DetailViewModel(
-    itemModel: ItemModel? = null,
+    handle: SavedStateHandle,
+    genericInfo: GenericInfo,
     context: Context,
+    val itemModel: ItemModel? = handle.get<String>("model")
+        ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
 ) : ViewModel() {
 
     var info: InfoModel? by mutableStateOf(null)
@@ -828,14 +853,14 @@ private fun DetailsView(
     val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
         ?: M3MaterialTheme.colorScheme.onSurface
 
-        val topAppBarScrollState = rememberTopAppBarScrollState()
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
-        BottomSheetScaffold(
-            backgroundColor = Color.Transparent,
-            sheetContent = {
-                val markAsTopAppBarScrollState = rememberTopAppBarScrollState()
-                val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior(markAsTopAppBarScrollState) }
+    BottomSheetScaffold(
+        backgroundColor = Color.Transparent,
+        sheetContent = {
+            val markAsTopAppBarScrollState = rememberTopAppBarScrollState()
+            val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior(markAsTopAppBarScrollState) }
 
             Scaffold(
                 topBar = {
@@ -1189,19 +1214,19 @@ private fun ChapterItem(
 
     val interactionSource = remember { MutableInteractionSource() }
 
-        androidx.compose.material3.ElevatedCard(
-            shape = RoundedCornerShape(2.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = interactionSource,
-                ) { markAs(!read.fastAny { it.url == c.url }) },
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = animateColorAsState(swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface).value,
-            )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+    androidx.compose.material3.ElevatedCard(
+        shape = RoundedCornerShape(2.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = interactionSource,
+            ) { vm.markAs(c, !read.fastAny { it.url == c.url }) },
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = animateColorAsState(swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface).value,
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
 
             if (shareChapter) {
                 ConstraintLayout(
@@ -1365,19 +1390,19 @@ private fun ChapterItem(
     }
 }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @ExperimentalComposeUiApi
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
-    @Composable
-    private fun DetailsHeader(
-        modifier: Modifier = Modifier,
-        model: InfoModel,
-        logo: Any?,
-        isFavorite: Boolean,
-        swatchInfo: MutableState<SwatchInfo?>,
-        favoriteClick: (Boolean) -> Unit
-    ) {
+@OptIn(ExperimentalMaterial3Api::class)
+@ExperimentalComposeUiApi
+@ExperimentalFoundationApi
+@ExperimentalMaterialApi
+@Composable
+private fun DetailsHeader(
+    modifier: Modifier = Modifier,
+    model: InfoModel,
+    logo: Any?,
+    isFavorite: Boolean,
+    swatchInfo: MutableState<SwatchInfo?>,
+    favoriteClick: (Boolean) -> Unit
+) {
 
     var imagePopup by remember { mutableStateOf(false) }
 
@@ -1489,20 +1514,20 @@ private fun ChapterItem(
                     color = M3MaterialTheme.colorScheme.onSurface
                 )
 
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        items(model.genres) {
-                            CustomChip(
-                                modifier = Modifier.fadeInAnimation(),
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
-                                        .animate().value,
-                                    labelColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
-                                        .animate().value
-                                        .copy(alpha = ChipDefaults.ContentOpacity)
-                                )
-                            ) { Text(it) }
-                        }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    items(model.genres) {
+                        CustomChip(
+                            modifier = Modifier.fadeInAnimation(),
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
+                                    .animate().value,
+                                labelColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
+                                    .animate().value
+                                    .copy(alpha = ChipDefaults.ContentOpacity)
+                            )
+                        ) { Text(it) }
                     }
+                }
 
                 Row(
                     modifier = Modifier
@@ -1565,21 +1590,21 @@ private fun ChapterItem(
     }
 }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @ExperimentalFoundationApi
-    @ExperimentalMaterialApi
-    @Composable
-    private fun PlaceHolderHeader(paddingValues: PaddingValues) {
+@OptIn(ExperimentalMaterial3Api::class)
+@ExperimentalFoundationApi
+@ExperimentalMaterialApi
+@Composable
+private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
     val placeholderColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
         .copy(0.1f)
         .compositeOver(M3MaterialTheme.colorScheme.surface)
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
 
         Row(modifier = Modifier.padding(5.dp)) {
 

@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.padding
@@ -31,11 +30,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -52,7 +50,6 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import com.programmersbox.uiviews.utils.Screen as SScreen
 
 abstract class BaseMainActivity : AppCompatActivity() {
@@ -93,11 +90,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
         onCreate()
 
         setContent {
-            M3MaterialTheme(currentColorScheme) {
+            val bottomSheetNavigator = rememberBottomSheetNavigator()
+            val navController = rememberNavController(bottomSheetNavigator)
+            OtakuMaterialTheme(navController) {
                 val showAllItem by showAll.collectAsState(false)
 
-                val bottomSheetNavigator = rememberBottomSheetNavigator()
-                val navController = rememberAnimatedNavController(bottomSheetNavigator)
                 com.google.accompanist.navigation.material.ModalBottomSheetLayout(bottomSheetNavigator) {
                     androidx.compose.material3.Scaffold(
                         bottomBar = {
@@ -142,7 +139,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        AnimatedNavHost(
+                        NavHost(
                             navController = navController,
                             startDestination = SScreen.RecentScreen.route,
                             modifier = Modifier.padding(innerPadding)
@@ -152,7 +149,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             ) {
                                 val context = LocalContext.current
                                 RecentView(
-                                    recentVm = viewModel(factory = factoryCreate { RecentViewModel(dao, context) }),
+                                    recentVm = viewModel { RecentViewModel(dao, context) },
                                     info = genericInfo,
                                     navController = navController,
                                     logo = logo
@@ -164,7 +161,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             ) {
                                 val context = LocalContext.current
                                 AllView(
-                                    allVm = viewModel(factory = factoryCreate { AllViewModel(dao, context) }),
+                                    allVm = viewModel { AllViewModel(dao, context) },
                                     info = genericInfo,
                                     navController = navController,
                                     logo = logo
@@ -173,8 +170,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.SettingsScreen.route,
-                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Start) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.End) },
+                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Start) },
+                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.End) },
                             ) {
                                 SettingScreen(
                                     navController = navController,
@@ -199,21 +196,22 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.DetailsScreen.route + "/{model}",
-                                arguments = listOf(navArgument("model") { type = AssetParamType(genericInfo) })
+                                //arguments = listOf(navArgument("model") { type = AssetParamType(genericInfo) })
                             ) {
-                                Text("Hello ${it.arguments?.getSerializable("model") as? ItemModel}")
-                                (it.arguments?.getSerializable("model") as? ItemModel)?.let { info ->
-                                    DetailsScreen(
-                                        navController = navController,
-                                        genericInfo = genericInfo,
-                                        logo = notificationLogo,
-                                        info = info,
-                                        dao = dao,
-                                        historyDao = historyDao,
-                                        windowSize = rememberWindowSizeClass()
-                                    )
-                                }
+                                //Text("Hello ${it.arguments?.getSerializable("model") as? ItemModel}")
+                                //(it.arguments?.getSerializable("model") as? ItemModel)?.let { info ->
+                                DetailsScreen(
+                                    navController = navController,
+                                    genericInfo = genericInfo,
+                                    logo = notificationLogo,
+                                    dao = dao,
+                                    historyDao = historyDao,
+                                    windowSize = rememberWindowSizeClass()
+                                )
+                                //}
                             }
+
+                            with(genericInfo) { navSetup() }
                         }
                     }
                 }

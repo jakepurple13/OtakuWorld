@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -77,4 +78,5 @@ interface GenericInfo {
     fun allNavSetup(fragment: Fragment, navController: NavController) = Unit
     fun settingNavSetup(fragment: Fragment, navController: NavController) = Unit
 
+    fun NavGraphBuilder.navSetup() = Unit
 }
