@@ -52,8 +52,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -305,7 +307,8 @@ class GlobalSearchFragment : Fragment() {
                                 scaffoldState = bottomScaffold,
                                 sheetContent = searchModelBottom?.let { s ->
                                     {
-                                        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                                        val topAppBarScrollState = rememberTopAppBarScrollState()
+                                        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
                                         Scaffold(
                                             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                             topBar = {
@@ -500,15 +503,16 @@ class GlobalSearchFragment : Fragment() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = rememberImagePainter(data = model.imageUrl) {
-                        placeholder(placeHolder)
-                        error(error)
-                        crossfade(true)
-                        lifecycle(LocalLifecycleOwner.current)
-                        size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                    },
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(model.imageUrl)
+                        .lifecycle(LocalLifecycleOwner.current)
+                        .crossfade(true)
+                        .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                        .build(),
                     contentDescription = model.title,
+                    placeholder = rememberDrawablePainter(placeHolder),
+                    error = rememberDrawablePainter(error),
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier.matchParentSize()
                 )

@@ -12,6 +12,7 @@ import com.programmersbox.models.Storage
 import io.reactivex.Single
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 
 object Kawaiifu : ShowApi(
     baseUrl = "https://kawaiifu.com",
@@ -75,7 +76,7 @@ object Kawaiifu : ShowApi(
             url = source.url,
             alternativeNames = emptyList(),
             description = doc.select(".sub-desc p")
-                .filter { it.select("strong").isEmpty() && it.select("iframe").isEmpty() }
+                .filter { it: Element -> it.select("strong").isEmpty() && it.select("iframe").isEmpty() }
                 .joinToString("\n") { it.text() },
             imageUrl = source.imageUrl,
             genres = doc.select(".table a[href*=\"/tag/\"]").fastMap { tag -> tag.text() },
@@ -151,7 +152,7 @@ object Kawaiifu : ShowApi(
         ItemModel(
             title = doc.selectFirst(".title")?.text().orEmpty(),
             description = doc.select(".sub-desc p")
-                .filter { it.select("strong").isEmpty() && it.select("iframe").isEmpty() }
+                .filter { it: Element -> it.select("strong").isEmpty() && it.select("iframe").isEmpty() }
                 .joinToString("\n") { it.text() },
             imageUrl = doc.selectFirst("a.thumb > img")?.attr("src").orEmpty(),
             url = url,

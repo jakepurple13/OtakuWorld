@@ -252,7 +252,8 @@ class ReadingActivity : ComponentActivity() {
                     }
                 }
 
-                val contentScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                val contentTopAppBarScrollState = rememberTopAppBarScrollState()
+                val contentScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(contentTopAppBarScrollState) }
 
                 //56 is the bottom app bar size
                 //16 is the scaffold padding
@@ -289,7 +290,8 @@ class ReadingActivity : ComponentActivity() {
                     contentColor = M3MaterialTheme.colorScheme.onSurface,
                     drawerContent = if (readVm.list.size > 1) {
                         {
-                            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                            val topAppBarScrollState = rememberTopAppBarScrollState()
+                            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
                             Scaffold(
                                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                 topBar = {

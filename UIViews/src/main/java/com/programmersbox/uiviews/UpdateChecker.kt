@@ -183,7 +183,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         triple.fastForEach {
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
-            dao.updateItem(item).subscribe()
+            dao.insertFavorite(item).subscribe()
             FirebaseDb.updateShow(item).subscribe()
         }
     }

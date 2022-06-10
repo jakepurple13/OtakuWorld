@@ -81,7 +81,8 @@ class DebugFragment : BaseBottomSheetDialogFragment() {
     private fun DebugView() {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarScrollState) }
 
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

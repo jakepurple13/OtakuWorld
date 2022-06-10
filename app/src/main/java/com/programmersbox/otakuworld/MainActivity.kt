@@ -25,7 +25,6 @@ import androidx.compose.material.ButtonElevation
 import androidx.compose.material.FabPosition
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
@@ -54,7 +53,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -144,7 +142,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }*/
 
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                val topBarState = rememberTopAppBarScrollState()
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
                 BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
@@ -1345,18 +1344,17 @@ fun SwipeButton(
     val collapsed = swipeButtonState == SwipeButtonState.COLLAPSED
     val swiped = swipeButtonState == SwipeButtonState.SWIPED
 
+    rememberRipple()
     Surface(
+        onClick = {},
         modifier = modifier.animateContentSize(),
+        enabled = enabled,
         shape = shape,
         color = colors.backgroundColor(enabled).value,
         contentColor = contentColor.copy(alpha = 1f),
         border = border,
         elevation = elevation?.elevation(enabled, interactionSource)?.value ?: 0.dp,
-        onClick = {},
-        enabled = enabled,
-        role = Role.Button,
-        interactionSource = interactionSource,
-        indication = rememberRipple()
+        interactionSource = interactionSource
     ) {
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),

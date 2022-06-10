@@ -230,7 +230,7 @@ fun DetailsScreen(
                         },
                     )
                 }
-            ) { PlaceHolderHeader() }
+            ) { PlaceHolderHeader(it) }
         } else if (details.info != null) {
 
             val isSaved by dao.doesNotificationExist(info.url)
@@ -828,12 +828,14 @@ private fun DetailsView(
     val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
         ?: M3MaterialTheme.colorScheme.onSurface
 
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
-    BottomSheetScaffold(
-        backgroundColor = Color.Transparent,
-        sheetContent = {
-            val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        BottomSheetScaffold(
+            backgroundColor = Color.Transparent,
+            sheetContent = {
+                val markAsTopAppBarScrollState = rememberTopAppBarScrollState()
+                val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior(markAsTopAppBarScrollState) }
 
             Scaffold(
                 topBar = {
@@ -1187,20 +1189,19 @@ private fun ChapterItem(
 
     val interactionSource = remember { MutableInteractionSource() }
 
-    androidx.compose.material3.ElevatedCard(
-        shape = RoundedCornerShape(2.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                indication = rememberRipple(),
-                interactionSource = interactionSource,
-            ) { vm.markAs(c, !read.fastAny { it.url == c.url }) },
-        /*colors = CardDefaults.elevatedCardColors(
-            containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
-        )*/
-        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        androidx.compose.material3.ElevatedCard(
+            shape = RoundedCornerShape(2.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    indication = rememberRipple(),
+                    interactionSource = interactionSource,
+                ) { markAs(!read.fastAny { it.url == c.url }) },
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = animateColorAsState(swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface).value,
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
 
             if (shareChapter) {
                 ConstraintLayout(
@@ -1364,18 +1365,19 @@ private fun ChapterItem(
     }
 }
 
-@ExperimentalComposeUiApi
-@ExperimentalFoundationApi
-@ExperimentalMaterialApi
-@Composable
-private fun DetailsHeader(
-    modifier: Modifier = Modifier,
-    model: InfoModel,
-    logo: Any?,
-    isFavorite: Boolean,
-    swatchInfo: MutableState<SwatchInfo?>,
-    favoriteClick: (Boolean) -> Unit
-) {
+    @OptIn(ExperimentalMaterial3Api::class)
+    @ExperimentalComposeUiApi
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    @Composable
+    private fun DetailsHeader(
+        modifier: Modifier = Modifier,
+        model: InfoModel,
+        logo: Any?,
+        isFavorite: Boolean,
+        swatchInfo: MutableState<SwatchInfo?>,
+        favoriteClick: (Boolean) -> Unit
+    ) {
 
     var imagePopup by remember { mutableStateOf(false) }
 
@@ -1487,20 +1489,20 @@ private fun DetailsHeader(
                     color = M3MaterialTheme.colorScheme.onSurface
                 )
 
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    items(model.genres) {
-                        CustomChip(
-                            modifier = Modifier.fadeInAnimation(),
-                            colors = ChipDefaults.outlinedChipColors(
-                                backgroundColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
-                                    .animate().value,
-                                contentColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
-                                    .animate().value
-                                    .copy(alpha = ChipDefaults.ContentOpacity)
-                            )
-                        ) { Text(it) }
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        items(model.genres) {
+                            CustomChip(
+                                modifier = Modifier.fadeInAnimation(),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
+                                        .animate().value,
+                                    labelColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
+                                        .animate().value
+                                        .copy(alpha = ChipDefaults.ContentOpacity)
+                                )
+                            ) { Text(it) }
+                        }
                     }
-                }
 
                 Row(
                     modifier = Modifier
@@ -1563,17 +1565,21 @@ private fun DetailsHeader(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalFoundationApi
-@ExperimentalMaterialApi
-@Composable
-private fun PlaceHolderHeader() {
+    @OptIn(ExperimentalMaterial3Api::class)
+    @ExperimentalFoundationApi
+    @ExperimentalMaterialApi
+    @Composable
+    private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
     val placeholderColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
         .copy(0.1f)
         .compositeOver(M3MaterialTheme.colorScheme.surface)
 
-    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
 
         Row(modifier = Modifier.padding(5.dp)) {
 

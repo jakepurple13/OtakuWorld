@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.contentColorFor
@@ -37,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
+import androidx.compose.material3.ChipColors
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
@@ -75,12 +76,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.window.layout.WindowMetricsCalculator
 import coil.Coil
+import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import coil.size.Scale
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionsRequired
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.composethemeadapter.MdcTheme
@@ -219,22 +221,22 @@ fun CustomChip2(
     }
 }
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun CustomChip(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     shape: Shape = MaterialTheme.shapes.small.copy(CornerSize(percent = 50)),
     border: BorderStroke? = null,
-    colors: ChipColors = ChipDefaults.chipColors(),
+    colors: ChipColors = AssistChipDefaults.assistChipColors(),
     leadingIcon: @Composable (() -> Unit)? = null,
     content: @Composable RowScope.() -> Unit
 ) {
-    val contentColor by colors.contentColor(enabled)
+    val contentColor by colors.labelColor(enabled)
     androidx.compose.material3.Surface(
         modifier = modifier,
         shape = shape,
-        color = colors.backgroundColor(enabled).value,
+        color = colors.containerColor(enabled).value,
         contentColor = contentColor.copy(1.0f),
         border = border,
         tonalElevation = 8.dp
@@ -405,7 +407,8 @@ fun <T> BottomSheetDeleteScaffold(
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
-    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
+    topAppBarScrollState: TopAppBarScrollState = rememberTopAppBarScrollState(),
+    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) },
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit
@@ -466,7 +469,8 @@ fun <T> BottomSheetDeleteScaffold(
 
             }
 
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+            val topAppBarScrollState = rememberTopAppBarScrollState()
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
             androidx.compose.material3.Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -649,7 +653,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     customSingleRemoveDialog: (T) -> Boolean = { true },
-    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() },
+    bottomScrollBehavior: TopAppBarScrollBehavior,
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
@@ -711,7 +715,8 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 
             }
 
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+            val topAppBarScrollState = rememberTopAppBarScrollState()
+            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
             androidx.compose.material3.Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -1046,10 +1051,13 @@ fun CustomSwipeToDelete(
 fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> Unit) {
     val storagePermissions = rememberMultiplePermissionsState(permissionsList)
     val context = LocalContext.current
-    PermissionsRequired(
-        multiplePermissionsState = storagePermissions,
-        permissionsNotGrantedContent = { NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() } },
-        permissionsNotAvailableContent = {
+    SideEffect { storagePermissions.launchMultiplePermissionRequest() }
+    if (storagePermissions.allPermissionsGranted) {
+        content()
+    } else {
+        if (storagePermissions.permissions.fastAll { it.status.shouldShowRationale }) {
+            NeedsPermissions { storagePermissions.launchMultiplePermissionRequest() }
+        } else {
             NeedsPermissions {
                 context.startActivity(
                     Intent().apply {
@@ -1058,9 +1066,8 @@ fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> 
                     }
                 )
             }
-        },
-        content = content
-    )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1751,7 +1758,7 @@ private suspend fun calculateSwatchesInImage(
         .allowHardware(false)
         .build()
 
-    val bitmap = when (val result = Coil.execute(r)) {
+    val bitmap = when (val result = r.context.imageLoader.execute(r)) {
         is SuccessResult -> result.drawable.toBitmap()
         else -> null
     }
@@ -1788,7 +1795,7 @@ private suspend fun calculateAllSwatchesInImage(
         .allowHardware(false)
         .build()
 
-    val bitmap = when (val result = Coil.execute(r)) {
+    val bitmap = when (val result = r.context.imageLoader.execute(r)) {
         is SuccessResult -> result.drawable.toBitmap()
         else -> null
     }

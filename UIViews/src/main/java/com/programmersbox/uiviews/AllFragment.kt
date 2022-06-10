@@ -19,7 +19,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Cancel
@@ -236,7 +235,8 @@ fun AllView(
 
     val state = rememberLazyGridState()
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-    val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
         topBar = {
@@ -288,7 +288,8 @@ fun AllView(
                                 val focusManager = LocalFocusManager.current
                                 val searchList by allVm.searchPublisher.subscribeAsState(initial = emptyList())
                                 var searchText by rememberSaveable { mutableStateOf("") }
-                                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                                val searchTopAppBarScrollState = rememberTopAppBarScrollState()
+                                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(searchTopAppBarScrollState) }
                                 Scaffold(
                                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                     topBar = {

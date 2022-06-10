@@ -8,10 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,15 +23,13 @@ import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +54,9 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -186,12 +186,14 @@ fun NotificationsScreen(
         val state = rememberBottomSheetScaffoldState()
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
+        val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
         BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
             scope.launch { state.bottomSheetState.collapse() }
         }
+        val topAppBarScrollState = rememberTopAppBarScrollState()
 
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
         BottomSheetDeleteScaffold(
             listOfItems = items,
@@ -265,14 +267,15 @@ fun NotificationsScreen(
                 ListItem(
                     modifier = Modifier.padding(5.dp),
                     icon = {
-                        Image(
-                            painter = rememberImagePainter(data = item.imageUrl.orEmpty()) {
-                                placeholder(logo.logoId)
-                                error(logo.logoId)
-                                crossfade(true)
-                                lifecycle(LocalLifecycleOwner.current)
-                                size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                            },
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(item.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = rememberDrawablePainter(logoDrawable),
+                            error = rememberDrawablePainter(logoDrawable),
                             contentScale = ContentScale.FillBounds,
                             contentDescription = item.notiTitle,
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -467,13 +470,15 @@ private fun NotificationItem(
                 }
         ) {
             Row {
-                Image(
-                    painter = rememberImagePainter(data = item.imageUrl.orEmpty()) {
-                        placeholder(logo.logoId)
-                        error(logo.logoId)
-                        crossfade(true)
-                        lifecycle(LocalLifecycleOwner.current)
-                    },
+                val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .lifecycle(LocalLifecycleOwner.current)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = rememberDrawablePainter(logoDrawable),
+                    error = rememberDrawablePainter(logoDrawable),
                     contentScale = ContentScale.Crop,
                     contentDescription = item.notiTitle,
                     modifier = Modifier

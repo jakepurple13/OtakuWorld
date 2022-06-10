@@ -18,24 +18,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.*
@@ -104,7 +98,8 @@ enum class SettingLocation {
 @ExperimentalMaterialApi
 @Composable
 fun TestView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
     var location: SettingLocation? by remember { mutableStateOf(null) }
@@ -231,8 +226,8 @@ fun TestView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun SwitchView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
             Column {
@@ -270,8 +265,8 @@ fun SwitchView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun CheckView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
             Column {
@@ -310,7 +305,8 @@ fun CheckView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun PagerView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
     val state = rememberPagerState()
     val currentPage by remember { derivedStateOf { state.currentPage } }
@@ -601,7 +597,7 @@ class MinimumTouchTargetModifierCustom(val size: DpSize) : LayoutModifier {
 @Composable
 fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    PreferenceSetting(
+    /*PreferenceSetting(
         settingTitle = { Text("Text Field") },
         endIcon = {
             TextField(
@@ -612,7 +608,7 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
                 modifier = Modifier.onFocusChanged { if (!it.isFocused) keyboardController?.hide() }
             )
         }
-    )
+    )*/
 }
 
 @ExperimentalComposeUiApi
@@ -621,7 +617,8 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun OptimisticView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -741,8 +738,8 @@ fun OptimisticView(closeClick: () -> Unit) {
 @ExperimentalMotionApi
 @Composable
 fun MotionLayoutView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
             Column {
@@ -829,7 +826,8 @@ fun MotionLayoutView(closeClick: () -> Unit) {
 @ExperimentalFoundationApi
 @Composable
 fun ThemeingView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
 
     Scaffold(
