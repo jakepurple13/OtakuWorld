@@ -1,7 +1,6 @@
 package com.programmersbox.novelworld
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
@@ -72,14 +74,13 @@ class GenericNovel(val context: Context) : GenericInfo {
         context: Context,
         navController: NavController
     ) {
-        context.startActivity(
-            Intent(context, ReadingActivity::class.java).apply {
-                putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                ChapterList(context, this@GenericNovel).set(allChapters)
-                putExtra("novelTitle", model.name)
-                putExtra("novelUrl", model.url)
-                putExtra("novelInfoUrl", model.sourceUrl)
-            }
+        ChapterList(context, this@GenericNovel).set(allChapters)
+        ReadViewModel.navigateToNovelReader(
+            navController,
+            model,
+            model.name,
+            model.url,
+            model.sourceUrl
         )
     }
 
@@ -171,5 +172,18 @@ class GenericNovel(val context: Context) : GenericInfo {
                 }
             }
         }
+    }
+
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.navSetup() {
+        composable(
+            ReadViewModel.NovelReaderRoute,
+            arguments = listOf(
+                navArgument("currentChapter") { },
+                navArgument("novelTitle") { },
+                navArgument("novelUrl") { },
+                navArgument("novelInfoUrl") { },
+            )
+        ) { NovelReader() }
     }
 }
