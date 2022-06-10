@@ -196,7 +196,7 @@ fun DetailsScreen(
     windowSize: WindowSize
 ) {
     val localContext = LocalContext.current
-    val details: DetailViewModel = viewModel { DetailViewModel(createSavedStateHandle(), genericInfo, context = localContext) }
+    val details: DetailViewModel = viewModel { DetailViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) }
 
     if (details.info == null) {
         Scaffold(
@@ -308,6 +308,7 @@ class DetailViewModel(
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     context: Context,
+    private val dao: ItemDao,
     val itemModel: ItemModel? = handle.get<String>("model")
         ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
 ) : ViewModel() {
@@ -315,7 +316,6 @@ class DetailViewModel(
     var info: InfoModel? by mutableStateOf(null)
 
     private val disposable = CompositeDisposable()
-    private val dao = ItemDatabase.getInstance(context).itemDao()
 
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
