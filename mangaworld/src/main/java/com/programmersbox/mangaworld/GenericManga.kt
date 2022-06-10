@@ -36,7 +36,6 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import com.programmersbox.favoritesdatabase.DbModel
@@ -371,42 +370,6 @@ class GenericManga(val context: Context) : GenericInfo {
             )
         }
 
-    }
-
-    private fun readerNavSetup(fragment: Fragment, navController: NavController, navId: Int) {
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, navId).createDestination().apply {
-                    id = ReadActivityComposeFragment::class.java.hashCode()
-                    setClassName(ReadActivityComposeFragment::class.java.name)
-                }
-            )
-
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
-        }
-    }
-
-    override fun recentNavSetup(fragment: Fragment, navController: NavController) {
-        readerNavSetup(fragment, navController, R.id.recent_nav)
-    }
-
-    override fun allNavSetup(fragment: Fragment, navController: NavController) {
-        readerNavSetup(fragment, navController, R.id.all_nav)
-    }
-
-    override fun settingNavSetup(fragment: Fragment, navController: NavController) {
-        readerNavSetup(fragment, navController, R.id.setting_nav)
-
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                    id = DownloadViewerFragment::class.java.hashCode()
-                    setClassName(DownloadViewerFragment::class.java.name)
-                }
-            )
     }
 
     @OptIn(
