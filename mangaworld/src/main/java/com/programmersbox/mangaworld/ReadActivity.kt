@@ -1014,19 +1014,11 @@ private fun TopBar(
                 onDispose { activity.unregisterReceiver(timeReceiver) }
             }
 
-            AnimatedContent(
-                targetState = time,
-                transitionSpec = {
-                    (slideInVertically { height -> height } + fadeIn() with slideOutVertically { height -> -height } + fadeOut())
-                        .using(SizeTransform(clip = false))
-                }
-            ) { targetTime ->
-                Text(
-                    DateFormat.getTimeFormat(LocalContext.current).format(targetTime).toString(),
-                    style = M3MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(4.dp)
-                )
-            }
+            Text(
+                DateFormat.getTimeFormat(LocalContext.current).format(time).toString(),
+                style = M3MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(4.dp)
+            )
         },
         actions = {
             PageIndicator(
@@ -1177,31 +1169,11 @@ private fun WrapHeightNavigationDrawerItem(
 @ExperimentalAnimationApi
 @Composable
 private fun PageIndicator(modifier: Modifier = Modifier, currentPage: Int, pageCount: Int) {
-    Row(modifier = modifier) {
-        AnimatedContent(
-            targetState = currentPage,
-            transitionSpec = {
-                if (targetState > initialState) {
-                    slideInVertically { height -> height } + fadeIn() with
-                            slideOutVertically { height -> -height } + fadeOut()
-                } else {
-                    slideInVertically { height -> -height } + fadeIn() with
-                            slideOutVertically { height -> height } + fadeOut()
-                }
-                    .using(SizeTransform(clip = false))
-            }
-        ) { targetPage ->
-            Text(
-                "$targetPage",
-                style = M3MaterialTheme.typography.bodyLarge,
-            )
-        }
-
-        Text(
-            "/$pageCount",
-            style = M3MaterialTheme.typography.bodyLarge
-        )
-    }
+    Text(
+        "$currentPage/$pageCount",
+        style = M3MaterialTheme.typography.bodyLarge,
+        modifier = modifier
+    )
 }
 
 private fun Context.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
