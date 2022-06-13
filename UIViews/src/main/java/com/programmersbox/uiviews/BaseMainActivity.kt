@@ -217,7 +217,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.NotificationScreen.route,
-                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + "://" + SScreen.NotificationScreen.route }),
+                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.NotificationScreen.route }),
                                 enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
@@ -260,7 +260,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.DetailsScreen.route + "/{model}",
                                 deepLinks = listOf(navDeepLink {
-                                    uriPattern = genericInfo.deepLinkUri + "://${SScreen.DetailsScreen.route}/{model}"
+                                    uriPattern = genericInfo.deepLinkUri + "${SScreen.DetailsScreen.route}/{model}"
                                 }),
                                 enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }

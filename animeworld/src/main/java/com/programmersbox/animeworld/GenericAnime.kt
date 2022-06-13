@@ -92,7 +92,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
-    override val deepLinkUri: String get() = "animeworld"
+    override val deepLinkUri: String get() = "animeworld://"
 
     override fun chapterOnClick(
         model: ChapterModel,
@@ -553,7 +553,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            "${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
             context,
             MainActivity::class.java
         )
@@ -567,7 +567,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun deepLinkSettings(context: Context): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            Screen.NotificationScreen.route.toUri(),
+            "$deepLinkUri${Screen.NotificationScreen.route}".toUri(),
             context,
             MainActivity::class.java
         )

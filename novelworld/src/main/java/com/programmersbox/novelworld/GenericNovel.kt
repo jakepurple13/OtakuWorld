@@ -72,7 +72,7 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
 
 class GenericNovel(val context: Context) : GenericInfo {
 
-    override val deepLinkUri: String get() = "novelworld"
+    override val deepLinkUri: String get() = "novelworld://"
 
     override fun chapterOnClick(
         model: ChapterModel,

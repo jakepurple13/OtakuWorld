@@ -73,7 +73,7 @@ val appModule = module {
 
 class GenericManga(val context: Context) : GenericInfo {
 
-    override val deepLinkUri: String get() = "mangaworld"
+    override val deepLinkUri: String get() = "mangaworld://"
 
     private val disposable = CompositeDisposable()
 
