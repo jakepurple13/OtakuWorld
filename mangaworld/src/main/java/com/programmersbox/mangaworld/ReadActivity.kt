@@ -73,10 +73,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Size
 import com.bumptech.glide.Glide
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
@@ -113,10 +116,13 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
@@ -354,7 +360,7 @@ fun ReadView() {
                         initialValue = runBlocking { context.dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
                         range = 1f..100f
                     )
-                    androidx.compose.material3.Divider()
+                    Divider()
                     SliderSetting(
                         scope = scope,
                         settingIcon = Icons.Default.FormatLineSpacing,
@@ -562,7 +568,7 @@ fun ReadView() {
                                     shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
                                 )
 
-                                if (i < readVm.list.lastIndex) androidx.compose.material3.Divider()
+                                if (i < readVm.list.lastIndex) Divider()
                             }
                         }
                     }
@@ -641,11 +647,7 @@ fun ReadView() {
                 onRefresh = { readVm.refresh() },
                 modifier = Modifier.padding(p)
             ) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(p)
-                ) {
+                Box(Modifier.fillMaxSize()) {
                     LazyColumn(
                         state = listState,
                         verticalArrangement = Arrangement.spacedBy(LocalContext.current.dpToPx(paddingPage).dp),
@@ -908,44 +910,45 @@ private fun ZoomableImage(
                 )
             }
     ) {
+        var retryHash by remember { mutableStateOf(0) }
+        val painterModel = rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(painter)
+                .apply { headers.forEach { addHeader(it.key, it.value) } }
+                .crossfade(true)
+                .size(Size.ORIGINAL)
+                .setParameter("retry_hash", retryHash, null)
+                .build()
+        )
 
-        val scope = rememberCoroutineScope()
-        var showTheThing by remember { mutableStateOf(true) }
-
-        if (showTheThing)
-            GlideImage(
-                imageModel = remember(painter) { GlideUrl(painter) { headers } },
-                contentScale = ContentScale.FillWidth,
-                loading = {
-                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                },
-                failure = {
-                    Text(
-                        stringResource(R.string.pressToRefresh),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .clickable {
-                                scope.launch {
-                                    showTheThing = false
-                                    delay(1000)
-                                    showTheThing = true
-                                }
-                            }
-                    )
-                },
+        if (painterModel.state is AsyncImagePainter.State.Loading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else if (painterModel.state is AsyncImagePainter.State.Error) {
+            Text(
+                stringResource(R.string.pressToRefresh),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                     .align(Alignment.Center)
-                    .clipToBounds()
-                    .graphicsLayer {
-                        translationX = offset.x
-                        translationY = offset.y
-
-                        scaleX = scaleAnim
-                        scaleY = scaleAnim
-                    }
+                    .clickable { retryHash++ }
             )
+        }
+
+        Image(
+            painter = painterModel,
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier
+                .fillMaxSize()
+                .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                .align(Alignment.Center)
+                .clipToBounds()
+                .graphicsLayer {
+                    translationX = offset.x
+                    translationY = offset.y
+
+                    scaleX = scaleAnim
+                    scaleY = scaleAnim
+                }
+        )
     }
 }
 
@@ -1155,17 +1158,17 @@ private fun WrapHeightNavigationDrawerItem(
         ) {
             if (icon != null) {
                 val iconColor = colors.iconColor(selected).value
-                CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides iconColor, content = icon)
+                CompositionLocalProvider(LocalContentColor provides iconColor, content = icon)
                 Spacer(Modifier.width(12.dp))
             }
             Box(Modifier.weight(1f)) {
                 val labelColor = colors.textColor(selected).value
-                CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides labelColor, content = label)
+                CompositionLocalProvider(LocalContentColor provides labelColor, content = label)
             }
             if (badge != null) {
                 Spacer(Modifier.width(12.dp))
                 val badgeColor = colors.badgeColor(selected).value
-                CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides badgeColor, content = badge)
+                CompositionLocalProvider(LocalContentColor provides badgeColor, content = badge)
             }
         }
     }
