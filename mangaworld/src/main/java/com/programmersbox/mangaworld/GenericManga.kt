@@ -2,10 +2,13 @@ package com.programmersbox.mangaworld
 
 import android.Manifest
 import android.app.DownloadManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.net.Uri
 import android.os.Environment
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,21 +22,26 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
+import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
-import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.composable
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -45,7 +53,6 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -57,7 +64,6 @@ import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
 import java.io.File
 
-
 val appModule = module {
     single<GenericInfo> { GenericManga(get()) }
     single { NetworkHelper(get()) }
@@ -66,6 +72,8 @@ val appModule = module {
 }
 
 class GenericManga(val context: Context) : GenericInfo {
+
+    override val deepLinkUri: String get() = "mangaworld://"
 
     private val disposable = CompositeDisposable()
 
@@ -77,10 +85,11 @@ class GenericManga(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
+        activity: FragmentActivity,
         navController: NavController
     ) {
         if (runBlocking { context.useNewReaderFlow.first() }) {
-            navController
+            /*navController
                 .navigate(
                     ReadActivityComposeFragment::class.java.hashCode(),
                     Bundle().apply {
@@ -91,7 +100,8 @@ class GenericManga(val context: Context) : GenericInfo {
                         putString("mangaInfoUrl", model.sourceUrl)
                     },
                     SettingsDsl.customAnimationOptions
-                )
+                )*/
+            ReadViewModel.navigateToMangaReader(navController, model, allChapters, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
@@ -141,8 +151,14 @@ class GenericManga(val context: Context) : GenericInfo {
             .addTo(disposable)
     }
 
-    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment) {
-        fragment.activity?.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
+    override fun downloadChapter(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        activity: FragmentActivity
+    ) {
+        activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
         }
     }
@@ -226,7 +242,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
+                ) { navController.navigate(DownloadViewModel.DownloadRoute) }
             )
         }
 
@@ -369,40 +385,61 @@ class GenericManga(val context: Context) : GenericInfo {
 
     }
 
-    private fun readerNavSetup(fragment: Fragment, navController: NavController, navId: Int) {
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, navId).createDestination().apply {
-                    id = ReadActivityComposeFragment::class.java.hashCode()
-                    setClassName(ReadActivityComposeFragment::class.java.name)
-                }
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
+    override fun NavGraphBuilder.navSetup() {
+        composable(
+            ReadViewModel.MangaReaderRoute,
+            arguments = listOf(
+                navArgument("currentChapter") { nullable = true },
+                navArgument("allChapters") { nullable = true },
+                navArgument("mangaTitle") { nullable = true },
+                navArgument("mangaUrl") { nullable = true },
+                navArgument("mangaInfoUrl") { nullable = true },
+                navArgument("downloaded") {},
+                navArgument("filePath") { nullable = true }
             )
+        ) { ReadView() }
 
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            showOrHideNav.onNext(destination.id != ReadActivityComposeFragment::class.java.hashCode())
+        composable(
+            DownloadViewModel.DownloadRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+        ) { DownloadScreen() }
+    }
+
+    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            "${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 
-    override fun recentNavSetup(fragment: Fragment, navController: NavController) {
-        readerNavSetup(fragment, navController, R.id.recent_nav)
-    }
+    override fun deepLinkSettings(context: Context): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            Screen.NotificationScreen.route.toUri(),
+            context,
+            MainActivity::class.java
+        )
 
-    override fun allNavSetup(fragment: Fragment, navController: NavController) {
-        readerNavSetup(fragment, navController, R.id.all_nav)
-    }
-
-    override fun settingNavSetup(fragment: Fragment, navController: NavController) {
-        readerNavSetup(fragment, navController, R.id.setting_nav)
-
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                    id = DownloadViewerFragment::class.java.hashCode()
-                    setClassName(DownloadViewerFragment::class.java.name)
-                }
-            )
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        }
     }
 
 }

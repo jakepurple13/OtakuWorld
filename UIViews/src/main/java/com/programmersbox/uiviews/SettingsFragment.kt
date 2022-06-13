@@ -2,16 +2,11 @@ package com.programmersbox.uiviews
 
 import android.Manifest
 import android.content.Context
-import android.os.Bundle
 import android.os.Environment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,21 +28,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -61,8 +52,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.translate.TranslateRemoteModel
-import com.mikepenz.aboutlibraries.Libs
-import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -84,9 +73,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.koin.android.ext.android.inject
 import java.io.File
-import java.util.*
 
 class SettingsDsl {
     companion object {
@@ -99,85 +86,6 @@ class SettingsDsl {
             }
         }
     }
-}
-
-class SettingsFragment : Fragment() {
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = SettingsFragment()
-    }
-
-    private val genericInfo: GenericInfo by inject()
-    private val logo: MainLogo by inject()
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class,
-        ExperimentalComposeUiApi::class
-    )
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                MaterialTheme(currentColorScheme) {
-                    SettingScreen(
-                        navController = findNavController(),
-                        logo = logo,
-                        genericInfo = genericInfo,
-                        fragment = this@SettingsFragment,
-                        activity = requireActivity(),
-                        usedLibraryClick = {
-                            findNavController()
-                                .navigate(
-                                    SettingsFragmentDirections.actionXToAboutLibs(
-                                        LibsBuilder()
-                                            .withSortEnabled(true)
-                                            .customUtils("loggingutils", "LoggingUtils")
-                                            //.customUtils("flowutils", "FlowUtils")
-                                            .customUtils("gsonutils", "GsonUtils")
-                                            .customUtils("helpfulutils", "HelpfulUtils")
-                                            .customUtils("dragswipe", "DragSwipe")
-                                            .customUtils("funutils", "FunUtils")
-                                            .customUtils("rxutils", "RxUtils")
-                                            //.customUtils("thirdpartyutils", "ThirdPartyUtils")
-                                            .withShowLoadingProgress(true)
-                                    )
-                                )
-                        },
-                        debugMenuClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToDebugFragment())
-                        },
-                        notificationClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToNotificationFragment())
-                        },
-                        favoritesClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
-                        },
-                        historyClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToHistoryFragment())
-                        },
-                        globalSearchClick = {
-                            findNavController().navigate(GlobalNavDirections.showGlobalSearch())
-                        }
-                    )
-                }
-            }
-        }
-
-    private fun LibsBuilder.customUtils(libraryName: String, newName: String) =
-        withLibraryModification(
-            libraryName,
-            Libs.LibraryFields.LIBRARY_REPOSITORY_LINK,
-            "https://www.github.com/jakepurple13/HelpfulTools"
-        )
-            .withLibraryModification(
-                libraryName,
-                Libs.LibraryFields.LIBRARY_NAME,
-                newName
-            )
 }
 
 class ComposeSettingsDsl {
@@ -208,7 +116,6 @@ fun SettingScreen(
     navController: NavController,
     logo: MainLogo,
     genericInfo: GenericInfo,
-    fragment: Fragment,
     activity: ComponentActivity,
     usedLibraryClick: () -> Unit = {},
     debugMenuClick: () -> Unit = {},
@@ -283,8 +190,7 @@ fun SettingScreen(
             GeneralSettings(
                 context = context,
                 scope = scope,
-                activity = activity,
-                fragment = fragment,
+                //fragment = fragment,
                 genericInfo = genericInfo,
                 customSettings = customPreferences.generalSettings,
                 globalSearchClick = globalSearchClick
@@ -720,8 +626,7 @@ private fun ViewSettings(
 private fun GeneralSettings(
     context: Context,
     scope: CoroutineScope,
-    activity: ComponentActivity,
-    fragment: Fragment,
+    //fragment: Fragment,
     genericInfo: GenericInfo,
     customSettings: (@Composable () -> Unit)?,
     globalSearchClick: () -> Unit
@@ -773,9 +678,9 @@ private fun GeneralSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = {
-                vm.getModels {
+                /*vm.getModels {
                     ListBottomSheet(
-                        title = fragment.getString(R.string.chooseModelToDelete),
+                        title = context.getString(R.string.chooseModelToDelete),
                         list = vm.translationModels.toList(),
                         onClick = { item -> vm.deleteModel(item) }
                     ) {
@@ -788,7 +693,7 @@ private fun GeneralSettings(
                             }
                         )
                     }.show(fragment.parentFragmentManager, "sourceChooser")
-                }
+                }*/
             }
         )
     )
@@ -803,7 +708,7 @@ private fun GeneralSettings(
         )
     )
 
-    val theme by activity.themeSetting.collectAsState(initial = "System")
+    val theme by context.themeSetting.collectAsState(initial = "System")
 
     ListSetting(
         settingTitle = { Text(stringResource(R.string.theme_choice_title)) },

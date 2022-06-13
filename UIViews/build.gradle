@@ -94,7 +94,7 @@ dependencies {
 
     implementation 'com.github.noowenz:ShowMoreLess:v1.0.2'
     implementation "com.mikepenz:aboutlibraries-core:${latestAboutLibsRelease}"
-    implementation "com.mikepenz:aboutlibraries:${latestAboutLibsRelease}"
+    implementation "com.mikepenz:aboutlibraries-compose:${latestAboutLibsRelease}"
 
     implementation glide
     kapt glideCompiler

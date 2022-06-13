@@ -223,8 +223,8 @@ object FirebaseDb {
                     ?.let(emitter::onNext)
                 error?.let(emitter::onError)
             }
-            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
+            emitter.setCancellable { listener?.remove() }
         }.toLatestFlowable()
 
         @ExperimentalCoroutinesApi
@@ -236,8 +236,8 @@ object FirebaseDb {
                     ?.let { trySend(it) }
                 error?.let(this::close)
             }
-            awaitClose { listener?.remove() }
             if (listener == null) trySend(emptyList())
+            awaitClose { listener?.remove() }
         }
 
         fun findItemByUrl(url: String?) = PublishSubject.create<Boolean> { emitter ->
@@ -250,8 +250,8 @@ object FirebaseDb {
                     ?.let { emitter.onNext(it.isNotEmpty()) }
                 error?.let(emitter::onError)
             }
-            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(false)
+            emitter.setCancellable { listener?.remove() }
         }.toLatestFlowable()
 
         @ExperimentalCoroutinesApi
@@ -264,8 +264,8 @@ object FirebaseDb {
                     ?.let { trySend(it.isNotEmpty()) }
                 error?.let(this::close)
             }
-            awaitClose { listener?.remove() }
             if (listener == null) trySend(false)
+            awaitClose { listener?.remove() }
         }
 
         fun getAllEpisodesByShow(showUrl: String) = PublishSubject.create<List<ChapterWatched>> { emitter ->
@@ -279,8 +279,8 @@ object FirebaseDb {
                         ?.let(emitter::onNext)
                     error?.let(emitter::onError)
                 }
-            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
+            emitter.setCancellable { listener?.remove() }
         }.toLatestFlowable()
 
         //fun getAllEpisodesByShow(showDbModel: DbModel) = getAllEpisodesByShow(showDbModel.showUrl)

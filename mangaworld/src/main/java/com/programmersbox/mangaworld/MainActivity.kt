@@ -1,17 +1,15 @@
 package com.programmersbox.mangaworld
 
-import android.view.ViewGroup
-import androidx.core.view.*
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.github.piasy.biv.BigImageViewer
 import com.github.piasy.biv.loader.glide.GlideImageLoader
 import com.google.android.gms.ads.MobileAds
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.currentService
-import io.reactivex.rxkotlin.addTo
 
 class MainActivity : BaseMainActivity() {
 
@@ -26,9 +24,9 @@ class MainActivity : BaseMainActivity() {
 
         MobileAds.initialize(this)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        //WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_layout)) { view, windowInsets ->
+        /*ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_layout)) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             // Apply the insets as a margin to the view. Here the system is setting
             // only the bottom, left, and right dimensions, but apply whichever insets are
@@ -44,9 +42,9 @@ class MainActivity : BaseMainActivity() {
             // Return CONSUMED if you don't want want the window insets to keep being
             // passed down to descendant views.
             WindowInsetsCompat.CONSUMED
-        }
+        }*/
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.navLayout2)
+        /*val bottomNav = findViewById<BottomNavigationView>(R.id.navLayout2)
 
         showOrHideNav
             .distinctUntilChanged()
@@ -59,7 +57,7 @@ class MainActivity : BaseMainActivity() {
                     hideSystemBars()
                 }
             }
-            .addTo(disposable)
+            .addTo(disposable)*/
     }
 
     private fun hideSystemBars() {

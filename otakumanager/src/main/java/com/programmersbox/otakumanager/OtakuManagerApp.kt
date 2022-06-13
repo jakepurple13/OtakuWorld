@@ -1,10 +1,11 @@
 package com.programmersbox.otakumanager
 
+import android.app.PendingIntent
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.manga_sources.utilities.NetworkHelper
@@ -50,11 +51,23 @@ val appModule = module {
         object : GenericInfo {
             override val apkString: AppUpdate.AppUpdates.() -> String? get() = { otakumanager_file }
 
+            override val deepLinkUri: String
+                get() = ""
+
+            override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+                throw Exception("No")
+            }
+
+            override fun deepLinkSettings(context: Context): PendingIntent? {
+                throw Exception("No")
+            }
+
             override fun chapterOnClick(
                 model: ChapterModel,
                 allChapters: List<ChapterModel>,
                 infoModel: InfoModel,
                 context: Context,
+                activity: FragmentActivity,
                 navController: NavController
             ) {
                 throw Exception("This should not be seen")
@@ -73,7 +86,13 @@ val appModule = module {
                 null
             }
 
-            override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment) {
+            override fun downloadChapter(
+                model: ChapterModel,
+                allChapters: List<ChapterModel>,
+                infoModel: InfoModel,
+                context: Context,
+                activity: FragmentActivity
+            ) {
                 throw Exception("This should not be seen")
             }
 

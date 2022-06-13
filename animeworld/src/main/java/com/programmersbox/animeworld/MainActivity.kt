@@ -1,18 +1,18 @@
 package com.programmersbox.animeworld
 
+import android.content.Intent
 import android.net.Uri
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.currentService
 
 class MainActivity : BaseMainActivity() {
 
     companion object {
-        const val VIEW_DOWNLOADS = "animeworld://view_downloads"
-        const val VIEW_VIDEOS = "animeworld://view_videos"
+        const val VIEW_DOWNLOADS = "animeworld://${DownloaderViewModel.DownloadViewerRoute}"
+        const val VIEW_VIDEOS = "animeworld://${DownloadViewModel.VideoViewerRoute}"
         lateinit var activity: MainActivity
         val cast: CastHelper = CastHelper()
     }
@@ -27,11 +27,6 @@ class MainActivity : BaseMainActivity() {
 
         }
 
-        when (intent.data) {
-            Uri.parse(VIEW_DOWNLOADS) -> openDownloads()
-            Uri.parse(VIEW_VIDEOS) -> openVideos()
-        }
-
         if (currentService == null) {
             val s = Sources.values().filterNot(Sources::notWorking).random()
             sourcePublish.onNext(s)
@@ -40,14 +35,21 @@ class MainActivity : BaseMainActivity() {
 
     }
 
-    private fun openDownloads() {
+    private fun openDownloads(intent: Intent?) {
         goToScreen(Screen.SETTINGS)
-        currentNavController?.value?.navigate(Uri.parse(VIEW_DOWNLOADS), SettingsDsl.customAnimationOptions)
+        if (isNavInitialized()) navController.handleDeepLink(intent)
     }
 
-    private fun openVideos() {
+    private fun openVideos(intent: Intent?) {
         goToScreen(Screen.SETTINGS)
-        currentNavController?.value?.navigate(Uri.parse(VIEW_VIDEOS), SettingsDsl.customAnimationOptions)
+        if (isNavInitialized()) navController.handleDeepLink(intent)
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        when (intent?.data) {
+            Uri.parse(VIEW_DOWNLOADS) -> openDownloads(intent)
+            Uri.parse(VIEW_VIDEOS) -> openVideos(intent)
+        }
     }
 
 }

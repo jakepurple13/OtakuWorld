@@ -8,7 +8,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
-import android.os.Bundle
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
@@ -54,8 +53,9 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                     subText = applicationContext.getString(R.string.versionAvailable, f)
                     pendingIntent { context ->
                         NavDeepLinkBuilder(context)
-                            .setGraph(R.navigation.setting_nav)
-                            .setDestination(R.id.settingsFragment)
+                            .setDestination(Screen.SettingsScreen.route)
+                            //.setGraph(R.navigation.setting_nav)
+                            //.setDestination(R.id.settingsFragment)
                             .createPendingIntent()
                     }
 
@@ -158,9 +158,9 @@ class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(
             }
             .map {
                 update.updateManga(dao, it)
-                update.mapDbModel(dao, it)
+                update.mapDbModel(dao, it, genericInfo)
             }
-            .map { update.onEnd(it).also { Loged.fd("Finished!") } }
+            .map { update.onEnd(it, info = genericInfo).also { Loged.fd("Finished!") } }
             .map {
                 update.sendFinishedNotification()
                 Result.success()
@@ -188,7 +188,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         }
     }
 
-    fun mapDbModel(dao: ItemDao, list: List<Pair<InfoModel?, DbModel>>) = list.mapIndexed { index, pair ->
+    fun mapDbModel(dao: ItemDao, list: List<Pair<InfoModel?, DbModel>>, info: GenericInfo) = list.mapIndexed { index, pair ->
         sendRunningNotification(list.size, index, pair.second.title)
         //index + 3 + (Math.random() * 50).toInt() //for a possible new notification value
         dao.insertNotification(
@@ -249,17 +249,11 @@ class UpdateNotification(private val context: Context) : KoinComponent {
                 intent.putExtra("url", pair.second.url)
                 PendingIntent.getBroadcast(context, 0, intent, 0)
             }*/
-            pendingIntent { context ->
-                NavDeepLinkBuilder(context)
-                    .setGraph(R.navigation.recent_nav)
-                    .setDestination(R.id.detailsFragment2)
-                    .setArguments(Bundle().apply { putSerializable("itemInfo", pair.second.toItemModel(pair.first!!.source)) })
-                    .createPendingIntent()
-            }
+            pendingIntent { context -> info.deepLinkDetails(context, pair.second.toItemModel(pair.first!!.source)) }
         }
     }
 
-    fun onEnd(list: List<Pair<Int, Notification>>, notificationId: Int = 42) {
+    fun onEnd(list: List<Pair<Int, Notification>>, notificationId: Int = 42, info: GenericInfo) {
         val n = context.notificationManager
         val currentNotificationSize = n.activeNotifications.filterNot { list.fastAny { l -> l.first == it.id } }.size - 1
         list.fastForEach { pair -> n.notify(pair.first, pair.second) }
@@ -273,12 +267,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
                 groupSummary = true
                 groupAlertBehavior = GroupBehavior.ALL
                 groupId = "otakuGroup"
-                pendingIntent { context ->
-                    NavDeepLinkBuilder(context)
-                        .setGraph(R.navigation.setting_nav)
-                        .setDestination(R.id.notificationFragment)
-                        .createPendingIntent()
-                }
+                pendingIntent { context -> info.deepLinkSettings(context) }
             }
         )
     }
@@ -419,14 +408,20 @@ object SavedNotifications {
                     ?.onErrorReturn { null }
                     ?.blockingGet()
 
-                NavDeepLinkBuilder(context)
-                    .setGraph(R.navigation.recent_nav)
-                    .setDestination(R.id.detailsFragment2)
-                    .setArguments(Bundle().apply { putSerializable("itemInfo", itemModel) })
-                    .createPendingIntent()
+                info.deepLinkDetails(context, itemModel)
+
+                /*NavDeepLinkBuilder(context)
+                    .setDestination(
+                        Screen.DetailsScreen.route,
+                        Bundle().apply { putSerializable("itemInfo", itemModel) }
+                    )
+                    //.setGraph(R.navigation.recent_nav)
+                    //.setDestination(R.id.detailsFragment2)
+                    //.setArguments(Bundle().apply { putSerializable("itemInfo", itemModel) })
+                    .createPendingIntent()*/
             }
         })
-            .let { update.onEnd(listOf(it)) }
+            .let { update.onEnd(listOf(it), info = info) }
     }
 
     fun viewNotificationsFromDb(context: Context, logo: NotificationLogo, info: GenericInfo) {
@@ -483,15 +478,11 @@ object SavedNotifications {
                                 ?.onErrorReturn { null }
                                 ?.blockingGet()
 
-                            NavDeepLinkBuilder(context)
-                                .setGraph(R.navigation.recent_nav)
-                                .setDestination(R.id.detailsFragment2)
-                                .setArguments(Bundle().apply { putSerializable("itemInfo", itemModel) })
-                                .createPendingIntent()
+                            info.deepLinkDetails(context, itemModel)
                         }
                     }
                 }
-                .let { update.onEnd(it) }
+                .let { update.onEnd(it, info = info) }
         }
     }
 

@@ -1,7 +1,9 @@
 package com.programmersbox.novelworld
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
-import androidx.fragment.app.Fragment
+import androidx.core.app.TaskStackBuilder
+import androidx.core.net.toUri
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
@@ -65,21 +72,23 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
 
 class GenericNovel(val context: Context) : GenericInfo {
 
+    override val deepLinkUri: String get() = "novelworld://"
+
     override fun chapterOnClick(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
+        activity: FragmentActivity,
         navController: NavController
     ) {
-        context.startActivity(
-            Intent(context, ReadingActivity::class.java).apply {
-                putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                ChapterList(context, this@GenericNovel).set(allChapters)
-                putExtra("novelTitle", model.name)
-                putExtra("novelUrl", model.url)
-                putExtra("novelInfoUrl", model.sourceUrl)
-            }
+        ChapterList(context, this@GenericNovel).set(allChapters)
+        ReadViewModel.navigateToNovelReader(
+            navController,
+            model,
+            model.name,
+            model.url,
+            model.sourceUrl
         )
     }
 
@@ -91,7 +100,14 @@ class GenericNovel(val context: Context) : GenericInfo {
         null
     }
 
-    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, fragment: Fragment) {}
+    override fun downloadChapter(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        activity: FragmentActivity
+    ) {
+    }
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { novel_file }
 
@@ -170,6 +186,47 @@ class GenericNovel(val context: Context) : GenericInfo {
                     )
                 }
             }
+        }
+    }
+
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.navSetup() {
+        composable(
+            ReadViewModel.NovelReaderRoute,
+            arguments = listOf(
+                navArgument("currentChapter") { },
+                navArgument("novelTitle") { },
+                navArgument("novelUrl") { },
+                navArgument("novelInfoUrl") { },
+            )
+        ) { NovelReader() }
+    }
+
+    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            "${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+    }
+
+    override fun deepLinkSettings(context: Context): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            Screen.NotificationScreen.route.toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 }
