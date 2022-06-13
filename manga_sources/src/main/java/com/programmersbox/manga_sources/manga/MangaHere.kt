@@ -23,6 +23,7 @@ object MangaHere : ApiService {
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         Jsoup.connect("$baseUrl/directory/$page.htm?latest")
+            .header("Referer", baseUrl)
             .cookie("isAdult", "1").get()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
@@ -38,6 +39,7 @@ object MangaHere : ApiService {
 
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         Jsoup.connect("$baseUrl/directory/$page.htm")
+            .header("Referer", baseUrl)
             .cookie("isAdult", "1").get()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
@@ -93,7 +95,7 @@ object MangaHere : ApiService {
     }
 
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = Jsoup.connect(model.url).get()
+        val doc = Jsoup.connect(model.url).header("Referer", baseUrl).get()
         emitter.onSuccess(
             InfoModel(
                 title = model.title,
@@ -143,7 +145,7 @@ object MangaHere : ApiService {
 
     override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
         try {
-            val doc = Jsoup.connect(url).get()
+            val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
             ItemModel(
                 title = doc.select("span.detail-info-right-title-font").text(),
                 description = doc.select("p.fullcontent").text(),
@@ -159,8 +161,12 @@ object MangaHere : ApiService {
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         it.onSuccess(
-            pageListParse(Jsoup.connect(chapterModel.url).get())
-                .fastMap { p -> Storage(link = p, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            pageListParse(Jsoup.connect(chapterModel.url).header("Referer", baseUrl).get())
+                .fastMap { p ->
+                    Storage(link = p, source = chapterModel.url, quality = "Good", sub = "Yes").apply {
+                        headers["Referer"] = baseUrl
+                    }
+                }
         )
     }
 

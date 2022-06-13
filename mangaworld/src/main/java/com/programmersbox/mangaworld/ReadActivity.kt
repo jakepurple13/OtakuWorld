@@ -76,6 +76,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
@@ -126,11 +127,15 @@ class ReadViewModel(
     handle: SavedStateHandle,
     context: Context,
     val genericInfo: GenericInfo,
+    val headers: MutableMap<String, String> = mutableMapOf<String, String>(),
     model: Single<List<String>>? = handle
         .get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
         ?.getChapterInfo()
-        ?.map { it.mapNotNull(Storage::link) }
+        ?.map {
+            headers.putAll(it.flatMap { it.headers.toList() })
+            it.mapNotNull(Storage::link)
+        }
         ?.subscribeOn(Schedulers.io())
         ?.observeOn(AndroidSchedulers.mainThread())
         ?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
@@ -261,10 +266,14 @@ class ReadViewModel(
     }
 
     fun refresh() {
+        headers.clear()
         loadPages(
             list.getOrNull(currentChapter)
                 ?.getChapterInfo()
-                ?.map { it.mapNotNull(Storage::link) }
+                ?.map {
+                    headers.putAll(it.flatMap { it.headers.toList() })
+                    it.mapNotNull(Storage::link)
+                }
                 ?.subscribeOn(Schedulers.io())
                 ?.observeOn(AndroidSchedulers.mainThread())
         )
@@ -788,7 +797,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
             }
         }*/
 
-    items(pages, key = { it }) { ChapterPage(it, onClick) }
+    items(pages, key = { it }) { ChapterPage(it, onClick, vm.headers) }
 
     item {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -828,7 +837,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
 }
 
 @Composable
-private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit) {
+private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit, headers: Map<String, String>) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -838,7 +847,8 @@ private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit) {
         ZoomableImage(
             modifier = Modifier.fillMaxWidth(),
             painter = chapterLink,
-            onClick = openCloseOverlay
+            onClick = openCloseOverlay,
+            headers = headers
         )
     }
 }
@@ -847,6 +857,7 @@ private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit) {
 private fun ZoomableImage(
     modifier: Modifier = Modifier,
     painter: String,
+    headers: Map<String, String>,
     onClick: () -> Unit = {}
 ) {
     var centerPoint by remember { mutableStateOf(Offset.Zero) }
@@ -903,7 +914,7 @@ private fun ZoomableImage(
 
         if (showTheThing)
             GlideImage(
-                imageModel = painter,
+                imageModel = remember(painter) { GlideUrl(painter) { headers } },
                 contentScale = ContentScale.FillWidth,
                 loading = {
                     androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
