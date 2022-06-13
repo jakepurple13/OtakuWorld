@@ -80,22 +80,27 @@ object Kawaiifu : ShowApi(
                 .joinToString("\n") { it.text() },
             imageUrl = source.imageUrl,
             genres = doc.select(".table a[href*=\"/tag/\"]").fastMap { tag -> tag.text() },
-            chapters = doc.selectFirst("a[href*=\".html-episode\"]")
-                ?.attr("href")
-                ?.toJsoup()
-                ?.selectFirst(".list-ep")
-                ?.select("li")
-                ?.fastMap {
-                    ChapterModel(
-                        if (it.text().trim().toIntOrNull() != null) "Episode ${it.text().trim()}" else it.text().trim(),
-                        it.selectFirst("a")?.attr("href").orEmpty(),
-                        "",
-                        source.url,
-                        Sources.KAWAIIFU
-                    )
-                }
-                ?.reversed()
-                .orEmpty()
+            chapters = try {
+                doc.selectFirst("a[href*=\".html-episode\"]")
+                    ?.attr("href")
+                    ?.toJsoup()
+                    ?.selectFirst(".list-ep")
+                    ?.select("li")
+                    ?.fastMap {
+                        ChapterModel(
+                            if (it.text().trim().toIntOrNull() != null) "Episode ${it.text().trim()}" else it.text().trim(),
+                            it.selectFirst("a")?.attr("href").orEmpty(),
+                            "",
+                            source.url,
+                            Sources.KAWAIIFU
+                        )
+                    }
+                    ?.reversed()
+                    .orEmpty()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
         )
             .let(emitter::onSuccess)
     }
