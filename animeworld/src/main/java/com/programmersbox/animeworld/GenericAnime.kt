@@ -43,6 +43,7 @@ import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.navDeepLink
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
@@ -531,7 +532,12 @@ class GenericAnime(val context: Context) : GenericInfo {
     @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.navSetup() {
 
-        composable(DownloadViewModel.VideoViewerRoute) { ViewVideoScreen() }
+        composable(
+            DownloadViewModel.VideoViewerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloadViewModel.VideoViewerRoute}" })
+        ) { ViewVideoScreen() }
 
     }
 

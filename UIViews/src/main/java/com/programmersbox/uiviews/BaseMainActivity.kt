@@ -6,17 +6,15 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.BrowseGallery
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.NavigationBar
@@ -34,11 +32,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
@@ -47,7 +44,6 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
@@ -67,13 +63,16 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected val disposable = CompositeDisposable()
 
-    protected var currentNavController: LiveData<NavController>? = null
+    //protected var currentNavController: LiveData<NavController>? = null
 
     protected val genericInfo: GenericInfo by inject()
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
     private val dao by lazy { ItemDatabase.getInstance(this).itemDao() }
     private val historyDao by lazy { HistoryDatabase.getInstance(this).historyDao() }
+    protected lateinit var navController: NavHostController
+
+    protected fun isNavInitialized() = ::navController.isInitialized
 
     protected abstract fun onCreate()
 
@@ -101,7 +100,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator()
-            val navController = rememberAnimatedNavController(bottomSheetNavigator)
+            navController = rememberAnimatedNavController(bottomSheetNavigator)
 
             if (showNavBar) {
                 showSystemBars()
@@ -133,8 +132,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                     icon = {
                                                         androidx.compose.material3.Icon(
                                                             when (screen) {
-                                                                SScreen.RecentScreen -> Icons.Default.Favorite
-                                                                SScreen.AllScreen -> Icons.Default.Settings
+                                                                SScreen.RecentScreen -> Icons.Default.History
+                                                                SScreen.AllScreen -> Icons.Default.BrowseGallery
                                                                 SScreen.SettingsScreen -> Icons.Default.Settings
                                                                 else -> Icons.Default.BrokenImage
                                                             },
@@ -214,7 +213,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 )
                             }
 
-                            composable(SScreen.NotificationScreen.route) {
+                            composable(
+                                SScreen.NotificationScreen.route,
+                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                            ) {
                                 NotificationsScreen(
                                     navController = navController,
                                     genericInfo = genericInfo,
@@ -228,15 +231,33 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.GlobalSearchScreen.route + "?searchFor={searchFor}",
-                                arguments = listOf(navArgument("searchFor") { nullable = true })
+                                arguments = listOf(navArgument("searchFor") { nullable = true }),
+                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
 
-                            composable(SScreen.FavoriteScreen.route) { FavoriteUi(logo) }
-                            composable(SScreen.HistoryScreen.route) { HistoryUi(dao = historyDao, logo = logo) }
-                            composable(SScreen.AboutScreen.route) { AboutLibrariesScreen(logo) }
+                            composable(
+                                SScreen.FavoriteScreen.route,
+                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                            ) { FavoriteUi(logo) }
+
+                            composable(
+                                SScreen.HistoryScreen.route,
+                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                            ) { HistoryUi(dao = historyDao, logo = logo) }
+
+                            composable(
+                                SScreen.AboutScreen.route,
+                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                            ) { AboutLibrariesScreen(logo) }
 
                             composable(
                                 SScreen.DetailsScreen.route + "/{model}",
+                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
                                 DetailsScreen(
                                     navController = navController,
@@ -311,55 +332,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
         //setupBottomNavBar()
     }
 
-    enum class Screen(val id: Int) { RECENT(R.id.recent_nav), ALL(R.id.all_nav), SETTINGS(R.id.setting_nav) }
+    enum class Screen(val route: SScreen) { RECENT(SScreen.RecentScreen), ALL(SScreen.AllScreen), SETTINGS(SScreen.SettingsScreen) }
 
     fun goToScreen(screen: Screen) {
-        findViewById<BottomNavigationView>(R.id.navLayout2)?.selectedItemId = screen.id
-    }
-
-    /*private fun setupBottomNavBar() {
-        //TODO: Look into doing a recreate and if for the all_nav when showAll is changed
-        val navGraphIds = listOf(R.navigation.recent_nav, R.navigation.all_nav, R.navigation.setting_nav)
-        currentScreen.value = R.id.recent_nav
-        val controller = findViewById<BottomNavigationView>(R.id.navLayout2)
-            .also { b ->
-                lifecycleScope.launch { showAll.collect { runOnUiThread { b.menu.findItem(R.id.all_nav)?.isVisible = it } } }
-                appUpdateCheck
-                    .filter {
-                        AppUpdate.checkForUpdate(
-                            packageManager?.getPackageInfo(packageName, 0)?.versionName.orEmpty(),
-                            it.update_real_version.orEmpty()
-                        )
-                    }
-                    .subscribe { b.getOrCreateBadge(R.id.setting_nav).number = 1 }
-                    .addTo(disposable)
-            }
-            .setupWithNavController(
-                navGraphIds = navGraphIds,
-                fragmentManager = supportFragmentManager,
-                containerId = R.id.mainShows,
-                intent = intent,
-                dynamicDestinations = mapOf(
-                    R.navigation.recent_nav to { f, n -> genericInfo.recentNavSetup(f, n) },
-                    R.navigation.all_nav to { f, n -> genericInfo.allNavSetup(f, n) },
-                    R.navigation.setting_nav to { f, n -> genericInfo.settingNavSetup(f, n) }
-                )
-            )
-
-        currentNavController = controller
-
-        Single.create<AppUpdate.AppUpdates> {
-            AppUpdate.getUpdate()?.let { d -> it.onSuccess(d) } ?: it.onError(Exception("Something went wrong"))
+        if (::navController.isInitialized) {
+            navController.navigate(screen.route.route)
         }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnError { }
-            .subscribeBy { appUpdateCheck.onNext(it) }
-            .addTo(disposable)
     }
-
-    override fun onSupportNavigateUp(): Boolean = currentNavController?.value?.navigateUp() ?: false*/
-
     override fun onDestroy() {
         disposable.dispose()
         super.onDestroy()
