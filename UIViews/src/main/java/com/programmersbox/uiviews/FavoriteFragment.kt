@@ -1,9 +1,5 @@
 package com.programmersbox.uiviews
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -37,7 +33,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,20 +50,6 @@ import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-
-class FavoriteFragment : Fragment() {
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = FavoriteFragment()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return super.onCreateView(inflater, container, savedInstanceState)
-    }
-
-}
-
 
 class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : ViewModel() {
 

@@ -1,15 +1,8 @@
 package com.programmersbox.uiviews
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.os.Build
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowInsetsController
 import androidx.activity.compose.BackHandler
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -43,10 +36,15 @@ import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -59,13 +57,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.fragment.navArgs
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.mlkit.common.model.DownloadConditions
@@ -76,7 +71,6 @@ import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.helpfulutils.colorFromTheme
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.*
@@ -100,84 +94,9 @@ import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import my.nanihadesuka.compose.LazyColumnScrollbar
-import org.koin.android.ext.android.inject
 import kotlin.math.ln
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
-
-class DetailsFragment : Fragment() {
-
-    companion object {
-        fun newInstance() = DetailsFragment()
-    }
-
-    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-    private val historyDao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
-
-    private val args: DetailsFragmentArgs by navArgs()
-
-    private val disposable = CompositeDisposable()
-
-    private val genericInfo by inject<GenericInfo>()
-
-    private val logo: NotificationLogo by inject()
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalComposeUiApi::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class
-    )
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View = ComposeView(requireContext()).apply {
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-
-        args.itemInfo
-            ?.also { info ->
-                currentDetailsUrl = info.url
-                setContent {
-
-                    //TODO: Change all this to its own function so we can preview it
-
-
-                }
-            }
-    }
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-        val window = requireActivity().window
-        ValueAnimator.ofArgb(window.statusBarColor, requireContext().colorFromTheme(R.attr.colorSurface))
-            .apply {
-                addUpdateListener { window.statusBarColor = it.animatedValue as Int }
-                doOnEnd {
-                    val isLightStatusBar = window.statusBarColor.toComposeColor().luminance() > .5f
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        val systemUiAppearance = if (isLightStatusBar) {
-                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                        } else {
-                            0
-                        }
-                        window.insetsController?.setSystemBarsAppearance(systemUiAppearance, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS)
-                    } else {
-                        val systemUiVisibilityFlags = if (isLightStatusBar) {
-                            window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                        } else {
-                            window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-                        }
-                        window.decorView.systemUiVisibility = systemUiVisibilityFlags
-                    }
-                }
-            }
-            .start()
-    }
-
-}
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -678,7 +597,7 @@ private fun DetailsViewLandscape(
                         androidx.compose.material3.DropdownMenuItem(
                             onClick = {
                                 dropDownDismiss()
-                                navController.navigate(GlobalNavDirections.showGlobalSearch(info.title))
+                                Screen.GlobalSearchScreen.navigate(navController, info.title)
                             },
                             text = { Text(stringResource(id = R.string.global_search_by_name)) },
                             leadingIcon = { Icon(Icons.Default.Search, null) }
@@ -829,7 +748,7 @@ private fun DetailsView(
 
     val context = LocalContext.current
 
-    BackHandler(scaffoldState.bottomSheetState.isExpanded && navController.graph.id == currentScreen.value) {
+    BackHandler(scaffoldState.bottomSheetState.isExpanded) {
         scope.launch {
             try {
                 scaffoldState.bottomSheetState.collapse()

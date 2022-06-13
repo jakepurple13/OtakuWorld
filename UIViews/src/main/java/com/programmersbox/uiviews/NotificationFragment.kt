@@ -1,11 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.app.NotificationManager
-import android.os.Bundle
 import android.text.format.DateFormat
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
@@ -36,20 +32,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -62,9 +53,11 @@ import com.google.android.material.datepicker.DateValidatorPointForward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import com.programmersbox.favoritesdatabase.*
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Completable
@@ -77,59 +70,9 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import java.util.*
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-
-class NotificationFragment : BaseBottomSheetDialogFragment() {
-
-    private val genericInfo: GenericInfo by inject()
-    private val db by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-    private val disposable = CompositeDisposable()
-    private val notificationManager by lazy { requireContext().notificationManager }
-    private val logo: MainLogo by inject()
-    private val notificationLogo: NotificationLogo by inject()
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class
-    )
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View = ComposeView(requireContext()).apply {
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        setContent {
-
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        lifecycleScope.launch {
-            db.getAllNotificationCountFlow()
-                .flowWithLifecycle(lifecycle)
-                .filter { it == 0 }
-                .collect {
-                    notificationManager.cancel(42)
-                    findNavController().popBackStack()
-                }
-        }
-    }
-
-    private fun cancelNotification(item: NotificationItem) {
-        notificationManager.cancel(item.id)
-        val g = notificationManager.activeNotifications.map { it.notification }.filter { it.group == "otakuGroup" }
-        if (g.size == 1) notificationManager.cancel(42)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-    }
-}
 
 private fun NotificationManager.cancelNotification(item: NotificationItem) {
     cancel(item.id)
@@ -188,7 +131,7 @@ fun NotificationsScreen(
         val context = LocalContext.current
         val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
-        BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
+        BackHandler(state.bottomSheetState.isExpanded) {
             scope.launch { state.bottomSheetState.collapse() }
         }
         val topAppBarScrollState = rememberTopAppBarScrollState()

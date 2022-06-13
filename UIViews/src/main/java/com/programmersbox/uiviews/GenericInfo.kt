@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.app.PendingIntent
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -22,6 +23,10 @@ interface GenericInfo {
 
     val apkString: AppUpdate.AppUpdates.() -> String?
     val scrollBuffer: Int get() = 2
+    val deepLinkUri: String
+
+    fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
+    fun deepLinkSettings(context: Context): PendingIntent?
 
     fun chapterOnClick(
         model: ChapterModel,

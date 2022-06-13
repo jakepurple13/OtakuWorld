@@ -108,7 +108,7 @@ private fun VideoLoad(viewModel: DownloadViewModel) {
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
 
-    BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
+    BackHandler(state.bottomSheetState.isExpanded) {
         scope.launch { state.bottomSheetState.collapse() }
     }
 

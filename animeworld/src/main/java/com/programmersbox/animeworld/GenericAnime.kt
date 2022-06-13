@@ -1,6 +1,7 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -35,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.core.app.TaskStackBuilder
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
@@ -89,6 +92,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
+    override val deepLinkUri: String get() = "animeworld"
 
     override fun chapterOnClick(
         model: ChapterModel,
@@ -544,6 +548,34 @@ class GenericAnime(val context: Context) : GenericInfo {
     @Composable
     override fun BottomBarAdditions() {
         AndroidViewBinding(factory = { l, v, b -> MiniControllerBinding.inflate(l, v, b) })
+    }
+
+    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            "${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+    }
+
+    override fun deepLinkSettings(context: Context): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            Screen.NotificationScreen.route.toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(13, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
     }
 
 }

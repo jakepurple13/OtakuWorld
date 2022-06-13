@@ -46,7 +46,6 @@ class MainActivity : BaseMainActivity() {
     }
 
     override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
         when (intent?.data) {
             Uri.parse(VIEW_DOWNLOADS) -> openDownloads(intent)
             Uri.parse(VIEW_VIDEOS) -> openVideos(intent)

@@ -1,5 +1,6 @@
 package com.programmersbox.otakumanager
 
+import android.app.PendingIntent
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -49,6 +50,17 @@ val appModule = module {
     single<GenericInfo> {
         object : GenericInfo {
             override val apkString: AppUpdate.AppUpdates.() -> String? get() = { otakumanager_file }
+
+            override val deepLinkUri: String
+                get() = ""
+
+            override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+                throw Exception("No")
+            }
+
+            override fun deepLinkSettings(context: Context): PendingIntent? {
+                throw Exception("No")
+            }
 
             override fun chapterOnClick(
                 model: ChapterModel,

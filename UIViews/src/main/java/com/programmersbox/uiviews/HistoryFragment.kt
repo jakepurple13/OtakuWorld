@@ -1,9 +1,5 @@
 package com.programmersbox.uiviews
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -36,15 +32,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.Pager
@@ -56,7 +49,6 @@ import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.HistoryDao
-import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
@@ -69,36 +61,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-
-class HistoryFragment : Fragment() {
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = HistoryFragment()
-    }
-
-    private val dao by lazy { HistoryDatabase.getInstance(requireContext()).historyDao() }
-    private val info by inject<GenericInfo>()
-    private val logo: MainLogo by inject()
-    private val disposable = CompositeDisposable()
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class
-    )
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
-        .apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        }
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-    }
-}
 
 class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
     val disposable = CompositeDisposable()

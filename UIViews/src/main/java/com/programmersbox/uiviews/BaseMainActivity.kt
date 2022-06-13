@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.app.assist.AssistContent
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -39,6 +40,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -215,6 +217,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.NotificationScreen.route,
+                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.NotificationScreen.route }),
                                 enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
@@ -256,6 +259,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.DetailsScreen.route + "/{model}",
+                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + "${SScreen.DetailsScreen.route}/{model}" }),
                                 enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
@@ -339,9 +343,20 @@ abstract class BaseMainActivity : AppCompatActivity() {
             navController.navigate(screen.route.route)
         }
     }
+
     override fun onDestroy() {
         disposable.dispose()
         super.onDestroy()
     }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (isNavInitialized()) {
+            navController.handleDeepLink(intent)
+            newIntent(intent)
+        }
+    }
+
+    protected fun newIntent(intent: Intent?) = Unit
 
 }

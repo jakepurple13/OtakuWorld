@@ -1,10 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.graphics.drawable.Drawable
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
@@ -40,13 +36,14 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -76,22 +73,6 @@ import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
-
-class GlobalSearchFragment : Fragment() {
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = GlobalSearchFragment()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent {
-            }
-        }
-}
-
 
 class GlobalSearchViewModel(
     val info: GenericInfo,
@@ -339,7 +320,7 @@ fun GlobalSearchView(
                                             itemInfo.value = if (c == ComponentState.Pressed) m else null
                                             showBanner = c == ComponentState.Pressed
                                         }
-                                    ) { navController.navigate(GlobalNavDirections.showDetails(m)) }
+                                    ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
                                 }
                             }
                         }

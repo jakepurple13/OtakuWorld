@@ -1,10 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.content.Context
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -34,26 +30,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMaxBy
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
@@ -68,51 +58,8 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
-
-/**
- * A simple [Fragment] subclass.
- * Use the [AllFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class AllFragment : BaseFragmentCompose() {
-
-    private val info: GenericInfo by inject()
-    private val dao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
-    private val logo: MainLogo by inject()
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class
-    )
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
-        .apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-            setContent {
-                M3MaterialTheme(currentColorScheme) {
-                    AllView(
-                        viewModel(factory = factoryCreate { AllViewModel(dao, context) }),
-                        logo,
-                        info,
-                        findNavController()
-                    )
-                }
-            }
-        }
-
-    override fun viewCreated(view: View, savedInstanceState: Bundle?) {
-
-    }
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = AllFragment()
-    }
-}
 
 class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
@@ -229,7 +176,7 @@ fun AllView(
     val scaffoldState = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
 
-    BackHandler(scaffoldState.bottomSheetState.isExpanded && isConnected && currentScreen.value == R.id.all_nav) {
+    BackHandler(scaffoldState.bottomSheetState.isExpanded) {
         scope.launch { scaffoldState.bottomSheetState.collapse() }
     }
 

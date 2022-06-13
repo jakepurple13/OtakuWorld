@@ -45,7 +45,6 @@ import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BaseBottomSheetDialogFragment
 import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.currentColorScheme
-import com.programmersbox.uiviews.utils.currentScreen
 import com.tonyodev.fetch2.*
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
@@ -191,7 +190,7 @@ class DownloadViewerFragment : BaseBottomSheetDialogFragment(), ActionListener {
             }
         }
 
-        BackHandler(state.bottomSheetState.isExpanded && currentScreen.value == R.id.setting_nav) {
+        BackHandler(state.bottomSheetState.isExpanded) {
             scope.launch { state.bottomSheetState.collapse() }
         }
 

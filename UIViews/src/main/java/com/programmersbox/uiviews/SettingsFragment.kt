@@ -2,16 +2,11 @@ package com.programmersbox.uiviews
 
 import android.Manifest
 import android.content.Context
-import android.os.Bundle
 import android.os.Environment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,21 +28,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -82,7 +73,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.koin.android.ext.android.inject
 import java.io.File
 
 class SettingsDsl {
@@ -96,69 +86,6 @@ class SettingsDsl {
             }
         }
     }
-}
-
-class SettingsFragment : Fragment() {
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = SettingsFragment()
-    }
-
-    private val genericInfo: GenericInfo by inject()
-    private val logo: MainLogo by inject()
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class,
-        ExperimentalComposeUiApi::class
-    )
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                MaterialTheme(currentColorScheme) {
-                    SettingScreen(
-                        navController = findNavController(),
-                        logo = logo,
-                        genericInfo = genericInfo,
-                        activity = requireActivity(),
-                        usedLibraryClick = {
-
-                        },
-                        debugMenuClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToDebugFragment())
-                        },
-                        notificationClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToNotificationFragment())
-                        },
-                        favoritesClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
-                        },
-                        historyClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToHistoryFragment())
-                        },
-                        globalSearchClick = {
-                            findNavController().navigate(GlobalNavDirections.showGlobalSearch())
-                        }
-                    )
-                }
-            }
-        }
-
-    /*private fun LibsBuilder.customUtils(libraryName: String, newName: String) =
-        withLibraryModification(
-            libraryName,
-            Libs.LibraryFields.LIBRARY_REPOSITORY_LINK,
-            "https://www.github.com/jakepurple13/HelpfulTools"
-        )
-            .withLibraryModification(
-                libraryName,
-                Libs.LibraryFields.LIBRARY_NAME,
-                newName
-            )*/
 }
 
 class ComposeSettingsDsl {

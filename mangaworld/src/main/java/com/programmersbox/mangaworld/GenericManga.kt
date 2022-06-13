@@ -2,9 +2,12 @@ package com.programmersbox.mangaworld
 
 import android.Manifest
 import android.app.DownloadManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Environment
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -32,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
+import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
@@ -68,6 +72,8 @@ val appModule = module {
 }
 
 class GenericManga(val context: Context) : GenericInfo {
+
+    override val deepLinkUri: String get() = "mangaworld"
 
     private val disposable = CompositeDisposable()
 
@@ -401,7 +407,39 @@ class GenericManga(val context: Context) : GenericInfo {
             )
         ) { ReadView() }
 
-        composable(DownloadViewModel.DownloadRoute) { DownloadScreen() }
+        composable(
+            DownloadViewModel.DownloadRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+        ) { DownloadScreen() }
+    }
+
+    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            "${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+    }
+
+    override fun deepLinkSettings(context: Context): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            Screen.NotificationScreen.route.toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(13, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
     }
 
 }
