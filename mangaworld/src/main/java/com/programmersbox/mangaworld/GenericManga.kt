@@ -424,7 +424,7 @@ class GenericManga(val context: Context) : GenericInfo {
 
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_UPDATE_CURRENT)
+            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 
@@ -438,7 +438,7 @@ class GenericManga(val context: Context) : GenericInfo {
 
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(13, PendingIntent.FLAG_UPDATE_CURRENT)
+            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 

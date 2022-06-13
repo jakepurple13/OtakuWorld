@@ -11,8 +11,8 @@ import com.programmersbox.uiviews.utils.currentService
 class MainActivity : BaseMainActivity() {
 
     companion object {
-        const val VIEW_DOWNLOADS = "animeworld://view_downloads"
-        const val VIEW_VIDEOS = "animeworld://view_videos"
+        const val VIEW_DOWNLOADS = "animeworld://${DownloaderViewModel.DownloadViewerRoute}"
+        const val VIEW_VIDEOS = "animeworld://${DownloadViewModel.VideoViewerRoute}"
         lateinit var activity: MainActivity
         val cast: CastHelper = CastHelper()
     }

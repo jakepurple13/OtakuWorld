@@ -452,9 +452,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) {
-                    //navController.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions)
-                }
+                ) { navController.navigate(DownloaderViewModel.DownloadViewerRoute) }
             )
         }
 
@@ -533,7 +531,11 @@ class GenericAnime(val context: Context) : GenericInfo {
             )*/
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
+    @OptIn(
+        ExperimentalAnimationApi::class,
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class
+    )
     override fun NavGraphBuilder.navSetup() {
 
         composable(
@@ -542,6 +544,13 @@ class GenericAnime(val context: Context) : GenericInfo {
             exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloadViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
+
+        composable(
+            DownloaderViewModel.DownloadViewerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
+        ) { DownloaderUi() }
 
     }
 
@@ -560,7 +569,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_UPDATE_CURRENT)
+            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 
@@ -574,7 +583,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(13, PendingIntent.FLAG_UPDATE_CURRENT)
+            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 
