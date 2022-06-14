@@ -52,6 +52,8 @@ buildscript {
 
     ext.lottieVersion = "4.2.2"
 
+    ext.coil = "2.1.0"
+
     ext.jetpack = "1.2.0-beta03"
 
     ext.accompanist = "0.24.10-beta"
@@ -83,7 +85,7 @@ buildscript {
     ext.drawablePainter = "com.google.accompanist:accompanist-drawablepainter:$accompanist"
     ext.permissions = "com.google.accompanist:accompanist-permissions:$accompanist"
     ext.uiUtil = "androidx.compose.ui:ui-util:$jetpack"
-    ext.coilCompose = "io.coil-kt:coil-compose:2.1.0"
+    ext.coilCompose = "io.coil-kt:coil-compose:$coil"
     ext.navCompose = "androidx.navigation:navigation-compose:$nav_version"
     ext.navMaterial = "com.google.accompanist:accompanist-navigation-material:$accompanist"
     ext.navAnimation = "com.google.accompanist:accompanist-navigation-animation:$accompanist"

@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
@@ -73,8 +74,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.ImageLoader
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
 import com.bumptech.glide.Glide
@@ -420,7 +424,7 @@ fun ReadView() {
                                 .padding(top = 4.dp),
                             factory = {
                                 AdView(it).apply {
-                                    adSize = AdSize.BANNER
+                                    setAdSize(AdSize.BANNER)
                                     adUnitId = context.getString(R.string.ad_unit_id)
                                     loadAd(readVm.ad)
                                 }
@@ -520,7 +524,7 @@ fun ReadView() {
                                     .padding(top = 4.dp),
                                 factory = {
                                     AdView(it).apply {
-                                        adSize = AdSize.BANNER
+                                        setAdSize(AdSize.BANNER)
                                         adUnitId = context.getString(R.string.ad_unit_id)
                                         loadAd(readVm.ad)
                                     }
@@ -827,7 +831,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
                     modifier = Modifier.fillMaxWidth(),
                     factory = {
                         AdView(it).apply {
-                            adSize = AdSize.BANNER
+                            setAdSize(AdSize.BANNER)
                             adUnitId = context.getString(R.string.ad_unit_id)
                             loadAd(vm.ad)
                         }
@@ -918,6 +922,15 @@ private fun ZoomableImage(
                 .crossfade(true)
                 .size(Size.ORIGINAL)
                 .setParameter("retry_hash", retryHash, null)
+                .build(),
+            imageLoader = ImageLoader.Builder(LocalContext.current)
+                .components {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        add(ImageDecoderDecoder.Factory())
+                    } else {
+                        add(GifDecoder.Factory())
+                    }
+                }
                 .build()
         )
 
