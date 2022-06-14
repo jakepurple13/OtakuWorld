@@ -32,7 +32,7 @@ object MangaHere : ApiService {
                     url = it.select("a").first()!!.attr("abs:href"),
                     imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
                     source = this
-                )
+                ).apply { extras["Referer"] = baseUrl }
             }.filter { it.title.isNotEmpty() }
             .let { emitter.onSuccess(it) }
     }
@@ -48,7 +48,7 @@ object MangaHere : ApiService {
                     url = it.select("a").first()!!.attr("abs:href"),
                     imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
                     source = this
-                )
+                ).apply { extras["Referer"] = baseUrl }
             }.filter { it.title.isNotEmpty() }
             .let { emitter.onSuccess(it) }
     }
@@ -84,7 +84,7 @@ object MangaHere : ApiService {
                         url = "$baseUrl${it.select(".manga-list-4-item-title > a").first()!!.attr("href")}",
                         imageUrl = it.select("img.manga-list-4-cover").first()!!.attr("abs:src"),
                         source = this
-                    )
+                    ).apply { extras["Referer"] = baseUrl }
                 }
                 .filter { it.title.isNotEmpty() }
                 .let { emitter.onSuccess(it) }
@@ -114,7 +114,7 @@ object MangaHere : ApiService {
                 genres = doc.select("p.detail-info-right-tag-list").select("a").eachText(),
                 alternativeNames = emptyList(),
                 source = this
-            )
+            ).apply { extras["Referer"] = baseUrl }
         )
     }
 

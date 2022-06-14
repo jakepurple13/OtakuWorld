@@ -270,6 +270,7 @@ fun M3CoverCard(
     name: String,
     placeHolder: Int,
     error: Int = placeHolder,
+    headers: Map<String, Any> = emptyMap(),
     onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {}
@@ -295,6 +296,7 @@ fun M3CoverCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
+                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)

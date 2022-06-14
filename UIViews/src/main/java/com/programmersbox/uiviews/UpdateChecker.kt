@@ -209,7 +209,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         ) {
             title = pair.second.title
             subText = pair.second.source
-            getBitmapFromURL(pair.second.imageUrl)?.let {
+            getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
                 largeIconBitmap = it
                 pictureStyle {
                     bigPicture = it
@@ -272,9 +272,10 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         )
     }
 
-    private fun getBitmapFromURL(strURL: String?): Bitmap? = try {
+    private fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? = try {
         val url = URL(strURL)
         val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        headers.forEach { connection.setRequestProperty(it.key, it.value.toString()) }
         connection.doInput = true
         connection.connect()
         BitmapFactory.decodeStream(connection.inputStream)
@@ -486,9 +487,10 @@ object SavedNotifications {
         }
     }
 
-    private fun getBitmapFromURL(strURL: String?): Bitmap? = try {
+    private fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? = try {
         val url = URL(strURL)
         val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        headers.forEach { connection.setRequestProperty(it.key, it.value.toString()) }
         connection.doInput = true
         connection.connect()
         BitmapFactory.decodeStream(connection.inputStream)

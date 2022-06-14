@@ -24,7 +24,9 @@ data class InfoModel(
     val genres: List<String>,
     val alternativeNames: List<String>,
     val source: ApiService
-)
+) {
+    val extras = mutableMapOf<String, Any>()
+}
 
 data class ChapterModel(
     val name: String,
@@ -52,7 +54,7 @@ data class Storage(
 
 data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?)
 
-interface ApiService: Serializable {
+interface ApiService : Serializable {
     val baseUrl: String
     val websiteUrl: String get() = baseUrl
     val canScroll: Boolean get() = false

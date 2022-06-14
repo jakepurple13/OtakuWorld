@@ -210,6 +210,7 @@ class GenericManga(val context: Context) : GenericInfo {
                     onLongPress = { c -> onLongPress(it, c) },
                     imageUrl = it.imageUrl,
                     name = it.title,
+                    headers = it.extras,
                     placeHolder = R.drawable.manga_world_round_logo,
                     favoriteIcon = {
                         if (favorites.fastAny { f -> f.url == it.url }) {

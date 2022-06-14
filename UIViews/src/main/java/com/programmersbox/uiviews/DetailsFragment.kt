@@ -61,6 +61,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.bumptech.glide.load.model.GlideUrl
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.mlkit.common.model.DownloadConditions
@@ -1351,11 +1352,13 @@ private fun DetailsHeader(
             .then(modifier)
     ) {
 
+        val imageUrl = remember { GlideUrl(model.imageUrl) { model.extras.map { it.key to it.value.toString() }.toMap() } }
+
         GlideImage(
-            imageModel = model.imageUrl,
+            imageModel = imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
+            modifier = Modifier.matchParentSize(),
         )
 
         Box(
@@ -1386,7 +1389,7 @@ private fun DetailsHeader(
                 modifier = Modifier.padding(5.dp)
             ) {
                 GlideImage(
-                    imageModel = model.imageUrl,
+                    imageModel = imageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     error = logo,
