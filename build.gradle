@@ -15,7 +15,7 @@ buildscript {
     ext.glide = "com.github.bumptech.glide:glide:$glideVersion"
     ext.glideCompiler = "com.github.bumptech.glide:compiler:$glideVersion"
 
-    ext.paging_version = "3.1.0"
+    ext.paging_version = "3.1.1"
 
     ext.rxkotlin = "io.reactivex.rxjava2:rxkotlin:2.4.0"
     ext.rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1"
@@ -88,6 +88,9 @@ buildscript {
     ext.navMaterial = "com.google.accompanist:accompanist-navigation-material:$accompanist"
     ext.navAnimation = "com.google.accompanist:accompanist-navigation-animation:$accompanist"
 
+    ext.swipeRefresh = "com.google.accompanist:accompanist-swiperefresh:$accompanist"
+    ext.systemUiController = "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
+
     ext.inset =  "com.google.accompanist:accompanist-insets:$accompanist"
     // If using insets-ui
     ext.insetUi = "com.google.accompanist:accompanist-insets-ui:$accompanist"
@@ -128,7 +131,8 @@ buildscript {
                         materialPlaceholder, drawablePainter, uiUtil,
                         materialYou,
                         inset, insetUi,
-                        navCompose, navMaterial, navAnimation
+                        navCompose, navMaterial, navAnimation,
+                        swipeRefresh, systemUiController
                 ]
         ]
 
