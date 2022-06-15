@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
@@ -74,16 +73,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import coil.ImageLoader
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
-import coil.size.Size
 import com.bumptech.glide.Glide
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
@@ -120,13 +113,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
@@ -914,54 +904,43 @@ private fun ZoomableImage(
                 )
             }
     ) {
-        var retryHash by remember { mutableStateOf(0) }
-        val painterModel = rememberAsyncImagePainter(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(painter)
-                .apply { headers.forEach { addHeader(it.key, it.value) } }
-                .crossfade(true)
-                .size(Size.ORIGINAL)
-                .setParameter("retry_hash", retryHash, null)
-                .build(),
-            imageLoader = ImageLoader.Builder(LocalContext.current)
-                .components {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        add(ImageDecoderDecoder.Factory())
-                    } else {
-                        add(GifDecoder.Factory())
-                    }
-                }
-                .build()
-        )
+        val scope = rememberCoroutineScope()
+        var showTheThing by remember { mutableStateOf(true) }
 
-        if (painterModel.state is AsyncImagePainter.State.Loading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        } else if (painterModel.state is AsyncImagePainter.State.Error) {
-            Text(
-                stringResource(R.string.pressToRefresh),
+        if (showTheThing)
+            GlideImage(
+                imageModel = remember(painter) { GlideUrl(painter) { headers } },
+                contentScale = ContentScale.FillWidth,
+                loading = {
+                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                },
+                failure = {
+                    Text(
+                        stringResource(R.string.pressToRefresh),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .clickable {
+                                scope.launch {
+                                    showTheThing = false
+                                    delay(1000)
+                                    showTheThing = true
+                                }
+                            }
+                    )
+                },
                 modifier = Modifier
+                    .fillMaxSize()
+                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                     .align(Alignment.Center)
-                    .clickable { retryHash++ }
+                    .clipToBounds()
+                    .graphicsLayer {
+                        translationX = offset.x
+                        translationY = offset.y
+
+                        scaleX = scaleAnim
+                        scaleY = scaleAnim
+                    }
             )
-        }
-
-        Image(
-            painter = painterModel,
-            contentDescription = null,
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier
-                .fillMaxSize()
-                .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                .align(Alignment.Center)
-                .clipToBounds()
-                .graphicsLayer {
-                    translationX = offset.x
-                    translationY = offset.y
-
-                    scaleX = scaleAnim
-                    scaleY = scaleAnim
-                }
-        )
     }
 }
 
