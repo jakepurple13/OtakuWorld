@@ -978,22 +978,10 @@ private fun TopBar(
                         else vm.batteryColor
                     ).value
                 )
-                AnimatedContent(
-                    targetState = vm.batteryPercent.toInt(),
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            slideInVertically { height -> height } + fadeIn() with slideOutVertically { height -> -height } + fadeOut()
-                        } else {
-                            slideInVertically { height -> -height } + fadeIn() with slideOutVertically { height -> height } + fadeOut()
-                        }
-                            .using(SizeTransform(clip = false))
-                    }
-                ) { targetBattery ->
-                    Text(
-                        "$targetBattery%",
-                        style = M3MaterialTheme.typography.bodyLarge
-                    )
-                }
+                Text(
+                    "${vm.batteryPercent.toInt()}%",
+                    style = M3MaterialTheme.typography.bodyLarge
+                )
             }
         },
         title = {

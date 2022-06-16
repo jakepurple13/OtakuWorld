@@ -54,9 +54,9 @@ buildscript {
 
     ext.coil = "2.1.0"
 
-    ext.jetpack = "1.2.0-beta03"
+    ext.jetpack = "1.2.0-rc01"
 
-    ext.accompanist = "0.24.10-beta"
+    ext.accompanist = "0.24.11-rc"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
@@ -76,8 +76,8 @@ buildscript {
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
-    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.10"
-    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.10"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.11"
+    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.11"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.5.2"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
