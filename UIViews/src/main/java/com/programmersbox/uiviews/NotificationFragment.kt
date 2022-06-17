@@ -114,181 +114,179 @@ fun NotificationsScreen(
     fragmentManager: FragmentManager,
     vm: NotificationScreenViewModel = viewModel()
 ) {
-    M3MaterialTheme(currentColorScheme) {
-        val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
+    val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
 
-        LaunchedEffect(Unit) {
-            db.getAllNotificationCountFlow()
-                .filter { it == 0 }
-                .collect {
-                    notificationManager.cancel(42)
-                    navController.popBackStack()
-                }
-        }
-
-        val state = rememberBottomSheetScaffoldState()
-        val scope = rememberCoroutineScope()
-        val context = LocalContext.current
-        val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
-
-        BackHandler(state.bottomSheetState.isExpanded) {
-            scope.launch { state.bottomSheetState.collapse() }
-        }
-        val topAppBarScrollState = rememberTopAppBarScrollState()
-
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
-
-        BottomSheetDeleteScaffold(
-            listOfItems = items,
-            state = state,
-            multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
-            bottomScrollBehavior = scrollBehavior,
-            topBar = {
-
-                var showPopup by remember { mutableStateOf(false) }
-
-                if (showPopup) {
-
-                    val onDismiss = { showPopup = false }
-
-                    AlertDialog(
-                        onDismissRequest = onDismiss,
-                        title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    db.deleteAllNotifications()
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeBy {
-                                            onDismiss()
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.deleted_notifications, it),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                        .addTo(vm.disposable)
-                                }
-                            ) { Text(stringResource(R.string.yes)) }
-                        },
-                        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-                    )
-
-                }
-
-                SmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
-                    actions = {
-                        IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
-                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                    }
-                )
-            },
-            onRemove = { item ->
-                vm.deleteNotification(db, item)
-                notificationManager.cancelNotification(item)
-            },
-            onMultipleRemove = { d ->
-                Completable.merge(
-                    d.map {
-                        notificationManager.cancelNotification(it)
-                        db.deleteNotification(it)
-                    }
-                )
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { d.clear() }
-                    .addTo(vm.disposable)
-            },
-            deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
-            itemUi = { item ->
-                ListItem(
-                    modifier = Modifier.padding(5.dp),
-                    icon = {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(item.imageUrl)
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                                .crossfade(true)
-                                .build(),
-                            placeholder = rememberDrawablePainter(logoDrawable),
-                            error = rememberDrawablePainter(logoDrawable),
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = item.notiTitle,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    },
-                    overlineText = { Text(item.source) },
-                    text = { Text(item.notiTitle) },
-                    secondaryText = { Text(item.summaryText) },
-                    trailing = {
-                        var showDropDown by remember { mutableStateOf(false) }
-
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = { showDropDown = false }
-                        ) {
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(stringResource(id = R.string.remove_same_name)) },
-                                onClick = {
-                                    Completable.merge(
-                                        items
-                                            .filter { it.notiTitle == item.notiTitle }
-                                            .map {
-                                                notificationManager.cancelNotification(it)
-                                                db.deleteNotification(it)
-                                            }
-                                    )
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe {
-                                            showDropDown = false
-                                            Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
-                                        }
-                                        .addTo(vm.disposable)
-                                }
-                            )
-                        }
-
-                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
-                    }
-                )
+    LaunchedEffect(Unit) {
+        db.getAllNotificationCountFlow()
+            .filter { it == 0 }
+            .collect {
+                notificationManager.cancel(42)
+                navController.popBackStack()
             }
-        ) { p, itemList ->
+    }
 
-            AnimatedLazyColumn(
-                contentPadding = p,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(vertical = 4.dp),
-                items = itemList.fastMap {
-                    AnimatedLazyListItem(key = it.url, value = it) {
-                        NotificationItem(
-                            item = it,
-                            navController = navController,
-                            vm = vm,
-                            notificationManager = notificationManager,
-                            db = db,
-                            parentFragmentManager = fragmentManager,
-                            genericInfo = genericInfo,
-                            logo = logo,
-                            notificationLogo = notificationLogo
-                        )
-                    }
+    val state = rememberBottomSheetScaffoldState()
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+
+    BackHandler(state.bottomSheetState.isExpanded) {
+        scope.launch { state.bottomSheetState.collapse() }
+    }
+    val topAppBarScrollState = rememberTopAppBarScrollState()
+
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+
+    BottomSheetDeleteScaffold(
+        listOfItems = items,
+        state = state,
+        multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
+        bottomScrollBehavior = scrollBehavior,
+        topBar = {
+
+            var showPopup by remember { mutableStateOf(false) }
+
+            if (showPopup) {
+
+                val onDismiss = { showPopup = false }
+
+                AlertDialog(
+                    onDismissRequest = onDismiss,
+                    title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                db.deleteAllNotifications()
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeBy {
+                                        onDismiss()
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.deleted_notifications, it),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    .addTo(vm.disposable)
+                            }
+                        ) { Text(stringResource(R.string.yes)) }
+                    },
+                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                )
+
+            }
+
+            SmallTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                actions = {
+                    IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
+                    IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
                 }
             )
+        },
+        onRemove = { item ->
+            vm.deleteNotification(db, item)
+            notificationManager.cancelNotification(item)
+        },
+        onMultipleRemove = { d ->
+            Completable.merge(
+                d.map {
+                    notificationManager.cancelNotification(it)
+                    db.deleteNotification(it)
+                }
+            )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { d.clear() }
+                .addTo(vm.disposable)
+        },
+        deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
+        itemUi = { item ->
+            ListItem(
+                modifier = Modifier.padding(5.dp),
+                icon = {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.imageUrl)
+                            .lifecycle(LocalLifecycleOwner.current)
+                            .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = rememberDrawablePainter(logoDrawable),
+                        error = rememberDrawablePainter(logoDrawable),
+                        contentScale = ContentScale.FillBounds,
+                        contentDescription = item.notiTitle,
+                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                },
+                overlineText = { Text(item.source) },
+                text = { Text(item.notiTitle) },
+                secondaryText = { Text(item.summaryText) },
+                trailing = {
+                    var showDropDown by remember { mutableStateOf(false) }
 
-            /*LazyColumn(
-                contentPadding = p,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(vertical = 4.dp)
-            ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
+                    androidx.compose.material3.DropdownMenu(
+                        expanded = showDropDown,
+                        onDismissRequest = { showDropDown = false }
+                    ) {
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(stringResource(id = R.string.remove_same_name)) },
+                            onClick = {
+                                Completable.merge(
+                                    items
+                                        .filter { it.notiTitle == item.notiTitle }
+                                        .map {
+                                            notificationManager.cancelNotification(it)
+                                            db.deleteNotification(it)
+                                        }
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe {
+                                        showDropDown = false
+                                        Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
+                                    }
+                                    .addTo(vm.disposable)
+                            }
+                        )
+                    }
+
+                    IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                }
+            )
         }
+    ) { p, itemList ->
+
+        AnimatedLazyColumn(
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
+            items = itemList.fastMap {
+                AnimatedLazyListItem(key = it.url, value = it) {
+                    NotificationItem(
+                        item = it,
+                        navController = navController,
+                        vm = vm,
+                        notificationManager = notificationManager,
+                        db = db,
+                        parentFragmentManager = fragmentManager,
+                        genericInfo = genericInfo,
+                        logo = logo,
+                        notificationLogo = notificationLogo
+                    )
+                }
+            }
+        )
+
+        /*LazyColumn(
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
     }
 }
 
