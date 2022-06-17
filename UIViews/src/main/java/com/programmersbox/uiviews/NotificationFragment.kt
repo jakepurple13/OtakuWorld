@@ -403,10 +403,7 @@ private fun NotificationItem(
                         ?.subscribeOn(Schedulers.io())
                         ?.doOnError { context.showErrorToast() }
                         ?.observeOn(AndroidSchedulers.mainThread())
-                        ?.subscribeBy {
-                            //navController.navigate(NotificationFragmentDirections.actionNotificationFragmentToDetailsFragment(it))
-                            navController.navigateToDetails(it)
-                        }
+                        ?.subscribeBy { navController.navigateToDetails(it) }
                         ?.addTo(vm.disposable)
                 }
         ) {

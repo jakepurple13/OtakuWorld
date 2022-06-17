@@ -77,29 +77,22 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 class GlobalSearchViewModel(
     val info: GenericInfo,
     val dao: HistoryDao,
-    initialSearch: String,
-    onSubscribe: () -> Unit,
-    subscribe: () -> Unit
+    initialSearch: String
 ) : ViewModel() {
 
     private val disposable: CompositeDisposable = CompositeDisposable()
 
     var searchText by mutableStateOf(initialSearch)
-    val searchListPublisher = mutableStateListOf<SearchModel>()
+    var searchListPublisher by mutableStateOf<List<SearchModel>>(emptyList())
+    var isRefreshing by mutableStateOf(false)
 
     init {
         if (initialSearch.isNotEmpty()) {
-            searchForItems(
-                onSubscribe = onSubscribe,
-                subscribe = subscribe
-            )
+            searchForItems()
         }
     }
 
-    fun searchForItems(
-        onSubscribe: () -> Unit,
-        subscribe: () -> Unit
-    ) {
+    fun searchForItems() {
         Observable.combineLatest(
             info.searchList()
                 .fastMap { a ->
@@ -113,15 +106,10 @@ class GlobalSearchViewModel(
                         .toObservable()
                 }
         ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
-            .doOnSubscribe {
-                searchListPublisher.clear()
-                onSubscribe()
-            }
+            .doOnSubscribe { isRefreshing = true }
+            .doOnComplete { isRefreshing = false }
             .onErrorReturnItem(emptyList())
-            .subscribe {
-                searchListPublisher.addAll(it)
-                subscribe()
-            }
+            .subscribe { searchListPublisher = it }
             .addTo(disposable)
     }
 
@@ -151,27 +139,24 @@ fun GlobalSearchView(
 
     val dao = remember { HistoryDatabase.getInstance(context).historyDao() }
 
-    var isRefreshing by remember { mutableStateOf(false) }
+    val viewModel: GlobalSearchViewModel = viewModel {
+        GlobalSearchViewModel(
+            info = info,
+            initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
+            dao = dao,
+        )
+    }
+
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = viewModel.isRefreshing)
     val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
     val networkState by ReactiveNetwork.observeInternetConnectivity()
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribeAsState(initial = true)
-
-    val viewModel: GlobalSearchViewModel = viewModel {
-        GlobalSearchViewModel(
-            info = info,
-            initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
-            dao = dao,
-            onSubscribe = { isRefreshing = true },
-            subscribe = { isRefreshing = false }
-        )
-    }
 
     val history by dao
         .searchHistory("%${viewModel.searchText}%")
@@ -223,10 +208,7 @@ fun GlobalSearchView(
                             viewModel.searchText = it.value.searchText
                             filter(viewModel.searchText)
                             focusManager.clearFocus()
-                            viewModel.searchForItems(
-                                onSubscribe = { isRefreshing = true },
-                                subscribe = { isRefreshing = false }
-                            )
+                            viewModel.searchForItems()
                         }
 
                         androidx.compose.material3.OutlinedTextField(
@@ -241,7 +223,7 @@ fun GlobalSearchView(
                                     onClick = {
                                         viewModel.searchText = ""
                                         filter("")
-                                        viewModel.searchListPublisher.clear()
+                                        viewModel.searchListPublisher = emptyList()
                                     }
                                 ) { Icon(Icons.Default.Cancel, null) }
                             },
@@ -258,10 +240,7 @@ fun GlobalSearchView(
                                         dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
                                     }
                                 }
-                                viewModel.searchForItems(
-                                    onSubscribe = { isRefreshing = true },
-                                    subscribe = { isRefreshing = false }
-                                )
+                                viewModel.searchForItems()
                             })
                         )
                     }

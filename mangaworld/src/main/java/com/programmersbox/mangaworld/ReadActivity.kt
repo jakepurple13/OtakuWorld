@@ -176,7 +176,7 @@ class ReadViewModel(
 
             navController.navigate(
                 "mangareader?currentChapter=$current&allChapters=$all&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
-            )
+            ) { launchSingleTop = true }
         }
     }
 

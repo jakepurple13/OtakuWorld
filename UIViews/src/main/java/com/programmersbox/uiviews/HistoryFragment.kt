@@ -320,9 +320,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
                                     ?.getSourceByUrl(item.url)
                                     ?.subscribeOn(Schedulers.io())
                                     ?.observeOn(AndroidSchedulers.mainThread())
-                                    ?.subscribeBy { m ->
-                                        navController.navigateToDetails(m)
-                                    }
+                                    ?.subscribeBy { m -> navController.navigateToDetails(m) }
                                     ?.addTo(hm.disposable)
                             }
                         ) { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }

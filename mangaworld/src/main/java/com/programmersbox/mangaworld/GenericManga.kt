@@ -243,7 +243,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloadViewModel.DownloadRoute) }
+                ) { navController.navigate(DownloadViewModel.DownloadRoute) { launchSingleTop = true } }
             )
         }
 

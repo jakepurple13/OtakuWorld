@@ -206,11 +206,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     logo = logo,
                                     genericInfo = genericInfo,
                                     activity = this@BaseMainActivity,
-                                    notificationClick = { navController.navigate(SScreen.NotificationScreen.route) },
-                                    globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) },
-                                    favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) },
-                                    historyClick = { navController.navigate(SScreen.HistoryScreen.route) },
-                                    usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) }
+                                    notificationClick = { navController.navigate(SScreen.NotificationScreen.route) { launchSingleTop = true } },
+                                    globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) { launchSingleTop = true } },
+                                    favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) { launchSingleTop = true } },
+                                    historyClick = { navController.navigate(SScreen.HistoryScreen.route) { launchSingleTop = true } },
+                                    usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) { launchSingleTop = true } }
                                 )
                             }
 

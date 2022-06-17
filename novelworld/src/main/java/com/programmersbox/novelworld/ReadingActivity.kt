@@ -117,7 +117,7 @@ class ReadViewModel(
 
             navController.navigate(
                 "novelreader?currentChapter=$current&novelTitle=${novelTitle}&novelUrl=${novelUrl}&novelInfoUrl=${novelInfoUrl}"
-            )
+            ) { launchSingleTop = true }
         }
     }
 

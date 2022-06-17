@@ -35,7 +35,7 @@ sealed class Screen(val route: String) {
     object DebugScreen : Screen("debug")
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
-            navController.navigate("$route?searchFor=$title")
+            navController.navigate("$route?searchFor=$title") { launchSingleTop = true }
         }
     }
 
@@ -47,7 +47,7 @@ sealed class Screen(val route: String) {
 
 fun NavController.navigateToDetails(model: ItemModel) = navigate(
     Screen.DetailsScreen.route + "/${Uri.encode(model.toJson(ApiService::class.java to ApiServiceSerializer()))}"
-)
+) { launchSingleTop = true }
 
 @Composable
 fun OtakuMaterialTheme(

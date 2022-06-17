@@ -415,7 +415,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloadViewModel.VideoViewerRoute) }
+                ) { navController.navigate(DownloadViewModel.VideoViewerRoute) { launchSingleTop = true } }
             )
 
             val castingViewModel: CastingViewModel = viewModel()
@@ -452,7 +452,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloaderViewModel.DownloadViewerRoute) }
+                ) { navController.navigate(DownloaderViewModel.DownloadViewerRoute) { launchSingleTop = true } }
             )
         }
 
