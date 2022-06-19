@@ -74,6 +74,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.util.*
 
 class SettingsDsl {
     companion object {
@@ -626,7 +627,6 @@ private fun ViewSettings(
 private fun GeneralSettings(
     context: Context,
     scope: CoroutineScope,
-    //fragment: Fragment,
     genericInfo: GenericInfo,
     customSettings: (@Composable () -> Unit)?,
     globalSearchClick: () -> Unit
@@ -671,6 +671,8 @@ private fun GeneralSettings(
             }
     )
 
+    val activity = LocalActivity.current
+
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
         settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
@@ -678,7 +680,7 @@ private fun GeneralSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = {
-                /*vm.getModels {
+                vm.getModels {
                     ListBottomSheet(
                         title = context.getString(R.string.chooseModelToDelete),
                         list = vm.translationModels.toList(),
@@ -692,8 +694,8 @@ private fun GeneralSettings(
                                 null
                             }
                         )
-                    }.show(fragment.parentFragmentManager, "sourceChooser")
-                }*/
+                    }.show(activity.supportFragmentManager, "sourceChooser")
+                }
             }
         )
     )
