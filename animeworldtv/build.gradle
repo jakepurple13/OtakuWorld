@@ -82,3 +82,5 @@ dependencies {
 
     implementation koin.koin
 }
+
+apply from: "$rootDir/buildtypes.gradle"
