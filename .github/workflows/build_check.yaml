@@ -152,8 +152,8 @@ jobs:
                cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
                cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
                cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
-          #          cp ${{ steps.otakumanager_sign.outputs.signedReleaseFile }} otakumanager-release.apk
-               cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
+
+          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
                cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
                cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
                cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
