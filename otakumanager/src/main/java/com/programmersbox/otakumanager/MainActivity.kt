@@ -306,7 +306,7 @@ class MainActivity : ComponentActivity() {
         ) {
 
             when {
-                FirebaseAuthentication.currentUser == null -> NotLoggedInState(it)
+                //FirebaseAuthentication.currentUser == null -> NotLoggedInState(it)
                 showing.isEmpty() -> EmptyState(navController = navController, paddingValues = it)
                 else -> {
 
