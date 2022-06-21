@@ -12,10 +12,10 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.firebase.auth.FirebaseUser
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.CustomFirebaseUser
 import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.appUpdateCheck
 import io.reactivex.Single
@@ -88,7 +88,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
 
             findPreference<Preference>("user_account")?.let { p ->
 
-                fun accountChanges(user: FirebaseUser?) {
+                fun accountChanges(user: CustomFirebaseUser?) {
                     activity?.let {
                         Glide.with(this@PrefFragment)
                             .load(user?.photoUrl ?: R.mipmap.ic_launcher)
@@ -101,9 +101,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                     p.title = user?.displayName ?: "User"
                 }
 
-                FirebaseAuthentication.auth.addAuthStateListener { accountChanges(it.currentUser) }
-
-                accountChanges(FirebaseAuthentication.currentUser)
+                FirebaseAuthentication.addAuthStateListener { accountChanges(it) }
             }
 
             findPreference<PreferenceScreen>("prefs_about")?.let { p ->
@@ -189,7 +187,15 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
             if (preference.key.equals("user_account")) {
                 // Open an AuthenticationActivity
                 //startActivity(Intent(activity, AuthenticationActivity::class.java))
-                FirebaseAuthentication.currentUser?.let {
+                FirebaseAuthentication.signInOrOut(
+                    this@PrefFragment.requireContext(),
+                    requireActivity(),
+                    R.string.browse_title,
+                    R.string.browse_title,
+                    R.string.browse_title,
+                    R.string.browse_title
+                )
+                /*FirebaseAuthentication.currentUser?.let {
                     MaterialAlertDialogBuilder(this@PrefFragment.requireContext(), R.style.Theme_MaterialComponents)
                         .setTitle("Log Out")
                         .setMessage("Are you sure?")
@@ -199,7 +205,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         }
                         .setNegativeButton("No") { d, _ -> d.dismiss() }
                         .show()
-                } ?: FirebaseAuthentication.signIn(requireActivity())
+                } ?: FirebaseAuthentication.signIn(requireActivity())*/
             }
             return super.onPreferenceTreeClick(preference)
         }

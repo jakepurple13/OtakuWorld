@@ -47,11 +47,6 @@ import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.mlkit.common.model.RemoteModelManager
-import com.google.mlkit.nl.translate.TranslateRemoteModel
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -59,10 +54,7 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.sourcePublish
-import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.FirebaseAuthentication
-import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.sharedutils.*
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
@@ -220,31 +212,19 @@ fun SettingScreen(
 
 class AccountViewModel : ViewModel() {
 
-    var accountInfo by mutableStateOf<FirebaseUser?>(null)
-
-    private val listener: FirebaseAuth.AuthStateListener = FirebaseAuth.AuthStateListener { p0 -> accountInfo = p0.currentUser }
+    var accountInfo by mutableStateOf<CustomFirebaseUser?>(null)
 
     init {
-        FirebaseAuthentication.auth.addAuthStateListener(listener)
+        FirebaseAuthentication.addAuthStateListener { p0 -> accountInfo = p0 }
     }
 
     fun signInOrOut(context: Context, activity: ComponentActivity) {
-        FirebaseAuthentication.currentUser?.let {
-            MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.logOut)
-                .setMessage(R.string.areYouSureLogOut)
-                .setPositiveButton(R.string.yes) { d, _ ->
-                    FirebaseAuthentication.signOut()
-                    d.dismiss()
-                }
-                .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                .show()
-        } ?: FirebaseAuthentication.signIn(activity)
+        FirebaseAuthentication.signInOrOut(context, activity, R.string.logOut, R.string.areYouSureLogOut, R.string.yes, R.string.no)
     }
 
     override fun onCleared() {
         super.onCleared()
-        FirebaseAuthentication.auth.removeAuthStateListener(listener)
+        FirebaseAuthentication.clear()
     }
 }
 
@@ -262,6 +242,8 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(accountInfo?.photoUrl)
+                    .error(logo.logoId)
+                    .placeholder(logo.logoId)
                     .crossfade(true)
                     .lifecycle(LocalLifecycleOwner.current)
                     .transformations(CircleCropTransformation())
@@ -680,6 +662,7 @@ private fun GeneralSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = {
+                //TODO: Change this into its own screen
                 vm.getModels {
                     ListBottomSheet(
                         title = context.getString(R.string.chooseModelToDelete),
@@ -770,22 +753,18 @@ private fun GeneralSettings(
 
 class GeneralViewModel : ViewModel() {
 
-    var translationModels: Set<TranslateRemoteModel> by mutableStateOf(emptySet())
+    var translationModels: List<CustomRemoteModel> by mutableStateOf(emptyList())
         private set
 
-    private val modelManager by lazy { RemoteModelManager.getInstance() }
-
     fun getModels(onSuccess: () -> Unit) {
-        modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
-            .addOnSuccessListener { models ->
-                translationModels = models
-                onSuccess()
-            }
-            .addOnFailureListener { }
+        TranslatorUtils.getModels {
+            translationModels = it
+            onSuccess()
+        }
     }
 
-    fun deleteModel(model: TranslateRemoteModel) {
-        modelManager.deleteDownloadedModel(model).addOnSuccessListener {}
+    fun deleteModel(model: CustomRemoteModel) {
+        TranslatorUtils.deleteModel(model)
     }
 
 }

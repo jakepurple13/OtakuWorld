@@ -38,6 +38,16 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion jetpack
     }
+
+    flavorDimensions "version"
+    productFlavors {
+        noFirebase {
+            dimension "version"
+        }
+        full {
+            dimension "version"
+        }
+    }
 }
 
 dependencies {
@@ -121,9 +131,6 @@ dependencies {
     api "androidx.navigation:navigation-fragment-ktx:$nav_version"
     api "androidx.navigation:navigation-ui-ktx:$nav_version"
 
-    // Feature module Support
-    api "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
-
     // Testing Navigation
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
 
@@ -141,7 +148,4 @@ dependencies {
     testImplementation "androidx.paging:paging-common-ktx:$paging_version"
 
     implementation datastore.datastore
-
-    implementation 'com.google.mlkit:translate:17.0.0'
-    implementation 'com.google.mlkit:language-id:17.0.3'
 }
