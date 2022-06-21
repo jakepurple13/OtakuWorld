@@ -187,7 +187,15 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
             if (preference.key.equals("user_account")) {
                 // Open an AuthenticationActivity
                 //startActivity(Intent(activity, AuthenticationActivity::class.java))
-                FirebaseAuthentication.currentUser?.let {
+                FirebaseAuthentication.signInOrOut(
+                    this@PrefFragment.requireContext(),
+                    requireActivity(),
+                    R.string.browse_title,
+                    R.string.browse_title,
+                    R.string.browse_title,
+                    R.string.browse_title
+                )
+                /*FirebaseAuthentication.currentUser?.let {
                     MaterialAlertDialogBuilder(this@PrefFragment.requireContext(), R.style.Theme_MaterialComponents)
                         .setTitle("Log Out")
                         .setMessage("Are you sure?")
@@ -197,7 +205,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         }
                         .setNegativeButton("No") { d, _ -> d.dismiss() }
                         .show()
-                } ?: FirebaseAuthentication.signIn(requireActivity())
+                } ?: FirebaseAuthentication.signIn(requireActivity())*/
             }
             return super.onPreferenceTreeClick(preference)
         }

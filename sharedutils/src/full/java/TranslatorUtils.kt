@@ -80,7 +80,17 @@ object TranslatorUtils {
 
     fun getModels(onSuccess: (List<CustomRemoteModel>) -> Unit) {
         modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
-            .addOnSuccessListener { models -> onSuccess(models.map { CustomRemoteModel(it.modelHash, it.language) }) }
+            .addOnSuccessListener { models ->
+                onSuccess(
+                    models.mapNotNull {
+                        try {
+                            CustomRemoteModel(it.modelHash, it.language)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                )
+            }
             .addOnFailureListener { }
     }
 
