@@ -2,10 +2,14 @@ package com.programmersbox.sharedutils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
+import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.util.fastMap
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
@@ -61,7 +65,33 @@ object FirebaseAuthentication : KoinComponent {
 
     val currentUser: FirebaseUser? get() = FirebaseAuth.getInstance().currentUser
 
+    private var update: ((FirebaseAuth?) -> Unit)? = null
+
+    fun addAuthStateListener(update: (CustomFirebaseUser?) -> Unit) {
+        this.update = { u -> update(u?.currentUser?.let { CustomFirebaseUser(it.displayName, it.photoUrl) }) }
+        auth.addAuthStateListener(this.update!!)
+    }
+
+    fun clear() {
+        update?.let { auth.removeAuthStateListener(it) }
+    }
+
+    fun signInOrOut(context: Context, activity: ComponentActivity, title: Int, message: Int, positive: Int, no: Int) {
+        currentUser?.let {
+            MaterialAlertDialogBuilder(context)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(positive) { d, _ ->
+                    signOut()
+                    d.dismiss()
+                }
+                .setNegativeButton(no) { d, _ -> d.dismiss() }
+                .show()
+        } ?: signIn(activity)
+    }
 }
+
+data class CustomFirebaseUser(val displayName: String?, val photoUrl: Uri?)
 
 object FirebaseDb {
 

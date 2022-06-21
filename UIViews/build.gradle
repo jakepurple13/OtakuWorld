@@ -38,6 +38,16 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion jetpack
     }
+
+    flavorDimensions "version"
+    productFlavors {
+        noFirebase {
+            dimension "version"
+        }
+        full {
+            dimension "version"
+        }
+    }
 }
 
 dependencies {

@@ -29,6 +29,28 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    flavorDimensions "version"
+    productFlavors {
+        noFirebase {
+            dimension "version"
+        }
+        full {
+            dimension "version"
+        }
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs = ['src/main/java']
+        }
+        full {
+            java.srcDirs = ['src/full/java']
+        }
+        noFirebase {
+            java.srcDirs = ['src/noFirebase/java']
+        }
+    }
 }
 
 dependencies {
