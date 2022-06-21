@@ -63,7 +63,7 @@ object FirebaseAuthentication : KoinComponent {
         //currentUser = null
     }
 
-    val currentUser: FirebaseUser? get() = FirebaseAuth.getInstance().currentUser
+    internal val currentUser: FirebaseUser? get() = FirebaseAuth.getInstance().currentUser
 
     private var update: ((FirebaseAuth?) -> Unit)? = null
 

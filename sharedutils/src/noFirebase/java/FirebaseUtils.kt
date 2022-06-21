@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import androidx.activity.ComponentActivity
-import com.google.firebase.auth.FirebaseUser
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import io.reactivex.Completable
@@ -27,7 +26,6 @@ object FirebaseAuthentication : KoinComponent {
         //currentUser = null
     }
 
-    val currentUser: FirebaseUser? get() = null//FirebaseAuth.getInstance().currentUser
     fun addAuthStateListener(update: (CustomFirebaseUser?) -> Unit) = Unit
     fun clear() = Unit
     fun signInOrOut(context: Context, activity: ComponentActivity, title: Int, message: Int, positive: Int, no: Int) = Unit

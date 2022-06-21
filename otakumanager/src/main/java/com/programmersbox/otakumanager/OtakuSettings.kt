@@ -45,13 +45,9 @@ import com.alorma.settings.composables.SettingsGroup
 import com.alorma.settings.composables.SettingsMenuLink
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.firebase.auth.FirebaseUser
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.loggingutils.Loged
-import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.FirebaseAuthentication
-import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.sharedutils.*
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.openInCustomChromeBrowser
@@ -89,10 +85,10 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
         val scope = rememberCoroutineScope()
         val disposable = remember { CompositeDisposable() }
 
-        var accountInfo by remember { mutableStateOf<FirebaseUser?>(null) }
+        var accountInfo by remember { mutableStateOf<CustomFirebaseUser?>(null) }
         val packageManager = LocalContext.current.packageManager
 
-        LaunchedEffect(Unit) { FirebaseAuthentication.auth.addAuthStateListener { accountInfo = it.currentUser } }
+        LaunchedEffect(Unit) { FirebaseAuthentication.addAuthStateListener { accountInfo = it } }
 
         DisposableEffect(accountInfo) {
             onDispose { disposable.dispose() }
@@ -113,17 +109,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                 },
                 title = { Text(text = accountInfo?.displayName ?: "User", modifier = Modifier.padding(start = 5.dp)) },
                 onClick = {
-                    FirebaseAuthentication.currentUser?.let {
-                        MaterialAlertDialogBuilder(activity)
-                            .setTitle(R.string.logOut)
-                            .setMessage(R.string.areYouSureLogOut)
-                            .setPositiveButton(R.string.yes) { d, _ ->
-                                FirebaseAuthentication.signOut()
-                                d.dismiss()
-                            }
-                            .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                            .show()
-                    } ?: FirebaseAuthentication.signIn(activity)
+                    FirebaseAuthentication.signInOrOut(activity, activity, R.string.logOut, R.string.areYouSureLogOut, R.string.yes, R.string.no)
                 },
             )
 

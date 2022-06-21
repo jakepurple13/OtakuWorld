@@ -64,16 +64,11 @@ import androidx.navigation.NavController
 import com.bumptech.glide.load.model.GlideUrl
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.google.mlkit.common.model.DownloadConditions
-import com.google.mlkit.nl.languageid.LanguageIdentification
-import com.google.mlkit.nl.translate.TranslateLanguage
-import com.google.mlkit.nl.translate.Translation
-import com.google.mlkit.nl.translate.Translator
-import com.google.mlkit.nl.translate.TranslatorOptions
 import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
@@ -258,68 +253,14 @@ class DetailViewModel(
             Cached.cache[it.url] = it
         }
 
-    private var englishTranslator: Translator? = null
+    private val englishTranslator = TranslateItems()
 
     fun translateDescription(progress: MutableState<Boolean>) {
-        progress.value = true
-        val languageIdentifier = LanguageIdentification.getClient()
-        languageIdentifier.identifyLanguage(info!!.description)
-            .addOnSuccessListener { languageCode ->
-                if (languageCode == "und") {
-                    println("Can't identify language.")
-                } else if (languageCode != "en") {
-                    println("Language: $languageCode")
-
-                    if (englishTranslator == null) {
-                        val options = TranslatorOptions.Builder()
-                            .setSourceLanguage(TranslateLanguage.fromLanguageTag(languageCode)!!)
-                            .setTargetLanguage(TranslateLanguage.ENGLISH)
-                            .build()
-                        englishTranslator = Translation.getClient(options)
-
-                        val conditions = DownloadConditions.Builder()
-                            .requireWifi()
-                            .build()
-
-                        englishTranslator!!.downloadModelIfNeeded(conditions)
-                            .addOnSuccessListener { _ ->
-                                // Model downloaded successfully. Okay to start translating.
-                                // (Set a flag, unhide the translation UI, etc.)
-                                englishTranslator!!.translate(info!!.description)
-                                    .addOnSuccessListener { translated ->
-                                        // Model downloaded successfully. Okay to start translating.
-                                        // (Set a flag, unhide the translation UI, etc.)
-
-                                        description = translated
-                                        progress.value = false
-                                    }
-                            }
-                            .addOnFailureListener { exception ->
-                                // Model couldn’t be downloaded or other internal error.
-                                // ...
-                                progress.value = false
-                            }
-                    } else {
-                        englishTranslator!!.translate(info!!.description)
-                            .addOnSuccessListener { translated ->
-                                // Model downloaded successfully. Okay to start translating.
-                                // (Set a flag, unhide the translation UI, etc.)
-
-                                description = translated
-                                progress.value = false
-                            }
-                            .addOnFailureListener { progress.value = false }
-                    }
-
-                } else {
-                    progress.value = false
-                }
-            }
-            .addOnFailureListener {
-                // Model couldn’t be loaded or other internal error.
-                // ...
-                progress.value = false
-            }
+        englishTranslator.translateDescription(
+            info!!.description,
+            { progress.value = it },
+            { description = it }
+        )
     }
 
     private fun setup(info: InfoModel) {
@@ -385,7 +326,7 @@ class DetailViewModel(
         disposable.dispose()
         itemListener.unregister()
         chapterListener.unregister()
-        englishTranslator?.close()
+        englishTranslator.clear()
     }
 }
 

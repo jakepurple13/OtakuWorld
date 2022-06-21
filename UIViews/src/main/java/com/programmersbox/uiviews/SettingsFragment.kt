@@ -47,8 +47,6 @@ import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
-import com.google.mlkit.common.model.RemoteModelManager
-import com.google.mlkit.nl.translate.TranslateRemoteModel
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -755,22 +753,18 @@ private fun GeneralSettings(
 
 class GeneralViewModel : ViewModel() {
 
-    var translationModels: Set<TranslateRemoteModel> by mutableStateOf(emptySet())
+    var translationModels: List<CustomRemoteModel> by mutableStateOf(emptyList())
         private set
 
-    private val modelManager by lazy { RemoteModelManager.getInstance() }
-
     fun getModels(onSuccess: () -> Unit) {
-        modelManager.getDownloadedModels(TranslateRemoteModel::class.java)
-            .addOnSuccessListener { models ->
-                translationModels = models
-                onSuccess()
-            }
-            .addOnFailureListener { }
+        TranslatorUtils.getModels {
+            translationModels = it
+            onSuccess()
+        }
     }
 
-    fun deleteModel(model: TranslateRemoteModel) {
-        modelManager.deleteDownloadedModel(model).addOnSuccessListener {}
+    fun deleteModel(model: CustomRemoteModel) {
+        TranslatorUtils.deleteModel(model)
     }
 
 }
