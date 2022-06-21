@@ -11,7 +11,6 @@ import com.google.firebase.firestore.ktx.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.rxutils.toLatestFlowable
-import com.programmersbox.sharedutils.FirebaseAuthentication
 import io.reactivex.Completable
 import io.reactivex.subjects.PublishSubject
 
@@ -37,8 +36,8 @@ data class FirebaseDb2(
 
     private fun <TResult> Task<TResult>.await(): TResult = Tasks.await(this)
 
-    private val showDoc2 get() = FirebaseAuthentication.currentUser?.let { db.collection(COLLECTION_ID).document(DOCUMENT_ID).collection(it.uid) }
-    private val episodeDoc2 get() = FirebaseAuthentication.currentUser?.let { db.collection(COLLECTION_ID).document(CHAPTERS_ID).collection(it.uid) }
+    private val showDoc2 get() = db.collection(COLLECTION_ID).document(DOCUMENT_ID).collection("it.uid")
+    private val episodeDoc2 get() = db.collection(COLLECTION_ID).document(CHAPTERS_ID).collection("it.uid")
 
     private inner class FirebaseAllShows(val first: String = DOCUMENT_ID, val second: List<FirebaseDbModel> = emptyList())
 
