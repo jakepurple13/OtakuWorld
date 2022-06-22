@@ -43,8 +43,7 @@ dependencies {
     // required if you want to use Mockito for Android tests
     androidTestImplementation 'org.mockito:mockito-android:4.2.0'
 
-    implementation "com.squareup.okhttp3:okhttp:4.9.3"
-    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.3"
+    implementation okhttp.okhttp
     implementation coroutinesCore
     implementation jsoup
     implementation 'com.squareup.duktape:duktape-android:1.4.0'
@@ -55,7 +54,7 @@ dependencies {
     implementation Deps.helpfulutils
     debugImplementation Deps.loggingutils
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3'
 
     implementation 'androidx.webkit:webkit:1.4.0'
 

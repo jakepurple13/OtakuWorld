@@ -3,7 +3,7 @@ buildscript {
     ext.kotlin_version = "1.6.21"
     ext.latestAboutLibsRelease = "10.3.0"
 
-    ext.coroutinesVersion = "1.6.2"
+    ext.coroutinesVersion = "1.6.3"
 
     ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
     ext.coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
@@ -24,7 +24,7 @@ buildscript {
 
     ext.androidCore = 'androidx.core:core-ktx:1.8.0'
     ext.appCompat = 'androidx.appcompat:appcompat:1.4.2'
-    ext.material = 'com.google.android.material:material:1.6.0-beta01'
+    ext.material = 'com.google.android.material:material:1.6.0-alpha02'
 
     ext.preference = "androidx.preference:preference-ktx:1.2.0"
 
@@ -38,7 +38,7 @@ buildscript {
     ext.analytics = 'com.google.firebase:firebase-analytics:20.1.0'
     ext.play_services = 'com.google.android.gms:play-services-auth:20.1.0'
 
-    ext.exoplayer_version = "2.16.1"
+    ext.exoplayer_version = "2.18.0"
     ext.room_version = "2.4.2"
 
     ext.nav_version = "2.4.2"
@@ -76,8 +76,8 @@ buildscript {
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
-    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.11"
-    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.11"
+    ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.12"
+    ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.12"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.5.2"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
@@ -100,6 +100,10 @@ buildscript {
     ext.datastore = "androidx.datastore:datastore:1.0.0"
     ext.datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
+    ext.okhttpVersion = "4.10.0"
+    ext.okhttpLib = "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    ext.okhttpDns = "com.squareup.okhttp3:okhttp-dnsoverhttps:$okhttpVersion"
+
     ext {
         jakepurple13Tools = [
                 helpfultools: [
@@ -118,6 +122,8 @@ buildscript {
                         "androidx.room:room-rxjava2:$room_version"
                 ]
         ]
+
+        okhttp = [okhttp: [okhttpLib, okhttpDns]]
 
         koin = [koin: [koinAndroid, koinAndroidExt]]
 

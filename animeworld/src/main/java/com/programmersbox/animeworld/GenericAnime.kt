@@ -439,7 +439,9 @@ class GenericAnime(val context: Context) : GenericInfo {
                             context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
                         } else {
                             MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                .also { it.routeSelector = CastContext.getSharedInstance(context).mergedSelector }
+                                .also { m ->
+                                    CastContext.getSharedInstance(context).mergedSelector?.let { m.routeSelector = it }
+                                }
                                 .show(activity.supportFragmentManager, "media_chooser")
                         }
                     }
