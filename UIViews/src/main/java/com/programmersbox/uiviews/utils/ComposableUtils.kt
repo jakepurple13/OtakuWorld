@@ -1204,10 +1204,10 @@ class ListBottomSheet<T>(
                                     dismiss()
                                     onClick(it)
                                 },
-                                leadingContent = c.icon?.let { i -> { Icon(i, null) } },
-                                headlineText = { Text(c.primaryText) },
-                                supportingText = c.secondaryText?.let { i -> { Text(i) } },
-                                overlineText = c.overlineText?.let { i -> { Text(i) } }
+                                leadingContent = c.icon?.let { i -> { androidx.compose.material3.Icon(i, null) } },
+                                headlineText = { androidx.compose.material3.Text(c.primaryText) },
+                                supportingText = c.secondaryText?.let { i -> { androidx.compose.material3.Text(i) } },
+                                overlineText = c.overlineText?.let { i -> { androidx.compose.material3.Text(i) } }
                             )
                             if (index < list.size - 1) androidx.compose.material3.Divider()
                         }
