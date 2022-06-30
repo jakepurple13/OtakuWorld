@@ -793,7 +793,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
             }
         }*/
 
-    items(pages, key = { it }) { ChapterPage(it, onClick, vm.headers) }
+    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, onClick, vm.headers) }
 
     item {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
