@@ -85,7 +85,6 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.composethemeadapter.MdcTheme
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -1184,13 +1183,17 @@ class ListBottomSheet<T>(
         .apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
             setContent {
-                MdcTheme {
+                M3MaterialTheme(currentColorScheme) {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         stickyHeader {
-                            TopAppBar(
-                                title = { Text(title) },
-                                navigationIcon = { IconButton(onClick = { dismiss() }) { Icon(Icons.Default.Close, null) } },
-                                actions = { if (list.isNotEmpty()) Text("(${list.size})") }
+                            SmallTopAppBar(
+                                title = { androidx.compose.material3.Text(title) },
+                                navigationIcon = {
+                                    androidx.compose.material3.IconButton(onClick = { dismiss() }) {
+                                        androidx.compose.material3.Icon(Icons.Default.Close, null)
+                                    }
+                                },
+                                actions = { if (list.isNotEmpty()) androidx.compose.material3.Text("(${list.size})") }
                             )
                         }
 
@@ -1206,7 +1209,7 @@ class ListBottomSheet<T>(
                                 supportingText = c.secondaryText?.let { i -> { Text(i) } },
                                 overlineText = c.overlineText?.let { i -> { Text(i) } }
                             )
-                            if (index < list.size - 1) androidx.compose.material.Divider()
+                            if (index < list.size - 1) androidx.compose.material3.Divider()
                         }
                     }
                 }
