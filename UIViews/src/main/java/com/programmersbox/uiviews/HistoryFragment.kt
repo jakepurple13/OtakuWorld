@@ -169,6 +169,7 @@ fun HistoryUi(
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel, logo: MainLogo, scope: CoroutineScope) {
@@ -291,10 +292,10 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
             }
         ) {
             ListItem(
-                text = { Text(item.title) },
+                headlineText = { Text(item.title) },
                 overlineText = { Text(item.source) },
-                secondaryText = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
-                icon = {
+                supportingText = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
+                leadingContent = {
                     Surface(shape = MaterialTheme.shapes.medium) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -311,7 +312,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
                         )
                     }
                 },
-                trailing = {
+                trailingContent = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = { showPopup = true }) { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
                         IconButton(
@@ -331,6 +332,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 private fun HistoryItemPlaceholder() {
@@ -345,10 +347,10 @@ private fun HistoryItemPlaceholder() {
     ) {
         ListItem(
             modifier = Modifier.placeholder(true, color = placeholderColor),
-            text = { Text("Otaku") },
+            headlineText = { Text("Otaku") },
             overlineText = { Text("Otaku") },
-            secondaryText = { Text("Otaku") },
-            icon = {
+            supportingText = { Text("Otaku") },
+            leadingContent = {
                 Surface(shape = MaterialTheme.shapes.medium) {
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -357,7 +359,7 @@ private fun HistoryItemPlaceholder() {
                     )
                 }
             },
-            trailing = {
+            trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = null)
                     Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)

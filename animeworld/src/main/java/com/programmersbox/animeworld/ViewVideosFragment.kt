@@ -176,7 +176,7 @@ private fun VideoLoad(viewModel: DownloadViewModel) {
         itemUi = { item ->
             ListItem(
                 modifier = Modifier.padding(5.dp),
-                icon = {
+                leadingContent = {
                     Box {
                         /*convert millis to appropriate time*/
                         val runTimeString = remember {
@@ -233,8 +233,8 @@ private fun VideoLoad(viewModel: DownloadViewModel) {
                 overlineText = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
                     { Text(context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()) }
                 } else null,
-                text = { Text(item.videoName.orEmpty()) },
-                secondaryText = { Text(item.path.orEmpty()) }
+                headlineText = { Text(item.videoName.orEmpty()) },
+                supportingText = { Text(item.path.orEmpty()) }
             )
         }
     ) { p, itemList ->

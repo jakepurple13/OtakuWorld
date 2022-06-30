@@ -15,13 +15,14 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -144,7 +145,7 @@ class GenericNovel(val context: Context) : GenericInfo {
     @OptIn(
         ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class
     )
     @Composable
     override fun ItemListView(
@@ -172,15 +173,15 @@ class GenericNovel(val context: Context) : GenericInfo {
                     shape = MaterialTheme.shapes.medium
                 ) {
                     ListItem(
-                        icon = {
+                        leadingContent = {
                             Icon(
                                 if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = null,
                             )
                         },
-                        text = { androidx.compose.material3.Text(it.title) },
+                        headlineText = { androidx.compose.material3.Text(it.title) },
                         overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
-                        secondaryText = if (it.description.isNotEmpty()) {
+                        supportingText = if (it.description.isNotEmpty()) {
                             { androidx.compose.material3.Text(it.description) }
                         } else null
                     )

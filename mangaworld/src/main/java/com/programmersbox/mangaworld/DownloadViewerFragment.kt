@@ -203,6 +203,7 @@ private fun EmptyState() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>, viewModel: DownloadViewModel) {
@@ -226,9 +227,9 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
         ) {
             ListItem(
                 modifier = Modifier.padding(5.dp),
-                text = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
-                secondaryText = { Text(stringResource(R.string.chapter_count, file.value.size)) },
-                trailing = {
+                headlineText = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
+                supportingText = { Text(stringResource(R.string.chapter_count, file.value.size)) },
+                trailingContent = {
                     Icon(
                         Icons.Default.ArrowDropDown,
                         null,
@@ -360,9 +361,9 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     ) {
                         ListItem(
                             modifier = Modifier.padding(5.dp),
-                            text = { Text(c?.chapterName.orEmpty()) },
-                            secondaryText = { Text(stringResource(R.string.page_count, chapter.size)) },
-                            trailing = { Icon(Icons.Default.ChevronRight, null) }
+                            headlineText = { Text(c?.chapterName.orEmpty()) },
+                            supportingText = { Text(stringResource(R.string.page_count, chapter.size)) },
+                            trailingContent = { Icon(Icons.Default.ChevronRight, null) }
                         )
                     }
                 }

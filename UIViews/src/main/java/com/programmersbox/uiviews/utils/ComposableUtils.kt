@@ -1178,7 +1178,7 @@ class ListBottomSheet<T>(
 ) : BottomSheetDialogFragment() {
     @OptIn(
         ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class
     )
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View = ComposeView(requireContext())
         .apply {
@@ -1201,9 +1201,9 @@ class ListBottomSheet<T>(
                                     dismiss()
                                     onClick(it)
                                 },
-                                icon = c.icon?.let { i -> { Icon(i, null) } },
-                                text = { Text(c.primaryText) },
-                                secondaryText = c.secondaryText?.let { i -> { Text(i) } },
+                                leadingContent = c.icon?.let { i -> { Icon(i, null) } },
+                                headlineText = { Text(c.primaryText) },
+                                supportingText = c.secondaryText?.let { i -> { Text(i) } },
                                 overlineText = c.overlineText?.let { i -> { Text(i) } }
                             )
                             if (index < list.size - 1) androidx.compose.material.Divider()

@@ -429,7 +429,7 @@ private fun DetailsViewLandscape(
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(horizontal = 4.dp),
-                                text = {
+                                headlineText = {
                                     Text(
                                         c.name,
                                         color = swatchInfo.value
@@ -438,7 +438,7 @@ private fun DetailsViewLandscape(
                                             ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
                                     )
                                 },
-                                icon = {
+                                leadingContent = {
                                     androidx.compose.material3.Checkbox(
                                         checked = vm.chapters.fastAny { it.url == c.url },
                                         onCheckedChange = { b -> vm.markAs(c, b) },
@@ -761,7 +761,7 @@ private fun DetailsView(
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(horizontal = 4.dp),
-                                text = {
+                                headlineText = {
                                     Text(
                                         c.name,
                                         color = swatchInfo.value
@@ -770,7 +770,7 @@ private fun DetailsView(
                                             ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
                                     )
                                 },
-                                icon = {
+                                leadingContent = {
                                     androidx.compose.material3.Checkbox(
                                         checked = vm.chapters.fastAny { it.url == c.url },
                                         onCheckedChange = { b -> vm.markAs(c, b) },

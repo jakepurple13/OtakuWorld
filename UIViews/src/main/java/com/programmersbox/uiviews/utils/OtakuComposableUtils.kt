@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -203,6 +205,7 @@ fun PlaceHolderCoverCard(placeHolder: Int) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 fun OtakuBannerBox(
@@ -224,7 +227,7 @@ fun OtakuBannerBox(
         banner = {
             Card(modifier = Modifier.align(Alignment.TopCenter)) {
                 ListItem(
-                    icon = {
+                    leadingContent = {
                         GlideImage(
                             imageModel = itemInfo.value?.imageUrl.orEmpty(),
                             contentDescription = null,
@@ -247,8 +250,8 @@ fun OtakuBannerBox(
                         )
                     },
                     overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    text = { Text(itemInfo.value?.title.orEmpty()) },
-                    secondaryText = {
+                    headlineText = { Text(itemInfo.value?.title.orEmpty()) },
+                    supportingText = {
                         Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,
@@ -404,7 +407,7 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
     }
 }
 
-@OptIn(ExperimentalCoilApi::class)
+@OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 fun M3OtakuBannerBox(
@@ -432,7 +435,7 @@ fun M3OtakuBannerBox(
                 shadowElevation = 10.dp
             ) {
                 ListItem(
-                    icon = {
+                    leadingContent = {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(itemInfo.value?.imageUrl.orEmpty())
@@ -450,8 +453,8 @@ fun M3OtakuBannerBox(
                         )
                     },
                     overlineText = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    text = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
-                    secondaryText = {
+                    headlineText = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
+                    supportingText = {
                         androidx.compose.material3.Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,

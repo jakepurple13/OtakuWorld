@@ -208,7 +208,7 @@ fun NotificationsScreen(
         itemUi = { item ->
             ListItem(
                 modifier = Modifier.padding(5.dp),
-                icon = {
+                leadingContent = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(item.imageUrl)
@@ -224,9 +224,9 @@ fun NotificationsScreen(
                     )
                 },
                 overlineText = { Text(item.source) },
-                text = { Text(item.notiTitle) },
-                secondaryText = { Text(item.summaryText) },
-                trailing = {
+                headlineText = { Text(item.notiTitle) },
+                supportingText = { Text(item.summaryText) },
+                trailingContent = {
                     var showDropDown by remember { mutableStateOf(false) }
 
                     androidx.compose.material3.DropdownMenu(

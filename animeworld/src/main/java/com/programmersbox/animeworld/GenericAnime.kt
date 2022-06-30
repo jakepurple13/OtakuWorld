@@ -17,12 +17,16 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
@@ -371,15 +375,15 @@ class GenericAnime(val context: Context) : GenericInfo {
                         )
                 ) {
                     ListItem(
-                        icon = {
+                        leadingContent = {
                             androidx.compose.material3.Icon(
                                 if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = null,
                             )
                         },
-                        text = { androidx.compose.material3.Text(it.title) },
+                        headlineText = { androidx.compose.material3.Text(it.title) },
                         overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
-                        secondaryText = if (it.description.isNotEmpty()) {
+                        supportingText = if (it.description.isNotEmpty()) {
                             { androidx.compose.material3.Text(it.description) }
                         } else null
                     )

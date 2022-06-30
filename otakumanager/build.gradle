@@ -37,13 +37,12 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
-        useIR = true
     }
     buildFeatures {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion jetpack
+        kotlinCompilerExtensionVersion jetpackCompiler
     }
     packagingOptions {
         resources {

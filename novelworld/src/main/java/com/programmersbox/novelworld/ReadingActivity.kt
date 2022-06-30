@@ -382,8 +382,8 @@ fun NovelReader() {
                                     tonalElevation = 5.dp
                                 ) {
                                     ListItem(
-                                        text = { Text(c.name) },
-                                        icon = if (readVm.currentChapter == i) {
+                                        headlineText = { Text(c.name) },
+                                        leadingContent = if (readVm.currentChapter == i) {
                                             { Icon(Icons.Default.ArrowRight, null) }
                                         } else null,
                                         modifier = Modifier.clickable { showChangeChapter = true }

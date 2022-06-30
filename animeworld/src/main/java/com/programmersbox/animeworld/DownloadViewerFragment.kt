@@ -236,7 +236,7 @@ fun DownloaderUi() {
         itemUi = { download ->
             ListItem(
                 modifier = Modifier.padding(5.dp),
-                text = { Text(download.download.url.toUri().lastPathSegment.orEmpty()) },
+                headlineText = { Text(download.download.url.toUri().lastPathSegment.orEmpty()) },
                 overlineText = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val progress = download.download.progress.coerceAtLeast(0)
