@@ -58,7 +58,6 @@ import com.programmersbox.sharedutils.*
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -126,7 +125,6 @@ fun SettingScreen(
 
     val topAppBarScrollState = rememberTopAppBarScrollState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
-    val listState = rememberScrollState()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -139,7 +137,7 @@ fun SettingScreen(
     ) { p ->
         Column(
             modifier = Modifier
-                .verticalScroll(listState)
+                .verticalScroll(rememberScrollState())
                 .padding(p)
                 .padding(bottom = 10.dp)
         ) {
