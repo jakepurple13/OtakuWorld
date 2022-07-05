@@ -17,10 +17,7 @@ import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -114,7 +111,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
             OtakuMaterialTheme(navController, genericInfo) {
                 val showAllItem by showAll.collectAsState(false)
 
-                com.google.accompanist.navigation.material.ModalBottomSheetLayout(bottomSheetNavigator) {
+                com.google.accompanist.navigation.material.ModalBottomSheetLayout(
+                    bottomSheetNavigator,
+                    sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+                    sheetContentColor = MaterialTheme.colorScheme.onSurface,
+                    scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
+                ) {
                     androidx.compose.material3.Scaffold(
                         bottomBar = {
                             Column {
