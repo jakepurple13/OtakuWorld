@@ -114,9 +114,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
@@ -128,21 +126,22 @@ class ReadViewModel(
     context: Context,
     val genericInfo: GenericInfo,
     val headers: MutableMap<String, String> = mutableMapOf<String, String>(),
-    model: Single<List<String>>? = handle
+    model: Flow<List<String>>? = handle
         .get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-        ?.getChapterInfo()
+        ?.getChapterInfoFlow()
         ?.map {
             headers.putAll(it.flatMap { it.headers.toList() })
             it.mapNotNull(Storage::link)
         }
-        ?.subscribeOn(Schedulers.io())
-        ?.observeOn(AndroidSchedulers.mainThread())
-        ?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
+        /*?.subscribeOn(Schedulers.io())
+        ?.observeOn(AndroidSchedulers.mainThread())*/
+        //?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
+    ,
     isDownloaded: Boolean = handle.get<String>("downloaded")?.toBooleanStrict() ?: false,
     filePath: File? = handle.get<String>("filePath")?.let { File(it) },
-    modelPath: Single<List<String>>? = if (isDownloaded && filePath != null) {
-        Single.create<List<String>> {
+    modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
+        /*Single.create<List<String>> {
             filePath
                 .listFiles()
                 ?.sortedBy { f -> f.name.split(".").first().toInt() }
@@ -151,7 +150,17 @@ class ReadViewModel(
                 ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
         }
             .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread())*/
+        flow<List<String>> {
+            filePath
+                .listFiles()
+                ?.sortedBy { f -> f.name.split(".").first().toInt() }
+                ?.fastMap(File::toUri)
+                ?.fastMap(Uri::toString)
+                ?.let{ emit(it) } ?: Throwable("Cannot find files")
+        }
+            .catch { emit(emptyList()) }
+            .flowOn(Dispatchers.IO)
     } else {
         model
     },
@@ -210,12 +219,13 @@ class ReadViewModel(
         private set
 
     init {
-        batteryInformation.composeSetup(
-            disposable,
-            androidx.compose.ui.graphics.Color.White
-        ) {
-            batteryColor = it.first
-            batteryIcon = it.second
+        viewModelScope.launch(Dispatchers.IO) {
+            batteryInformation.composeSetupFlow(
+                androidx.compose.ui.graphics.Color.White
+            ) {
+                batteryColor = it.first
+                batteryIcon = it.second
+            }
         }
 
         val url = handle.get<String>("mangaUrl") ?: ""
@@ -242,40 +252,36 @@ class ReadViewModel(
                 .addTo(disposable)
 
             item
-                .getChapterInfo()
+                .getChapterInfoFlow()
                 .map { it.mapNotNull(Storage::link) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { pageList.clear() }
-                .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                .addTo(disposable)
+                .let { loadPages(it) }
         }
     }
 
-    private fun loadPages(modelPath: Single<List<String>>?) {
-        modelPath
-            ?.doOnSubscribe {
-                isLoadingPages.value = true
-                pageList.clear()
-            }
-            ?.subscribeBy {
-                pageList.addAll(it)
-                isLoadingPages.value = false
-            }
-            ?.addTo(disposable)
+    private fun loadPages(modelPath: Flow<List<String>>?) {
+        viewModelScope.launch {
+            modelPath
+                ?.onStart {
+                    isLoadingPages.value = true
+                    pageList.clear()
+                }
+                ?.onEach {
+                    pageList.addAll(it)
+                    isLoadingPages.value = false
+                }
+                ?.collect()
+        }
     }
 
     fun refresh() {
         headers.clear()
         loadPages(
             list.getOrNull(currentChapter)
-                ?.getChapterInfo()
+                ?.getChapterInfoFlow()
                 ?.map {
                     headers.putAll(it.flatMap { it.headers.toList() })
                     it.mapNotNull(Storage::link)
                 }
-                ?.subscribeOn(Schedulers.io())
-                ?.observeOn(AndroidSchedulers.mainThread())
         )
     }
 
@@ -316,8 +322,8 @@ fun ReadView() {
     DisposableEffect(LocalContext.current) {
         val batteryInfo = context.battery {
             readVm.batteryPercent = it.percent
-            readVm.batteryInformation.batteryLevelAlert(it.percent)
-            readVm.batteryInformation.batteryInfoItem(it)
+            readVm.batteryInformation.batteryLevel.tryEmit(it.percent)
+            readVm.batteryInformation.batteryInfo.tryEmit(it)
         }
         onDispose { context.unregisterReceiver(batteryInfo) }
     }
@@ -643,6 +649,7 @@ fun ReadView() {
             ) {
                 Box(Modifier.fillMaxSize()) {
                     LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
                         state = listState,
                         verticalArrangement = Arrangement.spacedBy(LocalContext.current.dpToPx(paddingPage).dp),
                         contentPadding = PaddingValues(
@@ -907,7 +914,7 @@ private fun ZoomableImage(
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }
 
-        if (showTheThing)
+        if (showTheThing) {
             GlideImage(
                 imageModel = remember(painter) { GlideUrl(painter) { headers } },
                 contentScale = ContentScale.FillWidth,
@@ -941,6 +948,7 @@ private fun ZoomableImage(
                         scaleY = scaleAnim
                     }
             )
+        }
     }
 }
 

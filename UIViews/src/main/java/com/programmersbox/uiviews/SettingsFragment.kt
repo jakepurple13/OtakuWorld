@@ -62,7 +62,9 @@ import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -474,14 +476,13 @@ class NotificationViewModel(dao: ItemDao) : ViewModel() {
     var savedNotifications by mutableStateOf(0)
         private set
 
-    private val sub = dao.getAllNotificationCount()
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeBy { savedNotifications = it }
-
-    override fun onCleared() {
-        super.onCleared()
-        sub.dispose()
+    init {
+        viewModelScope.launch {
+            dao.getAllNotificationCountFlow()
+                .dispatchIo()
+                .onEach { savedNotifications = it }
+                .collect()
+        }
     }
 
 }
@@ -494,7 +495,7 @@ private fun NotificationSettings(
     notificationClick: () -> Unit
 ) {
     val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-    val notiViewModel: NotificationViewModel = viewModel(factory = factoryCreate { NotificationViewModel(dao = dao) })
+    val notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao = dao) }
 
     ShowWhen(notiViewModel.savedNotifications > 0) {
         CategorySetting { Text(stringResource(R.string.notifications_category_title)) }

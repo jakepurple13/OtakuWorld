@@ -56,14 +56,15 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
-    val searchPublisher = BehaviorSubject.createDefault<List<ItemModel>>(emptyList())
+    var searchText by mutableStateOf("")
+    var searchList by mutableStateOf<List<ItemModel>>(emptyList())
 
     var isSearching by mutableStateOf(false)
 
@@ -111,32 +112,28 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
     }
 
     private fun sourceLoadCompose(context: Context?, sources: ApiService) {
-        sources
-            .getList(count)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnError { context?.showErrorToast() }
-            .onErrorReturnItem(emptyList())
-            .doOnSubscribe { isRefreshing = true }
-            .subscribeBy {
-                sourceList.addAll(it)
-                isRefreshing = false
-            }
-            .addTo(disposable)
+        viewModelScope.launch {
+            sources
+                .getListFlow(count)
+                .dispatchIoAndCatchList { context?.showErrorToast() }
+                .onStart { isRefreshing = true }
+                .onEach {
+                    sourceList.addAll(it)
+                    isRefreshing = false
+                }
+                .collect()
+        }
     }
 
-    fun search(searchText: String) {
-        sourcePublish.value
-            ?.searchList(searchText, 1, sourceList)
-            ?.subscribeOn(Schedulers.io())
-            ?.observeOn(AndroidSchedulers.mainThread())
-            ?.doOnSubscribe { isSearching = true }
-            ?.onErrorReturnItem(sourceList)
-            ?.subscribeBy {
-                searchPublisher.onNext(it)
-                isSearching = false
-            }
-            ?.addTo(disposable)
+    fun search() {
+        viewModelScope.launch {
+            sourcePublish.value
+                ?.searchSourceList(searchText, 1, sourceList)
+                ?.onStart { isSearching = true }
+                ?.onEach { searchList = it }
+                ?.onCompletion { isSearching = false }
+                ?.collect()
+        }
     }
 
     override fun onCleared() {
@@ -233,8 +230,7 @@ fun AllView(
                             sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
                             sheetContent = {
                                 val focusManager = LocalFocusManager.current
-                                val searchList by allVm.searchPublisher.subscribeAsState(initial = emptyList())
-                                var searchText by rememberSaveable { mutableStateOf("") }
+                                val searchList = allVm.searchList
                                 val searchTopAppBarScrollState = rememberTopAppBarScrollState()
                                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(searchTopAppBarScrollState) }
                                 Scaffold(
@@ -261,8 +257,8 @@ fun AllView(
                                             ) { Text(stringResource(R.string.search)) }
 
                                             androidx.compose.material3.OutlinedTextField(
-                                                value = searchText,
-                                                onValueChange = { searchText = it },
+                                                value = allVm.searchText,
+                                                onValueChange = { allVm.searchText = it },
                                                 label = {
                                                     Text(
                                                         stringResource(
@@ -274,7 +270,7 @@ fun AllView(
                                                 trailingIcon = {
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                                         Text(searchList.size.toString())
-                                                        IconButton(onClick = { searchText = "" }) {
+                                                        IconButton(onClick = { allVm.searchText = "" }) {
                                                             Icon(Icons.Default.Cancel, null)
                                                         }
                                                     }
@@ -286,7 +282,7 @@ fun AllView(
                                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                                                 keyboardActions = KeyboardActions(onSearch = {
                                                     focusManager.clearFocus()
-                                                    allVm.search(searchText)
+                                                    allVm.search()
                                                 })
                                             )
                                         }

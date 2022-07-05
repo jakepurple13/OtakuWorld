@@ -40,4 +40,9 @@ dependencies {
 
     //Rx
     implementation rxkotlin
+
+    //Coroutines
+    implementation coroutinesCore
+    implementation coroutinesAndroid
+    implementation coroutinesRX
 }

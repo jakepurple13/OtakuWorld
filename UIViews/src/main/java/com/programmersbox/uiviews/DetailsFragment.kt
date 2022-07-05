@@ -81,9 +81,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.onebone.toolbar.CollapsingToolbarScaffold
@@ -240,18 +238,27 @@ class DetailViewModel(
 
     var description: String by mutableStateOf("")
 
-    private val itemSub = itemModel?.url?.let { url ->
-        Cached.cache[url]?.let { Single.create { emitter -> emitter.onSuccess(it) } } ?: itemModel.toInfoModel()
-    }
-        ?.doOnError { context.showErrorToast() }
-        ?.subscribeOn(Schedulers.io())
-        ?.observeOn(AndroidSchedulers.mainThread())
-        ?.subscribeBy {
-            info = it
-            description = it.description
-            setup(it)
-            Cached.cache[it.url] = it
+    init {
+        viewModelScope.launch {
+            itemModel?.url?.let { url ->
+                Cached.cache[url]?.let { flow<Result<InfoModel>> { emit(Result.success(it)) } } ?: itemModel.toInfoModelFlow()
+            }
+                ?.dispatchIo()
+                ?.catch {
+                    it.printStackTrace()
+                    context.showErrorToast()
+                }
+                ?.onEach {
+                    if(it.isSuccess) {
+                        info = it.getOrThrow()
+                        description = it.getOrThrow().description
+                        setup(it.getOrThrow())
+                        Cached.cache[it.getOrThrow().url] = it.getOrThrow()
+                    }
+                }
+                ?.collect()
         }
+    }
 
     private val englishTranslator = TranslateItems()
 
@@ -322,7 +329,6 @@ class DetailViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        itemSub?.dispose()
         disposable.dispose()
         itemListener.unregister()
         chapterListener.unregister()
