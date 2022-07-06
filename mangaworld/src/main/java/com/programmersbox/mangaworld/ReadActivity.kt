@@ -227,15 +227,17 @@ class ReadViewModel(
         }
 
         viewModelScope.launch(Dispatchers.IO) {
+            val url = handle.get<String>("mangaUrl") ?: ""
+
             handle.getStateFlow<String>("allChapters", "")
                 .map { it.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo)).orEmpty() }
-                .onEach { list = it }
+                .onEach {
+                    list = it
+                    currentChapter = it.indexOfFirst { l -> l.url == url }
+                }
                 .flowOn(Dispatchers.Main)
                 .collect()
         }
-
-        val url = handle.get<String>("mangaUrl") ?: ""
-        currentChapter = list.indexOfFirst { l -> l.url == url }
 
         loadPages(modelPath)
     }
