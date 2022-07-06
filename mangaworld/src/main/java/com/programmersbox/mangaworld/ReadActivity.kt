@@ -639,10 +639,8 @@ fun ReadView() {
                         modifier = Modifier.fillMaxSize(),
                         state = listState,
                         verticalArrangement = Arrangement.spacedBy(LocalContext.current.dpToPx(paddingPage).dp),
-                        contentPadding = PaddingValues(top = 64.dp)
-                    ) {
-                        reader(pages, readVm) { readVm.showInfo = !readVm.showInfo }
-                    }
+                        contentPadding = PaddingValues(top = 64.dp, bottom = 80.dp)
+                    ) { reader(pages, readVm) { readVm.showInfo = !readVm.showInfo } }
                 }
             }
         }
