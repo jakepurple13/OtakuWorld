@@ -66,6 +66,20 @@ abstract class VidstreamingTemplate(
             .let(it::onSuccess)
     }
 
+    override suspend fun recent(page: Int): List<ItemModel> {
+        return recentPath(page)
+            .select("li.video-block")
+            .fastMap {
+                ItemModel(
+                    title = it.select("div.name").text(),
+                    description = "",
+                    imageUrl = it.select("div.picture").select("img").attr("abs:src"),
+                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
+                    source = this
+                )
+            }
+    }
+
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create {
         doc
             .select("li.video-block")
@@ -79,6 +93,20 @@ abstract class VidstreamingTemplate(
                 )
             }
             .let(it::onSuccess)
+    }
+
+    override suspend fun allList(page: Int): List<ItemModel> {
+        return all(page)
+            .select("li.video-block")
+            .fastMap {
+                ItemModel(
+                    title = it.select("div.name").text(),
+                    description = "",
+                    imageUrl = it.select("div.picture").select("img").attr("abs:src"),
+                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
+                    source = this
+                )
+            }
     }
 
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create {
@@ -103,6 +131,28 @@ abstract class VidstreamingTemplate(
             .let(it::onSuccess)
     }
 
+    override suspend fun itemInfo(model: ItemModel): InfoModel {
+        val doc = model.url.toJsoup()
+        return InfoModel(
+            source = this,
+            title = model.title,
+            url = model.url,
+            alternativeNames = emptyList(),
+            description = doc.select("div.post-entry").text(),
+            imageUrl = model.imageUrl,
+            genres = emptyList(),
+            chapters = doc.select("div.video-info-left > ul.listing > li.video-block > a").fastMap {
+                ChapterModel(
+                    it.select("div.name").text(),
+                    it.select("a").attr("abs:href"),
+                    it.select("span.date").text(),
+                    model.url,
+                    this
+                )
+            }
+        )
+    }
+
     override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
         val doc = url.toJsoup()
         ItemModel(
@@ -119,6 +169,23 @@ abstract class VidstreamingTemplate(
             source = this
         )
             .let(it::onSuccess)
+    }
+
+    override suspend fun sourceByUrl(url: String): ItemModel {
+        val doc = url.toJsoup()
+        return ItemModel(
+            title = doc.select("div.video-details").select("span.date").text(),
+            description = doc.select("div.post-entry").text(),
+            imageUrl = doc
+                .select("div.video-info-left > ul.listing > li.video-block > a")
+                .select("div.picture")
+                .select("img")
+                .randomOrNull()
+                ?.attr("abs:src")
+                .orEmpty(),
+            url = url,
+            source = this
+        )
     }
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
@@ -139,6 +206,20 @@ abstract class VidstreamingTemplate(
 
         }
             .onErrorResumeNext(super.searchList(searchText, page, list))
+    }
+
+    override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
+        return "$searchUrl/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
+            .select("li.video-block")
+            .fastMap {
+                ItemModel(
+                    title = it.select("div.name").text(),
+                    description = "",
+                    imageUrl = it.select("div.picture").select("img").attr("abs:src"),
+                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
+                    source = this
+                )
+            }
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> {
@@ -179,6 +260,35 @@ abstract class VidstreamingTemplate(
             emitter.onSuccess(i)
         }
             .onErrorReturnItem(emptyList())
+    }
+
+    override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
+        val v = chapterModel.url.toJsoup().select("div.play-video").select("iframe").attr("abs:src")
+
+        val s = v.toJsoup()
+
+        val servers = s.select(".list-server-items > .linkserver").mapNotNull { li ->
+            if (!li?.attr("data-video").isNullOrEmpty()) {
+                li.text() to fixUrl(li.attr("data-video"), baseUrl)
+            } else {
+                null
+            }
+        }
+
+        return servers
+            .map { l ->
+                //println(l)
+                extractors.flatMap { e ->
+                    //println(e.name)
+                    if (l.second.startsWith(e.mainUrl)) {
+                        //println(url + "\t" + e.name)
+                        e.getUrl(l.second)
+                    } else emptyList()
+                }
+            }
+            .filter { it.isNotEmpty() }
+            .flatten()
+            .distinctBy { it.link }
     }
 
     data class Xstream(val success: Boolean?, val player: Any?, val data: List<XstreamData>?, val captions: Any?, val is_vr: Boolean?)

@@ -68,8 +68,8 @@ abstract class ShowApi(
     internal val recentPath: String
 ) : ApiService {
 
-    private fun recentPath(page: Int = 1) = "$baseUrl/$recentPath${recentPage(page)}".toJsoup()
-    private fun all(page: Int = 1) = "$baseUrl/$allPath${allPage(page)}".toJsoup()
+    internal fun recentPath(page: Int = 1) = "$baseUrl/$recentPath${recentPage(page)}".toJsoup()
+    internal fun all(page: Int = 1) = "$baseUrl/$allPath${allPage(page)}".toJsoup()
 
     internal open fun recentPage(page: Int): String = ""
     internal open fun allPage(page: Int): String = ""
