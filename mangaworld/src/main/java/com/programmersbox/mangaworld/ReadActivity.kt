@@ -29,21 +29,13 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -64,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastMap
@@ -84,6 +77,10 @@ import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.VerticalPager
+import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
@@ -300,6 +297,7 @@ class ReadViewModel(
 
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
@@ -343,8 +341,11 @@ fun ReadView() {
 
     LaunchedEffect(readVm.pageList) { BigImageViewer.prefetch(*readVm.pageList.fastMap(Uri::parse).toTypedArray()) }
 
+    val listOrPager by context.listOrPager.collectAsState(initial = true)
+
+    val pagerState = rememberPagerState()
     val listState = rememberLazyListState()
-    val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
+    val currentPage by remember { derivedStateOf { if (listOrPager) listState.firstVisibleItemIndex else pagerState.currentPage } }
 
     val paddingPage by context.pagePadding.collectAsState(initial = 4)
     var settingsPopup by remember { mutableStateOf(false) }
@@ -358,7 +359,7 @@ fun ReadView() {
             onDismissRequest = { settingsPopup = false },
             title = { Text(stringResource(R.string.settings)) },
             text = {
-                Column {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     SliderSetting(
                         scope = scope,
                         settingIcon = Icons.Default.BatteryAlert,
@@ -378,6 +379,15 @@ fun ReadView() {
                         initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
                         range = 0f..10f
                     )
+                    Divider()
+                    val activity = LocalActivity.current
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
+                        summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
+                        value = listOrPager,
+                        updateValue = { scope.launch { activity.updatePref(LIST_OR_PAGER, it) } },
+                        settingIcon = { Icon(Icons.Default.Pages, null) }
+                    )
                 }
             },
             confirmButton = { TextButton(onClick = { settingsPopup = false }) { Text(stringResource(R.string.ok)) } }
@@ -390,25 +400,20 @@ fun ReadView() {
         activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
     }
 
+    val listShowItems = (listState.isScrolledToTheEnd() || listState.isScrolledToTheBeginning()) && listOrPager
+    val pagerShowItems = (pagerState.currentPage == 0 || pagerState.currentPage >= pages.size) && !listOrPager
 
-    val showItems = readVm.showInfo || listState.isScrolledToTheEnd() || listState.isScrolledToTheBeginning()
-
-    /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
-    //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
-    //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
+    val showItems = readVm.showInfo || listShowItems || pagerShowItems
 
     val topAppBarScrollState = rememberTopAppBarScrollState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
-    val scaffoldState = rememberBottomSheetScaffoldState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
-    BackHandler(scaffoldState.bottomSheetState.isExpanded || scaffoldState.drawerState.isOpen || drawerState.isOpen || sheetState.isVisible) {
+    BackHandler(drawerState.isOpen || sheetState.isVisible) {
         scope.launch {
             when {
-                scaffoldState.bottomSheetState.isExpanded -> scaffoldState.bottomSheetState.collapse()
-                scaffoldState.drawerState.isOpen -> scaffoldState.drawerState.close()
                 drawerState.isOpen -> drawerState.close()
                 sheetState.isVisible -> sheetState.hide()
             }
@@ -428,7 +433,7 @@ fun ReadView() {
                         title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
                         actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
                         navigationIcon = {
-                            IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
+                            IconButton(onClick = { scope.launch { sheetState.hide() } }) {
                                 Icon(Icons.Default.Close, null)
                             }
                         }
@@ -472,8 +477,8 @@ fun ReadView() {
                                     )
                                     .clickable {
                                         scope.launch {
-                                            if (currentPage == i) scaffoldState.bottomSheetState.collapse()
-                                            listState.animateScrollToItem(i)
+                                            if (currentPage == i) sheetState.hide()
+                                            if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
                                         }
                                     }
                             ) {
@@ -635,14 +640,81 @@ fun ReadView() {
                     onRefresh = { readVm.refresh() },
                     indicatorPadding = PaddingValues(top = 64.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        state = listState,
-                        verticalArrangement = Arrangement.spacedBy(LocalContext.current.dpToPx(paddingPage).dp),
-                        contentPadding = PaddingValues(top = 64.dp, bottom = 80.dp)
-                    ) { reader(pages, readVm) { readVm.showInfo = !readVm.showInfo } }
+                    val padding = PaddingValues(top = 64.dp, bottom = 80.dp)
+                    val spacing = LocalContext.current.dpToPx(paddingPage).dp
+                    Crossfade(targetState = listOrPager) {
+                        if (it) ListView(listState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        else PagerView(pagerState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ListView(
+    listState: LazyListState,
+    contentPadding: PaddingValues,
+    pages: List<String>,
+    readVm: ReadViewModel,
+    itemSpacing: Dp,
+    onClick: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        verticalArrangement = Arrangement.spacedBy(itemSpacing),
+        contentPadding = contentPadding
+    ) { reader(pages, readVm, onClick) }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List<String>, vm: ReadViewModel, itemSpacing: Dp, onClick: () -> Unit) {
+    VerticalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize(),
+        count = pages.size + 1,
+        itemSpacing = itemSpacing,
+        contentPadding = contentPadding,
+        key = { it }
+    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, onClick, vm.headers) } ?: LastPageReached(vm = vm) }
+}
+
+@Composable
+private fun LastPageReached(vm: ReadViewModel) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            stringResource(id = R.string.lastPage),
+            style = M3MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.CenterHorizontally)
+        )
+        if (vm.currentChapter <= 0) {
+            Text(
+                stringResource(id = R.string.reachedLastChapter),
+                style = M3MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+            )
+        }
+        if (BuildConfig.BUILD_TYPE == "release") {
+            val context = LocalContext.current
+            AndroidView(
+                modifier = Modifier.fillMaxWidth(),
+                factory = {
+                    AdView(it).apply {
+                        setAdSize(AdSize.BANNER)
+                        adUnitId = context.getString(R.string.ad_unit_id)
+                        loadAd(vm.ad)
+                    }
+                }
+            )
         }
     }
 }
@@ -747,42 +819,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
         }*/
 
     items(pages, key = { it }, contentType = { it }) { ChapterPage(it, onClick, vm.headers) }
-
-    item {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                stringResource(id = R.string.lastPage),
-                style = M3MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-            )
-            if (vm.currentChapter <= 0) {
-                Text(
-                    stringResource(id = R.string.reachedLastChapter),
-                    style = M3MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                )
-            }
-            if (BuildConfig.BUILD_TYPE == "release") {
-                val context = LocalContext.current
-                AndroidView(
-                    modifier = Modifier.fillMaxWidth(),
-                    factory = {
-                        AdView(it).apply {
-                            setAdSize(AdSize.BANNER)
-                            adUnitId = context.getString(R.string.ad_unit_id)
-                            loadAd(vm.ad)
-                        }
-                    }
-                )
-            }
-        }
-    }
+    item { LastPageReached(vm = vm) }
 }
 
 @Composable
@@ -864,9 +901,7 @@ private fun ZoomableImage(
             GlideImage(
                 imageModel = remember(painter) { GlideUrl(painter) { headers } },
                 contentScale = ContentScale.FillWidth,
-                loading = {
-                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                },
+                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {
                     Text(
                         stringResource(R.string.pressToRefresh),
