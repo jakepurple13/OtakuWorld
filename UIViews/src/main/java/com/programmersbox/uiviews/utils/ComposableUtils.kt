@@ -1144,21 +1144,26 @@ fun InfiniteListHandler(
     buffer: Int = 2,
     onLoadMore: () -> Unit
 ) {
+    var lastTotalItems = remember { -1 }
     val loadMore = remember {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
             val totalItemsNumber = layoutInfo.totalItemsCount
             val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
 
-            lastVisibleItemIndex > (totalItemsNumber - buffer)
+            lastVisibleItemIndex > (totalItemsNumber - buffer) && (lastTotalItems != totalItemsNumber)
         }
     }
 
     LaunchedEffect(loadMore) {
         snapshotFlow { loadMore.value }
-            .drop(1)
             .distinctUntilChanged()
-            .collect { onLoadMore() }
+            .collect {
+                if (it) {
+                    lastTotalItems = listState.layoutInfo.totalItemsCount
+                    onLoadMore()
+                }
+            }
     }
 }
 
