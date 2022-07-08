@@ -149,7 +149,7 @@ buildscript {
 
         datastore = [ datastore: [datastore, datastorePref] ]
 
-        ktorVersion = "1.6.7"
+        ktorVersion = "2.0.3"
 
         ktor = [
                 ktor: [
