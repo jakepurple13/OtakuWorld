@@ -403,6 +403,14 @@ fun ReadView() {
     val listShowItems = (listState.isScrolledToTheEnd() || listState.isScrolledToTheBeginning()) && listOrPager
     val pagerShowItems = (pagerState.currentPage == 0 || pagerState.currentPage >= pages.size) && !listOrPager
 
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { listState.scrollToItem(it) }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }.collect { pagerState.scrollToPage(it) }
+    }
+
     val showItems = readVm.showInfo || listShowItems || pagerShowItems
 
     val topAppBarScrollState = rememberTopAppBarScrollState()
