@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = "1.7.0"
-    ext.latestAboutLibsRelease = "10.3.0"
+    ext.latestAboutLibsRelease = "10.3.1"
 
     ext.coroutinesVersion = "1.6.3"
 
@@ -73,7 +73,7 @@ buildscript {
     // Integration with activities
     ext.composeActivity = 'androidx.activity:activity-compose:1.5.0'
     // Integration with ViewModels
-    ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'
+    ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0'
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
@@ -169,9 +169,9 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:7.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.gms:google-services:4.3.10'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
-        classpath "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:10.3.0"
+        classpath 'com.google.gms:google-services:4.3.13'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.1'
+        classpath "com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:10.3.1"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
