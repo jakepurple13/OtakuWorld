@@ -41,7 +41,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -91,18 +91,19 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
     }
 
     private fun sourceLoadCompose(context: Context?, sources: ApiService) {
-        sources
-            .getRecent(count)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnError { context?.showErrorToast() }
-            .onErrorReturnItem(emptyList())
-            .doOnSubscribe { isRefreshing = true }
-            .subscribeBy {
-                sourceList.addAll(it)
-                isRefreshing = false
-            }
-            .addTo(disposable)
+        viewModelScope.launch {
+            sources
+                .getRecentFlow(count)
+                .dispatchIoAndCatchList()
+                .catch {
+                    context?.showErrorToast()
+                    emit(emptyList())
+                }
+                .onStart { isRefreshing = true }
+                .onCompletion { isRefreshing = false }
+                .onEach { sourceList.addAll(it) }
+                .collect()
+        }
     }
 
     override fun onCleared() {

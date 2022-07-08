@@ -222,6 +222,9 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
 val PAGE_PADDING = intPreferencesKey("page_padding")
 val Context.pagePadding get() = dataStore.data.map { it[PAGE_PADDING] ?: 4 }
 
+val LIST_OR_PAGER = booleanPreferencesKey("list_or_padding")
+val Context.listOrPager get() = dataStore.data.map { it[LIST_OR_PAGER] ?: true }
+
 val showOrHideNav = BehaviorSubject.createDefault(true)
 
 /**

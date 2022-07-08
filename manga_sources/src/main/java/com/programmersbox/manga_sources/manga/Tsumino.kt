@@ -45,6 +45,27 @@ object Tsumino : ApiService {
         super.searchList(searchText, page, list)
     }
 
+    override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
+        val body = FormBody.Builder()
+            .add("PageNumber", page.toString())
+            .add("Text", searchText.toString())
+            .add("Sort", "Newest")
+            .add("List", "0")
+            .add("Length", "0")
+            .build()
+        return getJsonApiPost<Base>("$baseUrl/Search/Operate/", body)
+            ?.data
+            ?.fastMap {
+                ItemModel(
+                    title = it.entry?.title.toString(),
+                    description = "${it.entry?.duration}",
+                    url = it.entry?.id.toString(),
+                    imageUrl = it.entry?.thumbnailUrl ?: it.entry?.thumbnailTemplateUrl ?: "",
+                    source = Tsumino
+                )
+            }.orEmpty()
+    }
+
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         getJsonApi<Base>("$baseUrl/Search/Operate/?PageNumber=$page&Sort=Newest")
             ?.data
@@ -60,6 +81,20 @@ object Tsumino : ApiService {
             .let(emitter::onSuccess)
     }
 
+    override suspend fun recent(page: Int): List<ItemModel> {
+        return getJsonApi<Base>("$baseUrl/Search/Operate/?PageNumber=$page&Sort=Newest")
+            ?.data
+            ?.fastMap {
+                ItemModel(
+                    title = it.entry?.title.toString(),
+                    description = "${it.entry?.duration}",
+                    url = it.entry?.id.toString(),
+                    imageUrl = it.entry?.thumbnailUrl ?: it.entry?.thumbnailTemplateUrl ?: "",
+                    source = Tsumino
+                )
+            }.orEmpty()
+    }
+
     override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         getJsonApi<Base>("$baseUrl/Search/Operate/?PageNumber=$page&Sort=Popularity")
             ?.data
@@ -73,6 +108,20 @@ object Tsumino : ApiService {
                 )
             }.orEmpty()
             .let(emitter::onSuccess)
+    }
+
+    override suspend fun allList(page: Int): List<ItemModel> {
+        return getJsonApi<Base>("$baseUrl/Search/Operate/?PageNumber=$page&Sort=Popularity")
+            ?.data
+            ?.fastMap {
+                ItemModel(
+                    title = it.entry?.title.toString(),
+                    description = "${it.entry?.duration}",
+                    url = it.entry?.id.toString(),
+                    imageUrl = it.entry?.thumbnailUrl ?: it.entry?.thumbnailTemplateUrl ?: "",
+                    source = Tsumino
+                )
+            }.orEmpty()
     }
 
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create {
@@ -99,12 +148,41 @@ object Tsumino : ApiService {
         )
     }
 
+    override suspend fun itemInfo(model: ItemModel): InfoModel {
+        val doc = Jsoup.connect("$baseUrl/entry/${model.url}").get()
+        return InfoModel(
+            title = model.title,
+            description = getDesc(doc),
+            url = "$baseUrl/entry/${model.url}",
+            imageUrl = model.imageUrl,
+            chapters = listOf(
+                ChapterModel(
+                    url = model.url,
+                    name = doc.select("#Pages").text(),
+                    uploaded = "",
+                    sourceUrl = model.url,
+                    source = Tsumino
+                )
+            ),
+            genres = doc.select("#Tag a").eachText(),
+            alternativeNames = emptyList(),
+            source = Tsumino
+        )
+    }
+
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
         chapterModel.name.toIntOrNull()?.let { 1..it }
             ?.map { "https://content.tsumino.com/thumbs/${chapterModel.url}/$it" }
             .orEmpty()
             .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
             .let(emitter::onSuccess)
+    }
+
+    override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
+        return chapterModel.name.toIntOrNull()?.let { 1..it }
+            ?.map { "https://content.tsumino.com/thumbs/${chapterModel.url}/$it" }
+            .orEmpty()
+            .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
     }
 
     private fun getDesc(document: Document): String {

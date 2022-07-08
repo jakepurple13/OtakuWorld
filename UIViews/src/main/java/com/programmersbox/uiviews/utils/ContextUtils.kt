@@ -63,7 +63,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.rx2.asObservable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -262,6 +262,9 @@ class BatteryInformation(val context: Context) {
     val batteryLevelAlert = PublishSubject.create<Float>()
     val batteryInfoItem = PublishSubject.create<Battery>()
 
+    val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
+    val batteryInfo by lazy { MutableSharedFlow<Battery>() }
+
     enum class BatteryViewType(val icon: GoogleMaterial.Icon, val composeIcon: ImageVector) {
         CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full, Icons.Default.BatteryChargingFull),
         DEFAULT(GoogleMaterial.Icon.gmd_battery_std, Icons.Default.BatteryStd),
@@ -302,6 +305,35 @@ class BatteryInformation(val context: Context) {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(subscribe)
             .addTo(disposable)
+    }
+
+    suspend fun composeSetupFlow(
+        normalBatteryColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White,
+        subscribe: suspend (Pair<androidx.compose.ui.graphics.Color, BatteryViewType>) -> Unit
+    ) {
+        combine(
+            combine(
+                batteryLevel,
+                context.batteryPercent
+            ) { b, d -> b <= d }
+                .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
+            combine(
+                batteryInfo,
+                context.batteryPercent
+            ) { b, d -> b to d }
+                .map {
+                    when {
+                        it.first.isCharging -> BatteryViewType.CHARGING_FULL
+                        it.first.percent <= it.second -> BatteryViewType.ALERT
+                        it.first.percent >= 95 -> BatteryViewType.FULL
+                        it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
+                        else -> BatteryViewType.DEFAULT
+                    }
+                }
+                .distinctUntilChanged { t1, t2 -> t1 != t2 },
+        ) { l, b -> l to b }
+            .onEach(subscribe)
+            .collect()
     }
 
     fun setup(

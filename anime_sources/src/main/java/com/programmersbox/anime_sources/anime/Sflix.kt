@@ -7,6 +7,7 @@ import android.webkit.*
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
+import com.programmersbox.anime_sources.toJsoup
 import com.programmersbox.anime_sources.utilities.*
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.models.ChapterModel
@@ -64,6 +65,26 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
             .let(s::onSuccess)
     }
 
+    override suspend fun recent(page: Int): List<ItemModel> {
+        return recentPath(page)
+            .select("section.block_area.block_area_home.section-id-02")
+            .select("div.film-poster")
+            .fastMap {
+                val img = it.select("img")
+                val title = img.attr("title")
+                val posterUrl = img.attr("data-src")
+                val href = fixUrl(it.select("a").attr("href"))
+
+                ItemModel(
+                    title = title,
+                    description = "",
+                    imageUrl = posterUrl,
+                    url = href,
+                    source = sourceName
+                )
+            }
+    }
+
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { s ->
         val map = listOf(
             "div#trending-movies",
@@ -91,6 +112,32 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
         s.onSuccess(items)
     }
 
+    override suspend fun allList(page: Int): List<ItemModel> {
+        val map = listOf(
+            "div#trending-movies",
+            "div#trending-tv",
+        )
+        return map.flatMap { key ->
+            all(page)
+                .select(key)
+                .select("div.film-poster")
+                .fastMap {
+                    val img = it.select("img")
+                    val title = img.attr("title")
+                    val posterUrl = img.attr("data-src")
+                    val href = fixUrl(it.select("a").attr("href"))
+
+                    ItemModel(
+                        title = title,
+                        description = "",
+                        imageUrl = posterUrl,
+                        url = href,
+                        source = sourceName
+                    )
+                }
+        }
+    }
+
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> =
         Single.create<List<ItemModel>> { s ->
             Jsoup.connect("$baseUrl/search/${searchText.toString().replace(" ", "-")}").get()
@@ -111,6 +158,24 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
                 .let(s::onSuccess)
         }
             .onErrorResumeNext(super.searchList(searchText, page, list))
+
+    override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
+        return Jsoup.connect("$baseUrl/search/${searchText.toString().replace(" ", "-")}").get()
+            .select("div.flw-item")
+            .fastMap {
+                val title = it.select("h2.film-name").text()
+                val href = fixUrl(it.select("a").attr("href"))
+                val year = it.select("span.fdi-item").text()
+                val image = it.select("img").attr("data-src")
+                ItemModel(
+                    title = title,
+                    description = year,
+                    imageUrl = image,
+                    url = href,
+                    source = sourceName
+                )
+            }
+    }
 
     override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
 
@@ -188,6 +253,80 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
             .let(emitter::onSuccess)
     }
 
+    override suspend fun itemInfo(model: ItemModel): InfoModel {
+        val details = model.url.toJsoup().select("div.detail_page-watch")
+        val img = details.select("img.film-poster-img")
+        val posterUrl = img.attr("src")
+        val title = img.attr("title")
+
+        val plot = details.select("div.description").text().replace("Overview:", "").trim()
+
+        val isMovie = model.url.contains("/movie/")
+
+        val idRegex = Regex(""".*-(\d+)""")
+        val dataId = details.attr("data-id")
+        val id = if (dataId.isNullOrEmpty()) idRegex.find(model.url)?.groupValues?.get(1).orEmpty() else dataId
+
+        val episodes = if (isMovie) {
+            val episodesUrl = "$baseUrl/ajax/movie/episodes/$id"
+            val episodes = get(episodesUrl).text
+
+            // Supported streams, they're identical
+            val sourceId = Jsoup.parse(episodes).select("a").firstOrNull {
+                it.select("span").text().trim().equals("RapidStream", ignoreCase = true)
+                        || it.select("span").text().trim().equals("Vidcloud", ignoreCase = true)
+            }?.attr("data-id")
+
+            val webViewUrl = "$baseUrl${sourceId?.let { ".$it" } ?: ""}".replace("/movie/", "/watch-movie/")
+            listOf(
+                ChapterModel(
+                    title,
+                    webViewUrl,
+                    "",
+                    model.url,
+                    this@Sflix.sourceName
+                )
+            )
+        } else {
+            val seasonsHtml = get("$baseUrl/ajax/v2/tv/seasons/$id").text
+            val seasonsDocument = Jsoup.parse(seasonsHtml)
+
+            seasonsDocument.select("div.dropdown-menu.dropdown-menu-model > a").flatMapIndexed { season, element ->
+                val seasonId = element.attr("data-id")
+                if (seasonId.isNullOrBlank()) emptyList() else {
+
+                    val seasonHtml = get("$baseUrl/ajax/v2/season/episodes/$seasonId").text
+                    val seasonDocument = Jsoup.parse(seasonHtml)
+                    seasonDocument.select("div.flw-item.film_single-item.episode-item.eps-item")
+                        .mapIndexed { _, it ->
+                            val episodeImg = it.select("img")
+                            val episodeTitle = episodeImg.attr("title")
+                            val episodeData = it.attr("data-id")
+
+                            ChapterModel(
+                                "S${season + 1}: $episodeTitle",
+                                "${model.url}:::$episodeData",
+                                "",
+                                model.url,
+                                this@Sflix.sourceName
+                            )
+                        }
+                }
+            }
+        }
+
+        return InfoModel(
+            source = this@Sflix.sourceName,
+            title = title,
+            url = model.url,
+            alternativeNames = emptyList(),
+            description = plot,
+            imageUrl = posterUrl,
+            genres = emptyList(),
+            chapters = episodes.reversed()
+        )
+    }
+
     override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
         ItemModel(
             title = "",
@@ -196,6 +335,16 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
             url = url,
             source = this
         ).let(emitter::onSuccess)
+    }
+
+    override suspend fun sourceByUrl(url: String): ItemModel {
+        return ItemModel(
+            title = "",
+            description = "",
+            imageUrl = "",
+            url = url,
+            source = this
+        )
     }
 
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
@@ -238,6 +387,44 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
         }.flatten()
 
         emitter.onSuccess(d)
+    }
+
+    override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
+        // To transfer url:::id
+        val split = chapterModel.url.split(":::")
+        // Only used for tv series
+        val url = if (split.size == 2) {
+            val episodesUrl = "$baseUrl/ajax/v2/episode/servers/${split[1]}"
+            val episodes = get(episodesUrl).text
+
+            // Supported streams, they're identical
+            val sourceId = Jsoup.parse(episodes).select("a").firstOrNull {
+                it.select("span").text().trim().equals("RapidStream", ignoreCase = true)
+                        || it.select("span").text().trim().equals("Vidcloud", ignoreCase = true)
+            }?.attr("data-id")
+
+            "${split[0]}${sourceId?.let { ".$it" } ?: ""}".replace("/tv/", "/watch-tv/")
+        } else {
+            chapterModel.url
+        }
+
+        val sources = get(
+            url,
+            interceptor = WebViewResolver(Regex("""/getSources"""))
+        ).text
+
+        val mapped = sources.fromJson<SourceObject>()
+
+        val list = listOf(
+            mapped?.sources to "source 1",
+            mapped?.sources1 to "source 2",
+            mapped?.sources2 to "source 3",
+            mapped?.sourcesBackup to "source backup"
+        )
+
+        return list.flatMap { subList ->
+            subList.first?.fastMap { it?.toExtractorLink(chapterModel, subList.second).orEmpty() }.orEmpty()
+        }.flatten()
     }
 
     private fun SourcesDope.toExtractorLink(caller: ChapterModel, name: String): List<Storage>? {

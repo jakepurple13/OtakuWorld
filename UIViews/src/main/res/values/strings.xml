@@ -85,6 +85,8 @@
     <string name="choose_a_theme">Choose a Theme</string>
     <string name="theme_choice_title">Theme</string>
     <string name="battery_alert_percentage">Battery Alert Percentage</string>
+    <string name="list_or_pager_title">View Type</string>
+    <string name="list_or_pager_description">Choose between a flowing view or a single page view</string>
     <string name="press_to_check_for_updates">Press to Check for Updates</string>
     <string name="update_available">Update Available</string>
     <string name="currentSource">Current Source: %s</string>

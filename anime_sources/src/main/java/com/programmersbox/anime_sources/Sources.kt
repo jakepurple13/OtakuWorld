@@ -68,8 +68,8 @@ abstract class ShowApi(
     internal val recentPath: String
 ) : ApiService {
 
-    private fun recent(page: Int = 1) = "$baseUrl/$recentPath${recentPage(page)}".toJsoup()
-    private fun all(page: Int = 1) = "$baseUrl/$allPath${allPage(page)}".toJsoup()
+    internal fun recentPath(page: Int = 1) = "$baseUrl/$recentPath${recentPage(page)}".toJsoup()
+    internal fun all(page: Int = 1) = "$baseUrl/$allPath${allPage(page)}".toJsoup()
 
     internal open fun recentPage(page: Int): String = ""
     internal open fun allPage(page: Int): String = ""
@@ -83,7 +83,7 @@ abstract class ShowApi(
     protected fun searchListNonSingle(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> =
         if (searchText.isEmpty()) list else list.filter { it.title.contains(searchText, true) }
 
-    override fun getRecent(page: Int) = Single.create<Document> { it.onSuccess(recent(page)) }
+    override fun getRecent(page: Int) = Single.create<Document> { it.onSuccess(recentPath(page)) }
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .flatMap { getRecent(it) }

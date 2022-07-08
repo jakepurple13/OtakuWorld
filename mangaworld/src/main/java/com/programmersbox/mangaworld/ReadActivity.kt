@@ -29,17 +29,17 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -48,18 +48,15 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastMap
@@ -80,6 +77,10 @@ import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.github.piasy.biv.BigImageViewer
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.VerticalPager
+import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
@@ -114,9 +115,7 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
@@ -128,21 +127,21 @@ class ReadViewModel(
     context: Context,
     val genericInfo: GenericInfo,
     val headers: MutableMap<String, String> = mutableMapOf<String, String>(),
-    model: Single<List<String>>? = handle
+    model: Flow<List<String>>? = handle
         .get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-        ?.getChapterInfo()
+        ?.getChapterInfoFlow()
         ?.map {
             headers.putAll(it.flatMap { it.headers.toList() })
             it.mapNotNull(Storage::link)
-        }
-        ?.subscribeOn(Schedulers.io())
-        ?.observeOn(AndroidSchedulers.mainThread())
-        ?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
+        },
+    /*?.subscribeOn(Schedulers.io())
+    ?.observeOn(AndroidSchedulers.mainThread())*/
+    //?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
     isDownloaded: Boolean = handle.get<String>("downloaded")?.toBooleanStrict() ?: false,
     filePath: File? = handle.get<String>("filePath")?.let { File(it) },
-    modelPath: Single<List<String>>? = if (isDownloaded && filePath != null) {
-        Single.create<List<String>> {
+    modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
+        /*Single.create<List<String>> {
             filePath
                 .listFiles()
                 ?.sortedBy { f -> f.name.split(".").first().toInt() }
@@ -151,7 +150,17 @@ class ReadViewModel(
                 ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
         }
             .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread())*/
+        flow<List<String>> {
+            filePath
+                .listFiles()
+                ?.sortedBy { f -> f.name.split(".").first().toInt() }
+                ?.fastMap(File::toUri)
+                ?.fastMap(Uri::toString)
+                ?.let { emit(it) } ?: Throwable("Cannot find files")
+        }
+            .catch { emit(emptyList()) }
+            .flowOn(Dispatchers.IO)
     } else {
         model
     },
@@ -188,12 +197,7 @@ class ReadViewModel(
 
     val disposable = CompositeDisposable()
 
-    val list by lazy {
-        handle.get<String>("allChapters")
-            ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-            .orEmpty()
-            .also(::println)
-    }
+    var list by mutableStateOf<List<ChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
 
@@ -210,16 +214,27 @@ class ReadViewModel(
         private set
 
     init {
-        batteryInformation.composeSetup(
-            disposable,
-            androidx.compose.ui.graphics.Color.White
-        ) {
-            batteryColor = it.first
-            batteryIcon = it.second
+        viewModelScope.launch(Dispatchers.IO) {
+            batteryInformation.composeSetupFlow(
+                androidx.compose.ui.graphics.Color.White
+            ) {
+                batteryColor = it.first
+                batteryIcon = it.second
+            }
         }
 
-        val url = handle.get<String>("mangaUrl") ?: ""
-        currentChapter = list.indexOfFirst { l -> l.url == url }
+        viewModelScope.launch(Dispatchers.IO) {
+            val url = handle.get<String>("mangaUrl") ?: ""
+
+            handle.getStateFlow<String>("allChapters", "")
+                .map { it.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo)).orEmpty() }
+                .onEach {
+                    list = it
+                    currentChapter = it.indexOfFirst { l -> l.url == url }
+                }
+                .flowOn(Dispatchers.Main)
+                .collect()
+        }
 
         loadPages(modelPath)
     }
@@ -242,40 +257,36 @@ class ReadViewModel(
                 .addTo(disposable)
 
             item
-                .getChapterInfo()
+                .getChapterInfoFlow()
                 .map { it.mapNotNull(Storage::link) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { pageList.clear() }
-                .subscribeBy { pages: List<String> -> pageList.addAll(pages) }
-                .addTo(disposable)
+                .let { loadPages(it) }
         }
     }
 
-    private fun loadPages(modelPath: Single<List<String>>?) {
-        modelPath
-            ?.doOnSubscribe {
-                isLoadingPages.value = true
-                pageList.clear()
-            }
-            ?.subscribeBy {
-                pageList.addAll(it)
-                isLoadingPages.value = false
-            }
-            ?.addTo(disposable)
+    private fun loadPages(modelPath: Flow<List<String>>?) {
+        viewModelScope.launch {
+            modelPath
+                ?.onStart {
+                    isLoadingPages.value = true
+                    pageList.clear()
+                }
+                ?.onEach {
+                    pageList.addAll(it)
+                    isLoadingPages.value = false
+                }
+                ?.collect()
+        }
     }
 
     fun refresh() {
         headers.clear()
         loadPages(
             list.getOrNull(currentChapter)
-                ?.getChapterInfo()
+                ?.getChapterInfoFlow()
                 ?.map {
                     headers.putAll(it.flatMap { it.headers.toList() })
                     it.mapNotNull(Storage::link)
                 }
-                ?.subscribeOn(Schedulers.io())
-                ?.observeOn(AndroidSchedulers.mainThread())
         )
     }
 
@@ -286,6 +297,7 @@ class ReadViewModel(
 
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
@@ -316,8 +328,8 @@ fun ReadView() {
     DisposableEffect(LocalContext.current) {
         val batteryInfo = context.battery {
             readVm.batteryPercent = it.percent
-            readVm.batteryInformation.batteryLevelAlert(it.percent)
-            readVm.batteryInformation.batteryInfoItem(it)
+            readVm.batteryInformation.batteryLevel.tryEmit(it.percent)
+            readVm.batteryInformation.batteryInfo.tryEmit(it)
         }
         onDispose { context.unregisterReceiver(batteryInfo) }
     }
@@ -329,8 +341,11 @@ fun ReadView() {
 
     LaunchedEffect(readVm.pageList) { BigImageViewer.prefetch(*readVm.pageList.fastMap(Uri::parse).toTypedArray()) }
 
+    val listOrPager by context.listOrPager.collectAsState(initial = true)
+
+    val pagerState = rememberPagerState()
     val listState = rememberLazyListState()
-    val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
+    val currentPage by remember { derivedStateOf { if (listOrPager) listState.firstVisibleItemIndex else pagerState.currentPage } }
 
     val paddingPage by context.pagePadding.collectAsState(initial = 4)
     var settingsPopup by remember { mutableStateOf(false) }
@@ -344,7 +359,7 @@ fun ReadView() {
             onDismissRequest = { settingsPopup = false },
             title = { Text(stringResource(R.string.settings)) },
             text = {
-                Column {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     SliderSetting(
                         scope = scope,
                         settingIcon = Icons.Default.BatteryAlert,
@@ -364,6 +379,15 @@ fun ReadView() {
                         initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
                         range = 0f..10f
                     )
+                    Divider()
+                    val activity = LocalActivity.current
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
+                        summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
+                        value = listOrPager,
+                        updateValue = { scope.launch { activity.updatePref(LIST_OR_PAGER, it) } },
+                        settingIcon = { Icon(Icons.Default.Pages, null) }
+                    )
                 }
             },
             confirmButton = { TextButton(onClick = { settingsPopup = false }) { Text(stringResource(R.string.ok)) } }
@@ -376,19 +400,28 @@ fun ReadView() {
         activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
     }
 
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val listShowItems = (listState.isScrolledToTheEnd() || listState.isScrolledToTheBeginning()) && listOrPager
+    val pagerShowItems = (pagerState.currentPage == 0 || pagerState.currentPage >= pages.size) && !listOrPager
 
-    BackHandler(scaffoldState.bottomSheetState.isExpanded || scaffoldState.drawerState.isOpen) {
+    val showItems = readVm.showInfo || listShowItems || pagerShowItems
+
+    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+
+    BackHandler(drawerState.isOpen || sheetState.isVisible) {
         scope.launch {
             when {
-                scaffoldState.bottomSheetState.isExpanded -> scaffoldState.bottomSheetState.collapse()
-                scaffoldState.drawerState.isOpen -> scaffoldState.drawerState.close()
+                drawerState.isOpen -> drawerState.close()
+                sheetState.isVisible -> sheetState.hide()
             }
         }
     }
 
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
         sheetContent = {
             val sheetTopAppBarScrollState = rememberTopAppBarScrollState()
             val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
@@ -400,7 +433,7 @@ fun ReadView() {
                         title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
                         actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
                         navigationIcon = {
-                            IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
+                            IconButton(onClick = { scope.launch { sheetState.hide() } }) {
                                 Icon(Icons.Default.Close, null)
                             }
                         }
@@ -423,7 +456,7 @@ fun ReadView() {
                     }
                 }
             ) { p ->
-                if (scaffoldState.bottomSheetState.isExpanded) {
+                if (sheetState.isVisible) {
                     LazyVerticalGrid(
                         columns = adaptiveGridCell(),
                         contentPadding = p,
@@ -444,8 +477,8 @@ fun ReadView() {
                                     )
                                     .clickable {
                                         scope.launch {
-                                            if (currentPage == i) scaffoldState.bottomSheetState.collapse()
-                                            listState.animateScrollToItem(i)
+                                            if (currentPage == i) sheetState.hide()
+                                            if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
                                         }
                                     }
                             ) {
@@ -491,10 +524,10 @@ fun ReadView() {
                 }
             }
         },
-        sheetGesturesEnabled = false,
-        sheetPeekHeight = 0.dp,
-        drawerContent = if (readVm.list.size > 1) {
-            {
+    ) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
                 val drawerTopAppBarScrollState = rememberTopAppBarScrollState()
                 val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
                 Scaffold(
@@ -523,7 +556,7 @@ fun ReadView() {
                         }
                     }
                 ) { p ->
-                    if (scaffoldState.drawerState.isOpen) {
+                    if (drawerState.isOpen) {
                         LazyColumn(
                             state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
                             contentPadding = p,
@@ -567,129 +600,121 @@ fun ReadView() {
                         }
                     }
                 }
-            }
-        } else null
-    ) {
-
-        val showItems = readVm.showInfo || listState.isScrolledToTheEnd()
-
-        /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }*/
-        //val currentOffset = animateFloatAsState(targetValue = if(showInfo) 0f else scrollBehavior.offsetLimit)
-        //if(showInfo) scrollBehavior.offset = currentOffset.value// else scrollBehavior.offset = currentOffset.value
-
-        val topAppBarScrollState = rememberTopAppBarScrollState()
-        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
-
-        val topBarHeight = 32.dp//28.dp
-        val topBarHeightPx = with(LocalDensity.current) { topBarHeight.roundToPx().toFloat() }
-        val topBarOffsetHeightPx = remember { mutableStateOf(0f) }
-
-        val toolbarHeight = 64.dp
-        val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.roundToPx().toFloat() }
-        val toolbarOffsetHeightPx = remember { mutableStateOf(0f) }
-
-        val nestedScrollConnection = remember {
-            object : NestedScrollConnection {
-                //by scrollBehavior.nestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    val delta = available.y
-
-                    val newTopOffset = topBarOffsetHeightPx.value + delta
-                    if (topBarOffsetHeightPx.value != newTopOffset)
-                        topBarOffsetHeightPx.value = newTopOffset.coerceIn(-topBarHeightPx, 0f)
-
-                    val newOffset = toolbarOffsetHeightPx.value + delta
-                    if (toolbarOffsetHeightPx.value != newOffset)
-                        toolbarOffsetHeightPx.value = newOffset.coerceIn(-toolbarHeightPx, 0f)
-
-                    return scrollBehavior.nestedScrollConnection.onPreScroll(available, source)//Offset.Zero
+            },
+            gesturesEnabled = readVm.list.size > 1
+        ) {
+            Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = slideInVertically() + fadeIn(),
+                        exit = slideOutVertically() + fadeOut()
+                    ) {
+                        TopBar(
+                            scrollBehavior = scrollBehavior,
+                            pages = pages,
+                            currentPage = currentPage,
+                            vm = readVm
+                        )
+                    }
+                },
+                bottomBar = {
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = slideInVertically { it / 2 } + fadeIn(),
+                        exit = slideOutVertically { it / 2 } + fadeOut()
+                    ) {
+                        BottomBar(
+                            scrollBehavior = scrollBehavior,
+                            onPageSelectClick = { scope.launch { sheetState.show() } },
+                            onSettingsClick = { settingsPopup = true },
+                            chapterChange = ::showToast,
+                            vm = readVm
+                        )
+                    }
+                }
+            ) { _ ->
+                SwipeRefresh(
+                    state = swipeState,
+                    onRefresh = { readVm.refresh() },
+                    indicatorPadding = PaddingValues(top = 64.dp)
+                ) {
+                    val padding = PaddingValues(top = 64.dp, bottom = 80.dp)
+                    val spacing = LocalContext.current.dpToPx(paddingPage).dp
+                    Crossfade(targetState = listOrPager) {
+                        if (it) ListView(listState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        else PagerView(pagerState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                    }
                 }
             }
         }
+    }
+}
 
-        Scaffold(
-            //TODO: This stuff will be used again once we find a way to keep the top and bottom bars out when reaching the bottom
-            // and animating the top and bottom bars away
-            modifier = Modifier.nestedScroll(nestedScrollConnection),
-            /*topBar = {
-                TopBar(
-                    scrollBehavior = scrollBehavior,
-                    modifier = Modifier
-                        .height(topBarHeight)
-                        .align(Alignment.TopCenter)
-                        .alpha(animateTopBar),
-                    pages = pages,
-                    currentPage = currentPage
-                )
-            },
-            bottomBar = {
-                BottomBar(
-                    modifier = Modifier
-                        .height(toolbarHeight)
-                        .align(Alignment.BottomCenter)
-                        .alpha(animateTopBar),
-                    scrollBehavior = scrollBehavior,
-                    onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
-                    onSettingsClick = { settingsPopup = true },
-                    chapterChange = ::showToast
-                )
-            }*/
-        ) { p ->
-            //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
-            SwipeRefresh(
-                state = swipeState,
-                onRefresh = { readVm.refresh() },
-                modifier = Modifier.padding(p)
-            ) {
-                Box(Modifier.fillMaxSize()) {
-                    LazyColumn(
-                        state = listState,
-                        verticalArrangement = Arrangement.spacedBy(LocalContext.current.dpToPx(paddingPage).dp),
-                        contentPadding = PaddingValues(
-                            top = topBarHeight,
-                            bottom = toolbarHeight
-                        )
-                    ) {
-                        reader(pages, readVm) {
-                            readVm.showInfo = !readVm.showInfo
-                            if (!readVm.showInfo) {
-                                toolbarOffsetHeightPx.value = -toolbarHeightPx
-                                topBarOffsetHeightPx.value = -topBarHeightPx
-                            }
-                        }
+@Composable
+fun ListView(
+    listState: LazyListState,
+    contentPadding: PaddingValues,
+    pages: List<String>,
+    readVm: ReadViewModel,
+    itemSpacing: Dp,
+    onClick: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        verticalArrangement = Arrangement.spacedBy(itemSpacing),
+        contentPadding = contentPadding
+    ) { reader(pages, readVm, onClick) }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List<String>, vm: ReadViewModel, itemSpacing: Dp, onClick: () -> Unit) {
+    VerticalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize(),
+        count = pages.size + 1,
+        itemSpacing = itemSpacing,
+        contentPadding = contentPadding,
+        key = { it }
+    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, onClick, vm.headers) } ?: LastPageReached(vm = vm) }
+}
+
+@Composable
+private fun LastPageReached(vm: ReadViewModel) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            stringResource(id = R.string.lastPage),
+            style = M3MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.CenterHorizontally)
+        )
+        if (vm.currentChapter <= 0) {
+            Text(
+                stringResource(id = R.string.reachedLastChapter),
+                style = M3MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+            )
+        }
+        if (BuildConfig.BUILD_TYPE == "release") {
+            val context = LocalContext.current
+            AndroidView(
+                modifier = Modifier.fillMaxWidth(),
+                factory = {
+                    AdView(it).apply {
+                        setAdSize(AdSize.BANNER)
+                        adUnitId = context.getString(R.string.ad_unit_id)
+                        loadAd(vm.ad)
                     }
-
-                    val animateTopBar by animateFloatAsState(
-                        if (showItems) 1f
-                        else 1f - (-topBarOffsetHeightPx.value.roundToInt() / topBarHeightPx)
-                    )
-
-                    TopBar(
-                        scrollBehavior = scrollBehavior,
-                        modifier = Modifier
-                            .height(topBarHeight)
-                            .align(Alignment.TopCenter)
-                            .alpha(animateTopBar)
-                            .offset { IntOffset(x = 0, y = if (showItems) 0 else (topBarOffsetHeightPx.value.roundToInt())) },
-                        pages = pages,
-                        currentPage = currentPage,
-                        vm = readVm
-                    )
-
-                    BottomBar(
-                        modifier = Modifier
-                            .height(toolbarHeight)
-                            .align(Alignment.BottomCenter)
-                            .alpha(animateTopBar)
-                            .offset { IntOffset(x = 0, y = if (showItems) 0 else (-toolbarOffsetHeightPx.value.roundToInt())) },
-                        scrollBehavior = scrollBehavior,
-                        onPageSelectClick = { scope.launch { scaffoldState.bottomSheetState.expand() } },
-                        onSettingsClick = { settingsPopup = true },
-                        chapterChange = ::showToast,
-                        vm = readVm
-                    )
                 }
-            }
+            )
         }
     }
 }
@@ -794,42 +819,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
         }*/
 
     items(pages, key = { it }, contentType = { it }) { ChapterPage(it, onClick, vm.headers) }
-
-    item {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                stringResource(id = R.string.lastPage),
-                style = M3MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-            )
-            if (vm.currentChapter <= 0) {
-                Text(
-                    stringResource(id = R.string.reachedLastChapter),
-                    style = M3MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                )
-            }
-            if (BuildConfig.BUILD_TYPE == "release") {
-                val context = LocalContext.current
-                AndroidView(
-                    modifier = Modifier.fillMaxWidth(),
-                    factory = {
-                        AdView(it).apply {
-                            setAdSize(AdSize.BANNER)
-                            adUnitId = context.getString(R.string.ad_unit_id)
-                            loadAd(vm.ad)
-                        }
-                    }
-                )
-            }
-        }
-    }
+    item { LastPageReached(vm = vm) }
 }
 
 @Composable
@@ -907,13 +897,11 @@ private fun ZoomableImage(
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }
 
-        if (showTheThing)
+        if (showTheThing) {
             GlideImage(
                 imageModel = remember(painter) { GlideUrl(painter) { headers } },
                 contentScale = ContentScale.FillWidth,
-                loading = {
-                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                },
+                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {
                     Text(
                         stringResource(R.string.pressToRefresh),
@@ -941,6 +929,7 @@ private fun ZoomableImage(
                         scaleY = scaleAnim
                     }
             )
+        }
     }
 }
 
@@ -1159,6 +1148,7 @@ private fun PageIndicator(modifier: Modifier = Modifier, currentPage: Int, pageC
 private fun Context.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 
 private fun LazyListState.isScrolledToTheEnd() = layoutInfo.visibleItemsInfo.lastOrNull()?.index == layoutInfo.totalItemsCount - 1
+private fun LazyListState.isScrolledToTheBeginning() = layoutInfo.visibleItemsInfo.firstOrNull()?.index == 0
 
 @Composable
 private fun GoBackButton(modifier: Modifier = Modifier) {

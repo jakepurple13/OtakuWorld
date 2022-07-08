@@ -66,4 +66,6 @@ dependencies {
     implementation project(':Models')
 
     implementation koin.koin
+
+    implementation ktor.ktor
 }

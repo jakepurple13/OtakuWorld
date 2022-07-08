@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -66,6 +67,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
@@ -93,24 +95,21 @@ class GlobalSearchViewModel(
     }
 
     fun searchForItems() {
-        Observable.combineLatest(
-            info.searchList()
-                .fastMap { a ->
-                    a
-                        .searchList(searchText, list = emptyList())
-                        .timeout(5, TimeUnit.SECONDS)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .onErrorReturnItem(emptyList())
-                        .map { SearchModel(a.serviceName, it) }
-                        .toObservable()
-                }
-        ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
-            .doOnSubscribe { isRefreshing = true }
-            .doOnComplete { isRefreshing = false }
-            .onErrorReturnItem(emptyList())
-            .subscribe { searchListPublisher = it }
-            .addTo(disposable)
+        viewModelScope.launch {
+            combine(
+                info.searchList()
+                    .fastMap { a ->
+                        a
+                            .searchSourceList(searchText, list = emptyList())
+                            .dispatchIoAndCatchList()
+                            .map { SearchModel(a.serviceName, it) }
+                    }
+            ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
+                .onCompletion { isRefreshing = false }
+                .onStart { isRefreshing = true }
+                .onEach { searchListPublisher = it }
+                .collect()
+        }
     }
 
     override fun onCleared() {

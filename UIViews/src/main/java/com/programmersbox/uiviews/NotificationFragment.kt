@@ -58,6 +58,7 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Completable
@@ -68,7 +69,10 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -156,18 +160,18 @@ fun NotificationsScreen(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                db.deleteAllNotifications()
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribeBy {
+                                scope.launch {
+                                    val number = db.deleteAllNotificationsFlow()
+                                    launch(Dispatchers.Main) {
                                         onDismiss()
                                         Toast.makeText(
                                             context,
-                                            context.getString(R.string.deleted_notifications, it),
+                                            context.getString(R.string.deleted_notifications, number),
                                             Toast.LENGTH_SHORT
                                         ).show()
+                                        context.notificationManager.cancel(42)
                                     }
-                                    .addTo(vm.disposable)
+                                }
                             }
                         ) { Text(stringResource(R.string.yes)) }
                     },
@@ -387,24 +391,24 @@ private fun NotificationItem(
                     interactionSource = interactionSource,
                     indication = rememberRipple()
                 ) {
-                    genericInfo
-                        .toSource(item.source)
-                        ?.let { source ->
-                            Cached.cache[item.url]?.let {
-                                Single.create { emitter ->
-                                    emitter.onSuccess(
-                                        it
-                                            .toDbModel()
-                                            .toItemModel(source)
-                                    )
-                                }
-                            } ?: source.getSourceByUrl(item.url)
-                        }
-                        ?.subscribeOn(Schedulers.io())
-                        ?.doOnError { context.showErrorToast() }
-                        ?.observeOn(AndroidSchedulers.mainThread())
-                        ?.subscribeBy { navController.navigateToDetails(it) }
-                        ?.addTo(vm.disposable)
+                    scope.launch {
+                        genericInfo
+                            .toSource(item.source)
+                            ?.let { source ->
+                                Cached.cache[item.url]?.let {
+                                    flow {
+                                        emit(
+                                            it
+                                                .toDbModel()
+                                                .toItemModel(source)
+                                        )
+                                    }
+                                } ?: source.getSourceByUrlFlow(item.url)
+                            }
+                            ?.dispatchIo()
+                            ?.onEach { navController.navigateToDetails(it) }
+                            ?.collect()
+                    }
                 }
         ) {
             Row {
