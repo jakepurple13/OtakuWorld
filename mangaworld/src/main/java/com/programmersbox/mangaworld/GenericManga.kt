@@ -382,6 +382,18 @@ class GenericManga(val context: Context) : GenericInfo {
                 value = reader,
                 updateValue = { scope.launch { context.updatePref(USER_NEW_READER, it) } }
             )
+
+            val listOrPager by context.listOrPager.collectAsState(initial = true)
+
+            ShowWhen(reader) {
+                SwitchSetting(
+                    settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
+                    summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
+                    value = listOrPager,
+                    updateValue = { scope.launch { context.updatePref(LIST_OR_PAGER, it) } },
+                    settingIcon = { Icon(if (listOrPager) Icons.Default.List else Icons.Default.Pages, null) }
+                )
+            }
         }
 
     }

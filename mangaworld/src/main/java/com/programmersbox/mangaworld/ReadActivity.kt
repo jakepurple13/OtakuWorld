@@ -386,7 +386,7 @@ fun ReadView() {
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
                         value = listOrPager,
                         updateValue = { scope.launch { activity.updatePref(LIST_OR_PAGER, it) } },
-                        settingIcon = { Icon(Icons.Default.Pages, null) }
+                        settingIcon = { Icon(if (listOrPager) Icons.Default.List else Icons.Default.Pages, null) }
                     )
                 }
             },
