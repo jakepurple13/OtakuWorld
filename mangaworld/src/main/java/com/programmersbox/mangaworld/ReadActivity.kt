@@ -648,7 +648,10 @@ fun ReadView() {
                     onRefresh = { readVm.refresh() },
                     indicatorPadding = PaddingValues(top = 64.dp)
                 ) {
-                    val padding = PaddingValues(top = 64.dp, bottom = 80.dp)
+                    val padding = PaddingValues(
+                        top = animateDpAsState(if (pagerShowItems || listShowItems) 64.dp else 0.dp).value,
+                        bottom = animateDpAsState(if (pagerShowItems || listShowItems) 80.dp else 0.dp).value
+                    )
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
                     Crossfade(targetState = listOrPager) {
                         if (it) ListView(listState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
