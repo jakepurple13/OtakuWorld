@@ -6,5 +6,9 @@
   "anime_file": "animeworld-release.apk",
   "novel_file": "novelworld-release.apk",
   "animetv_file": "animeworldtv-release.apk",
-  "otakumanager_file": "otakumanager-release.apk"
+  "otakumanager_file": "otakumanager-release.apk",
+  "manga_no_firebase_file": "mangaworld-no-firebase-release.apk",
+  "anime_no_firebase_file": "animeworld-no-firebase-release.apk",
+  "novel_no_firebase_file": "novelworld-no-firebase-release.apk",
+  "animetv_no_firebase_file": "animeworldtv-no-firebase-release.apk"
 }

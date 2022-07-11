@@ -18,10 +18,8 @@ import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,9 +47,14 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
+import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.utils.*
+import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
@@ -96,6 +99,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         onCreate()
 
+        Single.create<AppUpdate.AppUpdates> { AppUpdate.getUpdate()?.let(it::onSuccess) ?: it.onError(Throwable("Something went wrong")) }
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .doOnError {}
+            .subscribe(appUpdateCheck::onNext)
+            .addTo(disposable)
+
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator()
             navController = rememberAnimatedNavController(bottomSheetNavigator)
@@ -117,7 +127,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     sheetContentColor = MaterialTheme.colorScheme.onSurface,
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
                 ) {
-                    androidx.compose.material3.Scaffold(
+                    Scaffold(
                         bottomBar = {
                             Column {
                                 genericInfo.BottomBarAdditions()
@@ -133,15 +143,26 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                             if (screen !is SScreen.AllScreen || showAllItem) {
                                                 NavigationBarItem(
                                                     icon = {
-                                                        androidx.compose.material3.Icon(
-                                                            when (screen) {
-                                                                SScreen.RecentScreen -> Icons.Default.History
-                                                                SScreen.AllScreen -> Icons.Default.BrowseGallery
-                                                                SScreen.SettingsScreen -> Icons.Default.Settings
-                                                                else -> Icons.Default.BrokenImage
-                                                            },
-                                                            null
-                                                        )
+                                                        BadgedBox(
+                                                            badge = {
+                                                                if (screen is SScreen.SettingsScreen) {
+                                                                    val updateAvailable = updateCheck()
+                                                                    if (updateAvailable) {
+                                                                        Badge { Text("") }
+                                                                    }
+                                                                }
+                                                            }
+                                                        ) {
+                                                            Icon(
+                                                                when (screen) {
+                                                                    SScreen.RecentScreen -> Icons.Default.History
+                                                                    SScreen.AllScreen -> Icons.Default.BrowseGallery
+                                                                    SScreen.SettingsScreen -> Icons.Default.Settings
+                                                                    else -> Icons.Default.BrokenImage
+                                                                },
+                                                                null
+                                                            )
+                                                        }
                                                     },
                                                     label = {
                                                         Text(
@@ -297,6 +318,16 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
         }*/
 
+    }
+
+    @Composable
+    fun updateCheck(): Boolean {
+        val appUpdate by appUpdateCheck.subscribeAsState(null)
+
+        return AppUpdate.checkForUpdate(
+            remember { packageManager.getPackageInfo(packageName, 0)?.versionName.orEmpty() },
+            appUpdate?.update_real_version.orEmpty()
+        )
     }
 
     private fun hideSystemBars() {

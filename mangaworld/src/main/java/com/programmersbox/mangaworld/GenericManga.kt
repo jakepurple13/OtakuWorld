@@ -77,7 +77,7 @@ class GenericManga(val context: Context) : GenericInfo {
 
     private val disposable = CompositeDisposable()
 
-    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { manga_file }
+    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") manga_no_firebase_file else manga_file }
     override val scrollBuffer: Int = 4
 
     override fun chapterOnClick(
