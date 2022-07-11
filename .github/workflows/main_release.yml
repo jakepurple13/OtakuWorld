@@ -54,7 +54,7 @@ jobs:
         name: Sign app APK
         id: manga_sign
         with:
-          releaseDirectory: mangaworld/build/outputs/apk/release
+          releaseDirectory: mangaworld/build/outputs/apk/full/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -64,7 +64,7 @@ jobs:
         name: Sign app APK
         id: anime_sign
         with:
-          releaseDirectory: animeworld/build/outputs/apk/release
+          releaseDirectory: animeworld/build/outputs/apk/full/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -74,7 +74,7 @@ jobs:
         name: Sign app APK
         id: novel_sign
         with:
-          releaseDirectory: novelworld/build/outputs/apk/release
+          releaseDirectory: novelworld/build/outputs/apk/full/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -84,7 +84,7 @@ jobs:
         name: Sign app APK
         id: animetv_sign
         with:
-          releaseDirectory: animeworldtv/build/outputs/apk/release
+          releaseDirectory: animeworldtv/build/outputs/apk/full/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
