@@ -90,6 +90,46 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        id: manga_sign_no_firebase
+        with:
+          releaseDirectory: mangaworld/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        id: anime_sign_no_firebase
+        with:
+          releaseDirectory: animeworld/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        id: novel_sign_no_firebase
+        with:
+          releaseDirectory: novelworld/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        id: animetv_sign_no_firebase
+        with:
+          releaseDirectory: animeworldtv/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
       #      - uses: r0adkll/sign-android-release@v1
       #        name: Sign app APK
       #        id: otakumanager_sign
