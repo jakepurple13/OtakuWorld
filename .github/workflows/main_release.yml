@@ -90,15 +90,15 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        id: otakumanager_sign
-        with:
-          releaseDirectory: otakumanager/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      #      - uses: r0adkll/sign-android-release@v1
+      #        name: Sign app APK
+      #        id: otakumanager_sign
+      #        with:
+      #          releaseDirectory: otakumanager/build/outputs/apk/release
+      #          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+      #          alias: ${{ secrets.ALIAS }}
+      #          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+      #          keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       # ${{steps.sign_app.outputs.signedReleaseFile}}
       - name: Clean up build artifacts
@@ -107,7 +107,11 @@ jobs:
           cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
           cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
-          cp ${{ steps.otakumanager_sign.outputs.signedReleaseFile }} otakumanager-release.apk
+
+          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
+          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
+          cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
+          cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v2
         with:
@@ -129,10 +133,31 @@ jobs:
           name: Signed AnimeTV App
           path: animeworldtv-release.apk
 
+      #      - uses: actions/upload-artifact@v2
+      #        with:
+      #          name: Signed OtakuManager App
+      #          path: otakumanager-release.apk
+
+
       - uses: actions/upload-artifact@v2
         with:
-          name: Signed OtakuManager App
-          path: otakumanager-release.apk
+          name: Signed Manga No Firebase App
+          path: mangaworld-no-firebase-release.apk
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Signed Anime No Firebase App
+          path: animeworld-no-firebase-release.apk
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Signed Novel No Firebase App
+          path: novelworld-no-firebase-release.apk
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Signed AnimeTV No Firebase App
+          path: animeworldtv-no-firebase-release.apk
 
           #       - name: Upload APK
           #         uses: actions/upload-artifact@v1
@@ -173,10 +198,27 @@ jobs:
        uses: actions/download-artifact@v1
        with:
          name: Signed AnimeTV App
+
      - name: Download APK from build
        uses: actions/download-artifact@v1
        with:
-         name: Signed OtakuManager App
+         name: Signed Anime No Firebase App
+     - name: Download APK from build
+       uses: actions/download-artifact@v1
+       with:
+         name: Signed Manga No Firebase App
+     - name: Download APK from build
+       uses: actions/download-artifact@v1
+       with:
+         name: Signed Novel No Firebase App
+     - name: Download APK from build
+       uses: actions/download-artifact@v1
+       with:
+         name: Signed AnimeTV No Firebase App
+      #     - name: Download APK from build
+      #       uses: actions/download-artifact@v1
+      #       with:
+      #         name: Signed OtakuManager App
 
      - name: Get tag name
        id: get_tag_name
@@ -193,11 +235,15 @@ jobs:
          tag_name: ${{ env.VERSION_TAG }}
          name: Release ${{ env.VERSION_TAG }}
          files: |
-            Signed Manga App/mangaworld-release.apk
-            Signed Anime App/animeworld-release.apk
-            Signed Novel App/novelworld-release.apk
-            Signed AnimeTV App/animeworldtv-release.apk
-            Signed OtakuManager App/otakumanager-release.apk
+           Signed Manga App/mangaworld-release.apk
+           Signed Anime App/animeworld-release.apk
+           Signed Novel App/novelworld-release.apk
+           Signed AnimeTV App/animeworldtv-release.apk
+
+           Signed Manga No Firebase App/mangaworld-no-firebase-release.apk
+           Signed Anime No Firebase App/animeworld-no-firebase-release.apk
+           Signed Novel No Firebase App/novelworld-no-firebase-release.apk
+           Signed AnimeTV No Firebase App/animeworldtv-no-firebase-release.apk
 
      - name: Discord notification
        env:

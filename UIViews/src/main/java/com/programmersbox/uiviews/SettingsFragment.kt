@@ -317,21 +317,25 @@ private fun AboutSettings(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            activity.requestPermissions(
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                            ) {
-                                if (it.isGranted) {
-                                    appUpdateCheck.value
-                                        ?.let { a ->
-                                            val isApkAlreadyThere = File(
-                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
-                                                a.let(genericInfo.apkString).toString()
-                                            )
-                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
-                                        }
+                            if (BuildConfig.FLAVOR != "noFirebase") {
+                                activity.requestPermissions(
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE
+                                ) {
+                                    if (it.isGranted) {
+                                        appUpdateCheck.value
+                                            ?.let { a ->
+                                                val isApkAlreadyThere = File(
+                                                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                                    a.let(genericInfo.apkString).toString()
+                                                )
+                                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                                DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                            }
+                                    }
                                 }
+                            } else {
+                                context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
                             }
                             showDialog = false
                         }
