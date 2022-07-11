@@ -95,7 +95,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private val disposable = CompositeDisposable()
 
-    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
+    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") anime_no_firebase_file else anime_file }
     override val deepLinkUri: String get() = "animeworld://"
 
     override fun chapterOnClick(

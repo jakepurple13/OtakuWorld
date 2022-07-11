@@ -59,15 +59,13 @@ import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 class SettingsDsl {
     companion object {
@@ -142,14 +140,16 @@ fun SettingScreen(
                 .padding(bottom = 10.dp)
         ) {
 
-            /*Account*/
-            AccountSettings(
-                context = context,
-                activity = activity,
-                logo = logo
-            )
+            if (BuildConfig.FLAVOR != "noFirebase") {
+                /*Account*/
+                AccountSettings(
+                    context = context,
+                    activity = activity,
+                    logo = logo
+                )
 
-            androidx.compose.material3.Divider()
+                Divider()
+            }
 
             /*About*/
             AboutSettings(
@@ -160,7 +160,7 @@ fun SettingScreen(
                 logo = logo
             )
 
-            androidx.compose.material3.Divider(modifier = Modifier.padding(top = 5.dp))
+            Divider(modifier = Modifier.padding(top = 5.dp))
 
             /*Notifications*/
             NotificationSettings(
@@ -177,7 +177,7 @@ fun SettingScreen(
                 historyClick = historyClick
             )
 
-            androidx.compose.material3.Divider()
+            Divider()
 
             /*General*/
             GeneralSettings(
@@ -189,7 +189,7 @@ fun SettingScreen(
                 globalSearchClick = globalSearchClick
             )
 
-            androidx.compose.material3.Divider()
+            Divider()
 
             /*Player*/
             PlaySettings(
@@ -198,7 +198,7 @@ fun SettingScreen(
                 customSettings = customPreferences.playerSettings
             )
 
-            androidx.compose.material3.Divider(modifier = Modifier.padding(top = 5.dp))
+            Divider(modifier = Modifier.padding(top = 5.dp))
 
             /*More Info*/
             InfoSettings(
@@ -266,6 +266,21 @@ class AboutViewModel : ViewModel() {
         viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
     }
 
+    private val checker = AtomicBoolean(false)
+
+    suspend fun updateChecker(context: Context) {
+        try {
+            if (!checker.get()) {
+                checker.set(true)
+                AppUpdate.getUpdate()?.let(appUpdateCheck::onNext)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            checker.set(false)
+            withContext(Dispatchers.Main) { context.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() } }
+        }
+    }
 }
 
 @ExperimentalMaterialApi
@@ -275,8 +290,11 @@ private fun AboutSettings(
     scope: CoroutineScope,
     activity: ComponentActivity,
     genericInfo: GenericInfo,
-    logo: MainLogo
+    logo: MainLogo,
+    aboutViewModel: AboutViewModel = viewModel()
 ) {
+    LaunchedEffect(Unit) { aboutViewModel.init(context) }
+
     CategorySetting(
         settingTitle = { Text(stringResource(R.string.about)) },
         settingIcon = {
@@ -298,7 +316,8 @@ private fun AboutSettings(
                     context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
                 )
             )
-        }
+        },
+        modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { aboutViewModel.updateChecker(context) } }
     )
 
     ShowWhen(
@@ -317,25 +336,21 @@ private fun AboutSettings(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            if (BuildConfig.FLAVOR != "noFirebase") {
-                                activity.requestPermissions(
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                    Manifest.permission.READ_EXTERNAL_STORAGE
-                                ) {
-                                    if (it.isGranted) {
-                                        appUpdateCheck.value
-                                            ?.let { a ->
-                                                val isApkAlreadyThere = File(
-                                                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
-                                                    a.let(genericInfo.apkString).toString()
-                                                )
-                                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                                DownloadUpdate(context, context.packageName).downloadUpdate(a)
-                                            }
-                                    }
+                            activity.requestPermissions(
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.READ_EXTERNAL_STORAGE
+                            ) {
+                                if (it.isGranted) {
+                                    appUpdateCheck.value
+                                        ?.let { a ->
+                                            val isApkAlreadyThere = File(
+                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                                a.let(genericInfo.apkString).toString()
+                                            )
+                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                        }
                                 }
-                            } else {
-                                context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
                             }
                             showDialog = false
                         }
@@ -410,9 +425,6 @@ private fun AboutSettings(
                 )
         }
     )
-
-    val aboutViewModel: AboutViewModel = viewModel()
-    LaunchedEffect(Unit) { aboutViewModel.init(context) }
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -551,7 +563,7 @@ private fun NotificationSettings(
                 .padding(bottom = 16.dp, top = 8.dp)
         )
 
-        androidx.compose.material3.Divider()
+        Divider()
     }
 }
 

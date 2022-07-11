@@ -1,10 +1,14 @@
 {
   "update_version": 27.0,
-  "update_real_version": "29.2.7",
-  "update_url": "https://github.com/jakepurple13/OtakuWorld/releases/download/v29.2.72/",
+  "update_real_version": "30.0.0",
+  "update_url": "https://github.com/jakepurple13/OtakuWorld/releases/download/v30.0.0/",
   "manga_file": "mangaworld-release.apk",
   "anime_file": "animeworld-release.apk",
   "novel_file": "novelworld-release.apk",
   "animetv_file": "animeworldtv-release.apk",
-  "otakumanager_file": "otakumanager-release.apk"
+  "otakumanager_file": "otakumanager-release.apk",
+  "manga_no_firebase_file": "mangaworld-no-firebase-release.apk",
+  "anime_no_firebase_file": "animeworld-no-firebase-release.apk",
+  "novel_no_firebase_file": "novelworld-no-firebase-release.apk",
+  "animetv_no_firebase_file": "animeworldtv-no-firebase-release.apk"
 }
