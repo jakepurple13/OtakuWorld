@@ -92,14 +92,14 @@ class AnimeApp : OtakuApp() {
     @RequiresApi(Build.VERSION_CODES.N_MR1)
     override fun shortcuts(): List<ShortcutInfo> = listOf(
         //download viewer
-        ShortcutInfo.Builder(this, "download_viewer")
+        ShortcutInfo.Builder(this, DownloaderViewModel.DownloadViewerRoute)
             .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_file_download).toBitmap()))
             .setShortLabel(getString(R.string.view_downloads))
             .setLongLabel(getString(R.string.view_downloads))
             .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_DOWNLOADS), this, MainActivity::class.java))
             .build(),
         //video viewer
-        ShortcutInfo.Builder(this, "video_viewer")
+        ShortcutInfo.Builder(this, DownloadViewModel.VideoViewerRoute)
             .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
             .setShortLabel(getString(R.string.view_videos))
             .setLongLabel(getString(R.string.view_videos))

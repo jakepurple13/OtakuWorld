@@ -85,6 +85,8 @@
     <string name="choose_a_theme">Choose a Theme</string>
     <string name="theme_choice_title">Theme</string>
     <string name="battery_alert_percentage">Battery Alert Percentage</string>
+    <string name="list_or_pager_title">View Type</string>
+    <string name="list_or_pager_description">Choose between a flowing view or a single page view.</string>
     <string name="press_to_check_for_updates">Press to Check for Updates</string>
     <string name="update_available">Update Available</string>
     <string name="currentSource">Current Source: %s</string>
@@ -98,6 +100,8 @@
     <string name="finishedDownloading">Finished Downloading</string>
     <string name="errorTryAgain">Error: Try Again</string>
     <string name="loading">Loading…</string>
+    <string name="history_save_title">History Limit</string>
+    <string name="history_save_summary">The number of items to save in history. (Default is 50)</string>
 
     <string-array name="theme_items">
         <item>System</item>
@@ -143,6 +147,7 @@
     <string name="search">Search</string>
     <string name="global_search_by_name">Global Search by Name</string>
     <string name="are_you_sure_delete_notifications">Are you sure you want to delete all notifications?</string>
+    <string name="are_you_sure_stop_checking">Are you sure you want to not check for updates on this device?</string>
     <string name="clear_update_queue">Clear Update Queue</string>
     <string name="clear_update_queue_summary">Clear queue if the update checker seems to not run consistently.</string>
     <string name="cleared">Cleared</string>
@@ -171,4 +176,7 @@
     <string name="selectTime">Select Time to be Notified At</string>
     <string name="notifyAtTime">Notify At…</string>
     <string name="willNotifyAt">Will Notify at %s</string>
+
+    <string name="viewTranslationModels">View Translation Models</string>
+    <string name="chooseModelToDelete">Choose a Model to Delete</string>
 </resources>

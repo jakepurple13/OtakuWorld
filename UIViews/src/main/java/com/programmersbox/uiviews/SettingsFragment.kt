@@ -2,16 +2,11 @@ package com.programmersbox.uiviews
 
 import android.Manifest
 import android.content.Context
-import android.os.Bundle
 import android.os.Environment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,7 +14,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -34,30 +28,25 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
-import androidx.preference.*
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.mikepenz.aboutlibraries.Libs
-import com.mikepenz.aboutlibraries.LibsBuilder
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -65,18 +54,18 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.sourcePublish
-import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.FirebaseAuthentication
-import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.sharedutils.*
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import org.koin.android.ext.android.inject
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.*
 
@@ -91,85 +80,6 @@ class SettingsDsl {
             }
         }
     }
-}
-
-class SettingsFragment : Fragment() {
-
-    companion object {
-        @JvmStatic
-        fun newInstance() = SettingsFragment()
-    }
-
-    private val genericInfo: GenericInfo by inject()
-    private val logo: MainLogo by inject()
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class,
-        ExperimentalComposeUiApi::class
-    )
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                MaterialTheme(currentColorScheme) {
-                    SettingScreen(
-                        navController = findNavController(),
-                        logo = logo,
-                        genericInfo = genericInfo,
-                        fragment = this@SettingsFragment,
-                        activity = requireActivity(),
-                        usedLibraryClick = {
-                            findNavController()
-                                .navigate(
-                                    SettingsFragmentDirections.actionXToAboutLibs(
-                                        LibsBuilder()
-                                            .withSortEnabled(true)
-                                            .customUtils("loggingutils", "LoggingUtils")
-                                            //.customUtils("flowutils", "FlowUtils")
-                                            .customUtils("gsonutils", "GsonUtils")
-                                            .customUtils("helpfulutils", "HelpfulUtils")
-                                            .customUtils("dragswipe", "DragSwipe")
-                                            .customUtils("funutils", "FunUtils")
-                                            .customUtils("rxutils", "RxUtils")
-                                            //.customUtils("thirdpartyutils", "ThirdPartyUtils")
-                                            .withShowLoadingProgress(true)
-                                    )
-                                )
-                        },
-                        debugMenuClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToDebugFragment())
-                        },
-                        notificationClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToNotificationFragment())
-                        },
-                        favoritesClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToFavoriteFragment())
-                        },
-                        historyClick = {
-                            findNavController().navigate(SettingsFragmentDirections.actionSettingsFragmentToHistoryFragment())
-                        },
-                        globalSearchClick = {
-                            findNavController().navigate(GlobalNavDirections.showGlobalSearch())
-                        }
-                    )
-                }
-            }
-        }
-
-    private fun LibsBuilder.customUtils(libraryName: String, newName: String) =
-        withLibraryModification(
-            libraryName,
-            Libs.LibraryFields.LIBRARY_REPOSITORY_LINK,
-            "https://www.github.com/jakepurple13/HelpfulTools"
-        )
-            .withLibraryModification(
-                libraryName,
-                Libs.LibraryFields.LIBRARY_NAME,
-                newName
-            )
 }
 
 class ComposeSettingsDsl {
@@ -200,7 +110,6 @@ fun SettingScreen(
     navController: NavController,
     logo: MainLogo,
     genericInfo: GenericInfo,
-    fragment: Fragment,
     activity: ComponentActivity,
     usedLibraryClick: () -> Unit = {},
     debugMenuClick: () -> Unit = {},
@@ -214,8 +123,8 @@ fun SettingScreen(
 
     val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
 
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-    val listState = rememberScrollState()
+    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -228,7 +137,7 @@ fun SettingScreen(
     ) { p ->
         Column(
             modifier = Modifier
-                .verticalScroll(listState)
+                .verticalScroll(rememberScrollState())
                 .padding(p)
                 .padding(bottom = 10.dp)
         ) {
@@ -240,7 +149,7 @@ fun SettingScreen(
                 logo = logo
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            androidx.compose.material3.Divider()
 
             /*About*/
             AboutSettings(
@@ -251,7 +160,7 @@ fun SettingScreen(
                 logo = logo
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), modifier = Modifier.padding(top = 5.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(top = 5.dp))
 
             /*Notifications*/
             NotificationSettings(
@@ -268,19 +177,19 @@ fun SettingScreen(
                 historyClick = historyClick
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            androidx.compose.material3.Divider()
 
             /*General*/
             GeneralSettings(
                 context = context,
                 scope = scope,
-                activity = activity,
+                //fragment = fragment,
                 genericInfo = genericInfo,
                 customSettings = customPreferences.generalSettings,
                 globalSearchClick = globalSearchClick
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            androidx.compose.material3.Divider()
 
             /*Player*/
             PlaySettings(
@@ -289,7 +198,7 @@ fun SettingScreen(
                 customSettings = customPreferences.playerSettings
             )
 
-            Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), modifier = Modifier.padding(top = 5.dp))
+            androidx.compose.material3.Divider(modifier = Modifier.padding(top = 5.dp))
 
             /*More Info*/
             InfoSettings(
@@ -303,31 +212,19 @@ fun SettingScreen(
 
 class AccountViewModel : ViewModel() {
 
-    var accountInfo by mutableStateOf<FirebaseUser?>(null)
-
-    private val listener: FirebaseAuth.AuthStateListener = FirebaseAuth.AuthStateListener { p0 -> accountInfo = p0.currentUser }
+    var accountInfo by mutableStateOf<CustomFirebaseUser?>(null)
 
     init {
-        FirebaseAuthentication.auth.addAuthStateListener(listener)
+        FirebaseAuthentication.addAuthStateListener { p0 -> accountInfo = p0 }
     }
 
     fun signInOrOut(context: Context, activity: ComponentActivity) {
-        FirebaseAuthentication.currentUser?.let {
-            MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.logOut)
-                .setMessage(R.string.areYouSureLogOut)
-                .setPositiveButton(R.string.yes) { d, _ ->
-                    FirebaseAuthentication.signOut()
-                    d.dismiss()
-                }
-                .setNegativeButton(R.string.no) { d, _ -> d.dismiss() }
-                .show()
-        } ?: FirebaseAuthentication.signIn(activity)
+        FirebaseAuthentication.signInOrOut(context, activity, R.string.logOut, R.string.areYouSureLogOut, R.string.yes, R.string.no)
     }
 
     override fun onCleared() {
         super.onCleared()
-        FirebaseAuthentication.auth.removeAuthStateListener(listener)
+        FirebaseAuthentication.clear()
     }
 }
 
@@ -342,13 +239,15 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
     PreferenceSetting(
         settingTitle = { Text(accountInfo?.displayName ?: "User") },
         settingIcon = {
-            Image(
-                painter = rememberImagePainter(data = accountInfo?.photoUrl) {
-                    error(logo.logoId)
-                    crossfade(true)
-                    lifecycle(LocalLifecycleOwner.current)
-                    transformations(CircleCropTransformation())
-                },
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(accountInfo?.photoUrl)
+                    .error(logo.logoId)
+                    .placeholder(logo.logoId)
+                    .crossfade(true)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .transformations(CircleCropTransformation())
+                    .build(),
                 contentDescription = null
             )
         },
@@ -418,21 +317,25 @@ private fun AboutSettings(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            activity.requestPermissions(
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                            ) {
-                                if (it.isGranted) {
-                                    appUpdateCheck.value
-                                        ?.let { a ->
-                                            val isApkAlreadyThere = File(
-                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
-                                                a.let(genericInfo.apkString).toString()
-                                            )
-                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
-                                        }
+                            if (BuildConfig.FLAVOR != "noFirebase") {
+                                activity.requestPermissions(
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE
+                                ) {
+                                    if (it.isGranted) {
+                                        appUpdateCheck.value
+                                            ?.let { a ->
+                                                val isApkAlreadyThere = File(
+                                                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                                    a.let(genericInfo.apkString).toString()
+                                                )
+                                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                                DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                            }
+                                    }
                                 }
+                            } else {
+                                context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
                             }
                             showDialog = false
                         }
@@ -511,12 +414,39 @@ private fun AboutSettings(
     val aboutViewModel: AboutViewModel = viewModel()
     LaunchedEffect(Unit) { aboutViewModel.init(context) }
 
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(stringResource(R.string.are_you_sure_stop_checking)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            context.updatePref(SHOULD_CHECK, false)
+                            OtakuApp.updateSetupNow(context, false)
+                        }
+                        showDialog = false
+                    }
+                ) { Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.no)) } }
+        )
+    }
+
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
         value = aboutViewModel.canCheck,
         updateValue = {
-            scope.launch { context.updatePref(SHOULD_CHECK, it) }
-            OtakuApp.updateSetup(context)
+            if (!it) {
+                showDialog = true
+            } else {
+                scope.launch {
+                    context.updatePref(SHOULD_CHECK, it)
+                    OtakuApp.updateSetupNow(context, it)
+                }
+            }
         }
     )
 
@@ -548,14 +478,13 @@ class NotificationViewModel(dao: ItemDao) : ViewModel() {
     var savedNotifications by mutableStateOf(0)
         private set
 
-    private val sub = dao.getAllNotificationCount()
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeBy { savedNotifications = it }
-
-    override fun onCleared() {
-        super.onCleared()
-        sub.dispose()
+    init {
+        viewModelScope.launch {
+            dao.getAllNotificationCountFlow()
+                .dispatchIo()
+                .onEach { savedNotifications = it }
+                .collect()
+        }
     }
 
 }
@@ -568,7 +497,7 @@ private fun NotificationSettings(
     notificationClick: () -> Unit
 ) {
     val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-    val notiViewModel: NotificationViewModel = viewModel(factory = factoryCreate { NotificationViewModel(dao = dao) })
+    val notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao = dao) }
 
     ShowWhen(notiViewModel.savedNotifications > 0) {
         CategorySetting { Text(stringResource(R.string.notifications_category_title)) }
@@ -622,7 +551,7 @@ private fun NotificationSettings(
                 .padding(bottom = 16.dp, top = 8.dp)
         )
 
-        Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+        androidx.compose.material3.Divider()
     }
 }
 
@@ -676,18 +605,20 @@ private fun ViewSettings(
     customSettings?.invoke()
 }
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @Composable
 private fun GeneralSettings(
     context: Context,
     scope: CoroutineScope,
-    activity: ComponentActivity,
     genericInfo: GenericInfo,
     customSettings: (@Composable () -> Unit)?,
     globalSearchClick: () -> Unit
 ) {
     CategorySetting { Text(stringResource(R.string.general_menu_title)) }
+
+    val vm: GeneralViewModel = viewModel()
 
     val source: ApiService? by sourcePublish.subscribeAsState(initial = null)
 
@@ -725,6 +656,36 @@ private fun GeneralSettings(
             }
     )
 
+    val activity = LocalActivity.current
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
+        settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = {
+                //TODO: Change this into its own screen
+                vm.getModels {
+                    ListBottomSheet(
+                        title = context.getString(R.string.chooseModelToDelete),
+                        list = vm.translationModels.toList(),
+                        onClick = { item -> vm.deleteModel(item) }
+                    ) {
+                        ListBottomSheetItemModel(
+                            primaryText = it.language,
+                            overlineText = try {
+                                Locale.forLanguageTag(it.language).displayLanguage
+                            } catch (e: Exception) {
+                                null
+                            }
+                        )
+                    }.show(activity.supportFragmentManager, "sourceChooser")
+                }
+            }
+        )
+    )
+
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.global_search)) },
         settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
@@ -735,7 +696,7 @@ private fun GeneralSettings(
         )
     )
 
-    val theme by activity.themeSetting.collectAsState(initial = "System")
+    val theme by context.themeSetting.collectAsState(initial = "System")
 
     ListSetting(
         settingTitle = { Text(stringResource(R.string.theme_choice_title)) },
@@ -776,7 +737,39 @@ private fun GeneralSettings(
         updateValue = { scope.launch { context.updatePref(SHOW_ALL, it) } }
     )
 
+    var sliderValue by remember { mutableStateOf(runBlocking { context.historySave.first().toFloat() }) }
+
+    SliderSetting(
+        sliderValue = sliderValue,
+        settingTitle = { Text(stringResource(R.string.history_save_title)) },
+        settingSummary = { Text(stringResource(R.string.history_save_summary)) },
+        settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
+        range = -1f..100f,
+        updateValue = {
+            sliderValue = it
+            scope.launch { context.updatePref(HISTORY_SAVE, sliderValue.toInt()) }
+        }
+    )
+
     customSettings?.invoke()
+}
+
+class GeneralViewModel : ViewModel() {
+
+    var translationModels: List<CustomRemoteModel> by mutableStateOf(emptyList())
+        private set
+
+    fun getModels(onSuccess: () -> Unit) {
+        TranslatorUtils.getModels {
+            translationModels = it
+            onSuccess()
+        }
+    }
+
+    fun deleteModel(model: CustomRemoteModel) {
+        TranslatorUtils.deleteModel(model)
+    }
+
 }
 
 @ExperimentalMaterialApi
@@ -846,6 +839,7 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
 
 }
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @Composable

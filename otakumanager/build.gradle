@@ -37,17 +37,26 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
-        useIR = true
     }
     buildFeatures {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion jetpack
+        kotlinCompilerExtensionVersion jetpackCompiler
     }
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+    flavorDimensions "version"
+    productFlavors {
+        noFirebase {
+            dimension "version"
+        }
+        full {
+            dimension "version"
         }
     }
 }

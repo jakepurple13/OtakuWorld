@@ -1,5 +1,6 @@
 package com.programmersbox.favoritesdatabase
 
+import androidx.paging.PagingSource
 import androidx.room.*
 import io.reactivex.Completable
 import io.reactivex.Flowable
@@ -64,6 +65,9 @@ interface ItemDao {
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItem(url: String): NotificationItem
 
+    @Query("SELECT * FROM Notifications where url = :url")
+    fun getNotificationItemFlow(url: String): Flow<NotificationItem?>
+
     @Query("SELECT * FROM Notifications")
     fun getAllNotifications(): Single<List<NotificationItem>>
 
@@ -78,6 +82,9 @@ interface ItemDao {
 
     @Query("SELECT * FROM Notifications")
     fun getAllNotificationsFlow(): Flow<List<NotificationItem>>
+
+    @Query("SELECT * FROM Notifications")
+    fun getAllNotificationsFlowPaging(): PagingSource<Int, NotificationItem>
 
     @Query("SELECT COUNT(id) FROM Notifications")
     fun getAllNotificationCountFlow(): Flow<Int>

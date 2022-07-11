@@ -36,7 +36,17 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion jetpack
+        kotlinCompilerExtensionVersion jetpackCompiler
+    }
+
+    flavorDimensions "version"
+    productFlavors {
+        noFirebase {
+            dimension "version"
+        }
+        full {
+            dimension "version"
+        }
     }
 }
 
@@ -47,7 +57,7 @@ dependencies {
     implementation material
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation preference
-    implementation 'androidx.window:window:1.0.0-rc01'
+    implementation 'androidx.window:window:1.1.0-alpha02'
     testImplementation Deps.junit
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
@@ -73,11 +83,11 @@ dependencies {
     implementation coroutinesCore
     implementation coroutinesAndroid
     implementation coroutinesRX
-    implementation "androidx.fragment:fragment-ktx:1.4.0"
+    implementation "androidx.fragment:fragment-ktx:1.4.1"
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.1"
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
 
     implementation "com.mikepenz:iconics-core:5.3.1"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
@@ -94,7 +104,7 @@ dependencies {
 
     implementation 'com.github.noowenz:ShowMoreLess:v1.0.2'
     implementation "com.mikepenz:aboutlibraries-core:${latestAboutLibsRelease}"
-    implementation "com.mikepenz:aboutlibraries:${latestAboutLibsRelease}"
+    implementation "com.mikepenz:aboutlibraries-compose:${latestAboutLibsRelease}"
 
     implementation glide
     kapt glideCompiler
@@ -121,9 +131,6 @@ dependencies {
     api "androidx.navigation:navigation-fragment-ktx:$nav_version"
     api "androidx.navigation:navigation-ui-ktx:$nav_version"
 
-    // Feature module Support
-    api "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
-
     // Testing Navigation
     androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
 
@@ -132,10 +139,13 @@ dependencies {
 
     implementation compose.compose
     implementation "com.airbnb.android:lottie-compose:$lottieVersion"
-    implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
-    implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
-    implementation "me.onebone:toolbar-compose:2.3.0"
+    implementation "me.onebone:toolbar-compose:2.3.3"
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:1.0.3'
+    implementation "androidx.paging:paging-compose:1.0.0-alpha15"
+
+    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
+    // alternatively - without Android dependencies for tests
+    testImplementation "androidx.paging:paging-common-ktx:$paging_version"
 
     implementation datastore.datastore
 }

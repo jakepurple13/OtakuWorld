@@ -2,10 +2,14 @@ package com.programmersbox.sharedutils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
+import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.util.fastMap
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
@@ -59,9 +63,35 @@ object FirebaseAuthentication : KoinComponent {
         //currentUser = null
     }
 
-    val currentUser: FirebaseUser? get() = FirebaseAuth.getInstance().currentUser
+    internal val currentUser: FirebaseUser? get() = FirebaseAuth.getInstance().currentUser
 
+    private var update: ((FirebaseAuth?) -> Unit)? = null
+
+    fun addAuthStateListener(update: (CustomFirebaseUser?) -> Unit) {
+        this.update = { u -> update(u?.currentUser?.let { CustomFirebaseUser(it.displayName, it.photoUrl) }) }
+        auth.addAuthStateListener(this.update!!)
+    }
+
+    fun clear() {
+        update?.let { auth.removeAuthStateListener(it) }
+    }
+
+    fun signInOrOut(context: Context, activity: ComponentActivity, title: Int, message: Int, positive: Int, no: Int) {
+        currentUser?.let {
+            MaterialAlertDialogBuilder(context)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(positive) { d, _ ->
+                    signOut()
+                    d.dismiss()
+                }
+                .setNegativeButton(no) { d, _ -> d.dismiss() }
+                .show()
+        } ?: signIn(activity)
+    }
 }
+
+data class CustomFirebaseUser(val displayName: String?, val photoUrl: Uri?)
 
 object FirebaseDb {
 
@@ -223,8 +253,8 @@ object FirebaseDb {
                     ?.let(emitter::onNext)
                 error?.let(emitter::onError)
             }
-            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
+            emitter.setCancellable { listener?.remove() }
         }.toLatestFlowable()
 
         @ExperimentalCoroutinesApi
@@ -236,8 +266,8 @@ object FirebaseDb {
                     ?.let { trySend(it) }
                 error?.let(this::close)
             }
-            awaitClose { listener?.remove() }
             if (listener == null) trySend(emptyList())
+            awaitClose { listener?.remove() }
         }
 
         fun findItemByUrl(url: String?) = PublishSubject.create<Boolean> { emitter ->
@@ -250,8 +280,8 @@ object FirebaseDb {
                     ?.let { emitter.onNext(it.isNotEmpty()) }
                 error?.let(emitter::onError)
             }
-            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(false)
+            emitter.setCancellable { listener?.remove() }
         }.toLatestFlowable()
 
         @ExperimentalCoroutinesApi
@@ -264,8 +294,8 @@ object FirebaseDb {
                     ?.let { trySend(it.isNotEmpty()) }
                 error?.let(this::close)
             }
-            awaitClose { listener?.remove() }
             if (listener == null) trySend(false)
+            awaitClose { listener?.remove() }
         }
 
         fun getAllEpisodesByShow(showUrl: String) = PublishSubject.create<List<ChapterWatched>> { emitter ->
@@ -279,8 +309,8 @@ object FirebaseDb {
                         ?.let(emitter::onNext)
                     error?.let(emitter::onError)
                 }
-            emitter.setCancellable { listener?.remove() }
             if (listener == null) emitter.onNext(emptyList())
+            emitter.setCancellable { listener?.remove() }
         }.toLatestFlowable()
 
         //fun getAllEpisodesByShow(showDbModel: DbModel) = getAllEpisodesByShow(showDbModel.showUrl)

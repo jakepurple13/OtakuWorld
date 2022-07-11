@@ -6,9 +6,12 @@ import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.manga_sources.manga.MangaFourLife
 import com.programmersbox.manga_sources.manga.MangaPark
+import com.programmersbox.manga_sources.manga.MangaRead
 import com.programmersbox.manga_sources.manga.NineAnime
 import com.programmersbox.manga_sources.utilities.toJsoup
 import com.programmersbox.models.ItemModel
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import org.junit.Test
 import org.mockito.Mockito
@@ -20,6 +23,15 @@ import java.io.File
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun mangareadTest() = runBlocking {
+
+        val f = MangaRead.getRecentFlow(1).firstOrNull()
+
+        println(f)
+
+    }
 
     @Test
     fun asuraScansTest() {

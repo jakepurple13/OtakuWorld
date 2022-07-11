@@ -29,8 +29,9 @@ abstract class OtakuApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        //TODO: This acts funky if user enabled force dark mode from developer options
+        //This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
+
 
         if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 
@@ -110,10 +111,14 @@ abstract class OtakuApp : Application() {
     companion object {
 
         fun updateSetup(context: Context) {
+            updateSetupNow(context, runBlocking { context.shouldCheckFlow.first() })
+        }
+
+        fun updateSetupNow(context: Context, check: Boolean) {
             val work = WorkManager.getInstance(context)
             //work.cancelAllWork()
             //if (context.shouldCheck) {
-            if (runBlocking { context.shouldCheckFlow.first() }) {
+            if (check) {
                 work.enqueueUniquePeriodicWork(
                     "updateChecks",
                     ExistingPeriodicWorkPolicy.KEEP,

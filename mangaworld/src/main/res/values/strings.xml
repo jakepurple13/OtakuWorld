@@ -23,4 +23,10 @@
     <string name="playSettings">Reader Settings</string>
     <string name="changeToChapter">Change to %s</string>
     <string name="doubleTapToReset">Double Tap to Reset</string>
+    <string name="pressToRefresh">Press to Refresh</string>
+
+    <string name="folder_location">Folder Location</string>
+    <string name="choose_a_directory">Choose a Folder</string>
+    <string name="chooseText">Choose</string>
+    <string name="cancelText">@android:string/cancel</string>
 </resources>

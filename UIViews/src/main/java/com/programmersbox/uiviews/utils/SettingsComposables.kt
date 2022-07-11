@@ -9,22 +9,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,36 +27,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 
-@Composable
-fun defaultSwitchColors() = SwitchDefaults.colors(
-    checkedThumbColor = MaterialTheme.colorScheme.primary,
-    checkedTrackColor = MaterialTheme.colorScheme.primary,
-    uncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface,
-    uncheckedTrackColor = MaterialTheme.colorScheme.onSurface,
-    disabledCheckedThumbColor = MaterialTheme.colorScheme.primary
-        .copy(alpha = ContentAlpha.disabled)
-        .compositeOver(MaterialTheme.colorScheme.inverseSurface),
-    disabledCheckedTrackColor = MaterialTheme.colorScheme.primary
-        .copy(alpha = ContentAlpha.disabled)
-        .compositeOver(MaterialTheme.colorScheme.inverseSurface),
-    disabledUncheckedThumbColor = MaterialTheme.colorScheme.inverseSurface
-        .copy(alpha = ContentAlpha.disabled)
-        .compositeOver(MaterialTheme.colorScheme.inverseSurface),
-    disabledUncheckedTrackColor = MaterialTheme.colorScheme.onSurface
-        .copy(alpha = ContentAlpha.disabled)
-        .compositeOver(MaterialTheme.colorScheme.inverseSurface)
-)
-
-@Composable
-fun defaultSliderColors() = SliderDefaults.colors(
-    thumbColor = MaterialTheme.colorScheme.primary,
-    disabledThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
-        .compositeOver(MaterialTheme.colorScheme.surface),
-    activeTrackColor = MaterialTheme.colorScheme.primary,
-    disabledActiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = SliderDefaults.DisabledActiveTrackAlpha),
-    activeTickColor = contentColorFor(MaterialTheme.colorScheme.primary).copy(alpha = SliderDefaults.TickAlpha)
-)
-
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @Composable
@@ -135,6 +101,7 @@ fun <T> ListSetting(
     )
 }
 
+@ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @Composable
@@ -231,20 +198,25 @@ fun SwitchSetting(
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: @Composable () -> Unit,
     summaryValue: (@Composable () -> Unit)? = null,
-    switchColors: SwitchColors = defaultSwitchColors(),
+    switchColors: SwitchColors = SwitchDefaults.colors(),
     value: Boolean,
     updateValue: (Boolean) -> Unit
 ) {
     DefaultPreferenceLayout(
-        modifier = modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) { updateValue(!value) },
+        modifier = modifier
+            /*.toggleable(
+                value = value,
+                onValueChange = updateValue
+            )*/
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { updateValue(!value) },
         settingIcon = settingIcon,
         settingTitle = settingTitle,
         summaryValue = summaryValue
     ) {
-        Switch(
+        androidx.compose.material3.Switch(
             checked = value,
             onCheckedChange = updateValue,
             colors = switchColors
@@ -252,6 +224,7 @@ fun SwitchSetting(
     }
 }
 
+@ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @Composable
 fun CheckBoxSetting(
@@ -289,7 +262,7 @@ fun SliderSetting(
     settingSummary: (@Composable () -> Unit)? = null,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
-    colors: SliderColors = defaultSliderColors(),
+    colors: SliderColors = androidx.compose.material3.SliderDefaults.colors(),
     format: (Float) -> String = { it.toInt().toString() },
     onValueChangedFinished: (() -> Unit)? = null,
     updateValue: (Float) -> Unit
@@ -334,7 +307,7 @@ fun SliderSetting(
             }
         }
 
-        Slider(
+        androidx.compose.material3.Slider(
             value = sliderValue,
             onValueChange = updateValue,
             onValueChangeFinished = onValueChangedFinished,

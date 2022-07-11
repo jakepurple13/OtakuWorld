@@ -1,0 +1,33 @@
+android {
+    buildTypes {
+        beta {
+            initWith debug
+            matchingFallbacks = ['debug', 'release']
+            debuggable false
+        }
+    }
+
+    flavorDimensions "version"
+    productFlavors {
+        noFirebase {
+            dimension "version"
+        }
+        full {
+            dimension "version"
+        }
+    }
+
+    easylauncher {
+        defaultFlavorNaming true
+        buildTypes {
+            debug { filters blueRibbonFilter() }
+            beta { enable false }
+        }
+    }
+}
+
+android.applicationVariants.all { variant ->
+    System.out.println(variant.name)
+    def googleTask = tasks.findByName("process${variant.name.capitalize()}GoogleServices")
+    googleTask.enabled = !"noFirebase".equals(variant.flavorName)
+}

@@ -1,5 +1,6 @@
 package com.programmersbox.otakumanager
 
+//import com.programmersbox.sharedutils.appUpdateCheck
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,13 +10,20 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,7 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -40,18 +51,14 @@ import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.otakumanager.ui.theme.OtakuWorldTheme
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseAuthentication
-import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.CoverCard
-import com.programmersbox.uiviews.utils.CustomChip
+import com.programmersbox.uiviews.utils.CustomChip2
 import io.reactivex.Flowable
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import org.koin.android.ext.android.inject
 import com.programmersbox.anime_sources.Sources as ASources
@@ -96,14 +103,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Single.create<AppUpdate.AppUpdates> {
+        /*Single.create<AppUpdate.AppUpdates> {
             AppUpdate.getUpdate()?.let { d -> it.onSuccess(d) } ?: it.onError(Exception("Something went wrong"))
         }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnError { }
             .subscribe(appUpdateCheck::onNext)
-            .addTo(disposable)
+            .addTo(disposable)*/
 
         val screenList = listOf(
             Screen.Favorites,
@@ -247,7 +254,7 @@ class MainActivity : ComponentActivity() {
                         LazyRow {
 
                             item {
-                                CustomChip(
+                                CustomChip2(
                                     "ALL",
                                     modifier = Modifier
                                         .combinedClickable(
@@ -271,7 +278,7 @@ class MainActivity : ComponentActivity() {
                                     .sortedBy { it.first }
                             ) {
 
-                                CustomChip(
+                                CustomChip2(
                                     "${it.first}: ${it.second.size - 1}",
                                     modifier = Modifier
                                         .combinedClickable(
@@ -296,14 +303,13 @@ class MainActivity : ComponentActivity() {
         ) {
 
             when {
-                FirebaseAuthentication.currentUser == null -> NotLoggedInState(it)
+                //FirebaseAuthentication.currentUser == null -> NotLoggedInState(it)
                 showing.isEmpty() -> EmptyState(navController = navController, paddingValues = it)
                 else -> {
 
                     LazyVerticalGrid(
-                        cells = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
+                        columns = GridCells.Adaptive(ComposableUtils.IMAGE_WIDTH),
                         contentPadding = it,
-                        //state = rememberLazyListState()
                     ) {
                         items(
                             showing

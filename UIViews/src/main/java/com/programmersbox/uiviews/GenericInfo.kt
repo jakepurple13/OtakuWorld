@@ -1,13 +1,16 @@
 package com.programmersbox.uiviews
 
+import android.app.PendingIntent
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.lazy.LazyGridState
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
@@ -20,12 +23,17 @@ interface GenericInfo {
 
     val apkString: AppUpdate.AppUpdates.() -> String?
     val scrollBuffer: Int get() = 2
+    val deepLinkUri: String
+
+    fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
+    fun deepLinkSettings(context: Context): PendingIntent?
 
     fun chapterOnClick(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
+        activity: FragmentActivity,
         navController: NavController
     )
 
@@ -33,7 +41,7 @@ interface GenericInfo {
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
     fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
-    fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context)
+    fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context, activity: FragmentActivity)
 
     @Composable
     fun DetailActions(infoModel: InfoModel, tint: Color) = Unit
@@ -77,4 +85,8 @@ interface GenericInfo {
     fun allNavSetup(fragment: Fragment, navController: NavController) = Unit
     fun settingNavSetup(fragment: Fragment, navController: NavController) = Unit
 
+    fun NavGraphBuilder.navSetup() = Unit
+
+    @Composable
+    fun BottomBarAdditions() = Unit
 }

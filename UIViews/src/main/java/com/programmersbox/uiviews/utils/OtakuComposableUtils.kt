@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -27,8 +29,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import coil.annotation.ExperimentalCoilApi
-import coil.compose.ImagePainter
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
@@ -203,6 +205,7 @@ fun PlaceHolderCoverCard(placeHolder: Int) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 fun OtakuBannerBox(
@@ -224,7 +227,7 @@ fun OtakuBannerBox(
         banner = {
             Card(modifier = Modifier.align(Alignment.TopCenter)) {
                 ListItem(
-                    icon = {
+                    leadingContent = {
                         GlideImage(
                             imageModel = itemInfo.value?.imageUrl.orEmpty(),
                             contentDescription = null,
@@ -247,8 +250,8 @@ fun OtakuBannerBox(
                         )
                     },
                     overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    text = { Text(itemInfo.value?.title.orEmpty()) },
-                    secondaryText = {
+                    headlineText = { Text(itemInfo.value?.title.orEmpty()) },
+                    supportingText = {
                         Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,
@@ -270,6 +273,7 @@ fun M3CoverCard(
     name: String,
     placeHolder: Int,
     error: Int = placeHolder,
+    headers: Map<String, Any> = emptyMap(),
     onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {}
@@ -291,14 +295,16 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = rememberImagePainter(imageUrl) {
-                    placeholder(placeHolder)
-                    error(error)
-                    crossfade(true)
-                    lifecycle(LocalLifecycleOwner.current)
-                    size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                },
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
+                    .crossfade(true)
+                    .placeholder(placeHolder)
+                    .error(error)
+                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                    .build(),
                 contentDescription = name,
                 modifier = Modifier.matchParentSize()
             )
@@ -401,12 +407,13 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
     }
 }
 
-@OptIn(ExperimentalCoilApi::class)
+@OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 fun M3OtakuBannerBox(
     showBanner: Boolean = false,
     placeholder: Int,
+    modifier: Modifier = Modifier,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val context = LocalContext.current
@@ -418,6 +425,7 @@ fun M3OtakuBannerBox(
     }
 
     BannerBox(
+        modifier = modifier,
         showBanner = showBanner,
         banner = {
             androidx.compose.material3.Surface(
@@ -427,68 +435,26 @@ fun M3OtakuBannerBox(
                 shadowElevation = 10.dp
             ) {
                 ListItem(
-                    icon = {
-                        val painter = rememberImagePainter(data = itemInfo.value?.imageUrl.orEmpty())
-
-                        when (painter.state) {
-                            is ImagePainter.State.Loading -> {
-                                placeHolderImage?.let {
-                                    Image(
-                                        bitmap = it,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .align(Alignment.Center)
-                                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                    )
-                                }
-                            }
-                            is ImagePainter.State.Error -> {
-                                GlideImage(
-                                    imageModel = itemInfo.value?.imageUrl.orEmpty(),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                                    loading = {
-                                        placeHolderImage?.let { it1 ->
-                                            Image(
-                                                bitmap = it1,
-                                                contentDescription = null,
-                                                modifier = Modifier
-                                                    .align(Alignment.Center)
-                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                            )
-                                        }
-                                    },
-                                    failure = {
-                                        placeHolderImage?.let { it1 ->
-                                            Image(
-                                                bitmap = it1,
-                                                contentDescription = null,
-                                                modifier = Modifier
-                                                    .align(Alignment.Center)
-                                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                            )
-                                        }
-                                    }
-                                )
-                            }
-                            else -> {}
-                        }
-
-                        Image(
-                            painter = painter,
-                            contentDescription = null,
+                    leadingContent = {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(itemInfo.value?.imageUrl.orEmpty())
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .placeholder(placeholder)
+                                .error(placeholder)
+                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                .build(),
+                            contentDescription = itemInfo.value?.title,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
                     },
                     overlineText = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    text = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
-                    secondaryText = {
+                    headlineText = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
+                    supportingText = {
                         androidx.compose.material3.Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,

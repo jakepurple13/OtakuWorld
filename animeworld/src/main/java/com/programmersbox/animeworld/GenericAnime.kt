@@ -1,6 +1,7 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -11,11 +12,21 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
-import androidx.compose.material.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rxjava2.subscribeAsState
@@ -28,13 +39,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.core.app.TaskStackBuilder
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.NavController
-import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.navDeepLink
+import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -46,6 +63,7 @@ import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.utilities.Qualities
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
+import com.programmersbox.animeworld.databinding.MiniControllerBinding
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.requestPermissions
@@ -55,7 +73,6 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.SettingsDsl
 import com.programmersbox.uiviews.utils.*
 import com.tonyodev.fetch2.*
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -79,12 +96,14 @@ class GenericAnime(val context: Context) : GenericInfo {
     private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { anime_file }
+    override val deepLinkUri: String get() = "animeworld://"
 
     override fun chapterOnClick(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
+        activity: FragmentActivity,
         navController: NavController
     ) {
         if ((model.source as? ShowApi)?.canPlay == false) {
@@ -94,7 +113,8 @@ class GenericAnime(val context: Context) : GenericInfo {
         getEpisodes(
             R.string.source_no_stream,
             model,
-            context
+            context,
+            activity,
         ) {
             if (MainActivity.cast.isCastActive()) {
                 MainActivity.cast.loadUrl(
@@ -120,7 +140,13 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     private val fetch = Fetch.getDefaultInstance()
 
-    override fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context) {
+    override fun downloadChapter(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        activity: FragmentActivity
+    ) {
         if ((model.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(
                 context,
@@ -129,13 +155,14 @@ class GenericAnime(val context: Context) : GenericInfo {
             ).show()
             return
         }
-        MainActivity.activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
+        activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
                 getEpisodes(
                     R.string.source_no_download,
                     model,
                     context,
+                    activity,
                     { !it.link.orEmpty().endsWith(".m3u8") }
                 ) { fetchIt(it, model) }
             }
@@ -183,6 +210,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         errorId: Int,
         model: ChapterModel,
         context: Context,
+        activity: FragmentActivity,
         filter: (Storage) -> Boolean = { true },
         onAction: (Storage) -> Unit
     ) {
@@ -233,7 +261,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                                     else -> Icons.Default.DeviceUnknown
                                 }
                             )
-                        }.show(MainActivity.activity.supportFragmentManager, "qualityChooser")
+                        }.show(activity.supportFragmentManager, "qualityChooser")
                     }
                     else -> {
                         Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
@@ -319,7 +347,8 @@ class GenericAnime(val context: Context) : GenericInfo {
     @OptIn(
         ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalFoundationApi::class,
+        ExperimentalMaterial3Api::class,
     )
     @Composable
     override fun ItemListView(
@@ -330,32 +359,31 @@ class GenericAnime(val context: Context) : GenericInfo {
         onClick: (ItemModel) -> Unit
     ) {
         LazyVerticalGrid(
-            cells = GridCells.Fixed(1),
+            columns = GridCells.Fixed(1),
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(list) {
-                androidx.compose.material3.Surface(
+                ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 5.dp)
                         .combineClickableWithIndication(
                             onLongPress = { c -> onLongPress(it, c) },
                             onClick = { onClick(it) }
-                        ),
-                    tonalElevation = 5.dp,
-                    shape = androidx.compose.material.MaterialTheme.shapes.medium
+                        )
                 ) {
                     ListItem(
-                        icon = {
+                        leadingContent = {
                             androidx.compose.material3.Icon(
                                 if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = null,
                             )
                         },
-                        text = { androidx.compose.material3.Text(it.title) },
+                        headlineText = { androidx.compose.material3.Text(it.title) },
                         overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
-                        secondaryText = if (it.description.isNotEmpty()) {
+                        supportingText = if (it.description.isNotEmpty()) {
                             { androidx.compose.material3.Text(it.description) }
                         } else null
                     )
@@ -391,10 +419,11 @@ class GenericAnime(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(ViewVideosFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
+                ) { navController.navigate(DownloadViewModel.VideoViewerRoute) { launchSingleTop = true } }
             )
 
             val castingViewModel: CastingViewModel = viewModel()
+            val activity = LocalActivity.current
 
             ShowWhen(castingViewModel.connection) {
                 PreferenceSetting(
@@ -414,8 +443,10 @@ class GenericAnime(val context: Context) : GenericInfo {
                             context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
                         } else {
                             MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                .also { it.routeSelector = CastContext.getSharedInstance(context).mergedSelector }
-                                .show(MainActivity.activity.supportFragmentManager, "media_chooser")
+                                .also { m ->
+                                    CastContext.getSharedInstance(context).mergedSelector?.let { m.routeSelector = it }
+                                }
+                                .show(activity.supportFragmentManager, "media_chooser")
                         }
                     }
                 )
@@ -427,7 +458,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloadViewerFragment::class.java.hashCode(), null, SettingsDsl.customAnimationOptions) }
+                ) { navController.navigate(DownloaderViewModel.DownloadViewerRoute) { launchSingleTop = true } }
             )
         }
 
@@ -485,7 +516,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     }
 
     override fun settingNavSetup(fragment: Fragment, navController: NavController) {
-        navController
+        /*navController
             .graph
             .addDestination(
                 FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
@@ -503,7 +534,63 @@ class GenericAnime(val context: Context) : GenericInfo {
                     setClassName(DownloadViewerFragment::class.java.name)
                     addDeepLink(MainActivity.VIEW_DOWNLOADS)
                 }
-            )
+            )*/
+    }
+
+    @OptIn(
+        ExperimentalAnimationApi::class,
+        ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class
+    )
+    override fun NavGraphBuilder.navSetup() {
+
+        composable(
+            DownloadViewModel.VideoViewerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloadViewModel.VideoViewerRoute}" })
+        ) { ViewVideoScreen() }
+
+        composable(
+            DownloaderViewModel.DownloadViewerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
+        ) { DownloaderUi() }
+
+    }
+
+    @Composable
+    override fun BottomBarAdditions() {
+        AndroidViewBinding(factory = { l, v, b -> MiniControllerBinding.inflate(l, v, b) })
+    }
+
+    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+    }
+
+    override fun deepLinkSettings(context: Context): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            "$deepLinkUri${Screen.NotificationScreen.route}".toUri(),
+            context,
+            MainActivity::class.java
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        }
     }
 
 }

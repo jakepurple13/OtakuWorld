@@ -29,6 +29,28 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    flavorDimensions "version"
+    productFlavors {
+        noFirebase {
+            dimension "version"
+        }
+        full {
+            dimension "version"
+        }
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs = ['src/main/java']
+        }
+        full {
+            java.srcDirs = ['src/full/java']
+        }
+        noFirebase {
+            java.srcDirs = ['src/noFirebase/java']
+        }
+    }
 }
 
 dependencies {
@@ -37,20 +59,23 @@ dependencies {
     implementation appCompat
     implementation material
     testImplementation Deps.junit
-    testImplementation "com.jakewharton.picnic:picnic:0.5.0"
+    testImplementation "com.jakewharton.picnic:picnic:0.6.0"
     testImplementation 'com.lordcodes.turtle:turtle:0.6.0'
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
 
-    implementation 'com.google.firebase:firebase-auth:21.0.1'
-    implementation play_services
-    implementation 'com.firebaseui:firebase-ui-auth:8.0.0'
-    implementation 'com.google.firebase:firebase-firestore-ktx:24.0.0'
-    implementation 'com.google.firebase:firebase-database-ktx:20.0.3'
+    fullImplementation 'com.google.firebase:firebase-auth:21.0.3'
+    fullImplementation play_services
+    fullImplementation 'com.firebaseui:firebase-ui-auth:8.0.1'
+    fullImplementation 'com.google.firebase:firebase-firestore-ktx:24.1.0'
+    fullImplementation 'com.google.firebase:firebase-database-ktx:20.0.4'
 
     implementation coroutinesCore
     implementation coroutinesAndroid
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutinesVersion"
+    fullImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutinesVersion"
+
+    fullImplementation 'com.google.mlkit:translate:17.0.0'
+    fullImplementation 'com.google.mlkit:language-id:17.0.3'
 
     implementation project(':Models')
     implementation project(':favoritesdatabase')

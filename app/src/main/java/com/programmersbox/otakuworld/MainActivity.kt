@@ -25,7 +25,6 @@ import androidx.compose.material.ButtonElevation
 import androidx.compose.material.FabPosition
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
@@ -54,7 +53,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -144,7 +142,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }*/
 
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+                val topBarState = rememberTopAppBarScrollState()
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
                 BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
@@ -163,7 +162,9 @@ class MainActivity : AppCompatActivity() {
                                         androidx.compose.material3.contentColorFor(androidx.compose.material3.MaterialTheme.colorScheme.surface)
                                             .animate().value
                             ) {
-                                Divider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value)
+                                androidx.compose.material3.Divider(
+                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value
+                                )
 
                                 PreferenceSetting(settingTitle = { Text("") }) {
                                     androidx.compose.material3.IconButton(onClick = showSettings) {
@@ -212,7 +213,9 @@ class MainActivity : AppCompatActivity() {
                                 title = { androidx.compose.material3.Text("Fun Playground") },
                                 scrollBehavior = scrollBehavior
                             )
-                            Divider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value)
+                            androidx.compose.material3.Divider(
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f).animate().value
+                            )
                         }
                     },
                     backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background.animate().value,
@@ -804,7 +807,7 @@ fun InfoCard(
 
             }
 
-            Divider(
+            androidx.compose.material3.Divider(
                 thickness = 0.5.dp,
                 color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.onSurface.copy(alpha = .12f)
             )
@@ -1341,18 +1344,17 @@ fun SwipeButton(
     val collapsed = swipeButtonState == SwipeButtonState.COLLAPSED
     val swiped = swipeButtonState == SwipeButtonState.SWIPED
 
+    rememberRipple()
     Surface(
+        onClick = {},
         modifier = modifier.animateContentSize(),
+        enabled = enabled,
         shape = shape,
         color = colors.backgroundColor(enabled).value,
         contentColor = contentColor.copy(alpha = 1f),
         border = border,
         elevation = elevation?.elevation(enabled, interactionSource)?.value ?: 0.dp,
-        onClick = {},
-        enabled = enabled,
-        role = Role.Button,
-        interactionSource = interactionSource,
-        indication = rememberRipple()
+        interactionSource = interactionSource
     ) {
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),

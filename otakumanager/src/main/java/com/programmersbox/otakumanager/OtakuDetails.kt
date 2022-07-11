@@ -349,7 +349,7 @@ fun DetailsHeader(
                     horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
                     items(model.genres) {
-                        CustomChip(
+                        CustomChip2(
                             category = it,
                             textColor = swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colors.onSurface,
                             backgroundColor = swatchInfo?.bodyColor?.toComposeColor()?.copy(1f) ?: MaterialTheme.colors.surface,

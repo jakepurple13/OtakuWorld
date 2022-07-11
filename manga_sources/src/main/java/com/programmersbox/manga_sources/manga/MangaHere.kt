@@ -23,6 +23,7 @@ object MangaHere : ApiService {
 
     override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
         Jsoup.connect("$baseUrl/directory/$page.htm?latest")
+            .header("Referer", baseUrl)
             .cookie("isAdult", "1").get()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
@@ -31,13 +32,14 @@ object MangaHere : ApiService {
                     url = it.select("a").first()!!.attr("abs:href"),
                     imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
                     source = this
-                )
+                ).apply { extras["Referer"] = baseUrl }
             }.filter { it.title.isNotEmpty() }
             .let { emitter.onSuccess(it) }
     }
 
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        Jsoup.connect("$baseUrl/directory/$page.htm")
+    override suspend fun recent(page: Int): List<ItemModel> {
+        return Jsoup.connect("$baseUrl/directory/$page.htm?latest")
+            .header("Referer", baseUrl)
             .cookie("isAdult", "1").get()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
@@ -46,9 +48,39 @@ object MangaHere : ApiService {
                     url = it.select("a").first()!!.attr("abs:href"),
                     imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
                     source = this
-                )
+                ).apply { extras["Referer"] = baseUrl }
+            }.filter { it.title.isNotEmpty() }
+    }
+
+    override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
+        Jsoup.connect("$baseUrl/directory/$page.htm")
+            .header("Referer", baseUrl)
+            .cookie("isAdult", "1").get()
+            .select(".manga-list-1-list li").fastMap {
+                ItemModel(
+                    title = it.select("a").first()!!.attr("title"),
+                    description = "",
+                    url = it.select("a").first()!!.attr("abs:href"),
+                    imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
+                    source = this
+                ).apply { extras["Referer"] = baseUrl }
             }.filter { it.title.isNotEmpty() }
             .let { emitter.onSuccess(it) }
+    }
+
+    override suspend fun allList(page: Int): List<ItemModel> {
+        return Jsoup.connect("$baseUrl/directory/$page.htm")
+            .header("Referer", baseUrl)
+            .cookie("isAdult", "1").get()
+            .select(".manga-list-1-list li").fastMap {
+                ItemModel(
+                    title = it.select("a").first()!!.attr("title"),
+                    description = "",
+                    url = it.select("a").first()!!.attr("abs:href"),
+                    imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
+                    source = this
+                ).apply { extras["Referer"] = baseUrl }
+            }.filter { it.title.isNotEmpty() }
     }
 
     override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
@@ -82,7 +114,7 @@ object MangaHere : ApiService {
                         url = "$baseUrl${it.select(".manga-list-4-item-title > a").first()!!.attr("href")}",
                         imageUrl = it.select("img.manga-list-4-cover").first()!!.attr("abs:src"),
                         source = this
-                    )
+                    ).apply { extras["Referer"] = baseUrl }
                 }
                 .filter { it.title.isNotEmpty() }
                 .let { emitter.onSuccess(it) }
@@ -92,8 +124,42 @@ object MangaHere : ApiService {
         super.searchList(searchText, page, list)
     }
 
+    override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
+        val url = "$baseUrl/search".toHttpUrlOrNull()!!.newBuilder().apply {
+            addEncodedQueryParameter("page", page.toString())
+            addEncodedQueryParameter("title", searchText.toString())
+            addEncodedQueryParameter("sort", null)
+            addEncodedQueryParameter("stype", 1.toString())
+            addEncodedQueryParameter("name", null)
+            addEncodedQueryParameter("author_method", "cw")
+            addEncodedQueryParameter("author", null)
+            addEncodedQueryParameter("artist_method", "cw")
+            addEncodedQueryParameter("artist", null)
+            addEncodedQueryParameter("rating_method", "eq")
+            addEncodedQueryParameter("rating", null)
+            addEncodedQueryParameter("released_method", "eq")
+            addEncodedQueryParameter("released", null)
+        }.build()
+        val request = Request.Builder()
+            .url(url)
+            .cacheControl(CacheControl.Builder().maxAge(10, TimeUnit.MINUTES).build())
+            .build()
+        val client = OkHttpClient().newCall(request).execute()
+        return Jsoup.parse(client.body?.string()).select(".manga-list-4-list > li")
+            .fastMap {
+                ItemModel(
+                    title = it.select("a").first()!!.attr("title"),
+                    description = it.select("p.manga-list-4-item-tip").last()!!.text(),
+                    url = "$baseUrl${it.select(".manga-list-4-item-title > a").first()!!.attr("href")}",
+                    imageUrl = it.select("img.manga-list-4-cover").first()!!.attr("abs:src"),
+                    source = this
+                ).apply { extras["Referer"] = baseUrl }
+            }
+            .filter { it.title.isNotEmpty() }
+    }
+
     override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = Jsoup.connect(model.url).get()
+        val doc = Jsoup.connect(model.url).header("Referer", baseUrl).get()
         emitter.onSuccess(
             InfoModel(
                 title = model.title,
@@ -112,8 +178,30 @@ object MangaHere : ApiService {
                 genres = doc.select("p.detail-info-right-tag-list").select("a").eachText(),
                 alternativeNames = emptyList(),
                 source = this
-            )
+            ).apply { extras["Referer"] = baseUrl }
         )
+    }
+
+    override suspend fun itemInfo(model: ItemModel): InfoModel {
+        val doc = Jsoup.connect(model.url).header("Referer", baseUrl).get()
+        return InfoModel(
+            title = model.title,
+            description = doc.select("p.fullcontent").text(),
+            url = model.url,
+            imageUrl = doc.select("img.detail-info-cover-img").select("img[src^=http]").attr("abs:src"),
+            chapters = doc.select("div[id=chapterlist]").select("ul.detail-main-list").select("li").map {
+                ChapterModel(
+                    name = it.select("a").select("p.title3").text(),
+                    url = it.select("a").attr("abs:href"),
+                    uploaded = it.select("a").select("p.title2").text(),
+                    sourceUrl = model.url,
+                    source = this
+                ).apply { uploadedTime = parseChapterDate(uploaded) }
+            },
+            genres = doc.select("p.detail-info-right-tag-list").select("a").eachText(),
+            alternativeNames = emptyList(),
+            source = this
+        ).apply { extras["Referer"] = baseUrl }
     }
 
     private fun parseChapterDate(date: String): Long {
@@ -143,7 +231,7 @@ object MangaHere : ApiService {
 
     override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
         try {
-            val doc = Jsoup.connect(url).get()
+            val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
             ItemModel(
                 title = doc.select("span.detail-info-right-title-font").text(),
                 description = doc.select("p.fullcontent").text(),
@@ -157,11 +245,35 @@ object MangaHere : ApiService {
         }
     }
 
+    override suspend fun sourceByUrl(url: String): ItemModel {
+        val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
+        return ItemModel(
+            title = doc.select("span.detail-info-right-title-font").text(),
+            description = doc.select("p.fullcontent").text(),
+            url = url,
+            imageUrl = doc.select("img.detail-info-cover-img").select("img[src^=http]").attr("abs:src"),
+            source = this
+        )
+    }
+
     override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
         it.onSuccess(
-            pageListParse(Jsoup.connect(chapterModel.url).get())
-                .fastMap { p -> Storage(link = p, source = chapterModel.url, quality = "Good", sub = "Yes") }
+            pageListParse(Jsoup.connect(chapterModel.url).header("Referer", baseUrl).get())
+                .fastMap { p ->
+                    Storage(link = p, source = chapterModel.url, quality = "Good", sub = "Yes").apply {
+                        headers["Referer"] = baseUrl
+                    }
+                }
         )
+    }
+
+    override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
+        return pageListParse(Jsoup.connect(chapterModel.url).header("Referer", baseUrl).get())
+            .fastMap { p ->
+                Storage(link = p, source = chapterModel.url, quality = "Good", sub = "Yes").apply {
+                    headers["Referer"] = baseUrl
+                }
+            }
     }
 
     private fun pageListParse(document: Document): List<String> {

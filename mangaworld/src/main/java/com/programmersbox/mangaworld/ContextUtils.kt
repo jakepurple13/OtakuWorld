@@ -19,6 +19,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.view.drawToBitmap
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -40,6 +41,13 @@ val USER_NEW_READER = booleanPreferencesKey("useNewReader")
 val Context.useNewReaderFlow get() = dataStore.data.map { it[USER_NEW_READER] ?: true }
 
 val DOWNLOAD_FILE_PATH get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"
+
+val FOLDER_LOCATION = stringPreferencesKey("folderLocation")
+val Context.folderLocationFlow get() = dataStore.data.map { it[FOLDER_LOCATION] ?: DOWNLOAD_FILE_PATH }
+
+var Context.folderLocation: String by sharedPrefNotNullDelegate(
+    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"
+)
 
 class CustomHideBottomViewOnScrollBehavior<T : View>(context: Context?, attrs: AttributeSet?) :
     HideBottomViewOnScrollBehavior<T>(context, attrs) {
@@ -213,6 +221,9 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
 
 val PAGE_PADDING = intPreferencesKey("page_padding")
 val Context.pagePadding get() = dataStore.data.map { it[PAGE_PADDING] ?: 4 }
+
+val LIST_OR_PAGER = booleanPreferencesKey("list_or_padding")
+val Context.listOrPager get() = dataStore.data.map { it[LIST_OR_PAGER] ?: true }
 
 val showOrHideNav = BehaviorSubject.createDefault(true)
 

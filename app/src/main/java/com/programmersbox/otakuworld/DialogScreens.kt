@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,32 +15,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.LayoutModifier
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.MeasureResult
-import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.layout.*
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -46,6 +40,10 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ExperimentalMotionApi
+import androidx.constraintlayout.compose.MotionLayout
+import androidx.constraintlayout.compose.MotionLayoutDebugFlags
+import androidx.constraintlayout.compose.MotionScene
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -55,6 +53,7 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -66,7 +65,8 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
         ExperimentalMaterialApi::class,
         ExperimentalComposeUiApi::class,
         ExperimentalPagerApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalFoundationApi::class,
+        ExperimentalMotionApi::class
     )
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -87,9 +87,10 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
 }
 
 enum class SettingLocation {
-    CHECK, SWITCH, PAGER, OPTIMISTIC
+    CHECK, SWITCH, PAGER, OPTIMISTIC, MOTIONLAYOUT, THEME
 }
 
+@ExperimentalMotionApi
 @ExperimentalPagerApi
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
@@ -97,7 +98,8 @@ enum class SettingLocation {
 @ExperimentalMaterialApi
 @Composable
 fun TestView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
     var location: SettingLocation? by remember { mutableStateOf(null) }
@@ -120,7 +122,7 @@ fun TestView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         sheetPeekHeight = 0.dp,
@@ -133,6 +135,8 @@ fun TestView(closeClick: () -> Unit) {
                     SettingLocation.SWITCH -> SwitchView { scope.launch { state.bottomSheetState.collapse() } }
                     SettingLocation.PAGER -> PagerView { scope.launch { state.bottomSheetState.collapse() } }
                     SettingLocation.OPTIMISTIC -> OptimisticView { scope.launch { state.bottomSheetState.collapse() } }
+                    SettingLocation.MOTIONLAYOUT -> MotionLayoutView { scope.launch { state.bottomSheetState.collapse() } }
+                    SettingLocation.THEME -> ThemeingView { scope.launch { state.bottomSheetState.collapse() } }
                     else -> {}
                 }
             }
@@ -188,6 +192,29 @@ fun TestView(closeClick: () -> Unit) {
                         }
                     ) { Icon(Icons.Default.ChevronRight, null) }
                 }
+
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text("MotionLayout Settings") },
+                        settingIcon = { Icon(Icons.Default.MotionPhotosAuto, null) },
+                        modifier = Modifier.clickable {
+                            location = SettingLocation.MOTIONLAYOUT
+                            scope.launch { state.bottomSheetState.expand() }
+                        }
+                    ) { Icon(Icons.Default.ChevronRight, null) }
+                }
+
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text("Theme Settings") },
+                        settingIcon = { Icon(Icons.Default.SettingsBrightness, null) },
+                        modifier = Modifier.clickable {
+                            location = SettingLocation.THEME
+                            scope.launch { state.bottomSheetState.expand() }
+                        }
+                    ) { Icon(Icons.Default.ChevronRight, null) }
+
+                }
             }
         }
     }
@@ -199,8 +226,8 @@ fun TestView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun SwitchView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
             Column {
@@ -213,7 +240,7 @@ fun SwitchView(closeClick: () -> Unit) {
                     },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -238,8 +265,8 @@ fun SwitchView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun CheckView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
             Column {
@@ -252,7 +279,7 @@ fun CheckView(closeClick: () -> Unit) {
                     },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -278,7 +305,8 @@ fun CheckView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun PagerView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
     val state = rememberPagerState()
     val currentPage by remember { derivedStateOf { state.currentPage } }
@@ -293,7 +321,7 @@ fun PagerView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -433,7 +461,7 @@ fun PagerView(closeClick: () -> Unit) {
                                             )
                                         }
 
-                                        DropdownMenu(
+                                        androidx.compose.material3.DropdownMenu(
                                             expanded = showPopup && popUpOrDialog,
                                             onDismissRequest = { showPopup = false },
                                             modifier = Modifier
@@ -441,14 +469,15 @@ fun PagerView(closeClick: () -> Unit) {
                                                 .border(1.dp, MaterialTheme.colorScheme.outline)
                                         ) {
                                             optionsList.value.forEachIndexed { index, settingLocation ->
-                                                DropdownMenuItem(
+                                                androidx.compose.material3.DropdownMenuItem(
                                                     onClick = {
                                                         dropDownSetting = settingLocation
                                                         showPopup = false
                                                     },
-                                                ) { Text(settingLocation.toString()) }
+                                                    text = { androidx.compose.material3.Text(settingLocation.toString()) }
+                                                )
                                                 if (index < optionsList.value.size - 1)
-                                                    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                                                    androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                                             }
                                         }
                                     }
@@ -568,7 +597,7 @@ class MinimumTouchTargetModifierCustom(val size: DpSize) : LayoutModifier {
 @Composable
 fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    PreferenceSetting(
+    /*PreferenceSetting(
         settingTitle = { Text("Text Field") },
         endIcon = {
             TextField(
@@ -579,7 +608,7 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
                 modifier = Modifier.onFocusChanged { if (!it.isFocused) keyboardController?.hide() }
             )
         }
-    )
+    )*/
 }
 
 @ExperimentalComposeUiApi
@@ -588,7 +617,8 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun OptimisticView(closeClick: () -> Unit) {
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -599,7 +629,7 @@ fun OptimisticView(closeClick: () -> Unit) {
                     actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
                     scrollBehavior = scrollBehavior
                 )
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -650,7 +680,7 @@ fun OptimisticView(closeClick: () -> Unit) {
                     onClick = { scope.launch { count2.emit(++count) } }
                 ) { Text("Hi: $timer") }
 
-                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
 
             item {
@@ -700,6 +730,182 @@ fun OptimisticView(closeClick: () -> Unit) {
                 )
 
             }
+        }
+    }
+}
+
+@ExperimentalMaterial3Api
+@ExperimentalMotionApi
+@Composable
+fun MotionLayoutView(closeClick: () -> Unit) {
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    Scaffold(
+        topBar = {
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("MotionLayout Views") },
+                    actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
+                    scrollBehavior = scrollBehavior
+                )
+                androidx.compose.material3.Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
+            }
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { p ->
+        var animateToEnd by remember { mutableStateOf(false) }
+
+        val progress by animateFloatAsState(
+            targetValue = if (animateToEnd) 1f else 0f,
+            animationSpec = tween(1000)
+        )
+        Column(modifier = Modifier.padding(p)) {
+            MotionLayout(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp)
+                    .background(Color.White),
+                motionScene = MotionScene(
+                    """{
+                    ConstraintSets: {   // all ConstraintSets
+                      start: {          // constraint set id = "start"
+                        a: {            // Constraint for widget id='a'
+                          width: 40,
+                          height: 40,
+                          start: ['parent', 'start', 16],
+                          bottom: ['parent', 'bottom', 16]
+                        }
+                      },
+                      end: {         // constraint set id = "start"
+                        a: {
+                          width: 40,
+                          height: 40,
+                          //rotationZ: 390,
+                          end: ['parent', 'end', 16],
+                          top: ['parent', 'top', 16]
+                        }
+                      }
+                    },
+                    Transitions: {            // All Transitions in here 
+                      default: {              // transition named 'default'
+                        from: 'start',        // go from Transition "start"
+                        to: 'end',            // go to Transition "end"
+                        pathMotionArc: 'startHorizontal',  // move in arc 
+                        KeyFrames: {          // All keyframes go here
+                          KeyAttributes: [    // keyAttributes key frames go here
+                            {
+                              target: ['a'],              // This keyAttributes group target id "a"
+                              frames: [25,50,75],         // 3 points on progress 25% , 50% and 75%
+                              rotationX: [0, 45, 60],     // the rotationX angles are a spline from 0,0,45,60,0
+                              rotationY: [60, 45, 0]     // the rotationX angles are a spline from 0,60,45,0,0
+                            }
+                          ]
+                        }
+                      }
+                    }
+                }"""
+                ),
+                debug = EnumSet.of(MotionLayoutDebugFlags.SHOW_ALL),
+                progress = progress
+            ) {
+                Box(
+                    modifier = Modifier
+                        .layoutId("a")
+                        .background(Color.Red)
+                )
+            }
+
+            androidx.compose.material3.Button(onClick = { animateToEnd = !animateToEnd }) {
+                androidx.compose.material3.Text(text = "Run")
+            }
+        }
+    }
+}
+
+@ExperimentalMaterial3Api
+@ExperimentalFoundationApi
+@Composable
+fun ThemeingView(closeClick: () -> Unit) {
+    val topBarState = rememberTopAppBarScrollState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        topBar = {
+            Column {
+                CenterAlignedTopAppBar(
+                    title = { Text("Theme Views") },
+                    actions = { IconButton(onClick = { closeClick() }) { Icon(imageVector = Icons.Default.Close, contentDescription = null) } },
+                    scrollBehavior = scrollBehavior
+                )
+                androidx.compose.material3.Divider()
+            }
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { p ->
+
+        val current = currentColorScheme
+
+        val dominantColor = rememberDynamicColorState()
+        val url: String? = remember {
+            "https://upload.wikimedia.org/wikipedia/en/c/c3/OnePunchMan_manga_cover.png"
+        }
+        LaunchedEffect(url) {
+            if (url != null) {
+                dominantColor.updateColorsFromImageUrl(url)
+            } else {
+                dominantColor.reset()
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(p),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            stickyHeader {
+                Row {
+                    Text("Option", modifier = Modifier.weight(1f))
+                    Text("M3", modifier = Modifier.weight(1f))
+                    Text("Dynamic", modifier = Modifier.weight(1f))
+                }
+            }
+
+            fun LazyListScope.row(type: String, choice: ColorScheme.() -> Color) {
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(type, modifier = Modifier.weight(1f))
+
+                        MaterialTheme(current) {
+                            Box(
+                                modifier = Modifier
+                                    .height(15.dp)
+                                    .weight(1f)
+                                    .background(MaterialTheme.colorScheme.choice())
+                            )
+                        }
+
+                        FullDynamicThemePrimaryColorsFromImage(dominantColor) {
+                            Box(
+                                modifier = Modifier
+                                    .height(15.dp)
+                                    .weight(1f)
+                                    .background(MaterialTheme.colorScheme.choice())
+                            )
+                        }
+                    }
+                }
+            }
+
+            row("Primary") { primary }
+            row("onPrimary") { onPrimary }
+            row("surface") { surface }
+            row("onSurface") { onSurface }
+            row("Background") { background }
+            row("onBackground") { onBackground }
+
         }
     }
 }
