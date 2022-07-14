@@ -139,7 +139,7 @@ dependencies {
 
     implementation compose.compose
     implementation "com.airbnb.android:lottie-compose:$lottieVersion"
-    implementation "me.onebone:toolbar-compose:2.3.3"
+    implementation "me.onebone:toolbar-compose:2.3.4"
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:1.0.3'
     implementation "androidx.paging:paging-compose:1.0.0-alpha15"
 
