@@ -642,20 +642,16 @@ fun ReadView() {
                         )
                     }
                 }
-            ) { _ ->
+            ) { paddingValues ->
                 SwipeRefresh(
                     state = swipeState,
                     onRefresh = { readVm.refresh() },
-                    indicatorPadding = PaddingValues(top = 64.dp)
+                    indicatorPadding = paddingValues
                 ) {
-                    val padding = PaddingValues(
-                        top = animateDpAsState(if (pagerShowItems || listShowItems) 64.dp else 0.dp).value,
-                        bottom = animateDpAsState(if (pagerShowItems || listShowItems) 80.dp else 0.dp).value
-                    )
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
                     Crossfade(targetState = listOrPager) {
-                        if (it) ListView(listState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-                        else PagerView(pagerState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        if (it) ListView(listState, paddingValues, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        else PagerView(pagerState, paddingValues, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
 
                         //TODO: Add a new type with a recyclerview for listview only
 
@@ -914,7 +910,7 @@ private fun ZoomableImage(
         if (showTheThing) {
             GlideImage(
                 imageModel = remember(painter) { GlideUrl(painter) { headers } },
-                contentScale = ContentScale.FillWidth,
+                contentScale = ContentScale.Fit,
                 loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {
                     Text(
