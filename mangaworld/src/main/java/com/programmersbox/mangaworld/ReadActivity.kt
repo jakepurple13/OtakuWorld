@@ -656,6 +656,7 @@ fun ReadView() {
                     Crossfade(targetState = listOrPager) {
                         if (it) ListView(listState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
                         else PagerView(pagerState, padding, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        //TODO: Add a new type with a recyclerview for listview only
                     }
                 }
             }
