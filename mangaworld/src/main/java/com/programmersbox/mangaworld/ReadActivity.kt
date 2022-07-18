@@ -689,7 +689,7 @@ fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List
         itemSpacing = itemSpacing,
         contentPadding = contentPadding,
         key = { it }
-    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, onClick, vm.headers) } ?: LastPageReached(vm = vm) }
+    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, onClick, vm.headers, ContentScale.Fit) } ?: LastPageReached(vm = vm) }
 }
 
 @Composable
@@ -828,12 +828,17 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
             }
         }*/
 
-    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, onClick, vm.headers) }
+    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, onClick, vm.headers, ContentScale.FillWidth) }
     item { LastPageReached(vm = vm) }
 }
 
 @Composable
-private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit, headers: Map<String, String>) {
+private fun ChapterPage(
+    chapterLink: String,
+    openCloseOverlay: () -> Unit,
+    headers: Map<String, String>,
+    contentScale: ContentScale
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -844,7 +849,8 @@ private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit, heade
             modifier = Modifier.fillMaxWidth(),
             painter = chapterLink,
             onClick = openCloseOverlay,
-            headers = headers
+            headers = headers,
+            contentScale = contentScale
         )
     }
 }
@@ -853,6 +859,7 @@ private fun ChapterPage(chapterLink: String, openCloseOverlay: () -> Unit, heade
 private fun ZoomableImage(
     modifier: Modifier = Modifier,
     painter: String,
+    contentScale: ContentScale = ContentScale.Fit,
     headers: Map<String, String>,
     onClick: () -> Unit = {}
 ) {
@@ -910,7 +917,7 @@ private fun ZoomableImage(
         if (showTheThing) {
             GlideImage(
                 imageModel = remember(painter) { GlideUrl(painter) { headers } },
-                contentScale = ContentScale.Fit,
+                contentScale = contentScale,
                 loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {
                     Text(
