@@ -90,6 +90,7 @@ buildscript {
     ext.navCompose = "androidx.navigation:navigation-compose:$nav_version"
     ext.navMaterial = "com.google.accompanist:accompanist-navigation-material:$accompanist"
     ext.navAnimation = "com.google.accompanist:accompanist-navigation-animation:$accompanist"
+    ext.flowLayout = "com.google.accompanist:accompanist-flowlayout:$accompanist"
 
     ext.swipeRefresh = "com.google.accompanist:accompanist-swiperefresh:$accompanist"
     ext.systemUiController = "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
@@ -141,7 +142,8 @@ buildscript {
                         materialYou,
                         inset, insetUi,
                         navCompose, navMaterial, navAnimation,
-                        swipeRefresh, systemUiController
+                        swipeRefresh, systemUiController,
+                        flowLayout
                 ]
         ]
 

@@ -83,11 +83,11 @@ dependencies {
     implementation coroutinesCore
     implementation coroutinesAndroid
     implementation coroutinesRX
-    implementation "androidx.fragment:fragment-ktx:1.4.1"
+    implementation "androidx.fragment:fragment-ktx:1.5.0"
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.1"
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.0"
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.0'
 
     implementation "com.mikepenz:iconics-core:5.3.1"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
@@ -139,7 +139,7 @@ dependencies {
 
     implementation compose.compose
     implementation "com.airbnb.android:lottie-compose:$lottieVersion"
-    implementation "me.onebone:toolbar-compose:2.3.3"
+    implementation "me.onebone:toolbar-compose:2.3.4"
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:1.0.3'
     implementation "androidx.paging:paging-compose:1.0.0-alpha15"
 

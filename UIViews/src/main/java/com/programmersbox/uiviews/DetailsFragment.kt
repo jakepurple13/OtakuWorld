@@ -69,7 +69,6 @@ import com.programmersbox.models.*
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.utils.*
-import com.programmersbox.uiviews.utils.components.CollapsingScrollScaffold
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.Completable
@@ -83,6 +82,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import me.onebone.toolbar.CollapsingToolbarScaffold
+import me.onebone.toolbar.ScrollStrategy
+import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import kotlin.math.ln
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -245,7 +247,7 @@ class DetailViewModel(
                     context.showErrorToast()
                 }
                 ?.onEach {
-                    if(it.isSuccess) {
+                    if (it.isSuccess) {
                         info = it.getOrThrow()
                         description = it.getOrThrow().description
                         setup(it.getOrThrow())
@@ -680,14 +682,14 @@ private fun DetailsView(
     var reverseChapters by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
-    val state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val scaffoldState = rememberBottomSheetScaffoldState()
 
     val context = LocalContext.current
 
-    BackHandler(state.isVisible) {
+    BackHandler(scaffoldState.bottomSheetState.isExpanded) {
         scope.launch {
             try {
-                state.hide()
+                scaffoldState.bottomSheetState.collapse()
             } catch (e: Exception) {
                 navController.popBackStack()
             }
@@ -700,7 +702,8 @@ private fun DetailsView(
     val topAppBarScrollState = rememberTopAppBarScrollState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
-    ModalBottomSheetLayout(
+    BottomSheetScaffold(
+        backgroundColor = Color.Transparent,
         sheetContent = {
             val markAsTopAppBarScrollState = rememberTopAppBarScrollState()
             val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior(markAsTopAppBarScrollState) }
@@ -719,7 +722,7 @@ private fun DetailsView(
                             )
                         ),
                         navigationIcon = {
-                            IconButton(onClick = { scope.launch { state.hide() } }) {
+                            IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
                                 Icon(Icons.Default.Close, null, tint = topBarColor)
                             }
                         },
@@ -776,9 +779,160 @@ private fun DetailsView(
                 }
             }
         },
-        sheetState = state
+        sheetPeekHeight = 0.dp,
+        sheetGesturesEnabled = false,
+        scaffoldState = scaffoldState,
+        topBar = {
+            SmallTopAppBar(
+                colors = TopAppBarDefaults.smallTopAppBarColors(
+                    titleContentColor = topBarColor,
+                    containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
+                        M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
+                    } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
+                        backgroundColor = M3MaterialTheme.colorScheme.surface,
+                        elevation = 1.dp
+                    )
+                ),
+                modifier = Modifier.zIndex(2f),
+                scrollBehavior = scrollBehavior,
+                title = { Text(info.title) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                    }
+                },
+                actions = {
+                    var showDropDown by remember { mutableStateOf(false) }
 
-    ) {
+                    val dropDownDismiss = { showDropDown = false }
+
+                    androidx.compose.material3.DropdownMenu(
+                        expanded = showDropDown,
+                        onDismissRequest = dropDownDismiss,
+                    ) {
+
+                        androidx.compose.material3.DropdownMenuItem(
+                            onClick = {
+                                dropDownDismiss()
+                                scope.launch { scaffoldState.bottomSheetState.expand() }
+                            },
+                            text = { Text(stringResource(id = R.string.markAs)) },
+                            leadingIcon = { Icon(Icons.Default.Check, null) }
+                        )
+
+                        androidx.compose.material3.DropdownMenuItem(
+                            onClick = {
+                                dropDownDismiss()
+                                context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                            },
+                            text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
+                            leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+                        )
+
+                        if (!isSaved) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    scope.launch(Dispatchers.IO) {
+                                        dao.insertNotification(
+                                            NotificationItem(
+                                                id = info.hashCode(),
+                                                url = info.url,
+                                                summaryText = context
+                                                    .getString(
+                                                        R.string.hadAnUpdate,
+                                                        info.title,
+                                                        info.chapters.firstOrNull()?.name.orEmpty()
+                                                    ),
+                                                notiTitle = info.title,
+                                                imageUrl = info.imageUrl,
+                                                source = info.source.serviceName,
+                                                contentTitle = info.title
+                                            )
+                                        ).subscribe()
+                                    }
+                                },
+                                text = { Text(stringResource(id = R.string.save_for_later)) },
+                                leadingIcon = { Icon(Icons.Default.Save, null) }
+                            )
+                        } else {
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    scope.launch(Dispatchers.IO) {
+                                        dao.getNotificationItemFlow(info.url)
+                                            .firstOrNull()
+                                            ?.let { dao.deleteNotification(it).subscribe() }
+                                    }
+                                },
+                                text = { Text(stringResource(R.string.removeNotification)) },
+                                leadingIcon = { Icon(Icons.Default.Delete, null) }
+                            )
+                        }
+
+                        androidx.compose.material3.DropdownMenuItem(
+                            onClick = {
+                                dropDownDismiss()
+                                Screen.GlobalSearchScreen.navigate(navController, info.title)
+                            },
+                            text = { Text(stringResource(id = R.string.global_search_by_name)) },
+                            leadingIcon = { Icon(Icons.Default.Search, null) }
+                        )
+
+                        androidx.compose.material3.DropdownMenuItem(
+                            onClick = {
+                                dropDownDismiss()
+                                reverseChapters = !reverseChapters
+                            },
+                            text = { Text(stringResource(id = R.string.reverseOrder)) },
+                            leadingIcon = { Icon(Icons.Default.Sort, null) }
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, info.url)
+                                putExtra(Intent.EXTRA_TITLE, info.title)
+                            }, context.getString(R.string.share_item, info.title)))
+                        }
+                    ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+                    genericInfo.DetailActions(infoModel = info, tint = topBarColor)
+
+                    IconButton(onClick = { showDropDown = true }) {
+                        Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+                    }
+                }
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(it) { data ->
+                val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
+                val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
+                Snackbar(
+                    elevation = 15.dp,
+                    backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), M3MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
+                    contentColor = font,
+                    snackbarData = data
+                )
+            }
+        },
+        modifier = Modifier
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        swatchInfo.value?.rgb
+                            ?.toComposeColor()
+                            ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
+                        M3MaterialTheme.colorScheme.background
+                    )
+                )
+            )
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { p ->
 
         val header: @Composable () -> Unit = {
             DetailsHeader(
@@ -789,147 +943,14 @@ private fun DetailsView(
             ) { b -> if (b) vm.removeItem() else vm.addItem() }
         }
 
-        CollapsingScrollScaffold(
-            modifier = Modifier
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            swatchInfo.value?.rgb
-                                ?.toComposeColor()
-                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
-                            M3MaterialTheme.colorScheme.background
-                        )
-                    )
-                )
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBarFixed = {
-                SmallTopAppBar(
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        titleContentColor = topBarColor,
-                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
-                        scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
-                            M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
-                        } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
-                            backgroundColor = M3MaterialTheme.colorScheme.surface,
-                            elevation = 1.dp
-                        )
-                    ),
-                    modifier = Modifier.zIndex(2f),
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(info.title) },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
-                        }
-                    },
-                    actions = {
-                        var showDropDown by remember { mutableStateOf(false) }
+        val state = rememberCollapsingToolbarScaffoldState()
 
-                        val dropDownDismiss = { showDropDown = false }
-
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss,
-                        ) {
-
-                            androidx.compose.material3.DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    scope.launch { state.show() }
-                                },
-                                text = { Text(stringResource(id = R.string.markAs)) },
-                                leadingIcon = { Icon(Icons.Default.Check, null) }
-                            )
-
-                            androidx.compose.material3.DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                                },
-                                text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
-                                leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
-                            )
-
-                            if (!isSaved) {
-                                androidx.compose.material3.DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.insertNotification(
-                                                NotificationItem(
-                                                    id = info.hashCode(),
-                                                    url = info.url,
-                                                    summaryText = context
-                                                        .getString(
-                                                            R.string.hadAnUpdate,
-                                                            info.title,
-                                                            info.chapters.firstOrNull()?.name.orEmpty()
-                                                        ),
-                                                    notiTitle = info.title,
-                                                    imageUrl = info.imageUrl,
-                                                    source = info.source.serviceName,
-                                                    contentTitle = info.title
-                                                )
-                                            ).subscribe()
-                                        }
-                                    },
-                                    text = { Text(stringResource(id = R.string.save_for_later)) },
-                                    leadingIcon = { Icon(Icons.Default.Save, null) }
-                                )
-                            } else {
-                                androidx.compose.material3.DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.getNotificationItemFlow(info.url)
-                                                .firstOrNull()
-                                                ?.let { dao.deleteNotification(it).subscribe() }
-                                        }
-                                    },
-                                    text = { Text(stringResource(R.string.removeNotification)) },
-                                    leadingIcon = { Icon(Icons.Default.Delete, null) }
-                                )
-                            }
-
-                            androidx.compose.material3.DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    Screen.GlobalSearchScreen.navigate(navController, info.title)
-                                },
-                                text = { Text(stringResource(id = R.string.global_search_by_name)) },
-                                leadingIcon = { Icon(Icons.Default.Search, null) }
-                            )
-
-                            androidx.compose.material3.DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    reverseChapters = !reverseChapters
-                                },
-                                text = { Text(stringResource(id = R.string.reverseOrder)) },
-                                leadingIcon = { Icon(Icons.Default.Sort, null) }
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, info.url)
-                                    putExtra(Intent.EXTRA_TITLE, info.title)
-                                }, context.getString(R.string.share_item, info.title)))
-                            }
-                        ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
-
-                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
-
-                        IconButton(onClick = { showDropDown = true }) {
-                            Icon(Icons.Default.MoreVert, null, tint = topBarColor)
-                        }
-                    }
-                )
-            },
-            topBarCollapsing = { header() }
-        ) { padding ->
+        CollapsingToolbarScaffold(
+            modifier = Modifier.padding(p),
+            state = state,
+            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+            toolbar = { header() }
+        ) {
             val listState = rememberLazyListState()
 
             LazyColumnScrollbar(
@@ -941,7 +962,6 @@ private fun DetailsView(
             ) {
                 var descriptionVisibility by remember { mutableStateOf(false) }
                 LazyColumn(
-                    contentPadding = padding,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
                         .fillMaxHeight()
@@ -1255,7 +1275,7 @@ private fun DetailsHeader(
 
     Box(
         modifier = Modifier
-            .wrapContentSize()
+            .fillMaxSize()
             .animateContentSize()
             .then(modifier)
     ) {
@@ -1332,11 +1352,11 @@ private fun DetailsHeader(
                     model.title,
                     style = M3MaterialTheme.typography.titleMedium,
                     modifier = Modifier
-                        .fillMaxWidth()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple()
-                        ) { descriptionVisibility = !descriptionVisibility },
+                        ) { descriptionVisibility = !descriptionVisibility }
+                        .fillMaxWidth(),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                     color = M3MaterialTheme.colorScheme.onSurface
@@ -1401,19 +1421,18 @@ private fun DetailsHeader(
                 }*/
 
                 /*
-                var descriptionVisibility by remember { mutableStateOf(false) }
-                Text(
-                    model.description,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { descriptionVisibility = !descriptionVisibility },
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
-                    style = MaterialTheme.typography.body2,
-                )*/
+            var descriptionVisibility by remember { mutableStateOf(false) }
+            Text(
+                model.description,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { descriptionVisibility = !descriptionVisibility },
+                overflow = TextOverflow.Ellipsis,
+                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
+                style = MaterialTheme.typography.body2,
+            )*/
 
             }
-
         }
     }
 }
