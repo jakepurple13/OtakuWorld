@@ -651,7 +651,7 @@ fun ReadView() {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
                     Crossfade(targetState = listOrPager) {
                         if (it) ListView(listState, paddingValues, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-                        else PagerView(pagerState, paddingValues, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        else PagerView(pagerState, PaddingValues(0.dp), pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
 
                         //TODO: Add a new type with a recyclerview for listview only
 
