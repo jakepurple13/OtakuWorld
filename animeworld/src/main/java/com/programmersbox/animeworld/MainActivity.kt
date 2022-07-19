@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworld.cast.CastHelper
+import com.programmersbox.animeworld.downloads.DownloaderViewModel
+import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.currentService
@@ -12,7 +14,7 @@ class MainActivity : BaseMainActivity() {
 
     companion object {
         const val VIEW_DOWNLOADS = "animeworld://${DownloaderViewModel.DownloadViewerRoute}"
-        const val VIEW_VIDEOS = "animeworld://${DownloadViewModel.VideoViewerRoute}"
+        const val VIEW_VIDEOS = "animeworld://${ViewVideoViewModel.VideoViewerRoute}"
         lateinit var activity: MainActivity
         val cast: CastHelper = CastHelper()
     }

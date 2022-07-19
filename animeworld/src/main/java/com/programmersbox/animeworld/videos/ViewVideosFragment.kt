@@ -1,4 +1,4 @@
-package com.programmersbox.animeworld
+package com.programmersbox.animeworld.videos
 
 import android.Manifest
 import android.content.Context
@@ -43,13 +43,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.programmersbox.animeworld.*
+import com.programmersbox.animeworld.R
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -75,36 +75,16 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 fun ViewVideoScreen() {
     PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
         val context = LocalContext.current
-        val viewModel: DownloadViewModel = viewModel { DownloadViewModel(context) }
+        val viewModel: ViewVideoViewModel = viewModel { ViewVideoViewModel(context) }
         VideoLoad(viewModel)
     }
-}
-
-class DownloadViewModel(context: Context) : ViewModel() {
-
-    var videos by mutableStateOf<List<VideoContent>>(emptyList())
-
-    private val v = VideoGet.getInstance(context).also { v ->
-        v?.loadVideos(viewModelScope, VideoGet.externalContentUri)
-        viewModelScope.launch { v?.videos2?.collect { videos = it } }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        v?.unregister()
-    }
-
-    companion object {
-        const val VideoViewerRoute = "view_videos"
-    }
-
 }
 
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
-private fun VideoLoad(viewModel: DownloadViewModel) {
+private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
     val navController = LocalNavController.current
     val context = LocalContext.current

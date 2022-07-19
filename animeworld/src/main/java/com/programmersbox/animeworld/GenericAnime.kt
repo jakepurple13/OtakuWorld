@@ -64,6 +64,10 @@ import com.programmersbox.anime_sources.utilities.Qualities
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.databinding.MiniControllerBinding
+import com.programmersbox.animeworld.downloads.DownloaderUi
+import com.programmersbox.animeworld.downloads.DownloaderViewModel
+import com.programmersbox.animeworld.videos.ViewVideoScreen
+import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.requestPermissions
@@ -421,7 +425,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloadViewModel.VideoViewerRoute) { launchSingleTop = true } }
+                ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
             )
 
             val castingViewModel: CastingViewModel = viewModel()
@@ -547,10 +551,10 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun NavGraphBuilder.navSetup() {
 
         composable(
-            DownloadViewModel.VideoViewerRoute,
+            ViewVideoViewModel.VideoViewerRoute,
             enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
-            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloadViewModel.VideoViewerRoute}" })
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
 
         composable(
