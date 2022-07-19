@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.globalsearch
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
@@ -43,10 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -55,71 +52,23 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.Observable
+import com.programmersbox.uiviews.utils.components.AutoCompleteBox
+import com.programmersbox.uiviews.utils.components.asAutoCompleteEntities
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
-import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
-
-class GlobalSearchViewModel(
-    val info: GenericInfo,
-    val dao: HistoryDao,
-    initialSearch: String
-) : ViewModel() {
-
-    private val disposable: CompositeDisposable = CompositeDisposable()
-
-    var searchText by mutableStateOf(initialSearch)
-    var searchListPublisher by mutableStateOf<List<SearchModel>>(emptyList())
-    var isRefreshing by mutableStateOf(false)
-
-    init {
-        if (initialSearch.isNotEmpty()) {
-            searchForItems()
-        }
-    }
-
-    fun searchForItems() {
-        viewModelScope.launch {
-            combine(
-                info.searchList()
-                    .fastMap { a ->
-                        a
-                            .searchSourceList(searchText, list = emptyList())
-                            .dispatchIoAndCatchList()
-                            .map { SearchModel(a.serviceName, it) }
-                    }
-            ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
-                .onCompletion { isRefreshing = false }
-                .onStart { isRefreshing = true }
-                .onEach { searchListPublisher = it }
-                .collect()
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
-    }
-
-}
-
-data class SearchModel(val apiName: String, val data: List<ItemModel>)
 
 @OptIn(
     ExperimentalMaterial3Api::class,

@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.settings
 
 import android.Manifest
 import android.content.Context
@@ -35,11 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.navOptions
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -48,37 +45,32 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.programmersbox.favoritesdatabase.HistoryDatabase
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.sourcePublish
-import com.programmersbox.sharedutils.*
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.BuildConfig
+import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.OtakuApp
+import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.UpdateWorker
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.ListBottomSheet
+import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
-
-class SettingsDsl {
-    companion object {
-        val customAnimationOptions = navOptions {
-            anim {
-                enter = R.anim.slide_in
-                exit = R.anim.fade_out
-                popEnter = R.anim.fade_in
-                popExit = R.anim.slide_out
-            }
-        }
-    }
-}
 
 class ComposeSettingsDsl {
 
@@ -210,24 +202,6 @@ fun SettingScreen(
 
 }
 
-class AccountViewModel : ViewModel() {
-
-    var accountInfo by mutableStateOf<CustomFirebaseUser?>(null)
-
-    init {
-        FirebaseAuthentication.addAuthStateListener { p0 -> accountInfo = p0 }
-    }
-
-    fun signInOrOut(context: Context, activity: ComponentActivity) {
-        FirebaseAuthentication.signInOrOut(context, activity, R.string.logOut, R.string.areYouSureLogOut, R.string.yes, R.string.no)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        FirebaseAuthentication.clear()
-    }
-}
-
 @ExperimentalMaterialApi
 @Composable
 private fun AccountSettings(context: Context, activity: ComponentActivity, logo: MainLogo) {
@@ -256,31 +230,6 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
             interactionSource = remember { MutableInteractionSource() }
         ) { viewModel.signInOrOut(context, activity) }
     )
-}
-
-class AboutViewModel : ViewModel() {
-
-    var canCheck by mutableStateOf(false)
-
-    fun init(context: Context) {
-        viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
-    }
-
-    private val checker = AtomicBoolean(false)
-
-    suspend fun updateChecker(context: Context) {
-        try {
-            if (!checker.get()) {
-                checker.set(true)
-                AppUpdate.getUpdate()?.let(appUpdateCheck::onNext)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            checker.set(false)
-            withContext(Dispatchers.Main) { context.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() } }
-        }
-    }
 }
 
 @ExperimentalMaterialApi
@@ -483,22 +432,6 @@ private fun AboutSettings(
                 }
         )
     }
-}
-
-class NotificationViewModel(dao: ItemDao) : ViewModel() {
-
-    var savedNotifications by mutableStateOf(0)
-        private set
-
-    init {
-        viewModelScope.launch {
-            dao.getAllNotificationCountFlow()
-                .dispatchIo()
-                .onEach { savedNotifications = it }
-                .collect()
-        }
-    }
-
 }
 
 @ExperimentalMaterialApi
@@ -764,24 +697,6 @@ private fun GeneralSettings(
     )
 
     customSettings?.invoke()
-}
-
-class GeneralViewModel : ViewModel() {
-
-    var translationModels: List<CustomRemoteModel> by mutableStateOf(emptyList())
-        private set
-
-    fun getModels(onSuccess: () -> Unit) {
-        TranslatorUtils.getModels {
-            translationModels = it
-            onSuccess()
-        }
-    }
-
-    fun deleteModel(model: CustomRemoteModel) {
-        TranslatorUtils.deleteModel(model)
-    }
-
 }
 
 @ExperimentalMaterialApi

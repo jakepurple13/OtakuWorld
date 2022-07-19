@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.notifications
 
 import android.app.NotificationManager
 import android.text.format.DateFormat
@@ -38,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.work.Data
@@ -60,13 +59,17 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.NotifySingleWorker
+import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.SavedNotifications
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
+import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
+import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import io.reactivex.Completable
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -82,24 +85,6 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
     cancel(item.id)
     val g = activeNotifications.map { it.notification }.filter { it.group == "otakuGroup" }
     if (g.size == 1) cancel(42)
-}
-
-class NotificationScreenViewModel : ViewModel() {
-
-    val disposable = CompositeDisposable()
-
-    fun deleteNotification(db: ItemDao, item: NotificationItem, block: () -> Unit = {}) {
-        db.deleteNotification(item)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { block() }
-            .addTo(disposable)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
-    }
 }
 
 @OptIn(

@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld
+package com.programmersbox.mangaworld.reader
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -65,9 +65,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.datastore.preferences.core.Preferences
-import androidx.lifecycle.*
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -83,7 +84,6 @@ import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -92,22 +92,20 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
-import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.*
+import com.programmersbox.helpfulutils.BuildConfig
+import com.programmersbox.mangaworld.*
+import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.rxutils.invoke
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.glide.GlideImage
-import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -115,187 +113,14 @@ import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
 import java.io.File
 import kotlin.math.roundToInt
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.OutlinedButton as M3OutlinedButton
-
-class ReadViewModel(
-    handle: SavedStateHandle,
-    context: Context,
-    val genericInfo: GenericInfo,
-    val headers: MutableMap<String, String> = mutableMapOf<String, String>(),
-    model: Flow<List<String>>? = handle
-        .get<String>("currentChapter")
-        ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-        ?.getChapterInfoFlow()
-        ?.map {
-            headers.putAll(it.flatMap { it.headers.toList() })
-            it.mapNotNull(Storage::link)
-        },
-    /*?.subscribeOn(Schedulers.io())
-    ?.observeOn(AndroidSchedulers.mainThread())*/
-    //?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
-    isDownloaded: Boolean = handle.get<String>("downloaded")?.toBooleanStrict() ?: false,
-    filePath: File? = handle.get<String>("filePath")?.let { File(it) },
-    modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
-        /*Single.create<List<String>> {
-            filePath
-                .listFiles()
-                ?.sortedBy { f -> f.name.split(".").first().toInt() }
-                ?.fastMap(File::toUri)
-                ?.fastMap(Uri::toString)
-                ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
-        }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())*/
-        flow<List<String>> {
-            filePath
-                .listFiles()
-                ?.sortedBy { f -> f.name.split(".").first().toInt() }
-                ?.fastMap(File::toUri)
-                ?.fastMap(Uri::toString)
-                ?.let { emit(it) } ?: Throwable("Cannot find files")
-        }
-            .catch { emit(emptyList()) }
-            .flowOn(Dispatchers.IO)
-    } else {
-        model
-    },
-) : ViewModel() {
-
-    companion object {
-        const val MangaReaderRoute =
-            "mangareader?currentChapter={currentChapter}&allChapters={allChapters}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
-
-        fun navigateToMangaReader(
-            navController: NavController,
-            currentChapter: ChapterModel? = null,
-            allChapters: List<ChapterModel>? = null,
-            mangaTitle: String? = null,
-            mangaUrl: String? = null,
-            mangaInfoUrl: String? = null,
-            downloaded: Boolean = false,
-            filePath: String? = null
-        ) {
-            val current = Uri.encode(currentChapter?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-            val all = Uri.encode(allChapters?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-
-            navController.navigate(
-                "mangareader?currentChapter=$current&allChapters=$all&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
-            ) { launchSingleTop = true }
-        }
-    }
-
-    val title by lazy { handle.get<String>("mangaTitle") ?: "" }
-
-    val ad: AdRequest by lazy { AdRequest.Builder().build() }
-
-    val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
-
-    val disposable = CompositeDisposable()
-
-    var list by mutableStateOf<List<ChapterModel>>(emptyList())
-
-    private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
-
-    var currentChapter: Int by mutableStateOf(0)
-
-    var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
-    var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
-    var batteryPercent by mutableStateOf(0f)
-
-    val batteryInformation by lazy { BatteryInformation(context) }
-
-    val pageList = mutableStateListOf<String>()
-    var isLoadingPages = mutableStateOf(false)
-        private set
-
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            batteryInformation.composeSetupFlow(
-                androidx.compose.ui.graphics.Color.White
-            ) {
-                batteryColor = it.first
-                batteryIcon = it.second
-            }
-        }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val url = handle.get<String>("mangaUrl") ?: ""
-
-            handle.getStateFlow<String>("allChapters", "")
-                .map { it.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo)).orEmpty() }
-                .onEach {
-                    list = it
-                    currentChapter = it.indexOfFirst { l -> l.url == url }
-                }
-                .flowOn(Dispatchers.Main)
-                .collect()
-        }
-
-        loadPages(modelPath)
-    }
-
-    var showInfo by mutableStateOf(false)
-
-    fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
-        currentChapter = newChapter
-        list.getOrNull(newChapter)?.let { item ->
-            ChapterWatched(item.url, item.name, mangaUrl)
-                .let {
-                    Completable.mergeArray(
-                        FirebaseDb.insertEpisodeWatched(it),
-                        dao.insertChapter(it)
-                    )
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(chapter)
-                .addTo(disposable)
-
-            item
-                .getChapterInfoFlow()
-                .map { it.mapNotNull(Storage::link) }
-                .let { loadPages(it) }
-        }
-    }
-
-    private fun loadPages(modelPath: Flow<List<String>>?) {
-        viewModelScope.launch {
-            modelPath
-                ?.onStart {
-                    isLoadingPages.value = true
-                    pageList.clear()
-                }
-                ?.onEach {
-                    pageList.addAll(it)
-                    isLoadingPages.value = false
-                }
-                ?.collect()
-        }
-    }
-
-    fun refresh() {
-        headers.clear()
-        loadPages(
-            list.getOrNull(currentChapter)
-                ?.getChapterInfoFlow()
-                ?.map {
-                    headers.putAll(it.flatMap { it.headers.toList() })
-                    it.mapNotNull(Storage::link)
-                }
-        )
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
-    }
-
-}
 
 @OptIn(ExperimentalPagerApi::class)
 @ExperimentalMaterial3Api
@@ -689,7 +514,7 @@ fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List
         itemSpacing = itemSpacing,
         contentPadding = contentPadding,
         key = { it }
-    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, onClick, vm.headers, ContentScale.Fit) } ?: LastPageReached(vm = vm) }
+    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit) } ?: LastPageReached(vm = vm) }
 }
 
 @Composable
@@ -828,13 +653,14 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
             }
         }*/
 
-    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, onClick, vm.headers, ContentScale.FillWidth) }
+    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth) }
     item { LastPageReached(vm = vm) }
 }
 
 @Composable
 private fun ChapterPage(
     chapterLink: String,
+    isDownloaded: Boolean,
     openCloseOverlay: () -> Unit,
     headers: Map<String, String>,
     contentScale: ContentScale
@@ -850,7 +676,8 @@ private fun ChapterPage(
             painter = chapterLink,
             onClick = openCloseOverlay,
             headers = headers,
-            contentScale = contentScale
+            contentScale = contentScale,
+            isDownloaded = isDownloaded
         )
     }
 }
@@ -859,6 +686,7 @@ private fun ChapterPage(
 private fun ZoomableImage(
     modifier: Modifier = Modifier,
     painter: String,
+    isDownloaded: Boolean,
     contentScale: ContentScale = ContentScale.Fit,
     headers: Map<String, String>,
     onClick: () -> Unit = {}
@@ -916,7 +744,7 @@ private fun ZoomableImage(
 
         if (showTheThing) {
             GlideImage(
-                imageModel = remember(painter) { GlideUrl(painter) { headers } },
+                imageModel = if (isDownloaded) painter else remember(painter) { GlideUrl(painter) { headers } },
                 contentScale = contentScale,
                 loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {

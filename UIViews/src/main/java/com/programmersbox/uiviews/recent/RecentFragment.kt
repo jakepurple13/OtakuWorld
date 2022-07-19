@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.recent
 
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -21,98 +20,22 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMaxBy
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.components.InfiniteListHandler
+import com.programmersbox.uiviews.utils.navigateToDetails
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-
-class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
-
-    var isRefreshing by mutableStateOf(false)
-    val sourceList = mutableStateListOf<ItemModel>()
-    val favoriteList = mutableStateListOf<DbModel>()
-
-    var count = 1
-
-    private val disposable: CompositeDisposable = CompositeDisposable()
-    private val itemListener = FirebaseDb.FirebaseListener()
-
-    init {
-        viewModelScope.launch {
-            combine(
-                itemListener.getAllShowsFlow(),
-                dao.getAllFavoritesFlow()
-            ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-                .collect {
-                    favoriteList.clear()
-                    favoriteList.addAll(it)
-                }
-        }
-
-        sourcePublish
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                count = 1
-                sourceList.clear()
-                sourceLoadCompose(context, it)
-            }
-            .addTo(disposable)
-    }
-
-    fun reset(context: Context?, sources: ApiService) {
-        count = 1
-        sourceList.clear()
-        sourceLoadCompose(context, sources)
-    }
-
-    fun loadMore(context: Context?, sources: ApiService) {
-        count++
-        sourceLoadCompose(context, sources)
-    }
-
-    private fun sourceLoadCompose(context: Context?, sources: ApiService) {
-        viewModelScope.launch {
-            sources
-                .getRecentFlow(count)
-                .dispatchIoAndCatchList()
-                .catch {
-                    context?.showErrorToast()
-                    emit(emptyList())
-                }
-                .onStart { isRefreshing = true }
-                .onCompletion { isRefreshing = false }
-                .onEach { sourceList.addAll(it) }
-                .collect()
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        itemListener.unregister()
-        disposable.dispose()
-    }
-
-}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable

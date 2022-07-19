@@ -39,10 +39,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.tonyodev.fetch2.*
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat

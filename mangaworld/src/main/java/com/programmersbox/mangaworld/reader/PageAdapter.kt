@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld
+package com.programmersbox.mangaworld.reader
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -15,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.layoutInflater
+import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.PageEndChapterItemBinding
 import com.programmersbox.mangaworld.databinding.PageItemBinding
 import com.programmersbox.mangaworld.databinding.PageNextChapterItemBinding

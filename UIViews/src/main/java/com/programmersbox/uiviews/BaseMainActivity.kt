@@ -50,6 +50,16 @@ import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.uiviews.all.AllView
+import com.programmersbox.uiviews.all.AllViewModel
+import com.programmersbox.uiviews.details.DetailsScreen
+import com.programmersbox.uiviews.favorite.FavoriteUi
+import com.programmersbox.uiviews.globalsearch.GlobalSearchView
+import com.programmersbox.uiviews.history.HistoryUi
+import com.programmersbox.uiviews.notifications.NotificationsScreen
+import com.programmersbox.uiviews.recent.RecentView
+import com.programmersbox.uiviews.recent.RecentViewModel
+import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable

@@ -1,7 +1,6 @@
-package com.programmersbox.mangaworld
+package com.programmersbox.mangaworld.downloads
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.MediaStore
@@ -39,23 +38,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.programmersbox.mangaworld.ChaptersGet
+import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
+import com.programmersbox.mangaworld.R
+import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.mangaworld.reader.ReadViewModel
+import com.programmersbox.mangaworld.useNewReaderFlow
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.components.PermissionRequest
+import com.programmersbox.uiviews.utils.components.animatedItems
+import com.programmersbox.uiviews.utils.components.updateAnimatedItemsState
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -105,40 +108,6 @@ fun DownloadScreen() {
     }
 }
 
-class DownloadViewModel(context: Context, defaultPathname: File) : ViewModel() {
-
-    companion object {
-        const val DownloadRoute = "downloads"
-    }
-
-    val disposable = CompositeDisposable()
-
-    var fileList by mutableStateOf<Map<String, Map<String, List<ChaptersGet.Chapters>>>>(emptyMap())
-
-    private val c = ChaptersGet.getInstance(context).also { c ->
-        c?.loadChapters(viewModelScope, defaultPathname.absolutePath)
-        viewModelScope.launch {
-            c?.chapters2
-                ?.map { f ->
-                    f
-                        .groupBy { it.folder }
-                        .entries
-                        .toList()
-                        .fastMap { it.key to it.value.groupBy { c -> c.chapterFolder } }
-                        .toMap()
-                }
-                ?.collect { fileList = it }
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        c?.unregister()
-        disposable.dispose()
-    }
-
-}
-
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
@@ -149,7 +118,7 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
 
     val f by updateAnimatedItemsState(newList = fileList.entries.toList())
 
-    if (fileList.isEmpty()) EmptyState()
+    if (fileList.isEmpty()) EmptyState(p1)
     else LazyColumn(
         contentPadding = p1,
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -164,10 +133,14 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
 }
 
 @Composable
-private fun EmptyState() {
+private fun EmptyState(p1: PaddingValues) {
     val navController = LocalNavController.current
     val activity = LocalActivity.current
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .padding(p1)
+            .fillMaxSize()
+    ) {
         androidx.compose.material3.Surface(
             shape = MaterialTheme.shapes.medium,
             tonalElevation = 4.dp,

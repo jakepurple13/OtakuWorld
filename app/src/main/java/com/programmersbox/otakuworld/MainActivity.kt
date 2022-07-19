@@ -65,6 +65,7 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.MaterialCard
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import io.reactivex.disposables.CompositeDisposable

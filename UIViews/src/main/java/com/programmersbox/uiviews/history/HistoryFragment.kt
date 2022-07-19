@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.history
 
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
@@ -38,10 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import coil.compose.AsyncImage
@@ -51,36 +48,16 @@ import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-
-class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
-    val disposable = CompositeDisposable()
-    val historyItems = Pager(
-        config = PagingConfig(
-            pageSize = 10,
-            enablePlaceholders = true
-        )
-    ) { dao.getRecentlyViewedPaging() }
-        .flow
-        .flowOn(Dispatchers.IO)
-
-    val historyCount = dao.getAllRecentHistoryCount()
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
-    }
-}
 
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi

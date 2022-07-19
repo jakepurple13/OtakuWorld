@@ -28,7 +28,7 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <activity android:name=".ReadActivity" />
+        <activity android:name=".reader.ReadActivity" />
         <activity
             android:exported="true"
             android:name=".MainActivity">

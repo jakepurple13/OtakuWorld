@@ -35,6 +35,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.models.ItemModel
+import com.programmersbox.uiviews.utils.components.BannerBox
+import com.programmersbox.uiviews.utils.components.BannerBox2
 import com.skydoves.landscapist.glide.GlideImage
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 

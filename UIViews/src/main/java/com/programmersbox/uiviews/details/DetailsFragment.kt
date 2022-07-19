@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.details
 
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
@@ -57,29 +56,29 @@ import androidx.compose.ui.zIndex
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.graphics.ColorUtils
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bumptech.glide.load.model.GlideUrl
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.*
-import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.models.*
-import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.sharedutils.TranslateItems
+import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
+import com.programmersbox.models.SwatchInfo
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.CustomChip
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
-import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.onebone.toolbar.CollapsingToolbarScaffold
@@ -107,7 +106,7 @@ fun DetailsScreen(
     windowSize: WindowSize
 ) {
     val localContext = LocalContext.current
-    val details: DetailViewModel = viewModel { DetailViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) }
+    val details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) }
 
     if (details.info == null) {
         Scaffold(
@@ -215,125 +214,6 @@ fun DetailsScreen(
     }
 }
 
-class DetailViewModel(
-    handle: SavedStateHandle,
-    genericInfo: GenericInfo,
-    context: Context,
-    private val dao: ItemDao,
-    val itemModel: ItemModel? = handle.get<String>("model")
-        ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
-) : ViewModel() {
-
-    var info: InfoModel? by mutableStateOf(null)
-
-    private val disposable = CompositeDisposable()
-
-    private val itemListener = FirebaseDb.FirebaseListener()
-    private val chapterListener = FirebaseDb.FirebaseListener()
-
-    var favoriteListener by mutableStateOf(false)
-    var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
-
-    var description: String by mutableStateOf("")
-
-    init {
-        viewModelScope.launch {
-            itemModel?.url?.let { url ->
-                Cached.cache[url]?.let { flow<Result<InfoModel>> { emit(Result.success(it)) } } ?: itemModel.toInfoModelFlow()
-            }
-                ?.dispatchIo()
-                ?.catch {
-                    it.printStackTrace()
-                    context.showErrorToast()
-                }
-                ?.onEach {
-                    if (it.isSuccess) {
-                        info = it.getOrThrow()
-                        description = it.getOrThrow().description
-                        setup(it.getOrThrow())
-                        Cached.cache[it.getOrThrow().url] = it.getOrThrow()
-                    }
-                }
-                ?.collect()
-        }
-    }
-
-    private val englishTranslator = TranslateItems()
-
-    fun translateDescription(progress: MutableState<Boolean>) {
-        englishTranslator.translateDescription(
-            info!!.description,
-            { progress.value = it },
-            { description = it }
-        )
-    }
-
-    private fun setup(info: InfoModel) {
-        viewModelScope.launch(Dispatchers.IO) {
-            combine(
-                itemListener.findItemByUrlFlow(info.url),
-                dao.containsItemFlow(info.url)
-            ) { f, d -> f || d }
-                .collect { favoriteListener = it }
-        }
-
-        Flowables.combineLatest(
-            chapterListener.getAllEpisodesByShow(info.url),
-            dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
-        ) { f, d -> (f + d).distinctBy { it.url } }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeBy { chapters = it }
-            .addTo(disposable)
-    }
-
-    fun markAs(c: ChapterModel, b: Boolean) {
-        ChapterWatched(url = c.url, name = c.name, favoriteUrl = info!!.url)
-            .let {
-                Completable.mergeArray(
-                    if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                    if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                )
-            }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {}
-            .addTo(disposable)
-    }
-
-    fun addItem() {
-        val db = info!!.toDbModel(info!!.chapters.size)
-        Completable.concatArray(
-            FirebaseDb.insertShow(db),
-            dao.insertFavorite(db).subscribeOn(Schedulers.io())
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe()
-            .addTo(disposable)
-    }
-
-    fun removeItem() {
-        val db = info!!.toDbModel(info!!.chapters.size)
-        Completable.concatArray(
-            FirebaseDb.removeShow(db),
-            dao.deleteFavorite(info!!.toDbModel()).subscribeOn(Schedulers.io())
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe()
-            .addTo(disposable)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
-        itemListener.unregister()
-        chapterListener.unregister()
-        englishTranslator.clear()
-    }
-}
-
 @Composable
 private fun Color.animate() = animateColorAsState(this)
 
@@ -351,7 +231,7 @@ private fun DetailsViewLandscape(
     navController: NavController,
     dao: ItemDao,
     historyDao: HistoryDao,
-    vm: DetailViewModel,
+    vm: DetailsViewModel,
     genericInfo: GenericInfo,
     logo: NotificationLogo
 ) {
@@ -674,7 +554,7 @@ private fun DetailsView(
     navController: NavController,
     dao: ItemDao,
     historyDao: HistoryDao,
-    vm: DetailViewModel,
+    vm: DetailsViewModel,
     genericInfo: GenericInfo,
     logo: NotificationLogo
 ) {
@@ -1032,7 +912,7 @@ private fun ChapterItem(
     swatchInfo: MutableState<SwatchInfo?>,
     shareChapter: Boolean,
     historyDao: HistoryDao,
-    vm: DetailViewModel,
+    vm: DetailsViewModel,
     genericInfo: GenericInfo,
     navController: NavController,
 ) {

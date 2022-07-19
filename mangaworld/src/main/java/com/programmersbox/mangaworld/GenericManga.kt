@@ -48,11 +48,16 @@ import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
+import com.programmersbox.mangaworld.downloads.DownloadScreen
+import com.programmersbox.mangaworld.downloads.DownloadViewModel
+import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.mangaworld.reader.ReadView
+import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo

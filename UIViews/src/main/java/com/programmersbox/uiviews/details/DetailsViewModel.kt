@@ -1,0 +1,154 @@
+package com.programmersbox.uiviews.details
+
+import android.content.Context
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
+import com.programmersbox.models.ItemModel
+import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.TranslateItems
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.ApiServiceDeserializer
+import com.programmersbox.uiviews.utils.Cached
+import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.showErrorToast
+import io.reactivex.Completable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.Flowables
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+
+class DetailsViewModel(
+    handle: SavedStateHandle,
+    genericInfo: GenericInfo,
+    context: Context,
+    private val dao: ItemDao,
+    val itemModel: ItemModel? = handle.get<String>("model")
+        ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
+) : ViewModel() {
+
+    var info: InfoModel? by mutableStateOf(null)
+
+    private val disposable = CompositeDisposable()
+
+    private val itemListener = FirebaseDb.FirebaseListener()
+    private val chapterListener = FirebaseDb.FirebaseListener()
+
+    var favoriteListener by mutableStateOf(false)
+    var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
+
+    var description: String by mutableStateOf("")
+
+    init {
+        viewModelScope.launch {
+            itemModel?.url?.let { url ->
+                Cached.cache[url]?.let { flow<Result<InfoModel>> { emit(Result.success(it)) } } ?: itemModel.toInfoModelFlow()
+            }
+                ?.dispatchIo()
+                ?.catch {
+                    it.printStackTrace()
+                    context.showErrorToast()
+                }
+                ?.onEach {
+                    if (it.isSuccess) {
+                        info = it.getOrThrow()
+                        description = it.getOrThrow().description
+                        setup(it.getOrThrow())
+                        Cached.cache[it.getOrThrow().url] = it.getOrThrow()
+                    }
+                }
+                ?.collect()
+        }
+    }
+
+    private val englishTranslator = TranslateItems()
+
+    fun translateDescription(progress: MutableState<Boolean>) {
+        englishTranslator.translateDescription(
+            info!!.description,
+            { progress.value = it },
+            { description = it }
+        )
+    }
+
+    private fun setup(info: InfoModel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            combine(
+                itemListener.findItemByUrlFlow(info.url),
+                dao.containsItemFlow(info.url)
+            ) { f, d -> f || d }
+                .collect { favoriteListener = it }
+        }
+
+        Flowables.combineLatest(
+            chapterListener.getAllEpisodesByShow(info.url),
+            dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
+        ) { f, d -> (f + d).distinctBy { it.url } }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy { chapters = it }
+            .addTo(disposable)
+    }
+
+    fun markAs(c: ChapterModel, b: Boolean) {
+        ChapterWatched(url = c.url, name = c.name, favoriteUrl = info!!.url)
+            .let {
+                Completable.mergeArray(
+                    if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
+                    if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                )
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {}
+            .addTo(disposable)
+    }
+
+    fun addItem() {
+        val db = info!!.toDbModel(info!!.chapters.size)
+        Completable.concatArray(
+            FirebaseDb.insertShow(db),
+            dao.insertFavorite(db).subscribeOn(Schedulers.io())
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe()
+            .addTo(disposable)
+    }
+
+    fun removeItem() {
+        val db = info!!.toDbModel(info!!.chapters.size)
+        Completable.concatArray(
+            FirebaseDb.removeShow(db),
+            dao.deleteFavorite(info!!.toDbModel()).subscribeOn(Schedulers.io())
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe()
+            .addTo(disposable)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        disposable.dispose()
+        itemListener.unregister()
+        chapterListener.unregister()
+        englishTranslator.clear()
+    }
+}

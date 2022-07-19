@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.favorite
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -6,20 +6,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.ChipDefaults
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -32,67 +31,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.util.fastMaxBy
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.models.ApiService
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
+import com.programmersbox.uiviews.utils.components.*
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-
-class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : ViewModel() {
-
-    private val fireListener = FirebaseDb.FirebaseListener()
-    var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
-        private set
-
-    init {
-        viewModelScope.launch {
-            combine(
-                fireListener.getAllShowsFlow(),
-                dao.getAllFavoritesFlow()
-            ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-                .collect { favoriteList = it }
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        fireListener.unregister()
-    }
-
-    var sortedBy by mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE)
-    var reverse by mutableStateOf(false)
-
-    val selectedSources = mutableStateListOf(*genericInfo.sourceList().fastMap(ApiService::serviceName).toTypedArray())
-
-    fun newSource(item: String) {
-        if (item in selectedSources) selectedSources.remove(item) else selectedSources.add(item)
-    }
-
-    fun singleSource(item: String) {
-        selectedSources.clear()
-        selectedSources.add(item)
-    }
-
-    fun resetSources() {
-        selectedSources.clear()
-        selectedSources.addAll(genericInfo.sourceList().fastMap(ApiService::serviceName))
-    }
-
-}
-
 
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
@@ -371,10 +323,4 @@ fun FavoriteUi(logo: MainLogo) {
             }
         }
     }
-}
-
-sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> K) {
-    object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
-    object COUNT : SortFavoritesBy<Int>({ it.value.size })
-    object CHAPTERS : SortFavoritesBy<Int>({ it.value.maxOf(DbModel::numChapters) })
 }
