@@ -32,8 +32,7 @@ import javax.net.ssl.X509TrustManager
 
 class VideoViewModel(
     handle: SavedStateHandle,
-    genericInfo: GenericInfo,
-    context: Context
+    genericInfo: GenericInfo
 ) : ViewModel() {
 
     companion object {
@@ -63,10 +62,27 @@ class VideoViewModel(
     var exoPlayer: ExoPlayer? by mutableStateOf(null)
 
     fun playPause() {
-        if (exoPlayer?.isPlaying == true) exoPlayer?.pause() else exoPlayer?.play()
+        if (exoPlayer?.isPlaying == true) {
+            exoPlayer?.pause()
+            quickSeekAction = QuickSeekAction.pause()
+        } else {
+            exoPlayer?.play()
+            quickSeekAction = QuickSeekAction.play()
+        }
+    }
+
+    fun fastForward() {
+        exoPlayer?.let { p -> p.seekTo(p.currentPosition + 30000) }
+        quickSeekAction = QuickSeekAction.forward()
+    }
+
+    fun rewind() {
+        exoPlayer?.let { p -> p.seekTo(p.currentPosition - 30000) }
+        quickSeekAction = QuickSeekAction.rewind()
     }
 
     var visibility by mutableStateOf(VideoPlayerVisibility.Gone)
+    var quickSeekAction by mutableStateOf(QuickSeekAction.none())
 
     var videoInfo by mutableStateOf(VideoInfo(0L, 0L, 0L))
 

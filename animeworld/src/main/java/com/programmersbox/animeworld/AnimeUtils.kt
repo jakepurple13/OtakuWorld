@@ -18,6 +18,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -25,13 +26,20 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -52,6 +60,9 @@ var Context.folderLocation: String by sharedPrefNotNullDelegate(
 
 val IGNORE_SSL = booleanPreferencesKey("ignore_ssl")
 val Context.ignoreSsl get() = dataStore.data.map { it[IGNORE_SSL] ?: true }
+
+val USER_NEW_PLAYER = booleanPreferencesKey("useNewPlayer")
+val Context.useNewPlayerFlow get() = dataStore.data.map { it[USER_NEW_PLAYER] ?: true }
 
 data class VideoContent(
     var videoId: Long = 0,
@@ -370,5 +381,149 @@ fun SlideTo(
                 }
             }
         }
+    }
+}
+
+@ExperimentalComposeUiApi
+@Composable
+fun AirBar(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    isHorizontal: Boolean = false,
+    fillColor: Brush = Brush.verticalGradient(listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.primary)),
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
+    cornerRadius: CornerRadius = CornerRadius(x = 40.dp.value, y = 40.dp.value),
+    minValue: Double = 0.0,
+    maxValue: Double = 100.0,
+    icon: (@Composable () -> Unit)? = null,
+    valueChanged: (Float) -> Unit
+) = AirBarSetup(progress, modifier, isHorizontal, fillColor, null, backgroundColor, cornerRadius, minValue, maxValue, icon, valueChanged)
+
+@ExperimentalComposeUiApi
+@Composable
+fun AirBar(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    isHorizontal: Boolean = false,
+    fillColor: Color = MaterialTheme.colorScheme.primary,
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
+    cornerRadius: CornerRadius = CornerRadius(x = 40.dp.value, y = 40.dp.value),
+    minValue: Double = 0.0,
+    maxValue: Double = 100.0,
+    icon: (@Composable () -> Unit)? = null,
+    valueChanged: (Float) -> Unit
+) = AirBarSetup(progress, modifier, isHorizontal, null, fillColor, backgroundColor, cornerRadius, minValue, maxValue, icon, valueChanged)
+
+@ExperimentalComposeUiApi
+@Composable
+private fun AirBarSetup(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    isHorizontal: Boolean = false,
+    fillColorBrush: Brush? = null,
+    fillColor: Color? = null,
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
+    cornerRadius: CornerRadius = CornerRadius(x = 40.dp.value, y = 40.dp.value),
+    minValue: Double = 0.0,
+    maxValue: Double = 100.0,
+    icon: (@Composable () -> Unit)? = null,
+    valueChanged: (Float) -> Unit
+) {
+
+    var bottomY = 0f
+    var rightX = 0f
+
+    fun reverseCalculateValues(realPercentage: Float): Float {
+        val p = if (isHorizontal)
+            realPercentage * rightX / 100
+        else
+            bottomY - realPercentage * bottomY / 100
+
+        return String.format("%.2f", p).toFloat()
+    }
+
+    fun calculateValues(touchY: Float, touchX: Float): Float {
+        val rawPercentage = if (isHorizontal) {
+            String.format("%.2f", (touchX.toDouble() / rightX.toDouble()) * 100).toDouble()
+        } else {
+            String.format("%.2f", 100 - ((touchY.toDouble() / bottomY.toDouble()) * 100)).toDouble()
+        }
+
+        val percentage = if (rawPercentage < 0) 0.0 else if (rawPercentage > 100) 100.0 else rawPercentage
+
+        return String.format("%.2f", ((percentage / 100) * (maxValue - minValue) + minValue)).toFloat()
+    }
+
+    Box(modifier = modifier, contentAlignment = if (isHorizontal) Alignment.CenterStart else Alignment.BottomCenter) {
+        Canvas(modifier = modifier.pointerInteropFilter { event ->
+            if (!isHorizontal) {
+                when {
+                    event.y in 0.0..bottomY.toDouble() -> {
+                        valueChanged(calculateValues(event.y, event.x))
+                        true
+                    }
+                    event.y > 100 -> {
+                        valueChanged(calculateValues(event.y, event.x))
+                        true
+                    }
+                    event.y < 0 -> {
+                        valueChanged(calculateValues(event.y, event.x))
+                        true
+                    }
+                    else -> false
+                }
+            } else {
+                when {
+                    event.x in 0.0..rightX.toDouble() -> {
+                        valueChanged(calculateValues(event.y, event.x))
+                        true
+                    }
+                    event.x > 100 -> {
+                        valueChanged(calculateValues(event.y, event.x))
+                        true
+                    }
+                    event.x < 0 -> {
+                        valueChanged(calculateValues(event.y, event.x))
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }) {
+            bottomY = size.height
+            rightX = size.width
+
+            val path = Path()
+            path.addRoundRect(
+                roundRect = RoundRect(
+                    0F,
+                    0F,
+                    size.width,
+                    size.height,
+                    cornerRadius
+                )
+            )
+            drawContext.canvas.drawPath(path, Paint().apply {
+                color = backgroundColor
+                isAntiAlias = true
+            })
+            drawContext.canvas.clipPath(path = path, ClipOp.Intersect)
+            if (fillColor != null) {
+                drawRect(
+                    fillColor,
+                    Offset(0f, if (isHorizontal) 0f else reverseCalculateValues(progress)),
+                    Size(if (isHorizontal) reverseCalculateValues(progress) else rightX, size.height)
+                )
+            } else if (fillColorBrush != null) {
+                drawRect(
+                    fillColorBrush,
+                    Offset(0f, if (isHorizontal) 0f else reverseCalculateValues(progress)),
+                    Size(if (isHorizontal) reverseCalculateValues(progress) else rightX, size.height)
+                )
+            }
+
+        }
+
+        icon?.let { Box(modifier = if (!isHorizontal) Modifier.padding(bottom = 15.dp) else Modifier.padding(start = 15.dp)) { it() } }
     }
 }

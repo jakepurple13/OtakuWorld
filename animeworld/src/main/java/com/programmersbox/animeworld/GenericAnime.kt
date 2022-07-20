@@ -509,8 +509,19 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
 
         playerSettings {
+
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
+
+            val player by context.useNewPlayerFlow.collectAsState(true)
+
+            SwitchSetting(
+                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.use_new_player)) },
+                summaryValue = { androidx.compose.material3.Text(stringResource(R.string.use_new_player_description)) },
+                settingIcon = { androidx.compose.material3.Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
+                value = player,
+                updateValue = { scope.launch { context.updatePref(USER_NEW_PLAYER, it) } }
+            )
 
             val ignoreSsl by context.ignoreSsl.collectAsState(initial = true)
 
