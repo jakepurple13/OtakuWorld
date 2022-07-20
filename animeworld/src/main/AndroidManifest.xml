@@ -31,7 +31,7 @@
         <activity android:name=".cast.ExpandedControlsActivity" />
 
         <activity
-            android:name=".VideoPlayerActivity"
+            android:name=".videoplayer.VideoPlayerActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="sensorLandscape">

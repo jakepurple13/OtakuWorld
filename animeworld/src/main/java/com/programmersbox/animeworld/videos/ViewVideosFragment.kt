@@ -48,8 +48,11 @@ import androidx.mediarouter.app.MediaRouteButton
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.programmersbox.animeworld.*
+import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
+import com.programmersbox.animeworld.SlideToDeleteDialog
+import com.programmersbox.animeworld.VideoContent
+import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -393,7 +396,7 @@ private fun VideoContentView(item: VideoContent) {
                             null, null
                         )
                     } else {
-                        context?.startActivity(
+                        context.startActivity(
                             Intent(context, VideoPlayerActivity::class.java).apply {
                                 putExtra("showPath", item.assetFileStringUri)
                                 putExtra("showName", item.videoName)
@@ -401,6 +404,13 @@ private fun VideoContentView(item: VideoContent) {
                                 data = item.assetFileStringUri?.toUri()
                             }
                         )
+                        /*VideoViewModel.navigateToVideoPlayer(
+                            navController,
+                            item.assetFileStringUri.orEmpty(),
+                            item.videoName.orEmpty(),
+                            true,
+                            ""
+                        )*/
                     }
                 }
         ) {

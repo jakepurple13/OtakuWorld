@@ -43,6 +43,9 @@
         <entry key="../../../../layout/compose-model-1635856669735.xml" value="0.1" />
         <entry key="../../../../layout/compose-model-1642007315769.xml" value="0.3158783783783784" />
         <entry key="../../../../layout/compose-model-1642602093485.xml" value="0.22" />
+        <entry key="../../../../layout/compose-model-1658242556933.xml" value="0.19045608108108109" />
+        <entry key="../../../../layout/compose-model-1658243597786.xml" value="0.3175925925925926" />
+        <entry key="../../../../layout/compose-model-1658332487261.xml" value="0.9" />
         <entry key="UIViews/src/main/res/drawable/action_chapter.xml" value="0.23778501628664495" />
         <entry key="UIViews/src/main/res/drawable/github_icon.xml" value="0.23541666666666666" />
         <entry key="UIViews/src/main/res/drawable/gradient_shape.xml" value="0.14078947368421052" />
@@ -87,6 +90,8 @@
         <entry key="animeworld/src/main/res/layout/item_torrent_download.xml" value="0.12894736842105264" />
         <entry key="animeworld/src/main/res/layout/item_torrent_download_1.xml" value="0.12894736842105264" />
         <entry key="animeworld/src/main/res/layout/mini_controller.xml" value="0.14638157894736842" />
+        <entry key="animeworld/src/main/res/layout/mx_mobile_brightness_dialog.xml" value="0.23007246376811594" />
+        <entry key="animeworld/src/main/res/layout/mx_mobile_volume_dialog.xml" value="0.23007246376811594" />
         <entry key="animeworld/src/main/res/layout/player_custom_layout.xml" value="0.2299342105263158" />
         <entry key="animeworld/src/main/res/layout/shimmer_item.xml" value="0.21805555555555556" />
         <entry key="animeworld/src/main/res/layout/shimmer_row.xml" value="0.2325657894736842" />

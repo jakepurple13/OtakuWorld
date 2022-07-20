@@ -66,6 +66,9 @@ import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.databinding.MiniControllerBinding
 import com.programmersbox.animeworld.downloads.DownloaderUi
 import com.programmersbox.animeworld.downloads.DownloaderViewModel
+import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
+import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
+import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.favoritesdatabase.DbModel
@@ -563,6 +566,12 @@ class GenericAnime(val context: Context) : GenericInfo {
             exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
         ) { DownloaderUi() }
+
+        composable(
+            VideoViewModel.VideoPlayerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+        ) { VideoPlayerUi() }
 
     }
 
