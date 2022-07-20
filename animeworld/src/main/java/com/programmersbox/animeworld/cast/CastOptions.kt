@@ -13,8 +13,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.view.isVisible
+import androidx.media3.common.MimeTypes
 import androidx.mediarouter.app.MediaRouteButton
-import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.gms.cast.*
 import com.google.android.gms.cast.framework.*
 import com.google.android.gms.cast.framework.CastOptions

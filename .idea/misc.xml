@@ -80,12 +80,13 @@
         <entry key="UIViews/src/main/res/xml/root_preferences.xml" value="0.25" />
         <entry key="animeworld/src/main/res/drawable/ic_baseline_article_24.xml" value="0.23778501628664495" />
         <entry key="animeworld/src/main/res/drawable/progress_bar.xml" value="0.24039087947882737" />
+        <entry key="animeworld/src/main/res/layout/activity_video_player.xml" value="0.1828774062816616" />
         <entry key="animeworld/src/main/res/layout/anime_list_item.xml" value="0.23029315960912053" />
         <entry key="animeworld/src/main/res/layout/base_main_activity.xml" value="0.2299342105263158" />
         <entry key="animeworld/src/main/res/layout/delete_dialog_layout.xml" value="0.2048611111111111" />
         <entry key="animeworld/src/main/res/layout/download_item.xml" value="0.25" />
         <entry key="animeworld/src/main/res/layout/download_viewer_fragment.xml" value="0.21736111111111112" />
-        <entry key="animeworld/src/main/res/layout/exo_controls.xml" value="0.21" />
+        <entry key="animeworld/src/main/res/layout/exo_controls.xml" value="0.33" />
         <entry key="animeworld/src/main/res/layout/fragment_view_videos.xml" value="0.1" />
         <entry key="animeworld/src/main/res/layout/item_torrent_download.xml" value="0.12894736842105264" />
         <entry key="animeworld/src/main/res/layout/item_torrent_download_1.xml" value="0.12894736842105264" />

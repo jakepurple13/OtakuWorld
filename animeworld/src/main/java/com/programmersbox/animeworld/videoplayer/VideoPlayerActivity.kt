@@ -16,23 +16,21 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.github.rubensousa.previewseekbar.PreviewBar
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
-import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.source.dash.DashMediaSource
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
-import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
-import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.util.Util
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.util.Util
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSourceFactory
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.dash.DashMediaSource
+import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
+import androidx.media3.ui.PlayerView
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
@@ -176,8 +174,6 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             exoBinding.videoBack.toolTipText(R.string.videoPlayerBack)
-            exoBinding.exoPlay.toolTipText(R.string.videoPlayerPlay)
-            exoBinding.exoPause.toolTipText(R.string.videoPlayerPause)
             exoBinding.exoFfwd.toolTipText(R.string.videoPlayerFF)
             exoBinding.exoRew.toolTipText(R.string.videoPlayerRewind)
             exoBinding.videoLock.toolTipText(R.string.videoPlayerLockUnlock)
@@ -186,10 +182,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
         exoBinding.forwardThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition + 30000) } }
 
-        videoBinding.playerView.setControllerVisibilityListener {
-            //exoBinding.videoInfoLayout.animate().setDuration(500).alpha(1f)
-            exoBinding.videoInfoLayout.visibility = it
-        }
+        videoBinding.playerView.setControllerVisibilityListener(
+            PlayerView.ControllerVisibilityListener { exoBinding.videoInfoLayout.visibility = it }
+        )
 
         /*if (args.showPath.isEmpty()) {
             finish()
@@ -219,18 +214,18 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         try {
             retriever.setDataSource(this@VideoPlayerActivity, showPath?.toUri())
-            var lastPos = 0L
+            /*var lastPos = 0L
             exoBinding.exoProgress.setPreviewLoader { currentPosition, _ ->
                 if (abs(lastPos - currentPosition) > 1000) {
                     exoBinding.imageView.setImageBitmap(retriever.getFrameAtTime(currentPosition * 1000))
                 }
                 lastPos = currentPosition
-            }
+            }*/
         } catch (e: Exception) {
-            exoBinding.exoProgress.isPreviewEnabled = false
+            //exoBinding.exoProgress.isPreviewEnabled = false
         }
 
-        exoBinding.exoProgress.addOnScrubListener(object : PreviewBar.OnScrubListener {
+        /*exoBinding.exoProgress.addOnScrubListener(object : PreviewBar.OnScrubListener {
             override fun onScrubStart(previewBar: PreviewBar?) {
                 player.playWhenReady = false
             }
@@ -243,7 +238,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 player.playWhenReady = true
             }
 
-        })
+        })*/
 
         playerView.player = player
 
@@ -361,10 +356,15 @@ class VideoPlayerActivity : AppCompatActivity() {
         gesture = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {})
         gesture.setOnDoubleTapListener(object : GestureDetector.OnDoubleTapListener {
             override fun onDoubleTap(p0: MotionEvent?): Boolean {
-                if (exoBinding.exoPlay.visibility == View.GONE)
+                if (player.isPlaying) {
+                    player.pause()
+                } else {
+                    player.play()
+                }
+                /*if (exoBinding.exoPlay.visibility == View.GONE)
                     exoBinding.exoPause.performClick()
                 else
-                    exoBinding.exoPlay.performClick()
+                    exoBinding.exoPlay.performClick()*/
                 return true
             }
 
@@ -562,7 +562,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun getMediaSource(url: Uri, preview: Boolean, header: String): MediaSource =
         when (Util.inferContentType(url.lastPathSegment.toString())) {
-            C.TYPE_SS -> SsMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(url)
+            //C.TYPE_SS -> SsMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(url)
             C.TYPE_DASH -> DashMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(url)
             C.TYPE_HLS -> HlsMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(uri)
             C.TYPE_OTHER -> ProgressiveMediaSource.Factory(getHttpDataSourceFactory(preview, header))//.createMediaSource(uri)
