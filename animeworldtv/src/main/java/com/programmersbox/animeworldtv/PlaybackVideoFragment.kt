@@ -16,15 +16,16 @@ import androidx.leanback.media.PlaybackTransportControlGlue
 import androidx.leanback.widget.*
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.PlaybackControlsRow.*
-import com.google.android.exoplayer2.Format
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.analytics.AnalyticsListener
-import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.video.VideoSize
+import androidx.media3.common.Format
+import androidx.media3.common.MediaItem
+import androidx.media3.common.VideoSize
+import androidx.media3.common.util.Util
+import androidx.media3.datasource.DefaultDataSourceFactory
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.SimpleExoPlayer
+import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.ui.leanback.LeanbackPlayerAdapter
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import io.reactivex.Observable
@@ -99,11 +100,11 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                     val dataSourceFactory = if (storage?.headers?.isEmpty() == true) {
                         DefaultDataSourceFactory(
                             requireContext(),
-                            com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
+                            Util.getUserAgent(requireContext(), "AnimeWorld")
                         )
                     } else {
                         DefaultHttpDataSource.Factory()
-                            .setUserAgent(com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld"))
+                            .setUserAgent(Util.getUserAgent(requireContext(), "AnimeWorld"))
                             .setDefaultRequestProperties(hashMapOf("Referer" to storage?.headers?.get("referer").orEmpty()))
                     }
 

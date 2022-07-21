@@ -129,6 +129,7 @@ fun VideoPlayerUi() {
             VideoPlayer(
                 source = remember {
                     if (viewModel.downloadOrStream) {
+                        //download
                         val dataSourceFactory = DefaultDataSource.Factory(context)
                         ProgressiveMediaSource.Factory(dataSourceFactory)
                             .createMediaSource(MediaItem.fromUri(viewModel.showPath.toUri()))
@@ -600,9 +601,6 @@ fun GestureBox(
                             }
                         }
                     }
-
-                    //TODO: get it working with the minicontroller fragment in play
-
                 },
                 onVerticalDragEnd = {
                     onVerticalDragEnd()

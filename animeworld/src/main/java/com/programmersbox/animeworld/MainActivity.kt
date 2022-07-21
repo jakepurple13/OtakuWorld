@@ -42,6 +42,7 @@ class MainActivity : BaseMainActivity() {
 
     @Composable
     override fun BottomBarAdditions() {
+        //TODO: get it working with the minicontroller fragment in play
         AndroidViewBinding(MiniControllerBinding::inflate)
     }
 

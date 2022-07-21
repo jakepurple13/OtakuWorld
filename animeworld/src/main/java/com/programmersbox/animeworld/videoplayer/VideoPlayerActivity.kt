@@ -64,8 +64,6 @@ import kotlin.math.roundToInt
 
 class VideoPlayerActivity : AppCompatActivity() {
 
-    //private val args by navArgs<VideoPlayerActivityArgs>()
-
     private var currentVolume: Int = 0
 
     private var currentPos: Long = 0
