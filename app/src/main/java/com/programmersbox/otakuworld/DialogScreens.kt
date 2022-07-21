@@ -49,6 +49,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.FullDynamicThemePrimaryColorsFromImage
+import com.programmersbox.uiviews.utils.components.rememberDynamicColorState
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
