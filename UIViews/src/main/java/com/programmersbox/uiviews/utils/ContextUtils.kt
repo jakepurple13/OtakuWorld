@@ -622,9 +622,7 @@ class ExpirableLRUCache<K, V>(
     }
 }
 
-val LocalActivity = staticCompositionLocalOf<FragmentActivity> {
-    error("Context is not an Activity.")
-}
+val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
 
 fun Context.findActivity(): FragmentActivity {
     var currentContext = this
@@ -654,8 +652,5 @@ fun rememberBackStackEntry(
     return remember { controller.getBackStackEntry(route) }
 }
 
-val LocalNavController = staticCompositionLocalOf<NavHostController> {
-    error("No NavController Found!")
-}
-
+val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }
