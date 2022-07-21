@@ -2,8 +2,11 @@ package com.programmersbox.animeworld
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.viewinterop.AndroidViewBinding
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworld.cast.CastHelper
+import com.programmersbox.animeworld.databinding.MiniControllerBinding
 import com.programmersbox.animeworld.downloads.DownloaderViewModel
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.models.sourcePublish
@@ -35,6 +38,11 @@ class MainActivity : BaseMainActivity() {
             currentService = s.serviceName
         }
 
+    }
+
+    @Composable
+    override fun BottomBarAdditions() {
+        AndroidViewBinding(factory = { l, v, b -> MiniControllerBinding.inflate(l, v, b) })
     }
 
     private fun openDownloads(intent: Intent?) {

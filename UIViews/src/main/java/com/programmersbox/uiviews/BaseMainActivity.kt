@@ -87,6 +87,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected abstract fun onCreate()
 
+    @Composable
+    protected open fun BottomBarAdditions() = Unit
+
     companion object {
         var showNavBar by mutableStateOf(true)
     }
@@ -140,7 +143,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     Scaffold(
                         bottomBar = {
                             Column {
-                                genericInfo.BottomBarAdditions()
+                                BottomBarAdditions()
                                 AnimatedVisibility(
                                     visible = showNavBar,
                                     enter = slideInVertically { it / 2 },

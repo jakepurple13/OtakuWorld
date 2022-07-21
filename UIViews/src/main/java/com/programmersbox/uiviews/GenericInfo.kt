@@ -87,7 +87,4 @@ interface GenericInfo {
     fun settingNavSetup(fragment: Fragment, navController: NavController) = Unit
 
     fun NavGraphBuilder.navSetup() = Unit
-
-    @Composable
-    fun BottomBarAdditions() = Unit
 }

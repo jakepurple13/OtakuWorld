@@ -51,11 +51,11 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import com.programmersbox.animeworld.AirBar
 import com.programmersbox.animeworld.ignoreSsl
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.AirBar
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import java.security.SecureRandom
@@ -79,35 +79,33 @@ fun VideoPlayerUi() {
 
     LifecycleHandle(
         onStop = {
-            BaseMainActivity.showNavBar = true
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+            BaseMainActivity.showNavBar = true
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
             setWindowBrightness(activity, originalScreenBrightness.toFloat())
         },
         onDestroy = {
-            BaseMainActivity.showNavBar = true
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+            BaseMainActivity.showNavBar = true
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
             setWindowBrightness(activity, originalScreenBrightness.toFloat())
         },
         onCreate = {
-            BaseMainActivity.showNavBar = false
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            BaseMainActivity.showNavBar = false
         },
         onStart = {
-            BaseMainActivity.showNavBar = false
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            BaseMainActivity.showNavBar = false
         },
         onResume = {
-            BaseMainActivity.showNavBar = false
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            BaseMainActivity.showNavBar = false
         }
     )
 
     val genericInfo = LocalGenericInfo.current
-
-    val viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo) }
-
+    val viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo, context) }
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
 
     Scaffold(
@@ -129,13 +127,6 @@ fun VideoPlayerUi() {
     ) {
         Box {
             VideoPlayer(
-                modifier = Modifier
-                /*.combinedClickable(
-                    onClick = { viewModel.visibility = !viewModel.visibility },
-                    onDoubleClick = viewModel::playPause,
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                )*/,
                 source = remember {
                     if (viewModel.downloadOrStream) {
                         val dataSourceFactory = DefaultDataSource.Factory(context)
@@ -199,6 +190,8 @@ fun VideoPlayer(
             factory = {
                 exoPlayer.setMediaSource(source)
                 exoPlayer.prepare()
+                val pos = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(viewModel.showPath, 0)
+                exoPlayer.seekTo(pos)
                 PlayerView(context).apply {
                     hideController()
                     useController = false
@@ -210,7 +203,14 @@ fun VideoPlayer(
                 }
             }
         )
-    ) { onDispose { exoPlayer.release() } }
+    ) {
+        onDispose {
+            exoPlayer.currentPosition.also {
+                viewModel.showPath.let { path -> context.getSharedPreferences("videos", Context.MODE_PRIVATE).edit().putLong(path, it).apply() }
+            }
+            exoPlayer.release()
+        }
+    }
 }
 
 @Composable
@@ -225,6 +225,25 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
         SmallTopAppBar(
             title = { Text(viewModel.showName.orEmpty()) },
             navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+            actions = {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        viewModel.batteryIcon.composeIcon,
+                        contentDescription = null,
+                        tint = animateColorAsState(
+                            if (viewModel.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
+                            else viewModel.batteryColor
+                        ).value
+                    )
+                    Text(
+                        "${viewModel.batteryPercent.toInt()}%",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            },
             colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .5f))
         )
     }
@@ -402,7 +421,7 @@ fun MediaControlGestures(
                     showBrightness = true
                 },
                 onVerticalDragRight = { volume ->
-                    volumeLevel = volume.coerceIn(0, 100)
+                    volumeLevel = (volume * 4).coerceIn(0, 100)
                     showVolume = true
                 },
                 onSeek = {
@@ -424,14 +443,20 @@ fun MediaControlGestures(
                     .padding(10.dp)
                     .align(Alignment.CenterStart)
             ) {
-                AirBar(
-                    progress = brightnessLevel.toFloat(),
-                    valueChanged = {},
-                    backgroundColor = Color.Black.copy(alpha = .4f),
-                    fillColor = Color.White,
-                    modifier = Modifier.size(80.dp, 175.dp),
-                    icon = { Icon(Icons.Default.BrightnessHigh, null, tint = MaterialTheme.colorScheme.primary) }
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "$brightnessLevel%",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    AirBar(
+                        progress = brightnessLevel.toFloat(),
+                        valueChanged = {},
+                        backgroundColor = Color.Black.copy(alpha = .4f),
+                        fillColor = Color.White,
+                        modifier = Modifier.size(80.dp, 175.dp),
+                        icon = { Icon(Icons.Default.BrightnessHigh, null, tint = MaterialTheme.colorScheme.primary) },
+                    )
+                }
             }
 
             AnimatedVisibility(
@@ -442,19 +467,27 @@ fun MediaControlGestures(
                     .padding(10.dp)
                     .align(Alignment.CenterEnd)
             ) {
-                AirBar(
-                    progress = volumeLevel.toFloat(),
-                    valueChanged = {},
-                    backgroundColor = Color.Black.copy(alpha = .4f),
-                    fillColor = Color.White,
-                    modifier = Modifier.size(80.dp, 175.dp),
-                    icon = { Icon(Icons.Default.VolumeUp, null, tint = MaterialTheme.colorScheme.primary) }
-                )
+                val context = LocalContext.current
+                val audioManager = remember { context.audioManager }
+                val maxVolume = remember { audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "$volumeLevel%",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    AirBar(
+                        progress = volumeLevel.toFloat(),
+                        valueChanged = {},
+                        backgroundColor = Color.Black.copy(alpha = .4f),
+                        fillColor = Color.White,
+                        modifier = Modifier.size(80.dp, 175.dp),
+                        maxValue = maxVolume.toDouble(),
+                        icon = { Icon(Icons.Default.VolumeUp, null, tint = MaterialTheme.colorScheme.primary) },
+                    )
+                }
             }
-
         }
     }
-
 }
 
 @Composable
@@ -548,10 +581,10 @@ fun GestureBox(
                             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
                             val deltaV = (maxVolume.toFloat() * deltaY * 3f / size.height).toInt()
                             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0)
-                            val volumePercent = (mGestureDownVolume * 100 / maxVolume + deltaY * 3f * 100f / size.height).toInt()
+                            //val volumePercent = (mGestureDownVolume * 100 / maxVolume + deltaY * 3f * 100f / size.height).toInt()
 
                             seekJob = coroutineScope.launch {
-                                onVerticalDragRight(volumePercent)
+                                onVerticalDragRight(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC))
                             }
                         }
                     }

@@ -3,8 +3,11 @@ package com.programmersbox.animeworld.videoplayer
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.Util
@@ -20,21 +23,26 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import androidx.navigation.NavController
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.helpfulutils.battery
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import java.security.cert.X509Certificate
 import java.util.*
 import javax.net.ssl.X509TrustManager
 
 class VideoViewModel(
     handle: SavedStateHandle,
-    genericInfo: GenericInfo
+    genericInfo: GenericInfo,
+    context: Context
 ) : ViewModel() {
 
     companion object {
@@ -88,6 +96,22 @@ class VideoViewModel(
 
     var videoInfo by mutableStateOf(VideoInfo(0L, 0L, 0L))
 
+    var batteryColor by mutableStateOf(Color.White)
+    var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
+    var batteryPercent by mutableStateOf(0f)
+    val batteryInformation by lazy { BatteryInformation(context) }
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            batteryInformation.composeSetupFlow(
+                androidx.compose.ui.graphics.Color.White
+            ) {
+                batteryColor = it.first
+                batteryIcon = it.second
+            }
+        }
+    }
+
     val currentTime get() = stringForTime(videoInfo.currentPosition)
     val totalTime get() = stringForTime(videoInfo.duration)
 
@@ -133,6 +157,17 @@ fun ExoPlayerAttributes(exoPlayer: ExoPlayer, viewModel: VideoViewModel) {
     }
         .filter { viewModel.visibility == VideoPlayerVisibility.Visible }
         .collectAsState(initial = VideoInfo(0L, 0L))*/
+
+    val context = LocalContext.current
+
+    DisposableEffect(context) {
+        val batteryInfo = context.battery {
+            viewModel.batteryPercent = it.percent
+            viewModel.batteryInformation.batteryLevel.tryEmit(it.percent)
+            viewModel.batteryInformation.batteryInfo.tryEmit(it)
+        }
+        onDispose { context.unregisterReceiver(batteryInfo) }
+    }
 }
 
 enum class VideoPlayerVisibility {

@@ -39,7 +39,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -63,7 +62,6 @@ import com.programmersbox.anime_sources.Sources
 import com.programmersbox.anime_sources.utilities.Qualities
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
-import com.programmersbox.animeworld.databinding.MiniControllerBinding
 import com.programmersbox.animeworld.downloads.DownloaderUi
 import com.programmersbox.animeworld.downloads.DownloaderViewModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
@@ -581,11 +579,6 @@ class GenericAnime(val context: Context) : GenericInfo {
             exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
         ) { VideoPlayerUi() }
 
-    }
-
-    @Composable
-    override fun BottomBarAdditions() {
-        AndroidViewBinding(factory = { l, v, b -> MiniControllerBinding.inflate(l, v, b) })
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
