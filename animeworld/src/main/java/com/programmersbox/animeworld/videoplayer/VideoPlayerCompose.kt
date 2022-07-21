@@ -399,6 +399,18 @@ fun MediaControlGestures(
             var showBrightness by remember { mutableStateOf(false) }
             var brightnessLevel by remember { mutableStateOf(0) }
 
+            var visibilityJob: Job? = remember { null }
+
+            LaunchedEffect(viewModel.visibility) {
+                if (viewModel.visibility == VideoPlayerVisibility.Visible && viewModel.exoPlayer?.isPlaying == true) {
+                    visibilityJob?.cancel()
+                    visibilityJob = scope.launch {
+                        delay(2500)
+                        viewModel.visibility = VideoPlayerVisibility.Gone
+                    }
+                }
+            }
+
             GestureBox(
                 doubleTap = viewModel::playPause,
                 doubleTapStart = viewModel::rewind,

@@ -42,7 +42,7 @@ class MainActivity : BaseMainActivity() {
 
     @Composable
     override fun BottomBarAdditions() {
-        AndroidViewBinding(factory = { l, v, b -> MiniControllerBinding.inflate(l, v, b) })
+        AndroidViewBinding(MiniControllerBinding::inflate)
     }
 
     private fun openDownloads(intent: Intent?) {
