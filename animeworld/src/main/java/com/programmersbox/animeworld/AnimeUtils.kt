@@ -3,6 +3,7 @@ package com.programmersbox.animeworld
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
@@ -44,14 +45,20 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.navigation.NavController
+import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
+import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.uiviews.utils.dataStore
 import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.math.roundToInt
 
 var Context.folderLocation: String by sharedPrefNotNullDelegate(
@@ -63,6 +70,33 @@ val Context.ignoreSsl get() = dataStore.data.map { it[IGNORE_SSL] ?: true }
 
 val USER_NEW_PLAYER = booleanPreferencesKey("useNewPlayer")
 val Context.useNewPlayerFlow get() = dataStore.data.map { it[USER_NEW_PLAYER] ?: true }
+
+fun Context.navigateToVideoPlayer(
+    navController: NavController,
+    assetFileStringUri: String?,
+    videoName: String?,
+    downloadOrStream: Boolean,
+    referer: String = ""
+) {
+    if (runBlocking { useNewPlayerFlow.first() }) {
+        VideoViewModel.navigateToVideoPlayer(
+            navController,
+            assetFileStringUri.orEmpty(),
+            videoName.orEmpty(),
+            downloadOrStream,
+            referer
+        )
+    } else {
+        startActivity(
+            Intent(this, VideoPlayerActivity::class.java).apply {
+                putExtra("showPath", assetFileStringUri)
+                putExtra("showName", videoName)
+                putExtra("downloadOrStream", downloadOrStream)
+                data = assetFileStringUri?.toUri()
+            }
+        )
+    }
+}
 
 data class VideoContent(
     var videoId: Long = 0,

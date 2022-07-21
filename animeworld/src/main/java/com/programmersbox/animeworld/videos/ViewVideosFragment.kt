@@ -2,7 +2,6 @@ package com.programmersbox.animeworld.videos
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.provider.MediaStore
 import android.widget.Toast
@@ -50,8 +49,6 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.animeworld.*
 import com.programmersbox.animeworld.R
-import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
-import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -62,9 +59,7 @@ import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.PermissionRequest
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -329,13 +324,12 @@ private fun VideoContentView(item: VideoContent) {
                         null, null
                     )
                 } else {
-                    context.startActivity(
-                        Intent(context, VideoPlayerActivity::class.java).apply {
-                            putExtra("showPath", item.assetFileStringUri)
-                            putExtra("showName", item.videoName)
-                            putExtra("downloadOrStream", true)
-                            data = item.assetFileStringUri?.toUri()
-                        }
+                    context.navigateToVideoPlayer(
+                        navController,
+                        item.assetFileStringUri,
+                        item.videoName,
+                        true,
+                        ""
                     )
                 }
             } else if (it == DismissValue.DismissedToStart) {
@@ -397,24 +391,13 @@ private fun VideoContentView(item: VideoContent) {
                             null, null
                         )
                     } else {
-                        if (runBlocking { context.useNewPlayerFlow.first() }) {
-                            VideoViewModel.navigateToVideoPlayer(
-                                navController,
-                                item.assetFileStringUri.orEmpty(),
-                                item.videoName.orEmpty(),
-                                true,
-                                ""
-                            )
-                        } else {
-                            context.startActivity(
-                                Intent(context, VideoPlayerActivity::class.java).apply {
-                                    putExtra("showPath", item.assetFileStringUri)
-                                    putExtra("showName", item.videoName)
-                                    putExtra("downloadOrStream", true)
-                                    data = item.assetFileStringUri?.toUri()
-                                }
-                            )
-                        }
+                        context.navigateToVideoPlayer(
+                            navController,
+                            item.assetFileStringUri,
+                            item.videoName,
+                            true,
+                            ""
+                        )
                     }
                 }
         ) {

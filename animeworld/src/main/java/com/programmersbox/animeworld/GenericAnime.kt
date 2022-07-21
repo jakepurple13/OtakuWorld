@@ -66,7 +66,6 @@ import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.databinding.MiniControllerBinding
 import com.programmersbox.animeworld.downloads.DownloaderUi
 import com.programmersbox.animeworld.downloads.DownloaderViewModel
-import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
@@ -134,14 +133,12 @@ class GenericAnime(val context: Context) : GenericInfo {
                     it.headers
                 )
             } else {
-                MainActivity.activity.startActivity(
-                    Intent(context, VideoPlayerActivity::class.java).apply {
-                        putExtra("showPath", it.link)
-                        putExtra("showName", model.name)
-                        putExtra("referer", it.headers["referer"])
-                        putExtra("chapterModel", it.toJson())
-                        putExtra("downloadOrStream", false)
-                    }
+                context.navigateToVideoPlayer(
+                    navController,
+                    it.link,
+                    model.name,
+                    false,
+                    it.headers["referer"] ?: it.source.orEmpty()
                 )
             }
         }

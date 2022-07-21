@@ -24,8 +24,10 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import java.security.cert.X509Certificate
 import java.util.*
 import javax.net.ssl.X509TrustManager
@@ -111,21 +113,22 @@ class VideoViewModel(
 
 @Composable
 fun ExoPlayerAttributes(exoPlayer: ExoPlayer, viewModel: VideoViewModel) {
-    val videoInfo by flow {
-        while (true) {
-            emit(VideoInfo(exoPlayer.currentPosition, exoPlayer.duration, exoPlayer.bufferedPosition))
-            delay(1000)
+    LaunchedEffect(exoPlayer) {
+        flow {
+            while (true) {
+                emit(VideoInfo(exoPlayer.currentPosition, exoPlayer.duration, exoPlayer.bufferedPosition))
+                delay(100)
+            }
         }
+            .filter { viewModel.visibility == VideoPlayerVisibility.Visible }
+            .onEach { viewModel.videoInfo = it }
+            .collect()
     }
-        .filter { viewModel.visibility == VideoPlayerVisibility.Visible }
-        .collectAsState(initial = VideoInfo(0L, 0L, 0L))
-
-    LaunchedEffect(videoInfo) { viewModel.videoInfo = videoInfo }
 
     /*val playing by flow {
         while (true) {
             emit(exoPlayer.isPlaying)
-            delay(1000)
+            delay(100)
         }
     }
         .filter { viewModel.visibility == VideoPlayerVisibility.Visible }

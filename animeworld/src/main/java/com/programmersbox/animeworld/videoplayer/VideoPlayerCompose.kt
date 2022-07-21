@@ -386,15 +386,9 @@ fun MediaControlGestures(
                 doubleTapEnd = viewModel::fastForward,
                 draggingProgress = onDraggingProgressChange,
                 onTap = { viewModel.visibility = !viewModel.visibility },
-                onHorizontalDragStart = {
-                    viewModel.exoPlayer?.pause()
-                },
-                onHorizontalDragEnd = {
-                    viewModel.exoPlayer?.play()
-                },
-                onVerticalDragStart = {
-
-                },
+                onHorizontalDragStart = { viewModel.exoPlayer?.pause() },
+                onHorizontalDragEnd = { viewModel.exoPlayer?.play() },
+                onVerticalDragStart = {},
                 onVerticalDragEnd = {
                     job?.cancel()
                     job = scope.launch {
@@ -419,7 +413,6 @@ fun MediaControlGestures(
                         viewModel.exoPlayer?.bufferedPosition ?: 0
                     )
                 },
-                isPlaying = viewModel.exoPlayer?.isPlaying == true,
                 viewModel = viewModel
             )
 
@@ -479,7 +472,6 @@ fun GestureBox(
     onVerticalDragLeft: (Int) -> Unit,
     onVerticalDragRight: (Int) -> Unit,
     onSeek: (Long) -> Unit,
-    isPlaying: Boolean,
     viewModel: VideoViewModel
 ) {
     val context = LocalContext.current
@@ -564,6 +556,8 @@ fun GestureBox(
                         }
                     }
 
+                    //TODO: get it working with the minicontroller fragment in play
+
                 },
                 onVerticalDragEnd = {
                     onVerticalDragEnd()
@@ -577,9 +571,8 @@ fun GestureBox(
                     resetState()
                 },
                 onDragStart = { offset ->
-                    wasPlaying = isPlaying//controller.currentState { it.isPlaying }
+                    wasPlaying = viewModel.exoPlayer?.isPlaying == true
                     onHorizontalDragStart(offset)
-                    //controller.pause()
 
                     currentPosition = viewModel.videoInfo.currentPosition
                     duration = viewModel.videoInfo.duration
