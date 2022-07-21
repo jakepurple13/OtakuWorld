@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.provider.Settings
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -43,6 +44,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -170,11 +172,13 @@ fun VideoPlayer(
     viewModel: VideoViewModel,
     source: MediaSource,
 ) {
-
+    val navController = LocalNavController.current
     val context = LocalContext.current
 
     val exoPlayer = remember {
-        ExoPlayer.Builder(context).build()
+        ExoPlayer.Builder(context)
+            .setHandleAudioBecomingNoisy(true)
+            .build()
             .apply {
                 setMediaSource(source)
                 prepare()
@@ -191,11 +195,23 @@ fun VideoPlayer(
             factory = {
                 exoPlayer.setMediaSource(source)
                 exoPlayer.prepare()
+
+                exoPlayer.addListener(
+                    object : Player.Listener {
+                        override fun onPlayerError(error: PlaybackException) {
+                            super.onPlayerError(error)
+                            Toast.makeText(context, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        }
+                    }
+                )
+
                 val pos = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(viewModel.showPath, 0)
                 exoPlayer.seekTo(pos)
                 PlayerView(context).apply {
                     hideController()
                     useController = false
+                    setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
 
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
 
@@ -287,7 +303,7 @@ fun VideoBottomBar(
                     var isSeeking by remember { mutableStateOf(false) }
 
                     var seekChange by remember(isSeeking, if (isSeeking) Unit else currentPosition) {
-                        mutableStateOf(currentPosition.coerceAtLeast(0L).toFloat())
+                        mutableStateOf(currentPosition.toFloat())
                     }
 
                     Slider(
@@ -300,7 +316,7 @@ fun VideoBottomBar(
                             isSeeking = false
                             seekTo(seekChange.toLong())
                         },
-                        valueRange = 0f..totalDuration.toFloat(),
+                        valueRange = 0f..totalDuration.coerceAtLeast(0L).toFloat(),
                         modifier = Modifier.weight(8f, true)
                     )
 
