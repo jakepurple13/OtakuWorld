@@ -254,6 +254,7 @@ object AllAnime : ShowApi(
         return out
     }
 
+
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
         val url =
             """$baseUrl/graphql?variables={"search":{"allowAdult":true,"allowUnknown":false,"query":"$searchText"},"limit":26,"page":1,"translationType":"dub","countryOrigin":"ALL"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"d2670e3e27ee109630991152c8484fce5ff5e280c523378001f9a23dc1839068"}}"""
@@ -273,7 +274,30 @@ object AllAnime : ShowApi(
     }
 
     override suspend fun sourceByUrl(url: String): ItemModel {
-        return super.sourceByUrl(url)
+        val rhino = Context.enter()
+        rhino.initStandardObjects()
+        rhino.optimizationLevel = -1
+        val scope: Scriptable = rhino.initStandardObjects()
+
+        val response = getApi(url).orEmpty()
+        val doc = Jsoup.parse(response)
+        val script = doc.select("script").firstOrNull { it.html().contains("window.__NUXT__") }
+        val js = """
+            const window = {}
+            ${script?.html()}
+            const returnValue = JSON.stringify(window.__NUXT__.fetch[0].show)
+        """.trimIndent()
+        rhino.evaluateString(scope, js, "JavaScript", 1, null)
+        val jsEval = scope.get("returnValue", scope)
+        return jsEval.toString().fromJson<Edges>()?.let { edges ->
+            ItemModel(
+                title = edges.name,
+                description = edges.description?.replace(Regex("""<(.*?)>"""), "").orEmpty(),
+                imageUrl = edges.thumbnail.orEmpty(),
+                url = "$baseUrl/anime/${edges._id}",
+                source = Sources.ALLANIME
+            )
+        } ?: super.sourceByUrl(url)
     }
 
     @Serializable
