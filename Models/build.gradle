@@ -45,4 +45,7 @@ dependencies {
     implementation coroutinesCore
     implementation coroutinesAndroid
     implementation coroutinesRX
+
+    implementation ktor.ktor
+    implementation kotlinxSerialization
 }

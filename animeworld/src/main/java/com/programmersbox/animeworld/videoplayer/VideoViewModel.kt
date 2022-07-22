@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -199,22 +200,22 @@ fun Context.getMediaSource(
     bandwidthMeter: BandwidthMeter,
     header: String
 ): MediaSource =
-    when (Util.inferContentType(url.lastPathSegment.toString())) {
-        C.TYPE_DASH -> DashMediaSource.Factory(
+    when (Util.inferContentType(url.lastPathSegment.orEmpty().toUri())) {
+        C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(
             getHttpDataSourceFactory(
                 preview,
                 bandwidthMeter,
                 header
             )
         )//.createMediaSource(url)
-        C.TYPE_HLS -> HlsMediaSource.Factory(
+        C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(
             getHttpDataSourceFactory(
                 preview,
                 bandwidthMeter,
                 header
             )
         )//.createMediaSource(uri)
-        C.TYPE_OTHER -> ProgressiveMediaSource.Factory(
+        C.CONTENT_TYPE_OTHER -> ProgressiveMediaSource.Factory(
             getHttpDataSourceFactory(
                 preview,
                 bandwidthMeter,

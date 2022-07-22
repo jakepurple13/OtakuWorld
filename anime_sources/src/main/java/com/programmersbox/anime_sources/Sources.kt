@@ -12,6 +12,8 @@ import org.jsoup.nodes.Document
 enum class Sources(private val api: ApiService, val notWorking: Boolean = false) : ApiService by api {
     //GOGOANIME(GogoAnimeApi),
 
+    ALLANIME(AllAnime),
+
     GOGOANIME_VC(GogoAnimeVC),
     KAWAIIFU(Kawaiifu),
     HDM(Hdm, true),
@@ -29,7 +31,7 @@ enum class Sources(private val api: ApiService, val notWorking: Boolean = false)
     PUTLOCKERCARTOONS(PutlockerCartoons, true),
     PUTLOCKERMOVIES(PutlockerMovies, true),
 
-    ANIMEKISA_SUBBED(AnimeKisaSubbed), ANIMEKISA_DUBBED(AnimeKisaDubbed), ANIMEKISA_MOVIES(AnimeKisaMovies),
+    ANIMEKISA_SUBBED(AnimeKisaSubbed, true), ANIMEKISA_DUBBED(AnimeKisaDubbed, true), ANIMEKISA_MOVIES(AnimeKisaMovies, true),
 
     WCOSTREAM(WcoStream),//WCO_DUBBED(WcoDubbed), WCO_SUBBED(WcoSubbed), WCO_CARTOON(WcoCartoon), WCO_MOVIES(WcoMovies), WCO_OVA(WcoOva),
     WCOSTREAMCC(WcoStreamCC)

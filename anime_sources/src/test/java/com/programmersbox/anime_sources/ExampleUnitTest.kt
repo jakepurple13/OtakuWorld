@@ -10,6 +10,7 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import io.reactivex.Single
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -34,6 +35,16 @@ import javax.net.ssl.X509TrustManager
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun allanimeTest() = runBlocking {
+        val f = AllAnime.recent(1)
+        println(f)
+        val f1 = f.first().toInfoModelFlow().first().getOrNull()
+        println(f1)
+        val f2 = f1?.chapters?.first()?.getChapterInfoFlow()?.first()
+        println(f2)
+    }
 
     @Test
     fun kawaiifuTest() {

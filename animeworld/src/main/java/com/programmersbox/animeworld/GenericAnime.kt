@@ -44,6 +44,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
@@ -81,14 +82,11 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.ListBottomSheet
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.tonyodev.fetch2.*
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
-import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 
 val appModule = module {
@@ -98,8 +96,6 @@ val appModule = module {
 }
 
 class GenericAnime(val context: Context) : GenericInfo {
-
-    private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") anime_no_firebase_file else anime_file }
     override val deepLinkUri: String get() = "animeworld://"
@@ -224,55 +220,52 @@ class GenericAnime(val context: Context) : GenericInfo {
             .setIcon(R.mipmap.ic_launcher)
             .setCancelable(false)
             .create()
-
-        model.getChapterInfo()
-            .doOnSubscribe { runOnUIThread { dialog.show() } }
-            .onErrorReturnItem(emptyList())
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .timeout(15, TimeUnit.SECONDS)
-            .doOnError {
-                runOnUIThread {
-                    Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
+        activity.lifecycleScope.launch {
+            model.getChapterInfoFlow()
+                .onStart { runOnUIThread { dialog.show() } }
+                .catch {
+                    runOnUIThread {
+                        Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                    emit(emptyList())
                 }
-            }
-            .map { it.filter(filter) }
-            .subscribeBy { c ->
-                dialog.dismiss()
-                when {
-                    c.size == 1 -> {
-                        when (model.source) {
-                            else -> c.firstOrNull()?.let { onAction(it) }
+                .map { it.filter(filter) }
+                .collect { c ->
+                    dialog.dismiss()
+                    when {
+                        c.size == 1 -> {
+                            when (model.source) {
+                                else -> c.firstOrNull()?.let { onAction(it) }
+                            }
+                        }
+                        c.isNotEmpty() -> {
+                            ListBottomSheet(
+                                title = context.getString(R.string.choose_quality_for, model.name),
+                                list = c,
+                                onClick = { onAction(it) }
+                            ) {
+                                ListBottomSheetItemModel(
+                                    primaryText = it.quality.orEmpty(),
+                                    icon = when (getQualityFromName(it.quality.orEmpty())) {
+                                        Qualities.Unknown -> Icons.Default.DeviceUnknown
+                                        Qualities.P360 -> Icons.Default._360
+                                        Qualities.P480 -> Icons.Default._4mp
+                                        Qualities.P720 -> Icons.Default._7mp
+                                        Qualities.P1080 -> Icons.Default._10mp
+                                        Qualities.P1440 -> Icons.Default._1k
+                                        Qualities.P2160 -> Icons.Default._4k
+                                        else -> Icons.Default.DeviceUnknown
+                                    }
+                                )
+                            }.show(activity.supportFragmentManager, "qualityChooser")
+                        }
+                        else -> {
+                            Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
                         }
                     }
-                    c.isNotEmpty() -> {
-                        ListBottomSheet(
-                            title = context.getString(R.string.choose_quality_for, model.name),
-                            list = c,
-                            onClick = { onAction(it) }
-                        ) {
-                            ListBottomSheetItemModel(
-                                primaryText = it.quality.orEmpty(),
-                                icon = when (getQualityFromName(it.quality.orEmpty())) {
-                                    Qualities.Unknown -> Icons.Default.DeviceUnknown
-                                    Qualities.P360 -> Icons.Default._360
-                                    Qualities.P480 -> Icons.Default._4mp
-                                    Qualities.P720 -> Icons.Default._7mp
-                                    Qualities.P1080 -> Icons.Default._10mp
-                                    Qualities.P1440 -> Icons.Default._1k
-                                    Qualities.P2160 -> Icons.Default._4k
-                                    else -> Icons.Default.DeviceUnknown
-                                }
-                            )
-                        }.show(activity.supportFragmentManager, "qualityChooser")
-                    }
-                    else -> {
-                        Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
-                    }
                 }
-            }
-            .addTo(disposable)
+        }
     }
 
     override fun sourceList(): List<ApiService> = Sources.values().filterNot(Sources::notWorking).toList()
