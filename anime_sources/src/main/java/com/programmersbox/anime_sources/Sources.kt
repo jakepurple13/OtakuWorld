@@ -43,6 +43,7 @@ enum class Sources(private val api: ApiService, val notWorking: Boolean = false)
     companion object {
         val searchSources
             get() = listOf(
+                ALLANIME,
                 VIDSTREAMING,
                 VIDEMBED,
                 //PUTLOCKERTV,
