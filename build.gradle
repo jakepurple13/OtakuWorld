@@ -38,7 +38,7 @@ buildscript {
     ext.analytics = 'com.google.firebase:firebase-analytics:20.1.0'
     ext.play_services = 'com.google.android.gms:play-services-auth:20.1.0'
 
-    ext.media3_version = "1.0.0-beta01"
+    ext.media3_version = "1.0.0-beta02"
     ext.room_version = "2.5.0-alpha02"
 
     ext.nav_version = "2.5.0"
