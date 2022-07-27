@@ -540,9 +540,9 @@ fun NovelReader() {
                         .alpha(1f - (animateBar / toolbarHeightPx))
                         .offset { IntOffset(x = 0, y = animateBar) },
                     containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                        .containerColor(scrollFraction = contentScrollBehavior.scrollFraction).value,
+                        .containerColor(contentScrollBehavior.state.collapsedFraction).value,
                     contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                        .titleContentColor(scrollFraction = contentScrollBehavior.scrollFraction).value
+                        .titleContentColor(contentScrollBehavior.state.collapsedFraction).value
                 ) {
 
                     val prevShown = readVm.currentChapter < readVm.list.lastIndex
