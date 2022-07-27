@@ -86,7 +86,7 @@ fun AllView(
 
     val state = rememberLazyGridState()
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
@@ -138,7 +138,7 @@ fun AllView(
                             sheetContent = {
                                 val focusManager = LocalFocusManager.current
                                 val searchList = allVm.searchList
-                                val searchTopAppBarScrollState = rememberTopAppBarScrollState()
+                                val searchTopAppBarScrollState = rememberTopAppBarState()
                                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(searchTopAppBarScrollState) }
                                 Scaffold(
                                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -147,7 +147,7 @@ fun AllView(
                                             modifier = Modifier
                                                 .background(
                                                     TopAppBarDefaults.smallTopAppBarColors()
-                                                        .containerColor(scrollBehavior.scrollFraction).value
+                                                        .containerColor(scrollBehavior.state.collapsedFraction).value
                                                 )
                                         ) {
                                             Button(

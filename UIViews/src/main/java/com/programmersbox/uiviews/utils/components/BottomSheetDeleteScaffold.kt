@@ -54,7 +54,7 @@ fun <T> BottomSheetDeleteScaffold(
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
-    topAppBarScrollState: TopAppBarScrollState = rememberTopAppBarScrollState(),
+    topAppBarScrollState: TopAppBarState = rememberTopAppBarState(),
     bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) },
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
@@ -116,7 +116,7 @@ fun <T> BottomSheetDeleteScaffold(
 
             }
 
-            val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarScrollState())
+            val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -138,9 +138,9 @@ fun <T> BottomSheetDeleteScaffold(
                     BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
                         containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+                            .containerColor(scrollBehavior.state.collapsedFraction).value,
                         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
+                            .titleContentColor(scrollBehavior.state.collapsedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
@@ -361,7 +361,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 
             }
 
-            val topAppBarScrollState = rememberTopAppBarScrollState()
+            val topAppBarScrollState = rememberTopAppBarState()
             val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
             Scaffold(
@@ -384,9 +384,9 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                     BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
                         containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+                            .containerColor(scrollBehavior.state.collapsedFraction).value,
                         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
+                            .titleContentColor(scrollBehavior.state.collapsedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },

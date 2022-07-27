@@ -113,7 +113,7 @@ fun SettingScreen(
 
     val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     Scaffold(

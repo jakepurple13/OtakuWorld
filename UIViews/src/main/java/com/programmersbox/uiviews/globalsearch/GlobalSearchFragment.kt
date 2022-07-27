@@ -221,7 +221,7 @@ fun GlobalSearchView(
                 scaffoldState = bottomScaffold,
                 sheetContent = searchModelBottom?.let { s ->
                     {
-                        val topAppBarScrollState = rememberTopAppBarScrollState()
+                        val topAppBarScrollState = rememberTopAppBarState()
                         val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
                         Scaffold(
                             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

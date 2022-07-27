@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -454,7 +455,7 @@ private fun DetailsViewLandscape(
         },
         snackbarHost = {
             SnackbarHost(it) { data ->
-                val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
+                val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.color
                 val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
                 Snackbar(
                     elevation = 15.dp,
@@ -579,13 +580,13 @@ private fun DetailsView(
     val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
         ?: M3MaterialTheme.colorScheme.onSurface
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     BottomSheetScaffold(
         backgroundColor = Color.Transparent,
         sheetContent = {
-            val markAsTopAppBarScrollState = rememberTopAppBarScrollState()
+            val markAsTopAppBarScrollState = rememberTopAppBarState()
             val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior(markAsTopAppBarScrollState) }
 
             Scaffold(
@@ -630,7 +631,7 @@ private fun DetailsView(
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(horizontal = 4.dp),
-                                text = { //headlineText
+                                headlineText = {
                                     Text(
                                         c.name,
                                         color = swatchInfo.value
@@ -639,7 +640,7 @@ private fun DetailsView(
                                             ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
                                     )
                                 },
-                                icon = { //leadingContent
+                                leadingContent = {
                                     androidx.compose.material3.Checkbox(
                                         checked = vm.chapters.fastAny { it.url == c.url },
                                         onCheckedChange = { b -> vm.markAs(c, b) },
@@ -790,7 +791,7 @@ private fun DetailsView(
         },
         snackbarHost = {
             SnackbarHost(it) { data ->
-                val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.backgroundColor
+                val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.color
                 val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
                 Snackbar(
                     elevation = 15.dp,

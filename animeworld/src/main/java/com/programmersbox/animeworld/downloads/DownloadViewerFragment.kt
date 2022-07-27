@@ -87,7 +87,7 @@ fun DownloaderUi() {
 
     itemToDelete?.download?.let { SlideToDeleteDialog(showDialog = showDialog, download = it) }
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     BottomSheetDeleteScaffold(

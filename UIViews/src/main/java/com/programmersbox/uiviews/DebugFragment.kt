@@ -29,7 +29,7 @@ fun DebugView() {
     val scope = rememberCoroutineScope()
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarScrollState) }
 
     Scaffold(

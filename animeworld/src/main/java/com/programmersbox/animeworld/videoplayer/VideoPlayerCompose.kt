@@ -230,6 +230,7 @@ fun VideoPlayer(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
     val navController = LocalNavController.current

@@ -275,7 +275,7 @@ fun NovelReader() {
         }
     }
 
-    val contentTopAppBarScrollState = rememberTopAppBarScrollState()
+    val contentTopAppBarScrollState = rememberTopAppBarState()
     val contentScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(contentTopAppBarScrollState) }
 
     //56 is the bottom app bar size
@@ -313,7 +313,7 @@ fun NovelReader() {
         contentColor = M3MaterialTheme.colorScheme.onSurface,
         drawerContent = if (readVm.list.size > 1) {
             {
-                val topAppBarScrollState = rememberTopAppBarScrollState()
+                val topAppBarScrollState = rememberTopAppBarState()
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
                 Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

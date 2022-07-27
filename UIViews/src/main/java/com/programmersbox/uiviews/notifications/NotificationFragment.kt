@@ -122,7 +122,7 @@ fun NotificationsScreen(
     BackHandler(state.bottomSheetState.isExpanded) {
         scope.launch { state.bottomSheetState.collapse() }
     }
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
 
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 

@@ -62,7 +62,7 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
     //var searchText by remember { mutableStateOf("") }
     val libs = libraries?.libraries/*?.filter { it.name.contains(searchText, true) }*/.orEmpty()
 
-    val state = rememberTopAppBarScrollState()
+    val state = rememberTopAppBarState()
     val topAppBarScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(state) }
 
     Scaffold(

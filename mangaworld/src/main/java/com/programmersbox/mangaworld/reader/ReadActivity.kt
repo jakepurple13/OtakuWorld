@@ -238,7 +238,7 @@ fun ReadView() {
 
     val showItems = readVm.showInfo || listShowItems || pagerShowItems
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -256,7 +256,7 @@ fun ReadView() {
     ModalBottomSheetLayout(
         sheetState = sheetState,
         sheetContent = {
-            val sheetTopAppBarScrollState = rememberTopAppBarScrollState()
+            val sheetTopAppBarScrollState = rememberTopAppBarState()
             val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
             Scaffold(
                 modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
@@ -361,7 +361,7 @@ fun ReadView() {
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
-                val drawerTopAppBarScrollState = rememberTopAppBarScrollState()
+                val drawerTopAppBarScrollState = rememberTopAppBarState()
                 val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
                 Scaffold(
                     modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
@@ -787,6 +787,7 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @Composable
 private fun TopBar(
@@ -846,6 +847,7 @@ private fun TopBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomBar(
     modifier: Modifier = Modifier,
@@ -858,9 +860,9 @@ private fun BottomBar(
     BottomAppBar(
         modifier = modifier,
         containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .containerColor(scrollFraction = scrollBehavior.scrollFraction).value,
+            .containerColor(scrollBehavior.state.collapsedFraction).value,
         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .titleContentColor(scrollFraction = scrollBehavior.scrollFraction).value
+            .titleContentColor(scrollBehavior.state.collapsedFraction).value
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0

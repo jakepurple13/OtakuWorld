@@ -77,7 +77,7 @@ fun DownloadScreen() {
 
     val defaultPathname = remember { File(DOWNLOAD_FILE_PATH) }
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     Scaffold(

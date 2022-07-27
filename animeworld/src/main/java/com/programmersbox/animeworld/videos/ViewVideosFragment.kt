@@ -102,7 +102,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
     itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, video = it) }
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     BottomSheetDeleteScaffold(

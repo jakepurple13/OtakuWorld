@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }*/
 
-                val topBarState = rememberTopAppBarScrollState()
+                val topBarState = rememberTopAppBarState()
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
                 val scaffoldState = rememberBottomSheetScaffoldState()
 

@@ -95,7 +95,7 @@ fun HistoryUi(
 
     }
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
 
     val scrollBehavior = remember {
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(

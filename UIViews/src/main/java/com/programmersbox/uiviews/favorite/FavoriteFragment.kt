@@ -69,7 +69,7 @@ fun FavoriteUi(logo: MainLogo) {
 
     val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
 
     CollapsingToolbarScaffold(
@@ -79,7 +79,7 @@ fun FavoriteUi(logo: MainLogo) {
         toolbar = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.scrollFraction).value)
+                modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.state.collapsedFraction).value)
             ) {
                 SmallTopAppBar(
                     scrollBehavior = scrollBehavior,

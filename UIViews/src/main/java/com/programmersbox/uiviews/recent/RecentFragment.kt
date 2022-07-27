@@ -60,7 +60,7 @@ fun RecentView(
         if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context, source!!)
     }
 
-    val topAppBarScrollState = rememberTopAppBarScrollState()
+    val topAppBarScrollState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
     Scaffold(
