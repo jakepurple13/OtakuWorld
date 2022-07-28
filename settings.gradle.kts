@@ -21,7 +21,7 @@ include(
     ":app",
     ":novelworld",
     ":novel_sources",
-    ":animeworldtv",
+    //":animeworldtv",
     ":sharedutils",
     ":otakumanager",
 )
