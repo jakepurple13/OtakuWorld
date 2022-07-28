@@ -47,7 +47,7 @@ android {
     }
 
     configurations.all {
-        resolutionStrategy.force "androidx.lifecycle:lifecycle-viewmodel:2.5.0"
+        resolutionStrategy.force "androidx.lifecycle:lifecycle-viewmodel:2.5.1"
     }
 }
 

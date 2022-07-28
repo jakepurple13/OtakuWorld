@@ -43,7 +43,7 @@ buildscript {
 
     ext.nav_version = "2.5.0"
 
-    def koin_version = "3.2.0"
+    def koin_version = "3.0.2"
 
     // Koin main features for Android (Scope,ViewModel ...)
     ext.koinAndroid = "io.insert-koin:koin-android:$koin_version"
