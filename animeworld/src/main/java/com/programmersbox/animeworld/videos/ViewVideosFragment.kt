@@ -52,6 +52,7 @@ import com.programmersbox.animeworld.R
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.Insets
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
@@ -108,22 +109,24 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     BottomSheetDeleteScaffold(
         bottomScrollBehavior = scrollBehavior,
         topBar = {
-            SmallTopAppBar(
-                scrollBehavior = scrollBehavior,
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
-                title = { Text(stringResource(R.string.downloaded_videos)) },
-                actions = {
-                    AndroidView(
-                        factory = { context ->
-                            MediaRouteButton(context).apply {
-                                MainActivity.cast.showIntroductoryOverlay(this)
-                                MainActivity.cast.setMediaRouteMenu(context, this)
+            Insets {
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    title = { Text(stringResource(R.string.downloaded_videos)) },
+                    actions = {
+                        AndroidView(
+                            factory = { context ->
+                                MediaRouteButton(context).apply {
+                                    MainActivity.cast.showIntroductoryOverlay(this)
+                                    MainActivity.cast.setMediaRouteMenu(context, this)
+                                }
                             }
-                        }
-                    )
-                    IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
-                }
-            )
+                        )
+                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                    }
+                )
+            }
         },
         state = state,
         listOfItems = items,

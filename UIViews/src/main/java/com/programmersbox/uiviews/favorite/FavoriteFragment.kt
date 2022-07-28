@@ -77,116 +77,120 @@ fun FavoriteUi(logo: MainLogo) {
         state = rememberCollapsingToolbarScaffoldState(),
         scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
         toolbar = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.background(TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.state.collapsedFraction).value)
-            ) {
-                SmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
-                    title = { Text(stringResource(R.string.viewFavoritesMenu)) },
-                    actions = {
-
-                        val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                            animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
-                        }
-
-                        GroupButton(
-                            selected = viewModel.sortedBy,
-                            options = listOf(
-                                GroupButtonModel(SortFavoritesBy.TITLE) {
-                                    Icon(
-                                        Icons.Default.SortByAlpha,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
-                                    )
-                                },
-                                GroupButtonModel(SortFavoritesBy.COUNT) {
-                                    Icon(
-                                        Icons.Default.Sort,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
-                                    )
-                                },
-                                GroupButtonModel(SortFavoritesBy.CHAPTERS) {
-                                    Icon(
-                                        Icons.Default.ReadMore,
-                                        null,
-                                        modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
-                                    )
-                                }
-                            )
-                        ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
-                    }
-                )
-
-                androidx.compose.material3.OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    label = {
-                        Text(
-                            context.resources.getQuantityString(
-                                R.plurals.numFavorites,
-                                showing.size,
-                                showing.size
-                            )
-                        )
-                    },
-                    trailingIcon = {
-                        IconButton(onClick = { searchText = "" }) {
-                            Icon(Icons.Default.Cancel, null)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 5.dp),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                )
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+            Insets {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.background(
+                        TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.state.collapsedFraction).value
+                    )
                 ) {
+                    SmallTopAppBar(
+                        scrollBehavior = scrollBehavior,
+                        navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                        title = { Text(stringResource(R.string.viewFavoritesMenu)) },
+                        actions = {
 
-                    item {
-                        CustomChip(
-                            modifier = Modifier.combinedClickable(
-                                onClick = { viewModel.resetSources() },
-                                onLongClick = { viewModel.selectedSources.clear() }
-                            ),
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = M3MaterialTheme.colorScheme.primary,
-                                labelColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
+                            val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
+                                animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
+                            }
+
+                            GroupButton(
+                                selected = viewModel.sortedBy,
+                                options = listOf(
+                                    GroupButtonModel(SortFavoritesBy.TITLE) {
+                                        Icon(
+                                            Icons.Default.SortByAlpha,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
+                                        )
+                                    },
+                                    GroupButtonModel(SortFavoritesBy.COUNT) {
+                                        Icon(
+                                            Icons.Default.Sort,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
+                                        )
+                                    },
+                                    GroupButtonModel(SortFavoritesBy.CHAPTERS) {
+                                        Icon(
+                                            Icons.Default.ReadMore,
+                                            null,
+                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
+                                        )
+                                    }
+                                )
+                            ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
+                        }
+                    )
+
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        label = {
+                            Text(
+                                context.resources.getQuantityString(
+                                    R.plurals.numFavorites,
+                                    showing.size,
+                                    showing.size
+                                )
                             )
-                        ) { Text("ALL") }
-                    }
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { searchText = "" }) {
+                                Icon(Icons.Default.Cancel, null)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                    )
 
-                    items(
-                        (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                            .groupBy { it }
-                            .toList()
-                            .sortedBy { it.first }
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
                     ) {
-                        CustomChip(
-                            modifier = Modifier.combinedClickable(
-                                onClick = { viewModel.newSource(it.first) },
-                                onLongClick = { viewModel.singleSource(it.first) }
-                            ),
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = animateColorAsState(
-                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
-                                    else M3MaterialTheme.colorScheme.surface
-                                ).value,
-                                labelColor = animateColorAsState(
-                                    if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
-                                    else M3MaterialTheme.colorScheme.onSurface
-                                ).value
-                                    .copy(alpha = ChipDefaults.ContentOpacity)
-                            ),
-                            leadingIcon = { Text("${it.second.size - 1}") }
-                        ) { Text(it.first) }
+
+                        item {
+                            CustomChip(
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { viewModel.resetSources() },
+                                    onLongClick = { viewModel.selectedSources.clear() }
+                                ),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = M3MaterialTheme.colorScheme.primary,
+                                    labelColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
+                                )
+                            ) { Text("ALL") }
+                        }
+
+                        items(
+                            (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
+                                .groupBy { it }
+                                .toList()
+                                .sortedBy { it.first }
+                        ) {
+                            CustomChip(
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { viewModel.newSource(it.first) },
+                                    onLongClick = { viewModel.singleSource(it.first) }
+                                ),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = animateColorAsState(
+                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
+                                        else M3MaterialTheme.colorScheme.surface
+                                    ).value,
+                                    labelColor = animateColorAsState(
+                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
+                                        else M3MaterialTheme.colorScheme.onSurface
+                                    ).value
+                                        .copy(alpha = ChipDefaults.ContentOpacity)
+                                ),
+                                leadingIcon = { Text("${it.second.size - 1}") }
+                            ) { Text(it.first) }
+                        }
                     }
                 }
             }
@@ -196,7 +200,8 @@ fun FavoriteUi(logo: MainLogo) {
 
         M3OtakuBannerBox(
             showBanner = showBanner,
-            placeholder = logo.logoId
+            placeholder = logo.logoId,
+            modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
         ) { itemInfo ->
             Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) { p ->
                 if (showing.isEmpty()) {
@@ -246,6 +251,7 @@ fun FavoriteUi(logo: MainLogo) {
                         contentPadding = p,
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         items(
                             showing

@@ -8,10 +8,7 @@ import android.content.IntentFilter
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -286,4 +283,20 @@ fun <T : Any> broadcastReceiverNullable(defaultValue: T?, intentFilter: IntentFi
         onDispose { context.unregisterReceiver(receiver) }
     }
     return item
+}
+
+
+@Composable
+fun Insets(
+    modifier: Modifier = Modifier,
+    insetPadding: PaddingValues = WindowInsets.statusBars.asPaddingValues(),
+    color: Color = MaterialTheme.colorScheme.primaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Surface(
+        modifier = modifier,
+        color = color,
+        contentColor = contentColor,
+    ) { Box(modifier = Modifier.padding(insetPadding), content = content) }
 }

@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -25,13 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
@@ -40,12 +39,10 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourcePublish
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
@@ -112,6 +109,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         onCreate()
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         Single.create<AppUpdate.AppUpdates> { AppUpdate.getUpdate()?.let(it::onSuccess) ?: it.onError(Throwable("Something went wrong")) }
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
@@ -123,12 +122,14 @@ abstract class BaseMainActivity : AppCompatActivity() {
             val bottomSheetNavigator = rememberBottomSheetNavigator()
             navController = rememberAnimatedNavController(bottomSheetNavigator)
 
+            val systemUiController = rememberSystemUiController()
+
             if (showNavBar) {
-                showSystemBars()
-                WindowCompat.setDecorFitsSystemWindows(window, true)
+                systemUiController.isSystemBarsVisible = true
+                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
-                hideSystemBars()
-                WindowCompat.setDecorFitsSystemWindows(window, false)
+                systemUiController.isSystemBarsVisible = false
+                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
 
             OtakuMaterialTheme(navController, genericInfo) {
@@ -141,6 +142,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
                 ) {
                     Scaffold(
+                        modifier = Modifier.navigationBarsPadding(),
                         bottomBar = {
                             Column {
                                 BottomBarAdditions()
@@ -341,36 +343,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             remember { packageManager.getPackageInfo(packageName, 0)?.versionName.orEmpty() },
             appUpdate?.update_real_version.orEmpty()
         )
-    }
-
-    private fun hideSystemBars() {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        // Configure the behavior of the hidden system bars
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        // Hide both the status bar and the navigation bar
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-    }
-
-    private fun showSystemBars() {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        // Configure the behavior of the hidden system bars
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        // Hide both the status bar and the navigation bar
-        windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-    }
-
-    class AssetParamType(val info: GenericInfo) : NavType<ItemModel>(isNullableAllowed = true) {
-        override fun get(bundle: Bundle, key: String): ItemModel? {
-            return bundle.getSerializable(key) as? ItemModel
-        }
-
-        override fun parseValue(value: String): ItemModel {
-            return value.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(info))!!
-        }
-
-        override fun put(bundle: Bundle, key: String, value: ItemModel) {
-            bundle.putSerializable(key, value)
-        }
     }
 
     override fun onProvideAssistContent(outContent: AssistContent?) {

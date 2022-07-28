@@ -7,7 +7,6 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -90,7 +89,6 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
-    ExperimentalFoundationApi::class
 )
 @Composable
 fun NotificationsScreen(
@@ -165,17 +163,19 @@ fun NotificationsScreen(
 
             }
 
-            SmallTopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
-                actions = {
-                    IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
-                    IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                }
-            )
+            Insets {
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                    actions = {
+                        IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
+                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                    }
+                )
+            }
         },
         onRemove = { item ->
             vm.deleteNotification(db, item)

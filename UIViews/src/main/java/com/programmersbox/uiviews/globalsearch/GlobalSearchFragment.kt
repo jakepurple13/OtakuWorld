@@ -115,84 +115,86 @@ fun GlobalSearchView(
         state = rememberCollapsingToolbarScaffoldState(),
         scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
         toolbar = {
-            Column(
-                modifier = Modifier
-                    .background(
-                        TopAppBarDefaults
-                            .smallTopAppBarColors()
-                            .containerColor(0f).value
+            Insets {
+                Column(
+                    modifier = Modifier
+                        .background(
+                            TopAppBarDefaults
+                                .smallTopAppBarColors()
+                                .containerColor(0f).value
+                        )
+                        .padding(5.dp)
+                ) {
+                    SmallTopAppBar(
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                        },
+                        title = { Text(stringResource(R.string.global_search)) }
                     )
-                    .padding(5.dp)
-            ) {
-                SmallTopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                    },
-                    title = { Text(stringResource(R.string.global_search)) }
-                )
-                AutoCompleteBox(
-                    items = history.asAutoCompleteEntities { _, _ -> true },
-                    trailingIcon = {
-                        androidx.compose.material3.IconButton(
-                            onClick = { scope.launch { dao.deleteHistory(it.value) } },
-                            modifier = Modifier.weight(.1f)
-                        ) { androidx.compose.material3.Icon(Icons.Default.Cancel, null) }
-                    },
-                    itemContent = {
-                        androidx.compose.material3.Text(
-                            text = it.value.searchText,
-                            style = M3MaterialTheme.typography.titleSmall,
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .weight(.9f)
-                        )
-                    },
-                    content = {
+                    AutoCompleteBox(
+                        items = history.asAutoCompleteEntities { _, _ -> true },
+                        trailingIcon = {
+                            androidx.compose.material3.IconButton(
+                                onClick = { scope.launch { dao.deleteHistory(it.value) } },
+                                modifier = Modifier.weight(.1f)
+                            ) { androidx.compose.material3.Icon(Icons.Default.Cancel, null) }
+                        },
+                        itemContent = {
+                            androidx.compose.material3.Text(
+                                text = it.value.searchText,
+                                style = M3MaterialTheme.typography.titleSmall,
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .weight(.9f)
+                            )
+                        },
+                        content = {
 
-                        boxWidthPercentage = 1f
-                        boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
+                            boxWidthPercentage = 1f
+                            boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
 
-                        onItemSelected {
-                            viewModel.searchText = it.value.searchText
-                            filter(viewModel.searchText)
-                            focusManager.clearFocus()
-                            viewModel.searchForItems()
-                        }
-
-                        androidx.compose.material3.OutlinedTextField(
-                            value = viewModel.searchText,
-                            onValueChange = {
-                                viewModel.searchText = it
-                                filter(it)
-                            },
-                            label = { Text(stringResource(id = R.string.search)) },
-                            trailingIcon = {
-                                IconButton(
-                                    onClick = {
-                                        viewModel.searchText = ""
-                                        filter("")
-                                        viewModel.searchListPublisher = emptyList()
-                                    }
-                                ) { Icon(Icons.Default.Cancel, null) }
-                            },
-                            modifier = Modifier
-                                .padding(5.dp)
-                                .fillMaxWidth()
-                                .onFocusChanged { isSearching = it.isFocused },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = {
+                            onItemSelected {
+                                viewModel.searchText = it.value.searchText
+                                filter(viewModel.searchText)
                                 focusManager.clearFocus()
-                                if (viewModel.searchText.isNotEmpty()) {
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
-                                    }
-                                }
                                 viewModel.searchForItems()
-                            })
-                        )
-                    }
-                )
+                            }
+
+                            androidx.compose.material3.OutlinedTextField(
+                                value = viewModel.searchText,
+                                onValueChange = {
+                                    viewModel.searchText = it
+                                    filter(it)
+                                },
+                                label = { Text(stringResource(id = R.string.search)) },
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.searchText = ""
+                                            filter("")
+                                            viewModel.searchListPublisher = emptyList()
+                                        }
+                                    ) { Icon(Icons.Default.Cancel, null) }
+                                },
+                                modifier = Modifier
+                                    .padding(5.dp)
+                                    .fillMaxWidth()
+                                    .onFocusChanged { isSearching = it.isFocused },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = {
+                                    focusManager.clearFocus()
+                                    if (viewModel.searchText.isNotEmpty()) {
+                                        scope.launch(Dispatchers.IO) {
+                                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                        }
+                                    }
+                                    viewModel.searchForItems()
+                                })
+                            )
+                        }
+                    )
+                }
             }
         }
     ) {
@@ -200,7 +202,8 @@ fun GlobalSearchView(
 
         M3OtakuBannerBox(
             showBanner = showBanner,
-            placeholder = mainLogo.logoId
+            placeholder = mainLogo.logoId,
+            modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
         ) { itemInfo ->
             val bottomScaffold = rememberBottomSheetScaffoldState()
             var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
@@ -226,11 +229,13 @@ fun GlobalSearchView(
                         Scaffold(
                             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                             topBar = {
-                                SmallTopAppBar(
-                                    scrollBehavior = scrollBehavior,
-                                    title = { Text(s.apiName) },
-                                    actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
-                                )
+                                Insets {
+                                    SmallTopAppBar(
+                                        scrollBehavior = scrollBehavior,
+                                        title = { Text(s.apiName) },
+                                        actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                    )
+                                }
                             }
                         ) { p ->
                             LazyVerticalGrid(

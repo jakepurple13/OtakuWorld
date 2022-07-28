@@ -107,17 +107,19 @@ fun HistoryUi(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            MediumTopAppBar(
-                scrollBehavior = scrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                },
-                title = { Text(stringResource(R.string.history)) },
-                actions = {
-                    Text("$recentSize")
-                    IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
-                }
-            )
+            Insets {
+                MediumTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                    },
+                    title = { Text(stringResource(R.string.history)) },
+                    actions = {
+                        Text("$recentSize")
+                        IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
+                    }
+                )
+            }
         }
     ) { p ->
 

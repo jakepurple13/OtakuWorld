@@ -57,7 +57,7 @@ buildscript {
     ext.jetpack = "1.3.0-alpha02"
     ext.jetpackCompiler = "1.3.0-rc01"
 
-    ext.accompanist = "0.24.13-rc"
+    ext.accompanist = "0.25.0"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
@@ -73,13 +73,13 @@ buildscript {
     // Integration with activities
     ext.composeActivity = 'androidx.activity:activity-compose:1.5.1'
     // Integration with ViewModels
-    ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0'
+    ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1'
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.14"
     ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.14"
-    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.5.3"
+    ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.6.0"
     ext.composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
     ext.composeAnimation = "androidx.compose.animation:animation:$jetpack"
     ext.materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"
@@ -94,10 +94,6 @@ buildscript {
 
     ext.swipeRefresh = "com.google.accompanist:accompanist-swiperefresh:$accompanist"
     ext.systemUiController = "com.google.accompanist:accompanist-systemuicontroller:$accompanist"
-
-    ext.inset =  "com.google.accompanist:accompanist-insets:$accompanist"
-    // If using insets-ui
-    ext.insetUi = "com.google.accompanist:accompanist-insets-ui:$accompanist"
 
     ext.datastore = "androidx.datastore:datastore:1.0.0"
     ext.datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
@@ -143,7 +139,6 @@ buildscript {
                         composeConstraintLayout, permissions,
                         materialPlaceholder, drawablePainter, uiUtil,
                         materialYou,
-                        inset, insetUi,
                         navCompose, navMaterial, navAnimation,
                         swipeRefresh, systemUiController,
                         flowLayout

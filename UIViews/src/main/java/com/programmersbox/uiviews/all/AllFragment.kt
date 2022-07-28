@@ -42,6 +42,7 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.Insets
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -91,17 +92,19 @@ fun AllView(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
         topBar = {
-            SmallTopAppBar(
-                title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                actions = {
-                    AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
-                        androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
-                            Icon(Icons.Default.ArrowUpward, null)
+            Insets {
+                SmallTopAppBar(
+                    title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                    actions = {
+                        AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
+                            androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                                Icon(Icons.Default.ArrowUpward, null)
+                            }
                         }
-                    }
-                },
-                scrollBehavior = scrollBehaviorTop
-            )
+                    },
+                    scrollBehavior = scrollBehaviorTop
+                )
+            }
         }
     ) { p1 ->
         var showBanner by remember { mutableStateOf(false) }

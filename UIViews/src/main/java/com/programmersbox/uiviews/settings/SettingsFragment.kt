@@ -119,16 +119,19 @@ fun SettingScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            SmallTopAppBar(
-                title = { Text(stringResource(R.string.settings)) },
-                scrollBehavior = scrollBehavior
-            )
+            Insets {
+                SmallTopAppBar(
+                    title = { Text(stringResource(R.string.settings)) },
+                    scrollBehavior = scrollBehavior
+                )
+            }
         }
     ) { p ->
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(p)
+                .navigationBarsPadding()
                 .padding(bottom = 10.dp)
         ) {
 

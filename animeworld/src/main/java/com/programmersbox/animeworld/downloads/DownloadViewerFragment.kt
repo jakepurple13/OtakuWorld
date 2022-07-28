@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.utils.Insets
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -106,17 +107,19 @@ fun DownloaderUi() {
         },
         onMultipleRemove = { downloadItems -> viewModel.fetch.delete(downloadItems.fastMap { it.id }) },
         topBar = {
-            SmallTopAppBar(
-                scrollBehavior = scrollBehavior,
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
-                actions = { IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) } },
-                title = {
-                    Text(
-                        stringResource(id = R.string.in_progress_downloads),
-                        style = M3MaterialTheme.typography.titleLarge
-                    )
-                }
-            )
+            Insets {
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    actions = { IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) } },
+                    title = {
+                        Text(
+                            stringResource(id = R.string.in_progress_downloads),
+                            style = M3MaterialTheme.typography.titleLarge
+                        )
+                    }
+                )
+            }
         },
         itemUi = { download ->
             ListItem(

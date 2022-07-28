@@ -48,6 +48,7 @@ import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.mangaworld.useNewReaderFlow
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.utils.Insets
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.components.PermissionRequest
@@ -83,13 +84,15 @@ fun DownloadScreen() {
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            SmallTopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = { Text(stringResource(R.string.downloaded_chapters)) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                }
-            )
+            Insets {
+                SmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(stringResource(R.string.downloaded_chapters)) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+                    }
+                )
+            }
         }
     ) { p1 ->
         PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {

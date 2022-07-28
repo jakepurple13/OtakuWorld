@@ -1,6 +1,8 @@
 package com.programmersbox.uiviews.utils.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -121,18 +123,23 @@ fun <T> BottomSheetDeleteScaffold(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
-                                else state.bottomSheetState.collapse()
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                    ) { Text(stringResource(R.string.delete_multiple)) }
+                    Column(modifier = Modifier.animateContentSize()) {
+                        AnimatedVisibility(state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
+                            Spacer(Modifier.padding(WindowInsets.statusBars.asPaddingValues()))
+                        }
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
+                                    else state.bottomSheetState.collapse()
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                        ) { Text(stringResource(R.string.delete_multiple)) }
+                    }
                 },
                 bottomBar = {
                     BottomAppBar(
