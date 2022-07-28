@@ -33,9 +33,9 @@ jobs:
       - run: echo $NOVEL_GOOGLE_SERVICES_JSON > novelworld/google-services.json
         env:
           NOVEL_GOOGLE_SERVICES_JSON: ${{ secrets.NOVEL_SERVICES }}
-      - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
-        env:
-          ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
+      #      - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
+      #        env:
+      #          ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
       - run: echo OTAKU_MANAGER_GOOGLE_SERVICES_JSON > otakumanager/google-services.json
         env:
           OTAKU_MANAGER_GOOGLE_SERVICES_JSON: ${{ secrets.OTAKU_MANAGER_SERVICES }}
@@ -115,25 +115,25 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        id: animetv_sign
-        with:
-          releaseDirectory: animeworldtv/build/outputs/apk/full/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        id: animetv_sign_no_firebase
-        with:
-          releaseDirectory: animeworldtv/build/outputs/apk/noFirebase/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      #      - uses: r0adkll/sign-android-release@v1
+      #        name: Sign app APK
+      #        id: animetv_sign
+      #        with:
+      #          releaseDirectory: animeworldtv/build/outputs/apk/full/release
+      #          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+      #          alias: ${{ secrets.ALIAS }}
+      #          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+      #          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      #
+      #      - uses: r0adkll/sign-android-release@v1
+      #        name: Sign app APK
+      #        id: animetv_sign_no_firebase
+      #        with:
+      #          releaseDirectory: animeworldtv/build/outputs/apk/noFirebase/release
+      #          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+      #          alias: ${{ secrets.ALIAS }}
+      #          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+      #          keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Clean up build artifacts
         run: |
@@ -144,7 +144,7 @@ jobs:
           cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
           cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
           cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
-          cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
+      #          cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v2
         with:
@@ -182,8 +182,8 @@ jobs:
           name: Signed Novel No Firebase App
           path: novelworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Signed AnimeTV No Firebase App
-          path: animeworldtv-no-firebase-release.apk
+#      - uses: actions/upload-artifact@v2
+#        with:
+#          name: Signed AnimeTV No Firebase App
+#          path: animeworldtv-no-firebase-release.apk
 
