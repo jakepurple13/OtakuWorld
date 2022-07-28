@@ -23,7 +23,7 @@ include(
     ":novel_sources",
     //":animeworldtv",
     ":sharedutils",
-    ":otakumanager",
+    //":otakumanager",
 )
 
 rootProject.name = "OtakuWorld"

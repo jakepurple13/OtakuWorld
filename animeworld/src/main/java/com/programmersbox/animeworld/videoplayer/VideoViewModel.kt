@@ -32,7 +32,6 @@ import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -97,6 +96,8 @@ class VideoViewModel(
 
     var videoInfo by mutableStateOf(VideoInfo(0L, 0L, 0L))
 
+    var isPlaying by mutableStateOf(false)
+
     var batteryColor by mutableStateOf(Color.White)
     var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
     var batteryPercent by mutableStateOf(0f)
@@ -105,7 +106,7 @@ class VideoViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             batteryInformation.composeSetupFlow(
-                androidx.compose.ui.graphics.Color.White
+                Color.White
             ) {
                 batteryColor = it.first
                 batteryIcon = it.second
@@ -145,8 +146,18 @@ fun ExoPlayerAttributes(exoPlayer: ExoPlayer, viewModel: VideoViewModel) {
                 delay(100)
             }
         }
-            .filter { viewModel.visibility == VideoPlayerVisibility.Visible }
             .onEach { viewModel.videoInfo = it }
+            .collect()
+    }
+
+    LaunchedEffect(exoPlayer) {
+        flow {
+            while (true) {
+                emit(exoPlayer.isPlaying)
+                delay(100)
+            }
+        }
+            .onEach { viewModel.isPlaying = it }
             .collect()
     }
 

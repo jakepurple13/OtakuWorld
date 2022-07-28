@@ -110,23 +110,25 @@ fun VideoPlayerUi() {
     val viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo, context) }
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
 
+    val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying
+
     Scaffold(
-        topBar = { VideoTopBar(viewModel, viewModel.visibility == VideoPlayerVisibility.Visible) },
+        topBar = { VideoTopBar(viewModel, overlayVisibility) },
         bottomBar = {
             VideoBottomBar(
-                visible = viewModel.visibility == VideoPlayerVisibility.Visible,
+                visible = overlayVisibility,
                 currentTime = viewModel.currentTime,
                 totalTime = viewModel.totalTime,
                 totalDuration = viewModel.videoInfo.duration,
                 currentPosition = viewModel.videoInfo.currentPosition,
-                isPlaying = viewModel.exoPlayer?.isPlaying ?: false,
+                isPlaying = viewModel.isPlaying,
                 playPauseToggle = viewModel::playPause,
                 seekTo = { viewModel.exoPlayer?.seekTo(it) },
                 rewind = viewModel::rewind,
                 fastForward = viewModel::fastForward
             )
         }
-    ) {
+    ) { p ->
         Box {
             VideoPlayer(
                 source = remember {
@@ -289,7 +291,7 @@ fun VideoBottomBar(
             color = MaterialTheme.colorScheme.surface.copy(alpha = .5f),
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp - 12.dp)
+                modifier = Modifier.padding(horizontal = 4.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -383,9 +385,7 @@ fun BottomBarPreview() {
                     fastForward = {}
                 )
             }
-        ) {
-
-        }
+        ) { Box(modifier = Modifier.padding(it)) }
     }
 }
 
@@ -420,7 +420,7 @@ fun MediaControlGestures(
             var visibilityJob: Job? = remember { null }
 
             LaunchedEffect(viewModel.visibility) {
-                if (viewModel.visibility == VideoPlayerVisibility.Visible && viewModel.exoPlayer?.isPlaying == true) {
+                if (viewModel.visibility == VideoPlayerVisibility.Visible && viewModel.isPlaying) {
                     visibilityJob?.cancel()
                     visibilityJob = scope.launch {
                         delay(2500)
