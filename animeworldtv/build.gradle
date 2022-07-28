@@ -45,6 +45,10 @@ android {
             dimension "version"
         }
     }
+
+    configurations.all {
+        resolutionStrategy.force "androidx.lifecycle:lifecycle-viewmodel:2.5.0"
+    }
 }
 
 dependencies {
