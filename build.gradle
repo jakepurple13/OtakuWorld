@@ -57,7 +57,7 @@ buildscript {
     ext.jetpack = "1.3.0-alpha02"
     ext.jetpackCompiler = "1.3.0-rc01"
 
-    ext.accompanist = "0.24.13-rc"
+    ext.accompanist = "0.25.0"
 
     ext.composeUi = "androidx.compose.ui:ui:$jetpack"
     // Tooling support (Previews, etc.)
