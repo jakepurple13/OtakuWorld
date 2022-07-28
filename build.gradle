@@ -71,7 +71,7 @@ buildscript {
     ext.composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"
     ext.composeMaterialIconsExtended = "androidx.compose.material:material-icons-extended:$jetpack"
     // Integration with activities
-    ext.composeActivity = 'androidx.activity:activity-compose:1.5.0'
+    ext.composeActivity = 'androidx.activity:activity-compose:1.5.1'
     // Integration with ViewModels
     ext.composeLifecycle = 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0'
     // Integration with observables
