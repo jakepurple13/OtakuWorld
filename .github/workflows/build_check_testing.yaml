@@ -7,13 +7,6 @@ on:
   #    - develop
   #  paths-ignore:
   #    - '.github/**'
-  pull_request:
-    types: [ assigned, opened, synchronize, reopened ]
-    branches:
-      - develop
-      - master
-    paths-ignore:
-      - '.github/**'
   workflow_dispatch:
     inputs:
       build_animeworld:
@@ -67,8 +60,9 @@ jobs:
       #          dependencies-cache-enabled: true
       #          configuration-cache-enabled: true
       #          arguments: assembleRelease
-      - name: Build all artifacts
-        id: buildAllApks
+      - if: github.event.inputs.build_mangaworld == 'true'
+        name: Build MangaWorld artifacts
+        id: buildMangaApks
         uses: eskatos/gradle-command-action@v1.3.3
         with:
           gradle-version: current
@@ -76,6 +70,39 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
           arguments: mangaworld:assembleRelease
+
+      - if: github.event.inputs.animeworld == 'true'
+        name: Build AnimeWorld artifacts
+        id: buildAnimeApks
+        uses: eskatos/gradle-command-action@v1.3.3
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: animeworld:assembleRelease
+
+      - if: github.event.inputs.animeworld == 'true'
+        name: Build AnimeWorldTV artifacts
+        id: buildAnimeTvApks
+        uses: eskatos/gradle-command-action@v1.3.3
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: animeworldtv:assembleRelease
+
+      - if: github.event.inputs.novelworld == 'true'
+        name: Build NovelWorld artifacts
+        id: buildNovelApks
+        uses: eskatos/gradle-command-action@v1.3.3
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: novelworld:assembleRelease
 
       - if: github.event.inputs.build_mangaworld == 'true'
         uses: r0adkll/sign-android-release@v1
@@ -165,16 +192,36 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Clean up build artifacts
+      #      - name: Clean up build artifacts
+      #        run: |
+      #          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+      #          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
+      #          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
+      #          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
+      #          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
+      #          cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
+      #          cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
+      #          cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
+
+      - if: github.event.inputs.build_mangaworld == 'true'
+        name: Clean up MangaWorld artifacts
         run: |
           cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
-          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
-          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
           cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
+
+      - if: github.event.inputs.build_animeworld == 'true'
+        name: Clean up AnimeWorld artifacts
+        run: |
+          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
           cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
-          cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
           cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
+
+      - if: github.event.inputs.novelworld == 'true'
+        name: Clean up NovelWorld artifacts
+        run: |
+          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
+          cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v2
         with:
@@ -195,7 +242,6 @@ jobs:
         with:
           name: Signed AnimeTV App
           path: animeworldtv-release.apk
-
 
       - uses: actions/upload-artifact@v2
         with:
