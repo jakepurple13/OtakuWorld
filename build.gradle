@@ -43,12 +43,11 @@ buildscript {
 
     ext.nav_version = '2.5.1'
 
-    def koin_version = "3.0.2"
+    def koin_version = "3.2.0"
 
     // Koin main features for Android (Scope,ViewModel ...)
     ext.koinAndroid = "io.insert-koin:koin-android:$koin_version"
-    // Koin Android - experimental builder extensions
-    ext.koinAndroidExt = "io.insert-koin:koin-android-ext:$koin_version"
+    ext.koinCompose = "io.insert-koin:koin-androidx-compose:$koin_version"
 
     ext.lottieVersion = '5.2.0'
 
@@ -128,7 +127,7 @@ buildscript {
 
         okhttp = [okhttp: [okhttpLib, okhttpDns]]
 
-        koin = [koin: [koinAndroid, koinAndroidExt]]
+        koin = [koin: [koinAndroid, koinCompose]]
 
         compose = [
                 compose: [
