@@ -706,6 +706,7 @@ private fun getScreenBrightness(context: Context): Int {
     return nowBrightnessValue
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 suspend fun PointerInputScope.detectMediaPlayerGesture(
     onTap: (Offset) -> Unit,
     onDoubleTap: (Offset) -> Unit,

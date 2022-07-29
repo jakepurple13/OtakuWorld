@@ -71,7 +71,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: mangaworld:assembleRelease
 
-      - if: github.event.inputs.animeworld == 'true'
+      - if: github.event.inputs.build_animeworld == 'true'
         name: Build AnimeWorld artifacts
         id: buildAnimeApks
         uses: eskatos/gradle-command-action@v1.3.3
@@ -82,7 +82,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworld:assembleRelease
 
-      - if: github.event.inputs.animeworld == 'true'
+      - if: github.event.inputs.build_animeworld == 'true'
         name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
         uses: eskatos/gradle-command-action@v1.3.3
@@ -93,7 +93,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworldtv:assembleRelease
 
-      - if: github.event.inputs.novelworld == 'true'
+      - if: github.event.inputs.build_novelworld == 'true'
         name: Build NovelWorld artifacts
         id: buildNovelApks
         uses: eskatos/gradle-command-action@v1.3.3
@@ -217,7 +217,7 @@ jobs:
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
           cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
 
-      - if: github.event.inputs.novelworld == 'true'
+      - if: github.event.inputs.build_novelworld == 'true'
         name: Clean up NovelWorld artifacts
         run: |
           cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
