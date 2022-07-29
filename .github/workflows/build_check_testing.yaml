@@ -13,6 +13,10 @@ on:
         description: 'Build AnimeWorld?'
         required: false
         default: 'true'
+      build_animeworldtv:
+        description: 'Build AnimeWorldTV?'
+        required: false
+        default: 'true'
       build_mangaworld:
         description: 'Build MangaWorld?'
         required: false
@@ -82,7 +86,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworld:assembleRelease
 
-      - if: github.event.inputs.build_animeworld == 'true'
+      - if: github.event.inputs.build_animeworldtv == 'true'
         name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
         uses: eskatos/gradle-command-action@v1.3.3
@@ -170,7 +174,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworld == 'true'
+      - if: github.event.inputs.build_animeworldtv == 'true'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: animetv_sign
@@ -181,7 +185,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworld == 'true'
+      - if: github.event.inputs.build_animeworldtv == 'true'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: animetv_sign_no_firebase
@@ -214,6 +218,12 @@ jobs:
         run: |
           cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
           cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
+          cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
+          cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
+
+      - if: github.event.inputs.build_animeworldtv == 'true'
+        name: Clean up AnimeWorldTV artifacts
+        run: |
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
           cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
 
