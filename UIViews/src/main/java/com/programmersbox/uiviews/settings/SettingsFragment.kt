@@ -426,7 +426,7 @@ private fun AboutSettings(
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
                     val work = WorkManager.getInstance(context)
-                    work.cancelUniqueWork("updateChecks")
+                    work.cancelUniqueWork("updateFlowChecks")
                     work.pruneWork()
                     OtakuApp.updateSetup(context)
                     Toast
