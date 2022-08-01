@@ -120,7 +120,7 @@ abstract class OtakuApp : Application() {
             //if (context.shouldCheck) {
             if (check) {
                 work.enqueueUniquePeriodicWork(
-                    "updateChecks",
+                    "updateFlowChecks",
                     ExistingPeriodicWorkPolicy.KEEP,
                     PeriodicWorkRequestBuilder<UpdateFlowWorker>(
                         1, TimeUnit.HOURS,
@@ -135,7 +135,7 @@ abstract class OtakuApp : Application() {
                         .build()
                 ).state.observeForever { println(it) }
             } else {
-                work.cancelUniqueWork("updateChecks")
+                work.cancelUniqueWork("updateFlowChecks")
                 work.pruneWork()
             }
         }
