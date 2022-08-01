@@ -65,15 +65,15 @@ interface ApiService : Serializable {
     val canScrollAll: Boolean get() = canScroll
     val canPlay: Boolean get() = true
     val canDownload: Boolean get() = true
-    fun getRecent(page: Int = 1): Single<List<ItemModel>>
+    fun getRecent(page: Int = 1): Single<List<ItemModel>> = Single.just(emptyList())
     fun getRecentFlow(page: Int = 1): Flow<List<ItemModel>> = flow { emit(recent(page)) }.dispatchIo()
     suspend fun recent(page: Int): List<ItemModel> = emptyList()
 
-    fun getList(page: Int = 1): Single<List<ItemModel>>
+    fun getList(page: Int = 1): Single<List<ItemModel>> = Single.just(emptyList())
     fun getListFlow(page: Int = 1): Flow<List<ItemModel>> = flow { emit(allList(page)) }.dispatchIo()
     suspend fun allList(page: Int): List<ItemModel> = emptyList()
 
-    fun getItemInfo(model: ItemModel): Single<InfoModel>
+    fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.never()
     fun getItemInfoFlow(model: ItemModel): Flow<Result<InfoModel>> = flow {
         emit(
             try {
@@ -107,7 +107,7 @@ interface ApiService : Serializable {
             emitAll(flow { emit(list.filter { it.title.contains(searchText, true) }) })
         }
 
-    fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>>
+    fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.just(emptyList())
     fun getChapterInfoFlow(chapterModel: ChapterModel): Flow<List<Storage>> = flow { emit(chapterInfo(chapterModel)) }.dispatchIo()
     suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> = emptyList()
 
