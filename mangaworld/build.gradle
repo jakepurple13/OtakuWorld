@@ -93,6 +93,8 @@ dependencies {
 
     implementation 'com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0'
 
+    implementation "xyz.quaver:subsampledimage:0.0.1-alpha22-SNAPSHOT"
+
     implementation "com.mikepenz:iconics-core:5.2.8"
     implementation 'com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar'
 
@@ -112,7 +114,6 @@ dependencies {
     implementation compose.compose
     implementation "com.google.accompanist:accompanist-pager:$accompanist"
     implementation "com.google.accompanist:accompanist-swiperefresh:$accompanist"
-    implementation "xyz.quaver:subsampledimage:0.0.1-alpha10-SNAPSHOT"
     implementation "io.coil-kt:coil-gif:$coil"
 
     implementation datastore.datastore
