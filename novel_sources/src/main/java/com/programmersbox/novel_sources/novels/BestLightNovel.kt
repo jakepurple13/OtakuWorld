@@ -116,5 +116,4 @@ object BestLightNovel : ApiService {
             imageUrl = doc.select(".info_image img").attr("abs:src")
         )
     }
-
 }

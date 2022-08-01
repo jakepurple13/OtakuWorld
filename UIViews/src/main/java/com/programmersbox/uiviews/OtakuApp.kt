@@ -122,7 +122,7 @@ abstract class OtakuApp : Application() {
                 work.enqueueUniquePeriodicWork(
                     "updateChecks",
                     ExistingPeriodicWorkPolicy.KEEP,
-                    PeriodicWorkRequestBuilder<UpdateWorker>(
+                    PeriodicWorkRequestBuilder<UpdateFlowWorker>(
                         1, TimeUnit.HOURS,
                         5, TimeUnit.MINUTES
                     )

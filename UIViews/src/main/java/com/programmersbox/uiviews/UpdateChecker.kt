@@ -13,6 +13,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.navigation.NavDeepLinkBuilder
+import androidx.work.CoroutineWorker
 import androidx.work.RxWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.favoritesdatabase.*
@@ -26,7 +27,10 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
@@ -54,8 +58,6 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                     pendingIntent { context ->
                         NavDeepLinkBuilder(context)
                             .setDestination(Screen.SettingsScreen.route)
-                            //.setGraph(R.navigation.setting_nav)
-                            //.setDestination(R.id.settingsFragment)
                             .createPendingIntent()
                     }
 
@@ -72,107 +74,84 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
         .timeout(1, TimeUnit.MINUTES)
         .onErrorReturn { Result.success() }
 
-
 }
 
-class UpdateWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
+class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), KoinComponent {
 
     private val update by lazy { UpdateNotification(this.applicationContext) }
-    private val dao by lazy { ItemDatabase.getInstance(this@UpdateWorker.applicationContext).itemDao() }
-
-    /*override fun startWork(): ListenableFuture<Result> {
-        update.sendRunningNotification(100, 0, "Starting check")
-        return super.startWork()
-    }*/
+    private val dao by lazy { ItemDatabase.getInstance(this@UpdateFlowWorker.applicationContext).itemDao() }
 
     private val genericInfo: GenericInfo by inject()
 
-    override fun createWork(): Single<Result> {
-        update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
-        Loged.fd("Starting check here")
-        applicationContext.lastUpdateCheck = System.currentTimeMillis()
-        applicationContext.lastUpdateCheck?.let { updateCheckPublish.onNext(it) }
-        return Single.create<List<DbModel>> { emitter ->
+    override suspend fun doWork(): Result {
+        return try {
+            update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
+            Loged.fd("Starting check here")
+            applicationContext.lastUpdateCheck = System.currentTimeMillis()
+            applicationContext.lastUpdateCheck?.let { updateCheckPublish.onNext(it) }
+
             Loged.fd("Start")
             val list = listOf(
                 dao.getAllFavoritesSync(),
                 FirebaseDb.getAllShows().requireNoNulls()
             ).flatten().groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! }
-            //applicationContext.dbAndFireMangaSync3(dao)
-            /*val sourceList = Sources.getUpdateSearches()
-                .filter { s -> list.any { m -> m.source == s } }
-                .flatMap { m -> m.getManga() }*/
 
+            // Getting all recent updates
             val newList = list.intersect(
-                //sourcesList
                 genericInfo.sourceList()
                     .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
                     .mapNotNull { m ->
                         try {
-                            m.getRecent()
-                                .timeout(10, TimeUnit.SECONDS)
-                                .onErrorReturnItem(emptyList())
-                                .blockingGet()
+                            withTimeoutOrNull(10000) {
+                                m.getRecentFlow()
+                                    .catch { emit(emptyList()) }
+                                    .firstOrNull()
+                            }
                         } catch (e: Exception) {
                             e.printStackTrace()
                             null
                         }
                     }.flatten()
             ) { o, n -> o.url == n.url }
-            emitter.onSuccess(newList.distinctBy { it.url })
-        }
-            .map { list ->
-                Loged.fd("Map1")
-                /*val loadMarkersJob: AtomicReference<Job?> = AtomicReference(null)
-                fun methodReturningJob() = GlobalScope.launch {
-                    println("Before Delay")
-                    delay(30000)
-                    println("After Delay")
-                    throw Exception("Finished")
-                }*/
-                list.mapIndexedNotNull { index, model ->
-                    update.sendRunningNotification(list.size, index, model.title)
-                    try {
-                        //loadMarkersJob.getAndSet(methodReturningJob())?.cancel()
-                        //val newData = sourceFromString(model.source)?.let { model.toItemModel(it).toInfoModel().blockingGet() }
-                        val newData = genericInfo.toSource(model.source)
-                            ?.let {
-                                model.toItemModel(it).toInfoModel()
-                                    .timeout(30, TimeUnit.SECONDS)
-                                    .blockingGet()
+                .distinctBy { it.url }
+
+            // Checking if any have updates
+            Loged.fd("Checking for updates")
+            val items = newList.mapIndexedNotNull { index, model ->
+                update.sendRunningNotification(newList.size, index, model.title)
+                try {
+                    val newData = genericInfo.toSource(model.source)
+                        ?.let {
+                            withTimeoutOrNull(10000) {
+                                model.toItemModel(it).toInfoModelFlow()
+                                    .firstOrNull()
+                                    ?.getOrNull()
                             }
-                        println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
-                        if (model.numChapters >= newData?.chapters?.size ?: -1) null
-                        else Pair(newData, model)
-                    } catch (e: Exception) {
-                        //e.crashlyticsLog(model.title, "manga_load_error")
-                        e.printStackTrace()
-                        null
-                    }
-                }.also {
-                    try {
-                        //loadMarkersJob.get()?.cancel()
-                    } catch (ignored: Exception) {
-                    }
+                        }
+                    println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
+                    if (model.numChapters >= (newData?.chapters?.size ?: -1)) null
+                    else Pair(newData, model)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null
+                }
+            }.also {
+                try {
+                } catch (ignored: Exception) {
                 }
             }
-            .map {
-                update.updateManga(dao, it)
-                update.mapDbModel(dao, it, genericInfo)
-            }
-            .map { update.onEnd(it, info = genericInfo).also { Loged.fd("Finished!") } }
-            .map {
-                update.sendFinishedNotification()
-                Result.success()
-            }
-            .timeout(5, TimeUnit.MINUTES)
-            .onErrorReturn {
-                println(it)
-                update.sendFinishedNotification()
-                Result.success()
-            }
-    }
 
+            // Saving updates
+            update.updateManga(dao, items)
+            update.onEnd(update.mapDbModel(dao, items, genericInfo), info = genericInfo)
+            Loged.fd("Finished!")
+
+            Result.success()
+        } finally {
+            update.sendFinishedNotification()
+            Result.success()
+        }
+    }
 }
 
 class UpdateNotification(private val context: Context) : KoinComponent {

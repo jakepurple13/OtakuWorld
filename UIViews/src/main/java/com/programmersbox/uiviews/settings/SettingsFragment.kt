@@ -57,7 +57,7 @@ import com.programmersbox.sharedutils.appUpdateCheck
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.UpdateWorker
+import com.programmersbox.uiviews.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.ListBottomSheet
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
@@ -363,7 +363,7 @@ private fun AboutSettings(
                 .enqueueUniqueWork(
                     "oneTimeUpdate",
                     ExistingWorkPolicy.KEEP,
-                    OneTimeWorkRequestBuilder<UpdateWorker>()
+                    OneTimeWorkRequestBuilder<UpdateFlowWorker>()
                         .setConstraints(
                             Constraints.Builder()
                                 .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
