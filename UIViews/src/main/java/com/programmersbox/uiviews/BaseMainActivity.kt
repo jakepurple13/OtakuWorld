@@ -319,21 +319,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 }
             }
         }
-
-        /*intent.data?.let {
-            if (URLUtil.isValidUrl(it.toString())) {
-                currentService?.let { it1 ->
-                    genericInfo.toSource(it1)?.getSourceByUrl(it.toString())
-                        ?.subscribeOn(Schedulers.io())
-                        ?.observeOn(AndroidSchedulers.mainThread())
-                        ?.subscribeBy { it2 ->
-                            currentNavController?.value?.navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it2))
-                        }
-                        ?.addTo(disposable)
-                }
-            }
-        }*/
-
     }
 
     @Composable
@@ -351,10 +336,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
         outContent?.webUri = Uri.parse(currentDetailsUrl)
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        //setupBottomNavBar()
-    }
 
     enum class Screen(val route: SScreen) { RECENT(SScreen.RecentScreen), ALL(SScreen.AllScreen), SETTINGS(SScreen.SettingsScreen) }
 
@@ -371,12 +352,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        if (isNavInitialized()) {
-            navController.handleDeepLink(intent)
-            newIntent(intent)
-        }
+        if (isNavInitialized()) navController.handleDeepLink(intent)
     }
-
-    protected fun newIntent(intent: Intent?) = Unit
 
 }

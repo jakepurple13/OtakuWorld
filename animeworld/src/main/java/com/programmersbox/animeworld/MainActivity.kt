@@ -1,7 +1,5 @@
 package com.programmersbox.animeworld
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import com.programmersbox.anime_sources.Sources
@@ -44,23 +42,6 @@ class MainActivity : BaseMainActivity() {
     override fun BottomBarAdditions() {
         //TODO: get it working with the minicontroller fragment in play
         if (cast.isCastActive()) AndroidViewBinding(MiniControllerBinding::inflate)
-    }
-
-    private fun openDownloads(intent: Intent?) {
-        goToScreen(Screen.SETTINGS)
-        if (isNavInitialized()) navController.handleDeepLink(intent)
-    }
-
-    private fun openVideos(intent: Intent?) {
-        goToScreen(Screen.SETTINGS)
-        if (isNavInitialized()) navController.handleDeepLink(intent)
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-        when (intent?.data) {
-            Uri.parse(VIEW_DOWNLOADS) -> openDownloads(intent)
-            Uri.parse(VIEW_VIDEOS) -> openVideos(intent)
-        }
     }
 
 }
