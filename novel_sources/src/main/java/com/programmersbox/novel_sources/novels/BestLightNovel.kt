@@ -90,11 +90,30 @@ object BestLightNovel : ApiService {
     }
 
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
-        return super.search(searchText, page, list)
+        val doc = Jsoup.connect("$baseUrl/search_novels/$searchText").get()
+            .select("div.update_item.list_category")
+            .map {
+                ItemModel(
+                    title = it.select("h3 > a").text(),
+                    description = "",
+                    url = it.select("h3 > a").attr("abs:href"),
+                    imageUrl = it.select("img").attr("abs:src"),
+                    source = Sources.BEST_LIGHT_NOVEL
+                )
+            }
+        return doc
     }
 
     override suspend fun sourceByUrl(url: String): ItemModel {
-        return super.sourceByUrl(url)
+        val doc = url.toJsoup()
+
+        return ItemModel(
+            source = Sources.BEST_LIGHT_NOVEL,
+            url = url,
+            title = doc.select(".truyen_info_right h1").text().trim(),
+            description = doc.select("div#noidungm").text(),
+            imageUrl = doc.select(".info_image img").attr("abs:src")
+        )
     }
 
 }
