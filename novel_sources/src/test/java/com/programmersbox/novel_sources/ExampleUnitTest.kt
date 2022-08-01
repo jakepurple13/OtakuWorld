@@ -4,7 +4,6 @@ import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.novel_sources.novels.BestLightNovel
 import com.programmersbox.novel_sources.novels.WuxiaWorld
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -20,6 +19,8 @@ class ExampleUnitTest {
     @Test
     fun bestlightnovelTest() = runBlocking {
 
+        println(BestLightNovel.baseUrl.toJsoup())
+        /*
         val f = BestLightNovel.getRecentFlow(1).first().first()
         println(f)
 
@@ -27,7 +28,7 @@ class ExampleUnitTest {
         println(f1.imageUrl)
 
         val f2 = f1.chapters.first().getChapterInfoFlow().first().first().link
-        println(f2)
+        println(f2)*/
 
     }
 

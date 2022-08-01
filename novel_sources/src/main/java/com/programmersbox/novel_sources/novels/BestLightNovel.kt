@@ -10,6 +10,7 @@ object BestLightNovel : ApiService {
     override val baseUrl: String get() = "https://bestlightnovel.com"
 
     override val canDownload: Boolean get() = false
+    override val canScroll: Boolean get() = true
 
     override val serviceName: String get() = "BEST_LIGHT_NOVEL"
 
