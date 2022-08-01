@@ -5,7 +5,6 @@ import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Environment
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -435,7 +434,7 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            "${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            deepLinkDetailsUri(itemModel),
             context,
             MainActivity::class.java
         )
@@ -449,7 +448,7 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun deepLinkSettings(context: Context): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            Screen.NotificationScreen.route.toUri(),
+            deepLinkSettingsUri(),
             context,
             MainActivity::class.java
         )

@@ -236,6 +236,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.SettingsScreen.route,
+                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.SettingsScreen.route }),
                                 //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Start) },
                                 //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.End) },
                             ) {

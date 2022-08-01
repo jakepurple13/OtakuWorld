@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.TaskStackBuilder
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
@@ -70,7 +69,6 @@ import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.*
@@ -577,7 +575,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            deepLinkDetailsUri(itemModel),
             context,
             MainActivity::class.java
         )
@@ -591,7 +589,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun deepLinkSettings(context: Context): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            "$deepLinkUri${Screen.NotificationScreen.route}".toUri(),
+            deepLinkSettingsUri(),
             context,
             MainActivity::class.java
         )

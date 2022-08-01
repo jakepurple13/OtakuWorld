@@ -50,12 +50,12 @@ import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -254,20 +254,21 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() },
             ) {
-                info.toSource(item.source)
-                    ?.getSourceByUrl(item.url)
-                    ?.subscribeOn(Schedulers.io())
-                    ?.observeOn(AndroidSchedulers.mainThread())
-                    ?.doOnError {
-                        showLoadingDialog = false
-                        context?.showErrorToast()
-                    }
-                    ?.doOnSubscribe { showLoadingDialog = true }
-                    ?.subscribeBy { m ->
-                        showLoadingDialog = false
-                        navController.navigateToDetails(m)
-                    }
-                    ?.addTo(hm.disposable)
+                scope.launch {
+                    info.toSource(item.source)
+                        ?.getSourceByUrlFlow(item.url)
+                        ?.dispatchIo()
+                        ?.onStart { showLoadingDialog = true }
+                        ?.catch {
+                            showLoadingDialog = false
+                            context.showErrorToast()
+                        }
+                        ?.onEach { m ->
+                            showLoadingDialog = false
+                            navController.navigateToDetails(m)
+                        }
+                        ?.collect()
+                }
             }
         ) {
             ListItem(
@@ -296,12 +297,21 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
                         IconButton(onClick = { showPopup = true }) { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
                         IconButton(
                             onClick = {
-                                info.toSource(item.source)
-                                    ?.getSourceByUrl(item.url)
-                                    ?.subscribeOn(Schedulers.io())
-                                    ?.observeOn(AndroidSchedulers.mainThread())
-                                    ?.subscribeBy { m -> navController.navigateToDetails(m) }
-                                    ?.addTo(hm.disposable)
+                                scope.launch {
+                                    info.toSource(item.source)
+                                        ?.getSourceByUrlFlow(item.url)
+                                        ?.dispatchIo()
+                                        ?.onStart { showLoadingDialog = true }
+                                        ?.catch {
+                                            showLoadingDialog = false
+                                            context.showErrorToast()
+                                        }
+                                        ?.onEach { m ->
+                                            showLoadingDialog = false
+                                            navController.navigateToDetails(m)
+                                        }
+                                        ?.collect()
+                                }
                             }
                         ) { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }
                     }

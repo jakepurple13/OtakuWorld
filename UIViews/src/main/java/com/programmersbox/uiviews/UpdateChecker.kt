@@ -30,6 +30,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -383,22 +384,13 @@ object SavedNotifications {
                 PendingIntent.getBroadcast(context, n.id, intent1, 0)
             }*/
             pendingIntent { context ->
-                val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
-                    ?.getSourceByUrl(n.url)
-                    ?.onErrorReturn { null }
-                    ?.blockingGet()
+                runBlocking {
+                    val itemModel = info.toSource(n.source)
+                        ?.getSourceByUrlFlow(n.url)
+                        ?.firstOrNull()
 
-                info.deepLinkDetails(context, itemModel)
-
-                /*NavDeepLinkBuilder(context)
-                    .setDestination(
-                        Screen.DetailsScreen.route,
-                        Bundle().apply { putSerializable("itemInfo", itemModel) }
-                    )
-                    //.setGraph(R.navigation.recent_nav)
-                    //.setDestination(R.id.detailsFragment2)
-                    //.setArguments(Bundle().apply { putSerializable("itemInfo", itemModel) })
-                    .createPendingIntent()*/
+                    info.deepLinkDetails(context, itemModel)
+                }
             }
         })
             .let { update.onEnd(listOf(it), info = info) }
@@ -453,12 +445,13 @@ object SavedNotifications {
                             PendingIntent.getBroadcast(context, n.id, intent1, 0)
                         }*/
                         pendingIntent { context ->
-                            val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
-                                ?.getSourceByUrl(n.url)
-                                ?.onErrorReturn { null }
-                                ?.blockingGet()
+                            runBlocking {
+                                val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
+                                    ?.getSourceByUrlFlow(n.url)
+                                    ?.firstOrNull()
 
-                            info.deepLinkDetails(context, itemModel)
+                                info.deepLinkDetails(context, itemModel)
+                            }
                         }
                     }
                 }
