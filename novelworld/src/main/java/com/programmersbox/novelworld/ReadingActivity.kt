@@ -48,6 +48,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -70,14 +71,12 @@ import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import io.reactivex.Completable
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -86,13 +85,10 @@ class ReadViewModel(
     activity: ComponentActivity,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
-    val model: Single<List<String>>? = handle.get<String>("currentChapter")
+    model: Flow<List<String>>? = handle.get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-        ?.getChapterInfo()
+        ?.getChapterInfoFlow()
         ?.map { it.mapNotNull(Storage::link) }
-        ?.subscribeOn(Schedulers.io())
-        ?.observeOn(AndroidSchedulers.mainThread())
-        ?.doOnError { Toast.makeText(activity, it.localizedMessage, Toast.LENGTH_SHORT).show() }
 ) : ViewModel() {
 
     companion object {
@@ -133,22 +129,24 @@ class ReadViewModel(
 
     val batteryInformation by lazy { BatteryInformation(activity) }
 
+    val pageList = mutableStateOf("")
+    val isLoadingPages = mutableStateOf(false)
+
     init {
-        batteryInformation.composeSetup(
-            disposable,
-            androidx.compose.ui.graphics.Color.White
-        ) {
-            batteryColor = it.first
-            batteryIcon = it.second
+        viewModelScope.launch(Dispatchers.IO) {
+            batteryInformation.composeSetupFlow(
+                androidx.compose.ui.graphics.Color.White
+            ) {
+                batteryColor = it.first
+                batteryIcon = it.second
+            }
         }
 
         val url = handle.get<String>("novelUrl") ?: ""
         currentChapter = list.indexOfFirst { l -> l.url == url }
-    }
 
-    val pageList = mutableStateOf("")
-    var isLoadingPages = mutableStateOf(false)
-        private set
+        loadPages(model)
+    }
 
     fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
         currentChapter = newChapter
@@ -165,14 +163,22 @@ class ReadViewModel(
                 .subscribe(chapter)
                 .addTo(disposable)
 
-            item
-                .getChapterInfo()
-                .map { it.mapNotNull(Storage::link) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { pageList.value = "" }
-                .subscribeBy { pages: List<String> -> pageList.value = pages.firstOrNull().orEmpty() }
-                .addTo(disposable)
+            loadPages(item.getChapterInfoFlow().mapNotNull { it.mapNotNull { it.link } })
+        }
+    }
+
+    fun loadPages(modelPath: Flow<List<String>>?) {
+        viewModelScope.launch {
+            modelPath
+                ?.onStart {
+                    pageList.value = ""
+                    isLoadingPages.value = true
+                }
+                ?.onEach {
+                    pageList.value = it.firstOrNull().orEmpty()
+                    isLoadingPages.value = false
+                }
+                ?.collect()
         }
     }
 
@@ -205,8 +211,6 @@ fun NovelReader() {
     val activity = LocalActivity.current
     val context = LocalContext.current
     val readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
-
-    LaunchedEffect(Unit) { loadPages(readVm, readVm.model) }
 
     DisposableEffect(context) {
         val batteryInfo = context.battery {
@@ -381,13 +385,10 @@ fun NovelReader() {
             SwipeRefresh(
                 state = swipeState,
                 onRefresh = {
-                    loadPages(
-                        readVm,
+                    readVm.loadPages(
                         readVm.list.getOrNull(readVm.currentChapter)
-                            ?.getChapterInfo()
+                            ?.getChapterInfoFlow()
                             ?.map { it.mapNotNull(Storage::link) }
-                            ?.subscribeOn(Schedulers.io())
-                            ?.observeOn(AndroidSchedulers.mainThread())
                     )
                 },
                 indicatorPadding = p
@@ -641,19 +642,6 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
             style = M3MaterialTheme.typography.bodyLarge
         )
     }
-}
-
-private fun loadPages(viewModel: ReadViewModel, modelPath: Single<List<String>>?) {
-    modelPath
-        ?.doOnSubscribe {
-            viewModel.isLoadingPages.value = true
-            viewModel.pageList.value = ""
-        }
-        ?.subscribeBy {
-            viewModel.pageList.value = it.firstOrNull().orEmpty()
-            viewModel.isLoadingPages.value = false
-        }
-        ?.addTo(viewModel.disposable)
 }
 
 @Composable

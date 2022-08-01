@@ -2,7 +2,9 @@ package com.programmersbox.novel_sources
 
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getJsonApi
+import com.programmersbox.novel_sources.novels.BestLightNovel
 import com.programmersbox.novel_sources.novels.WuxiaWorld
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -14,6 +16,20 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun bestlightnovelTest() = runBlocking {
+
+        val f = BestLightNovel.getRecentFlow(1).first().first()
+        println(f)
+
+        val f1 = f.toInfoModelFlow().first().getOrThrow()
+        println(f1.imageUrl)
+
+        val f2 = f1.chapters.first().getChapterInfoFlow().first().first().link
+        println(f2)
+
+    }
 
     @Test
     fun novelTest2() = runBlocking {
