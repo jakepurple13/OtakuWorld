@@ -9,7 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -36,8 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
@@ -220,26 +217,10 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
 
         var showLoadingDialog by remember { mutableStateOf(false) }
 
-        if (showLoadingDialog) {
-            Dialog(
-                onDismissRequest = { showLoadingDialog = false },
-                DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .background(M3MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
-                ) {
-                    Column {
-                        androidx.compose.material3.CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                        Text(text = stringResource(id = R.string.loading), Modifier.align(Alignment.CenterHorizontally))
-                    }
-                }
-            }
-        }
+        LoadingDialog(
+            showLoadingDialog = showLoadingDialog,
+            onDismissRequest = { showLoadingDialog = false }
+        )
 
         val context = LocalContext.current
         val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }

@@ -7,14 +7,17 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -28,9 +31,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.window.layout.WindowMetricsCalculator
+import com.programmersbox.uiviews.R
 import kotlin.properties.Delegates
 
 fun Int.toComposeColor() = Color(this)
@@ -299,4 +306,31 @@ fun Insets(
         color = color,
         contentColor = contentColor,
     ) { Box(modifier = Modifier.padding(insetPadding), content = content) }
+}
+
+@Composable
+fun LoadingDialog(
+    showLoadingDialog: Boolean,
+    onDismissRequest: () -> Unit
+) {
+    if (showLoadingDialog) {
+        Dialog(
+            onDismissRequest = onDismissRequest,
+            DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
+            ) {
+                Column {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Text(text = stringResource(id = R.string.loading), Modifier.align(Alignment.CenterHorizontally))
+                }
+            }
+        }
+    }
 }

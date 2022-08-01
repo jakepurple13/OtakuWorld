@@ -71,10 +71,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -300,7 +297,6 @@ private fun NotificationItem(
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
-
         val onDismiss = { showPopup = false }
 
         AlertDialog(
@@ -316,8 +312,14 @@ private fun NotificationItem(
             },
             dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
         )
-
     }
+
+    var showLoadingDialog by remember { mutableStateOf(false) }
+
+    LoadingDialog(
+        showLoadingDialog = showLoadingDialog,
+        onDismissRequest = { showLoadingDialog = false }
+    )
 
     val dismissState = rememberDismissState(
         confirmStateChange = {
@@ -391,7 +393,11 @@ private fun NotificationItem(
                                 } ?: source.getSourceByUrlFlow(item.url)
                             }
                             ?.dispatchIo()
-                            ?.onEach { navController.navigateToDetails(it) }
+                            ?.onStart { showLoadingDialog = true }
+                            ?.onEach {
+                                showLoadingDialog = false
+                                navController.navigateToDetails(it)
+                            }
                             ?.collect()
                     }
                 }
