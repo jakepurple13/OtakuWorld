@@ -116,6 +116,7 @@ abstract class OtakuApp : Application() {
 
         fun updateSetupNow(context: Context, check: Boolean) {
             val work = WorkManager.getInstance(context)
+            work.cancelUniqueWork("updateChecks")
             //work.cancelAllWork()
             //if (context.shouldCheck) {
             if (check) {
