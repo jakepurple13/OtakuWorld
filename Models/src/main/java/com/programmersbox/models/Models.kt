@@ -1,7 +1,6 @@
 package com.programmersbox.models
 
 import io.reactivex.Single
-import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import java.io.Serializable
@@ -111,10 +110,6 @@ interface ApiService : Serializable {
     fun getChapterInfoFlow(chapterModel: ChapterModel): Flow<List<Storage>> = flow { emit(chapterInfo(chapterModel)) }.dispatchIo()
     suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> = emptyList()
 
-    fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        it.onSuccess(ItemModel("", "", url, "", this))
-    }
-
     fun getSourceByUrlFlow(url: String): Flow<ItemModel> = flow { emit(sourceByUrl(url)) }
         .dispatchIo()
         .catch {
@@ -136,5 +131,4 @@ interface ApiService : Serializable {
     fun <T> Flow<T>.dispatchIo() = this.flowOn(Dispatchers.IO)
 }
 
-val sourcePublish = BehaviorSubject.create<ApiService>()
 val sourceFlow = MutableStateFlow<ApiService?>(null)

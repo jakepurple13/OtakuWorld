@@ -121,33 +121,6 @@ object GogoAnimeVC : ShowApi(
             }
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { s ->
-        val doc = (if (!url.contains(baseUrl)) "$baseUrl$url" else url).toJsoup()
-
-        val animeBody = doc.selectFirst(".anime_info_body_bg")
-        val title = animeBody?.selectFirst("h1")?.text().orEmpty()
-        val poster = animeBody?.selectFirst("img")?.attr("src").orEmpty()
-
-        var description: String? = null
-
-        animeBody?.select("p.type")?.fastForEach {
-            when (it.selectFirst("span")?.text()?.trim()) {
-                "Plot Summary:" -> {
-                    description = it.text().replace("Plot Summary:", "").trim()
-                }
-            }
-        }
-
-        ItemModel(
-            title = title,
-            description = description.orEmpty(),
-            imageUrl = poster,
-            url = url,
-            source = Sources.GOGOANIME_VC
-        )
-            .let(s::onSuccess)
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val doc = (if (!url.contains(baseUrl)) "$baseUrl$url" else url).toJsoup()
 

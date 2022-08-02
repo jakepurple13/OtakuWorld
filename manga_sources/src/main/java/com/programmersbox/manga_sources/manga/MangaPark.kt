@@ -7,8 +7,6 @@ import com.programmersbox.manga_sources.utilities.*
 import com.programmersbox.models.*
 import com.squareup.duktape.Duktape
 import io.reactivex.Single
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
@@ -310,25 +308,6 @@ object MangaPark : ApiService, KoinComponent {
         now.add(javaUnit, -number)
 
         return now.timeInMillis
-    }
-
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        try {
-            val doc = cloudflare(helper, url).execute().asJsoup()
-            val infoElement = doc.select("div#mainer div.container-fluid")
-            ItemModel(
-                title = infoElement.select("h3.item-title").text(),
-                description = infoElement.select("div.limit-height-body")
-                    .select("h5.text-muted, div.limit-html")
-                    .joinToString("\n\n", transform = Element::text),
-                url = url,
-                imageUrl = infoElement.select("div.detail-set div.attr-cover img").attr("abs:src"),
-                source = this
-            )
-                .let(it::onSuccess)
-        } catch (e: Exception) {
-            it.onError(e)
-        }
     }
 
     override suspend fun sourceByUrl(url: String): ItemModel {

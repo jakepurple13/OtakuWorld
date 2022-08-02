@@ -3,8 +3,10 @@ package com.programmersbox.manga_sources.manga
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
 import io.reactivex.Single
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import org.jsoup.Jsoup
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -135,24 +137,6 @@ object NineAnime : ApiService {
                 .removePrefix("Alternative(s):").split(";"),
             source = this@NineAnime
         )
-    }
-
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        try {
-            val doc = Jsoup.connect(url).get()
-            val genreAndDescription = doc.select("div.manga-detailmiddle")
-            it.onSuccess(
-                ItemModel(
-                    title = doc.select("div.manga-detail > h1").select("h1").text(),
-                    description = genreAndDescription.select("p.mobile-none").text(),
-                    url = url,
-                    imageUrl = doc.select("img.detail-cover").attr("abs:src"),
-                    source = this
-                )
-            )
-        } catch (e: Exception) {
-            it.onError(e)
-        }
     }
 
     override fun getSourceByUrlFlow(url: String): Flow<ItemModel> = flow {

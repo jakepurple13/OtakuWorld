@@ -198,22 +198,6 @@ object WcoStream : ShowApi(
         )
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        try {
-            val doc = url.toJsoup()
-            ItemModel(
-                title = doc.select("div#content").select("h2[title]").text(),
-                description = doc.select("div.iltext").text(),
-                imageUrl = doc.select("div#cat-img-desc").select("img").attr("abs:src"),
-                url = url,
-                source = this
-            )
-                .let(it::onSuccess)
-        } catch (e: Exception) {
-            it.onError(e)
-        }
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val doc = url.toJsoup()
         return ItemModel(
@@ -693,18 +677,6 @@ object WcoStreamCC : ShowApi(
                     source = Sources.WCOSTREAMCC
                 )
             }
-    }
-
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
-        val doc = url.toJsoup()
-        ItemModel(
-            source = Sources.WCOSTREAMCC,
-            url = url,
-            title = doc.select("meta[name=\"title\"]").attr("content").split("| W")[0],
-            description = doc.select(".description > p").text().trim(),
-            imageUrl = doc.select(".film-poster-img").attr("src")
-        )
-            .let(emitter::onSuccess)
     }
 
     override suspend fun sourceByUrl(url: String): ItemModel {

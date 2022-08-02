@@ -228,17 +228,6 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
             .orEmpty()
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
-        val doc = url.toJsoup()
-        ItemModel(
-            title = doc.select("div.infodesbox").select("h1").text(),
-            description = doc.select("div.infodes2").text(),
-            imageUrl = doc.select("div.infopicbox").select("img").attr("abs:src"),
-            url = url,
-            source = this
-        ).let(emitter::onSuccess)
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val doc = url.toJsoup()
         return ItemModel(

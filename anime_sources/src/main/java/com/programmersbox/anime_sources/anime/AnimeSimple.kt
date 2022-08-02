@@ -28,7 +28,7 @@ abstract class AnimeSimple(private val isSubbed: Boolean) : ShowApi(
 
     override val canDownload: Boolean get() = false
 
-    override fun getRecent(doc: Document): Single<List<ItemModel>> = getList()
+    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.never()
 
     override fun getList(doc: Document): Single<List<ItemModel>> = Single.create {
         doc

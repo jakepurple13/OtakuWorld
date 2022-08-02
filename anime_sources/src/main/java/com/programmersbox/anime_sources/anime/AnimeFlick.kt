@@ -115,16 +115,5 @@ object AnimeFlick : ShowApi(
         emitter.onSuccess(d)
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
-        val doc = url.toJsoup()
-        ItemModel(
-            title = doc.select("h2.title").text(),
-            description = doc.select("p").text(),
-            imageUrl = baseUrl + doc.select("img.rounded").attr("src"),
-            url = url,
-            source = this
-        ).let(emitter::onSuccess)
-    }
-
 }
 

@@ -305,29 +305,6 @@ object CrunchyRoll : ShowApi(
             .orEmpty()
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
-        try {
-            val doc = Jsoup.parse(crUnblock.geoBypassRequest(fixUrl(url)).text)
-            val p = doc.select(".description")
-
-            val description = if (p.select(".more").text().trim().isNotEmpty()) {
-                p.select(".more").text().trim()
-            } else {
-                p.select("span").text().trim()
-            }
-            ItemModel(
-                source = Sources.CRUNCHYROLL,
-                title = doc.selectFirst("#showview-content-header .ellipsis")?.text()?.trim().orEmpty(),
-                url = url,
-                description = description,
-                imageUrl = doc.selectFirst(".poster")?.attr("src").orEmpty(),
-            )
-                .let(emitter::onSuccess)
-        } catch (e: Exception) {
-            emitter.onError(e)
-        }
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val doc = Jsoup.parse(crUnblock.geoBypassRequest(fixUrl(url)).text)
         val p = doc.select(".description")

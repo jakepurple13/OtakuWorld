@@ -327,16 +327,6 @@ abstract class Sflix(baseUrl: String, private val servName: String) : ShowApi(
         )
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
-        ItemModel(
-            title = "",
-            description = "",
-            imageUrl = "",
-            url = url,
-            source = this
-        ).let(emitter::onSuccess)
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         return ItemModel(
             title = "",

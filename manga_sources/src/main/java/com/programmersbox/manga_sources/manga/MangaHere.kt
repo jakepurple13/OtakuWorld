@@ -229,22 +229,6 @@ object MangaHere : ApiService {
         }
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        try {
-            val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
-            ItemModel(
-                title = doc.select("span.detail-info-right-title-font").text(),
-                description = doc.select("p.fullcontent").text(),
-                url = url,
-                imageUrl = doc.select("img.detail-info-cover-img").select("img[src^=http]").attr("abs:src"),
-                source = this
-            )
-                .let(it::onSuccess)
-        } catch (e: Exception) {
-            it.onError(e)
-        }
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
         return ItemModel(

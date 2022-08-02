@@ -188,29 +188,6 @@ object AsuraScans : ApiService, KoinComponent {
         )
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-
-        val request = cloudflare(
-            helper,
-            url,
-            "referer" to baseUrl,
-            "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
-        ).execute().asJsoup()
-
-        val i = request.select("div.bigcontent, div.animefull, div.main-info")
-
-        val info = ItemModel(
-            title = i.select("h1.entry-title").text(),
-            description = i.select("div.desc p, div.entry-content p").joinToString("\n") { it.text() },
-            url = url,
-            imageUrl = i.select("div.thumb img").let { if (it.hasAttr("data-src")) it.attr("abs:data-src") else it.attr("abs:src") },
-            source = Sources.ASURA_SCANS
-        )
-
-        it.onSuccess(info)
-
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val request = cloudflare(
             helper,

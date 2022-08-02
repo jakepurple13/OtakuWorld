@@ -197,21 +197,6 @@ object MangaFourLife : ApiService {
         )
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        val doc = Jsoup.connect(url).get()
-        val title = doc.select("li.list-group-item, li.d-none, li.d-sm-block").select("h1").text()
-        val description = doc.select("div.BoxBody > div.row").select("div.Content").text()
-        it.onSuccess(
-            ItemModel(
-                title = title,
-                description = description,
-                url = url,
-                imageUrl = doc.select("img.img-fluid, img.bottom-5").attr("abs:src"),
-                source = this
-            )
-        )
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val doc = Jsoup.connect(url).get()
         val title = doc.select("li.list-group-item, li.d-none, li.d-sm-block").select("h1").text()

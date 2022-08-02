@@ -119,20 +119,4 @@ object Hdm : ShowApi(
             .let(emitter::onSuccess)
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
-        val doc = url.toJsoup()
-        val title = doc.selectFirst("h2.movieTitle")?.text()
-        val poster = doc.selectFirst("div.post-thumbnail > img")?.attr("src")
-        val description = doc.selectFirst("div.synopsis > p")?.text().orEmpty()
-
-        ItemModel(
-            source = Sources.HDM,
-            title = title.orEmpty(),
-            url = url,
-            description = description,
-            imageUrl = poster.orEmpty(),
-        )
-            .let(emitter::onSuccess)
-    }
-
 }
