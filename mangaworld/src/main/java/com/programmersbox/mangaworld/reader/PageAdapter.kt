@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
@@ -22,14 +23,11 @@ import com.programmersbox.mangaworld.databinding.PageNextChapterItemBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.DragSwipeGlideAdapter
-import io.reactivex.Completable
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.util.*
 
 class PageAdapter(
-    private val disposable: CompositeDisposable,
     override val fullRequest: RequestBuilder<Drawable>,
     override val thumbRequest: RequestBuilder<Drawable>,
     private val activity: AppCompatActivity,
@@ -74,23 +72,18 @@ class PageAdapter(
                     chapterModels.getOrNull(--currentChapter)
                         ?.also(loadNewPages)
                         ?.let { item ->
-                            ChapterWatched(item.url, item.name, mangaUrl)
-                                .let {
-                                    Completable.mergeArray(
-                                        FirebaseDb.insertEpisodeWatched(it),
-                                        dao.insertChapter(it)
-                                    )
-                                }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(Schedulers.io())
-                                .subscribe {
-                                    Snackbar.make(
-                                        coordinatorLayout,
-                                        R.string.addedChapterItem,
-                                        Snackbar.LENGTH_SHORT
-                                    ).show()
-                                }
-                                .addTo(disposable)
+                            activity.lifecycleScope.launch {
+                                ChapterWatched(item.url, item.name, mangaUrl)
+                                    .let {
+                                        dao.insertChapterFlow(it)
+                                        FirebaseDb.insertEpisodeWatchedFlow(it).collect()
+                                    }
+                            }
+                            Snackbar.make(
+                                coordinatorLayout,
+                                R.string.addedChapterItem,
+                                Snackbar.LENGTH_SHORT
+                            ).show()
                         }
                 }
             }

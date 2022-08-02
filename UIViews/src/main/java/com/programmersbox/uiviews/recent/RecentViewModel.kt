@@ -12,14 +12,10 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -31,7 +27,6 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
     var count = 1
 
-    private val disposable: CompositeDisposable = CompositeDisposable()
     private val itemListener = FirebaseDb.FirebaseListener()
 
     init {
@@ -46,15 +41,16 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
                 }
         }
 
-        sourcePublish
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                count = 1
-                sourceList.clear()
-                sourceLoadCompose(context, it)
-            }
-            .addTo(disposable)
+        viewModelScope.launch {
+            sourceFlow
+                .filterNotNull()
+                .onEach {
+                    count = 1
+                    sourceList.clear()
+                    sourceLoadCompose(context, it)
+                }
+                .collect()
+        }
     }
 
     fun reset(context: Context?, sources: ApiService) {
@@ -87,7 +83,6 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         itemListener.unregister()
-        disposable.dispose()
     }
 
 }

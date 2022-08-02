@@ -65,20 +65,12 @@ import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
-import com.programmersbox.rxutils.invoke
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.Completable
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class ReadViewModel(
@@ -113,8 +105,6 @@ class ReadViewModel(
     val ad by lazy { AdRequest.Builder().build() }
 
     private val dao by lazy { ItemDatabase.getInstance(activity).itemDao() }
-
-    val disposable = CompositeDisposable()
 
     val list by lazy { ChapterList(activity, genericInfo).get().orEmpty() }
 
@@ -153,15 +143,12 @@ class ReadViewModel(
         list.getOrNull(newChapter)?.let { item ->
             ChapterWatched(item.url, item.name, novelUrl)
                 .let {
-                    Completable.mergeArray(
-                        FirebaseDb.insertEpisodeWatched(it),
-                        dao.insertChapter(it)
-                    )
+                    viewModelScope.launch {
+                        dao.insertChapterFlow(it)
+                        FirebaseDb.insertEpisodeWatchedFlow(it).collect()
+                        withContext(Dispatchers.Main) { chapter() }
+                    }
                 }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(chapter)
-                .addTo(disposable)
 
             loadPages(item.getChapterInfoFlow().mapNotNull { it.mapNotNull { it.link } })
         }
@@ -180,11 +167,6 @@ class ReadViewModel(
                 }
                 ?.collect()
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
     }
 
 }
@@ -215,8 +197,8 @@ fun NovelReader() {
     DisposableEffect(context) {
         val batteryInfo = context.battery {
             readVm.batteryPercent = it.percent
-            readVm.batteryInformation.batteryLevelAlert(it.percent)
-            readVm.batteryInformation.batteryInfoItem(it)
+            readVm.batteryInformation.batteryLevel.tryEmit(it.percent)
+            readVm.batteryInformation.batteryInfo.tryEmit(it)
         }
         onDispose { context.unregisterReceiver(batteryInfo) }
     }

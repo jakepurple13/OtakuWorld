@@ -2,23 +2,16 @@ package com.programmersbox.favoritesdatabase
 
 import androidx.paging.PagingSource
 import androidx.room.*
-import io.reactivex.Completable
-import io.reactivex.Flowable
-import io.reactivex.Maybe
-import io.reactivex.Single
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertFavorite(model: DbModel): Completable
+    suspend fun insertFavoriteFlow(model: DbModel)
 
     @Delete
-    fun deleteFavorite(model: DbModel): Completable
-
-    @Query("SELECT * FROM FavoriteItem")
-    fun getAllFavorites(): Flowable<List<DbModel>>
+    suspend fun deleteFavoriteFlow(model: DbModel)
 
     @Query("SELECT * FROM FavoriteItem")
     fun getAllFavoritesFlow(): Flow<List<DbModel>>
@@ -26,38 +19,26 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem")
     fun getAllFavoritesSync(): List<DbModel>
 
-    @Query("SELECT COUNT(*) FROM FavoriteItem WHERE url = :url")
-    fun getItemById(url: String): Flowable<Int>
-
-    @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
-    fun containsItem(url: String): Flowable<Boolean>
-
     @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
     fun containsItemFlow(url: String): Flow<Boolean>
 
-    @Query("SELECT * FROM FavoriteItem WHERE url = :url")
-    fun getItemByUrl(url: String): Maybe<DbModel>
-
-    @Update
-    fun updateItem(model: DbModel): Completable
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertChapter(chapterWatched: ChapterWatched): Completable
+    suspend fun insertChapterFlow(chapterWatched: ChapterWatched)
 
     @Delete
-    fun deleteChapter(chapterWatched: ChapterWatched): Completable
+    suspend fun deleteChapterFlow(chapterWatched: ChapterWatched)
 
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
-    fun getAllChapters(url: String): Flowable<List<ChapterWatched>>
+    fun getAllChaptersFlow(url: String): Flow<List<ChapterWatched>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertNotification(notificationItem: NotificationItem): Completable
+    suspend fun insertNotification(notificationItem: NotificationItem)
 
     @Delete
-    fun deleteNotification(notificationItem: NotificationItem): Completable
+    suspend fun deleteNotification(notificationItem: NotificationItem)
 
-    @Query("DELETE FROM Notifications")
-    fun deleteAllNotifications(): Single<Int>
+    @Delete
+    suspend fun deleteNotificationFlow(notificationItem: NotificationItem): Int
 
     @Query("DELETE FROM Notifications")
     suspend fun deleteAllNotificationsFlow(): Int
@@ -68,20 +49,14 @@ interface ItemDao {
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItemFlow(url: String): Flow<NotificationItem?>
 
-    @Query("SELECT * FROM Notifications")
-    fun getAllNotifications(): Single<List<NotificationItem>>
-
-    @Query("SELECT * FROM Notifications")
-    fun getAllNotificationsFlowable(): Flowable<List<NotificationItem>>
-
-    @Query("SELECT COUNT(id) FROM Notifications")
-    fun getAllNotificationCount(): Flowable<Int>
-
     @Query("SELECT EXISTS(SELECT 1 FROM Notifications WHERE url = :url)")
-    fun doesNotificationExist(url: String): Flowable<Boolean>
+    fun doesNotificationExistFlow(url: String): Flow<Boolean>
 
     @Query("SELECT * FROM Notifications")
     fun getAllNotificationsFlow(): Flow<List<NotificationItem>>
+
+    @Query("SELECT * FROM Notifications")
+    suspend fun getAllNotifications(): List<NotificationItem>
 
     @Query("SELECT * FROM Notifications")
     fun getAllNotificationsFlowPaging(): PagingSource<Int, NotificationItem>

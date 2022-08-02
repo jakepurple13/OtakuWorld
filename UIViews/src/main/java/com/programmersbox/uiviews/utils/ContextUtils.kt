@@ -51,20 +51,11 @@ import com.programmersbox.helpfulutils.*
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
-import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.rx2.asObservable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -259,9 +250,6 @@ abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
 class BatteryInformation(val context: Context) {
 
-    val batteryLevelAlert = PublishSubject.create<Float>()
-    val batteryInfoItem = PublishSubject.create<Battery>()
-
     val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
     val batteryInfo by lazy { MutableSharedFlow<Battery>() }
 
@@ -271,40 +259,6 @@ class BatteryInformation(val context: Context) {
         FULL(GoogleMaterial.Icon.gmd_battery_full, Icons.Default.BatteryFull),
         ALERT(GoogleMaterial.Icon.gmd_battery_alert, Icons.Default.BatteryAlert),
         UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.Default.BatteryUnknown)
-    }
-
-    fun composeSetup(
-        disposable: CompositeDisposable,
-        normalBatteryColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White,
-        subscribe: (Pair<androidx.compose.ui.graphics.Color, BatteryViewType>) -> Unit
-    ) {
-        Flowables.combineLatest(
-            Observable.combineLatest(
-                batteryLevelAlert,
-                context.batteryPercent.asObservable()
-            ) { b, d -> b <= d }
-                .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor }
-                .toLatestFlowable(),
-            Observable.combineLatest(
-                batteryInfoItem,
-                context.batteryPercent.asObservable()
-            ) { b, d -> b to d }
-                .map {
-                    when {
-                        it.first.isCharging -> BatteryViewType.CHARGING_FULL
-                        it.first.percent <= it.second -> BatteryViewType.ALERT
-                        it.first.percent >= 95 -> BatteryViewType.FULL
-                        it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                        else -> BatteryViewType.DEFAULT
-                    }
-                }
-                .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(subscribe)
-            .addTo(disposable)
     }
 
     suspend fun composeSetupFlow(
@@ -336,22 +290,20 @@ class BatteryInformation(val context: Context) {
             .collect()
     }
 
-    fun setup(
-        disposable: CompositeDisposable,
+    suspend fun setupFlow(
         normalBatteryColor: Int = Color.WHITE,
         size: Int,
         subscribe: (Pair<Int, IconicsDrawable>) -> Unit
     ) {
-        Flowables.combineLatest(
-            Observable.combineLatest(
-                batteryLevelAlert,
-                context.batteryPercent.asObservable()
+        combine(
+            combine(
+                batteryLevel,
+                context.batteryPercent
             ) { b, d -> b <= d }
-                .map { if (it) Color.RED else normalBatteryColor }
-                .toLatestFlowable(),
-            Observable.combineLatest(
-                batteryInfoItem,
-                context.batteryPercent.asObservable()
+                .map { if (it) Color.RED else normalBatteryColor },
+            combine(
+                batteryInfo,
+                context.batteryPercent
             ) { b, d -> b to d }
                 .map {
                     when {
@@ -363,13 +315,10 @@ class BatteryInformation(val context: Context) {
                     }
                 }
                 .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(context, it.icon).apply { sizePx = size } }
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(subscribe)
-            .addTo(disposable)
+                .map { IconicsDrawable(context, it.icon).apply { sizePx = size } },
+        ) { l, b -> l to b }
+            .onEach(subscribe)
+            .collect()
     }
 
 }

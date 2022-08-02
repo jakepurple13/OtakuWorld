@@ -58,11 +58,11 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
@@ -78,8 +78,6 @@ val appModule = module {
 class GenericManga(val context: Context) : GenericInfo {
 
     override val deepLinkUri: String get() = "mangaworld://"
-
-    private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") manga_no_firebase_file else manga_file }
     override val scrollBuffer: Int = 4
@@ -126,33 +124,34 @@ class GenericManga(val context: Context) : GenericInfo {
         val direct = File("$fileLocation$title/${model.name}/")
         if (!direct.exists()) direct.mkdir()
 
-        model.getChapterInfo()
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .map { it.mapNotNull(Storage::link) }
-            .map {
-                it.mapIndexed { index, s ->
-                    //val location = "/$fileLocation/$title/${model.name}"
+        GlobalScope.launch {
+            model.getChapterInfoFlow()
+                .dispatchIo()
+                .map { it.mapNotNull(Storage::link) }
+                .map {
+                    it.mapIndexed { index, s ->
+                        //val location = "/$fileLocation/$title/${model.name}"
 
-                    //val file = File(Environment.getExternalStorageDirectory().path + location, "${String.format("%03d", index)}.png")
+                        //val file = File(Environment.getExternalStorageDirectory().path + location, "${String.format("%03d", index)}.png")
 
-                    DownloadManager.Request(s.toUri())
-                        //.setDestinationUri(file.toUri())
-                        .setDestinationInExternalPublicDir(
-                            Environment.DIRECTORY_DOWNLOADS,
-                            "MangaWorld/$title/${model.name}/${String.format("%03d", index)}"
-                        )
-                        .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                        .setAllowedOverRoaming(true)
-                        .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                        .setMimeType("image/*")
-                        .setTitle(model.name)
-                        .addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77")
-                        .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
+                        DownloadManager.Request(s.toUri())
+                            //.setDestinationUri(file.toUri())
+                            .setDestinationInExternalPublicDir(
+                                Environment.DIRECTORY_DOWNLOADS,
+                                "MangaWorld/$title/${model.name}/${String.format("%03d", index)}"
+                            )
+                            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            .setAllowedOverRoaming(true)
+                            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                            .setMimeType("image/*")
+                            .setTitle(model.name)
+                            .addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77")
+                            .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
+                    }
                 }
-            }
-            .subscribeBy { it.fastForEach(context.downloadManager::enqueue) }
-            .addTo(disposable)
+                .onEach { it.fastForEach(context.downloadManager::enqueue) }
+                .collect()
+        }
     }
 
     override fun downloadChapter(
@@ -262,8 +261,8 @@ class GenericManga(val context: Context) : GenericInfo {
                 settingIcon = { Icon(Icons.Default.TextFormat, null, modifier = Modifier.fillMaxSize()) },
                 updateValue = {
                     scope.launch { context.updatePref(SHOW_ADULT, it) }
-                    if (!it && (sourcePublish.value as? Sources)?.isAdult == true) {
-                        sourcePublish.onNext(sourceList().random())
+                    if (!it && (sourceFlow.value as? Sources)?.isAdult == true) {
+                        sourceFlow.tryEmit(sourceList().random())
                     }
                 }
             )

@@ -20,13 +20,13 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -43,10 +43,10 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.all.AllView
 import com.programmersbox.uiviews.all.AllViewModel
 import com.programmersbox.uiviews.details.DetailsScreen
@@ -58,20 +58,13 @@ import com.programmersbox.uiviews.recent.RecentView
 import com.programmersbox.uiviews.recent.RecentViewModel
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.Single
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import com.programmersbox.uiviews.utils.Screen as SScreen
 
 abstract class BaseMainActivity : AppCompatActivity() {
-
-    protected val disposable = CompositeDisposable()
-
-    //protected var currentNavController: LiveData<NavController>? = null
 
     protected val genericInfo: GenericInfo by inject()
     private val logo: MainLogo by inject()
@@ -98,7 +91,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        genericInfo.toSource(currentService.orEmpty())?.let { sourcePublish.onNext(it) }
+        lifecycleScope.launch {
+            genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
+        }
 
         when (runBlocking { themeSetting.first() }) {
             "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
@@ -111,12 +106,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        Single.create<AppUpdate.AppUpdates> { AppUpdate.getUpdate()?.let(it::onSuccess) ?: it.onError(Throwable("Something went wrong")) }
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .doOnError {}
-            .subscribe(appUpdateCheck::onNext)
-            .addTo(disposable)
+        lifecycleScope.launch {
+            flow { emit(AppUpdate.getUpdate()) }
+                .catch { emit(null) }
+                .dispatchIo()
+                .onEach(updateAppCheck::emit)
+                .collect()
+        }
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator()
@@ -323,7 +319,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @Composable
     fun updateCheck(): Boolean {
-        val appUpdate by appUpdateCheck.subscribeAsState(null)
+        val appUpdate by updateAppCheck.collectAsState(null)
 
         return AppUpdate.checkForUpdate(
             remember { packageManager.getPackageInfo(packageName, 0)?.versionName.orEmpty() },
@@ -343,11 +339,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
         if (::navController.isInitialized) {
             navController.navigate(screen.route.route)
         }
-    }
-
-    override fun onDestroy() {
-        disposable.dispose()
-        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent?) {

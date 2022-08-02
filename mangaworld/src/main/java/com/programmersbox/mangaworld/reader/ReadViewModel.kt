@@ -24,13 +24,11 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import io.reactivex.Completable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class ReadViewModel(
@@ -68,7 +66,7 @@ class ReadViewModel(
                 ?.sortedBy { f -> f.name.split(".").first().toInt() }
                 ?.fastMap(File::toUri)
                 ?.fastMap(Uri::toString)
-                ?.let { emit(it) } ?: Throwable("Cannot find files")
+                ?.let { emit(it) } ?: throw Exception("Cannot find files")
         }
             .catch { emit(emptyList()) }
             .flowOn(Dispatchers.IO)
@@ -156,15 +154,12 @@ class ReadViewModel(
         list.getOrNull(newChapter)?.let { item ->
             ChapterWatched(item.url, item.name, mangaUrl)
                 .let {
-                    Completable.mergeArray(
-                        FirebaseDb.insertEpisodeWatched(it),
-                        dao.insertChapter(it)
-                    )
+                    viewModelScope.launch {
+                        dao.insertChapterFlow(it)
+                        FirebaseDb.insertEpisodeWatchedFlow(it).collect()
+                        withContext(Dispatchers.Main) { chapter() }
+                    }
                 }
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(chapter)
-                .addTo(disposable)
 
             item
                 .getChapterInfoFlow()

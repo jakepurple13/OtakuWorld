@@ -66,13 +66,10 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
-import io.reactivex.Completable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -179,16 +176,15 @@ fun NotificationsScreen(
             notificationManager.cancelNotification(item)
         },
         onMultipleRemove = { d ->
-            Completable.merge(
-                d.map {
-                    notificationManager.cancelNotification(it)
-                    db.deleteNotification(it)
+            scope.launch {
+                withContext(Dispatchers.Default) {
+                    d.forEach {
+                        notificationManager.cancelNotification(it)
+                        db.deleteNotificationFlow(it)
+                    }
                 }
-            )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { d.clear() }
-                .addTo(vm.disposable)
+                d.clear()
+            }
         },
         deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
         itemUi = { item ->
@@ -222,21 +218,18 @@ fun NotificationsScreen(
                         androidx.compose.material3.DropdownMenuItem(
                             text = { Text(stringResource(id = R.string.remove_same_name)) },
                             onClick = {
-                                Completable.merge(
-                                    items
-                                        .filter { it.notiTitle == item.notiTitle }
-                                        .map {
-                                            notificationManager.cancelNotification(it)
-                                            db.deleteNotification(it)
-                                        }
-                                )
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe {
-                                        showDropDown = false
-                                        Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
+                                scope.launch {
+                                    withContext(Dispatchers.Default) {
+                                        items
+                                            .filter { it.notiTitle == item.notiTitle }
+                                            .forEach {
+                                                notificationManager.cancelNotification(it)
+                                                db.deleteNotification(it)
+                                            }
                                     }
-                                    .addTo(vm.disposable)
+                                    showDropDown = false
+                                    Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
+                                }
                             }
                         )
                     }

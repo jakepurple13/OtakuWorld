@@ -12,14 +12,10 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -32,11 +28,10 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<ItemModel>()
-    val favoriteList = mutableStateListOf<DbModel>()
+    var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
 
     var count = 1
 
-    private val disposable: CompositeDisposable = CompositeDisposable()
     private val itemListener = FirebaseDb.FirebaseListener()
 
     init {
@@ -45,21 +40,18 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
                 itemListener.getAllShowsFlow(),
                 dao.getAllFavoritesFlow()
             ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-                .collect {
-                    favoriteList.clear()
-                    favoriteList.addAll(it)
-                }
+                .collect { favoriteList = it }
         }
-
-        sourcePublish
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                count = 1
-                sourceList.clear()
-                sourceLoadCompose(context, it)
-            }
-            .addTo(disposable)
+        viewModelScope.launch {
+            sourceFlow
+                .filterNotNull()
+                .onEach {
+                    count = 1
+                    sourceList.clear()
+                    sourceLoadCompose(context, it)
+                }
+                .collect()
+        }
     }
 
     fun reset(context: Context?, sources: ApiService) {
@@ -89,19 +81,22 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
     fun search() {
         viewModelScope.launch {
-            sourcePublish.value
-                ?.searchSourceList(searchText, 1, sourceList)
-                ?.onStart { isSearching = true }
-                ?.onEach { searchList = it }
-                ?.onCompletion { isSearching = false }
-                ?.collect()
+            sourceFlow
+                .filterNotNull()
+                .flatMapMerge { it.searchSourceList(searchText, 1, sourceList) }
+                .onStart { isSearching = true }
+                .onEach {
+                    searchList = it
+                    isSearching = false
+                }
+                .onCompletion { isSearching = false }
+                .collect()
         }
     }
 
     override fun onCleared() {
         super.onCleared()
         itemListener.unregister()
-        disposable.dispose()
     }
 
 }

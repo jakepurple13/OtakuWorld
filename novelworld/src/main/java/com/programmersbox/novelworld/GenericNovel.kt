@@ -15,14 +15,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Surface
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
@@ -128,8 +124,7 @@ class GenericNovel(val context: Context) : GenericInfo {
                             .fillMaxWidth()
                             .placeholder(
                                 true,
-                                color = androidx.compose.material3
-                                    .contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                                color = contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
                                     .copy(0.1f)
                                     .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
                             )

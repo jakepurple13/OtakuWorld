@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.leanback.app.DetailsSupportFragment
 import androidx.leanback.app.DetailsSupportFragmentBackgroundController
 import androidx.leanback.widget.*
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
@@ -22,13 +23,9 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import io.reactivex.Completable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import kotlin.math.roundToInt
 
@@ -55,40 +52,48 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         mSelectedMovie = requireActivity().intent.getSerializableExtra(DetailsActivity.MOVIE) as ItemModel
 
-        mSelectedMovie
-            ?.toInfoModel()
-            ?.subscribeOn(Schedulers.io())
-            ?.observeOn(AndroidSchedulers.mainThread())
-            ?.doOnError {
-                val intent = Intent(requireContext(), MainActivity::class.java)
-                startActivity(intent)
-            }
-            ?.subscribeBy {
-                mSelectedInfoModel = it
-                mPresenterSelector = ClassPresenterSelector()
-                mAdapter = ArrayObjectAdapter(mPresenterSelector)
-                setupDetailsOverviewRow(it)
-                setupDetailsOverviewRowPresenter(it)
-                setupRelatedMovieListRow(it)
+        lifecycleScope.launch {
+            mSelectedMovie
+                ?.toInfoModelFlow()
+                ?.map { it.getOrNull() }
+                ?.flowOn(Dispatchers.Main)
+                ?.catch {
+                    val intent = Intent(requireContext(), MainActivity::class.java)
+                    startActivity(intent)
+                }
+                ?.onEach {
+                    if (it == null) {
+                        val intent = Intent(requireContext(), MainActivity::class.java)
+                        startActivity(intent)
+                    } else {
+                        mSelectedInfoModel = it
+                        mPresenterSelector = ClassPresenterSelector()
+                        mAdapter = ArrayObjectAdapter(mPresenterSelector)
+                        setupDetailsOverviewRow(it)
+                        setupDetailsOverviewRowPresenter(it)
+                        setupRelatedMovieListRow(it)
 
-                Flowables.combineLatest(
-                    chapterListener.getAllEpisodesByShow(it.url),
-                    itemDao.getAllChapters(it.url).subscribeOn(Schedulers.io())
-                ) { f, d -> (f + d).distinctBy { u -> u.url } }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { l ->
-                        episodePresenter.watched.clear()
-                        episodePresenter.watched.addAll(l)
-                        rows.forEach { it.notifyChanges() }
+                        lifecycleScope.launch {
+                            combine(
+                                chapterListener.getAllEpisodesByShowFlow(it.url),
+                                itemDao.getAllChaptersFlow(it.url)
+                            ) { f, d -> (f + d).distinctBy { it.url } }
+                                .flowOn(Dispatchers.Main)
+                                .onEach { l ->
+                                    episodePresenter.watched.clear()
+                                    episodePresenter.watched.addAll(l)
+                                    rows.forEach { it.notifyChanges() }
+                                }
+                                .collect()
+                        }
+
+                        adapter = mAdapter
+                        initializeBackground(it)
+                        onItemViewClickedListener = ItemViewClickedListener()
                     }
-                    .addTo(disposable)
-
-                adapter = mAdapter
-                initializeBackground(it)
-                onItemViewClickedListener = ItemViewClickedListener()
-            }
-            ?.addTo(disposable)
+                }
+                ?.collect()
+        }
 
         /*if (mSelectedMovie != null) {
             mPresenterSelector = ClassPresenterSelector()
@@ -170,24 +175,23 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         )
 
 
-        Flowables.combineLatest(
-            itemListener.findItemByUrl(movie!!.url),
-            itemDao.containsItem(movie.url)
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { it.second || it.first }
-            .subscribe {
-                actionAdapter.replace(
-                    1,
-                    Action(
-                        5L,
-                        resources.getString(if (it) R.string.removeFromFavorites else R.string.addToFavorites)
-                    )//.also { it.icon = R.drawable.exo_ic_check }
-                )
-                isFavorite = it
-            }
-            .addTo(disposable)
+        lifecycleScope.launch(Dispatchers.IO) {
+            combine(
+                itemListener.findItemByUrlFlow(movie!!.url),
+                itemDao.containsItemFlow(movie.url)
+            ) { f, d -> f || d }
+                .flowOn(Dispatchers.Main)
+                .collect {
+                    actionAdapter.replace(
+                        1,
+                        Action(
+                            5L,
+                            resources.getString(if (it) R.string.removeFromFavorites else R.string.addToFavorites)
+                        )//.also { it.icon = R.drawable.exo_ic_check }
+                    )
+                    isFavorite = it
+                }
+        }
 
         actionAdapter.add(
             Action(
@@ -253,26 +257,18 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
                     fun addItem(model: InfoModel) {
                         val db = model.toDbModel(model.chapters.size)
-                        Completable.concatArray(
-                            FirebaseDb.insertShow(db),
-                            itemDao.insertFavorite(db).subscribeOn(Schedulers.io())
-                        )
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe()
-                            .addTo(disposable)
+                        lifecycleScope.launch {
+                            itemDao.insertFavoriteFlow(db)
+                            FirebaseDb.insertShowFlow(db).collect()
+                        }
                     }
 
                     fun removeItem(model: InfoModel) {
                         val db = model.toDbModel(model.chapters.size)
-                        Completable.concatArray(
-                            FirebaseDb.removeShow(db),
-                            itemDao.deleteFavorite(model.toDbModel()).subscribeOn(Schedulers.io())
-                        )
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe()
-                            .addTo(disposable)
+                        lifecycleScope.launch {
+                            itemDao.deleteFavoriteFlow(db)
+                            FirebaseDb.removeShowFlow(db).collect()
+                        }
                     }
 
                     movie?.let { (if (isFavorite) ::removeItem else ::addItem)(it) }
@@ -315,11 +311,8 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         mPresenterSelector.addClassPresenter(DetailsOverviewRow::class.java, detailsPresenter)
     }
 
-    private val disposable = CompositeDisposable()
-
     override fun onDestroy() {
         super.onDestroy()
-        disposable.dispose()
         itemListener.unregister()
         chapterListener.unregister()
     }
@@ -396,15 +389,11 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
                 ChapterWatched(url = item.url, name = item.name, favoriteUrl = mSelectedInfoModel?.url.orEmpty())
                     .let {
-                        Completable.mergeArray(
-                            FirebaseDb.insertEpisodeWatched(it),
-                            itemDao.insertChapter(it)
-                        )
+                        lifecycleScope.launch {
+                            itemDao.insertChapterFlow(it)
+                            FirebaseDb.insertEpisodeWatchedFlow(it).collect()
+                        }
                     }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe()
-                    .addTo(disposable)
 
                 val intent = Intent(requireContext(), PlaybackActivity::class.java)
                 intent.putExtra(DetailsActivity.MOVIE, item)

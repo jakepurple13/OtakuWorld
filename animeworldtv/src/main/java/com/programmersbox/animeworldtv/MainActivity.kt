@@ -2,14 +2,15 @@ package com.programmersbox.animeworldtv
 
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.appUpdateCheck
-import io.reactivex.Single
+import com.programmersbox.sharedutils.updateAppCheck
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 /**
  * Loads [MainFragment].
@@ -22,24 +23,27 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (currentService == null) {
-            val s = Sources.values().filterNot(Sources::notWorking).random()
-            sourcePublish.onNext(s)
-            currentService = s.serviceName
-        } else if (currentService != null) {
-            try {
-                Sources.valueOf(currentService!!)
-            } catch (e: IllegalArgumentException) {
-                null
-            }?.let(sourcePublish::onNext)
+        lifecycleScope.launch {
+            if (currentService == null) {
+                val s = Sources.values().filterNot(Sources::notWorking).random()
+                sourceFlow.emit(s)
+                currentService = s.serviceName
+            } else if (currentService != null) {
+                try {
+                    Sources.valueOf(currentService!!)
+                } catch (e: IllegalArgumentException) {
+                    null
+                }?.let { sourceFlow.emit(it) }
+            }
         }
 
-        Single.create<AppUpdate.AppUpdates> { AppUpdate.getUpdate()?.let(it::onSuccess) ?: it.onError(Throwable("Something went wrong")) }
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .doOnError {}
-            .subscribe(appUpdateCheck::onNext)
-            .addTo(disposable)
+        lifecycleScope.launch {
+            flow { emit(AppUpdate.getUpdate()) }
+                .catch { emit(null) }
+                .flowOn(Dispatchers.IO)
+                .onEach(updateAppCheck::emit)
+                .collect()
+        }
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()

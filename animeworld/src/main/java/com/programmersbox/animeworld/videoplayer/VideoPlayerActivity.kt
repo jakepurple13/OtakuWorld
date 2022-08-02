@@ -16,6 +16,7 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -44,13 +45,12 @@ import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.enableImmersiveMode
 import com.programmersbox.helpfulutils.startDrawable
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.rxutils.invoke
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.toolTipText
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.security.cert.X509Certificate
@@ -290,8 +290,6 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     }
 
-    private val disposable = CompositeDisposable()
-
     private var batteryInfo: BroadcastReceiver? = null
 
     private val batteryInformation by lazy { BatteryInformation(this) }
@@ -304,21 +302,22 @@ class VideoPlayerActivity : AppCompatActivity() {
             sizePx = exoBinding.batteryInformation.textSize.roundToInt()
         }
 
-        batteryInformation.setup(
-            disposable = disposable,
-            size = exoBinding.batteryInformation.textSize.roundToInt(),
-            normalBatteryColor = Color.WHITE
-        ) {
-            it.second.colorInt = it.first
-            exoBinding.batteryInformation.startDrawable = it.second
-            exoBinding.batteryInformation.setTextColor(it.first)
-            exoBinding.batteryInformation.startDrawable?.setTint(it.first)
+        lifecycleScope.launch {
+            batteryInformation.setupFlow(
+                size = exoBinding.batteryInformation.textSize.roundToInt(),
+                normalBatteryColor = Color.WHITE
+            ) {
+                it.second.colorInt = it.first
+                exoBinding.batteryInformation.startDrawable = it.second
+                exoBinding.batteryInformation.setTextColor(it.first)
+                exoBinding.batteryInformation.startDrawable?.setTint(it.first)
+            }
         }
 
         batteryInfo = battery {
             exoBinding.batteryInformation.text = "${it.percent.toInt()}%"
-            batteryInformation.batteryLevelAlert(it.percent)
-            batteryInformation.batteryInfoItem(it)
+            batteryInformation.batteryLevel.tryEmit(it.percent)
+            batteryInformation.batteryInfo.tryEmit(it)
         }
     }
 
@@ -328,7 +327,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             showPath?.let { path -> getSharedPreferences("videos", Context.MODE_PRIVATE).edit().putLong(path, it).apply() }
         }
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currentVolume, 0)
-        disposable.dispose()
         unregisterReceiver(batteryInfo)
         super.onDestroy()
     }

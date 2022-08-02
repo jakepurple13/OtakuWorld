@@ -54,12 +54,11 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.components.PermissionRequest
 import com.programmersbox.uiviews.utils.components.animatedItems
 import com.programmersbox.uiviews.utils.components.updateAnimatedItemsState
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -97,15 +96,7 @@ fun DownloadScreen() {
     ) { p1 ->
         PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             val context = LocalContext.current
-            /*val viewModel: DownloadViewModel = viewModel(
-                factory = factoryCreate { DownloadViewModel(context, File(runBlocking { context.folderLocationFlow.first() })) }
-            )*/
-            val viewModel: DownloadViewModel = viewModel {
-                DownloadViewModel(
-                    context,
-                    defaultPathname
-                )
-            }
+            val viewModel: DownloadViewModel = viewModel { DownloadViewModel(context, defaultPathname) }
             DownloadViewer(viewModel, p1)
         }
     }
@@ -131,7 +122,7 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
             f,
             enterTransition = fadeIn(),
             exitTransition = fadeOut()
-        ) { file -> ChapterItem(file, viewModel) }
+        ) { file -> ChapterItem(file) }
     }
 }
 
@@ -182,7 +173,7 @@ private fun EmptyState(p1: PaddingValues) {
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
-private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>, viewModel: DownloadViewModel) {
+private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>) {
     val context = LocalContext.current
 
     var expanded by remember { mutableStateOf(false) }
@@ -224,34 +215,36 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                 if (showPopup) {
                     val onDismiss = { showPopup = false }
 
+                    val scope = rememberCoroutineScope()
+
                     AlertDialog(
                         onDismissRequest = onDismiss,
                         title = { Text(stringResource(R.string.delete_title, c?.chapterName.orEmpty())) },
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    Single.create<Boolean> {
-                                        try {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                                chapter.fastForEach { f ->
-                                                    context.contentResolver.delete(
-                                                        f.assetFileStringUri.toUri(),
-                                                        "${MediaStore.Images.Media._ID} = ?",
-                                                        arrayOf(f.id)
-                                                    )
+                                    scope.launch {
+                                        flow {
+                                            try {
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                                    chapter.fastForEach { f ->
+                                                        context.contentResolver.delete(
+                                                            f.assetFileStringUri.toUri(),
+                                                            "${MediaStore.Images.Media._ID} = ?",
+                                                            arrayOf(f.id)
+                                                        )
+                                                    }
+                                                } else {
+                                                    File(c?.chapterFolder!!).delete()
                                                 }
-                                            } else {
-                                                File(c?.chapterFolder!!).delete()
+                                                emit(true)
+                                            } catch (e: Exception) {
+                                                emit(false)
                                             }
-                                            it.onSuccess(true)
-                                        } catch (e: Exception) {
-                                            it.onSuccess(false)
                                         }
+                                            .onEach { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
+                                            .collect()
                                     }
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeBy { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
-                                        .addTo(viewModel.disposable)
                                     onDismiss()
                                 }
                             ) { Text(stringResource(R.string.yes)) }

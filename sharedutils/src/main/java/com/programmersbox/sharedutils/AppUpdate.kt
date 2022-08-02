@@ -1,7 +1,7 @@
 package com.programmersbox.sharedutils
 
 import com.programmersbox.gsonutils.getJsonApi
-import io.reactivex.subjects.BehaviorSubject
+import kotlinx.coroutines.flow.MutableStateFlow
 
 object AppUpdate {
     private const val url = "https://raw.githubusercontent.com/jakepurple13/OtakuWorld/master/update.json"
@@ -47,4 +47,4 @@ object AppUpdate {
     }
 }
 
-val appUpdateCheck = BehaviorSubject.create<AppUpdate.AppUpdates>()
+val updateAppCheck = MutableStateFlow<AppUpdate.AppUpdates?>(null)

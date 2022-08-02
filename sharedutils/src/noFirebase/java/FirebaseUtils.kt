@@ -100,13 +100,23 @@ object FirebaseDb {
 
     fun insertShow(showDbModel: DbModel) = Completable.complete()
 
+    fun insertShowFlow(showDbModel: DbModel) = flowOf(Unit)
+
     fun removeShow(showDbModel: DbModel) = Completable.complete()
+
+    fun removeShowFlow(showDbModel: DbModel) = flowOf(Unit)
 
     fun updateShow(showDbModel: DbModel) = Completable.complete()
 
+    fun updateShowFlow(showDbModel: DbModel) = flowOf(Unit)
+
     fun insertEpisodeWatched(episodeWatched: ChapterWatched) = Completable.complete()
 
+    fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched) = flowOf(Unit)
+
     fun removeEpisodeWatched(episodeWatched: ChapterWatched) = Completable.complete()
+
+    fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched) = flowOf(Unit)
 
     class FirebaseListener {
 
@@ -117,10 +127,11 @@ object FirebaseDb {
 
         fun findItemByUrl(url: String?) = Flowable.just(false)
 
-        @ExperimentalCoroutinesApi
         fun findItemByUrlFlow(url: String?) = flowOf(false)
 
         fun getAllEpisodesByShow(showUrl: String) = Flowable.just<List<ChapterWatched>>(emptyList())
+
+        fun getAllEpisodesByShowFlow(showUrl: String) = flowOf(emptyList<ChapterWatched>())
 
         //fun getAllEpisodesByShow(showDbModel: DbModel) = getAllEpisodesByShow(showDbModel.showUrl)
 

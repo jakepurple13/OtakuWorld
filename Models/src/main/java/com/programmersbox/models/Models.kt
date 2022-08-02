@@ -137,3 +137,4 @@ interface ApiService : Serializable {
 }
 
 val sourcePublish = BehaviorSubject.create<ApiService>()
+val sourceFlow = MutableStateFlow<ApiService?>(null)

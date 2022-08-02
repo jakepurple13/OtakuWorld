@@ -23,14 +23,8 @@ import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.showErrorToast
-import io.reactivex.Completable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -45,7 +39,7 @@ class DetailsViewModel(
 
     var info: InfoModel? by mutableStateOf(null)
 
-    private val disposable = CompositeDisposable()
+    private var addRemoveFavoriteJob: Job? = null
 
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
@@ -96,57 +90,46 @@ class DetailsViewModel(
                 .collect { favoriteListener = it }
         }
 
-        Flowables.combineLatest(
-            chapterListener.getAllEpisodesByShow(info.url),
-            dao.getAllChapters(info.url).subscribeOn(Schedulers.io())
-        ) { f, d -> (f + d).distinctBy { it.url } }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeBy { chapters = it }
-            .addTo(disposable)
+        viewModelScope.launch {
+            combine(
+                chapterListener.getAllEpisodesByShowFlow(info.url),
+                dao.getAllChaptersFlow(info.url)
+            ) { f, d -> (f + d).distinctBy { it.url } }
+                .onEach { chapters = it }
+                .collect()
+        }
     }
 
     fun markAs(c: ChapterModel, b: Boolean) {
         ChapterWatched(url = c.url, name = c.name, favoriteUrl = info!!.url)
             .let {
-                Completable.mergeArray(
-                    if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                    if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                )
+                viewModelScope.launch {
+                    if (b) dao.insertChapterFlow(it) else dao.deleteChapterFlow(it)
+                    (if (b) FirebaseDb.insertEpisodeWatchedFlow(it) else FirebaseDb.removeEpisodeWatchedFlow(it)).collect()
+                }
             }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {}
-            .addTo(disposable)
     }
 
     fun addItem() {
         val db = info!!.toDbModel(info!!.chapters.size)
-        Completable.concatArray(
-            FirebaseDb.insertShow(db),
-            dao.insertFavorite(db).subscribeOn(Schedulers.io())
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe()
-            .addTo(disposable)
+        addRemoveFavoriteJob?.cancel()
+        addRemoveFavoriteJob = viewModelScope.launch {
+            dao.insertFavoriteFlow(db)
+            FirebaseDb.insertShowFlow(db).collect()
+        }
     }
 
     fun removeItem() {
         val db = info!!.toDbModel(info!!.chapters.size)
-        Completable.concatArray(
-            FirebaseDb.removeShow(db),
-            dao.deleteFavorite(info!!.toDbModel()).subscribeOn(Schedulers.io())
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe()
-            .addTo(disposable)
+        addRemoveFavoriteJob?.cancel()
+        addRemoveFavoriteJob = viewModelScope.launch {
+            dao.deleteFavoriteFlow(db)
+            FirebaseDb.removeShowFlow(db).collect()
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
-        disposable.dispose()
         itemListener.unregister()
         chapterListener.unregister()
         englishTranslator.clear()

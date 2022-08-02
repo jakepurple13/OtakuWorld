@@ -8,7 +8,6 @@ import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.mangaworld.ChaptersGet
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.File
@@ -18,8 +17,6 @@ class DownloadViewModel(context: Context, defaultPathname: File) : ViewModel() {
     companion object {
         const val DownloadRoute = "downloads"
     }
-
-    val disposable = CompositeDisposable()
 
     var fileList by mutableStateOf<Map<String, Map<String, List<ChaptersGet.Chapters>>>>(emptyMap())
 
@@ -42,7 +39,6 @@ class DownloadViewModel(context: Context, defaultPathname: File) : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         c?.unregister()
-        disposable.dispose()
     }
 
 }

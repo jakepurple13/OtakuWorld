@@ -10,7 +10,6 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -19,8 +18,6 @@ class GlobalSearchViewModel(
     val dao: HistoryDao,
     initialSearch: String
 ) : ViewModel() {
-
-    private val disposable: CompositeDisposable = CompositeDisposable()
 
     var searchText by mutableStateOf(initialSearch)
     var searchListPublisher by mutableStateOf<List<SearchModel>>(emptyList())
@@ -42,17 +39,12 @@ class GlobalSearchViewModel(
                             .dispatchIoAndCatchList()
                             .map { SearchModel(a.serviceName, it) }
                     }
-            ) { it.filterIsInstance<SearchModel>().filter { s -> s.data.isNotEmpty() } }
+            ) { it.toList().filter { s -> s.data.isNotEmpty() } }
                 .onCompletion { isRefreshing = false }
                 .onStart { isRefreshing = true }
                 .onEach { searchListPublisher = it }
                 .collect()
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
     }
 
 }

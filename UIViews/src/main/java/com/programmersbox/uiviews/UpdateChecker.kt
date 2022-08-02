@@ -28,6 +28,7 @@ import com.programmersbox.uiviews.utils.*
 import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -40,15 +41,15 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 
 
-class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
+class AppCheckWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), KoinComponent {
 
     private val logo: NotificationLogo by inject()
 
-    override fun createWork(): Single<Result> = Single.create<Result> {
-        try {
-            val f = AppUpdate.getUpdate()?.update_real_version.orEmpty()
+    override suspend fun doWork(): Result {
+        return try {
+            val f = withTimeoutOrNull(60000) { AppUpdate.getUpdate()?.update_real_version.orEmpty() }
             val appVersion = applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName.orEmpty()
-            if (AppUpdate.checkForUpdate(appVersion, f)) {
+            if (f != null && AppUpdate.checkForUpdate(appVersion, f)) {
                 val n = NotificationDslBuilder.builder(
                     applicationContext,
                     "appUpdate",
@@ -61,20 +62,14 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : RxWorke
                             .setDestination(Screen.SettingsScreen.route)
                             .createPendingIntent()
                     }
-
                 }
-
                 applicationContext.notificationManager.notify(12, n)
-
-                it.onSuccess(Result.success())
             }
+            Result.success()
         } catch (e: Exception) {
-            it.onSuccess(Result.success())
+            Result.success()
         }
     }
-        .timeout(1, TimeUnit.MINUTES)
-        .onErrorReturn { Result.success() }
-
 }
 
 class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), KoinComponent {
@@ -130,6 +125,7 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
                             }
                         }
                     println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
+                    // To test notifications, comment these out but leave the Pair
                     if (model.numChapters >= (newData?.chapters?.size ?: -1)) null
                     else Pair(newData, model)
                 } catch (e: Exception) {
@@ -159,16 +155,16 @@ class UpdateNotification(private val context: Context) : KoinComponent {
 
     private val icon: NotificationLogo by inject()
 
-    fun updateManga(dao: ItemDao, triple: List<Pair<InfoModel?, DbModel>>) {
+    suspend fun updateManga(dao: ItemDao, triple: List<Pair<InfoModel?, DbModel>>) {
         triple.fastForEach {
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
-            dao.insertFavorite(item).subscribe()
-            FirebaseDb.updateShow(item).subscribe()
+            dao.insertFavoriteFlow(item)
+            FirebaseDb.updateShowFlow(item).catch { println("Something went wrong: ${it.message}") }.collect()
         }
     }
 
-    fun mapDbModel(dao: ItemDao, list: List<Pair<InfoModel?, DbModel>>, info: GenericInfo) = list.mapIndexed { index, pair ->
+    suspend fun mapDbModel(dao: ItemDao, list: List<Pair<InfoModel?, DbModel>>, info: GenericInfo) = list.mapIndexed { index, pair ->
         sendRunningNotification(list.size, index, pair.second.title)
         //index + 3 + (Math.random() * 50).toInt() //for a possible new notification value
         dao.insertNotification(
@@ -181,7 +177,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
                 source = pair.second.source,
                 contentTitle = pair.second.title
             )
-        ).subscribe()
+        )
         pair.second.hashCode() to NotificationDslBuilder.builder(
             context,
             "otakuChannel",
@@ -303,7 +299,7 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
         GlobalScope.launch {
             url?.let { dao?.getNotificationItem(it) }
                 .also { println(it) }
-                ?.let { dao?.deleteNotification(it)?.subscribe() }
+                ?.let { dao?.deleteNotification(it) }
             id?.let { if (it != -1) context?.notificationManager?.cancel(it) }
             val g = context?.notificationManager?.activeNotifications?.map { it.notification }?.filter { it.group == "otakuGroup" }.orEmpty()
             if (g.size == 1) context?.notificationManager?.cancel(42)
@@ -402,7 +398,6 @@ object SavedNotifications {
         val update = UpdateNotification(context)
         GlobalScope.launch {
             dao.getAllNotifications()
-                .blockingGet()
                 .fastMap { n ->
                     println(n)
                     n.id to NotificationDslBuilder.builder(

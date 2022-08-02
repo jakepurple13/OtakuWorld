@@ -52,7 +52,7 @@ class AboutViewModel : ViewModel() {
         try {
             if (!checker.get()) {
                 checker.set(true)
-                AppUpdate.getUpdate()?.let(appUpdateCheck::onNext)
+                AppUpdate.getUpdate()?.let(updateAppCheck::tryEmit)
             }
         } catch (e: Exception) {
             e.printStackTrace()

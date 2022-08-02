@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -31,7 +32,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -75,8 +75,6 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.CustomChip
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -138,10 +136,7 @@ fun DetailsScreen(
         ) { PlaceHolderHeader(it) }
     } else if (details.info != null) {
 
-        val isSaved by dao.doesNotificationExist(details.itemModel!!.url)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeAsState(false)
+        val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsState(initial = false)
 
         val shareChapter by localContext.shareChapter.collectAsState(initial = true)
         val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
@@ -406,7 +401,7 @@ private fun DetailsViewLandscape(
                                                 source = info.source.serviceName,
                                                 contentTitle = info.title
                                             )
-                                        ).subscribe()
+                                        )
                                     }
                                 },
                                 text = { Text(stringResource(id = R.string.save_for_later)) },
@@ -735,7 +730,7 @@ private fun DetailsView(
                                                     source = info.source.serviceName,
                                                     contentTitle = info.title
                                                 )
-                                            ).subscribe()
+                                            )
                                         }
                                     },
                                     text = { Text(stringResource(id = R.string.save_for_later)) },
@@ -748,7 +743,7 @@ private fun DetailsView(
                                         scope.launch(Dispatchers.IO) {
                                             dao.getNotificationItemFlow(info.url)
                                                 .firstOrNull()
-                                                ?.let { dao.deleteNotification(it).subscribe() }
+                                                ?.let { dao.deleteNotification(it) }
                                         }
                                     },
                                     text = { Text(stringResource(R.string.removeNotification)) },
@@ -1280,13 +1275,15 @@ private fun DetailsHeader(
                             ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
-                    Text(
-                        stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites),
-                        style = M3MaterialTheme.typography.headlineSmall,
-                        fontSize = 20.sp,
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                        color = M3MaterialTheme.colorScheme.onSurface
-                    )
+                    Crossfade(targetState = isFavorite) { target ->
+                        Text(
+                            stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
+                            style = M3MaterialTheme.typography.headlineSmall,
+                            fontSize = 20.sp,
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            color = M3MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
 
                 Text(

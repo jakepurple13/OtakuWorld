@@ -168,13 +168,11 @@ class GenericAnime(val context: Context) : GenericInfo {
     }
 
     private fun fetchIt(i: Storage, ep: ChapterModel) {
-
         try {
-
             fetch.setGlobalNetworkType(NetworkType.ALL)
 
             fun getNameFromUrl(url: String): String {
-                return Uri.parse(url).lastPathSegment?.let { if (it.isNotEmpty()) it else ep.name } ?: ep.name
+                return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { ep.name } } ?: ep.name
             }
 
             val requestList = arrayListOf<Request>()
@@ -599,5 +597,4 @@ class GenericAnime(val context: Context) : GenericInfo {
             getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
-
 }

@@ -24,7 +24,7 @@ import androidx.navigation.NavController
 import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -49,7 +49,7 @@ fun RecentView(
     val context = LocalContext.current
     val state = rememberLazyGridState()
     val scope = rememberCoroutineScope()
-    val source by sourcePublish.subscribeAsState(initial = null)
+    val source by sourceFlow.collectAsState(initial = null)
     val refresh = rememberSwipeRefreshState(isRefreshing = recentVm.isRefreshing)
 
     val isConnected by ReactiveNetwork.observeInternetConnectivity()

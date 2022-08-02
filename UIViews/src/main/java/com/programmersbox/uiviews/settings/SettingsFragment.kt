@@ -48,12 +48,11 @@ import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.BuildConfig
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
@@ -258,7 +257,7 @@ private fun AboutSettings(
         }
     )
 
-    val appUpdate by appUpdateCheck.subscribeAsState(null)
+    val appUpdate by updateAppCheck.collectAsState(null)
 
     PreferenceSetting(
         settingTitle = {
@@ -293,7 +292,7 @@ private fun AboutSettings(
                                 Manifest.permission.READ_EXTERNAL_STORAGE
                             ) {
                                 if (it.isGranted) {
-                                    appUpdateCheck.value
+                                    updateAppCheck.value
                                         ?.let { a ->
                                             val isApkAlreadyThere = File(
                                                 context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
@@ -568,7 +567,7 @@ private fun GeneralSettings(
 
     val vm: GeneralViewModel = viewModel()
 
-    val source: ApiService? by sourcePublish.subscribeAsState(initial = null)
+    val source by sourceFlow.collectAsState(initial = null)
 
     DynamicListSetting(
         settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
@@ -578,9 +577,11 @@ private fun GeneralSettings(
         value = source,
         options = { genericInfo.sourceList() },
         updateValue = { service, d ->
-            service?.let {
-                sourcePublish.onNext(it)
-                context.currentService = it.serviceName
+            scope.launch {
+                service?.let {
+                    sourceFlow.emit(it)
+                    context.currentService = it.serviceName
+                }
             }
             d.value = false
         }

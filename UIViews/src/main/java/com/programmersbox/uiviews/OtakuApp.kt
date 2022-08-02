@@ -15,7 +15,6 @@ import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.utils.shouldCheckFlow
-import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
@@ -29,7 +28,7 @@ abstract class OtakuApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        //This acts funky if user enabled force dark mode from developer options
+        // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
 
 
@@ -43,11 +42,6 @@ abstract class OtakuApp : Application() {
             createNotificationGroup("otakuGroup")
             createNotificationChannel("updateCheckChannel", importance = NotificationChannelImportance.MIN)
             createNotificationChannel("appUpdate", importance = NotificationChannelImportance.HIGH)
-        }
-
-        RxJavaPlugins.setErrorHandler {
-            it.printStackTrace()
-            //FirebaseCrashlytics.getInstance().recordException(it)
         }
 
         startKoin {

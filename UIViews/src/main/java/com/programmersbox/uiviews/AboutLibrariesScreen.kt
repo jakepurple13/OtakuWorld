@@ -40,6 +40,7 @@ import com.mikepenz.aboutlibraries.ui.compose.data.fakeData
 import com.mikepenz.aboutlibraries.ui.compose.util.author
 import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.utils.Insets
 import com.programmersbox.uiviews.utils.LocalNavController
 
 @Composable
@@ -68,12 +69,14 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
     Scaffold(
         modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
         topBar = {
-            SmallTopAppBar(
-                title = { Text("Libraries Used") },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
-                actions = { Text("${libs.size} libraries") },
-                scrollBehavior = topAppBarScrollBehavior
-            )
+            Insets {
+                SmallTopAppBar(
+                    title = { Text("Libraries Used") },
+                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    actions = { Text("${libs.size} libraries") },
+                    scrollBehavior = topAppBarScrollBehavior
+                )
+            }
         },
         /*bottomBar = {
             BottomAppBar {
