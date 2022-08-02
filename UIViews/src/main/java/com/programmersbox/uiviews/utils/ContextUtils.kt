@@ -45,16 +45,17 @@ import com.google.gson.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
-import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
-import com.programmersbox.helpfulutils.*
+import com.programmersbox.helpfulutils.Battery
+import com.programmersbox.helpfulutils.BatteryHealth
+import com.programmersbox.helpfulutils.downloadManager
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.flow.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -63,17 +64,15 @@ import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.LinkedHashMap
+import kotlin.collections.MutableMap
+import kotlin.collections.indices
+import kotlin.collections.lastOrNull
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 import kotlin.properties.Delegates
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
-
-var Context.shouldCheck: Boolean by sharedPrefNotNullObjectDelegate(true)
-
-var Context.lastUpdateCheck: Long? by sharedPrefDelegate(null)
-var Context.lastUpdateCheckEnd: Long? by sharedPrefDelegate(null)
-
-val updateCheckPublish = BehaviorSubject.create<Long>()
-val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     "otakuworld",
@@ -97,6 +96,12 @@ val Context.showAll get() = dataStore.data.map { it[SHOW_ALL] ?: true }
 
 val HISTORY_SAVE = intPreferencesKey("history_save")
 val Context.historySave get() = dataStore.data.map { it[HISTORY_SAVE] ?: 50 }
+
+val UPDATE_CHECKING_START = longPreferencesKey("lastUpdateCheckStart")
+val Context.updateCheckingStart get() = dataStore.data.map { it[UPDATE_CHECKING_START] ?: System.currentTimeMillis() }
+
+val UPDATE_CHECKING_END = longPreferencesKey("lastUpdateCheckEnd")
+val Context.updateCheckingEnd get() = dataStore.data.map { it[UPDATE_CHECKING_END] ?: System.currentTimeMillis() }
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 

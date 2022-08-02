@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -60,9 +59,6 @@ import com.programmersbox.uiviews.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.ListBottomSheet
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.rxkotlin.Observables
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -242,9 +238,8 @@ private fun AboutSettings(
     activity: ComponentActivity,
     genericInfo: GenericInfo,
     logo: MainLogo,
-    aboutViewModel: AboutViewModel = viewModel()
+    aboutViewModel: AboutViewModel = viewModel { AboutViewModel(context) }
 ) {
-    LaunchedEffect(Unit) { aboutViewModel.init(context) }
 
     CategorySetting(
         settingTitle = { Text(stringResource(R.string.about)) },
@@ -337,23 +332,9 @@ private fun AboutSettings(
         )
     }
 
-    val time by Observables.combineLatest(
-        updateCheckPublish.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
-        updateCheckPublishEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
-    )
-        .map { "${it.first}\n${it.second}" }
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeAsState(
-            listOfNotNull(
-                context.lastUpdateCheck?.let { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
-                context.lastUpdateCheckEnd?.let { "End: ${context.getSystemDateTimeFormat().format(it)}" }
-            ).joinToString("\n")
-        )
-
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
-        summaryValue = { Text(time) },
+        summaryValue = { Text(aboutViewModel.time) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }

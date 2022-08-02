@@ -10,14 +10,12 @@ import androidx.fragment.app.Fragment
 import androidx.leanback.app.SearchFragment
 import androidx.leanback.app.SearchSupportFragment
 import androidx.leanback.widget.*
+import androidx.lifecycle.lifecycleScope
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.models.ItemModel
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 /**
  * A simple [Fragment] subclass.
@@ -29,7 +27,6 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
     private val handler = Handler()
     private val delayedLoad = SearchRunnable()
     private val searchList = mutableListOf<ItemModel>()
-    private val disposable = CompositeDisposable()
 
     inner class SearchRunnable : Runnable {
 
@@ -74,11 +71,6 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy { searchList.addAll(it) }
             .addTo(disposable)*/
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
     }
 
     override fun onQueryTextChange(newQuery: String): Boolean {
@@ -128,36 +120,32 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
                         .observeOn(AndroidSchedulers.mainThread())
                         .onErrorReturnItem(emptyList())
                 }*/
-            Observable.combineLatest(
-                //Sources.values().distinctBy { it.baseUrl }
-                Sources.searchSources
-                    .filter { it.canPlay }
-                    .map {
-                        it
-                            .searchList(query, list = searchList)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .onErrorReturnItem(emptyList())
-                            .toObservable()
+            lifecycleScope.launch {
+                combine(
+                    Sources.searchSources
+                        .filter { it.canPlay }
+                        .map { a ->
+                            a.searchSourceList(query, list = emptyList())
+                            //.map { SearchModel(a.serviceName, it) }
+                        }
+                ) { it.toList().flatten().sortedBy(ItemModel::title) }
+                    .debounce(SEARCH_DELAY_MS)
+                    .map { d -> d.groupBy { it.source.serviceName } }
+                    .flowOn(Dispatchers.Main)
+                    .onEach {
+                        it.forEach { item ->
+                            val (t, u) = item
+                            val listRowAdapter = ArrayObjectAdapter(CardPresenter())
+
+                            listRowAdapter.addAll(0, u)
+
+                            val header = HeaderItem(t.hashCode().toLong(), t)
+
+                            rowsAdapter.add(ListRow(header, listRowAdapter))
+                        }
                     }
-            ) { (it as Array<List<ItemModel>>).toList().flatten().sortedBy(ItemModel::title) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .delay(SEARCH_DELAY_MS, TimeUnit.MILLISECONDS)
-                .map { d -> d.groupBy { it.source.serviceName } }
-                .subscribe {
-                    it.forEach { item ->
-                        val (t, u) = item
-                        val listRowAdapter = ArrayObjectAdapter(CardPresenter())
-
-                        listRowAdapter.addAll(0, u)
-
-                        val header = HeaderItem(t.hashCode().toLong(), t)
-
-                        rowsAdapter.add(ListRow(header, listRowAdapter))
-                    }
-                }
-                .addTo(disposable)
+                    .collect()
+            }
         }
         return true
     }

@@ -83,8 +83,7 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
         return try {
             update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
             Loged.fd("Starting check here")
-            applicationContext.lastUpdateCheck = System.currentTimeMillis()
-            applicationContext.lastUpdateCheck?.let { updateCheckPublish.onNext(it) }
+            applicationContext.updatePref(UPDATE_CHECKING_START, System.currentTimeMillis())
 
             Loged.fd("Start")
             val list = listOf(
@@ -145,6 +144,7 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
 
             Result.success()
         } finally {
+            applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
             update.sendFinishedNotification()
             Result.success()
         }
@@ -279,8 +279,6 @@ class UpdateNotification(private val context: Context) : KoinComponent {
     }
 
     fun sendFinishedNotification() {
-        context.lastUpdateCheckEnd = System.currentTimeMillis()
-        context.lastUpdateCheckEnd?.let { updateCheckPublishEnd.onNext(it) }
         val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon.notificationId) {
             onlyAlertOnce = true
             subText = context.getString(R.string.finishedChecking)

@@ -11,10 +11,11 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.sharedutils.*
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.shouldCheckFlow
+import com.programmersbox.uiviews.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,12 +39,24 @@ class AccountViewModel : ViewModel() {
     }
 }
 
-class AboutViewModel : ViewModel() {
+class AboutViewModel(context: Context) : ViewModel() {
 
     var canCheck by mutableStateOf(false)
 
-    fun init(context: Context) {
+    var time by mutableStateOf("")
+
+    init {
         viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
+
+        viewModelScope.launch {
+            combine(
+                context.updateCheckingStart.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
+                context.updateCheckingEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+            ) { s, e -> s to e }
+                .map { "${it.first}\n${it.second}" }
+                .onEach { time = it }
+                .collect()
+        }
     }
 
     private val checker = AtomicBoolean(false)
