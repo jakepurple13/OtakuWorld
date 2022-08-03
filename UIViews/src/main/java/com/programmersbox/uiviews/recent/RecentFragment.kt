@@ -33,8 +33,6 @@ import com.programmersbox.uiviews.utils.Insets
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.navigateToDetails
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -52,10 +50,7 @@ fun RecentView(
     val source by sourceFlow.collectAsState(initial = null)
     val refresh = rememberSwipeRefreshState(isRefreshing = recentVm.isRefreshing)
 
-    val isConnected by ReactiveNetwork.observeInternetConnectivity()
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeAsState(initial = true)
+    val isConnected by ReactiveNetwork.observeInternetConnectivity().subscribeAsState(initial = true)
 
     LaunchedEffect(isConnected) {
         if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context, source!!)

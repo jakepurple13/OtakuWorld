@@ -7,7 +7,6 @@ buildscript {
 
     ext.coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
     ext.coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
-    ext.coroutinesRX =  "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion"
 
     ext.gson = 'com.google.code.gson:gson:2.9.1'
 
@@ -16,11 +15,6 @@ buildscript {
     ext.glideCompiler = "com.github.bumptech.glide:compiler:$glideVersion"
 
     ext.paging_version = "3.1.1"
-
-    ext.rxkotlin = "io.reactivex.rxjava2:rxkotlin:2.4.0"
-    ext.rxandroid = "io.reactivex.rxjava2:rxandroid:2.1.1"
-    ext.rxbinding = 'com.jakewharton.rxbinding2:rxbinding:2.2.0'
-    ext.rxbindingKotlin = 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.2.0'
 
     ext.androidCore = 'androidx.core:core-ktx:1.8.0'
     ext.appCompat = 'androidx.appcompat:appcompat:1.4.2'
@@ -105,7 +99,6 @@ buildscript {
 
     ext.kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0-RC"
 
-
     ext {
         jakepurple13Tools = [
                 helpfultools: [
@@ -113,15 +106,13 @@ buildscript {
                         Deps.helpfulutils,
                         Deps.loggingutils,
                         Deps.dragswipe,
-                        Deps.funutils,
-                        Deps.rxutils
+                        Deps.funutils
                 ]
         ]
         room = [
                 room: [
                         "androidx.room:room-runtime:$room_version",
                         "androidx.room:room-ktx:$room_version",
-                        "androidx.room:room-rxjava2:$room_version"
                 ]
         ]
 

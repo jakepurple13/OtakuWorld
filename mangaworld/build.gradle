@@ -57,7 +57,7 @@ dependencies {
     implementation constraintlayout
     implementation swiperefresh
     implementation recyclerview
-    implementation 'com.google.android.gms:play-services-ads:20.5.0'
+    implementation 'com.google.android.gms:play-services-ads:21.1.0'
     testImplementation Deps.junit
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
@@ -81,11 +81,6 @@ dependencies {
         transitive = false
     }
 
-    implementation rxkotlin
-    implementation rxandroid
-    implementation rxbinding
-    implementation rxbindingKotlin
-
     def piasy = "1.8.1"
     implementation "com.github.piasy:BigImageViewer:$piasy"
     implementation "com.github.piasy:GlideImageLoader:$piasy"
@@ -100,7 +95,6 @@ dependencies {
 
     implementation coroutinesCore
     implementation coroutinesAndroid
-    implementation coroutinesRX
 
     implementation room.room
     // For Kotlin use kapt instead of annotationProcessor

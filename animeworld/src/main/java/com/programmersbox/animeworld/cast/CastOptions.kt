@@ -26,10 +26,10 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.images.WebImage
 import com.programmersbox.animeworld.R
 import io.github.dkbai.tinyhttpd.nanohttpd.webserver.SimpleWebServer
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -102,13 +102,13 @@ class CastHelper {
     private var onNeedToShowIntroductoryOverlay: SimpleCallback? = null
     private var onSessionConnected: () -> Unit = {}
 
-    private val sessionConnected = BehaviorSubject.createDefault(false)
+    private val sessionConnected = MutableStateFlow(false)
 
-    fun sessionConnected(): Observable<Boolean> = sessionConnected
+    fun sessionConnected(): Flow<Boolean> = sessionConnected
 
-    private val sessionStatus = BehaviorSubject.createDefault(false)
+    private val sessionStatus = MutableStateFlow(false)
 
-    fun sessionStatus(): Observable<Boolean> = sessionStatus
+    fun sessionStatus(): Flow<Boolean> = sessionStatus
 
     fun isCastActive() = try {
         mCastContext.castState == CastState.CONNECTED
@@ -169,7 +169,7 @@ class CastHelper {
     }
 
     private val castListener: (Int) -> Unit = { state ->
-        sessionConnected.onNext(state != CastState.NO_DEVICES_AVAILABLE)
+        sessionConnected.tryEmit(state != CastState.NO_DEVICES_AVAILABLE)
         if (state != CastState.NO_DEVICES_AVAILABLE) this.onNeedToShowIntroductoryOverlay?.invoke()
         if (state == CastState.NOT_CONNECTED) {
             /** When casting is disconnected we post updateLastModel */
@@ -180,7 +180,7 @@ class CastHelper {
             onSessionConnected()
             //sessionConnected.onNext(true)
         }
-        sessionStatus.onNext(state == CastState.CONNECTED)
+        sessionStatus.tryEmit(state == CastState.CONNECTED)
     }
 
     /** Separate UI logic to avoid memory, use context from view */

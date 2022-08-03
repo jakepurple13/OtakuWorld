@@ -61,10 +61,6 @@ dependencies {
     implementation glide
     kapt glideCompiler
 
-    implementation rxkotlin
-    implementation rxandroid
-    implementation rxbinding
-    implementation rxbindingKotlin
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation material
     implementation constraintlayout

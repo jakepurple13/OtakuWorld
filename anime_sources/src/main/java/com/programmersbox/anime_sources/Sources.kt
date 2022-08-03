@@ -2,12 +2,8 @@ package com.programmersbox.anime_sources
 
 import com.programmersbox.anime_sources.anime.*
 import com.programmersbox.models.ApiService
-import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
-import io.reactivex.Single
-import io.reactivex.schedulers.Schedulers
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 
 enum class Sources(private val api: ApiService, val notWorking: Boolean = false) : ApiService by api {
     //GOGOANIME(GogoAnimeApi),
@@ -77,30 +73,6 @@ abstract class ShowApi(
     internal open fun recentPage(page: Int): String = ""
     internal open fun allPage(page: Int): String = ""
 
-    internal abstract fun getRecent(doc: Document): Single<List<ItemModel>>
-    internal abstract fun getList(doc: Document): Single<List<ItemModel>>
-
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> =
-        Single.create { it.onSuccess(if (searchText.isEmpty()) list else list.filter { it.title.contains(searchText, true) }) }
-
     protected fun searchListNonSingle(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> =
         if (searchText.isEmpty()) list else list.filter { it.title.contains(searchText, true) }
-
-    override fun getRecent(page: Int) = Single.create<Document> { it.onSuccess(recentPath(page)) }
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.io())
-        .flatMap { getRecent(it) }
-
-    override fun getList(page: Int) = Single.create<Document> { it.onSuccess(all(page)) }
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.io())
-        .flatMap { getList(it) }
-        .map { it.sortedBy(ItemModel::title) }
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create<Document> { it.onSuccess(model.url.toJsoup()) }
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.io())
-        .flatMap { getItemInfo(model, it) }
-
-    internal abstract fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel>
 }

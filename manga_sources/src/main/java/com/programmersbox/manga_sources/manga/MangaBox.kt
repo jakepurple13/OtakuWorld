@@ -1,12 +1,10 @@
 package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
-import android.net.Uri
 import com.programmersbox.manga_sources.utilities.GET
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
-import io.reactivex.Single
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -35,25 +33,6 @@ abstract class MangaBox(
 
     fun Response.asJsoup(html: String? = null): Document {
         return Jsoup.parse(html ?: body!!.string(), request.url.toString())
-    }
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create {
-        it.onSuccess(mangaDetailsParse(client.newCall(GET(model.url, headers())).execute().asJsoup(), model))
-        //it.onSuccess(mangaDetailsParse(client.newCall(GET("${baseUrl}/${model.url}", headers())).execute().asJsoup(), model))
-    }
-
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        client.newCall(latestUpdatesRequest(page))
-            .execute()
-            .let { latestUpdatesParse(it) }
-            .let { emitter.onSuccess(it) }
-    }
-
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        client.newCall(popularMangaRequest(page))
-            .execute()
-            .let { popularMangaParse(it) }
-            .let { emitter.onSuccess(it) }
     }
 
     /*override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create { emitter ->
@@ -302,13 +281,6 @@ abstract class MangaBox(
     }*/
 
     open val pageListSelector = "div#vungdoc img, div.container-chapter-reader img"
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-        client.newCall(GET(chapterModel.url)).execute().asJsoup()
-            .let { pageListParse(it) }
-            .also { println(it.joinToString("\n") { Uri.parse(it.link).toString() }) }
-            .let(emitter::onSuccess)
-    }
 
     private fun pageListParse(document: Document): List<Storage> {
         return document.select(pageListSelector)

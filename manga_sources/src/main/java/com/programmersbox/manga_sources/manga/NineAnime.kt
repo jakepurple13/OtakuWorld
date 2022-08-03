@@ -2,7 +2,6 @@ package com.programmersbox.manga_sources.manga
 
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
-import io.reactivex.Single
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
@@ -36,41 +35,6 @@ object NineAnime : ApiService {
             }
     }
 
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
-        if (searchText.isBlank()) throw Exception("No search necessary")
-        Single.create { emitter ->
-            Jsoup.connect("$baseUrl/search/?name=$searchText&page=$page.html").followRedirects(true).get()
-                .select("div.post").fastMap {
-                    ItemModel(
-                        title = it.select("p.title a").text(),
-                        description = "",
-                        url = it.select("p.title a").attr("abs:href"),
-                        imageUrl = it.select("img").attr("abs:src"),
-                        source = this
-                    )
-                }
-                .let { emitter.onSuccess(it) }
-        }
-
-    } catch (e: Exception) {
-        super.searchList(searchText, page, list)
-    }
-
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create {
-        it.onSuccess(
-            Jsoup.connect("$baseUrl/category/index_$page.html").followRedirects(true).get()
-                .select("div.post").fastMap {
-                    ItemModel(
-                        title = it.select("p.title a").text(),
-                        description = "",
-                        url = it.select("p.title a").attr("abs:href"),
-                        imageUrl = it.select("img").attr("abs:src"),
-                        source = this
-                    )
-                }
-        )
-    }
-
     override suspend fun allList(page: Int): List<ItemModel> {
         return Jsoup.connect("$baseUrl/category/index_$page.html").followRedirects(true).get()
             .select("div.post").fastMap {
@@ -82,37 +46,6 @@ object NineAnime : ApiService {
                     source = this@NineAnime
                 )
             }
-    }
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = try {
-            Jsoup.connect("${model.url}?waring=1").followRedirects(true).get()
-        } catch (e: Exception) {
-            emitter.onError(e)
-            return@create
-        }
-        val genreAndDescription = doc.select("div.manga-detailmiddle")
-        emitter.onSuccess(
-            InfoModel(
-                title = model.title,
-                description = genreAndDescription.select("p.mobile-none").text(),
-                url = model.url,
-                imageUrl = model.imageUrl,
-                chapters = doc.select("ul.detail-chlist li").fastMap {
-                    ChapterModel(
-                        name = it.select("a").select("span").firstOrNull()?.text() ?: it.text() ?: it.select("a").text(),
-                        url = it.select("a").attr("abs:href"),
-                        uploaded = it.select("span.time").text(),
-                        sourceUrl = model.url,
-                        source = this
-                    ).apply { uploadedTime = uploaded.toDate() }
-                },
-                genres = genreAndDescription.select("p:has(span:contains(Genre)) a").fastMap { it.text() },
-                alternativeNames = doc.select("div.detail-info").select("p:has(span:contains(Alternative))").text()
-                    .removePrefix("Alternative(s):").split(";"),
-                source = this
-            )
-        )
     }
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
@@ -169,21 +102,6 @@ object NineAnime : ApiService {
         )
     }
 
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-        try {
-            val doc = Jsoup.connect(chapterModel.url)
-                .header("Referer", "$baseUrl/manga/").followRedirects(true).get()
-            val script = doc.select("script:containsData(all_imgs_url)").firstOrNull()?.data() ?: throw Exception("all_imgsurl not found")
-            emitter.onSuccess(
-                Regex(""""(http.*)",""").findAll(script).map { it.groupValues[1] }
-                    .map { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
-                    .toList()
-            )
-        } catch (e: Exception) {
-            emitter.onError(e)
-        }
-    }
-
     override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
         val doc = Jsoup.connect(chapterModel.url)
             .header("Referer", "$baseUrl/manga/").followRedirects(true).get()
@@ -200,21 +118,6 @@ object NineAnime : ApiService {
     }*/
 
     override val canScroll: Boolean get() = true
-
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create {
-        it.onSuccess(
-            Jsoup.connect("$baseUrl/category/index_$page.html?sort=updated").followRedirects(true).get()
-                .select("div.post").fastMap {
-                    ItemModel(
-                        title = it.select("p.title a").text(),
-                        description = "",
-                        url = it.select("p.title a").attr("abs:href"),
-                        imageUrl = it.select("img").attr("abs:src"),
-                        source = this
-                    )
-                }
-        )
-    }
 
     override suspend fun recent(page: Int): List<ItemModel> {
         return Jsoup.connect("$baseUrl/category/index_$page.html?sort=updated").followRedirects(true).get()

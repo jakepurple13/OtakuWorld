@@ -6,7 +6,6 @@ import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.*
 import com.programmersbox.models.*
 import com.squareup.duktape.Duktape
-import io.reactivex.Single
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
@@ -29,41 +28,13 @@ object MangaPark : ApiService, KoinComponent {
 
     private fun String.v3Url() = baseUrl
 
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
-        if (searchText.isBlank()) {
-            super.searchList(searchText, page, list)
-        } else {
-            Single.create { emitter ->
-                emitter.onSuccess(
-                    cloudflare(helper, "${baseUrl.v3Url()}/search?word=$searchText&page=$page").execute().asJsoup()
-                        .browseToItemModel("div#search-list div.col")
-                )
-            }
-
-        }
-    } catch (e: Exception) {
-        super.searchList(searchText, page, list)
-    }
-
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
         return cloudflare(helper, "${baseUrl.v3Url()}/search?word=$searchText&page=$page").execute().asJsoup()
             .browseToItemModel("div#search-list div.col")
     }
 
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare(helper, "${baseUrl.v3Url()}/browse?sort=d007&page=$page").execute().asJsoup()
-            .browseToItemModel()
-            .let { emitter.onSuccess(it) }
-    }
-
     override suspend fun allList(page: Int): List<ItemModel> {
         return cloudflare(helper, "${baseUrl.v3Url()}/browse?sort=d007&page=$page").execute().asJsoup().browseToItemModel()
-    }
-
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        cloudflare(helper, "${baseUrl.v3Url()}/browse?sort=update&page=$page").execute().asJsoup()
-            .browseToItemModel()
-            .let { emitter.onSuccess(it) }
     }
 
     override suspend fun recent(page: Int): List<ItemModel> {
@@ -80,47 +51,6 @@ object MangaPark : ApiService, KoinComponent {
                 source = Sources.MANGA_PARK
             )
         }
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = cloudflare(helper, model.url.v3Url()).execute().asJsoup()
-        try {
-            val infoElement = doc.select("div#mainer div.container-fluid")
-            emitter.onSuccess(
-                InfoModel(
-                    title = model.title,
-                    description = model.description,
-                    url = model.url,
-                    imageUrl = model.imageUrl,
-                    chapters = chapterListParse(helper.cloudflareClient.newCall(chapterListRequest(model)).execute(), model.url.v3Url()),
-                    genres = infoElement.select("div.attr-item:contains(genres) span span").fastMap { it.text().trim() },
-                    alternativeNames = emptyList(),
-                    source = this
-                )
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            val genres = mutableListOf<String>()
-            val alternateNames = mutableListOf<String>()
-            doc.select(".attr > tbody > tr").forEach {
-                when (it.getElementsByTag("th").first()!!.text().trim().lowercase(Locale.getDefault())) {
-                    "genre(s)" -> genres.addAll(it.getElementsByTag("a").fastMap(Element::text))
-                    "alternative" -> alternateNames.addAll(it.text().split("l"))
-                }
-            }
-            emitter.onSuccess(
-                InfoModel(
-                    title = model.title,
-                    description = doc.select("p.summary").text(),
-                    url = model.url,
-                    imageUrl = model.imageUrl,
-                    chapters = chapterListParse(doc, model.url),
-                    genres = genres,
-                    alternativeNames = alternateNames,
-                    source = this
-                )
-            )
-        }
-    }
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
         val doc = cloudflare(helper, model.url.v3Url()).execute().asJsoup()
@@ -322,30 +252,6 @@ object MangaPark : ApiService, KoinComponent {
             imageUrl = infoElement.select("div.detail-set div.attr-cover img").attr("abs:src"),
             source = this
         )
-    }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-
-        val duktape = Duktape.create()
-        val script = cloudflare(helper, chapterModel.url).execute().asJsoup().select("script").html()
-        val imgCdnHost = script.substringAfter("const imgCdnHost = \"").substringBefore("\";")
-        val imgPathLisRaw = script.substringAfter("const imgPathLis = ").substringBefore(";")
-        val imgPathLis = Json.parseToJsonElement(imgPathLisRaw).jsonArray
-        val amPass = script.substringAfter("const amPass = ").substringBefore(";")
-        val amWord = script.substringAfter("const amWord = ").substringBefore(";")
-
-        val decryptScript = cryptoJS + "CryptoJS.AES.decrypt($amWord, $amPass).toString(CryptoJS.enc.Utf8);"
-
-        val imgWordLisRaw = duktape.evaluate(decryptScript).toString()
-        val imgWordLis = Json.parseToJsonElement(imgWordLisRaw).jsonArray
-
-        imgWordLis.mapIndexed { i, imgWordE ->
-            val imgPath = imgPathLis[i].jsonPrimitive.content
-            val imgWord = imgWordE.jsonPrimitive.content
-            "$imgCdnHost$imgPath?$imgWord"
-        }
-            .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
-            .let { emitter.onSuccess(it) }
     }
 
     override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {

@@ -75,7 +75,7 @@ class PageAdapter(
                             activity.lifecycleScope.launch {
                                 ChapterWatched(item.url, item.name, mangaUrl)
                                     .let {
-                                        dao.insertChapterFlow(it)
+                                        dao.insertChapter(it)
                                         FirebaseDb.insertEpisodeWatchedFlow(it).collect()
                                     }
                             }

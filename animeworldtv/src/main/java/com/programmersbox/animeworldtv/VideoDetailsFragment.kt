@@ -54,7 +54,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
         lifecycleScope.launch {
             mSelectedMovie
-                ?.toInfoModelFlow()
+                ?.toInfoModel()
                 ?.map { it.getOrNull() }
                 ?.flowOn(Dispatchers.Main)
                 ?.catch {
@@ -76,7 +76,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                         lifecycleScope.launch {
                             combine(
                                 chapterListener.getAllEpisodesByShowFlow(it.url),
-                                itemDao.getAllChaptersFlow(it.url)
+                                itemDao.getAllChapters(it.url)
                             ) { f, d -> (f + d).distinctBy { it.url } }
                                 .flowOn(Dispatchers.Main)
                                 .onEach { l ->
@@ -178,7 +178,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
         lifecycleScope.launch(Dispatchers.IO) {
             combine(
                 itemListener.findItemByUrlFlow(movie!!.url),
-                itemDao.containsItemFlow(movie.url)
+                itemDao.containsItem(movie.url)
             ) { f, d -> f || d }
                 .flowOn(Dispatchers.Main)
                 .collect {
@@ -258,7 +258,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                     fun addItem(model: InfoModel) {
                         val db = model.toDbModel(model.chapters.size)
                         lifecycleScope.launch {
-                            itemDao.insertFavoriteFlow(db)
+                            itemDao.insertFavorite(db)
                             FirebaseDb.insertShowFlow(db).collect()
                         }
                     }
@@ -266,7 +266,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                     fun removeItem(model: InfoModel) {
                         val db = model.toDbModel(model.chapters.size)
                         lifecycleScope.launch {
-                            itemDao.deleteFavoriteFlow(db)
+                            itemDao.deleteFavorite(db)
                             FirebaseDb.removeShowFlow(db).collect()
                         }
                     }
@@ -390,7 +390,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 ChapterWatched(url = item.url, name = item.name, favoriteUrl = mSelectedInfoModel?.url.orEmpty())
                     .let {
                         lifecycleScope.launch {
-                            itemDao.insertChapterFlow(it)
+                            itemDao.insertChapter(it)
                             FirebaseDb.insertEpisodeWatchedFlow(it).collect()
                         }
                     }

@@ -288,7 +288,7 @@ class ReadActivity : AppCompatActivity() {
             .start()
         adapter2.setListNotify(emptyList())
         lifecycleScope.launch {
-            model?.getChapterInfoFlow()
+            model?.getChapterInfo()
                 ?.map { it.mapNotNull(Storage::link) }
                 ?.catch { runOnUiThread { Toast.makeText(this@ReadActivity, it.localizedMessage, Toast.LENGTH_SHORT).show() } }
                 ?.flowOn(Dispatchers.Main)

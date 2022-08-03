@@ -60,9 +60,6 @@ dependencies {
 
     implementation uiUtil
 
-    implementation rxkotlin
-    implementation rxandroid
-
     implementation project(':Models')
 
     implementation koin.koin

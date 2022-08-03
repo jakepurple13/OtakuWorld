@@ -98,7 +98,7 @@ fun NotificationsScreen(
     val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
 
     LaunchedEffect(Unit) {
-        db.getAllNotificationCountFlow()
+        db.getAllNotificationCount()
             .filter { it == 0 }
             .collect {
                 notificationManager.cancel(42)
@@ -138,7 +138,7 @@ fun NotificationsScreen(
                         TextButton(
                             onClick = {
                                 scope.launch {
-                                    val number = db.deleteAllNotificationsFlow()
+                                    val number = db.deleteAllNotifications()
                                     launch(Dispatchers.Main) {
                                         onDismiss()
                                         Toast.makeText(
@@ -180,7 +180,7 @@ fun NotificationsScreen(
                 withContext(Dispatchers.Default) {
                     d.forEach {
                         notificationManager.cancelNotification(it)
-                        db.deleteNotificationFlow(it)
+                        db.deleteNotification(it)
                     }
                 }
                 d.clear()

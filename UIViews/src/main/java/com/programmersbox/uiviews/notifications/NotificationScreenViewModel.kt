@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 class NotificationScreenViewModel : ViewModel() {
     fun deleteNotification(db: ItemDao, item: NotificationItem, block: () -> Unit = {}) {
         viewModelScope.launch {
-            withContext(Dispatchers.Default) { db.deleteNotificationFlow(item) }
+            withContext(Dispatchers.Default) { db.deleteNotification(item) }
             block()
         }
     }

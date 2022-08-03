@@ -125,7 +125,7 @@ class GenericManga(val context: Context) : GenericInfo {
         if (!direct.exists()) direct.mkdir()
 
         GlobalScope.launch {
-            model.getChapterInfoFlow()
+            model.getChapterInfo()
                 .dispatchIo()
                 .map { it.mapNotNull(Storage::link) }
                 .map {

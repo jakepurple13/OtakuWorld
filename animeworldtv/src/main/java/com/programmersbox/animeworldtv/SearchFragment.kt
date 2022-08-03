@@ -37,7 +37,6 @@ class SearchFragment : SearchSupportFragment(), SearchSupportFragment.SearchResu
         }
 
         override fun run() {
-
             searchList.filter { it.title.contains(searchQuery, true) }
                 .groupBy { it.title.firstOrNull().toString() }
                 .entries.forEach {

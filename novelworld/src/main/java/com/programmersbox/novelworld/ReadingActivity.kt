@@ -79,7 +79,7 @@ class ReadViewModel(
     genericInfo: GenericInfo,
     model: Flow<List<String>>? = handle.get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-        ?.getChapterInfoFlow()
+        ?.getChapterInfo()
         ?.map { it.mapNotNull(Storage::link) }
 ) : ViewModel() {
 
@@ -144,13 +144,13 @@ class ReadViewModel(
             ChapterWatched(item.url, item.name, novelUrl)
                 .let {
                     viewModelScope.launch {
-                        dao.insertChapterFlow(it)
+                        dao.insertChapter(it)
                         FirebaseDb.insertEpisodeWatchedFlow(it).collect()
                         withContext(Dispatchers.Main) { chapter() }
                     }
                 }
 
-            loadPages(item.getChapterInfoFlow().mapNotNull { it.mapNotNull { it.link } })
+            loadPages(item.getChapterInfo().mapNotNull { it.mapNotNull { it.link } })
         }
     }
 
@@ -280,7 +280,7 @@ fun NovelReader() {
                                 .padding(top = 4.dp),
                             factory = {
                                 AdView(it).apply {
-                                    adSize = AdSize.BANNER
+                                    setAdSize(AdSize.BANNER)
                                     adUnitId = context.getString(R.string.ad_unit_id)
                                     loadAd(readVm.ad)
                                 }
@@ -369,7 +369,7 @@ fun NovelReader() {
                 onRefresh = {
                     readVm.loadPages(
                         readVm.list.getOrNull(readVm.currentChapter)
-                            ?.getChapterInfoFlow()
+                            ?.getChapterInfo()
                             ?.map { it.mapNotNull(Storage::link) }
                     )
                 },
@@ -412,7 +412,7 @@ fun NovelReader() {
                             modifier = Modifier.fillMaxWidth(),
                             factory = {
                                 AdView(it).apply {
-                                    adSize = AdSize.BANNER
+                                    setAdSize(AdSize.BANNER)
                                     adUnitId = context.getString(R.string.ad_unit_id)
                                     loadAd(readVm.ad)
                                 }

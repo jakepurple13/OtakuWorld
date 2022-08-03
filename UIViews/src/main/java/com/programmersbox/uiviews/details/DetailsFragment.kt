@@ -240,7 +240,7 @@ private fun DetailsViewLandscape(
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
 
-    BackHandler(scaffoldState.bottomSheetState.isExpanded && navController.graph.id == currentScreen.value) {
+    BackHandler(scaffoldState.bottomSheetState.isExpanded) {
         scope.launch {
             try {
                 scaffoldState.bottomSheetState.collapse()

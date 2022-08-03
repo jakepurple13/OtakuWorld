@@ -450,7 +450,7 @@ private fun NotificationSettings(
                     TextButton(
                         onClick = {
                             scope.launch {
-                                val number = dao.deleteAllNotificationsFlow()
+                                val number = dao.deleteAllNotifications()
                                 launch(Dispatchers.Main) {
                                     Toast.makeText(
                                         context,

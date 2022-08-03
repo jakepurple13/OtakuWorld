@@ -128,7 +128,7 @@ class FavoriteFragment : BrowseSupportFragment() {
         lifecycleScope.launch {
             combine(
                 itemListener.getAllShowsFlow(),
-                itemDao.getAllFavoritesFlow()
+                itemDao.getAllFavorites()
             ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
                 .map { items ->
                     items.mapNotNull {

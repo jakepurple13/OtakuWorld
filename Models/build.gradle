@@ -38,13 +38,9 @@ dependencies {
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
 
-    //Rx
-    implementation rxkotlin
-
     //Coroutines
     implementation coroutinesCore
     implementation coroutinesAndroid
-    implementation coroutinesRX
 
     implementation ktor.ktor
     implementation kotlinxSerialization

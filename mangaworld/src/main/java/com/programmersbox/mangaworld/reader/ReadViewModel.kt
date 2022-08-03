@@ -39,7 +39,7 @@ class ReadViewModel(
     model: Flow<List<String>>? = handle
         .get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-        ?.getChapterInfoFlow()
+        ?.getChapterInfo()
         ?.map {
             headers.putAll(it.flatMap { it.headers.toList() })
             it.mapNotNull(Storage::link)
@@ -155,14 +155,14 @@ class ReadViewModel(
             ChapterWatched(item.url, item.name, mangaUrl)
                 .let {
                     viewModelScope.launch {
-                        dao.insertChapterFlow(it)
+                        dao.insertChapter(it)
                         FirebaseDb.insertEpisodeWatchedFlow(it).collect()
                         withContext(Dispatchers.Main) { chapter() }
                     }
                 }
 
             item
-                .getChapterInfoFlow()
+                .getChapterInfo()
                 .map { it.mapNotNull(Storage::link) }
                 .let { loadPages(it) }
         }
@@ -187,7 +187,7 @@ class ReadViewModel(
         headers.clear()
         loadPages(
             list.getOrNull(currentChapter)
-                ?.getChapterInfoFlow()
+                ?.getChapterInfo()
                 ?.map {
                     headers.putAll(it.flatMap { it.headers.toList() })
                     it.mapNotNull(Storage::link)

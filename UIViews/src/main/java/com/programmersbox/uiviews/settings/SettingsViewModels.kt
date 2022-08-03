@@ -83,7 +83,7 @@ class NotificationViewModel(dao: ItemDao) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            dao.getAllNotificationCountFlow()
+            dao.getAllNotificationCount()
                 .dispatchIo()
                 .onEach { savedNotifications = it }
                 .collect()

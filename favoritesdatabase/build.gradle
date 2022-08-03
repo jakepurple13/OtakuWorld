@@ -58,5 +58,5 @@ dependencies {
     implementation "androidx.paging:paging-runtime-ktx:$paging_version"
     // alternatively - without Android dependencies for tests
     testImplementation "androidx.paging:paging-common-ktx:$paging_version"
-    implementation "androidx.room:room-paging:2.4.1"
+    implementation "androidx.room:room-paging:2.4.3"
 }

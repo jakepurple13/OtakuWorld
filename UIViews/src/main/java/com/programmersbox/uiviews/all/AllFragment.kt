@@ -58,13 +58,11 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 @ExperimentalFoundationApi
 @Composable
 fun AllView(
-    allVm: AllViewModel,// = viewModel(factory = factoryCreate { AllFragment.AllViewModel(dao, context) })
+    allVm: AllViewModel,
     logo: MainLogo,
     info: GenericInfo,
     navController: NavController
 ) {
-    //TODO: MAYBE have an option to show or hide the All screen.
-    // maybe if possible, have it show for certain sources that the user can choose
     val context = LocalContext.current
 
     val isConnected by ReactiveNetwork.observeInternetConnectivity()

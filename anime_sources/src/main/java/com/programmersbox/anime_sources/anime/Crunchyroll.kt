@@ -13,16 +13,12 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
-import io.reactivex.Single
-import io.reactivex.schedulers.Schedulers
 import khttp.responses.Response
 import khttp.structures.authorization.Authorization
 import khttp.structures.cookie.Cookie
 import khttp.structures.cookie.CookieJar
 import khttp.structures.files.FileLike
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import java.util.concurrent.TimeUnit
 
 /**
  * An HTTP session manager.
@@ -175,30 +171,6 @@ object CrunchyRoll : ShowApi(
     private val crUnblock = CrunchyrollGeoBypasser()
     private val episodeNumRegex = Regex("""Episode (\d+)""")
 
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create<Document> { emitter ->
-        emitter.onSuccess(Jsoup.parse(crUnblock.geoBypassRequest("$baseUrl/videos/anime/popular/ajax_page?pg=1").text))
-    }
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.io())
-        .flatMap { getRecent(it) }
-
-    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
-        doc
-            .select("li.group-item")
-            .fastMap {
-                ItemModel(
-                    title = it.select("span.series-title").text(),
-                    description = "",
-                    imageUrl = it.select("span.img-holder")
-                        .select("img")
-                        .attr("src"),
-                    url = fixUrl(it.select("a").attr("href")),
-                    source = Sources.CRUNCHYROLL
-                )
-            }
-            .let(emitter::onSuccess)
-    }
-
     override suspend fun recent(page: Int): List<ItemModel> {
         return Jsoup.parse(crUnblock.geoBypassRequest("$baseUrl/videos/anime/popular/ajax_page?pg=1").text)
             .select("li.group-item")
@@ -213,30 +185,6 @@ object CrunchyRoll : ShowApi(
                     source = Sources.CRUNCHYROLL
                 )
             }
-    }
-
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create<Document> { emitter ->
-        emitter.onSuccess(Jsoup.parse(crUnblock.geoBypassRequest("$baseUrl/videos/anime/popular/ajax_page?pg=2").text))
-    }
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.io())
-        .flatMap { getRecent(it) }
-
-    override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
-        doc
-            .select("li.group-item")
-            .fastMap {
-                ItemModel(
-                    title = it.select("span.series-title").text(),
-                    description = "",
-                    imageUrl = it.select("span.img-holder")
-                        .select("img")
-                        .attr("src"),
-                    url = fixUrl(it.select("a").attr("href")),
-                    source = Sources.CRUNCHYROLL
-                )
-            }
-            .let(emitter::onSuccess)
     }
 
     override suspend fun allList(page: Int): List<ItemModel> {
@@ -262,28 +210,6 @@ object CrunchyRoll : ShowApi(
     )
 
     private data class CrunchyJson(val data: List<CrunchyAnimeData>)
-
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create<List<ItemModel>> {
-        val json = crUnblock.geoBypassRequest("http://www.crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates")
-            .text
-            .split("*/")[0].replace("\\/", "/")
-            .split("\n").mapNotNull { s -> if (!s.startsWith("/")) s else null }.joinToString("\n")
-            .fromJson<CrunchyJson>()
-            ?.data
-            ?.filter { data -> data.name.similarity(searchText.toString()) >= .6 || data.name.contains(searchText, true) }
-            ?.fastMap { d ->
-                ItemModel(
-                    title = d.name,
-                    description = "",
-                    imageUrl = d.img.replace("small", "full"),
-                    url = fixUrl(d.link),
-                    source = Sources.CRUNCHYROLL
-                )
-            }
-            .orEmpty()
-        it.onSuccess(json)
-    }
-        .onErrorResumeNext(super.searchList(searchText, page, list))
 
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
         return crUnblock.geoBypassRequest("http://www.crunchyroll.com/ajax/?req=RpcApiSearch_GetSearchCandidates")
@@ -322,81 +248,6 @@ object CrunchyRoll : ShowApi(
             imageUrl = doc.selectFirst(".poster")?.attr("src").orEmpty(),
         )
     }
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-
-        val doc = Jsoup.parse(crUnblock.geoBypassRequest(fixUrl(model.url)).text)
-
-        val sub = ArrayList<ChapterModel>()
-        val dub = ArrayList<ChapterModel>()
-
-        doc
-            .select(".season")
-            .fastForEach {
-                val seasonName = it.selectFirst("a.season-dropdown")?.text()?.trim()
-                it.select(".episode").forEach { ep ->
-                    val epTitle = ep.selectFirst(".short-desc")?.text()
-                    val epNum = episodeNumRegex.find(ep.selectFirst("span.ellipsis")?.text().toString())?.destructured?.component1()
-
-                    if (seasonName == null) {
-                        val epi = ChapterModel(
-                            "$epNum: $epTitle",
-                            fixUrl(ep.attr("href")),
-                            ep.select("div.episode-progress-bar").select("div.episode_progress").attr("media_id"),
-                            model.url,
-                            Sources.CRUNCHYROLL
-                        )
-                        sub.add(epi)
-                    } else if (seasonName.contains("(HD)")) {
-                        // do nothing (filters our premium eps from one piece)
-                    } else if (seasonName.contains("Dub") || seasonName.contains("Russian")) {
-                        val epi = ChapterModel(
-                            "$epNum: $epTitle (Dub)",
-                            fixUrl(ep.attr("href")),
-                            ep.select("div.episode-progress-bar").select("div.episode_progress").attr("media_id"),
-                            model.url,
-                            Sources.CRUNCHYROLL
-                        )
-                        dub.add(epi)
-                    } else {
-                        val epi = ChapterModel(
-                            "$epNum: $epTitle",
-                            fixUrl(ep.attr("href")),
-                            ep.select("div.episode-progress-bar").select("div.episode_progress").attr("media_id"),
-                            model.url,
-                            Sources.CRUNCHYROLL
-                        )
-                        sub.add(epi)
-                    }
-                }
-            }
-
-        val p = doc.selectFirst(".description")
-
-        val description = if (
-            p?.selectFirst(".more") != null &&
-            !p.selectFirst(".more")?.text()?.trim().isNullOrEmpty()
-        ) {
-            p.selectFirst(".more")?.text()?.trim()
-        } else {
-            p?.selectFirst("span")?.text()?.trim()
-        }
-            .orEmpty()
-
-        InfoModel(
-            source = Sources.CRUNCHYROLL,
-            title = model.title,
-            url = model.url,
-            alternativeNames = emptyList(),
-            description = description,
-            imageUrl = model.imageUrl,
-            genres = doc.select(".large-margin-bottom > ul:nth-child(2) li:nth-child(2) a").map { it.text() },
-            chapters = sub + dub
-        )
-            .let(emitter::onSuccess)
-    }
-
-    override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.never()
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
         val doc = Jsoup.parse(crUnblock.geoBypassRequest(fixUrl(model.url)).text)
@@ -489,62 +340,6 @@ object CrunchyRoll : ShowApi(
         val streams: List<Streams>,
         val subtitles: List<Subtitles>,
     )
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create<List<Storage>> { emitter ->
-        val contentRegex = Regex("""vilos\.config\.media = (\{.+\})""")
-        val response = crUnblock.geoBypassRequest(chapterModel.url)
-
-        val hlsHelper = M3u8Helper()
-
-        val dat = contentRegex.find(response.text)?.destructured?.component1()
-
-        val f = if (!dat.isNullOrEmpty()) {
-            val json = dat.fromJson<CrunchyrollVideo>()
-
-            val streams = ArrayList<Streams>()
-
-            for (stream in json?.streams.orEmpty()) {
-                if (
-                    listOf(
-                        "adaptive_hls", "adaptive_dash",
-                        "multitrack_adaptive_hls_v2",
-                        "vo_adaptive_dash", "vo_adaptive_hls"
-                    ).contains(stream.format)
-                ) {
-                    if (stream.audio_lang == "jaJP" && (listOf(null, "enUS").contains(stream.hardsub_lang)) && listOf(
-                            "m3u",
-                            "m3u8"
-                        ).contains(hlsHelper.absoluteExtensionDetermination(stream.url))
-                    ) {
-                        stream.title = if (stream.hardsub_lang == "enUS") "Hardsub" else "Raw"
-                        streams.add(stream)
-                    }
-                }
-            }
-
-
-            streams.flatMap { stream ->
-                try {
-                    hlsHelper.m3u8Generation(M3u8Helper.M3u8Stream(stream.url, null), false).fastMap {
-                        Storage(
-                            link = it.streamUrl,
-                            source = chapterModel.url,
-                            filename = "${chapterModel.name}.mp4",
-                            quality = "${stream.title}: ${stream.resolution} - ${stream.format} - ${getQualityFromName(it.quality.toString()).name}",
-                            sub = getQualityFromName(it.quality.toString()).name
-                        )
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    emptyList()
-                }
-            }
-        } else emptyList()
-
-        emitter.onSuccess(f.distinctBy { it.link })
-    }
-        .timeout(15, TimeUnit.SECONDS)
-        .onErrorReturnItem(emptyList())
 
     override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
         val contentRegex = Regex("""vilos\.config\.media = (\{.+\})""")

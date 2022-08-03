@@ -208,7 +208,7 @@ fun GlobalSearchView(
             val bottomScaffold = rememberBottomSheetScaffoldState()
             var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
-            BackHandler(bottomScaffold.bottomSheetState.isExpanded && navController.graph.id == currentScreen.value) {
+            BackHandler(bottomScaffold.bottomSheetState.isExpanded) {
                 scope.launch {
                     try {
                         bottomScaffold.bottomSheetState.collapse()
@@ -229,13 +229,11 @@ fun GlobalSearchView(
                         Scaffold(
                             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                             topBar = {
-                                Insets {
-                                    SmallTopAppBar(
-                                        scrollBehavior = scrollBehavior,
-                                        title = { Text(s.apiName) },
-                                        actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
-                                    )
-                                }
+                                SmallTopAppBar(
+                                    scrollBehavior = scrollBehavior,
+                                    title = { Text(s.apiName) },
+                                    actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                )
                             }
                         ) { p ->
                             LazyVerticalGrid(

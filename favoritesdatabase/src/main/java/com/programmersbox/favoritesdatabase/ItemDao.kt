@@ -8,28 +8,28 @@ import kotlinx.coroutines.flow.Flow
 interface ItemDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFavoriteFlow(model: DbModel)
+    suspend fun insertFavorite(model: DbModel)
 
     @Delete
-    suspend fun deleteFavoriteFlow(model: DbModel)
+    suspend fun deleteFavorite(model: DbModel)
 
     @Query("SELECT * FROM FavoriteItem")
-    fun getAllFavoritesFlow(): Flow<List<DbModel>>
+    fun getAllFavorites(): Flow<List<DbModel>>
 
     @Query("SELECT * FROM FavoriteItem")
     fun getAllFavoritesSync(): List<DbModel>
 
     @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
-    fun containsItemFlow(url: String): Flow<Boolean>
+    fun containsItem(url: String): Flow<Boolean>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertChapterFlow(chapterWatched: ChapterWatched)
+    suspend fun insertChapter(chapterWatched: ChapterWatched)
 
     @Delete
-    suspend fun deleteChapterFlow(chapterWatched: ChapterWatched)
+    suspend fun deleteChapter(chapterWatched: ChapterWatched)
 
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
-    fun getAllChaptersFlow(url: String): Flow<List<ChapterWatched>>
+    fun getAllChapters(url: String): Flow<List<ChapterWatched>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNotification(notificationItem: NotificationItem)
@@ -37,11 +37,8 @@ interface ItemDao {
     @Delete
     suspend fun deleteNotification(notificationItem: NotificationItem)
 
-    @Delete
-    suspend fun deleteNotificationFlow(notificationItem: NotificationItem): Int
-
     @Query("DELETE FROM Notifications")
-    suspend fun deleteAllNotificationsFlow(): Int
+    suspend fun deleteAllNotifications(): Int
 
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItem(url: String): NotificationItem
@@ -62,6 +59,6 @@ interface ItemDao {
     fun getAllNotificationsFlowPaging(): PagingSource<Int, NotificationItem>
 
     @Query("SELECT COUNT(id) FROM Notifications")
-    fun getAllNotificationCountFlow(): Flow<Int>
+    fun getAllNotificationCount(): Flow<Int>
 
 }

@@ -25,7 +25,6 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -92,8 +91,6 @@ class MainFragment : BrowseSupportFragment() {
         // set search icon color
         searchAffordanceColor = ContextCompat.getColor(requireContext(), R.color.search_opaque)
     }
-
-    private val disposable = CompositeDisposable()
 
     private fun loadRows() {
         /*val list = Sources.ANIMEKISA_SUBBED.getRecent().blockingGet()

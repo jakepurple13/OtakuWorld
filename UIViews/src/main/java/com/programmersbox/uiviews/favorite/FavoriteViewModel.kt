@@ -26,7 +26,7 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
         viewModelScope.launch {
             combine(
                 fireListener.getAllShowsFlow(),
-                dao.getAllFavoritesFlow()
+                dao.getAllFavorites()
             ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
                 .collect { favoriteList = it }
         }

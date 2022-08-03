@@ -29,7 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,6 +43,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
@@ -80,9 +80,7 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.ListBottomSheet
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.tonyodev.fetch2.*
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import kotlin.collections.set
@@ -217,7 +215,7 @@ class GenericAnime(val context: Context) : GenericInfo {
             .setCancelable(false)
             .create()
         activity.lifecycleScope.launch {
-            model.getChapterInfoFlow()
+            model.getChapterInfo()
                 .onStart { runOnUIThread { dialog.show() } }
                 .catch {
                     runOnUIThread {
@@ -274,11 +272,9 @@ class GenericAnime(val context: Context) : GenericInfo {
         null
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     @Composable
     override fun DetailActions(infoModel: InfoModel, tint: Color) {
-        val showCast by MainActivity.cast.sessionConnected()
-            .subscribeAsState(initial = true)
+        val showCast by MainActivity.cast.sessionConnected().collectAsState(initial = true)
 
         AnimatedVisibility(
             visible = showCast,
@@ -390,13 +386,9 @@ class GenericAnime(val context: Context) : GenericInfo {
         var connection by mutableStateOf(false)
         var session by mutableStateOf(false)
 
-        private val connectionStatus = MainActivity.cast.sessionConnected().subscribe { connection = it }
-        private val sessionStatus = MainActivity.cast.sessionStatus().subscribe { session = it }
-
-        override fun onCleared() {
-            super.onCleared()
-            connectionStatus.dispose()
-            sessionStatus.dispose()
+        init {
+            viewModelScope.launch { MainActivity.cast.sessionConnected().onEach { connection = it }.collect() }
+            viewModelScope.launch { MainActivity.cast.sessionStatus().onEach { session = it }.collect() }
         }
     }
 

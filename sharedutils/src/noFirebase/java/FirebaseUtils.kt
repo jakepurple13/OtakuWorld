@@ -6,9 +6,6 @@ import android.net.Uri
 import androidx.activity.ComponentActivity
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
-import io.reactivex.Completable
-import io.reactivex.Flowable
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import org.koin.core.component.KoinComponent
 
@@ -97,46 +94,17 @@ object FirebaseDb {
     private fun String.pathToUrl() = replace("<", "/")
 
     fun getAllShows() = emptyList<DbModel>()
-
-    fun insertShow(showDbModel: DbModel) = Completable.complete()
-
     fun insertShowFlow(showDbModel: DbModel) = flowOf(Unit)
-
-    fun removeShow(showDbModel: DbModel) = Completable.complete()
-
     fun removeShowFlow(showDbModel: DbModel) = flowOf(Unit)
-
-    fun updateShow(showDbModel: DbModel) = Completable.complete()
-
     fun updateShowFlow(showDbModel: DbModel) = flowOf(Unit)
-
-    fun insertEpisodeWatched(episodeWatched: ChapterWatched) = Completable.complete()
-
     fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched) = flowOf(Unit)
-
-    fun removeEpisodeWatched(episodeWatched: ChapterWatched) = Completable.complete()
-
     fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched) = flowOf(Unit)
 
     class FirebaseListener {
-
-        fun getAllShowsFlowable() = Flowable.just<List<DbModel>>(emptyList())
-
-        @ExperimentalCoroutinesApi
         fun getAllShowsFlow() = flowOf(emptyList<DbModel>())
-
-        fun findItemByUrl(url: String?) = Flowable.just(false)
-
         fun findItemByUrlFlow(url: String?) = flowOf(false)
-
-        fun getAllEpisodesByShow(showUrl: String) = Flowable.just<List<ChapterWatched>>(emptyList())
-
         fun getAllEpisodesByShowFlow(showUrl: String) = flowOf(emptyList<ChapterWatched>())
-
-        //fun getAllEpisodesByShow(showDbModel: DbModel) = getAllEpisodesByShow(showDbModel.showUrl)
-
         fun unregister() {}
-
     }
 
     private class Watched(val watched: List<FirebaseChapterWatched> = emptyList())

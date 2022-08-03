@@ -14,7 +14,6 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.CoroutineWorker
-import androidx.work.RxWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.gsonutils.fromJson
@@ -25,7 +24,6 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.Single
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -38,7 +36,6 @@ import org.koin.core.component.inject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.TimeUnit
 
 
 class AppCheckWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), KoinComponent {
@@ -118,7 +115,7 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
                     val newData = genericInfo.toSource(model.source)
                         ?.let {
                             withTimeoutOrNull(10000) {
-                                model.toItemModel(it).toInfoModelFlow()
+                                model.toItemModel(it).toInfoModel()
                                     .firstOrNull()
                                     ?.getOrNull()
                             }
@@ -159,7 +156,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         triple.fastForEach {
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
-            dao.insertFavoriteFlow(item)
+            dao.insertFavorite(item)
             FirebaseDb.updateShowFlow(item).catch { println("Something went wrong: ${it.message}") }.collect()
         }
     }
@@ -316,21 +313,17 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
     }
 }
 
-class NotifySingleWorker(context: Context, workerParams: WorkerParameters) : RxWorker(context, workerParams), KoinComponent {
+class NotifySingleWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), KoinComponent {
 
     private val logo: NotificationLogo by inject()
     private val genericInfo: GenericInfo by inject()
 
-    override fun createWork(): Single<Result> = Single.create<Result> {
+    override suspend fun doWork(): Result {
         inputData.getString("notiData")
             ?.fromJson<NotificationItem>()
             ?.let { d -> SavedNotifications.viewNotificationFromDb(applicationContext, d, logo, genericInfo) }
-
-        it.onSuccess(Result.success())
+        return Result.success()
     }
-        .timeout(1, TimeUnit.MINUTES)
-        .onErrorReturn { Result.success() }
-
 }
 
 object SavedNotifications {

@@ -13,7 +13,6 @@ object Deps {
     const val loggingutils = "com.github.jakepurple13.HelpfulTools:loggingutils:$jakepurple13"
     const val dragswipe = "com.github.jakepurple13.HelpfulTools:dragswipe:$jakepurple13"
     const val funutils = "com.github.jakepurple13.HelpfulTools:funutils:$jakepurple13"
-    const val rxutils = "com.github.jakepurple13.HelpfulTools:rxutils:$jakepurple13"
     const val thirdpartyutils = "com.github.jakepurple13.HelpfulTools:thirdpartyutils:$jakepurple13"
 
     /*const val jakepurple13Tools = arrayOf(

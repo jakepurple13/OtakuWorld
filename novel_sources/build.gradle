@@ -42,16 +42,12 @@ dependencies {
 
     implementation Deps.gsonutils
     implementation Deps.helpfulutils
-    implementation Deps.rxutils
     debugImplementation Deps.loggingutils
     implementation gson
 
     implementation jsoup
 
     implementation uiUtil
-
-    implementation rxkotlin
-    implementation rxandroid
 
     implementation project(':Models')
 

@@ -82,7 +82,6 @@ dependencies {
     implementation swiperefresh
     implementation coroutinesCore
     implementation coroutinesAndroid
-    implementation coroutinesRX
     implementation "androidx.fragment:fragment-ktx:1.5.1"
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle"
@@ -118,14 +117,6 @@ dependencies {
     def work_version = "2.7.1"
     // Kotlin + coroutines
     implementation "androidx.work:work-runtime-ktx:$work_version"
-    // optional - RxJava2 support
-    implementation "androidx.work:work-rxjava2:$work_version"
-
-    //Rx
-    implementation rxkotlin
-    implementation rxandroid
-    implementation rxbinding
-    implementation rxbindingKotlin
 
     // Kotlin
     api "androidx.navigation:navigation-fragment-ktx:$nav_version"

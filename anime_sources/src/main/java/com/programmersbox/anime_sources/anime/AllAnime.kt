@@ -12,11 +12,8 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
-import io.reactivex.Single
-import io.reactivex.schedulers.Schedulers
 import kotlinx.serialization.Serializable
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.Scriptable
 import java.net.URI
@@ -28,28 +25,6 @@ object AllAnime : ShowApi(
     recentPath = ""
 ) {
     override val canDownload: Boolean get() = false
-
-    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.just(emptyList())
-
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create {
-        val url =
-            """$baseUrl/graphql?variables={"search":{"allowAdult":true,"allowUnknown":false},"limit":30,"page":1,"translationType":"dub","countryOrigin":"ALL"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"d2670e3e27ee109630991152c8484fce5ff5e280c523378001f9a23dc1839068"}}"""
-        getApi(url)?.let { it.fromJson<AllAnimeQuery>() }
-            ?.data?.shows?.edges
-            ?.map {
-                ItemModel(
-                    title = it.name,
-                    description = it.description.orEmpty(),
-                    imageUrl = it.thumbnail.orEmpty(),
-                    url = "$baseUrl/anime/${it._id}",
-                    source = Sources.ALLANIME
-                )
-            }
-            .orEmpty()
-            .let(it::onSuccess)
-    }
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.io())
 
     override suspend fun recent(page: Int): List<ItemModel> {
         val url =
@@ -68,8 +43,6 @@ object AllAnime : ShowApi(
             .orEmpty()
     }
 
-    override fun getList(doc: Document): Single<List<ItemModel>> = Single.just(emptyList())
-
     override suspend fun allList(page: Int): List<ItemModel> {
         val random =
             """$baseUrl/graphql?variables={"format":"anime"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"21ac672633498a3698e8f6a93ce6c2b3722b29a216dcca93363bf012c360cd54"}}"""
@@ -87,8 +60,6 @@ object AllAnime : ShowApi(
             }
             .orEmpty()
     }
-
-    override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.never()
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
         val rhino = Context.enter()
@@ -140,8 +111,6 @@ object AllAnime : ShowApi(
             )
         } ?: super.itemInfo(model)
     }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.just(emptyList())
 
     private val embedBlackList = listOf(
         "https://mp4upload.com/",

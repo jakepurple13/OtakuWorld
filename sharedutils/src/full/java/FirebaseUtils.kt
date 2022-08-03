@@ -19,10 +19,6 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.rxutils.toLatestFlowable
-import io.reactivex.Completable
-import io.reactivex.subjects.PublishSubject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import org.koin.core.component.KoinComponent
@@ -179,13 +175,6 @@ object FirebaseDb {
         ?.fastMap { it.toDbModel() }
         .orEmpty()
 
-    fun insertShow(showDbModel: DbModel) = Completable.create { emitter ->
-        showDoc2?.document(showDbModel.url.urlToPath())
-            ?.set(showDbModel.toFirebaseDbModel())
-            ?.addOnSuccessListener { emitter.onComplete() }
-            ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
-    }
-
     fun insertShowFlow(showDbModel: DbModel) = callbackFlow {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.set(showDbModel.toFirebaseDbModel())
@@ -198,13 +187,6 @@ object FirebaseDb {
             close()
         }
         awaitClose()
-    }
-
-    fun removeShow(showDbModel: DbModel) = Completable.create { emitter ->
-        showDoc2?.document(showDbModel.url.urlToPath())
-            ?.delete()
-            ?.addOnSuccessListener { emitter.onComplete() }
-            ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
     }
 
     fun removeShowFlow(showDbModel: DbModel) = callbackFlow {
@@ -221,13 +203,6 @@ object FirebaseDb {
         awaitClose()
     }
 
-    fun updateShow(showDbModel: DbModel) = Completable.create { emitter ->
-        showDoc2?.document(showDbModel.url.urlToPath())
-            ?.update(READ_OR_WATCHED_ID, showDbModel.numChapters)
-            ?.addOnSuccessListener { emitter.onComplete() }
-            ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
-    }
-
     fun updateShowFlow(showDbModel: DbModel) = callbackFlow {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.update(READ_OR_WATCHED_ID, showDbModel.numChapters)
@@ -240,34 +215,6 @@ object FirebaseDb {
             close()
         }
         awaitClose()
-    }
-
-    fun insertEpisodeWatched(episodeWatched: ChapterWatched) = Completable.create { emitter ->
-        episodeDoc2
-            ?.document(episodeWatched.favoriteUrl.urlToPath())
-            //?.set("create" to 1)
-            //?.update("watched", FieldValue.arrayUnion(episodeWatched.toFirebaseChapterWatched()))
-            ?.get()
-            ?.addOnSuccessListener { value ->
-                if (value?.exists() == true) {
-                    episodeDoc2
-                        ?.document(episodeWatched.favoriteUrl.urlToPath())
-                        ?.update("watched", FieldValue.arrayUnion(episodeWatched.toFirebaseChapterWatched()))
-                        ?.addOnSuccessListener { emitter.onComplete() }
-                        ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
-                } else {
-                    episodeDoc2
-                        ?.document(episodeWatched.favoriteUrl.urlToPath())
-                        ?.set("create" to 1)
-                        ?.addOnSuccessListener {
-                            episodeDoc2
-                                ?.document(episodeWatched.favoriteUrl.urlToPath())
-                                ?.update("watched", FieldValue.arrayUnion(episodeWatched.toFirebaseChapterWatched()))
-                                ?.addOnSuccessListener { emitter.onComplete() }
-                                ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
-                        }
-                }
-            } ?: emitter.onComplete()
     }
 
     fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow {
@@ -311,18 +258,6 @@ object FirebaseDb {
         awaitClose()
     }
 
-    fun removeEpisodeWatched(episodeWatched: ChapterWatched) = Completable.create { emitter ->
-        episodeDoc2
-            ?.document(episodeWatched.favoriteUrl.urlToPath())
-            ?.update("watched", FieldValue.arrayRemove(episodeWatched.toFirebaseChapterWatched()))
-            //?.collection(episodeWatched.url.urlToPath())
-            //?.document("watched")
-            //?.delete()
-            ?.addOnSuccessListener { emitter.onComplete() }
-            ?.addOnFailureListener { emitter.onError(it) } ?: emitter.onComplete()
-        emitter.onComplete()
-    }
-
     fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow {
         episodeDoc2
             ?.document(episodeWatched.favoriteUrl.urlToPath())
@@ -345,19 +280,6 @@ object FirebaseDb {
 
         private var listener: ListenerRegistration? = null
 
-        fun getAllShowsFlowable() = PublishSubject.create<List<DbModel>> { emitter ->
-            //assert(listener == null)
-            listener?.remove()
-            listener = showDoc2?.addSnapshotListener { value, error ->
-                value?.toObjects<FirebaseDbModel>()
-                    ?.fastMap { it.toDbModel() }
-                    ?.let(emitter::onNext)
-                error?.let(emitter::onError)
-            }
-            if (listener == null) emitter.onNext(emptyList())
-            emitter.setCancellable { listener?.remove() }
-        }.toLatestFlowable()
-
         fun getAllShowsFlow() = callbackFlow {
             listener?.remove()
             listener = showDoc2?.addSnapshotListener { value, error ->
@@ -369,20 +291,6 @@ object FirebaseDb {
             if (listener == null) trySend(emptyList())
             awaitClose { listener?.remove() }
         }
-
-        fun findItemByUrl(url: String?) = PublishSubject.create<Boolean> { emitter ->
-            //assert(listener == null)
-            listener?.remove()
-            listener = showDoc2?.whereEqualTo(ITEM_ID, url)?.addSnapshotListener { value, error ->
-                value?.toObjects<FirebaseDbModel>()
-                    .also { println(it) }
-                    ?.fastMap { it.toDbModel() }
-                    ?.let { emitter.onNext(it.isNotEmpty()) }
-                error?.let(emitter::onError)
-            }
-            if (listener == null) emitter.onNext(false)
-            emitter.setCancellable { listener?.remove() }
-        }.toLatestFlowable()
 
         fun findItemByUrlFlow(url: String?) = callbackFlow {
             listener?.remove()
@@ -397,21 +305,6 @@ object FirebaseDb {
             awaitClose { listener?.remove() }
         }
 
-        fun getAllEpisodesByShow(showUrl: String) = PublishSubject.create<List<ChapterWatched>> { emitter ->
-            //assert(listener == null)
-            listener?.remove()
-            listener = episodeDoc2
-                ?.document(showUrl.urlToPath())
-                ?.addSnapshotListener { value, error ->
-                    value?.toObject(Watched::class.java)?.watched
-                        ?.fastMap { it.toChapterWatchedModel() }
-                        ?.let(emitter::onNext)
-                    error?.let(emitter::onError)
-                }
-            if (listener == null) emitter.onNext(emptyList())
-            emitter.setCancellable { listener?.remove() }
-        }.toLatestFlowable()
-
         fun getAllEpisodesByShowFlow(showUrl: String) = callbackFlow {
             listener?.remove()
             listener = episodeDoc2
@@ -425,8 +318,6 @@ object FirebaseDb {
             if (listener == null) trySend(emptyList())
             awaitClose()
         }
-
-        //fun getAllEpisodesByShow(showDbModel: DbModel) = getAllEpisodesByShow(showDbModel.showUrl)
 
         fun unregister() {
             listener?.remove()

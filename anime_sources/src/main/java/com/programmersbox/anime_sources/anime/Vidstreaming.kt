@@ -10,14 +10,12 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
-import io.reactivex.Single
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okio.BufferedSink
-import org.jsoup.nodes.Document
 
 object Vidstreaming : VidstreamingTemplate(
     "https://vidstreaming.io",
@@ -51,21 +49,6 @@ abstract class VidstreamingTemplate(
 
     abstract val searchUrl: String
 
-    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create {
-        doc
-            .select("li.video-block")
-            .fastMap {
-                ItemModel(
-                    title = it.select("div.name").text(),
-                    description = "",
-                    imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
-                    source = this
-                )
-            }
-            .let(it::onSuccess)
-    }
-
     override suspend fun recent(page: Int): List<ItemModel> {
         return recentPath(page)
             .select("li.video-block")
@@ -80,21 +63,6 @@ abstract class VidstreamingTemplate(
             }
     }
 
-    override fun getList(doc: Document): Single<List<ItemModel>> = Single.create {
-        doc
-            .select("li.video-block")
-            .fastMap {
-                ItemModel(
-                    title = it.select("div.name").text(),
-                    description = "",
-                    imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                    url = it.select("a").first()?.attr("abs:href").orEmpty(),
-                    source = this
-                )
-            }
-            .let(it::onSuccess)
-    }
-
     override suspend fun allList(page: Int): List<ItemModel> {
         return all(page)
             .select("li.video-block")
@@ -107,28 +75,6 @@ abstract class VidstreamingTemplate(
                     source = this
                 )
             }
-    }
-
-    override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create {
-        InfoModel(
-            source = this,
-            title = source.title,
-            url = source.url,
-            alternativeNames = emptyList(),
-            description = doc.select("div.post-entry").text(),
-            imageUrl = source.imageUrl,
-            genres = emptyList(),
-            chapters = doc.select("div.video-info-left > ul.listing > li.video-block > a").fastMap {
-                ChapterModel(
-                    it.select("div.name").text(),
-                    it.select("a").attr("abs:href"),
-                    it.select("span.date").text(),
-                    source.url,
-                    this
-                )
-            }
-        )
-            .let(it::onSuccess)
     }
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
@@ -170,26 +116,6 @@ abstract class VidstreamingTemplate(
         )
     }
 
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> {
-        return if (searchText.isEmpty()) super.searchList(searchText, page, list)
-        else Single.create<List<ItemModel>> {
-            "$searchUrl/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
-                .select("li.video-block")
-                .fastMap {
-                    ItemModel(
-                        title = it.select("div.name").text(),
-                        description = "",
-                        imageUrl = it.select("div.picture").select("img").attr("abs:src"),
-                        url = it.select("a").first()?.attr("abs:href").orEmpty(),
-                        source = this
-                    )
-                }
-                .let(it::onSuccess)
-
-        }
-            .onErrorResumeNext(super.searchList(searchText, page, list))
-    }
-
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
         return "$searchUrl/search.html?keyword=${searchText.split(" ").joinToString("%20")}".toJsoup()
             .select("li.video-block")
@@ -202,46 +128,6 @@ abstract class VidstreamingTemplate(
                     source = this
                 )
             }
-    }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> {
-        return Single.create<List<Storage>> { emitter ->
-
-            //val e = "https://vidstreaming.io/videos/tensei-shitara-slime-datta-ken-episode-24-9".toJsoup()
-            //println(e)
-
-            val v = chapterModel.url.toJsoup().select("div.play-video").select("iframe").attr("abs:src")
-
-            val s = v.toJsoup()
-
-            val servers = s.select(".list-server-items > .linkserver").mapNotNull { li ->
-                if (!li?.attr("data-video").isNullOrEmpty()) {
-                    li.text() to fixUrl(li.attr("data-video"), baseUrl)
-                } else {
-                    null
-                }
-            }
-
-            val i = servers
-                .map { l ->
-                    //println(l)
-                    extractors.flatMap { e ->
-                        //println(e.name)
-                        if (l.second.startsWith(e.mainUrl)) {
-                            //println(url + "\t" + e.name)
-                            e.getUrl(l.second)
-                        } else emptyList()
-                    }
-                }
-                .filter { it.isNotEmpty() }
-                .flatten()
-                .distinctBy { it.link }
-
-            //Loged.i(i)
-
-            emitter.onSuccess(i)
-        }
-            .onErrorReturnItem(emptyList())
     }
 
     override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {

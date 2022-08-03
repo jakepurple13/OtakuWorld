@@ -3,15 +3,16 @@ package com.programmersbox.uiviews.globalsearch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class GlobalSearchViewModel(
     val info: GenericInfo,
@@ -31,20 +32,39 @@ class GlobalSearchViewModel(
 
     fun searchForItems() {
         viewModelScope.launch {
-            combine(
+            // this populates dynamically
+            isRefreshing = true
+            searchListPublisher = emptyList()
+            info.searchList()
+                .apmap { a ->
+                    a
+                        .searchSourceList(searchText, list = emptyList())
+                        .dispatchIoAndCatchList()
+                        .map { SearchModel(a.serviceName, it) }
+                        .filter { it.data.isNotEmpty() }
+                        .onEach { searchListPublisher = searchListPublisher + it }
+                        .onCompletion { isRefreshing = false }
+                }
+                .forEach { launch { it.collect() } }
+            // this populates after it all finishes
+            /*combine(
                 info.searchList()
-                    .fastMap { a ->
+                    .apmap { a ->
                         a
                             .searchSourceList(searchText, list = emptyList())
                             .dispatchIoAndCatchList()
                             .map { SearchModel(a.serviceName, it) }
                     }
             ) { it.toList().filter { s -> s.data.isNotEmpty() } }
-                .onCompletion { isRefreshing = false }
                 .onStart { isRefreshing = true }
+                .onCompletion { isRefreshing = false }
                 .onEach { searchListPublisher = it }
-                .collect()
+                .collect()*/
         }
+    }
+
+    fun <A, B> List<A>.apmap(f: suspend (A) -> B): List<B> = runBlocking {
+        map { async { f(it) } }.map { it.await() }
     }
 
 }

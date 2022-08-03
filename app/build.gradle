@@ -73,11 +73,6 @@ dependencies {
     implementation project(':anime_sources')
     implementation project(':manga_sources')
 
-    implementation rxkotlin
-    implementation rxandroid
-    implementation rxbinding
-    implementation rxbindingKotlin
-
     implementation room.room
     // For Kotlin use kapt instead of annotationProcessor
     kapt "androidx.room:room-compiler:$room_version"

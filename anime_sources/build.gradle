@@ -50,11 +50,7 @@ dependencies {
     implementation "io.karn:khttp-android:0.1.2" //okhttp instead
     implementation Deps.gsonutils
     implementation Deps.helpfulutils
-    implementation Deps.rxutils
     debugImplementation Deps.loggingutils
-
-    implementation rxkotlin
-    implementation rxandroid
 
     implementation uiUtil
 

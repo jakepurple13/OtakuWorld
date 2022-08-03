@@ -64,23 +64,21 @@ dependencies {
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
 
-    fullImplementation 'com.google.firebase:firebase-auth:21.0.3'
+    fullImplementation 'com.google.firebase:firebase-auth:21.0.6'
     fullImplementation play_services
     fullImplementation 'com.firebaseui:firebase-ui-auth:8.0.1'
-    fullImplementation 'com.google.firebase:firebase-firestore-ktx:24.1.0'
-    fullImplementation 'com.google.firebase:firebase-database-ktx:20.0.4'
+    fullImplementation 'com.google.firebase:firebase-firestore-ktx:24.2.1'
+    fullImplementation 'com.google.firebase:firebase-database-ktx:20.0.5'
 
     implementation coroutinesCore
     implementation coroutinesAndroid
     fullImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutinesVersion"
 
     fullImplementation 'com.google.mlkit:translate:17.0.0'
-    fullImplementation 'com.google.mlkit:language-id:17.0.3'
+    fullImplementation 'com.google.mlkit:language-id:17.0.4'
 
     implementation project(':Models')
     implementation project(':favoritesdatabase')
-    implementation rxkotlin
-    implementation rxandroid
     implementation koin.koin
     implementation jakepurple13Tools.helpfultools
     implementation uiUtil

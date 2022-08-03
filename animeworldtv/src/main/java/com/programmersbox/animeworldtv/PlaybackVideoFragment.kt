@@ -14,23 +14,18 @@ import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.leanback.media.PlaybackTransportControlGlue
 import androidx.leanback.widget.*
-import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.PlaybackControlsRow.*
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
-import androidx.media3.common.VideoSize
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSourceFactory
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.SimpleExoPlayer
-import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.leanback.LeanbackPlayerAdapter
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -79,7 +74,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         //playerAdapter.setDataSource(Uri.parse(videoUrl))
 
         lifecycleScope.launch {
-            item.getChapterInfoFlow()
+            item.getChapterInfo()
                 .flowOn(Dispatchers.Main)
                 .catch {
                     Toast.makeText(requireContext(), "Something went wrong", Toast.LENGTH_SHORT).show()
@@ -144,10 +139,10 @@ class PlaybackVideoFragment : VideoSupportFragment() {
 
     private fun setupStatsForNerds(exoPlayer: SimpleExoPlayer) {
 
-        val bandwidthSubject = BehaviorSubject.create<Int>()
+        /*val bandwidthSubject = BehaviorSubject.create<Int>()
         val resolutionSubject = BehaviorSubject.create<String>()
         val bitrateSubject = BehaviorSubject.create<Double>()
-        val droppedFramesSubject = BehaviorSubject.createDefault(0)
+        val droppedFramesSubject = BehaviorSubject.createDefault(0)*/
 
         /*
         Dropped frames of video - got it
@@ -157,7 +152,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         Resolution - got it
          */
 
-        exoPlayer.addAnalyticsListener(object : AnalyticsListener {
+        /*exoPlayer.addAnalyticsListener(object : AnalyticsListener {
             override fun onBandwidthEstimate(
                 eventTime: AnalyticsListener.EventTime,
                 totalLoadTimeMs: Int,
@@ -206,10 +201,10 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         val row = ListRow(header, statsAdapter)
         rowsAdapter.add(row)
 
-        adapter = rowsAdapter
+        adapter = rowsAdapter*/
     }
 
-    class Stats<T : Any>(val type: String, val subject: Observable<T>)
+    class Stats<T : Any>(val type: String)
 
     private fun getResolution(videoSize: Format): String =
         "${videoSize.width}x${videoSize.height}${if (videoSize.frameRate > 0) "@${videoSize.frameRate.toInt()}" else ""}"

@@ -38,7 +38,7 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
         viewModelScope.launch {
             combine(
                 itemListener.getAllShowsFlow(),
-                dao.getAllFavoritesFlow()
+                dao.getAllFavorites()
             ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
                 .collect { favoriteList = it }
         }

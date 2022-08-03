@@ -52,7 +52,7 @@ class DetailsViewModel(
     init {
         viewModelScope.launch {
             itemModel?.url?.let { url ->
-                Cached.cache[url]?.let { flow<Result<InfoModel>> { emit(Result.success(it)) } } ?: itemModel.toInfoModelFlow()
+                Cached.cache[url]?.let { flow<Result<InfoModel>> { emit(Result.success(it)) } } ?: itemModel.toInfoModel()
             }
                 ?.dispatchIo()
                 ?.catch {
@@ -85,7 +85,7 @@ class DetailsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             combine(
                 itemListener.findItemByUrlFlow(info.url),
-                dao.containsItemFlow(info.url)
+                dao.containsItem(info.url)
             ) { f, d -> f || d }
                 .collect { favoriteListener = it }
         }
@@ -93,7 +93,7 @@ class DetailsViewModel(
         viewModelScope.launch {
             combine(
                 chapterListener.getAllEpisodesByShowFlow(info.url),
-                dao.getAllChaptersFlow(info.url)
+                dao.getAllChapters(info.url)
             ) { f, d -> (f + d).distinctBy { it.url } }
                 .onEach { chapters = it }
                 .collect()
@@ -104,7 +104,7 @@ class DetailsViewModel(
         ChapterWatched(url = c.url, name = c.name, favoriteUrl = info!!.url)
             .let {
                 viewModelScope.launch {
-                    if (b) dao.insertChapterFlow(it) else dao.deleteChapterFlow(it)
+                    if (b) dao.insertChapter(it) else dao.deleteChapter(it)
                     (if (b) FirebaseDb.insertEpisodeWatchedFlow(it) else FirebaseDb.removeEpisodeWatchedFlow(it)).collect()
                 }
             }
@@ -114,7 +114,7 @@ class DetailsViewModel(
         val db = info!!.toDbModel(info!!.chapters.size)
         addRemoveFavoriteJob?.cancel()
         addRemoveFavoriteJob = viewModelScope.launch {
-            dao.insertFavoriteFlow(db)
+            dao.insertFavorite(db)
             FirebaseDb.insertShowFlow(db).collect()
         }
     }
@@ -123,7 +123,7 @@ class DetailsViewModel(
         val db = info!!.toDbModel(info!!.chapters.size)
         addRemoveFavoriteJob?.cancel()
         addRemoveFavoriteJob = viewModelScope.launch {
-            dao.deleteFavoriteFlow(db)
+            dao.deleteFavorite(db)
             FirebaseDb.removeShowFlow(db).collect()
         }
     }
