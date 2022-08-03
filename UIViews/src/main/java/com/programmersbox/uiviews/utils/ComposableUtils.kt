@@ -297,8 +297,8 @@ fun <T : Any> broadcastReceiverNullable(defaultValue: T?, intentFilter: IntentFi
 fun Insets(
     modifier: Modifier = Modifier,
     insetPadding: PaddingValues = WindowInsets.statusBars.asPaddingValues(),
-    color: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    color: Color = MaterialTheme.colorScheme.surface,
+    contentColor: Color = contentColorFor(backgroundColor = color),
     content: @Composable BoxScope.() -> Unit
 ) {
     Surface(
