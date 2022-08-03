@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -47,7 +46,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.github.pwittchen.reactivenetwork.library.rx2.ReactiveNetwork
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -60,13 +58,13 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AutoCompleteBox
 import com.programmersbox.uiviews.utils.components.asAutoCompleteEntities
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
+import ru.beryukhov.reactivenetwork.ReactiveNetwork
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
@@ -101,10 +99,10 @@ fun GlobalSearchView(
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = viewModel.isRefreshing)
     val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
-    val networkState by ReactiveNetwork.observeInternetConnectivity()
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribeAsState(initial = true)
+    val networkState by ReactiveNetwork()
+        .observeInternetConnectivity()
+        .flowOn(Dispatchers.IO)
+        .collectAsState(initial = true)
 
     val history by dao
         .searchHistory("%${viewModel.searchText}%")

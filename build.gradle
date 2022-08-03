@@ -71,7 +71,6 @@ buildscript {
     ext.composeLifecycle = "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle"
     // Integration with observables
     ext.composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
-    ext.composeRuntimeRxjava2 = "androidx.compose.runtime:runtime-rxjava2:$jetpack"
     ext.composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.15"
     ext.composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.15"
     ext.landscapistGlide = "com.github.skydoves:landscapist-glide:1.6.0"
@@ -125,7 +124,7 @@ buildscript {
                         composeUi, composeUiTooling, composeFoundation, composeMaterial,
                         composeMaterialIconsCore, composeMaterialIconsExtended,
                         composeActivity, composeLifecycle,
-                        composeRuntimeLivedata, composeRuntimeRxjava2,
+                        composeRuntimeLivedata,
                         composeMaterialThemeAdapter, composeMaterial3ThemeAdapter,
                         landscapistGlide, coilCompose,
                         composeConstraintLayout, permissions,

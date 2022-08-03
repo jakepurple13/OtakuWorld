@@ -70,7 +70,7 @@ dependencies {
 
     implementation 'me.zhanghai.android.fastscroll:library:1.1.6'
 
-    implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.8'
+    implementation 'ru.beryukhov:flowreactivenetwork:1.0.4'
 
     implementation koin.koin
 
