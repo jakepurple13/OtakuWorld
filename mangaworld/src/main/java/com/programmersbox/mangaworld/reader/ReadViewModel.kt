@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -24,7 +25,6 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -104,15 +104,13 @@ class ReadViewModel(
 
     val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 
-    val disposable = CompositeDisposable()
-
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
 
     var currentChapter: Int by mutableStateOf(0)
 
-    var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
+    var batteryColor by mutableStateOf(Color.White)
     var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
     var batteryPercent by mutableStateOf(0f)
 
@@ -124,7 +122,7 @@ class ReadViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             batteryInformation.composeSetupFlow(
-                androidx.compose.ui.graphics.Color.White
+                Color.White
             ) {
                 batteryColor = it.first
                 batteryIcon = it.second
@@ -193,10 +191,5 @@ class ReadViewModel(
                     it.mapNotNull(Storage::link)
                 }
         )
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        disposable.dispose()
     }
 }
