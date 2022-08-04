@@ -3,8 +3,11 @@ package com.programmersbox.manga_sources.manga
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
 import com.squareup.duktape.Duktape
-import okhttp3.CacheControl
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cache.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jsoup.Jsoup
@@ -12,7 +15,6 @@ import org.jsoup.nodes.Document
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 object MangaHere : ApiService {
 
@@ -20,10 +22,20 @@ object MangaHere : ApiService {
 
     override val serviceName: String get() = "MANGA_HERE"
 
+    private val client by lazy {
+        createHttpClient {
+            defaultRequest {
+                header("Referer", baseUrl)
+                cookie("isAdult", "1")
+                url.takeFrom(URLBuilder().takeFrom(baseUrl).appendPathSegments(url.encodedPath))
+            }
+            install(HttpCache)
+            followRedirects = true
+        }
+    }
+
     override suspend fun recent(page: Int): List<ItemModel> {
-        return Jsoup.connect("$baseUrl/directory/$page.htm?latest")
-            .header("Referer", baseUrl)
-            .cookie("isAdult", "1").get()
+        return client.get("/directory/$page.htm?latest").body<Document>()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
@@ -36,9 +48,7 @@ object MangaHere : ApiService {
     }
 
     override suspend fun allList(page: Int): List<ItemModel> {
-        return Jsoup.connect("$baseUrl/directory/$page.htm")
-            .header("Referer", baseUrl)
-            .cookie("isAdult", "1").get()
+        return client.get("/directory/$page.htm").body<Document>()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
@@ -51,27 +61,22 @@ object MangaHere : ApiService {
     }
 
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
-        val url = "$baseUrl/search".toHttpUrlOrNull()!!.newBuilder().apply {
-            addEncodedQueryParameter("page", page.toString())
-            addEncodedQueryParameter("title", searchText.toString())
-            addEncodedQueryParameter("sort", null)
-            addEncodedQueryParameter("stype", 1.toString())
-            addEncodedQueryParameter("name", null)
-            addEncodedQueryParameter("author_method", "cw")
-            addEncodedQueryParameter("author", null)
-            addEncodedQueryParameter("artist_method", "cw")
-            addEncodedQueryParameter("artist", null)
-            addEncodedQueryParameter("rating_method", "eq")
-            addEncodedQueryParameter("rating", null)
-            addEncodedQueryParameter("released_method", "eq")
-            addEncodedQueryParameter("released", null)
-        }.build()
-        val request = Request.Builder()
-            .url(url)
-            .cacheControl(CacheControl.Builder().maxAge(10, TimeUnit.MINUTES).build())
-            .build()
-        val client = OkHttpClient().newCall(request).execute()
-        return Jsoup.parse(client.body?.string()).select(".manga-list-4-list > li")
+        return client.get("/search") {
+            parameter("page", page.toString())
+            parameter("title", searchText.toString())
+            parameter("sort", null)
+            parameter("stype", 1.toString())
+            parameter("name", null)
+            parameter("author_method", "cw")
+            parameter("author", null)
+            parameter("artist_method", "cw")
+            parameter("artist", null)
+            parameter("rating_method", "eq")
+            parameter("rating", null)
+            parameter("released_method", "eq")
+            parameter("released", null)
+        }.body<Document>()
+            .select(".manga-list-4-list > li")
             .fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
@@ -85,7 +90,7 @@ object MangaHere : ApiService {
     }
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
-        val doc = Jsoup.connect(model.url).header("Referer", baseUrl).get()
+        val doc = client.get { url(model.url) }.body<Document>()
         return InfoModel(
             title = model.title,
             description = doc.select("p.fullcontent").text(),
@@ -132,7 +137,7 @@ object MangaHere : ApiService {
     }
 
     override suspend fun sourceByUrl(url: String): ItemModel {
-        val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
+        val doc = client.get { url(url) }.body<Document>()
         return ItemModel(
             title = doc.select("span.detail-info-right-title-font").text(),
             description = doc.select("p.fullcontent").text(),

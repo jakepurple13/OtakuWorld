@@ -8,10 +8,9 @@ import com.programmersbox.anime_sources.utilities.extractors
 import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getApi
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
+import com.programmersbox.models.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import kotlinx.serialization.Serializable
 import org.jsoup.Jsoup
 import org.mozilla.javascript.Context
@@ -26,12 +25,18 @@ object AllAnime : ShowApi(
 ) {
     override val canDownload: Boolean get() = false
 
+    private val client by lazy {
+        createHttpClient(
+
+        )
+    }
+
     override suspend fun recent(page: Int): List<ItemModel> {
         val url =
             """$baseUrl/graphql?variables={"search":{"allowAdult":true,"allowUnknown":false},"limit":30,"page":1,"translationType":"dub","countryOrigin":"ALL"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"d2670e3e27ee109630991152c8484fce5ff5e280c523378001f9a23dc1839068"}}"""
-        return getApi(url)?.let { it.fromJson<AllAnimeQuery>() }
-            ?.data?.shows?.edges
-            ?.map {
+        return client.get(url).body<AllAnimeQuery>()
+            .data.shows.edges
+            .map {
                 ItemModel(
                     title = it.name,
                     description = it.description.orEmpty(),
@@ -40,15 +45,15 @@ object AllAnime : ShowApi(
                     source = Sources.ALLANIME
                 )
             }
-            .orEmpty()
     }
 
     override suspend fun allList(page: Int): List<ItemModel> {
         val random =
             """$baseUrl/graphql?variables={"format":"anime"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"21ac672633498a3698e8f6a93ce6c2b3722b29a216dcca93363bf012c360cd54"}}"""
 
-        return getApi(random)?.let { it.fromJson<RandomMain>() }
-            ?.data?.queryRandomRecommendation
+        return client.get(random).body<RandomMain>()
+            .data
+            ?.queryRandomRecommendation
             ?.map {
                 ItemModel(
                     title = it.name.orEmpty(),
@@ -228,9 +233,9 @@ object AllAnime : ShowApi(
         val url =
             """$baseUrl/graphql?variables={"search":{"allowAdult":true,"allowUnknown":false,"query":"$searchText"},"limit":26,"page":1,"translationType":"dub","countryOrigin":"ALL"}&extensions={"persistedQuery":{"version":1,"sha256Hash":"d2670e3e27ee109630991152c8484fce5ff5e280c523378001f9a23dc1839068"}}"""
 
-        return getApi(url)?.let { it.fromJson<AllAnimeQuery>() }
-            ?.data?.shows?.edges
-            ?.map {
+        return client.get(url).body<AllAnimeQuery>()
+            .data.shows.edges
+            .map {
                 ItemModel(
                     title = it.name,
                     description = it.description.orEmpty(),
@@ -239,7 +244,6 @@ object AllAnime : ShowApi(
                     source = Sources.ALLANIME
                 )
             }
-            .orEmpty()
     }
 
     override suspend fun sourceByUrl(url: String): ItemModel {
