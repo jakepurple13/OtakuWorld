@@ -2,11 +2,16 @@ package com.programmersbox.manga_sources.manga
 
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -18,12 +23,19 @@ object NineAnime : ApiService {
     override val serviceName: String get() = "NINE_ANIME"
 
     val headers: List<Pair<String, String>> = listOf(
-        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77",
-        "Accept-Language" to "en-US,en;q=0.5"
+        HttpHeaders.UserAgent to "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77",
+        HttpHeaders.AcceptLanguage to "en-US,en;q=0.5"
     )
 
+    private val client by lazy {
+        createHttpClient {
+            defaultRequest { this@NineAnime.headers.forEach { header(it.first, it.second) } }
+            followRedirects = true
+        }
+    }
+
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
-        return Jsoup.connect("$baseUrl/search/?name=$searchText&page=$page.html").followRedirects(true).get()
+        return client.get("$baseUrl/search/?name=$searchText&page=$page.html").body<Document>()
             .select("div.post").fastMap {
                 ItemModel(
                     title = it.select("p.title a").text(),
@@ -36,7 +48,7 @@ object NineAnime : ApiService {
     }
 
     override suspend fun allList(page: Int): List<ItemModel> {
-        return Jsoup.connect("$baseUrl/category/index_$page.html").followRedirects(true).get()
+        return client.get("$baseUrl/category/index_$page.html").body<Document>()
             .select("div.post").fastMap {
                 ItemModel(
                     title = it.select("p.title a").text(),
@@ -49,7 +61,7 @@ object NineAnime : ApiService {
     }
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
-        val doc = Jsoup.connect("${model.url}?waring=1").followRedirects(true).get()
+        val doc = client.get("${model.url}?waring=1").body<Document>()
         val genreAndDescription = doc.select("div.manga-detailmiddle")
         return InfoModel(
             title = model.title,
@@ -73,7 +85,7 @@ object NineAnime : ApiService {
     }
 
     override fun getSourceByUrlFlow(url: String): Flow<ItemModel> = flow {
-        val doc = Jsoup.connect(url).get()
+        val doc = client.get(url).body<Document>()
         val genreAndDescription = doc.select("div.manga-detailmiddle")
         emit(
             ItemModel(
@@ -91,7 +103,7 @@ object NineAnime : ApiService {
         }
 
     override suspend fun sourceByUrl(url: String): ItemModel {
-        val doc = Jsoup.connect(url).get()
+        val doc = client.get(url).body<Document>()
         val genreAndDescription = doc.select("div.manga-detailmiddle")
         return ItemModel(
             title = doc.select("div.manga-detail > h1").select("h1").text(),
@@ -111,16 +123,10 @@ object NineAnime : ApiService {
             .toList()
     }
 
-    /*override fun getPageInfo(chapterModel: ChapterModel): PageModel {
-        val doc = Jsoup.connect(chapterModel.url).header("Referer", "$baseUrl/manga.").followRedirects(true).get()
-        val script = doc.select("script:containsData(all_imgs_url)").firstOrNull()?.data() ?: return PageModel(emptyList())
-        return PageModel(Regex(""""(http.*)",""").findAll(script).map { it.groupValues[1] }.toList())
-    }*/
-
     override val canScroll: Boolean get() = true
 
     override suspend fun recent(page: Int): List<ItemModel> {
-        return Jsoup.connect("$baseUrl/category/index_$page.html?sort=updated").followRedirects(true).get()
+        return client.get("$baseUrl/category/index_$page.html?sort=updated").body<Document>()
             .select("div.post").fastMap {
                 ItemModel(
                     title = it.select("p.title a").text(),

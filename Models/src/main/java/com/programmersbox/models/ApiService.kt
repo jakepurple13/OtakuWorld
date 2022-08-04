@@ -47,7 +47,13 @@ interface ApiService : Serializable {
             emitAll(flow { emit(list.filter { s -> s.title.contains(searchText, true) }) })
         }
 
-    fun getChapterInfoFlow(chapterModel: ChapterModel): Flow<List<Storage>> = flow { emit(chapterInfo(chapterModel)) }.dispatchIo()
+    fun getChapterInfoFlow(chapterModel: ChapterModel): Flow<List<Storage>> = flow { emit(chapterInfo(chapterModel)) }
+        .catch {
+            it.printStackTrace()
+            emit(emptyList())
+        }
+        .dispatchIo()
+
     suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> = emptyList()
 
     fun getSourceByUrlFlow(url: String): Flow<ItemModel> = flow { emit(sourceByUrl(url)) }

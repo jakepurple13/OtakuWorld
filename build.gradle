@@ -150,7 +150,9 @@ buildscript {
                         "io.ktor:ktor-client-logging:$ktorVersion",
                         "io.ktor:ktor-client-serialization:$ktorVersion",
                         "io.ktor:ktor-serialization-kotlinx-json:$ktorVersion",
-                        "io.ktor:ktor-client-content-negotiation:$ktorVersion"
+                        "io.ktor:ktor-client-content-negotiation:$ktorVersion",
+                        "io.ktor:ktor-client-okhttp:$ktorVersion",
+                        "com.tfowl.ktor:ktor-jsoup:2.0.0"
                 ]
         ]
     }
