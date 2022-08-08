@@ -1,13 +1,14 @@
 package com.programmersbox.manga_sources.manga
 
 import androidx.compose.ui.util.fastMap
+import app.cash.zipline.Zipline
 import com.programmersbox.models.*
-import com.squareup.duktape.Duktape
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cache.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jsoup.Jsoup
@@ -158,7 +159,7 @@ object MangaHere : ApiService {
 
     private fun pageListParse(document: Document): List<String> {
         val bar = document.select("script[src*=chapter_bar]")
-        val duktape = Duktape.create()
+        val zipline = Zipline.create(Dispatchers.IO)
 
         /*
             function to drop last imageUrl if it's broken/unneccesary, working imageUrls are incremental (e.g. t001, t002, etc); if the difference between
@@ -182,14 +183,14 @@ object MangaHere : ApiService {
         // if-branch is for webtoon reader, else is for page-by-page
         return if (bar.isNotEmpty()) {
             val script = document.select("script:containsData(function(p,a,c,k,e,d))").html().removePrefix("eval")
-            val deobfuscatedScript = duktape.evaluate(script).toString()
+            val deobfuscatedScript = zipline.quickJs.evaluate(script).toString()
             val urls = deobfuscatedScript.substringAfter("newImgs=['").substringBefore("'];").split("','")
-            duktape.close()
+            zipline.close()
             urls.fastMap { s -> "https:$s" }
         } else {
             val html = document.html()
             val link = document.location()
-            var secretKey = extractSecretKey(html, duktape)
+            var secretKey = extractSecretKey(html, zipline)
             val chapterIdStartLoc = html.indexOf("chapterid")
             val chapterId = html.substring(
                 chapterIdStartLoc + 11,
@@ -220,7 +221,7 @@ object MangaHere : ApiService {
                     else
                         secretKey = ""
                 }
-                val deobfuscatedScript = duktape.evaluate(responseText.removePrefix("eval")).toString()
+                val deobfuscatedScript = zipline.quickJs.evaluate(responseText.removePrefix("eval")).toString()
                 val baseLinkStartPos = deobfuscatedScript.indexOf("pix=") + 5
                 val baseLinkEndPos = deobfuscatedScript.indexOf(";", baseLinkStartPos) - 1
                 val baseLink = deobfuscatedScript.substring(baseLinkStartPos, baseLinkEndPos)
@@ -231,20 +232,20 @@ object MangaHere : ApiService {
             }
         }
             .dropLastIfBroken()
-            .also { duktape.close() }
+            .also { zipline.close() }
     }
 
-    private fun extractSecretKey(html: String, duktape: Duktape): String {
+    private fun extractSecretKey(html: String, zipline: Zipline): String {
         val secretKeyScriptLocation = html.indexOf("eval(function(p,a,c,k,e,d)")
         val secretKeyScriptEndLocation = html.indexOf("</script>", secretKeyScriptLocation)
         val secretKeyScript = html.substring(secretKeyScriptLocation, secretKeyScriptEndLocation).removePrefix("eval")
-        val secretKeyDeobfuscatedScript = duktape.evaluate(secretKeyScript).toString()
+        val secretKeyDeobfuscatedScript = zipline.quickJs.evaluate(secretKeyScript).toString()
         val secretKeyStartLoc = secretKeyDeobfuscatedScript.indexOf("'")
         val secretKeyEndLoc = secretKeyDeobfuscatedScript.indexOf(";")
         val secretKeyResultScript = secretKeyDeobfuscatedScript.substring(
             secretKeyStartLoc, secretKeyEndLoc
         )
-        return duktape.evaluate(secretKeyResultScript).toString()
+        return zipline.quickJs.evaluate(secretKeyResultScript).toString()
     }
 
     override val canScroll: Boolean = true

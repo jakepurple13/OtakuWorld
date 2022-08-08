@@ -43,6 +43,7 @@ dependencies {
     implementation coroutinesCore
     implementation jsoup
     implementation 'com.squareup.duktape:duktape-android:1.4.0'
+    implementation zipline.zipline
     implementation 'org.mozilla:rhino:1.7.14'
     implementation gson
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"

@@ -136,9 +136,9 @@ buildscript {
                 ]
         ]
 
-        firebaseCrash = [ crash: [crashlytics, analytics] ]
+        firebaseCrash = [crash: [crashlytics, analytics]]
 
-        datastore = [ datastore: [datastore, datastorePref] ]
+        datastore = [datastore: [datastore, datastorePref]]
 
         ktorVersion = "2.0.3"
 
@@ -154,6 +154,15 @@ buildscript {
                         "io.ktor:ktor-client-okhttp:$ktorVersion",
                         "io.ktor:ktor-serialization-gson:$ktorVersion",
                         "com.tfowl.ktor:ktor-jsoup:2.0.0"
+                ]
+        ]
+
+        ziplineVersion = "0.9.0"
+
+        zipline = [
+                zipline: [
+                        "app.cash.zipline:zipline-loader:$ziplineVersion",
+                        "app.cash.zipline:zipline-profiler:$ziplineVersion"
                 ]
         ]
     }
