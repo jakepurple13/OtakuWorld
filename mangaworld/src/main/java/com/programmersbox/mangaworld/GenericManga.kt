@@ -167,7 +167,12 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     override fun sourceList(): List<ApiService> =
-        if (runBlocking { context.showAdultFlow.first() }) Sources.values().toList() else Sources.values().filterNot(Sources::isAdult).toList()
+        if (runBlocking { context.showAdultFlow.first() }) {
+            Sources.values().toList()
+        } else {
+            Sources.values().filterNot(Sources::isAdult).toList()
+        }
+            .filterNot(ApiService::notWorking)
 
     override fun toSource(s: String): ApiService? = try {
         Sources.valueOf(s)

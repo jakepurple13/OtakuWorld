@@ -1131,6 +1131,8 @@ private fun DetailsHeader(
     favoriteClick: (Boolean) -> Unit
 ) {
 
+    val imageUrl = remember { GlideUrl(model.imageUrl) { model.extras.map { it.key to it.value.toString() }.toMap() } }
+
     var imagePopup by remember { mutableStateOf(false) }
 
     if (imagePopup) {
@@ -1141,7 +1143,7 @@ private fun DetailsHeader(
             title = { Text(model.title, modifier = Modifier.padding(5.dp)) },
             text = {
                 GlideImage(
-                    imageModel = model.imageUrl,
+                    imageModel = imageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
@@ -1160,9 +1162,6 @@ private fun DetailsHeader(
             .animateContentSize()
             .then(modifier)
     ) {
-
-        val imageUrl = remember { GlideUrl(model.imageUrl) { model.extras.map { it.key to it.value.toString() }.toMap() } }
-
         GlideImage(
             imageModel = imageUrl,
             contentDescription = null,

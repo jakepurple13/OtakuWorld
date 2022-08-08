@@ -62,6 +62,9 @@ dependencies {
     implementation uiUtil
 
     implementation project(':Models')
+    implementation("com.github.KotatsuApp:kotatsu-parsers:8709c3dd0c") {
+        exclude group: 'org.json', module: 'json'
+    }
 
     implementation koin.koin
 

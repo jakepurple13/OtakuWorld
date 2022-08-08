@@ -1,10 +1,19 @@
 package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.webkit.WebView
+import androidx.core.os.LocaleListCompat
+import com.programmersbox.gsonutils.getObject
+import com.programmersbox.gsonutils.putObject
+import com.programmersbox.manga_sources.Sources
+import com.programmersbox.manga_sources.utilities.AndroidCookieJar
 import com.programmersbox.manga_sources.utilities.GET
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -15,10 +24,31 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koitharu.kotatsu.parsers.MangaLoaderContext
+import org.koitharu.kotatsu.parsers.config.ConfigKey
+import org.koitharu.kotatsu.parsers.config.MangaSourceConfig
+import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.newParser
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.List
+import kotlin.collections.emptyList
+import kotlin.collections.emptySet
+import kotlin.collections.filterNot
+import kotlin.collections.firstOrNull
+import kotlin.collections.lastOrNull
+import kotlin.collections.map
+import kotlin.collections.mapIndexed
+import kotlin.collections.orEmpty
+import kotlin.collections.reversed
+import kotlin.collections.set
+import kotlin.collections.toList
+import kotlin.collections.toMap
+import kotlin.collections.toTypedArray
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 abstract class MangaBox(
     override val serviceName: String,
@@ -344,4 +374,156 @@ object Manganelo : MangaBox("Manganato", "https://manganato.com") {
     override val simpleQueryPath = "search/story/"
     override fun searchMangaSelector() = "div.search-story-item, div.content-genres-item"
     override val serviceName: String get() = "MANGANELO"
+}
+
+object MangaTown : ApiService, KoinComponent {
+
+    override val notWorking: Boolean get() = true
+
+    private val context: Context by inject()
+
+    override val baseUrl: String get() = parser.getDomain()
+
+    private val parser by lazy {
+        MangaSource.MANGATOWN.newParser(
+            MangaLoaderContextImpl(
+                OkHttpClient(),
+                AndroidCookieJar(),
+                context
+            )
+        )
+    }
+
+    override suspend fun allList(page: Int): List<ItemModel> {
+        return parser.getList(page, sortOrder = SortOrder.POPULARITY, tags = emptySet()).toItemModel()
+    }
+
+    override suspend fun recent(page: Int): List<ItemModel> {
+        return parser.getList(page, sortOrder = SortOrder.UPDATED, tags = emptySet()).toItemModel()
+    }
+
+    override suspend fun itemInfo(model: ItemModel): InfoModel {
+        return parser.getDetails(model.toManga()).let {
+            InfoModel(
+                title = it.title,
+                description = it.description.orEmpty(),
+                url = it.url,
+                imageUrl = it.largeCoverUrl ?: it.coverUrl,
+                genres = it.tags.map { it.title },
+                chapters = it.chapters.orEmpty().reversed().map {
+                    ChapterModel(
+                        name = it.name,
+                        url = it.url,
+                        uploaded = it.uploadDate.toString(),
+                        source = Sources.MANGATOWN,
+                        sourceUrl = model.url
+                    )
+                },
+                source = Sources.MANGATOWN,
+                alternativeNames = emptyList()
+            ).apply { extras["referer"] = it.publicUrl }
+        }
+    }
+
+    override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
+        return parser.getPages(
+            MangaChapter(
+                id = 1,
+                number = 1,
+                url = chapterModel.url,
+                scanlator = "",
+                uploadDate = 1L,
+                branch = "",
+                source = MangaSource.MANGATOWN,
+                name = chapterModel.name
+            )
+        ).map { Storage(link = parser.getPageUrl(it)).apply { headers["referer"] = it.referer } }
+    }
+
+    private fun List<Manga>.toItemModel() = map {
+        ItemModel(
+            title = it.title,
+            description = it.description.orEmpty(),
+            imageUrl = it.largeCoverUrl ?: it.coverUrl,
+            url = it.url,
+            source = Sources.MANGATOWN
+        ).apply { extras["referer"] = it.publicUrl }
+    }
+
+    private fun ItemModel.toManga() = Manga(
+        title = title,
+        description = description,
+        coverUrl = imageUrl,
+        url = url,
+        id = 1,
+        altTitle = "",
+        rating = 5f,
+        isNsfw = false,
+        largeCoverUrl = imageUrl,
+        tags = emptySet(),
+        state = MangaState.ONGOING,
+        author = "",
+        chapters = emptyList(),
+        source = MangaSource.MANGATOWN,
+        publicUrl = url
+    )
+
+}
+
+class MangaLoaderContextImpl(
+    override val httpClient: OkHttpClient,
+    override val cookieJar: AndroidCookieJar,
+    private val androidContext: Context,
+) : MangaLoaderContext() {
+
+    @SuppressLint("SetJavaScriptEnabled")
+    override suspend fun evaluateJs(script: String): String? = withContext(Dispatchers.Main) {
+        val webView = WebView(androidContext)
+        webView.settings.javaScriptEnabled = true
+        suspendCoroutine { cont ->
+            webView.evaluateJavascript(script) { result ->
+                cont.resume(result?.takeUnless { it == "null" })
+            }
+        }
+    }
+
+    override fun getConfig(source: MangaSource): MangaSourceConfig {
+        return SourceSettings(androidContext, source)
+    }
+
+    override fun encodeBase64(data: ByteArray): String {
+        return android.util.Base64.encodeToString(data, android.util.Base64.NO_PADDING)
+    }
+
+    override fun decodeBase64(data: String): ByteArray {
+        return android.util.Base64.decode(data, android.util.Base64.DEFAULT)
+    }
+
+    override fun getPreferredLocales(): List<Locale> {
+        return LocaleListCompat.getAdjustedDefault().toList()
+    }
+}
+
+fun LocaleListCompat.toList(): List<Locale> = List(size()) { i -> getOrThrow(i) }
+
+fun LocaleListCompat.getOrThrow(index: Int) = get(index) ?: throw NoSuchElementException()
+
+private const val KEY_SORT_ORDER = "sort_order"
+
+class SourceSettings(context: Context, source: MangaSource) : MangaSourceConfig {
+
+    private val prefs = context.getSharedPreferences(source.name, Context.MODE_PRIVATE)
+
+    var defaultSortOrder: SortOrder?
+        get() = prefs.getObject<SortOrder>(KEY_SORT_ORDER)
+        set(value) = prefs.edit().putObject(KEY_SORT_ORDER, value).apply()
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> get(key: ConfigKey<T>): T {
+        return when (key) {
+            is ConfigKey.Domain -> prefs.getString(key.key, key.defaultValue)?.let {
+                if (it.isEmpty()) key.defaultValue else it
+            } ?: key.defaultValue
+        } as T
+    }
 }

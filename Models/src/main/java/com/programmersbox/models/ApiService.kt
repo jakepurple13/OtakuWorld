@@ -11,6 +11,7 @@ interface ApiService : Serializable {
     val canScrollAll: Boolean get() = canScroll
     val canPlay: Boolean get() = true
     val canDownload: Boolean get() = true
+    val notWorking: Boolean get() = false
     fun getRecentFlow(page: Int = 1): Flow<List<ItemModel>> = flow { emit(recent(page)) }.dispatchIo()
     suspend fun recent(page: Int = 1): List<ItemModel> = emptyList()
 

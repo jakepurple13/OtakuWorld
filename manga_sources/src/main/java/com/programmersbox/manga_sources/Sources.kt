@@ -25,7 +25,8 @@ enum class Sources(
     //MANGA_DOG(domain = "mangadog", source = MangaDog),
     //INKR(domain = "mangarock", source = com.programmersbox.manga_sources.mangasources.manga.INKR),
     TSUMINO(domain = "tsumino", isAdult = true, source = Tsumino),
-    MANGA_READ(domain = "mangaread", source = MangaRead)
+    MANGA_READ(domain = "mangaread", source = MangaRead),
+    MANGATOWN(domain = "mangatown", source = MangaTown)
     ;
 
     override val serviceName: String get() = this.name

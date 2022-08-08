@@ -5,7 +5,7 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import org.jsoup.Jsoup
 
-enum class Sources(private val api: ApiService, val notWorking: Boolean = false) : ApiService by api {
+enum class Sources(private val api: ApiService, override val notWorking: Boolean = false) : ApiService by api {
     //GOGOANIME(GogoAnimeApi),
 
     ALLANIME(AllAnime),
