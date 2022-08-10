@@ -57,7 +57,7 @@ dependencies {
     implementation material
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation preference
-    implementation 'androidx.window:window:1.1.0-alpha02'
+    implementation 'androidx.window:window:1.1.0-alpha03'
     testImplementation Deps.junit
     androidTestImplementation Deps.androidJunit
     androidTestImplementation Deps.androidEspresso
