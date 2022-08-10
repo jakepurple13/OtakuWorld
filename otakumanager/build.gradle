@@ -74,7 +74,7 @@ dependencies {
     implementation firebaseCrash.crash
     implementation koin.koin
     implementation Deps.palette
-    implementation 'com.google.firebase:firebase-auth:21.0.1'
+    implementation 'com.google.firebase:firebase-auth:21.0.7'
     implementation play_services
     implementation 'com.google.firebase:firebase-firestore-ktx:24.0.0'
     implementation 'com.google.firebase:firebase-database-ktx:20.0.5'

@@ -67,7 +67,7 @@ dependencies {
 
     implementation firebaseCrash.crash
 
-    implementation 'com.google.firebase:firebase-auth:21.0.1'
+    implementation 'com.google.firebase:firebase-auth:21.0.7'
     implementation play_services
 
     //implementation project(':UIViews')
