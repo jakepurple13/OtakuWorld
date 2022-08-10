@@ -7,12 +7,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion Deps.compileVersion
-    buildToolsVersion Deps.buildVersion
+    compileSdkVersion AppInfo.compileVersion
+    buildToolsVersion AppInfo.buildVersion
 
     defaultConfig {
-        minSdkVersion Deps.minimumSdk
-        targetSdkVersion Deps.targetSdk
+        minSdkVersion AppInfo.minimumSdk
+        targetSdkVersion AppInfo.targetSdk
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"

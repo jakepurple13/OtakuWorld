@@ -12,6 +12,8 @@ import com.programmersbox.manga_sources.utilities.GET
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Headers
@@ -29,24 +31,12 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.config.MangaSourceConfig
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.newParser
+import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.List
-import kotlin.collections.emptyList
-import kotlin.collections.emptySet
-import kotlin.collections.filterNot
-import kotlin.collections.firstOrNull
-import kotlin.collections.lastOrNull
-import kotlin.collections.map
-import kotlin.collections.mapIndexed
-import kotlin.collections.orEmpty
-import kotlin.collections.reversed
 import kotlin.collections.set
-import kotlin.collections.toList
-import kotlin.collections.toMap
-import kotlin.collections.toTypedArray
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -382,6 +372,8 @@ object MangaTown : ApiService, KoinComponent {
 
     private val context: Context by inject()
 
+    private val client = createHttpClient()
+
     override val baseUrl: String get() = parser.getDomain()
 
     private val parser by lazy {
@@ -438,6 +430,25 @@ object MangaTown : ApiService, KoinComponent {
                 name = chapterModel.name
             )
         ).map { Storage(link = parser.getPageUrl(it)).apply { headers["referer"] = it.referer } }
+    }
+
+    override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
+        return parser.getList(page, searchText.toString()).toItemModel()
+    }
+
+    override suspend fun sourceByUrl(url: String): ItemModel {
+        val doc = client.get(url).body<Document>()
+        val root = doc.body().selectFirstOrThrow("section.main")
+            .selectFirstOrThrow("div.article_content")
+        val info = root.selectFirst("div.detail_info")?.selectFirst("ul")
+        println(doc)
+        return ItemModel(
+            title = "",
+            description = info?.getElementById("show")?.ownText().orEmpty(),
+            url = url,
+            imageUrl = "",
+            source = Sources.MANGATOWN
+        )
     }
 
     private fun List<Manga>.toItemModel() = map {
@@ -522,7 +533,7 @@ class SourceSettings(context: Context, source: MangaSource) : MangaSourceConfig 
     override fun <T> get(key: ConfigKey<T>): T {
         return when (key) {
             is ConfigKey.Domain -> prefs.getString(key.key, key.defaultValue)?.let {
-                if (it.isEmpty()) key.defaultValue else it
+                it.ifEmpty { key.defaultValue }
             } ?: key.defaultValue
         } as T
     }
