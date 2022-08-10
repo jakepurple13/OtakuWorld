@@ -317,77 +317,8 @@ fun ReadView() {
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
-                val drawerTopAppBarScrollState = rememberTopAppBarState()
-                val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
-                Scaffold(
-                    modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
-                    topBar = {
-                        LargeTopAppBar(
-                            scrollBehavior = drawerScrollBehavior,
-                            title = { Text(readVm.title) },
-                            actions = { PageIndicator(Modifier, readVm.list.size - readVm.currentChapter, readVm.list.size) }
-                        )
-                    },
-                    bottomBar = {
-                        if (BuildConfig.BUILD_TYPE == "release") {
-                            AndroidView(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 4.dp),
-                                factory = {
-                                    AdView(it).apply {
-                                        setAdSize(AdSize.BANNER)
-                                        adUnitId = context.getString(R.string.ad_unit_id)
-                                        loadAd(readVm.ad)
-                                    }
-                                }
-                            )
-                        }
-                    }
-                ) { p ->
-                    if (drawerState.isOpen) {
-                        LazyColumn(
-                            state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
-                            contentPadding = p,
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            itemsIndexed(readVm.list) { i, c ->
-
-                                var showChangeChapter by remember { mutableStateOf(false) }
-
-                                if (showChangeChapter) {
-                                    AlertDialog(
-                                        onDismissRequest = { showChangeChapter = false },
-                                        title = { Text(stringResource(R.string.changeToChapter, c.name)) },
-                                        confirmButton = {
-                                            TextButton(
-                                                onClick = {
-                                                    showChangeChapter = false
-                                                    readVm.currentChapter = i
-                                                    readVm.addChapterToWatched(readVm.currentChapter, ::showToast)
-                                                }
-                                            ) { Text(stringResource(R.string.yes)) }
-                                        },
-                                        dismissButton = {
-                                            TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
-                                        }
-                                    )
-                                }
-
-                                WrapHeightNavigationDrawerItem(
-                                    modifier = Modifier
-                                        .padding(bottom = 4.dp)
-                                        .padding(horizontal = 4.dp),
-                                    label = { Text(c.name) },
-                                    selected = readVm.currentChapter == i,
-                                    onClick = { showChangeChapter = true },
-                                    shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
-                                )
-
-                                if (i < readVm.list.lastIndex) Divider()
-                            }
-                        }
-                    }
+                ModalDrawerSheet {
+                    DrawerView(readVm = readVm, drawerState = drawerState, showToast = ::showToast)
                 }
             },
             gesturesEnabled = readVm.list.size > 1
@@ -437,6 +368,87 @@ fun ReadView() {
                         //TODO: Add a new type with a recyclerview for listview only
 
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+@Composable
+fun DrawerView(
+    readVm: ReadViewModel,
+    drawerState: DrawerState,
+    showToast: () -> Unit
+) {
+    val drawerTopAppBarScrollState = rememberTopAppBarState()
+    val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
+    Scaffold(
+        modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                scrollBehavior = drawerScrollBehavior,
+                title = { Text(readVm.title) },
+                actions = { PageIndicator(Modifier, readVm.list.size - readVm.currentChapter, readVm.list.size) }
+            )
+        },
+        bottomBar = {
+            if (BuildConfig.BUILD_TYPE == "release") {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    factory = {
+                        AdView(it).apply {
+                            setAdSize(AdSize.BANNER)
+                            adUnitId = context.getString(R.string.ad_unit_id)
+                            loadAd(readVm.ad)
+                        }
+                    }
+                )
+            }
+        }
+    ) { p ->
+        if (drawerState.isOpen) {
+            LazyColumn(
+                state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
+                contentPadding = p,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                itemsIndexed(readVm.list) { i, c ->
+
+                    var showChangeChapter by remember { mutableStateOf(false) }
+
+                    if (showChangeChapter) {
+                        AlertDialog(
+                            onDismissRequest = { showChangeChapter = false },
+                            title = { Text(stringResource(R.string.changeToChapter, c.name)) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showChangeChapter = false
+                                        readVm.currentChapter = i
+                                        readVm.addChapterToWatched(readVm.currentChapter, showToast)
+                                    }
+                                ) { Text(stringResource(R.string.yes)) }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                            }
+                        )
+                    }
+
+                    WrapHeightNavigationDrawerItem(
+                        modifier = Modifier
+                            .padding(bottom = 4.dp)
+                            .padding(horizontal = 4.dp),
+                        label = { Text(c.name) },
+                        selected = readVm.currentChapter == i,
+                        onClick = { showChangeChapter = true },
+                        shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
+                    )
+
+                    if (i < readVm.list.lastIndex) Divider()
                 }
             }
         }

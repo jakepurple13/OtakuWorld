@@ -1,8 +1,10 @@
 package com.programmersbox.uiviews
 
+import android.Manifest
 import android.app.assist.AssistContent
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -39,6 +41,8 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -129,6 +133,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
 
             OtakuMaterialTheme(navController, genericInfo) {
+                AskForNotificationPermissions()
+
                 val showAllItem by showAll.collectAsState(false)
 
                 com.google.accompanist.navigation.material.ModalBottomSheetLayout(
@@ -314,6 +320,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    @OptIn(ExperimentalPermissionsApi::class)
+    @Composable
+    fun AskForNotificationPermissions() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            val permissions = rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
+            LaunchedEffect(Unit) { permissions.launchPermissionRequest() }
         }
     }
 

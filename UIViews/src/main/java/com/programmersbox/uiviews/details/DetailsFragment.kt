@@ -25,7 +25,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.Surface
@@ -368,7 +367,7 @@ private fun DetailsViewLandscape(
                             leadingIcon = { Icon(Icons.Default.Check, null) }
                         )
 
-                        MenuDefaults.Divider()
+                        androidx.compose.material3.Divider()
 
                         androidx.compose.material3.DropdownMenuItem(
                             onClick = {
@@ -379,7 +378,7 @@ private fun DetailsViewLandscape(
                             leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
                         )
 
-                        MenuDefaults.Divider()
+                        androidx.compose.material3.Divider()
 
                         if (!isSaved) {
                             androidx.compose.material3.DropdownMenuItem(
@@ -408,7 +407,7 @@ private fun DetailsViewLandscape(
                                 leadingIcon = { Icon(Icons.Default.Save, null) }
                             )
 
-                            MenuDefaults.Divider()
+                            androidx.compose.material3.Divider()
                         }
 
                         androidx.compose.material3.DropdownMenuItem(
@@ -420,7 +419,7 @@ private fun DetailsViewLandscape(
                             leadingIcon = { Icon(Icons.Default.Search, null) }
                         )
 
-                        MenuDefaults.Divider()
+                        androidx.compose.material3.Divider()
 
                         androidx.compose.material3.DropdownMenuItem(
                             onClick = {

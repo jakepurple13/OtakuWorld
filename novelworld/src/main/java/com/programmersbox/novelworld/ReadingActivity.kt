@@ -259,83 +259,85 @@ fun NovelReader() {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            val topAppBarScrollState = rememberTopAppBarState()
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                topBar = {
-                    Insets {
-                        SmallTopAppBar(
-                            title = { Text(readVm.title) },
-                            actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
-                            scrollBehavior = scrollBehavior
-                        )
-                    }
-                },
-                bottomBar = {
-                    if (!BuildConfig.DEBUG) {
-                        AndroidView(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            factory = {
-                                AdView(it).apply {
-                                    setAdSize(AdSize.BANNER)
-                                    adUnitId = context.getString(R.string.ad_unit_id)
-                                    loadAd(readVm.ad)
-                                }
-                            }
-                        )
-                    }
-                }
-            ) { p ->
-                if (drawerState.isOpen) {
-                    LazyColumn(
-                        state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
-                        contentPadding = p,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        itemsIndexed(readVm.list) { i, c ->
-
-                            var showChangeChapter by remember { mutableStateOf(false) }
-
-                            if (showChangeChapter) {
-                                AlertDialog(
-                                    onDismissRequest = { showChangeChapter = false },
-                                    title = { Text(stringResource(R.string.changeToChapter, c.name)) },
-                                    confirmButton = {
-                                        TextButton(
-                                            onClick = {
-                                                showChangeChapter = false
-                                                readVm.addChapterToWatched(i, ::showToast)
-                                            }
-                                        ) { Text(stringResource(R.string.yes)) }
-                                    },
-                                    dismissButton = {
-                                        TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+            ModalDrawerSheet {
+                val topAppBarScrollState = rememberTopAppBarState()
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+                Scaffold(
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                    topBar = {
+                        Insets {
+                            SmallTopAppBar(
+                                title = { Text(readVm.title) },
+                                actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
+                                scrollBehavior = scrollBehavior
+                            )
+                        }
+                    },
+                    bottomBar = {
+                        if (!BuildConfig.DEBUG) {
+                            AndroidView(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp),
+                                factory = {
+                                    AdView(it).apply {
+                                        setAdSize(AdSize.BANNER)
+                                        adUnitId = context.getString(R.string.ad_unit_id)
+                                        loadAd(readVm.ad)
                                     }
-                                )
-                            }
+                                }
+                            )
+                        }
+                    }
+                ) { p ->
+                    if (drawerState.isOpen) {
+                        LazyColumn(
+                            state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
+                            contentPadding = p,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            itemsIndexed(readVm.list) { i, c ->
 
-                            Surface(
-                                modifier = Modifier.padding(horizontal = 5.dp),
-                                border = BorderStroke(
-                                    1.dp,
-                                    animateColorAsState(
-                                        if (readVm.currentChapter == i) M3MaterialTheme.colorScheme.onSurface
-                                        else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                                    ).value
-                                ),
-                                shape = MaterialTheme.shapes.medium,
-                                tonalElevation = 5.dp
-                            ) {
-                                ListItem(
-                                    headlineText = { Text(c.name) },
-                                    leadingContent = if (readVm.currentChapter == i) {
-                                        { Icon(Icons.Default.ArrowRight, null) }
-                                    } else null,
-                                    modifier = Modifier.clickable { showChangeChapter = true }
-                                )
+                                var showChangeChapter by remember { mutableStateOf(false) }
+
+                                if (showChangeChapter) {
+                                    AlertDialog(
+                                        onDismissRequest = { showChangeChapter = false },
+                                        title = { Text(stringResource(R.string.changeToChapter, c.name)) },
+                                        confirmButton = {
+                                            TextButton(
+                                                onClick = {
+                                                    showChangeChapter = false
+                                                    readVm.addChapterToWatched(i, ::showToast)
+                                                }
+                                            ) { Text(stringResource(R.string.yes)) }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                                        }
+                                    )
+                                }
+
+                                Surface(
+                                    modifier = Modifier.padding(horizontal = 5.dp),
+                                    border = BorderStroke(
+                                        1.dp,
+                                        animateColorAsState(
+                                            if (readVm.currentChapter == i) M3MaterialTheme.colorScheme.onSurface
+                                            else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                        ).value
+                                    ),
+                                    shape = MaterialTheme.shapes.medium,
+                                    tonalElevation = 5.dp
+                                ) {
+                                    ListItem(
+                                        headlineText = { Text(c.name) },
+                                        leadingContent = if (readVm.currentChapter == i) {
+                                            { Icon(Icons.Default.ArrowRight, null) }
+                                        } else null,
+                                        modifier = Modifier.clickable { showChangeChapter = true }
+                                    )
+                                }
                             }
                         }
                     }

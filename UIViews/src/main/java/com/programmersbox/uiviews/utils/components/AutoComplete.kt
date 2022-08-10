@@ -5,7 +5,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -109,7 +112,7 @@ fun <T : AutoCompleteEntity> AutoCompleteBox(
                     trailingIcon = trailingIcon?.let { { it.invoke(item) } },
                     leadingIcon = leadingIcon?.let { { it.invoke(item) } }
                 )
-                if (i < items.size - 1) MenuDefaults.Divider()
+                if (i < items.size - 1) androidx.compose.material3.Divider()
             }
         }
     }

@@ -22,7 +22,6 @@ import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -446,7 +445,7 @@ private fun NotificationItem(
                             }
                         )
 
-                        MenuDefaults.Divider()
+                        androidx.compose.material3.Divider()
 
                         androidx.compose.material3.DropdownMenuItem(
                             text = { Text(stringResource(R.string.notifyAtTime)) },
@@ -512,7 +511,7 @@ private fun NotificationItem(
                             }
                         )
 
-                        MenuDefaults.Divider()
+                        androidx.compose.material3.Divider()
 
                         androidx.compose.material3.DropdownMenuItem(
                             onClick = {

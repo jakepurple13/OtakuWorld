@@ -64,8 +64,8 @@ object Deps {
 
     const val lifecycle = "2.5.1"
 
-    const val jetpack = "1.3.0-alpha02"
-    const val jetpackCompiler = "1.3.0-rc01"
+    const val jetpack = "1.3.0-alpha03"
+    const val jetpackCompiler = "1.3.0"
 
     const val accompanist = "0.25.0"
 
@@ -79,7 +79,7 @@ object Deps {
 
     // Material Design
     const val composeMaterial = "androidx.compose.material:material:$jetpack"
-    const val materialYou = "androidx.compose.material3:material3:1.0.0-alpha15"
+    const val materialYou = "androidx.compose.material3:material3:1.0.0-alpha16"
 
     // Material design icons
     const val composeMaterialIconsCore = "androidx.compose.material:material-icons-core:$jetpack"

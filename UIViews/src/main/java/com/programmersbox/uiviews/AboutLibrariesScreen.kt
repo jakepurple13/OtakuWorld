@@ -246,6 +246,7 @@ internal fun OutlinedLibrary(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun Library(
     library: Library,

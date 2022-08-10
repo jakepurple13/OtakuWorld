@@ -351,7 +351,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun initVideoPlayer() {
         gesture = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {})
         gesture.setOnDoubleTapListener(object : GestureDetector.OnDoubleTapListener {
-            override fun onDoubleTap(p0: MotionEvent?): Boolean {
+            override fun onDoubleTap(p0: MotionEvent): Boolean {
                 if (player.isPlaying) {
                     player.pause()
                 } else {
@@ -364,11 +364,11 @@ class VideoPlayerActivity : AppCompatActivity() {
                 return true
             }
 
-            override fun onDoubleTapEvent(p0: MotionEvent?): Boolean {
+            override fun onDoubleTapEvent(p0: MotionEvent): Boolean {
                 return false
             }
 
-            override fun onSingleTapConfirmed(p0: MotionEvent?): Boolean {
+            override fun onSingleTapConfirmed(p0: MotionEvent): Boolean {
                 return false
             }
 
