@@ -245,67 +245,69 @@ fun ReadView() {
                     }
                 }
             ) { p ->
-                if (sheetState.isVisible) {
-                    LazyVerticalGrid(
-                        columns = adaptiveGridCell(),
-                        contentPadding = p,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        itemsIndexed(pages) { i, it ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                    .border(
-                                        animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
-                                        color = animateColorAsState(
-                                            if (currentPage == i) MaterialTheme.colorScheme.primary
-                                            else Color.Transparent
-                                        ).value
-                                    )
-                                    .clickable {
-                                        scope.launch {
-                                            if (currentPage == i) sheetState.hide()
-                                            if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
-                                        }
-                                    }
-                            ) {
-                                GlideImage(
-                                    imageModel = it,
-                                    contentScale = ContentScale.Crop,
-                                    loading = {
-                                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.Center)
-                                )
-
+                Crossfade(targetState = sheetState.isVisible) { target ->
+                    if (target) {
+                        LazyVerticalGrid(
+                            columns = adaptiveGridCell(),
+                            contentPadding = p,
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            itemsIndexed(pages) { i, it ->
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .background(
-                                            brush = Brush.verticalGradient(
-                                                colors = listOf(
-                                                    Color.Transparent,
-                                                    Color.Black
-                                                ),
-                                                startY = 50f
-                                            )
+                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                        .border(
+                                            animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                            color = animateColorAsState(
+                                                if (currentPage == i) MaterialTheme.colorScheme.primary
+                                                else Color.Transparent
+                                            ).value
                                         )
+                                        .clickable {
+                                            scope.launch {
+                                                if (currentPage == i) sheetState.hide()
+                                                if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
+                                            }
+                                        }
                                 ) {
-                                    Text(
-                                        (i + 1).toString(),
-                                        style = MaterialTheme
-                                            .typography
-                                            .bodyLarge
-                                            .copy(textAlign = TextAlign.Center, color = Color.White),
-                                        maxLines = 2,
+                                    GlideImage(
+                                        imageModel = it,
+                                        contentScale = ContentScale.Crop,
+                                        loading = {
+                                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                        },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .align(Alignment.Center)
                                     )
+
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        Color.Transparent,
+                                                        Color.Black
+                                                    ),
+                                                    startY = 50f
+                                                )
+                                            )
+                                    ) {
+                                        Text(
+                                            (i + 1).toString(),
+                                            style = MaterialTheme
+                                                .typography
+                                                .bodyLarge
+                                                .copy(textAlign = TextAlign.Center, color = Color.White),
+                                            maxLines = 2,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .align(Alignment.Center)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -314,10 +316,10 @@ fun ReadView() {
             }
         },
     ) {
-        ModalNavigationDrawer(
+        DismissibleNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
-                ModalDrawerSheet {
+                DismissibleDrawerSheet {
                     DrawerView(readVm = readVm, drawerState = drawerState, showToast = ::showToast)
                 }
             },
@@ -409,46 +411,48 @@ fun DrawerView(
             }
         }
     ) { p ->
-        if (drawerState.isOpen) {
-            LazyColumn(
-                state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
-                contentPadding = p,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                itemsIndexed(readVm.list) { i, c ->
+        Crossfade(drawerState.isOpen) { target ->
+            if (target) {
+                LazyColumn(
+                    state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
+                    contentPadding = p,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    itemsIndexed(readVm.list) { i, c ->
 
-                    var showChangeChapter by remember { mutableStateOf(false) }
+                        var showChangeChapter by remember { mutableStateOf(false) }
 
-                    if (showChangeChapter) {
-                        AlertDialog(
-                            onDismissRequest = { showChangeChapter = false },
-                            title = { Text(stringResource(R.string.changeToChapter, c.name)) },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        showChangeChapter = false
-                                        readVm.currentChapter = i
-                                        readVm.addChapterToWatched(readVm.currentChapter, showToast)
-                                    }
-                                ) { Text(stringResource(R.string.yes)) }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
-                            }
+                        if (showChangeChapter) {
+                            AlertDialog(
+                                onDismissRequest = { showChangeChapter = false },
+                                title = { Text(stringResource(R.string.changeToChapter, c.name)) },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showChangeChapter = false
+                                            readVm.currentChapter = i
+                                            readVm.addChapterToWatched(readVm.currentChapter, showToast)
+                                        }
+                                    ) { Text(stringResource(R.string.yes)) }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                                }
+                            )
+                        }
+
+                        WrapHeightNavigationDrawerItem(
+                            modifier = Modifier
+                                .padding(bottom = 4.dp)
+                                .padding(horizontal = 4.dp),
+                            label = { Text(c.name) },
+                            selected = readVm.currentChapter == i,
+                            onClick = { showChangeChapter = true },
+                            shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
                         )
+
+                        if (i < readVm.list.lastIndex) Divider()
                     }
-
-                    WrapHeightNavigationDrawerItem(
-                        modifier = Modifier
-                            .padding(bottom = 4.dp)
-                            .padding(horizontal = 4.dp),
-                        label = { Text(c.name) },
-                        selected = readVm.currentChapter == i,
-                        onClick = { showChangeChapter = true },
-                        shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
-                    )
-
-                    if (i < readVm.list.lastIndex) Divider()
                 }
             }
         }
