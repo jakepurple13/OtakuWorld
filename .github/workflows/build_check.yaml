@@ -18,19 +18,19 @@ on:
     inputs:
       build_animeworld:
         description: 'Build AnimeWorld?'
-        required: false
+        required: true
         default: 'true'
       build_animeworldtv:
         description: 'Build AnimeWorldTV?'
-        required: false
+        required: true
         default: 'true'
       build_mangaworld:
         description: 'Build MangaWorld?'
-        required: false
+        required: true
         default: 'true'
       build_novelworld:
         description: 'Build NovelWorld?'
-        required: false
+        required: true
         default: 'true'
 
 jobs:
