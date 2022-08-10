@@ -135,7 +135,7 @@ dependencies {
     implementation("com.airbnb.android:lottie-compose:${Deps.lottieVersion}")
     implementation("me.onebone:toolbar-compose:2.3.4")
     implementation("com.github.nanihadesuka:LazyColumnScrollbar:1.0.3")
-    implementation("androidx.paging:paging-compose:1.0.0-alpha15")
+    implementation("androidx.paging:paging-compose:1.0.0-alpha16")
 
     implementation("androidx.paging:paging-runtime-ktx:${Deps.pagingVersion}")
     // alternatively - without Android dependencies for tests
