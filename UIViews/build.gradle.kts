@@ -85,7 +85,7 @@ dependencies {
     implementation(Deps.swiperefresh)
     implementation(Deps.coroutinesCore)
     implementation(Deps.coroutinesAndroid)
-    implementation("androidx.fragment:fragment-ktx:1.5.1")
+    implementation("androidx.fragment:fragment-ktx:1.5.2")
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:${Deps.lifecycle}")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:${Deps.lifecycle}")
