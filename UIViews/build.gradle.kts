@@ -65,7 +65,7 @@ dependencies {
     androidTestImplementation(Deps.androidJunit)
     androidTestImplementation(Deps.androidEspresso)
 
-    implementation("com.google.firebase:firebase-auth:21.0.6")
+    implementation("com.google.firebase:firebase-auth:21.0.7")
     implementation(Deps.playServices)
 
     implementation("com.google.androidbrowserhelper:androidbrowserhelper:2.4.0")
