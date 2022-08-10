@@ -68,7 +68,6 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.MaterialCard
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
@@ -79,7 +78,6 @@ import com.programmersbox.novel_sources.Sources as NSources
 
 class MainActivity : AppCompatActivity() {
 
-    private val disposable = CompositeDisposable()
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
 
@@ -655,11 +653,6 @@ class MainActivity : AppCompatActivity() {
             }*/
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
     }
 }
 
