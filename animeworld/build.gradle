@@ -64,7 +64,7 @@ dependencies {
     androidTestImplementation Deps.androidEspresso
 
     implementation "com.airbnb.android:lottie:$lottieVersion"
-    implementation 'com.github.hedzr:android-file-chooser:v1.2.0-final'
+    implementation 'com.github.hedzr:android-file-chooser:1.2.0'
 
     implementation "com.ncorti:slidetoact:0.9.0"
 
