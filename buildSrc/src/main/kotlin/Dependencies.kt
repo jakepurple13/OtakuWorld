@@ -90,6 +90,7 @@ object Deps {
 
     // Integration with ViewModels
     const val composeLifecycle = "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle"
+    const val composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha01"
 
     // Integration with observables
     const val composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
@@ -144,7 +145,7 @@ object Deps {
     val composeLibs = arrayOf(
         composeUi, composeUiTooling, composeFoundation, composeMaterial,
         composeMaterialIconsCore, composeMaterialIconsExtended,
-        composeActivity, composeLifecycle,
+        composeActivity, composeLifecycle, composeLifecycleRuntime,
         composeRuntimeLivedata,
         composeMaterialThemeAdapter, composeMaterial3ThemeAdapter,
         landscapistGlide, coilCompose,
