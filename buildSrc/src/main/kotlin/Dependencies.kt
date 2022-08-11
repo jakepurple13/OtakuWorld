@@ -145,6 +145,7 @@ object Deps {
     val composeLibs = arrayOf(
         composeUi, composeUiTooling, composeFoundation, composeMaterial,
         composeMaterialIconsCore, composeMaterialIconsExtended,
+        composeAnimation,
         composeActivity, composeLifecycle, composeLifecycleRuntime,
         composeRuntimeLivedata,
         composeMaterialThemeAdapter, composeMaterial3ThemeAdapter,
