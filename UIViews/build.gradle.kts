@@ -71,7 +71,7 @@ dependencies {
     implementation("com.google.androidbrowserhelper:androidbrowserhelper:2.4.0")
     implementation("androidx.browser:browser:1.4.0")
 
-    implementation("me.zhanghai.android.fastscroll:library:1.1.6")
+    implementation("me.zhanghai.android.fastscroll:library:1.1.8")
 
     implementation("ru.beryukhov:flowreactivenetwork:1.0.4")
 
