@@ -65,7 +65,7 @@ dependencies {
     androidTestImplementation(Deps.androidEspresso)
 
     implementation("com.mikepenz:iconics-core:5.3.4")
-    implementation("com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar")
+    implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
     implementation("com.google.android.gms:play-services-ads:21.1.0")
 
     implementation(project(":UIViews"))

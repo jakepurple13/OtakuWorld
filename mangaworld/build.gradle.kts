@@ -93,7 +93,7 @@ dependencies {
     implementation("xyz.quaver:subsampledimage:0.0.1-alpha22-SNAPSHOT")
 
     implementation("com.mikepenz:iconics-core:5.3.4")
-    implementation("com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar")
+    implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
 
     implementation(Deps.coroutinesCore)
     implementation(Deps.coroutinesAndroid)
