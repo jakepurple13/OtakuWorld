@@ -67,7 +67,7 @@ dependencies {
     add("fullImplementation", "com.google.firebase:firebase-auth:21.0.7")
     add("fullImplementation", Deps.playServices)
     add("fullImplementation", "com.firebaseui:firebase-ui-auth:8.0.1")
-    add("fullImplementation", "com.google.firebase:firebase-firestore-ktx:24.2.1")
+    add("fullImplementation", "com.google.firebase:firebase-firestore-ktx:24.2.2")
     add("fullImplementation", "com.google.firebase:firebase-database-ktx:20.0.5")
 
     implementation(Deps.coroutinesCore)
