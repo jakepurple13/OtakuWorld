@@ -66,6 +66,11 @@ object Deps {
 
     const val lifecycle = "2.5.1"
 
+    const val lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
+    const val lifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle"
+    const val lifecycleLivedata = "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle"
+    const val lifecycleViewModel = "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle"
+
     const val jetpack = "1.3.0-alpha03"
     const val jetpackCompiler = "1.3.0"
 
@@ -174,4 +179,15 @@ object Deps {
         "io.ktor:ktor-serialization-gson:$ktorVersion",
         "com.tfowl.ktor:ktor-jsoup:2.0.0"
     )
+
+    const val reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
+
+    const val fragmentKtx = "androidx.fragment:fragment-ktx:1.5.2"
+
+    const val stetho = "com.facebook.stetho:stetho:1.6.0"
+
+    const val workVersion = "2.7.1"
+
+    // Kotlin + coroutines
+    const val workRuntime = "androidx.work:work-runtime-ktx:$workVersion"
 }

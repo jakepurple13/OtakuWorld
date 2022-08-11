@@ -73,7 +73,7 @@ dependencies {
 
     implementation("me.zhanghai.android.fastscroll:library:1.1.8")
 
-    implementation("ru.beryukhov:flowreactivenetwork:1.0.4")
+    implementation(Deps.reactiveNetwork)
 
     implementation(Deps.koinLibs)
 
@@ -84,11 +84,11 @@ dependencies {
     implementation(Deps.constraintlayout)
     implementation(Deps.coroutinesCore)
     implementation(Deps.coroutinesAndroid)
-    implementation("androidx.fragment:fragment-ktx:1.5.2")
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:${Deps.lifecycle}")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:${Deps.lifecycle}")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:${Deps.lifecycle}")
+    implementation(Deps.fragmentKtx)
+    implementation(Deps.lifecycleExtensions)
+    implementation(Deps.lifecycleRuntime)
+    implementation(Deps.lifecycleLivedata)
+    implementation(Deps.lifecycleViewModel)
 
     implementation("com.mikepenz:iconics-core:5.3.4")
     implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
@@ -100,7 +100,7 @@ dependencies {
     implementation(Deps.recyclerview)
     implementation(Deps.palette)
     implementation("com.airbnb.android:lottie:${Deps.lottieVersion}")
-    implementation("androidx.room:room-runtime:${Deps.roomVersion}")
+    implementation(Deps.roomLibs)
     implementation("com.github.anzaizai:EasySwipeMenuLayout:1.1.4")
 
     implementation("com.github.noowenz:ShowMoreLess:1.0.3")
@@ -114,11 +114,9 @@ dependencies {
         isTransitive = false
     }
 
-    implementation("com.facebook.stetho:stetho:1.6.0")
+    implementation(Deps.stetho)
 
-    val work_version = "2.7.1"
-    // Kotlin + coroutines
-    implementation("androidx.work:work-runtime-ktx:$work_version")
+    implementation(Deps.workRuntime)
 
     // Kotlin
     api("androidx.navigation:navigation-fragment-ktx:${Deps.navVersion}")
