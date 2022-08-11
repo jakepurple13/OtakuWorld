@@ -10,7 +10,7 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Deps.kotlinVersion}")
         classpath("com.google.gms:google-services:4.3.13")
         classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.1")
-        classpath("com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:10.3.1")
+        classpath("com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:10.4.0")
         classpath("org.jetbrains.kotlin:kotlin-serialization:${Deps.kotlinVersion}")
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
