@@ -71,7 +71,7 @@ dependencies {
     implementation("com.google.androidbrowserhelper:androidbrowserhelper:2.4.0")
     implementation("androidx.browser:browser:1.4.0")
 
-    implementation("me.zhanghai.android.fastscroll:library:1.1.6")
+    implementation("me.zhanghai.android.fastscroll:library:1.1.8")
 
     implementation("ru.beryukhov:flowreactivenetwork:1.0.4")
 
@@ -134,7 +134,7 @@ dependencies {
     implementation(Deps.composeLibs)
     implementation("com.airbnb.android:lottie-compose:${Deps.lottieVersion}")
     implementation("me.onebone:toolbar-compose:2.3.4")
-    implementation("com.github.nanihadesuka:LazyColumnScrollbar:1.0.3")
+    implementation("com.github.nanihadesuka:LazyColumnScrollbar:1.5.1")
     implementation("androidx.paging:paging-compose:1.0.0-alpha16")
 
     implementation("androidx.paging:paging-runtime-ktx:${Deps.pagingVersion}")

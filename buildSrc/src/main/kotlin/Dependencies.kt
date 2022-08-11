@@ -67,7 +67,7 @@ object Deps {
     const val jetpack = "1.3.0-alpha03"
     const val jetpackCompiler = "1.3.0"
 
-    const val accompanist = "0.25.0"
+    const val accompanist = "0.26.1-alpha"
 
     const val composeUi = "androidx.compose.ui:ui:$jetpack"
 
@@ -96,7 +96,7 @@ object Deps {
     const val composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
     const val composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.15"
     const val composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.15"
-    const val landscapistGlide = "com.github.skydoves:landscapist-glide:1.6.0"
+    const val landscapistGlide = "com.github.skydoves:landscapist-glide:1.6.1"
     const val composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
     const val composeAnimation = "androidx.compose.animation:animation:$jetpack"
     const val materialPlaceholder = "com.google.accompanist:accompanist-placeholder-material:$accompanist"

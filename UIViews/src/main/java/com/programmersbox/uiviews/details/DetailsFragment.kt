@@ -834,6 +834,7 @@ private fun DetailsView(
             val listState = rememberLazyListState()
 
             LazyColumnScrollbar(
+                enabled = true,
                 thickness = 8.dp,
                 padding = 2.dp,
                 listState = listState,
