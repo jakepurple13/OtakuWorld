@@ -320,7 +320,7 @@ fun ReadView() {
             drawerState = drawerState,
             drawerContent = {
                 DismissibleDrawerSheet {
-                    DrawerView(readVm = readVm, drawerState = drawerState, showToast = ::showToast)
+                    DrawerView(readVm = readVm, showToast = ::showToast)
                 }
             },
             gesturesEnabled = readVm.list.size > 1
@@ -380,7 +380,6 @@ fun ReadView() {
 @Composable
 fun DrawerView(
     readVm: ReadViewModel,
-    drawerState: DrawerState,
     showToast: () -> Unit
 ) {
     val drawerTopAppBarScrollState = rememberTopAppBarState()
@@ -411,49 +410,45 @@ fun DrawerView(
             }
         }
     ) { p ->
-        Crossfade(drawerState.isOpen) { target ->
-            if (target) {
-                LazyColumn(
-                    state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    itemsIndexed(readVm.list) { i, c ->
+        LazyColumn(
+            state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            itemsIndexed(readVm.list) { i, c ->
 
-                        var showChangeChapter by remember { mutableStateOf(false) }
+                var showChangeChapter by remember { mutableStateOf(false) }
 
-                        if (showChangeChapter) {
-                            AlertDialog(
-                                onDismissRequest = { showChangeChapter = false },
-                                title = { Text(stringResource(R.string.changeToChapter, c.name)) },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            showChangeChapter = false
-                                            readVm.currentChapter = i
-                                            readVm.addChapterToWatched(readVm.currentChapter, showToast)
-                                        }
-                                    ) { Text(stringResource(R.string.yes)) }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                if (showChangeChapter) {
+                    AlertDialog(
+                        onDismissRequest = { showChangeChapter = false },
+                        title = { Text(stringResource(R.string.changeToChapter, c.name)) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showChangeChapter = false
+                                    readVm.currentChapter = i
+                                    readVm.addChapterToWatched(readVm.currentChapter, showToast)
                                 }
-                            )
+                            ) { Text(stringResource(R.string.yes)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
                         }
-
-                        WrapHeightNavigationDrawerItem(
-                            modifier = Modifier
-                                .padding(bottom = 4.dp)
-                                .padding(horizontal = 4.dp),
-                            label = { Text(c.name) },
-                            selected = readVm.currentChapter == i,
-                            onClick = { showChangeChapter = true },
-                            shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
-                        )
-
-                        if (i < readVm.list.lastIndex) Divider()
-                    }
+                    )
                 }
+
+                WrapHeightNavigationDrawerItem(
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .padding(horizontal = 4.dp),
+                    label = { Text(c.name) },
+                    selected = readVm.currentChapter == i,
+                    onClick = { showChangeChapter = true },
+                    shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
+                )
+
+                if (i < readVm.list.lastIndex) Divider()
             }
         }
     }

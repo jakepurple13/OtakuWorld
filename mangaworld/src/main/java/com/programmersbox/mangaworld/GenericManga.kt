@@ -42,7 +42,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
@@ -75,6 +77,23 @@ val appModule = module {
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
 }
 
+class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
+    fun set(item: List<ChapterModel>?) {
+        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
+        context.defaultSharedPref.edit().putString("chapterList", i).commit()
+    }
+
+    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
+        "chapterList",
+        null,
+        ChapterModel::class.java to ChapterModelDeserializer(genericInfo)
+    )
+
+    fun clear() {
+        context.defaultSharedPref.edit().remove("chapterList").apply()
+    }
+}
+
 class GenericManga(val context: Context) : GenericInfo {
 
     override val deepLinkUri: String get() = "mangaworld://"
@@ -90,6 +109,7 @@ class GenericManga(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
+        ChapterList(context, this@GenericManga).set(allChapters)
         if (runBlocking { context.useNewReaderFlow.first() }) {
             /*navController
                 .navigate(

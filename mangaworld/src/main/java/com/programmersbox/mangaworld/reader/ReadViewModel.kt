@@ -18,6 +18,7 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.mangaworld.ChapterList
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
@@ -104,6 +105,7 @@ class ReadViewModel(
 
     val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 
+    private val chapterList by lazy { ChapterList(context, genericInfo) }
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
@@ -129,18 +131,9 @@ class ReadViewModel(
             }
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val url = handle.get<String>("mangaUrl") ?: ""
-
-            handle.getStateFlow<String>("allChapters", "")
-                .map { it.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo)).orEmpty() }
-                .onEach {
-                    list = it
-                    currentChapter = it.indexOfFirst { l -> l.url == url }
-                }
-                .flowOn(Dispatchers.Main)
-                .collect()
-        }
+        val url = handle.get<String>("mangaUrl") ?: ""
+        list = chapterList.get().orEmpty()
+        currentChapter = list.indexOfFirst { l -> l.url == url }
 
         loadPages(modelPath)
     }
@@ -191,5 +184,10 @@ class ReadViewModel(
                     it.mapNotNull(Storage::link)
                 }
         )
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        chapterList.clear()
     }
 }
