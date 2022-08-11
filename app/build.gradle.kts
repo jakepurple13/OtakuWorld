@@ -63,9 +63,9 @@ dependencies {
     implementation(Deps.appCompat)
     implementation(Deps.material)
     implementation(Deps.constraintlayout)
-    testImplementation(Deps.junit)
-    androidTestImplementation(Deps.androidJunit)
-    androidTestImplementation(Deps.androidEspresso)
+    testImplementation(TestDeps.junit)
+    androidTestImplementation(TestDeps.androidJunit)
+    androidTestImplementation(TestDeps.androidEspresso)
 
     implementation(Deps.recyclerview)
 

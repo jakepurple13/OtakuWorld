@@ -77,7 +77,7 @@ dependencies {
 
     implementation(Media3Deps.exoplayerLibs)
     // For building media playback UIs for Android TV using the Jetpack Leanback library
-    implementation("androidx.media3:media3-ui-leanback:${Deps.media3Version}")
+    implementation("androidx.media3:media3-ui-leanback:${Media3Deps.media3Version}")
 
     implementation(project(":Models"))
     implementation(project(":anime_sources"))

@@ -61,9 +61,9 @@ dependencies {
     implementation(Deps.swiperefresh)
     implementation(Deps.recyclerview)
     implementation("com.google.android.gms:play-services-ads:21.1.0")
-    testImplementation(Deps.junit)
-    androidTestImplementation(Deps.androidJunit)
-    androidTestImplementation(Deps.androidEspresso)
+    testImplementation(TestDeps.junit)
+    androidTestImplementation(TestDeps.androidJunit)
+    androidTestImplementation(TestDeps.androidEspresso)
     implementation(Deps.preference)
     implementation(Deps.firebaseCrashLibs)
 

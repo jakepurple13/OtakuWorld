@@ -38,13 +38,13 @@ dependencies {
     implementation(Deps.kotlinStLib)
     implementation(Deps.androidCore)
     implementation(Deps.appCompat)
-    testImplementation(Deps.junit)
-    androidTestImplementation(Deps.androidJunit)
-    androidTestImplementation(Deps.androidEspresso)
+    testImplementation(TestDeps.junit)
+    androidTestImplementation(TestDeps.androidJunit)
+    androidTestImplementation(TestDeps.androidEspresso)
 
-    testImplementation("org.mockito:mockito-core:4.6.1")
+    testImplementation(TestDeps.mockitoCore)
     // required if you want to use Mockito for Android tests
-    androidTestImplementation("org.mockito:mockito-android:4.6.1")
+    androidTestImplementation(TestDeps.mockitoAndroid)
 
     implementation(Deps.okHttpLibs)
     implementation(Deps.coroutinesCore)

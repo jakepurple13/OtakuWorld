@@ -61,10 +61,9 @@ dependencies {
     implementation(Deps.preference)
     implementation(Deps.firebaseCrashLibs)
     implementation(Deps.recyclerview)
-    implementation(Deps.swiperefresh)
-    testImplementation(Deps.junit)
-    androidTestImplementation(Deps.androidJunit)
-    androidTestImplementation(Deps.androidEspresso)
+    testImplementation(TestDeps.junit)
+    androidTestImplementation(TestDeps.androidJunit)
+    androidTestImplementation(TestDeps.androidEspresso)
 
     implementation("com.airbnb.android:lottie:${Deps.lottieVersion}")
     implementation("com.github.hedzr:android-file-chooser:1.2.0")

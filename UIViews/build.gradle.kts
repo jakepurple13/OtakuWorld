@@ -61,9 +61,9 @@ dependencies {
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation(Deps.preference)
     implementation("androidx.window:window:1.1.0-alpha03")
-    testImplementation(Deps.junit)
-    androidTestImplementation(Deps.androidJunit)
-    androidTestImplementation(Deps.androidEspresso)
+    testImplementation(TestDeps.junit)
+    androidTestImplementation(TestDeps.androidJunit)
+    androidTestImplementation(TestDeps.androidEspresso)
 
     implementation("com.google.firebase:firebase-auth:21.0.7")
     implementation(Deps.playServices)
@@ -82,7 +82,6 @@ dependencies {
     implementation(project(":sharedutils"))
 
     implementation(Deps.constraintlayout)
-    implementation(Deps.swiperefresh)
     implementation(Deps.coroutinesCore)
     implementation(Deps.coroutinesAndroid)
     implementation("androidx.fragment:fragment-ktx:1.5.2")

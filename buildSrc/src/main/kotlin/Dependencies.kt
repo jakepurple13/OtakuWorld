@@ -20,9 +20,6 @@ object Deps {
     const val thirdpartyutils = "com.github.jakepurple13.HelpfulTools:thirdpartyutils:$jakepurple13"
 
     const val palette = "androidx.palette:palette-ktx:1.0.0"
-    const val junit = "junit:junit:4.+"
-    const val androidJunit = "androidx.test.ext:junit:1.1.3"
-    const val androidEspresso = "androidx.test.espresso:espresso-core:3.4.0"
 
     const val coroutinesVersion = "1.6.4"
 
@@ -53,7 +50,6 @@ object Deps {
     const val analytics = "com.google.firebase:firebase-analytics:21.1.0"
     const val playServices = "com.google.android.gms:play-services-auth:20.1.0"
 
-    const val media3Version = "1.0.0-beta02"
     const val roomVersion = "2.5.0-alpha02"
 
     const val navVersion = "2.5.1"

@@ -60,9 +60,9 @@ dependencies {
     implementation(Deps.constraintlayout)
     implementation(Deps.recyclerview)
     implementation(Deps.preference)
-    testImplementation(Deps.junit)
-    androidTestImplementation(Deps.androidJunit)
-    androidTestImplementation(Deps.androidEspresso)
+    testImplementation(TestDeps.junit)
+    androidTestImplementation(TestDeps.androidJunit)
+    androidTestImplementation(TestDeps.androidEspresso)
 
     implementation("com.mikepenz:iconics-core:5.3.4")
     implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
@@ -80,7 +80,7 @@ dependencies {
 
     implementation(Deps.firebaseCrashLibs)
     implementation(Deps.composeLibs)
-    implementation("com.google.accompanist:accompanist-swiperefresh:${Deps.accompanist}")
+    implementation(Deps.swipeRefresh)
 
     implementation(Deps.datastoreLibs)
 
