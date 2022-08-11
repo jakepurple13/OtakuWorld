@@ -223,36 +223,36 @@ jobs:
     steps:
     
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed Anime App
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed Manga App
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed Novel App
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed AnimeTV App
 
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed Anime No Firebase App
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed Manga No Firebase App
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed Novel No Firebase App
      - name: Download APK from build
-       uses: actions/download-artifact@v1
+       uses: actions/download-artifact@v3
        with:
          name: Signed AnimeTV No Firebase App
       #     - name: Download APK from build
