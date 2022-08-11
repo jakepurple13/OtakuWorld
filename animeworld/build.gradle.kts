@@ -75,7 +75,7 @@ dependencies {
     implementation("androidx.tonyodev.fetch2:xfetch2:3.1.6")
     implementation("androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6")
 
-    implementation("com.github.TorrentStream:TorrentStream-Android:2.8.0")
+    implementation("com.github.TorrentStream:TorrentStream-Android:3.0.0")
 
     implementation(Deps.gson)
 
