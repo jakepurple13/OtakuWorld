@@ -98,7 +98,7 @@ dependencies {
     implementation("io.github.kaustubhpatange:autobindings:$autoBinding")
     kapt("io.github.kaustubhpatange:autobindings-compiler:$autoBinding")
 
-    implementation("com.google.android.gms:play-services-cast-framework:21.0.1")
+    implementation("com.google.android.gms:play-services-cast-framework:21.1.0")
 
     implementation("com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01")
 
