@@ -42,9 +42,9 @@ dependencies {
     androidTestImplementation(Deps.androidJunit)
     androidTestImplementation(Deps.androidEspresso)
 
-    testImplementation("org.mockito:mockito-core:4.2.0")
+    testImplementation("org.mockito:mockito-core:4.6.1")
     // required if you want to use Mockito for Android tests
-    androidTestImplementation("org.mockito:mockito-android:4.2.0")
+    androidTestImplementation("org.mockito:mockito-android:4.6.1")
 
     implementation(Deps.okHttpLibs)
     implementation(Deps.coroutinesCore)
