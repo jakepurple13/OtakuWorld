@@ -92,7 +92,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:${Deps.lifecycle}")
 
     implementation("com.mikepenz:iconics-core:5.3.4")
-    implementation("com.mikepenz:google-material-typeface:4.0.0.1-kotlin@aar")
+    implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
     //Google Material Icons
     implementation("com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar")
 
