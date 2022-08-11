@@ -67,7 +67,7 @@ jobs:
       - if: github.event.inputs.build_mangaworld == 'true'
         name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: eskatos/gradle-command-action@v1.3.3
+        uses: eskatos/gradle-command-action@v1.5.1
         with:
           gradle-version: current
           wrapper-cache-enabled: true
@@ -78,7 +78,7 @@ jobs:
       - if: github.event.inputs.build_animeworld == 'true'
         name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: eskatos/gradle-command-action@v1.3.3
+        uses: eskatos/gradle-command-action@v1.5.1
         with:
           gradle-version: current
           wrapper-cache-enabled: true
@@ -89,7 +89,7 @@ jobs:
       - if: github.event.inputs.build_animeworldtv == 'true'
         name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: eskatos/gradle-command-action@v1.3.3
+        uses: eskatos/gradle-command-action@v1.5.1
         with:
           gradle-version: current
           wrapper-cache-enabled: true
@@ -100,7 +100,7 @@ jobs:
       - if: github.event.inputs.build_novelworld == 'true'
         name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: eskatos/gradle-command-action@v1.3.3
+        uses: eskatos/gradle-command-action@v1.5.1
         with:
           gradle-version: current
           wrapper-cache-enabled: true
