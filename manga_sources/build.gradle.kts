@@ -35,7 +35,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Deps.kotlinVersion}")
+    implementation(Deps.kotlinStLib)
     implementation(Deps.androidCore)
     implementation(Deps.appCompat)
     testImplementation(Deps.junit)
@@ -49,16 +49,15 @@ dependencies {
     implementation(Deps.okHttpLibs)
     implementation(Deps.coroutinesCore)
     implementation(Deps.jsoup)
-    implementation("com.squareup.duktape:duktape-android:1.4.0")
-    implementation(Deps.ziplineLibs)
+    implementation(SourceDeps.duktape)
+    implementation(SourceDeps.ziplineLibs)
     implementation(Deps.gson)
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("com.github.salomonbrys.kotson:kotson:2.5.0")
+    implementation(SourceDeps.kotson)
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation(SourceDeps.kotlinxJson)
 
     implementation("androidx.webkit:webkit:1.4.0")
 

@@ -34,7 +34,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Deps.kotlinVersion}")
+    implementation(Deps.kotlinStLib)
     implementation(Deps.androidCore)
     implementation(Deps.appCompat)
     testImplementation(Deps.junit)

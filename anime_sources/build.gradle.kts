@@ -32,7 +32,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Deps.kotlinVersion}")
+    implementation(Deps.kotlinStLib)
     implementation(Deps.androidCore)
     implementation(Deps.appCompat)
     testImplementation(Deps.junit)
@@ -42,21 +42,20 @@ dependencies {
     implementation(Deps.okHttpLibs)
     implementation(Deps.coroutinesCore)
     implementation(Deps.jsoup)
-    implementation("com.squareup.duktape:duktape-android:1.4.0")
-    implementation(Deps.ziplineLibs)
-    implementation("org.mozilla:rhino:1.7.14")
+    implementation(SourceDeps.duktape)
+    implementation(SourceDeps.ziplineLibs)
+    implementation(SourceDeps.rhino)
     implementation(Deps.gson)
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("com.github.salomonbrys.kotson:kotson:2.5.0")
-    implementation("io.karn:khttp-android:0.1.2") //okhttp instead
+    implementation(SourceDeps.kotson)
+    implementation(SourceDeps.karnKhttp) //okhttp instead
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
 
     implementation(Deps.uiUtil)
 
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation(SourceDeps.retrofit)
+    implementation(SourceDeps.retrofitGson)
 
     implementation(project(":Models"))
 

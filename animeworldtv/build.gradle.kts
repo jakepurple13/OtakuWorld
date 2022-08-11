@@ -54,7 +54,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Deps.kotlinVersion}")
+    implementation(Deps.kotlinStLib)
     implementation(Deps.androidCore)
     implementation(Deps.appCompat)
     implementation("androidx.leanback:leanback:1.2.0-alpha02")

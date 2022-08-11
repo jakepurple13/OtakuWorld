@@ -53,7 +53,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Deps.kotlinVersion}")
+    implementation(Deps.kotlinStLib)
     implementation(Deps.androidCore)
     implementation(Deps.appCompat)
     implementation(Deps.material)
@@ -108,9 +108,9 @@ dependencies {
     implementation(Deps.koinLibs)
 
     implementation(Deps.composeLibs)
-    implementation("com.google.accompanist:accompanist-pager:${Deps.accompanist}")
-    implementation("com.google.accompanist:accompanist-swiperefresh:${Deps.accompanist}")
-    implementation("io.coil-kt:coil-gif:${Deps.coil}")
+    implementation(MangaWorldDeps.pager)
+    implementation(MangaWorldDeps.swiperefresh)
+    implementation(MangaWorldDeps.coilGif)
 
     implementation(Deps.datastoreLibs)
 
