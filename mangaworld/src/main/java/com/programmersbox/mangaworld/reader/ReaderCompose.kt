@@ -316,10 +316,10 @@ fun ReadView() {
             }
         },
     ) {
-        DismissibleNavigationDrawer(
+        ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
-                DismissibleDrawerSheet {
+                ModalDrawerSheet {
                     DrawerView(readVm = readVm, showToast = ::showToast)
                 }
             },
