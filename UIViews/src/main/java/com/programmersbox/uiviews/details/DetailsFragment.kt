@@ -587,7 +587,9 @@ private fun DetailsView(
 
             Scaffold(
                 topBar = {
-                    Insets {
+                    Insets(
+                        color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                    ) {
                         SmallTopAppBar(
                             title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
                             colors = TopAppBarDefaults.smallTopAppBarColors(
