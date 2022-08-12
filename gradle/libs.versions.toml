@@ -1,6 +1,6 @@
 [versions]
 kotlin = "1.7.10"
-latestAboutLibsRelease = "10.3.1"
+latestAboutLibsRelease = "10.4.0"
 jakepurple13 = "10.6.5"
 coroutinesVersion = "1.6.4"
 glideVersion = "4.13.2"
