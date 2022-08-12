@@ -69,7 +69,7 @@ dependencies {
     implementation(libs.palette)
     implementation(libs.bundles.media3)
     // For building media playback UIs for Android TV using the Jetpack Leanback library
-    implementation(libs.bundles.leanbackLibs)
+    implementation(libs.exoplayerleanback)
 
     implementation(projects.models)
     implementation(projects.animeSources)
