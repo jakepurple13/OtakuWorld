@@ -65,23 +65,21 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation("com.airbnb.android:lottie:${Deps.lottieVersion}")
-    implementation("com.github.hedzr:android-file-chooser:1.2.0")
+    implementation(Deps.lottie)
+    implementation(Deps.fileChooser)
+    implementation(AnimeWorldDeps.slideToAct)
 
-    implementation("com.ncorti:slidetoact:0.9.0")
+    implementation(AnimeWorldDeps.mediaRouter)
+    implementation(AnimeWorldDeps.fetch)
+    implementation(AnimeWorldDeps.fetchOkHttp)
 
-    implementation("androidx.mediarouter:mediarouter:1.3.1")
-    implementation("androidx.tonyodev.fetch2:xfetch2:3.1.6")
-    implementation("androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6")
-
-    implementation("com.github.TorrentStream:TorrentStream-Android:3.0.0")
+    implementation(AnimeWorldDeps.torrentStream)
 
     implementation(Deps.gson)
 
-    implementation("com.mikepenz:iconics-core:5.3.4")
-    implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
-    //Google Material Icons
-    implementation("com.mikepenz:fontawesome-typeface:5.13.3.0-kotlin@aar")
+    implementation(Deps.iconicsCore)
+    implementation(Deps.materialTypeface)
+    implementation(Deps.fontawesomeTypeface)
 
     implementation(project(":UIViews"))
     implementation(project(":Models"))
@@ -91,37 +89,28 @@ dependencies {
 
     implementation(Deps.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt("androidx.room:room-compiler:${Deps.roomVersion}")
+    kapt(Deps.roomCompiler)
 
-    val autoBinding = "1.1-beta04"
-    implementation("io.github.kaustubhpatange:autobindings:$autoBinding")
-    kapt("io.github.kaustubhpatange:autobindings-compiler:$autoBinding")
+    implementation(AnimeWorldDeps.autoBindings)
+    kapt(AnimeWorldDeps.autoBindingsCompiler)
 
-    implementation("com.google.android.gms:play-services-cast-framework:21.1.0")
-
-    implementation("com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01")
+    implementation(AnimeWorldDeps.castFramework)
+    implementation(AnimeWorldDeps.localCast)
 
     implementation(Deps.glide)
     kapt(Deps.glideCompiler)
-    implementation("com.github.bumptech.glide:recyclerview-integration:${Deps.glideVersion}") {
-        // Excludes the support library because it"s already included by Glide.
-        isTransitive = false
-    }
 
-    implementation("com.github.ertugrulkaragoz:SuperForwardView:0.2")
+    // Excludes the support library because it"s already included by Glide.
+    implementation(Deps.glideRecyclerview) { isTransitive = false }
+
+    implementation(AnimeWorldDeps.superForwardView)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-
     implementation(Deps.koinLibs)
-
     implementation(Deps.composeLibs)
-
-    implementation("androidx.compose.ui:ui-viewbinding:${Deps.jetpack}")
-
+    implementation(AnimeWorldDeps.composeViewBinding)
     implementation(Deps.datastoreLibs)
-
-    //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.8")
 
     implementation(Media3Deps.exoplayerLibs)
 }

@@ -56,10 +56,6 @@ dependencies {
 
     implementation(Deps.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt("androidx.room:room-compiler:${Deps.roomVersion}")
-
-    implementation("androidx.paging:paging-runtime-ktx:${Deps.pagingVersion}")
-    // alternatively - without Android dependencies for tests
-    testImplementation("androidx.paging:paging-common-ktx:${Deps.pagingVersion}")
-    implementation("androidx.room:room-paging:2.4.3")
+    kapt(Deps.roomCompiler)
+    implementation(Deps.pagingLibs)
 }

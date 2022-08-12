@@ -64,18 +64,9 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    add("fullImplementation", "com.google.firebase:firebase-auth:21.0.7")
-    add("fullImplementation", Deps.playServices)
-    add("fullImplementation", "com.firebaseui:firebase-ui-auth:8.0.1")
-    add("fullImplementation", "com.google.firebase:firebase-firestore-ktx:24.2.2")
-    add("fullImplementation", "com.google.firebase:firebase-database-ktx:20.0.5")
-
+    fullImplementation(SharedDeps.fullImplementation)
     implementation(Deps.coroutinesCore)
     implementation(Deps.coroutinesAndroid)
-    add("fullImplementation", "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:${Deps.coroutinesVersion}")
-
-    add("fullImplementation", "com.google.mlkit:translate:17.0.0")
-    add("fullImplementation", "com.google.mlkit:language-id:17.0.4")
 
     implementation(project(":Models"))
     implementation(project(":favoritesdatabase"))
@@ -83,3 +74,6 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
     implementation(Deps.uiUtil)
 }
+
+fun DependencyHandlerScope.fullImplementation(item: Array<String>) = item.forEach { fullImplementation(it) }
+fun DependencyHandlerScope.fullImplementation(item: String) = add("fullImplementation", item)

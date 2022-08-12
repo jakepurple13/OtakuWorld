@@ -1,5 +1,28 @@
 object AnimeWorldDeps {
+    const val slideToAct = "com.ncorti:slidetoact:0.9.0"
 
+    const val mediaRouter = "androidx.mediarouter:mediarouter:1.3.1"
+    const val fetch = "androidx.tonyodev.fetch2:xfetch2:3.1.6"
+    const val fetchOkHttp = "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
+
+    const val torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
+
+    const val autoBinding = "1.1-beta04"
+    const val autoBindings = "io.github.kaustubhpatange:autobindings:$autoBinding"
+    const val autoBindingsCompiler = "io.github.kaustubhpatange:autobindings-compiler:$autoBinding"
+
+    const val castFramework = "com.google.android.gms:play-services-cast-framework:21.1.0"
+
+    const val localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
+
+    const val superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
+
+    const val composeViewBinding = "androidx.compose.ui:ui-viewbinding:${Deps.jetpack}"
+
+    val leanbackLibs = arrayOf(
+        "androidx.leanback:leanback:1.2.0-alpha02",
+        "androidx.leanback:leanback-preference:1.2.0-alpha02"
+    )
 }
 
 object Media3Deps {
@@ -65,6 +88,8 @@ object Media3Deps {
 
     // Common functionality used across multiple media libraries
     private const val common = "androidx.media3:media3-common:$media3Version"
+
+    const val leanback = "androidx.media3:media3-ui-leanback:$media3Version"
 
     val exoplayerLibs = arrayOf(
         exoplayer,

@@ -17,4 +17,5 @@ object SourceDeps {
 
     const val kotlinxJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3"
 
+    const val androidxWebkit = "androidx.webkit:webkit:1.4.0"
 }

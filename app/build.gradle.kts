@@ -78,13 +78,13 @@ dependencies {
 
     implementation(Deps.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt("androidx.room:room-compiler:${Deps.roomVersion}")
+    kapt(Deps.roomCompiler)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
     implementation(Deps.composeLibs)
-    implementation("com.google.accompanist:accompanist-pager:${Deps.accompanist}")
+    implementation(Deps.composePager)
     implementation("com.google.accompanist:accompanist-insets:${Deps.accompanist}")
     // If using insets-ui
     implementation("com.google.accompanist:accompanist-insets-ui:${Deps.accompanist}")

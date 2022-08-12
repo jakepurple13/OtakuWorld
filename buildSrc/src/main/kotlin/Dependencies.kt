@@ -31,6 +31,7 @@ object Deps {
     const val glideVersion = "4.13.2"
     const val glide = "com.github.bumptech.glide:glide:$glideVersion"
     const val glideCompiler = "com.github.bumptech.glide:compiler:$glideVersion"
+    const val glideRecyclerview = "com.github.bumptech.glide:recyclerview-integration:$glideVersion"
 
     const val pagingVersion = "3.1.1"
 
@@ -61,6 +62,8 @@ object Deps {
     const val koinCompose = "io.insert-koin:koin-androidx-compose:$koinVersion"
 
     const val lottieVersion = "5.2.0"
+    const val lottie = "com.airbnb.android:lottie:$lottieVersion"
+    const val lottieCompose = "com.airbnb.android:lottie-compose:$lottieVersion"
 
     const val coil = "2.1.0"
 
@@ -98,6 +101,8 @@ object Deps {
     // Integration with ViewModels
     const val composeLifecycle = "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle"
     const val composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha01"
+
+    const val composePager = "com.google.accompanist:accompanist-pager:$accompanist"
 
     // Integration with observables
     const val composeRuntimeLivedata = "androidx.compose.runtime:runtime-livedata:$jetpack"
@@ -137,6 +142,8 @@ object Deps {
         dragswipe,
         funutils
     )
+
+    const val roomCompiler = "androidx.room:room-compiler:$roomVersion"
 
     val roomLibs = arrayOf(
         "androidx.room:room-runtime:$roomVersion",
@@ -190,4 +197,49 @@ object Deps {
 
     // Kotlin + coroutines
     const val workRuntime = "androidx.work:work-runtime-ktx:$workVersion"
+
+    const val iconicsCore = "com.mikepenz:iconics-core:5.3.4"
+    const val materialTypeface = "com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar"
+    const val fontawesomeTypeface = "com.mikepenz:fontawesome-typeface:5.13.3.0-kotlin@aar"
+
+    const val androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
+
+    const val firebaseAuth = "com.google.firebase:firebase-auth:21.0.7"
+    const val googlePlayAds = "com.google.android.gms:play-services-ads:21.1.0"
+
+    val pagingLibs = arrayOf(
+        "androidx.paging:paging-runtime-ktx:$pagingVersion",
+        "androidx.room:room-paging:2.4.3"
+    )
+
+    const val pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha16"
+
+    const val fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
+
+    const val storage = "com.anggrayudi:storage:1.4.1"
+
+    const val androidxWindow = "androidx.window:window:1.1.0-alpha03"
+    const val androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
+    const val androidxBrowser = "androidx.browser:browser:1.4.0"
+
+    const val fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
+    const val showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
+    const val aboutLibrariesCore = "com.mikepenz:aboutlibraries-core:$latestAboutLibsRelease"
+    const val aboutLibrariesCompose = "com.mikepenz:aboutlibraries-compose:$latestAboutLibsRelease"
+    const val navFragment = "androidx.navigation:navigation-fragment-ktx:$navVersion"
+    const val navUiKtx = "androidx.navigation:navigation-ui-ktx:$navVersion"
+    const val navTesting = "androidx.navigation:navigation-testing:$navVersion"
+
+    const val toolbarCompose = "me.onebone:toolbar-compose:2.3.4"
+    const val lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.5.1"
+
+}
+
+object SharedDeps {
+    val fullImplementation = arrayOf(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:${Deps.coroutinesVersion}",
+        "com.google.mlkit:translate:17.0.0", "com.google.mlkit:language-id:17.0.4",
+        "com.google.firebase:firebase-database-ktx:20.0.5", "com.google.firebase:firebase-firestore-ktx:24.2.2",
+        "com.firebaseui:firebase-ui-auth:8.0.1", Deps.firebaseAuth, Deps.playServices
+    )
 }

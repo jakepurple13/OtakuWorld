@@ -64,9 +64,9 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation("com.mikepenz:iconics-core:5.3.4")
-    implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
-    implementation("com.google.android.gms:play-services-ads:21.1.0")
+    implementation(Deps.iconicsCore)
+    implementation(Deps.materialTypeface)
+    implementation(Deps.googlePlayAds)
 
     implementation(project(":UIViews"))
     implementation(project(":Models"))
@@ -76,7 +76,7 @@ dependencies {
 
     implementation(Deps.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt("androidx.room:room-compiler:${Deps.roomVersion}")
+    kapt(Deps.roomCompiler)
 
     implementation(Deps.firebaseCrashLibs)
     implementation(Deps.composeLibs)
@@ -88,8 +88,6 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
 
     implementation(Deps.koinLibs)
-
-    //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.8")
 }
 
 apply(from = "$rootDir/buildtypes.gradle")

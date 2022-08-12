@@ -59,7 +59,7 @@ dependencies {
 
     implementation(SourceDeps.kotlinxJson)
 
-    implementation("androidx.webkit:webkit:1.4.0")
+    implementation(SourceDeps.androidxWebkit)
 
     implementation(Deps.uiUtil)
 

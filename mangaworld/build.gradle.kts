@@ -60,15 +60,15 @@ dependencies {
     implementation(Deps.constraintlayout)
     implementation(Deps.swiperefresh)
     implementation(Deps.recyclerview)
-    implementation("com.google.android.gms:play-services-ads:21.1.0")
+    implementation(Deps.googlePlayAds)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
     implementation(Deps.preference)
     implementation(Deps.firebaseCrashLibs)
 
-    implementation("com.github.hedzr:android-file-chooser:1.2.0")
-    implementation("com.anggrayudi:storage:1.4.1")
+    implementation(Deps.fileChooser)
+    implementation(Deps.storage)
 
     implementation(project(":UIViews"))
     implementation(project(":Models"))
@@ -78,42 +78,32 @@ dependencies {
 
     implementation(Deps.glide)
     kapt(Deps.glideCompiler)
-    implementation("com.github.bumptech.glide:recyclerview-integration:${Deps.glideVersion}") {
-        // Excludes the support library because it"s already included by Glide.
-        isTransitive = false
-    }
+    // Excludes the support library because it"s already included by Glide.
+    implementation(Deps.glideRecyclerview) { isTransitive = false }
 
-    val piasy = "1.8.1"
-    implementation("com.github.piasy:BigImageViewer:$piasy")
-    implementation("com.github.piasy:GlideImageLoader:$piasy")
-    implementation("com.github.piasy:ProgressPieIndicator:$piasy")
+    implementation(MangaWorldDeps.piasyLibs)
+    implementation(MangaWorldDeps.subsamplingImageView)
+    implementation(MangaWorldDeps.subsamplingCompose)
 
-    implementation("com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0")
-
-    implementation("xyz.quaver:subsampledimage:0.0.1-alpha22-SNAPSHOT")
-
-    implementation("com.mikepenz:iconics-core:5.3.4")
-    implementation("com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar")
+    implementation(Deps.iconicsCore)
+    implementation(Deps.materialTypeface)
 
     implementation(Deps.coroutinesCore)
     implementation(Deps.coroutinesAndroid)
 
     implementation(Deps.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt("androidx.room:room-compiler:${Deps.roomVersion}")
+    kapt(Deps.roomCompiler)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
     implementation(Deps.koinLibs)
-
     implementation(Deps.composeLibs)
-    implementation(MangaWorldDeps.pager)
+    implementation(Deps.composePager)
     implementation(MangaWorldDeps.swiperefresh)
     implementation(MangaWorldDeps.coilGif)
-
     implementation(Deps.datastoreLibs)
-
 }
 
 apply(from = "$rootDir/buildtypes.gradle")
