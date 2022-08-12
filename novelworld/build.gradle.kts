@@ -48,46 +48,46 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = Deps.jetpackCompiler
+        kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
     }
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
-    implementation(Deps.material)
-    implementation(Deps.constraintlayout)
-    implementation(Deps.recyclerview)
-    implementation(Deps.preference)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
+    implementation(libs.material)
+    implementation(libs.constraintlayout)
+    implementation(libs.recyclerview)
+    implementation(libs.preference)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(Deps.iconicsCore)
+    implementation(libs.iconicsCore)
     implementation(Deps.materialTypeface)
-    implementation(Deps.googlePlayAds)
+    implementation(libs.googlePlayAds)
 
-    implementation(project(":UIViews"))
-    implementation(project(":Models"))
-    implementation(project(":favoritesdatabase"))
-    implementation(project(":novel_sources"))
-    implementation(project(":sharedutils"))
+    implementation(projects.uiViews)
+    implementation(projects.models)
+    implementation(projects.favoritesdatabase)
+    implementation(projects.novelSources)
+    implementation(projects.sharedutils)
 
-    implementation(Deps.roomLibs)
+    implementation(libs.bundles.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt(Deps.roomCompiler)
+    kapt(libs.roomCompiler)
 
-    implementation(Deps.firebaseCrashLibs)
-    implementation(Deps.composeLibs)
-    implementation(Deps.swipeRefresh)
+    implementation(libs.bundles.firebaseCrashLibs)
+    implementation(libs.bundles.compose)
+    implementation(libs.swipeRefresh)
 
-    implementation(Deps.datastoreLibs)
+    implementation(libs.bundles.datastoreLibs)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(Deps.koinLibs)
+    implementation(libs.bundles.koinLibs)
 }
 
 apply(from = "$rootDir/buildtypes.gradle")

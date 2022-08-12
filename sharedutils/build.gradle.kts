@@ -54,26 +54,33 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
-    implementation(Deps.material)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
+    implementation(libs.material)
     testImplementation(TestDeps.junit)
     testImplementation("com.jakewharton.picnic:picnic:0.6.0")
     testImplementation("com.lordcodes.turtle:turtle:0.7.0")
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    fullImplementation(SharedDeps.fullImplementation)
-    implementation(Deps.coroutinesCore)
-    implementation(Deps.coroutinesAndroid)
+    fullImplementation(libs.mlkitTranslate)
+    fullImplementation(libs.mlkitLanguage)
+    fullImplementation(libs.firebaseDatabase)
+    fullImplementation(libs.firebaseFirestore)
+    fullImplementation(libs.firebaseAuth)
+    fullImplementation(libs.firebaseUiAuth)
+    fullImplementation(libs.playServices)
+    fullImplementation(libs.coroutinesPlayServices)
 
-    implementation(project(":Models"))
-    implementation(project(":favoritesdatabase"))
-    implementation(Deps.koinLibs)
+    implementation(libs.coroutinesCore)
+    implementation(libs.coroutinesAndroid)
+
+    implementation(projects.models)
+    implementation(projects.favoritesdatabase)
+    implementation(libs.bundles.koinLibs)
     implementation(Deps.jakepurple13Libs)
-    implementation(Deps.uiUtil)
+    implementation(libs.uiUtil)
 }
 
-fun DependencyHandlerScope.fullImplementation(item: Array<String>) = item.forEach { fullImplementation(it) }
-fun DependencyHandlerScope.fullImplementation(item: String) = add("fullImplementation", item)
+fun DependencyHandlerScope.fullImplementation(item: Provider<MinimalExternalModuleDependency>) = add("fullImplementation", item)

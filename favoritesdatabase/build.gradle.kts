@@ -43,19 +43,19 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
     implementation(Deps.gsonutils)
 
-    implementation(project(":Models"))
+    implementation(projects.models)
 
-    implementation(Deps.roomLibs)
+    implementation(libs.bundles.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt(Deps.roomCompiler)
-    implementation(Deps.pagingLibs)
+    kapt(libs.roomCompiler)
+    implementation(libs.bundles.pagingLibs)
 }

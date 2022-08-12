@@ -39,7 +39,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = Deps.jetpackCompiler
+        kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
     }
 
     setFlavorDimensions(listOf("version"))
@@ -54,82 +54,82 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
-    implementation(Deps.material)
-    implementation(Deps.androidxLegacySupport)
-    implementation(Deps.preference)
-    implementation(Deps.androidxWindow)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
+    implementation(libs.material)
+    implementation(libs.androidxLegacySupport)
+    implementation(libs.preference)
+    implementation(libs.androidxWindow)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(Deps.firebaseAuth)
-    implementation(Deps.playServices)
+    implementation(libs.firebaseAuth)
+    implementation(libs.playServices)
 
-    implementation(Deps.androidBrowserHelper)
-    implementation(Deps.androidxBrowser)
+    implementation(libs.androidBrowserHelper)
+    implementation(libs.androidxBrowser)
 
-    implementation(Deps.fastScroll)
+    implementation(libs.fastScroll)
 
-    implementation(Deps.reactiveNetwork)
+    implementation(libs.reactiveNetwork)
 
-    implementation(Deps.koinLibs)
+    implementation(libs.bundles.koinLibs)
 
-    implementation(project(":Models"))
-    implementation(project(":favoritesdatabase"))
-    implementation(project(":sharedutils"))
+    implementation(projects.models)
+    implementation(projects.favoritesdatabase)
+    implementation(projects.sharedutils)
 
-    implementation(Deps.constraintlayout)
-    implementation(Deps.coroutinesCore)
-    implementation(Deps.coroutinesAndroid)
-    implementation(Deps.fragmentKtx)
-    implementation(Deps.lifecycleExtensions)
-    implementation(Deps.lifecycleRuntime)
-    implementation(Deps.lifecycleLivedata)
-    implementation(Deps.lifecycleViewModel)
+    implementation(libs.constraintlayout)
+    implementation(libs.coroutinesCore)
+    implementation(libs.coroutinesAndroid)
+    implementation(libs.fragmentKtx)
+    implementation(libs.lifecycleExtensions)
+    implementation(libs.lifecycleRuntime)
+    implementation(libs.lifecycleLivedata)
+    implementation(libs.lifecycleViewModel)
 
-    implementation(Deps.iconicsCore)
+    implementation(libs.iconicsCore)
     implementation(Deps.materialTypeface)
     implementation(Deps.fontawesomeTypeface)
 
-    implementation(Deps.gson)
+    implementation(libs.gson)
 
-    implementation(Deps.recyclerview)
-    implementation(Deps.palette)
-    implementation(Deps.lottie)
-    implementation(Deps.lottieCompose)
-    implementation(Deps.roomLibs)
+    implementation(libs.recyclerview)
+    implementation(libs.palette)
+    implementation(libs.lottie)
+    implementation(libs.lottieCompose)
+    implementation(libs.bundles.roomLibs)
 
-    implementation(Deps.showMoreLess)
-    implementation(Deps.aboutLibrariesCore)
-    implementation(Deps.aboutLibrariesCompose)
+    implementation(libs.showMoreLess)
+    implementation(libs.aboutLibrariesCore)
+    implementation(libs.aboutLibrariesCompose)
 
-    implementation(Deps.glide)
-    kapt(Deps.glideCompiler)
+    implementation(libs.glide)
+    kapt(libs.glideCompiler)
 
     // Excludes the support library because it"s already included by Glide.
-    implementation(Deps.glideRecyclerview) { isTransitive = false }
+    implementation(libs.glideRecyclerview) { isTransitive = false }
 
-    implementation(Deps.stetho)
+    implementation(libs.stetho)
 
-    implementation(Deps.workRuntime)
+    implementation(libs.workRuntime)
 
     // Kotlin
-    api(Deps.navFragment)
-    api(Deps.navUiKtx)
+    api(libs.navFragment)
+    api(libs.navUiKtx)
 
     // Testing Navigation
-    androidTestImplementation(Deps.navTesting)
+    androidTestImplementation(libs.navTesting)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(Deps.composeLibs)
-    implementation(Deps.toolbarCompose)
-    implementation(Deps.lazyColumnScrollbar)
-    implementation(Deps.pagingCompose)
-    implementation(Deps.pagingLibs)
-    implementation(Deps.datastoreLibs)
+    implementation(libs.bundles.compose)
+    implementation(libs.toolbarCompose)
+    implementation(libs.lazyColumnScrollbar)
+    implementation(libs.pagingCompose)
+    implementation(libs.bundles.pagingLibs)
+    implementation(libs.bundles.datastoreLibs)
 }

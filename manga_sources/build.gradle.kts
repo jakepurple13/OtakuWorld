@@ -35,9 +35,9 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -46,29 +46,26 @@ dependencies {
     // required if you want to use Mockito for Android tests
     androidTestImplementation(TestDeps.mockitoAndroid)
 
-    implementation(Deps.okHttpLibs)
-    implementation(Deps.coroutinesCore)
-    implementation(Deps.jsoup)
-    implementation(SourceDeps.duktape)
-    implementation(SourceDeps.ziplineLibs)
-    implementation(Deps.gson)
-    implementation(SourceDeps.kotson)
+    implementation(libs.bundles.okHttpLibs)
+    implementation(libs.coroutinesCore)
+    implementation(libs.jsoup)
+    implementation(libs.duktape)
+    implementation(libs.bundles.ziplineLibs)
+    implementation(libs.gson)
+    implementation(libs.kotson)
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
+    implementation(libs.kotlinxJson)
+    implementation(libs.androidxWebkit)
 
-    implementation(SourceDeps.kotlinxJson)
+    implementation(libs.uiUtil)
 
-    implementation(SourceDeps.androidxWebkit)
-
-    implementation(Deps.uiUtil)
-
-    implementation(project(":Models"))
+    implementation(projects.models)
     implementation("com.github.KotatsuApp:kotatsu-parsers:8709c3dd0c") {
         exclude("org.json", "json")
     }
 
-    implementation(Deps.koinLibs)
-
-    implementation(Deps.ktorLibs)
+    implementation(libs.bundles.koinLibs)
+    implementation(libs.bundles.ktorLibs)
 }

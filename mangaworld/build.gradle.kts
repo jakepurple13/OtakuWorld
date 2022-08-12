@@ -48,62 +48,64 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = Deps.jetpackCompiler
+        kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
     }
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
-    implementation(Deps.material)
-    implementation(Deps.constraintlayout)
-    implementation(Deps.swiperefresh)
-    implementation(Deps.recyclerview)
-    implementation(Deps.googlePlayAds)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
+    implementation(libs.material)
+    implementation(libs.constraintlayout)
+    implementation(libs.swiperefresh)
+    implementation(libs.recyclerview)
+    implementation(libs.googlePlayAds)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
-    implementation(Deps.preference)
-    implementation(Deps.firebaseCrashLibs)
+    implementation(libs.preference)
+    implementation(libs.bundles.firebaseCrashLibs)
 
-    implementation(Deps.fileChooser)
-    implementation(Deps.storage)
+    implementation(libs.fileChooser)
+    implementation(libs.storage)
 
-    implementation(project(":UIViews"))
-    implementation(project(":Models"))
-    implementation(project(":favoritesdatabase"))
-    implementation(project(":manga_sources"))
-    implementation(project(":sharedutils"))
+    implementation(projects.uiViews)
+    implementation(projects.models)
+    implementation(projects.favoritesdatabase)
+    implementation(projects.mangaSources)
+    implementation(projects.sharedutils)
 
-    implementation(Deps.glide)
-    kapt(Deps.glideCompiler)
+    implementation(libs.glide)
+    kapt(libs.glideCompiler)
     // Excludes the support library because it"s already included by Glide.
-    implementation(Deps.glideRecyclerview) { isTransitive = false }
+    implementation(libs.glideRecyclerview) { isTransitive = false }
 
-    implementation(MangaWorldDeps.piasyLibs)
-    implementation(MangaWorldDeps.subsamplingImageView)
-    implementation(MangaWorldDeps.subsamplingCompose)
+    implementation(libs.bundles.piasyLibs)
+    implementation(libs.subsamplingImageView)
+    implementation(libs.subsamplingCompose)
 
-    implementation(Deps.iconicsCore)
+    implementation(libs.iconicsCore)
     implementation(Deps.materialTypeface)
 
-    implementation(Deps.coroutinesCore)
-    implementation(Deps.coroutinesAndroid)
+    implementation(libs.coroutinesCore)
+    implementation(libs.coroutinesAndroid)
 
-    implementation(Deps.roomLibs)
+    implementation(libs.bundles.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt(Deps.roomCompiler)
+    kapt(libs.roomCompiler)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(Deps.koinLibs)
-    implementation(Deps.composeLibs)
-    implementation(Deps.composePager)
-    implementation(MangaWorldDeps.swiperefresh)
-    implementation(MangaWorldDeps.coilGif)
-    implementation(Deps.datastoreLibs)
+    implementation(libs.bundles.koinLibs)
+    implementation(libs.bundles.compose)
+    implementation(libs.composePager)
+    implementation(libs.swiperefresh)
+    implementation(libs.coilGif)
+    implementation(libs.bundles.datastoreLibs)
+
+    //implementation("com.alialbaali.kamel:kamel-image:0.4.0")
 }
 
 apply(from = "$rootDir/buildtypes.gradle")

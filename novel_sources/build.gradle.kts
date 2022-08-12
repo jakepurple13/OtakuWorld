@@ -30,26 +30,26 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
-    implementation(Deps.okHttpLibs)
+    implementation(libs.bundles.okHttpLibs)
 
-    implementation(Deps.coroutinesCore)
+    implementation(libs.coroutinesCore)
 
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
-    implementation(Deps.gson)
+    implementation(libs.gson)
 
-    implementation(Deps.jsoup)
+    implementation(libs.jsoup)
 
-    implementation(Deps.uiUtil)
+    implementation(libs.uiUtil)
 
-    implementation(project(":Models"))
+    implementation(projects.models)
 
-    implementation(Deps.koinLibs)
+    implementation(libs.bundles.koinLibs)
 }

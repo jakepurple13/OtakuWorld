@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = Deps.jetpackCompiler
+        kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
     }
 
     setFlavorDimensions(listOf("version"))
@@ -58,36 +58,33 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
-    implementation(Deps.material)
-    implementation(Deps.constraintlayout)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
+    implementation(libs.material)
+    implementation(libs.constraintlayout)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(Deps.recyclerview)
+    implementation(libs.recyclerview)
 
-    implementation(project(":UIViews"))
-    implementation(project(":Models"))
-    implementation(project(":favoritesdatabase"))
-    implementation(project(":novel_sources"))
-    implementation(project(":anime_sources"))
-    implementation(project(":manga_sources"))
+    implementation(projects.uiViews)
+    implementation(projects.models)
+    implementation(projects.favoritesdatabase)
+    implementation(projects.novelSources)
+    implementation(projects.animeSources)
+    implementation(projects.mangaSources)
 
-    implementation(Deps.roomLibs)
+    implementation(libs.bundles.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt(Deps.roomCompiler)
+    kapt(libs.roomCompiler)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(Deps.composeLibs)
-    implementation(Deps.composePager)
-    implementation("com.google.accompanist:accompanist-insets:${Deps.accompanist}")
-    // If using insets-ui
-    implementation("com.google.accompanist:accompanist-insets-ui:${Deps.accompanist}")
+    implementation(libs.bundles.compose)
+    implementation(libs.composePager)
 
     implementation("androidx.window:window:1.0.0")
 

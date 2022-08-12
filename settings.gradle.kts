@@ -1,14 +1,5 @@
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        gradlePluginPortal()
-        mavenCentral()
-        maven("https://jitpack.io")
-        //maven { url "https://dl.bintray.com/piasy/maven" }
-        maven("https://oss.sonatype.org/content/repositories/snapshots")
-    }
-}
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+enableFeaturePreview("VERSION_CATALOGS")
 
 include(
     ":favoritesdatabase",

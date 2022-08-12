@@ -48,71 +48,71 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = Deps.jetpackCompiler
+        kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
     }
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
-    implementation(Deps.material)
-    implementation(Deps.constraintlayout)
-    implementation(Deps.preference)
-    implementation(Deps.firebaseCrashLibs)
-    implementation(Deps.recyclerview)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
+    implementation(libs.material)
+    implementation(libs.constraintlayout)
+    implementation(libs.preference)
+    implementation(libs.bundles.firebaseCrashLibs)
+    implementation(libs.recyclerview)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(Deps.lottie)
-    implementation(Deps.fileChooser)
-    implementation(AnimeWorldDeps.slideToAct)
+    implementation(libs.lottie)
+    implementation(libs.fileChooser)
+    implementation(libs.slideToAct)
 
-    implementation(AnimeWorldDeps.mediaRouter)
-    implementation(AnimeWorldDeps.fetch)
-    implementation(AnimeWorldDeps.fetchOkHttp)
+    implementation(libs.mediaRouter)
+    implementation(libs.fetch)
+    implementation(libs.fetchOkHttp)
 
-    implementation(AnimeWorldDeps.torrentStream)
+    implementation(libs.torrentStream)
 
-    implementation(Deps.gson)
+    implementation(libs.gson)
 
-    implementation(Deps.iconicsCore)
+    implementation(libs.iconicsCore)
     implementation(Deps.materialTypeface)
     implementation(Deps.fontawesomeTypeface)
 
-    implementation(project(":UIViews"))
-    implementation(project(":Models"))
-    implementation(project(":favoritesdatabase"))
-    implementation(project(":anime_sources"))
-    implementation(project(":sharedutils"))
+    implementation(projects.uiViews)
+    implementation(projects.models)
+    implementation(projects.favoritesdatabase)
+    implementation(projects.animeSources)
+    implementation(projects.sharedutils)
 
-    implementation(Deps.roomLibs)
+    implementation(libs.bundles.roomLibs)
     // For Kotlin use kapt instead of annotationProcessor
-    kapt(Deps.roomCompiler)
+    kapt(libs.roomCompiler)
 
-    implementation(AnimeWorldDeps.autoBindings)
-    kapt(AnimeWorldDeps.autoBindingsCompiler)
+    implementation(libs.autoBindings)
+    kapt(libs.autoBindingsCompiler)
 
-    implementation(AnimeWorldDeps.castFramework)
-    implementation(AnimeWorldDeps.localCast)
+    implementation(libs.castFramework)
+    implementation(libs.localCast)
 
-    implementation(Deps.glide)
-    kapt(Deps.glideCompiler)
+    implementation(libs.glide)
+    kapt(libs.glideCompiler)
 
     // Excludes the support library because it"s already included by Glide.
-    implementation(Deps.glideRecyclerview) { isTransitive = false }
+    implementation(libs.glideRecyclerview) { isTransitive = false }
 
-    implementation(AnimeWorldDeps.superForwardView)
+    implementation(libs.superForwardView)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-    implementation(Deps.koinLibs)
-    implementation(Deps.composeLibs)
-    implementation(AnimeWorldDeps.composeViewBinding)
-    implementation(Deps.datastoreLibs)
+    implementation(libs.bundles.koinLibs)
+    implementation(libs.bundles.compose)
+    implementation(libs.composeViewBinding)
+    implementation(libs.bundles.datastoreLibs)
 
-    implementation(Media3Deps.exoplayerLibs)
+    implementation(libs.bundles.media3)
 }
 
 apply(from = "$rootDir/buildtypes.gradle")

@@ -34,17 +34,17 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
     //Coroutines
-    implementation(Deps.coroutinesCore)
-    implementation(Deps.coroutinesAndroid)
+    implementation(libs.coroutinesCore)
+    implementation(libs.coroutinesAndroid)
 
-    implementation(Deps.ktorLibs)
-    implementation(Deps.kotlinxSerialization)
+    implementation(libs.bundles.ktorLibs)
+    implementation(libs.kotlinxSerialization)
 }

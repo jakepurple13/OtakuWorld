@@ -1,0 +1,302 @@
+[versions]
+kotlin = "1.7.10"
+latestAboutLibsRelease = "10.3.1"
+jakepurple13 = "10.6.5"
+coroutinesVersion = "1.6.4"
+glideVersion = "4.13.2"
+pagingVersion = "3.1.1"
+roomVersion = "2.5.0-alpha02"
+navVersion = "2.5.1"
+koinVersion = "3.2.0"
+lottieVersion = "5.2.0"
+coil = "2.1.0"
+lifecycle = "2.5.1"
+jetpack = "1.3.0-alpha03"
+jetpackCompiler = "1.3.0"
+accompanist = "0.26.1-alpha"
+okhttpVersion = "4.10.0"
+ktorVersion = "2.0.3"
+workVersion = "2.7.1"
+ziplineVersion = "0.9.0"
+
+### MangaWorld
+piasy = "1.8.1"
+
+### AnimeWorld
+autoBinding = "1.1-beta04"
+media3Version = "1.0.0-beta02"
+
+[plugins]
+kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
+kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
+
+[libraries]
+kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+palette = "androidx.palette:palette-ktx:1.0.0"
+gson = "com.google.code.gson:gson:2.9.1"
+
+#Compose
+composeUi = { module = "androidx.compose.ui:ui", version.ref = "jetpack" }
+composeUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "jetpack" }
+composeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "jetpack" }
+composeMaterial = { module = "androidx.compose.material:material", version.ref = "jetpack" }
+materialYou = "androidx.compose.material3:material3:1.0.0-alpha16"
+composeMaterialIconsCore = { module = "androidx.compose.material:material-icons-core", version.ref = "jetpack" }
+composeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "jetpack" }
+composeActivity = "androidx.activity:activity-compose:1.5.1"
+composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetpack" }
+composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha01"
+composeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpack" }
+composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.15"
+composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.15"
+landscapistGlide = "com.github.skydoves:landscapist-glide:1.6.1"
+composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+composeAnimation = { module = "androidx.compose.animation:animation", version.ref = "jetpack" }
+uiUtil = { module = "androidx.compose.ui:ui-util", version.ref = "jetpack" }
+coilCompose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
+#Accompanist
+composePager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist" }
+materialPlaceholder = { module = "com.google.accompanist:accompanist-placeholder-material", version.ref = "accompanist" }
+drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
+permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
+navMaterial = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
+navAnimation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
+flowLayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanist" }
+swipeRefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanist" }
+systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
+okhttpLib = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
+okhttpDns = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpVersion" }
+
+coroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutinesVersion" }
+coroutinesAndroid = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutinesVersion" }
+coroutinesPlayServices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesVersion" }
+
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
+glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
+glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
+
+androidCore = "androidx.core:core-ktx:1.8.0"
+appCompat = "androidx.appcompat:appcompat:1.4.2"
+material = "com.google.android.material:material:1.7.0-alpha03"
+
+lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
+lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+lifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
+lifecycleViewModel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+
+lottie = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
+lottieCompose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
+
+koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
+koinCompose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinVersion" }
+
+roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
+roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
+roomKtx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
+
+ktorCore = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }
+ktorAuth = { module = "io.ktor:ktor-client-auth", version.ref = "ktorVersion" }
+ktorAndroid = { module = "io.ktor:ktor-client-android", version.ref = "ktorVersion" }
+ktorLogging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorVersion" }
+ktorSerialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktorVersion" }
+ktorJson = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorVersion" }
+ktorContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorVersion" }
+ktorOkHttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorVersion" }
+ktorGson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktorVersion" }
+ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.0.0"
+
+workRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "workVersion" }
+
+pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
+roomPaging = "androidx.room:room-paging:2.4.3"
+
+aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref = "latestAboutLibsRelease" }
+aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose", version.ref = "latestAboutLibsRelease" }
+navFragment = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navVersion" }
+navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navVersion" }
+navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
+
+reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.5.2"
+stetho = "com.facebook.stetho:stetho:1.6.0"
+
+iconicsCore = "com.mikepenz:iconics-core:5.3.4"
+
+androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
+
+firebaseAuth = "com.google.firebase:firebase-auth:21.0.7"
+googlePlayAds = "com.google.android.gms:play-services-ads:21.1.0"
+
+pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha16"
+
+fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
+storage = "com.anggrayudi:storage:1.4.1"
+
+androidxWindow = "androidx.window:window:1.1.0-alpha03"
+androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
+androidxBrowser = "androidx.browser:browser:1.4.0"
+
+fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
+showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
+
+toolbarCompose = "me.onebone:toolbar-compose:2.3.4"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.5.1"
+
+datastore = "androidx.datastore:datastore:1.0.0"
+datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
+
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0-RC"
+
+jsoup = "org.jsoup:jsoup:1.15.2"
+
+crashlytics = "com.google.firebase:firebase-crashlytics:18.2.12"
+analytics = "com.google.firebase:firebase-analytics:21.1.0"
+playServices = "com.google.android.gms:play-services-auth:20.1.0"
+
+preference = "androidx.preference:preference-ktx:1.2.0"
+
+recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
+constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
+swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+
+### MangaWorld
+coilGif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
+subsamplingImageView = "com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0"
+subsamplingCompose = "xyz.quaver:subsampledimage:0.0.1-alpha22-SNAPSHOT"
+bigImageViewer = { module = "com.github.piasy:BigImageViewer", version.ref = "piasy" }
+bigImageGlideLoader = { module = "com.github.piasy:GlideImageLoader", version.ref = "piasy" }
+progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", version.ref = "piasy" }
+
+### AnimeWorld
+slideToAct = "com.ncorti:slidetoact:0.9.0"
+mediaRouter = "androidx.mediarouter:mediarouter:1.3.1"
+fetch = "androidx.tonyodev.fetch2:xfetch2:3.1.6"
+fetchOkHttp = "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
+torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
+castFramework = "com.google.android.gms:play-services-cast-framework:21.1.0"
+localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
+superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
+
+composeViewBinding = { module = "androidx.compose.ui:ui-viewbinding", version.ref = "jetpack" }
+autoBindings = { module = "io.github.kaustubhpatange:autobindings", version.ref = "autoBinding" }
+autoBindingsCompiler = { module = "io.github.kaustubhpatange:autobindings-compiler", version.ref = "autoBinding" }
+# For media playback using ExoPlayer
+exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Version" }
+# For DASH playback support with ExoPlayer
+exoplayerDash = { module = "androidx.media3:media3-exoplayer-dash", version.ref = "media3Version" }
+# For HLS playback support with ExoPlayer
+exoplayerHls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3Version" }
+# For RTSP playback support with ExoPlayer
+exoplayerRtsp = { module = "androidx.media3:media3-exoplayer-rtsp", version.ref = "media3Version" }
+# For ad insertion using the Interactive Media Ads SDK with ExoPlayer
+exoplayerIma = { module = "androidx.media3:media3-exoplayer-ima", version.ref = "media3Version" }
+# For loading data using the Cronet network stack
+exoplayerdatasourceCronet = { module = "androidx.media3:media3-datasource-cronet", version.ref = "media3Version" }
+# For loading data using the OkHttp network stack
+exoplayerdatasourceOkhttp = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "media3Version" }
+# For loading data using librtmp
+exoplayerdatasourceRtmp = { module = "androidx.media3:media3-datasource-rtmp", version.ref = "media3Version" }
+# For building media playback UIs
+exoplayerui = { module = "androidx.media3:media3-ui", version.ref = "media3Version" }
+# For exposing and controlling media sessions
+exoplayersession = { module = "androidx.media3:media3-session", version.ref = "media3Version" }
+# For extracting data from media containers
+exoplayerextractor = { module = "androidx.media3:media3-extractor", version.ref = "media3Version" }
+# For integrating with Cast
+exoplayercast = { module = "androidx.media3:media3-cast", version.ref = "media3Version" }
+# For scheduling background operations using Jetpack Work"s WorkManager with ExoPlayer
+exoplayerWorkmanager = { module = "androidx.media3:media3-exoplayer-workmanager", version.ref = "media3Version" }
+# For transforming media files
+exoplayertransformer = { module = "androidx.media3:media3-transformer", version.ref = "media3Version" }
+# Utilities for testing media components (including ExoPlayer components)
+exoplayertestUtils = { module = "androidx.media3:media3-test-utils", version.ref = "media3Version" }
+# Utilities for testing media components (including ExoPlayer components) via Robolectric
+exoplayertestUtilsRobolectric = { module = "androidx.media3:media3-test-utils-robolectric", version.ref = "media3Version" }
+# Common functionality for media database components
+exoplayerdatabase = { module = "androidx.media3:media3-database", version.ref = "media3Version" }
+# Common functionality for media decoders
+exoplayerdecoder = { module = "androidx.media3:media3-decoder", version.ref = "media3Version" }
+# Common functionality for loading data
+exoplayerdatasource = { module = "androidx.media3:media3-datasource", version.ref = "media3Version" }
+# Common functionality used across multiple media libraries
+exoplayercommon = { module = "androidx.media3:media3-common", version.ref = "media3Version" }
+exoplayerleanback = { module = "androidx.media3:media3-ui-leanback", version.ref = "media3Version" }
+
+leanback = "androidx.leanback:leanback:1.2.0-alpha02"
+leanbackPreference = "androidx.leanback:leanback-preference:1.2.0-alpha02"
+
+duktape = "com.squareup.duktape:duktape-android:1.4.0"
+rhino = "org.mozilla:rhino:1.7.14"
+kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
+karnKhttp = "io.karn:khttp-android:0.1.2"
+ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "ziplineVersion" }
+ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
+retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
+retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
+kotlinxJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3"
+androidxWebkit = "androidx.webkit:webkit:1.4.0"
+
+mlkitTranslate = "com.google.mlkit:translate:17.0.0"
+mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
+firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.0.5"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.2.2"
+firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.1"
+
+[bundles]
+compose = [
+    "composeUi", "composeUiTooling", "composeFoundation", "composeMaterial",
+    "composeMaterialIconsCore", "composeMaterialIconsExtended",
+    "composeAnimation",
+    "composeActivity", "composeLifecycle", "composeLifecycleRuntime",
+    "composeRuntimeLivedata",
+    "composeMaterialThemeAdapter", "composeMaterial3ThemeAdapter",
+    "landscapistGlide", "coilCompose",
+    "composeConstraintLayout", "permissions",
+    "materialPlaceholder", "drawablePainter", "uiUtil",
+    "materialYou",
+    "navCompose", "navMaterial", "navAnimation",
+    "swipeRefresh", "systemUiController",
+    "flowLayout"
+]
+media3 = [
+    "exoplayer",
+    "exoplayerDash", "exoplayerHls", "exoplayerRtsp", "exoplayerIma",
+    "exoplayerdatasourceCronet", "exoplayerdatasource", "exoplayerdatasourceRtmp", "exoplayerdatasourceOkhttp",
+    "exoplayerui",
+    "exoplayersession",
+    "exoplayerextractor",
+    "exoplayercast",
+    "exoplayerWorkmanager",
+    "exoplayertransformer",
+    "exoplayerdatabase",
+    "exoplayerdecoder",
+    "exoplayercommon"
+]
+leanbackLibs = ["leanback", "leanbackPreference"]
+
+okHttpLibs = ["okhttpLib", "okhttpDns"]
+koinLibs = ["koinAndroid", "koinCompose"]
+firebaseCrashLibs = ["crashlytics", "analytics"]
+datastoreLibs = ["datastore", "datastorePref"]
+
+piasyLibs = ["bigImageViewer", "bigImageGlideLoader", "progressPieIndicator"]
+ziplineLibs = ["ziplineLoader", "ziplineProfiler"]
+
+ktorLibs = [
+    "ktorCore",
+    "ktorAuth",
+    "ktorAndroid",
+    "ktorLogging",
+    "ktorSerialization",
+    "ktorJson",
+    "ktorContentNegotiation",
+    "ktorOkHttp",
+    "ktorGson",
+    "ktorJsoup"
+]
+
+roomLibs = ["roomRuntime", "roomKtx"]
+
+pagingLibs = ["pagingRuntime", "roomPaging"]

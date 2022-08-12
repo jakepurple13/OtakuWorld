@@ -32,35 +32,35 @@ android {
 }
 
 dependencies {
-    implementation(Deps.kotlinStLib)
-    implementation(Deps.androidCore)
-    implementation(Deps.appCompat)
+    implementation(libs.kotlinStLib)
+    implementation(libs.androidCore)
+    implementation(libs.appCompat)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(Deps.okHttpLibs)
-    implementation(Deps.coroutinesCore)
-    implementation(Deps.jsoup)
-    implementation(SourceDeps.duktape)
-    implementation(SourceDeps.ziplineLibs)
-    implementation(SourceDeps.rhino)
-    implementation(Deps.gson)
-    implementation(SourceDeps.kotson)
-    implementation(SourceDeps.karnKhttp) //okhttp instead
+    implementation(libs.bundles.okHttpLibs)
+    implementation(libs.coroutinesCore)
+    implementation(libs.jsoup)
+    implementation(libs.duktape)
+    implementation(libs.bundles.ziplineLibs)
+    implementation(libs.rhino)
+    implementation(libs.gson)
+    implementation(libs.kotson)
+    implementation(libs.karnKhttp) //okhttp instead
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
 
-    implementation(Deps.uiUtil)
+    implementation(libs.uiUtil)
 
-    implementation(SourceDeps.retrofit)
-    implementation(SourceDeps.retrofitGson)
+    implementation(libs.retrofit)
+    implementation(libs.retrofitGson)
 
-    implementation(project(":Models"))
+    implementation(projects.models)
 
-    implementation(Deps.koinLibs)
+    implementation(libs.bundles.koinLibs)
 
-    implementation(Deps.ktorLibs)
-    implementation(Deps.kotlinxSerialization)
+    implementation(libs.bundles.ktorLibs)
+    implementation(libs.kotlinxSerialization)
 }
