@@ -105,7 +105,6 @@ dependencies {
     implementation(libs.coilGif)
     implementation(libs.bundles.datastoreLibs)
 
-    //implementation("com.alialbaali.kamel:kamel-image:0.4.0")
 }
 
 apply(from = "$rootDir/buildtypes.gradle")
