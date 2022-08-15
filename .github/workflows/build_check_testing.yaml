@@ -92,18 +92,14 @@ jobs:
           generate-job-summary: true
           arguments: animeworldtv:assembleRelease
 
-      #      - if: github.event.inputs.build_novelworld == 'true'
-      #        name: Build NovelWorld artifacts
-      #        id: buildNovelApks
-      #        uses: gradle/gradle-build-action@v2
-      #        with:
-      #          gradle-version: current
-      #          generate-job-summary: true
-      #          arguments: novelworld:assembleRelease --scan
       - if: github.event.inputs.build_novelworld == 'true'
         name: Build NovelWorld artifacts
         id: buildNovelApks
-        run: ./gradlew novelworld:assembleRelease --scan
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: current
+          generate-job-summary: true
+          arguments: novelworld:assembleRelease
 
       - if: github.event.inputs.build_mangaworld == 'true'
         uses: r0adkll/sign-android-release@v1
