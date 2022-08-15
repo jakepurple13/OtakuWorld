@@ -73,7 +73,7 @@ jobs:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
-          arguments: mangaworld:assembleRelease
+          arguments: mangaworld:assembleRelease --scan
 
       - if: github.event.inputs.build_animeworld == 'true'
         name: Build AnimeWorld artifacts
