@@ -79,7 +79,7 @@ jobs:
       - if: github.event.inputs.build_animeworld == 'true'
         name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: eskatos/gradle-command-action@v2.2.2
+        uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
           wrapper-cache-enabled: true
@@ -90,7 +90,7 @@ jobs:
       - if: github.event.inputs.build_animeworldtv == 'true'
         name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: eskatos/gradle-command-action@v2.2.2
+        uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
           wrapper-cache-enabled: true
@@ -101,7 +101,7 @@ jobs:
       - if: github.event.inputs.build_novelworld == 'true'
         name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: eskatos/gradle-command-action@v2.2.2
+        uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
           wrapper-cache-enabled: true
@@ -272,3 +272,8 @@ jobs:
           name: Signed AnimeTV No Firebase App
           path: animeworldtv-no-firebase-release.apk
 
+      - name: Upload build reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-reports
+          path: build/reports/
