@@ -1,9 +1,7 @@
 plugins {
     id("com.android.library")
     kotlin("android")
-    kotlin("kapt")
-    //TODO: In order to use ksp, EVERYTHING needs to use it. So the removal of kapt would be needed
-    //id "com.google.devtools.ksp" version "1.6.0-1.0.1"
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -17,10 +15,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-proguard-rules.pro")
 
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments["room.schemaLocation"] = "$projectDir/schemas"
-            }
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
         }
     }
 
@@ -55,7 +51,6 @@ dependencies {
     implementation(projects.models)
 
     implementation(libs.bundles.roomLibs)
-    // For Kotlin use kapt instead of annotationProcessor
-    kapt(libs.roomCompiler)
+    ksp(libs.roomCompiler)
     implementation(libs.bundles.pagingLibs)
 }

@@ -7,6 +7,7 @@ plugins {
     id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
     id("com.starter.easylauncher") version "5.1.2"
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -88,8 +89,7 @@ dependencies {
     implementation(projects.sharedutils)
 
     implementation(libs.bundles.roomLibs)
-    // For Kotlin use kapt instead of annotationProcessor
-    kapt(libs.roomCompiler)
+    ksp(libs.roomCompiler)
 
     implementation(libs.autoBindings)
     kapt(libs.autoBindingsCompiler)

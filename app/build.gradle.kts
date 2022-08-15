@@ -1,8 +1,8 @@
 plugins {
     id("com.android.application")
     kotlin("android")
-    kotlin("kapt")
     id("com.mikepenz.aboutlibraries.plugin")
+    alias(libs.plugins.ksp)
 }
 
 //This is just to show what the minimum is needed to create a new app
@@ -77,8 +77,7 @@ dependencies {
     implementation(projects.mangaSources)
 
     implementation(libs.bundles.roomLibs)
-    // For Kotlin use kapt instead of annotationProcessor
-    kapt(libs.roomCompiler)
+    ksp(libs.roomCompiler)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
