@@ -36,6 +36,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:
+          distribution: adopt
           java-version: 11
       #       - name: Build APK
       #         run: bash ./gradlew assembleRelease --stacktrace
