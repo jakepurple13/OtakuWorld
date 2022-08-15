@@ -71,9 +71,6 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
           generate-job-summary: true
           arguments: mangaworld:assembleRelease
 
@@ -83,9 +80,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          generate-job-summary: true
           arguments: animeworld:assembleRelease
 
       - if: github.event.inputs.build_animeworldtv == 'true'
@@ -94,9 +89,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          generate-job-summary: true
           arguments: animeworldtv:assembleRelease
 
       - if: github.event.inputs.build_novelworld == 'true'
@@ -105,9 +98,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          generate-job-summary: true
           arguments: novelworld:assembleRelease
 
       - if: github.event.inputs.build_mangaworld == 'true'
