@@ -280,8 +280,6 @@ fun M3CoverCard(
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-
     androidx.compose.material3.Surface(
         modifier = Modifier
             .size(

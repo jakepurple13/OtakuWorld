@@ -233,6 +233,11 @@ class MainActivity : AppCompatActivity() {
                         verticalArrangement = Arrangement.Center
                     ) {
 
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            val connectivityStatus by connectivityStatus()
+                            Text("ConnectionState: ${connectivityStatus.name}")
+                        }
+
                         Text("Outlined Button")
                         androidx.compose.material3.OutlinedButton(
                             onClick = {

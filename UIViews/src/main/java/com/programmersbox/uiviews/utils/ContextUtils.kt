@@ -1,10 +1,13 @@
 package com.programmersbox.uiviews.utils
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.app.DownloadManager
 import android.content.*
 import android.graphics.*
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,14 +23,15 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
@@ -46,10 +50,7 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
-import com.programmersbox.helpfulutils.Battery
-import com.programmersbox.helpfulutils.BatteryHealth
-import com.programmersbox.helpfulutils.downloadManager
-import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.helpfulutils.*
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -64,11 +65,6 @@ import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.LinkedHashMap
-import kotlin.collections.MutableMap
-import kotlin.collections.indices
-import kotlin.collections.lastOrNull
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 import kotlin.properties.Delegates
 
@@ -603,8 +599,46 @@ fun rememberBackStackEntry(
     route: String,
 ): NavBackStackEntry {
     val controller = LocalNavController.current
-    return remember { controller.getBackStackEntry(route) }
+    return remember(controller.currentBackStackEntry) { controller.getBackStackEntry(route) }
 }
 
 val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }
+
+enum class Status { Available, Losing, Lost, Unavailable }
+
+@RequiresApi(Build.VERSION_CODES.N)
+@RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+@Composable
+fun connectivityStatus(
+    initialValue: Status = Status.Unavailable,
+    context: Context = LocalContext.current,
+    vararg key: Any
+): State<Status> = produceState(initialValue = initialValue, keys = key) {
+    val callback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            super.onAvailable(network)
+            value = Status.Available
+        }
+
+        override fun onLosing(network: Network, maxMsToLive: Int) {
+            super.onLosing(network, maxMsToLive)
+            value = Status.Losing
+        }
+
+        override fun onLost(network: Network) {
+            super.onLost(network)
+            value = Status.Lost
+        }
+
+        override fun onUnavailable() {
+            super.onUnavailable()
+            value = Status.Unavailable
+        }
+    }
+
+    val manager = context.connectivityManager
+    manager.registerDefaultNetworkCallback(callback)
+
+    awaitDispose { manager.unregisterNetworkCallback(callback) }
+}
