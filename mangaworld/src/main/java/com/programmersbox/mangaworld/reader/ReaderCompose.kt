@@ -21,13 +21,24 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -212,108 +223,15 @@ fun ReadView() {
     ModalBottomSheetLayout(
         sheetState = sheetState,
         sheetContent = {
-            val sheetTopAppBarScrollState = rememberTopAppBarState()
-            val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
-            Scaffold(
-                modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
-                topBar = {
-                    SmallTopAppBar(
-                        scrollBehavior = sheetScrollBehavior,
-                        title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
-                        actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
-                        navigationIcon = {
-                            IconButton(onClick = { scope.launch { sheetState.hide() } }) {
-                                Icon(Icons.Default.Close, null)
-                            }
-                        }
-                    )
-                },
-                bottomBar = {
-                    if (BuildConfig.BUILD_TYPE == "release") {
-                        AndroidView(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            factory = {
-                                AdView(it).apply {
-                                    setAdSize(AdSize.BANNER)
-                                    adUnitId = context.getString(R.string.ad_unit_id)
-                                    loadAd(readVm.ad)
-                                }
-                            }
-                        )
-                    }
-                }
-            ) { p ->
-                Crossfade(targetState = sheetState.isVisible) { target ->
-                    if (target) {
-                        LazyVerticalGrid(
-                            columns = adaptiveGridCell(),
-                            contentPadding = p,
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            itemsIndexed(pages) { i, it ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                        .border(
-                                            animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
-                                            color = animateColorAsState(
-                                                if (currentPage == i) MaterialTheme.colorScheme.primary
-                                                else Color.Transparent
-                                            ).value
-                                        )
-                                        .clickable {
-                                            scope.launch {
-                                                if (currentPage == i) sheetState.hide()
-                                                if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
-                                            }
-                                        }
-                                ) {
-                                    GlideImage(
-                                        imageModel = it,
-                                        contentScale = ContentScale.Crop,
-                                        loading = {
-                                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .align(Alignment.Center)
-                                    )
-
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(
-                                                brush = Brush.verticalGradient(
-                                                    colors = listOf(
-                                                        Color.Transparent,
-                                                        Color.Black
-                                                    ),
-                                                    startY = 50f
-                                                )
-                                            )
-                                    ) {
-                                        Text(
-                                            (i + 1).toString(),
-                                            style = MaterialTheme
-                                                .typography
-                                                .bodyLarge
-                                                .copy(textAlign = TextAlign.Center, color = Color.White),
-                                            maxLines = 2,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .align(Alignment.Center)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            SheetView(
+                readVm = readVm,
+                sheetState = sheetState,
+                currentPage = currentPage,
+                pages = pages,
+                listOrPager = listOrPager,
+                pagerState = pagerState,
+                listState = listState
+            )
         },
     ) {
         ModalNavigationDrawer(
@@ -364,11 +282,10 @@ fun ReadView() {
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
                     Crossfade(targetState = listOrPager) {
-                        if (it) ListView(listState, paddingValues, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        if (it) ListView(listState, PaddingValues(top = 64.dp, bottom = 80.dp), pages, readVm, spacing) {
+                            readVm.showInfo = !readVm.showInfo
+                        }
                         else PagerView(pagerState, PaddingValues(0.dp), pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-
-                        //TODO: Add a new type with a recyclerview for listview only
-
                     }
                 }
             }
@@ -449,6 +366,122 @@ fun DrawerView(
                 )
 
                 if (i < readVm.list.lastIndex) Divider()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalAnimationApi::class, ExperimentalPagerApi::class)
+@Composable
+fun SheetView(
+    readVm: ReadViewModel,
+    sheetState: ModalBottomSheetState,
+    currentPage: Int,
+    pages: List<String>,
+    listOrPager: Boolean,
+    pagerState: PagerState,
+    listState: LazyListState
+) {
+    val scope = rememberCoroutineScope()
+    val sheetTopAppBarScrollState = rememberTopAppBarState()
+    val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
+    Scaffold(
+        modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
+        topBar = {
+            SmallTopAppBar(
+                scrollBehavior = sheetScrollBehavior,
+                title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
+                actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
+                navigationIcon = {
+                    IconButton(onClick = { scope.launch { sheetState.hide() } }) {
+                        Icon(Icons.Default.Close, null)
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            if (BuildConfig.BUILD_TYPE == "release") {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    factory = {
+                        AdView(it).apply {
+                            setAdSize(AdSize.BANNER)
+                            adUnitId = context.getString(R.string.ad_unit_id)
+                            loadAd(readVm.ad)
+                        }
+                    }
+                )
+            }
+        }
+    ) { p ->
+        Crossfade(targetState = sheetState.isVisible) { target ->
+            if (target) {
+                LazyVerticalGrid(
+                    columns = adaptiveGridCell(),
+                    contentPadding = p,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    itemsIndexed(pages) { i, it ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                .border(
+                                    animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                    color = animateColorAsState(
+                                        if (currentPage == i) MaterialTheme.colorScheme.primary
+                                        else Color.Transparent
+                                    ).value
+                                )
+                                .clickable {
+                                    scope.launch {
+                                        if (currentPage == i) sheetState.hide()
+                                        if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
+                                    }
+                                }
+                        ) {
+                            GlideImage(
+                                imageModel = it,
+                                contentScale = ContentScale.Crop,
+                                loading = {
+                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center)
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                Color.Black
+                                            ),
+                                            startY = 50f
+                                        )
+                                    )
+                            ) {
+                                Text(
+                                    (i + 1).toString(),
+                                    style = MaterialTheme
+                                        .typography
+                                        .bodyLarge
+                                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                                    maxLines = 2,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.Center)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
