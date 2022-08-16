@@ -127,6 +127,14 @@ fun DetailsScreen(
                                 }
                             ) { Icon(Icons.Default.Share, null) }
 
+                            IconButton(
+                                onClick = {
+                                    details.itemModel?.url?.let {
+                                        localContext.openInCustomChromeBrowser(it) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                    }
+                                }
+                            ) { Icon(Icons.Default.OpenInBrowser, null) }
+
                             IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
                         },
                     )

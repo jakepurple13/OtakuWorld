@@ -208,7 +208,9 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
-            modifier = Modifier.padding(vertical = 4.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
@@ -226,10 +228,10 @@ class GenericManga(val context: Context) : GenericInfo {
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
-        //TODO: See if you can modify this to perform better
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
             state = listState,
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
