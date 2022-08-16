@@ -147,12 +147,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         modifier = Modifier.navigationBarsPadding(),
                         bottomBar = {
                             Column {
-                                BottomBarAdditions()
                                 AnimatedVisibility(
                                     visible = showNavBar,
                                     enter = slideInVertically { it / 2 },
                                     exit = slideOutVertically { it / 2 }
                                 ) {
+                                    BottomBarAdditions()
                                     NavigationBar {
                                         val navBackStackEntry by navController.currentBackStackEntryAsState()
                                         val currentDestination = navBackStackEntry?.destination
