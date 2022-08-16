@@ -1,17 +1,14 @@
 package com.programmersbox.uiviews.utils
 
-import android.animation.ValueAnimator
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import androidx.annotation.ColorInt
 import androidx.annotation.NonNull
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
-import com.airbnb.lottie.LottieAnimationView
-import com.airbnb.lottie.LottieProperty
-import com.airbnb.lottie.model.KeyPath
 import com.bumptech.glide.ListPreloader
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.request.target.CustomTarget
@@ -71,18 +68,3 @@ fun String.getPaletteFromHexColor(): Palette = Color.parseColor(this@getPaletteF
 
 fun Int.toColorDrawable() = ColorDrawable(this)
 fun String.toColorDrawable() = ColorDrawable(Color.parseColor(this))
-
-var LottieAnimationView.checked: Boolean
-    get() = progress == 1f
-    set(value) = check(value)
-
-fun LottieAnimationView.check(checked: Boolean) {
-    val endProgress = if (checked) 1f else 0f
-    val animator = ValueAnimator.ofFloat(progress, endProgress).apply {
-        addUpdateListener { animation: ValueAnimator -> progress = animation.animatedValue as Float }
-    }
-    animator.start()
-}
-
-fun LottieAnimationView.changeTint(@ColorInt newColor: Int) =
-    addValueCallback(KeyPath("**"), LottieProperty.COLOR_FILTER) { PorterDuffColorFilter(newColor, PorterDuff.Mode.SRC_ATOP) }
