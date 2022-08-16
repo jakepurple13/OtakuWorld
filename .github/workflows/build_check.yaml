@@ -72,7 +72,7 @@ jobs:
       #          dependencies-cache-enabled: true
       #          configuration-cache-enabled: true
       #          arguments: assembleRelease
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
         name: Build MangaWorld artifacts
         id: buildMangaApks
         uses: gradle/gradle-build-action@v2
@@ -83,7 +83,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: mangaworld:assembleRelease
 
-      - if: github.event.inputs.build_animeworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
         name: Build AnimeWorld artifacts
         id: buildAnimeApks
         uses: gradle/gradle-build-action@v2
@@ -94,7 +94,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworld:assembleRelease
 
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
         name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
         uses: gradle/gradle-build-action@v2
@@ -105,7 +105,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworldtv:assembleRelease
 
-      - if: github.event.inputs.build_novelworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
         name: Build NovelWorld artifacts
         id: buildNovelApks
         uses: gradle/gradle-build-action@v2
@@ -116,7 +116,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: novelworld:assembleRelease
 
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: manga_sign
@@ -127,7 +127,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: manga_sign_no_firebase
@@ -138,7 +138,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: anime_sign
@@ -149,7 +149,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: anime_sign_no_firebase
@@ -160,7 +160,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_novelworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: novel_sign
@@ -171,7 +171,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_novelworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: novel_sign_no_firebase
@@ -182,7 +182,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: animetv_sign
@@ -193,7 +193,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
         uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: animetv_sign_no_firebase
@@ -215,25 +215,25 @@ jobs:
       #          cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
       #          cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
 
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
         name: Clean up MangaWorld artifacts
         run: |
           cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
           cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
 
-      - if: github.event.inputs.build_animeworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
         name: Clean up AnimeWorld artifacts
         run: |
           cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
           cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
 
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
         name: Clean up AnimeWorldTV artifacts
         run: |
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
           cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
 
-      - if: github.event.inputs.build_novelworld == 'true' || github.event.issue.pull_request
+      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
         name: Clean up NovelWorld artifacts
         run: |
           cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
