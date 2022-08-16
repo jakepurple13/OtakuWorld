@@ -6,6 +6,8 @@
  
 A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld) apps. This was created because there were a ton of shared elements between the two apps so I combined them, allowing two separate apps but a lot of the same base logic.
 
+Most of these apps are done in jetpack compose!
+
 ## Contents
    * [Screenshots](#screenshots)
       * [MangaWorld](#mangaworld)
