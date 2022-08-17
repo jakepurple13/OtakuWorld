@@ -43,7 +43,7 @@ jobs:
 
       - name: Build all artifacts
         id: buildAllApks
-        uses: eskatos/gradle-command-action@v2.2.2
+        uses: eskatos/gradle-command-action@v2.2.3
         with:
           gradle-version: current
           wrapper-cache-enabled: true
