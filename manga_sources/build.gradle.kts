@@ -56,7 +56,7 @@ dependencies {
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
-    implementation(libs.kotlinxJson)
+    implementation(libs.kotlinxSerialization)
     implementation(libs.androidxWebkit)
 
     implementation(libs.uiUtil)
