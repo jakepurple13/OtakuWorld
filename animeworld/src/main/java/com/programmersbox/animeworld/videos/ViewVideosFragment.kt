@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
@@ -51,10 +50,7 @@ import com.programmersbox.animeworld.*
 import com.programmersbox.animeworld.R
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.Insets
-import com.programmersbox.uiviews.utils.LocalActivity
-import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
@@ -86,7 +82,6 @@ fun ViewVideoScreen() {
 @Composable
 private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
-    val navController = LocalNavController.current
     val context = LocalContext.current
 
     val items = viewModel.videos
@@ -112,7 +107,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
             Insets {
                 SmallTopAppBar(
                     scrollBehavior = scrollBehavior,
-                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    navigationIcon = { BackButton() },
                     title = { Text(stringResource(R.string.downloaded_videos)) },
                     actions = {
                         AndroidView(
@@ -304,7 +299,6 @@ private fun EmptyState() {
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
@@ -314,7 +308,6 @@ private fun VideoContentView(item: VideoContent) {
     SlideToDeleteDialog(showDialog = showDialog, video = item)
 
     val navController = LocalNavController.current
-    val activity = LocalActivity.current
     val context = LocalContext.current
 
     val dismissState = rememberDismissState(
@@ -378,7 +371,7 @@ private fun VideoContentView(item: VideoContent) {
             }
         }
     ) {
-        androidx.compose.material3.ElevatedCard(
+        ElevatedCard(
             modifier = Modifier
                 .fillMaxSize()
                 .clickable(
@@ -390,7 +383,7 @@ private fun VideoContentView(item: VideoContent) {
                             File(item.path!!),
                             context
                                 .getSharedPreferences("videos", Context.MODE_PRIVATE)
-                                .getLong(item.assetFileStringUri, 0) ?: 0L,
+                                .getLong(item.assetFileStringUri, 0),
                             null, null
                         )
                     } else {

@@ -1,5 +1,6 @@
 package com.programmersbox.animeworld.videoplayer
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
@@ -68,6 +69,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 import kotlin.math.abs
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoPlayerUi() {
@@ -81,13 +83,13 @@ fun VideoPlayerUi() {
 
     LifecycleHandle(
         onStop = {
-            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             BaseMainActivity.showNavBar = true
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
             setWindowBrightness(activity, originalScreenBrightness.toFloat())
         },
         onDestroy = {
-            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             BaseMainActivity.showNavBar = true
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
             setWindowBrightness(activity, originalScreenBrightness.toFloat())
@@ -128,7 +130,7 @@ fun VideoPlayerUi() {
                 fastForward = viewModel::fastForward
             )
         }
-    ) { p ->
+    ) { _ ->
         Box {
             VideoPlayer(
                 source = remember {
@@ -235,8 +237,6 @@ fun VideoPlayer(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
-    val navController = LocalNavController.current
-
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically() + fadeIn(),
@@ -244,7 +244,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
     ) {
         SmallTopAppBar(
             title = { Text(viewModel.showName.orEmpty()) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+            navigationIcon = { BackButton() },
             actions = {
                 Row(
                     modifier = Modifier.padding(4.dp),

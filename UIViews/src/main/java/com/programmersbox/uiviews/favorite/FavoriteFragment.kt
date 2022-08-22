@@ -86,7 +86,7 @@ fun FavoriteUi(logo: MainLogo) {
                 ) {
                     SmallTopAppBar(
                         scrollBehavior = scrollBehavior,
-                        navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                        navigationIcon = { BackButton() },
                         title = { Text(stringResource(R.string.viewFavoritesMenu)) },
                         actions = {
 

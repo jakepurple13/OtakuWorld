@@ -17,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
@@ -124,9 +123,7 @@ fun GlobalSearchView(
                         .padding(5.dp)
                 ) {
                     SmallTopAppBar(
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                        },
+                        navigationIcon = { BackButton() },
                         title = { Text(stringResource(R.string.global_search)) }
                     )
                     AutoCompleteBox(

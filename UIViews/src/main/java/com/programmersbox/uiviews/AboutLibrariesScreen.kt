@@ -11,8 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.DialogProperties
-import androidx.navigation.NavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.entity.Library
@@ -40,8 +37,8 @@ import com.mikepenz.aboutlibraries.ui.compose.data.fakeData
 import com.mikepenz.aboutlibraries.ui.compose.util.author
 import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Insets
-import com.programmersbox.uiviews.utils.LocalNavController
 
 @Composable
 fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
@@ -56,7 +53,6 @@ fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().
 @ExperimentalComposeUiApi
 @Composable
 fun AboutLibrariesScreen(mainLogo: MainLogo) {
-    val navController: NavController = LocalNavController.current
     val libraries by libraryList()
     val context = LocalContext.current
 
@@ -72,7 +68,7 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
             Insets {
                 SmallTopAppBar(
                     title = { Text("Libraries Used") },
-                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    navigationIcon = { BackButton() },
                     actions = { Text("${libs.size} libraries") },
                     scrollBehavior = topAppBarScrollBehavior
                 )

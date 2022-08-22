@@ -113,9 +113,7 @@ fun DetailsScreen(
                     SmallTopAppBar(
                         modifier = Modifier.zIndex(2f),
                         title = { Text(details.itemModel?.title.orEmpty()) },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                        },
+                        navigationIcon = { BackButton() },
                         actions = {
                             IconButton(
                                 onClick = {

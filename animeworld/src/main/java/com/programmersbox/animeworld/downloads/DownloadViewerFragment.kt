@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
@@ -38,10 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.Insets
-import com.programmersbox.uiviews.utils.LifecycleHandle
-import com.programmersbox.uiviews.utils.LocalActivity
-import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.tonyodev.fetch2.Status
 import kotlinx.coroutines.launch
@@ -60,8 +56,6 @@ interface ActionListener {
 @ExperimentalMaterialApi
 @Composable
 fun DownloaderUi() {
-
-    val navController = LocalNavController.current
     val context = LocalContext.current
     val viewModel = viewModel { DownloaderViewModel(context) }
     val state = rememberBottomSheetScaffoldState()
@@ -110,7 +104,7 @@ fun DownloaderUi() {
             Insets {
                 SmallTopAppBar(
                     scrollBehavior = scrollBehavior,
-                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } },
+                    navigationIcon = { BackButton() },
                     actions = { IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) } },
                     title = {
                         Text(

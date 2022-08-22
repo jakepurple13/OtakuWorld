@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
@@ -24,7 +23,6 @@ import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -48,6 +46,7 @@ import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.mangaworld.useNewReaderFlow
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Insets
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -73,8 +72,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @Composable
 fun DownloadScreen() {
 
-    val navController = LocalNavController.current
-
     val defaultPathname = remember { File(DOWNLOAD_FILE_PATH) }
 
     val topAppBarScrollState = rememberTopAppBarState()
@@ -87,9 +84,7 @@ fun DownloadScreen() {
                 SmallTopAppBar(
                     scrollBehavior = scrollBehavior,
                     title = { Text(stringResource(R.string.downloaded_chapters)) },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
-                    }
+                    navigationIcon = { BackButton() }
                 )
             }
         }
@@ -135,7 +130,7 @@ private fun EmptyState(p1: PaddingValues) {
             .padding(p1)
             .fillMaxSize()
     ) {
-        androidx.compose.material3.Surface(
+        Surface(
             shape = MaterialTheme.shapes.medium,
             tonalElevation = 4.dp,
             modifier = Modifier
@@ -182,7 +177,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
         modifier = Modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        androidx.compose.material3.Surface(
+        Surface(
             shape = MaterialTheme.shapes.medium,
             tonalElevation = 4.dp,
             modifier = Modifier
@@ -294,7 +289,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     }
                 ) {
                     val navController = LocalNavController.current
-                    androidx.compose.material3.Surface(
+                    Surface(
                         shape = MaterialTheme.shapes.medium,
                         tonalElevation = 4.dp,
                         modifier = Modifier
