@@ -150,8 +150,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 BottomBarAdditions()
                                 AnimatedVisibility(
                                     visible = showNavBar,
-                                    enter = slideInVertically { it / 2 },
-                                    exit = slideOutVertically { it / 2 }
+                                    enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
+                                    exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
                                 ) {
                                     NavigationBar {
                                         val navBackStackEntry by navController.currentBackStackEntryAsState()
