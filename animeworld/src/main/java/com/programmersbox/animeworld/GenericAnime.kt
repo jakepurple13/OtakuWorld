@@ -160,12 +160,12 @@ class GenericAnime(val context: Context) : GenericInfo {
                     context,
                     activity,
                     { !it.link.orEmpty().endsWith(".m3u8") }
-                ) { fetchIt(it, model) }
+                ) { fetchIt(it, model, activity) }
             }
         }
     }
 
-    private fun fetchIt(i: Storage, ep: ChapterModel) {
+    private fun fetchIt(i: Storage, ep: ChapterModel, activity: FragmentActivity) {
         try {
             fetch.setGlobalNetworkType(NetworkType.ALL)
 
@@ -175,7 +175,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
             val requestList = arrayListOf<Request>()
 
-            val filePath = context.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
+            val filePath = activity.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
             val request = Request(i.link!!, filePath)
             request.priority = Priority.HIGH
             request.networkType = NetworkType.ALL
@@ -196,7 +196,7 @@ class GenericAnime(val context: Context) : GenericInfo {
 
             fetch.enqueue(requestList) {}
         } catch (e: Exception) {
-            MainActivity.activity.runOnUiThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
+            activity.runOnUiThread { Toast.makeText(activity, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
         }
     }
 
@@ -429,7 +429,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                         } else {
                             MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
                                 .also { m ->
-                                    CastContext.getSharedInstance(context).mergedSelector?.let { m.routeSelector = it }
+                                    CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
                                 }
                                 .show(activity.supportFragmentManager, "media_chooser")
                         }
@@ -450,6 +450,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         generalSettings {
             val context = LocalContext.current
             var folderLocation by remember { mutableStateOf(context.folderLocation) }
+            val activity = LocalActivity.current
 
             PreferenceSetting(
                 settingTitle = { androidx.compose.material3.Text(stringResource(R.string.folder_location)) },
@@ -459,7 +460,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
-                    MainActivity.activity.requestPermissions(
+                    activity.requestPermissions(
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     ) {

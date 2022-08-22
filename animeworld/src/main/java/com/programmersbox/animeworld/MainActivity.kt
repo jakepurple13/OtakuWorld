@@ -18,14 +18,10 @@ class MainActivity : BaseMainActivity() {
     companion object {
         const val VIEW_DOWNLOADS = "animeworld://${DownloaderViewModel.DownloadViewerRoute}"
         const val VIEW_VIDEOS = "animeworld://${ViewVideoViewModel.VideoViewerRoute}"
-        lateinit var activity: MainActivity
         val cast: CastHelper = CastHelper()
     }
 
     override fun onCreate() {
-
-        activity = this
-
         try {
             cast.init(this)
         } catch (e: Exception) {
