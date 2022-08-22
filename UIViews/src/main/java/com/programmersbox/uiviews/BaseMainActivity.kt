@@ -347,7 +347,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
         outContent?.webUri = Uri.parse(currentDetailsUrl)
     }
 
-
     enum class Screen(val route: SScreen) { RECENT(SScreen.RecentScreen), ALL(SScreen.AllScreen), SETTINGS(SScreen.SettingsScreen) }
 
     fun goToScreen(screen: Screen) {
