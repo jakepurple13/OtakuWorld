@@ -2,10 +2,10 @@ package com.programmersbox.manga_sources.manga
 
 import android.annotation.SuppressLint
 import androidx.compose.ui.util.fastMap
+import app.cash.zipline.QuickJs
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.*
 import com.programmersbox.models.*
-import com.squareup.duktape.Duktape
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
@@ -255,24 +255,19 @@ object MangaPark : ApiService, KoinComponent {
     }
 
     override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
-        val duktape = Duktape.create()
-        val script = cloudflare(helper, chapterModel.url).execute().asJsoup().select("script").html()
-        val imgCdnHost = script.substringAfter("const imgCdnHost = \"").substringBefore("\";")
-        val imgPathLisRaw = script.substringAfter("const imgPathLis = ").substringBefore(";")
-        val imgPathLis = Json.parseToJsonElement(imgPathLisRaw).jsonArray
-        val amPass = script.substringAfter("const amPass = ").substringBefore(";")
-        val amWord = script.substringAfter("const amWord = ").substringBefore(";")
+        val script = cloudflare(helper, chapterModel.url).execute().asJsoup()
+            .select("script:containsData(imgHttpLis):containsData(amWord):containsData(amPass)").html()
+        val imgHttpLisString = script.substringAfter("const imgHttpLis =").substringBefore(";").trim()
+        val imgHttpLis = Json.parseToJsonElement(imgHttpLisString).jsonArray.map { it.jsonPrimitive.content }
+        val amWord = script.substringAfter("const amWord =").substringBefore(";").trim()
+        val amPass = script.substringAfter("const amPass =").substringBefore(";").trim()
 
         val decryptScript = cryptoJS + "CryptoJS.AES.decrypt($amWord, $amPass).toString(CryptoJS.enc.Utf8);"
 
-        val imgWordLisRaw = duktape.evaluate(decryptScript).toString()
-        val imgWordLis = Json.parseToJsonElement(imgWordLisRaw).jsonArray
+        val imgAccListString = QuickJs.create().use { it.evaluate(decryptScript).toString() }
+        val imgAccList = Json.parseToJsonElement(imgAccListString).jsonArray.map { it.jsonPrimitive.content }
 
-        return imgWordLis.mapIndexed { i, imgWordE ->
-            val imgPath = imgPathLis[i].jsonPrimitive.content
-            val imgWord = imgWordE.jsonPrimitive.content
-            "$imgCdnHost$imgPath?$imgWord"
-        }
+        return imgHttpLis.zip(imgAccList).mapIndexed { i, (imgUrl, imgAcc) -> "$imgUrl?$imgAcc" }
             .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
     }
 
