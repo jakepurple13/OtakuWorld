@@ -7,7 +7,7 @@ class TranslateItems {
 
 object TranslatorUtils {
     fun getModels(onSuccess: (List<CustomRemoteModel>) -> Unit) = Unit
-    fun deleteModel(model: CustomRemoteModel) = Unit
+    suspend fun deleteModel(model: CustomRemoteModel) = Unit
 }
 
 data class CustomRemoteModel(val hash: String, val language: String)

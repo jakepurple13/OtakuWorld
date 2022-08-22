@@ -92,10 +92,14 @@ class NotificationViewModel(dao: ItemDao) : ViewModel() {
 
 }
 
-class GeneralViewModel : ViewModel() {
+class TranslationViewModel : ViewModel() {
 
     var translationModels: List<CustomRemoteModel> by mutableStateOf(emptyList())
         private set
+
+    fun loadModels() {
+        TranslatorUtils.getModels { translationModels = it }
+    }
 
     fun getModels(onSuccess: () -> Unit) {
         TranslatorUtils.getModels {
@@ -104,8 +108,9 @@ class GeneralViewModel : ViewModel() {
         }
     }
 
-    fun deleteModel(model: CustomRemoteModel) {
+    suspend fun deleteModel(model: CustomRemoteModel) {
         TranslatorUtils.deleteModel(model)
+        TranslatorUtils.getModels { translationModels = it }
     }
 
 }

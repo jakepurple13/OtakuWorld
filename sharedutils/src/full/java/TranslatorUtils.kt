@@ -4,6 +4,7 @@ import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.translate.*
+import kotlinx.coroutines.tasks.await
 
 class TranslateItems {
     private var englishTranslator: Translator? = null
@@ -94,11 +95,12 @@ object TranslatorUtils {
             .addOnFailureListener { }
     }
 
-    fun deleteModel(model: CustomRemoteModel) {
-        modelManager.getDownloadedModels(TranslateRemoteModel::class.java).result.find { it.modelHash == model.hash }?.let {
+    suspend fun deleteModel(model: CustomRemoteModel) {
+        modelManager.getDownloadedModels(TranslateRemoteModel::class.java).await().find { it.modelHash == model.hash }?.let {
             modelManager
                 .deleteDownloadedModel(it)
                 .addOnSuccessListener {}
+                .addOnFailureListener {}
         }
     }
 }

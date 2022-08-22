@@ -33,6 +33,7 @@ sealed class Screen(val route: String) {
     object FavoriteScreen : Screen("favorite")
     object AboutScreen : Screen("about")
     object DebugScreen : Screen("debug")
+    object TranslationScreen : Screen("translation_models")
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
             navController.navigate("$route?searchFor=$title") { launchSingleTop = true }

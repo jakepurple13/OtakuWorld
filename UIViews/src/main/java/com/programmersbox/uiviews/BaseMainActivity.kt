@@ -40,6 +40,7 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
@@ -61,6 +62,7 @@ import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.recent.RecentView
 import com.programmersbox.uiviews.recent.RecentViewModel
 import com.programmersbox.uiviews.settings.SettingScreen
+import com.programmersbox.uiviews.settings.TranslationScreen
 import com.programmersbox.uiviews.utils.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -314,6 +316,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     windowSize = rememberWindowSizeClass()
                                 )
                             }
+
+                            bottomSheet(SScreen.TranslationScreen.route) { TranslationScreen() }
 
                             with(genericInfo) { navSetup() }
                         }

@@ -57,7 +57,7 @@ import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.*
-import com.programmersbox.uiviews.utils.components.ListBottomSheet
+import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -173,8 +173,6 @@ fun SettingScreen(
             GeneralSettings(
                 context = context,
                 scope = scope,
-                //fragment = fragment,
-                genericInfo = genericInfo,
                 customSettings = customPreferences.generalSettings,
                 globalSearchClick = globalSearchClick
             )
@@ -230,6 +228,7 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @ExperimentalMaterialApi
 @Composable
 private fun AboutSettings(
@@ -415,6 +414,26 @@ private fun AboutSettings(
                 }
         )
     }
+
+    val source by sourceFlow.collectAsState(initial = null)
+
+    DynamicListSetting(
+        settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+        dialogTitle = { Text(stringResource(R.string.chooseASource)) },
+        settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
+        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.done)) } },
+        value = source,
+        options = { genericInfo.sourceList() },
+        updateValue = { service, d ->
+            scope.launch {
+                service?.let {
+                    sourceFlow.emit(it)
+                    context.currentService = it.serviceName
+                }
+            }
+            d.value = false
+        }
+    )
 }
 
 @ExperimentalMaterialApi
@@ -432,6 +451,7 @@ private fun NotificationSettings(
 
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
+            settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
             summaryValue = { Text(stringResource(R.string.pending_saved_notifications, notiViewModel.savedNotifications)) },
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
@@ -540,33 +560,12 @@ private fun ViewSettings(
 private fun GeneralSettings(
     context: Context,
     scope: CoroutineScope,
-    genericInfo: GenericInfo,
     customSettings: (@Composable () -> Unit)?,
     globalSearchClick: () -> Unit
 ) {
     CategorySetting { Text(stringResource(R.string.general_menu_title)) }
 
-    val vm: GeneralViewModel = viewModel()
-
     val source by sourceFlow.collectAsState(initial = null)
-
-    DynamicListSetting(
-        settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-        dialogTitle = { Text(stringResource(R.string.chooseASource)) },
-        settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
-        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.done)) } },
-        value = source,
-        options = { genericInfo.sourceList() },
-        updateValue = { service, d ->
-            scope.launch {
-                service?.let {
-                    sourceFlow.emit(it)
-                    context.currentService = it.serviceName
-                }
-            }
-            d.value = false
-        }
-    )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
@@ -586,7 +585,7 @@ private fun GeneralSettings(
             }
     )
 
-    val activity = LocalActivity.current
+    val navController = LocalNavController.current
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
@@ -594,25 +593,7 @@ private fun GeneralSettings(
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
-            onClick = {
-                //TODO: Change this into its own screen
-                vm.getModels {
-                    ListBottomSheet(
-                        title = context.getString(R.string.chooseModelToDelete),
-                        list = vm.translationModels.toList(),
-                        onClick = { item -> vm.deleteModel(item) }
-                    ) {
-                        ListBottomSheetItemModel(
-                            primaryText = it.language,
-                            overlineText = try {
-                                Locale.forLanguageTag(it.language).displayLanguage
-                            } catch (e: Exception) {
-                                null
-                            }
-                        )
-                    }.show(activity.supportFragmentManager, "sourceChooser")
-                }
-            }
+            onClick = { navController.navigate(Screen.TranslationScreen.route) }
         )
     )
 
@@ -823,4 +804,28 @@ fun <T> DynamicListSetting(
             ) { dialogPopup.value = true }
             .then(modifier)
     )
+}
+
+@Composable
+fun TranslationScreen() {
+    val vm = viewModel<TranslationViewModel>()
+    val scope = rememberCoroutineScope()
+
+    LifecycleHandle(onResume = { vm.loadModels() })
+
+    ListBottomScreen(
+        title = stringResource(id = R.string.chooseModelToDelete),
+        list = vm.translationModels.toList(),
+        onClick = { item -> scope.launch { vm.deleteModel(item) } },
+    ) {
+        ListBottomSheetItemModel(
+            primaryText = it.language,
+            overlineText = try {
+                Locale.forLanguageTag(it.language).displayLanguage
+            } catch (e: Exception) {
+                null
+            },
+            icon = Icons.Default.Delete
+        )
+    }
 }
