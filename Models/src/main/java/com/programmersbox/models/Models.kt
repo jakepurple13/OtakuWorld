@@ -40,6 +40,7 @@ data class ChapterModel(
 
 class NormalLink(var normal: Normal? = null)
 class Normal(var storage: Array<Storage>? = emptyArray())
+@kotlinx.serialization.Serializable
 data class Storage(
     var sub: String? = null,
     var source: String? = null,

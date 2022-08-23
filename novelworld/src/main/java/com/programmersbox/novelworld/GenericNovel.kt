@@ -100,7 +100,8 @@ class GenericNovel(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
-        activity: FragmentActivity
+        activity: FragmentActivity,
+        navController: NavController
     ) {
     }
 

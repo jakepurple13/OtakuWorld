@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.TaskStackBuilder
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
@@ -51,6 +50,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navDeepLink
 import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -59,11 +60,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.utilities.Qualities
-import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.downloads.DownloaderUi
 import com.programmersbox.animeworld.downloads.DownloaderViewModel
+import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
+import com.programmersbox.animeworld.videochoice.VideoSourceViewModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
@@ -77,8 +78,6 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.*
-import com.programmersbox.uiviews.utils.components.ListBottomSheet
-import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.tonyodev.fetch2.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -111,8 +110,11 @@ class GenericAnime(val context: Context) : GenericInfo {
         getEpisodes(
             R.string.source_no_stream,
             model,
+            infoModel,
             context,
             activity,
+            navController = navController,
+            isStreaming = true,
         ) {
             if (MainActivity.cast.isCastActive()) {
                 MainActivity.cast.loadUrl(
@@ -141,7 +143,8 @@ class GenericAnime(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
-        activity: FragmentActivity
+        activity: FragmentActivity,
+        navController: NavController
     ) {
         if ((model.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(
@@ -157,15 +160,18 @@ class GenericAnime(val context: Context) : GenericInfo {
                 getEpisodes(
                     R.string.source_no_download,
                     model,
+                    infoModel,
                     context,
                     activity,
-                    { !it.link.orEmpty().endsWith(".m3u8") }
+                    { !it.link.orEmpty().endsWith(".m3u8") },
+                    navController,
+                    false
                 ) { fetchIt(it, model, activity) }
             }
         }
     }
 
-    private fun fetchIt(i: Storage, ep: ChapterModel, activity: FragmentActivity) {
+    fun fetchIt(i: Storage, ep: ChapterModel, activity: FragmentActivity) {
         try {
             fetch.setGlobalNetworkType(NetworkType.ALL)
 
@@ -203,9 +209,12 @@ class GenericAnime(val context: Context) : GenericInfo {
     private fun getEpisodes(
         errorId: Int,
         model: ChapterModel,
+        infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
         filter: (Storage) -> Boolean = { true },
+        navController: NavController,
+        isStreaming: Boolean,
         onAction: (Storage) -> Unit
     ) {
         val dialog = MaterialAlertDialogBuilder(context)
@@ -234,25 +243,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                             }
                         }
                         c.isNotEmpty() -> {
-                            ListBottomSheet(
-                                title = context.getString(R.string.choose_quality_for, model.name),
-                                list = c,
-                                onClick = { onAction(it) }
-                            ) {
-                                ListBottomSheetItemModel(
-                                    primaryText = it.quality.orEmpty(),
-                                    icon = when (getQualityFromName(it.quality.orEmpty())) {
-                                        Qualities.Unknown -> Icons.Default.DeviceUnknown
-                                        Qualities.P360 -> Icons.Default._360
-                                        Qualities.P480 -> Icons.Default._4mp
-                                        Qualities.P720 -> Icons.Default._7mp
-                                        Qualities.P1080 -> Icons.Default._10mp
-                                        Qualities.P1440 -> Icons.Default._1k
-                                        Qualities.P2160 -> Icons.Default._4k
-                                        else -> Icons.Default.DeviceUnknown
-                                    }
-                                )
-                            }.show(activity.supportFragmentManager, "qualityChooser")
+                            navController.navigate(VideoSourceViewModel.createNavigationRoute(c, infoModel, isStreaming, model))
                         }
                         else -> {
                             Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
@@ -293,7 +284,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
         LazyColumn {
@@ -334,8 +324,6 @@ class GenericAnime(val context: Context) : GenericInfo {
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class,
         ExperimentalMaterial3Api::class,
     )
@@ -512,32 +500,11 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     }
 
-    override fun settingNavSetup(fragment: Fragment, navController: NavController) {
-        /*navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                    id = ViewVideosFragment::class.java.hashCode()
-                    setClassName(ViewVideosFragment::class.java.name)
-                    addDeepLink(MainActivity.VIEW_VIDEOS)
-                }
-            )
-
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                    id = DownloadViewerFragment::class.java.hashCode()
-                    setClassName(DownloadViewerFragment::class.java.name)
-                    addDeepLink(MainActivity.VIEW_DOWNLOADS)
-                }
-            )*/
-    }
-
     @OptIn(
         ExperimentalAnimationApi::class,
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class
+        ExperimentalMaterialApi::class,
+        ExperimentalMaterialNavigationApi::class
     )
     override fun NavGraphBuilder.navSetup() {
 
@@ -561,6 +528,7 @@ class GenericAnime(val context: Context) : GenericInfo {
             exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
         ) { VideoPlayerUi() }
 
+        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

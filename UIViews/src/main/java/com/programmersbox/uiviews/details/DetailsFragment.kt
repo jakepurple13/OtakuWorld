@@ -1093,7 +1093,7 @@ private fun ChapterItem(
                 if (infoModel.source.canDownload) {
                     OutlinedButton(
                         onClick = {
-                            genericInfo.downloadChapter(c, chapters, infoModel, context, activity)
+                            genericInfo.downloadChapter(c, chapters, infoModel, context, activity, navController)
                             insertRecent()
                             if (!read.fastAny { it.url == c.url }) vm.markAs(c, true)
                         },

@@ -179,7 +179,8 @@ class GenericManga(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
-        activity: FragmentActivity
+        activity: FragmentActivity,
+        navController: NavController
     ) {
         activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
