@@ -416,24 +416,45 @@ private fun AboutSettings(
     }
 
     val source by sourceFlow.collectAsState(initial = null)
+    val navController = LocalNavController.current
 
-    DynamicListSetting(
+    PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-        dialogTitle = { Text(stringResource(R.string.chooseASource)) },
         settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
-        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.done)) } },
-        value = source,
-        options = { genericInfo.sourceList() },
-        updateValue = { service, d ->
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { navController.navigate(Screen.SourceChooserScreen.route) }
+    )
+}
+
+@Composable
+fun SourceChooserScreen() {
+    val source by sourceFlow.collectAsState(initial = null)
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val navController = LocalNavController.current
+    val genericInfo = LocalGenericInfo.current
+
+    ListBottomScreen(
+        includeInsetPadding = false,
+        title = stringResource(R.string.chooseASource),
+        list = genericInfo.sourceList(),
+        onClick = { service ->
+            navController.popBackStack()
             scope.launch {
-                service?.let {
+                service.let {
                     sourceFlow.emit(it)
                     context.currentService = it.serviceName
                 }
             }
-            d.value = false
         }
-    )
+    ) {
+        ListBottomSheetItemModel(
+            primaryText = it.serviceName,
+            icon = if (it == source) Icons.Default.Check else null
+        )
+    }
 }
 
 @ExperimentalMaterialApi

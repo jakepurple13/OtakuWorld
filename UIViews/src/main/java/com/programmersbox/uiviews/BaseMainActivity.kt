@@ -41,7 +41,6 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.bottomSheet
-import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -63,6 +62,7 @@ import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.recent.RecentView
 import com.programmersbox.uiviews.recent.RecentViewModel
 import com.programmersbox.uiviews.settings.SettingScreen
+import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
 import com.programmersbox.uiviews.utils.*
 import kotlinx.coroutines.flow.*
@@ -122,7 +122,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         }
 
         setContent {
-            val bottomSheetNavigator = rememberBottomSheetNavigator()
+            val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
             navController = rememberAnimatedNavController(bottomSheetNavigator)
 
             val systemUiController = rememberSystemUiController()
@@ -323,6 +323,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             bottomSheet(
                                 SScreen.FavoriteChoiceScreen.route + "/{${SScreen.FavoriteChoiceScreen.dbitemsArgument}}",
                             ) { FavoriteChoiceScreen() }
+
+                            bottomSheet(SScreen.SourceChooserScreen.route) { SourceChooserScreen() }
 
                             with(genericInfo) { navSetup() }
                         }
