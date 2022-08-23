@@ -437,7 +437,7 @@ fun SourceChooserScreen() {
     val genericInfo = LocalGenericInfo.current
 
     ListBottomScreen(
-        includeInsetPadding = false,
+        includeInsetPadding = true,
         title = stringResource(R.string.chooseASource),
         list = genericInfo.sourceList(),
         onClick = { service ->
