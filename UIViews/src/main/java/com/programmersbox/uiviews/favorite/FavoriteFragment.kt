@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.favorite
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -14,7 +13,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ChipDefaults
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -41,7 +39,10 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
-import com.programmersbox.uiviews.utils.components.*
+import com.programmersbox.uiviews.utils.components.GroupButton
+import com.programmersbox.uiviews.utils.components.GroupButtonModel
+import com.programmersbox.uiviews.utils.components.ListBottomScreen
+import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import me.onebone.toolbar.CollapsingToolbarScaffold
 import me.onebone.toolbar.ScrollStrategy
 import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
@@ -155,16 +156,15 @@ fun FavoriteUi(logo: MainLogo) {
                     ) {
 
                         item {
-                            CustomChip(
+                            FilterChip(
+                                selected = true,
                                 modifier = Modifier.combinedClickable(
                                     onClick = { viewModel.resetSources() },
                                     onLongClick = { viewModel.selectedSources.clear() }
                                 ),
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = M3MaterialTheme.colorScheme.primary,
-                                    labelColor = M3MaterialTheme.colorScheme.onPrimary.copy(alpha = ChipDefaults.ContentOpacity)
-                                )
-                            ) { Text("ALL") }
+                                label = { Text("ALL") },
+                                onClick = { viewModel.allClick() }
+                            )
                         }
 
                         items(
@@ -173,24 +173,16 @@ fun FavoriteUi(logo: MainLogo) {
                                 .toList()
                                 .sortedBy { it.first }
                         ) {
-                            CustomChip(
+                            FilterChip(
+                                selected = it.first in viewModel.selectedSources,
+                                onClick = { viewModel.newSource(it.first) },
+                                label = { Text(it.first) },
+                                leadingIcon = { Text("${it.second.size - 1}") },
                                 modifier = Modifier.combinedClickable(
                                     onClick = { viewModel.newSource(it.first) },
                                     onLongClick = { viewModel.singleSource(it.first) }
-                                ),
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = animateColorAsState(
-                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.primary
-                                        else M3MaterialTheme.colorScheme.surface
-                                    ).value,
-                                    labelColor = animateColorAsState(
-                                        if (it.first in viewModel.selectedSources) M3MaterialTheme.colorScheme.onPrimary
-                                        else M3MaterialTheme.colorScheme.onSurface
-                                    ).value
-                                        .copy(alpha = ChipDefaults.ContentOpacity)
-                                ),
-                                leadingIcon = { Text("${it.second.size - 1}") }
-                            ) { Text(it.first) }
+                                )
+                            )
                         }
                     }
                 }

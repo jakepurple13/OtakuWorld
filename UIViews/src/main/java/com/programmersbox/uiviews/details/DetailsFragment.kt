@@ -71,7 +71,6 @@ import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
-import com.programmersbox.uiviews.utils.components.CustomChip
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
 import kotlinx.coroutines.Dispatchers
@@ -1252,16 +1251,18 @@ private fun DetailsHeader(
 
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     items(model.genres) {
-                        CustomChip(
+                        AssistChip(
+                            onClick = {},
                             modifier = Modifier.fadeInAnimation(),
                             colors = AssistChipDefaults.assistChipColors(
-                                containerColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
+                                containerColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
                                     .animate().value,
-                                labelColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
+                                labelColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
                                     .animate().value
                                     .copy(alpha = ChipDefaults.ContentOpacity)
-                            )
-                        ) { Text(it) }
+                            ),
+                            label = { Text(it) }
+                        )
                     }
                 }
 

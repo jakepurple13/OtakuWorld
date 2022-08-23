@@ -36,7 +36,64 @@ fun CustomChip(
         color = colors.containerColor(enabled).value,
         contentColor = contentColor.copy(1.0f),
         border = border,
-        tonalElevation = 8.dp
+        tonalElevation = 8.dp,
+    ) {
+        CompositionLocalProvider(LocalContentAlpha provides contentColor.alpha) {
+            ProvideTextStyle(
+                value = MaterialTheme.typography.bodyMedium
+            ) {
+                Row(
+                    Modifier
+                        .defaultMinSize(
+                            minHeight = ChipDefaults.MinHeight
+                        )
+                        .padding(
+                            start = if (leadingIcon == null) {
+                                12.dp
+                            } else 0.dp,
+                            end = 12.dp,
+                        ),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (leadingIcon != null) {
+                        Spacer(Modifier.width(4.dp))
+                        val leadingIconContentColor by colors.leadingIconContentColor(enabled)
+                        CompositionLocalProvider(
+                            LocalContentColor provides leadingIconContentColor,
+                            LocalContentAlpha provides leadingIconContentColor.alpha,
+                            content = leadingIcon
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    content()
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@Composable
+fun CustomChip(
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = MaterialTheme.shapes.small.copy(CornerSize(percent = 50)),
+    border: BorderStroke? = null,
+    colors: ChipColors = AssistChipDefaults.assistChipColors(),
+    onClick: () -> Unit,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    content: @Composable RowScope.() -> Unit
+) {
+    val contentColor by colors.labelColor(enabled)
+    Surface(
+        modifier = modifier,
+        shape = shape,
+        color = colors.containerColor(enabled).value,
+        contentColor = contentColor.copy(1.0f),
+        border = border,
+        tonalElevation = 8.dp,
+        onClick = onClick
     ) {
         CompositionLocalProvider(LocalContentAlpha provides contentColor.alpha) {
             ProvideTextStyle(

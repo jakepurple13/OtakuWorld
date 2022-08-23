@@ -59,6 +59,18 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
         selectedSources.addAll(genericInfo.sourceList().fastMap(ApiService::serviceName))
     }
 
+    private fun clearAllSources() {
+        selectedSources.clear()
+    }
+
+    fun allClick() {
+        if (selectedSources.size == genericInfo.sourceList().size) {
+            clearAllSources()
+        } else {
+            resetSources()
+        }
+    }
+
 }
 
 sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> K) {
