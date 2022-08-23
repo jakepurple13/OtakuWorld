@@ -8,8 +8,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -37,6 +36,7 @@ class ListBottomSheetItemModel(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun <T> ListBottomScreen(
+    includeInsetPadding: Boolean = true,
     title: String,
     list: List<T>,
     onClick: (T) -> Unit,
@@ -48,7 +48,9 @@ fun <T> ListBottomScreen(
         modifier = Modifier.navigationBarsPadding()
     ) {
         stickyHeader {
-            Insets {
+            Insets(
+                insetPadding = if (includeInsetPadding) WindowInsets.statusBars.asPaddingValues() else PaddingValues(0.dp)
+            ) {
                 SmallTopAppBar(
                     title = { Text(title) },
                     navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) } },

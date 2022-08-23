@@ -17,6 +17,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
@@ -37,6 +38,13 @@ sealed class Screen(val route: String) {
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
             navController.navigate("$route?searchFor=$title") { launchSingleTop = true }
+        }
+    }
+
+    object FavoriteChoiceScreen : Screen("favorite_choice") {
+        const val dbitemsArgument = "dbitems"
+        fun navigate(navController: NavController, items: List<DbModel>) {
+            navController.navigate("$route/${Uri.encode(items.toJson())}") { launchSingleTop = true }
         }
     }
 

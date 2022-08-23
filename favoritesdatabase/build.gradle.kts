@@ -2,6 +2,7 @@ plugins {
     id("com.android.library")
     kotlin("android")
     alias(libs.plugins.ksp)
+    id("kotlinx-serialization")
 }
 
 android {
@@ -49,6 +50,7 @@ dependencies {
     implementation(Deps.gsonutils)
 
     implementation(projects.models)
+    implementation(libs.kotlinxSerialization)
 
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)

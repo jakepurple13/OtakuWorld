@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -307,20 +308,7 @@ fun FavoriteUi(logo: MainLogo) {
                                         ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
                                         ?.let { navController.navigateToDetails(it) }
                                 } else {
-                                    ListBottomSheet(
-                                        title = context.getString(R.string.chooseASource),
-                                        list = info.value,
-                                        onClick = { item ->
-                                            item
-                                                .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                                ?.let { navController.navigateToDetails(it) }
-                                        }
-                                    ) {
-                                        ListBottomSheetItemModel(
-                                            primaryText = it.title,
-                                            overlineText = it.source
-                                        )
-                                    }.show(activity.supportFragmentManager, "sourceChooser")
+                                    Screen.FavoriteChoiceScreen.navigate(navController, info.value)
                                 }
                             }
                         }
@@ -328,5 +316,27 @@ fun FavoriteUi(logo: MainLogo) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FavoriteChoiceScreen() {
+    val vm = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }
+    val genericInfo = LocalGenericInfo.current
+    val navController = LocalNavController.current
+    ListBottomScreen(
+        includeInsetPadding = false,
+        title = stringResource(R.string.chooseASource),
+        list = vm.items,
+        onClick = { item ->
+            item
+                .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                ?.let { navController.navigateToDetails(it) }
+        }
+    ) {
+        ListBottomSheetItemModel(
+            primaryText = it.title,
+            overlineText = it.source
+        )
     }
 }

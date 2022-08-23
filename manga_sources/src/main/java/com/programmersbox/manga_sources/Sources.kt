@@ -20,7 +20,9 @@ enum class Sources(
     NINE_ANIME(domain = "nineanime", source = NineAnime),
 
     //MANGAKAKALOT(domain = "mangakakalot", source = Mangakakalot),
-    MANGAMUTINY(domain = "mangamutiny", source = Mangamutiny),
+    MANGAMUTINY(domain = "mangamutiny", source = Mangamutiny, filterOutOfUpdate = true) {
+        override val notWorking: Boolean get() = true
+    },
 
     //MANGA_DOG(domain = "mangadog", source = MangaDog),
     //INKR(domain = "mangarock", source = com.programmersbox.manga_sources.mangasources.manga.INKR),

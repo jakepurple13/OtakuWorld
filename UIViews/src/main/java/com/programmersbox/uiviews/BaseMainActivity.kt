@@ -55,6 +55,7 @@ import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.all.AllView
 import com.programmersbox.uiviews.all.AllViewModel
 import com.programmersbox.uiviews.details.DetailsScreen
+import com.programmersbox.uiviews.favorite.FavoriteChoiceScreen
 import com.programmersbox.uiviews.favorite.FavoriteUi
 import com.programmersbox.uiviews.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.history.HistoryUi
@@ -318,6 +319,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
 
                             bottomSheet(SScreen.TranslationScreen.route) { TranslationScreen() }
+
+                            bottomSheet(
+                                SScreen.FavoriteChoiceScreen.route + "/{${SScreen.FavoriteChoiceScreen.dbitemsArgument}}",
+                            ) { FavoriteChoiceScreen() }
 
                             with(genericInfo) { navSetup() }
                         }

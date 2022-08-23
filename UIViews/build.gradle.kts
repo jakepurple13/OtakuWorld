@@ -3,6 +3,7 @@ plugins {
     kotlin("android")
     id("androidx.navigation.safeargs.kotlin")
     kotlin("kapt")
+    id("kotlinx-serialization")
 }
 
 android {
@@ -115,6 +116,8 @@ dependencies {
     implementation(libs.stetho)
 
     implementation(libs.workRuntime)
+
+    implementation(libs.kotlinxSerialization)
 
     // Kotlin
     api(libs.navFragment)
