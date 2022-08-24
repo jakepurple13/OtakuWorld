@@ -23,6 +23,8 @@ object AppUpdate {
         fun downloadUrl(url: AppUpdates.() -> String?) = "$update_url${url()}"
     }
 
+    private fun String.removeVariantSuffix() = removeSuffix("-noFirebase")
+
     fun checkForUpdate(oldVersion: String, newVersion: String): Boolean = try {
         val items = oldVersion.split(".").zip(newVersion.split("."))
         val major = items[0]
@@ -39,7 +41,7 @@ object AppUpdate {
             major.second.toInt() == major.first.toInt() && minor.second.toInt() > minor.first.toInt() -> true
             major.second.toInt() == major.first.toInt()
                     && minor.second.toInt() == minor.first.toInt()
-                    && patch.second.toInt() > patch.first.toInt() -> true
+                    && patch.second.removeVariantSuffix().toInt() > patch.first.removeVariantSuffix().toInt() -> true
             else -> false
         }
     } catch (e: Exception) {
