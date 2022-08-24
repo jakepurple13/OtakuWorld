@@ -38,7 +38,7 @@ import com.mikepenz.aboutlibraries.ui.compose.util.author
 import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.Insets
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 
 @Composable
 fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
@@ -65,14 +65,12 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
     Scaffold(
         modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
         topBar = {
-            Insets {
-                SmallTopAppBar(
-                    title = { Text("Libraries Used") },
-                    navigationIcon = { BackButton() },
-                    actions = { Text("${libs.size} libraries") },
-                    scrollBehavior = topAppBarScrollBehavior
-                )
-            }
+            InsetSmallTopAppBar(
+                title = { Text("Libraries Used") },
+                navigationIcon = { BackButton() },
+                actions = { Text("${libs.size} libraries") },
+                scrollBehavior = topAppBarScrollBehavior
+            )
         },
         /*bottomBar = {
             BottomAppBar {

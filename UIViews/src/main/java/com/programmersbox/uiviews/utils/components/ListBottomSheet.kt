@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.programmersbox.uiviews.utils.Insets
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
 
 class ListBottomSheetItemModel(
@@ -37,15 +37,12 @@ fun <T> ListBottomScreen(
         modifier = Modifier.navigationBarsPadding()
     ) {
         stickyHeader {
-            Insets(
-                insetPadding = if (includeInsetPadding) WindowInsets.statusBars.asPaddingValues() else PaddingValues(0.dp)
-            ) {
-                SmallTopAppBar(
-                    title = { Text(title) },
-                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) } },
-                    actions = { if (list.isNotEmpty()) Text("(${list.size})") }
-                )
-            }
+            InsetSmallTopAppBar(
+                insetPadding = if (includeInsetPadding) WindowInsets.statusBars.asPaddingValues() else PaddingValues(0.dp),
+                title = { Text(title) },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                actions = { if (list.isNotEmpty()) Text("(${list.size})") }
+            )
             Divider()
         }
         itemsIndexed(list) { index, it ->

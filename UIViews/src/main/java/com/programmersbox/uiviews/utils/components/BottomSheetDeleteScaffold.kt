@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.utils.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -123,10 +122,17 @@ fun <T> BottomSheetDeleteScaffold(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Column(modifier = Modifier.animateContentSize()) {
-                        AnimatedVisibility(state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
-                            Spacer(Modifier.padding(WindowInsets.statusBars.asPaddingValues()))
-                        }
+                    Surface(
+                        modifier = Modifier
+                            .animateContentSize()
+                            .let {
+                                if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
+                                    it.padding(WindowInsets.statusBars.asPaddingValues())
+                                } else {
+                                    it
+                                }
+                            }
+                    ) {
                         Button(
                             onClick = {
                                 scope.launch {
@@ -145,9 +151,9 @@ fun <T> BottomSheetDeleteScaffold(
                     BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
                         containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollBehavior.state.collapsedFraction).value,
+                            .containerColor(scrollBehavior.state.overlappedFraction).value,
                         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollBehavior.state.collapsedFraction).value
+                            .titleContentColor(scrollBehavior.state.overlappedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
@@ -374,26 +380,38 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
-                                else state.bottomSheetState.collapse()
-                            }
-                        },
+                    Surface(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                    ) { Text(stringResource(R.string.delete_multiple)) }
+                            .animateContentSize()
+                            .let {
+                                if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
+                                    it.padding(WindowInsets.statusBars.asPaddingValues())
+                                } else {
+                                    it
+                                }
+                            }
+                    ) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
+                                    else state.bottomSheetState.collapse()
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                        ) { Text(stringResource(R.string.delete_multiple)) }
+                    }
                 },
                 bottomBar = {
                     BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
                         containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollBehavior.state.collapsedFraction).value,
+                            .containerColor(scrollBehavior.state.overlappedFraction).value,
                         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollBehavior.state.collapsedFraction).value
+                            .titleContentColor(scrollBehavior.state.overlappedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },

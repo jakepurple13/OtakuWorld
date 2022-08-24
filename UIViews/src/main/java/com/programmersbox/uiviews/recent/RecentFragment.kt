@@ -27,7 +27,7 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.Insets
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -66,19 +66,17 @@ fun RecentView(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            Insets {
-                SmallTopAppBar(
-                    title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                    actions = {
-                        AnimatedVisibility(visible = showButton) {
-                            IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
-                                Icon(Icons.Default.ArrowUpward, null)
-                            }
+            InsetSmallTopAppBar(
+                title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                actions = {
+                    AnimatedVisibility(visible = showButton) {
+                        IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                            Icon(Icons.Default.ArrowUpward, null)
                         }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
-            }
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
         }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
@@ -87,7 +85,10 @@ fun RecentView(
             placeholder = logo.logoId,
             modifier = Modifier.padding(p)
         ) { itemInfo ->
-            Crossfade(targetState = isConnected) { connected ->
+            Crossfade(
+                targetState = isConnected,
+                modifier = Modifier.padding(p)
+            ) { connected ->
                 when (connected) {
                     false -> {
                         Column(

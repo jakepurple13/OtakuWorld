@@ -64,7 +64,6 @@ fun HistoryUi(
     logo: MainLogo
 ) {
 
-    val navController = LocalNavController.current
     val recentItems = hm.historyItems.collectAsLazyPagingItems()
     val recentSize by hm.historyCount.collectAsState(initial = 0)
     val scope = rememberCoroutineScope()
@@ -103,17 +102,15 @@ fun HistoryUi(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            Insets {
-                MediumTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    navigationIcon = { BackButton() },
-                    title = { Text(stringResource(R.string.history)) },
-                    actions = {
-                        Text("$recentSize")
-                        IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
-                    }
-                )
-            }
+            InsetMediumTopAppBar(
+                scrollBehavior = scrollBehavior,
+                navigationIcon = { BackButton() },
+                title = { Text(stringResource(R.string.history)) },
+                actions = {
+                    Text("$recentSize")
+                    IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
+                }
+            )
         }
     ) { p ->
 

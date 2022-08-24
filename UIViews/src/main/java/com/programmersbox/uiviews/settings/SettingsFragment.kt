@@ -114,12 +114,10 @@ fun SettingScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            Insets {
-                SmallTopAppBar(
-                    title = { Text(stringResource(R.string.settings)) },
-                    scrollBehavior = scrollBehavior
-                )
-            }
+            InsetSmallTopAppBar(
+                title = { Text(stringResource(R.string.settings)) },
+                scrollBehavior = scrollBehavior
+            )
         }
     ) { p ->
         Column(

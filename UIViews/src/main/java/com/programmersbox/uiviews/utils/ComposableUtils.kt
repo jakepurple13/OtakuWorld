@@ -300,19 +300,112 @@ fun BackButton() {
     IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Insets(
+fun InsetSmallTopAppBar(
     modifier: Modifier = Modifier,
     insetPadding: PaddingValues = WindowInsets.statusBars.asPaddingValues(),
-    color: Color = MaterialTheme.colorScheme.surface,
-    contentColor: Color = contentColorFor(backgroundColor = color),
-    content: @Composable BoxScope.() -> Unit
+    colors: TopAppBarColors = TopAppBarDefaults.smallTopAppBarColors(),
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    title: @Composable () -> Unit = {},
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     Surface(
         modifier = modifier,
-        color = color,
-        contentColor = contentColor,
-    ) { Box(modifier = Modifier.padding(insetPadding), content = content) }
+        color = scrollBehavior?.state?.overlappedFraction?.let { colors.containerColor(it).value } ?: MaterialTheme.colorScheme.surface,
+        contentColor = scrollBehavior?.state?.overlappedFraction?.let { colors.titleContentColor(it).value } ?: MaterialTheme.colorScheme.onSurface,
+    ) {
+        SmallTopAppBar(
+            modifier = Modifier.padding(insetPadding),
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            scrollBehavior = scrollBehavior,
+            colors = colors
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InsetCenterAlignedTopAppBar(
+    modifier: Modifier = Modifier,
+    insetPadding: PaddingValues = WindowInsets.statusBars.asPaddingValues(),
+    colors: TopAppBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    title: @Composable () -> Unit = {},
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    Surface(
+        modifier = modifier,
+        color = scrollBehavior?.state?.overlappedFraction?.let { colors.containerColor(it).value } ?: MaterialTheme.colorScheme.surface,
+        contentColor = scrollBehavior?.state?.overlappedFraction?.let { colors.titleContentColor(it).value } ?: MaterialTheme.colorScheme.onSurface,
+    ) {
+        CenterAlignedTopAppBar(
+            modifier = Modifier.padding(insetPadding),
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            scrollBehavior = scrollBehavior,
+            colors = colors
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InsetMediumTopAppBar(
+    modifier: Modifier = Modifier,
+    insetPadding: PaddingValues = WindowInsets.statusBars.asPaddingValues(),
+    colors: TopAppBarColors = TopAppBarDefaults.mediumTopAppBarColors(),
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    title: @Composable () -> Unit = {},
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    Surface(
+        modifier = modifier,
+        color = scrollBehavior?.state?.overlappedFraction?.let { colors.containerColor(it).value } ?: MaterialTheme.colorScheme.surface,
+        contentColor = scrollBehavior?.state?.overlappedFraction?.let { colors.titleContentColor(it).value } ?: MaterialTheme.colorScheme.onSurface,
+    ) {
+        MediumTopAppBar(
+            modifier = Modifier.padding(insetPadding),
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            scrollBehavior = scrollBehavior,
+            colors = colors
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InsetLargeTopAppBar(
+    modifier: Modifier = Modifier,
+    insetPadding: PaddingValues = WindowInsets.statusBars.asPaddingValues(),
+    colors: TopAppBarColors = TopAppBarDefaults.largeTopAppBarColors(),
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    title: @Composable () -> Unit = {},
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    Surface(
+        modifier = modifier,
+        color = scrollBehavior?.state?.overlappedFraction?.let { colors.containerColor(it).value } ?: MaterialTheme.colorScheme.surface,
+        contentColor = scrollBehavior?.state?.overlappedFraction?.let { colors.titleContentColor(it).value } ?: MaterialTheme.colorScheme.onSurface,
+    ) {
+        LargeTopAppBar(
+            modifier = Modifier.padding(insetPadding),
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            scrollBehavior = scrollBehavior,
+            colors = colors
+        )
+    }
 }
 
 @Composable

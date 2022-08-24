@@ -36,16 +36,13 @@ fun BannerBox(
     banner: @Composable BoxScope.() -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .then(modifier)
-    ) {
+    Box(Modifier.fillMaxSize()) {
         content()
         AnimatedVisibility(
             visible = showBanner,
             enter = bannerEnter,
             exit = bannerExit,
+            modifier = modifier
         ) { banner() }
     }
 }

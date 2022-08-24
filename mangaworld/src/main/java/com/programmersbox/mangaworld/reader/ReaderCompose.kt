@@ -860,9 +860,9 @@ private fun BottomBar(
     BottomAppBar(
         modifier = modifier,
         containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .containerColor(scrollBehavior.state.collapsedFraction).value,
+            .containerColor(scrollBehavior.state.overlappedFraction).value,
         contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .titleContentColor(scrollBehavior.state.collapsedFraction).value
+            .titleContentColor(scrollBehavior.state.overlappedFraction).value
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0

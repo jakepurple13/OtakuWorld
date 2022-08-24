@@ -101,19 +101,17 @@ fun DownloaderUi() {
         },
         onMultipleRemove = { downloadItems -> viewModel.fetch.delete(downloadItems.fastMap { it.id }) },
         topBar = {
-            Insets {
-                SmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    navigationIcon = { BackButton() },
-                    actions = { IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) } },
-                    title = {
-                        Text(
-                            stringResource(id = R.string.in_progress_downloads),
-                            style = M3MaterialTheme.typography.titleLarge
-                        )
-                    }
-                )
-            }
+            InsetSmallTopAppBar(
+                scrollBehavior = scrollBehavior,
+                navigationIcon = { BackButton() },
+                actions = { IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) } },
+                title = {
+                    Text(
+                        stringResource(id = R.string.in_progress_downloads),
+                        style = M3MaterialTheme.typography.titleLarge
+                    )
+                }
+            )
         },
         itemUi = { download ->
             ListItem(

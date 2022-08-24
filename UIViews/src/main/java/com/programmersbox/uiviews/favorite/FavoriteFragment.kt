@@ -43,9 +43,6 @@ import com.programmersbox.uiviews.utils.components.GroupButton
 import com.programmersbox.uiviews.utils.components.GroupButtonModel
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import me.onebone.toolbar.CollapsingToolbarScaffold
-import me.onebone.toolbar.ScrollStrategy
-import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
@@ -71,22 +68,25 @@ fun FavoriteUi(logo: MainLogo) {
 
     val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    CollapsingToolbarScaffold(
-        modifier = Modifier,
-        state = rememberCollapsingToolbarScaffoldState(),
-        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-        toolbar = {
-            Insets {
+    var showBanner by remember { mutableStateOf(false) }
+
+    M3OtakuBannerBox(
+        showBanner = showBanner,
+        placeholder = logo.logoId,
+        modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
+    ) { itemInfo ->
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.background(
-                        TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.state.collapsedFraction).value
+                        TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.state.overlappedFraction).value
                     )
                 ) {
-                    SmallTopAppBar(
+                    InsetSmallTopAppBar(
                         scrollBehavior = scrollBehavior,
                         navigationIcon = { BackButton() },
                         title = { Text(stringResource(R.string.viewFavoritesMenu)) },
@@ -154,7 +154,6 @@ fun FavoriteUi(logo: MainLogo) {
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
                     ) {
-
                         item {
                             FilterChip(
                                 selected = true,
@@ -187,121 +186,111 @@ fun FavoriteUi(logo: MainLogo) {
                     }
                 }
             }
-        }
-    ) {
-        var showBanner by remember { mutableStateOf(false) }
+        ) { p ->
+            if (showing.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(p)
+                ) {
 
-        M3OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = logo.logoId,
-            modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-        ) { itemInfo ->
-            Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) { p ->
-                if (showing.isEmpty()) {
-                    Box(
+                    Surface(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(p)
+                            .fillMaxWidth()
+                            .padding(5.dp),
+                        tonalElevation = 5.dp,
+                        shape = RoundedCornerShape(5.dp)
                     ) {
 
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp),
-                            tonalElevation = 5.dp,
-                            shape = RoundedCornerShape(5.dp)
-                        ) {
+                        Column(modifier = Modifier) {
 
-                            Column(modifier = Modifier) {
+                            Text(
+                                text = stringResource(id = R.string.get_started),
+                                style = M3MaterialTheme.typography.headlineSmall,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
 
-                                Text(
-                                    text = stringResource(id = R.string.get_started),
-                                    style = M3MaterialTheme.typography.headlineSmall,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
+                            Text(
+                                text = stringResource(R.string.get_started_info),
+                                style = M3MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
 
-                                Text(
-                                    text = stringResource(R.string.get_started_info),
-                                    style = M3MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
-
-                                Button(
-                                    onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
-                                    modifier = Modifier
-                                        .align(Alignment.CenterHorizontally)
-                                        .padding(vertical = 5.dp)
-                                ) { Text(text = stringResource(R.string.add_a_favorite)) }
-
-                            }
+                            Button(
+                                onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
+                                    .padding(vertical = 5.dp)
+                            ) { Text(text = stringResource(R.string.add_a_favorite)) }
 
                         }
+
                     }
-                } else {
-                    LazyVerticalGrid(
-                        columns = adaptiveGridCell(),
-                        state = rememberLazyGridState(),
-                        contentPadding = p,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(
-                            showing
-                                .groupBy(DbModel::title)
-                                .entries
-                                .let {
-                                    when (val s = viewModel.sortedBy) {
-                                        is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
-                                        is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
-                                        is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
-                                    }
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = adaptiveGridCell(),
+                    state = rememberLazyGridState(),
+                    contentPadding = p,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(
+                        showing
+                            .groupBy(DbModel::title)
+                            .entries
+                            .let {
+                                when (val s = viewModel.sortedBy) {
+                                    is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
+                                    is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
+                                    is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
                                 }
-                                .let { if (viewModel.reverse) it.reversed() else it }
-                                .toTypedArray(),
-                            key = { it.key }
-                        ) { info ->
-                            M3CoverCard(
-                                onLongPress = { c ->
-                                    itemInfo.value = if (c == ComponentState.Pressed) {
-                                        info.value.randomOrNull()
-                                            ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                    } else null
-                                    showBanner = c == ComponentState.Pressed
-                                },
-                                imageUrl = info.value.randomOrNull()?.imageUrl.orEmpty(),
-                                name = info.key,
-                                placeHolder = logo.logoId,
-                                favoriteIcon = {
-                                    if (info.value.size > 1) {
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.TopStart)
-                                                .padding(4.dp)
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Circle,
-                                                contentDescription = null,
-                                                tint = M3MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                            Text(
-                                                info.value.size.toString(),
-                                                color = M3MaterialTheme.colorScheme.onPrimary,
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                        }
-                                    }
-                                }
-                            ) {
-                                if (info.value.size == 1) {
-                                    info.value
-                                        .firstOrNull()
+                            }
+                            .let { if (viewModel.reverse) it.reversed() else it }
+                            .toTypedArray(),
+                        key = { it.key }
+                    ) { info ->
+                        M3CoverCard(
+                            onLongPress = { c ->
+                                itemInfo.value = if (c == ComponentState.Pressed) {
+                                    info.value.randomOrNull()
                                         ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                        ?.let { navController.navigateToDetails(it) }
-                                } else {
-                                    Screen.FavoriteChoiceScreen.navigate(navController, info.value)
+                                } else null
+                                showBanner = c == ComponentState.Pressed
+                            },
+                            imageUrl = info.value.randomOrNull()?.imageUrl.orEmpty(),
+                            name = info.key,
+                            placeHolder = logo.logoId,
+                            favoriteIcon = {
+                                if (info.value.size > 1) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopStart)
+                                            .padding(4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Circle,
+                                            contentDescription = null,
+                                            tint = M3MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                        Text(
+                                            info.value.size.toString(),
+                                            color = M3MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
+                            }
+                        ) {
+                            if (info.value.size == 1) {
+                                info.value
+                                    .firstOrNull()
+                                    ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                    ?.let { navController.navigateToDetails(it) }
+                            } else {
+                                Screen.FavoriteChoiceScreen.navigate(navController, info.value)
                             }
                         }
                     }

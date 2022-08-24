@@ -47,7 +47,7 @@ import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.mangaworld.useNewReaderFlow
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.Insets
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.components.PermissionRequest
@@ -80,13 +80,11 @@ fun DownloadScreen() {
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            Insets {
-                SmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(stringResource(R.string.downloaded_chapters)) },
-                    navigationIcon = { BackButton() }
-                )
-            }
+            InsetSmallTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = { Text(stringResource(R.string.downloaded_chapters)) },
+                navigationIcon = { BackButton() }
+            )
         }
     ) { p1 ->
         PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -111,7 +109,9 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
     else LazyColumn(
         contentPadding = p1,
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(4.dp)
     ) {
         animatedItems(
             f,

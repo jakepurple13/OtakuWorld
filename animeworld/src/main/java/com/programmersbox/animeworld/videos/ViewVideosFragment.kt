@@ -104,24 +104,22 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     BottomSheetDeleteScaffold(
         bottomScrollBehavior = scrollBehavior,
         topBar = {
-            Insets {
-                SmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    navigationIcon = { BackButton() },
-                    title = { Text(stringResource(R.string.downloaded_videos)) },
-                    actions = {
-                        AndroidView(
-                            factory = { context ->
-                                MediaRouteButton(context).apply {
-                                    MainActivity.cast.showIntroductoryOverlay(this)
-                                    MainActivity.cast.setMediaRouteMenu(context, this)
-                                }
+            InsetSmallTopAppBar(
+                scrollBehavior = scrollBehavior,
+                navigationIcon = { BackButton() },
+                title = { Text(stringResource(R.string.downloaded_videos)) },
+                actions = {
+                    AndroidView(
+                        factory = { context ->
+                            MediaRouteButton(context).apply {
+                                MainActivity.cast.showIntroductoryOverlay(this)
+                                MainActivity.cast.setMediaRouteMenu(context, this)
                             }
-                        )
-                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
-                    }
-                )
-            }
+                        }
+                    )
+                    IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                }
+            )
         },
         state = state,
         listOfItems = items,

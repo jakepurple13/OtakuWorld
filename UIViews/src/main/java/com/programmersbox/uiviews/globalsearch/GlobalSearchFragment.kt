@@ -60,9 +60,6 @@ import com.programmersbox.uiviews.utils.components.asAutoCompleteEntities
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import me.onebone.toolbar.CollapsingToolbarScaffold
-import me.onebone.toolbar.ScrollStrategy
-import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
@@ -107,24 +104,46 @@ fun GlobalSearchView(
         .searchHistory("%${viewModel.searchText}%")
         .collectAsState(emptyList())
 
-    CollapsingToolbarScaffold(
-        modifier = Modifier,
-        state = rememberCollapsingToolbarScaffoldState(),
-        scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-        toolbar = {
-            Insets {
+    var showBanner by remember { mutableStateOf(false) }
+
+    M3OtakuBannerBox(
+        showBanner = showBanner,
+        placeholder = mainLogo.logoId,
+        modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
+    ) { itemInfo ->
+        val bottomScaffold = rememberBottomSheetScaffoldState()
+        var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
+
+        BackHandler(bottomScaffold.bottomSheetState.isExpanded) {
+            scope.launch {
+                try {
+                    bottomScaffold.bottomSheetState.collapse()
+                } catch (e: Exception) {
+                    navController.popBackStack()
+                }
+            }
+        }
+
+        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+        BottomSheetScaffold(
+            backgroundColor = M3MaterialTheme.colorScheme.background,
+            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
+            scaffoldState = bottomScaffold,
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
                 Column(
                     modifier = Modifier
                         .background(
                             TopAppBarDefaults
                                 .smallTopAppBarColors()
-                                .containerColor(0f).value
+                                .containerColor(scrollBehavior.state.overlappedFraction).value
                         )
-                        .padding(5.dp)
                 ) {
-                    SmallTopAppBar(
+                    InsetSmallTopAppBar(
                         navigationIcon = { BackButton() },
-                        title = { Text(stringResource(R.string.global_search)) }
+                        title = { Text(stringResource(R.string.global_search)) },
+                        scrollBehavior = scrollBehavior
                     )
                     AutoCompleteBox(
                         items = history.asAutoCompleteEntities { _, _ -> true },
@@ -190,185 +209,158 @@ fun GlobalSearchView(
                         }
                     )
                 }
-            }
-        }
-    ) {
-        var showBanner by remember { mutableStateOf(false) }
-
-        M3OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = mainLogo.logoId,
-            modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-        ) { itemInfo ->
-            val bottomScaffold = rememberBottomSheetScaffoldState()
-            var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
-
-            BackHandler(bottomScaffold.bottomSheetState.isExpanded) {
-                scope.launch {
-                    try {
-                        bottomScaffold.bottomSheetState.collapse()
-                    } catch (e: Exception) {
-                        navController.popBackStack()
+            },
+            sheetContent = searchModelBottom?.let { s ->
+                {
+                    val topAppBarScrollState = rememberTopAppBarState()
+                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+                    Scaffold(
+                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        topBar = {
+                            SmallTopAppBar(
+                                scrollBehavior = scrollBehavior,
+                                title = { Text(s.apiName) },
+                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                            )
+                        }
+                    ) { p ->
+                        LazyVerticalGrid(
+                            columns = adaptiveGridCell(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            contentPadding = p
+                        ) {
+                            items(s.data) { m ->
+                                SearchCoverCard(
+                                    model = m,
+                                    placeHolder = mainLogoDrawable,
+                                    onLongPress = { c ->
+                                        itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                        showBanner = c == ComponentState.Pressed
+                                    }
+                                ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
+                            }
+                        }
                     }
                 }
-            }
-
-            BottomSheetScaffold(
-                backgroundColor = M3MaterialTheme.colorScheme.background,
-                contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
-                scaffoldState = bottomScaffold,
-                sheetContent = searchModelBottom?.let { s ->
-                    {
-                        val topAppBarScrollState = rememberTopAppBarState()
-                        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
-                        Scaffold(
-                            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                            topBar = {
-                                SmallTopAppBar(
-                                    scrollBehavior = scrollBehavior,
-                                    title = { Text(s.apiName) },
-                                    actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
-                                )
-                            }
-                        ) { p ->
-                            LazyVerticalGrid(
-                                columns = adaptiveGridCell(),
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                contentPadding = p
-                            ) {
-                                items(s.data) { m ->
-                                    SearchCoverCard(
-                                        model = m,
-                                        placeHolder = mainLogoDrawable,
-                                        onLongPress = { c ->
-                                            itemInfo.value = if (c == ComponentState.Pressed) m else null
-                                            showBanner = c == ComponentState.Pressed
-                                        }
-                                    ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
-                                }
-                            }
+            } ?: {},
+            sheetPeekHeight = 0.dp,
+        ) {
+            Crossfade(targetState = networkState) { network ->
+                when (network) {
+                    false -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(it),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                Icons.Default.CloudOff,
+                                null,
+                                modifier = Modifier.size(50.dp, 50.dp),
+                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                            )
+                            Text(
+                                stringResource(R.string.you_re_offline),
+                                style = M3MaterialTheme.typography.titleLarge,
+                                color = M3MaterialTheme.colorScheme.onBackground
+                            )
                         }
                     }
-                } ?: {},
-                sheetPeekHeight = 0.dp,
-            ) {
-                Crossfade(targetState = networkState) { network ->
-                    when (network) {
-                        false -> {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(it),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
+                    true -> {
+                        SwipeRefresh(
+                            state = swipeRefreshState,
+                            onRefresh = {},
+                            swipeEnabled = false,
+                            modifier = Modifier.padding(it)
+                        ) {
+                            LazyColumn(
+                                state = listState,
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
-                                Image(
-                                    Icons.Default.CloudOff,
-                                    null,
-                                    modifier = Modifier.size(50.dp, 50.dp),
-                                    colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                                )
-                                Text(
-                                    stringResource(R.string.you_re_offline),
-                                    style = M3MaterialTheme.typography.titleLarge,
-                                    color = M3MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
-                        true -> {
-                            SwipeRefresh(
-                                state = swipeRefreshState,
-                                onRefresh = {},
-                                swipeEnabled = false,
-                                modifier = Modifier.padding(it)
-                            ) {
-                                LazyColumn(
-                                    state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    if (swipeRefreshState.isRefreshing) {
-                                        items(3) {
-                                            val placeholderColor =
-                                                contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
-                                                    .copy(0.1f)
-                                                    .compositeOver(M3MaterialTheme.colorScheme.surface)
-                                            Surface(
-                                                modifier = Modifier.placeholder(true, color = placeholderColor),
-                                                tonalElevation = 5.dp,
-                                                shape = MaterialTheme.shapes.medium
-                                            ) {
-                                                Column {
-                                                    Box(modifier = Modifier.fillMaxWidth()) {
-                                                        Text(
-                                                            "Otaku",
-                                                            modifier = Modifier
-                                                                .align(Alignment.CenterStart)
-                                                                .padding(start = 5.dp)
-                                                        )
-                                                        IconButton(
-                                                            onClick = {},
-                                                            modifier = Modifier.align(Alignment.CenterEnd)
-                                                        ) { Icon(Icons.Default.ChevronRight, null) }
-                                                    }
-                                                    LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
+                                if (swipeRefreshState.isRefreshing) {
+                                    items(3) {
+                                        val placeholderColor =
+                                            contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
+                                                .copy(0.1f)
+                                                .compositeOver(M3MaterialTheme.colorScheme.surface)
+                                        Surface(
+                                            modifier = Modifier.placeholder(true, color = placeholderColor),
+                                            tonalElevation = 5.dp,
+                                            shape = MaterialTheme.shapes.medium
+                                        ) {
+                                            Column {
+                                                Box(modifier = Modifier.fillMaxWidth()) {
+                                                    Text(
+                                                        "Otaku",
+                                                        modifier = Modifier
+                                                            .align(Alignment.CenterStart)
+                                                            .padding(start = 5.dp)
+                                                    )
+                                                    IconButton(
+                                                        onClick = {},
+                                                        modifier = Modifier.align(Alignment.CenterEnd)
+                                                    ) { Icon(Icons.Default.ChevronRight, null) }
                                                 }
+                                                LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
                                             }
                                         }
-                                    } else if (viewModel.searchListPublisher.isNotEmpty()) {
-                                        items(viewModel.searchListPublisher) { i ->
-                                            androidx.compose.material3.Surface(
-                                                modifier = Modifier.clickable {
-                                                    searchModelBottom = i
-                                                    scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                },
-                                                tonalElevation = 5.dp,
-                                                shape = MaterialTheme.shapes.medium
-                                            ) {
-                                                Column {
-                                                    Box(
+                                    }
+                                } else if (viewModel.searchListPublisher.isNotEmpty()) {
+                                    items(viewModel.searchListPublisher) { i ->
+                                        androidx.compose.material3.Surface(
+                                            modifier = Modifier.clickable {
+                                                searchModelBottom = i
+                                                scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                            },
+                                            tonalElevation = 5.dp,
+                                            shape = MaterialTheme.shapes.medium
+                                        ) {
+                                            Column {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable {
+                                                            searchModelBottom = i
+                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                        }
+                                                ) {
+                                                    Text(
+                                                        i.apiName,
                                                         modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .clickable {
-                                                                searchModelBottom = i
-                                                                scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                            }
+                                                            .align(Alignment.CenterStart)
+                                                            .padding(start = 5.dp)
+                                                    )
+                                                    IconButton(
+                                                        onClick = {
+                                                            searchModelBottom = i
+                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                                        },
+                                                        modifier = Modifier.align(Alignment.CenterEnd)
                                                     ) {
-                                                        Text(
-                                                            i.apiName,
-                                                            modifier = Modifier
-                                                                .align(Alignment.CenterStart)
-                                                                .padding(start = 5.dp)
-                                                        )
-                                                        IconButton(
-                                                            onClick = {
-                                                                searchModelBottom = i
-                                                                scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                            },
-                                                            modifier = Modifier.align(Alignment.CenterEnd)
-                                                        ) {
-                                                            Row {
-                                                                Text(i.data.size.toString())
-                                                                Icon(Icons.Default.ChevronRight, null)
-                                                            }
+                                                        Row {
+                                                            Text(i.data.size.toString())
+                                                            Icon(Icons.Default.ChevronRight, null)
                                                         }
                                                     }
-                                                    LazyRow(
-                                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                                        modifier = Modifier
-                                                            .padding(horizontal = 4.dp)
-                                                            .padding(bottom = 4.dp)
-                                                    ) {
-                                                        items(i.data) { m ->
-                                                            SearchCoverCard(
-                                                                model = m,
-                                                                placeHolder = mainLogoDrawable,
-                                                                onLongPress = { c ->
-                                                                    itemInfo.value = if (c == ComponentState.Pressed) m else null
-                                                                    showBanner = c == ComponentState.Pressed
-                                                                }
-                                                            ) { navController.navigateToDetails(m) }
-                                                        }
+                                                }
+                                                LazyRow(
+                                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 4.dp)
+                                                        .padding(bottom = 4.dp)
+                                                ) {
+                                                    items(i.data) { m ->
+                                                        SearchCoverCard(
+                                                            model = m,
+                                                            placeHolder = mainLogoDrawable,
+                                                            onLongPress = { c ->
+                                                                itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                                showBanner = c == ComponentState.Pressed
+                                                            }
+                                                        ) { navController.navigateToDetails(m) }
                                                     }
                                                 }
                                             }

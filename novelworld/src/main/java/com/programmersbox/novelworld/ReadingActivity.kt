@@ -265,13 +265,11 @@ fun NovelReader() {
                 Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     topBar = {
-                        Insets {
-                            SmallTopAppBar(
-                                title = { Text(readVm.title) },
-                                actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
-                                scrollBehavior = scrollBehavior
-                            )
-                        }
+                        InsetSmallTopAppBar(
+                            title = { Text(readVm.title) },
+                            actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
+                            scrollBehavior = scrollBehavior
+                        )
                     },
                     bottomBar = {
                         if (!BuildConfig.DEBUG) {
@@ -523,9 +521,9 @@ fun BottomBar(
         BottomAppBar(
             modifier = modifier,
             containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                .containerColor(contentScrollBehavior.state.collapsedFraction).value,
+                .containerColor(contentScrollBehavior.state.overlappedFraction).value,
             contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                .titleContentColor(contentScrollBehavior.state.collapsedFraction).value
+                .titleContentColor(contentScrollBehavior.state.overlappedFraction).value
         ) {
 
             val prevShown = readVm.currentChapter < readVm.list.lastIndex

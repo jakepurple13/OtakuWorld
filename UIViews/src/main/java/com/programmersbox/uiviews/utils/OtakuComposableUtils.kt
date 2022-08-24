@@ -411,9 +411,9 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
 @ExperimentalMaterialApi
 @Composable
 fun M3OtakuBannerBox(
+    modifier: Modifier = Modifier,
     showBanner: Boolean = false,
     placeholder: Int,
-    modifier: Modifier = Modifier,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val context = LocalContext.current

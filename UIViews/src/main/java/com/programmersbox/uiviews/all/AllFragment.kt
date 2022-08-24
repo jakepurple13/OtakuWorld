@@ -13,15 +13,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material3.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +42,7 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.Insets
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -89,25 +91,24 @@ fun AllView(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
         topBar = {
-            Insets {
-                SmallTopAppBar(
-                    title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                    actions = {
-                        AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
-                            androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
-                                Icon(Icons.Default.ArrowUpward, null)
-                            }
+            InsetSmallTopAppBar(
+                title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                actions = {
+                    AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
+                        androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                            Icon(Icons.Default.ArrowUpward, null)
                         }
-                    },
-                    scrollBehavior = scrollBehaviorTop
-                )
-            }
+                    }
+                },
+                scrollBehavior = scrollBehaviorTop
+            )
         }
     ) { p1 ->
         var showBanner by remember { mutableStateOf(false) }
         M3OtakuBannerBox(
             showBanner = showBanner,
-            placeholder = logo.logoId
+            placeholder = logo.logoId,
+            modifier = Modifier.padding(p1)
         ) { itemInfo ->
             Crossfade(targetState = isConnected) { connected ->
                 when (connected) {
@@ -147,7 +148,7 @@ fun AllView(
                                             modifier = Modifier
                                                 .background(
                                                     TopAppBarDefaults.smallTopAppBarColors()
-                                                        .containerColor(scrollBehavior.state.collapsedFraction).value
+                                                        .containerColor(scrollBehavior.state.overlappedFraction).value
                                                 )
                                         ) {
                                             Button(
