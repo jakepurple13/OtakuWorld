@@ -11,6 +11,8 @@ android {
     productFlavors {
         noFirebase {
             dimension "version"
+            versionNameSuffix "-noFirebase"
+            applicationIdSuffix ".noFirebase"
         }
         full {
             dimension "version"
@@ -21,7 +23,7 @@ android {
         defaultFlavorNaming true
         buildTypes {
             debug { filters blueRibbonFilter() }
-            beta { enable false }
+            beta { filters blueRibbonFilter() }
         }
     }
 }
