@@ -34,10 +34,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -150,7 +147,7 @@ fun DetailsScreen(
         var c by remember { mutableStateOf(statusBar) }
         val ac by animateColorAsState(c)
 
-        LaunchedEffect(ac) { systemUiController.setStatusBarColor(ac) }
+        LaunchedEffect(ac) { systemUiController.setStatusBarColor(Color.Transparent, darkIcons = ac.luminance() > 0.5f) }
 
         SideEffect { currentDetailsUrl = details.itemModel!!.url }
 
