@@ -29,7 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,12 +38,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.core.app.TaskStackBuilder
-import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
@@ -52,6 +50,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navDeepLink
 import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -60,29 +60,28 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.utilities.Qualities
-import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
-import com.programmersbox.animeworld.databinding.MiniControllerBinding
+import com.programmersbox.animeworld.downloads.DownloaderUi
+import com.programmersbox.animeworld.downloads.DownloaderViewModel
+import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
+import com.programmersbox.animeworld.videochoice.VideoSourceViewModel
+import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
+import com.programmersbox.animeworld.videoplayer.VideoViewModel
+import com.programmersbox.animeworld.videos.ViewVideoScreen
+import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.*
 import com.tonyodev.fetch2.*
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
-import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 
 val appModule = module {
@@ -92,8 +91,6 @@ val appModule = module {
 }
 
 class GenericAnime(val context: Context) : GenericInfo {
-
-    private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") anime_no_firebase_file else anime_file }
     override val deepLinkUri: String get() = "animeworld://"
@@ -113,8 +110,11 @@ class GenericAnime(val context: Context) : GenericInfo {
         getEpisodes(
             R.string.source_no_stream,
             model,
+            infoModel,
             context,
             activity,
+            navController = navController,
+            isStreaming = true,
         ) {
             if (MainActivity.cast.isCastActive()) {
                 MainActivity.cast.loadUrl(
@@ -125,14 +125,12 @@ class GenericAnime(val context: Context) : GenericInfo {
                     it.headers
                 )
             } else {
-                MainActivity.activity.startActivity(
-                    Intent(context, VideoPlayerActivity::class.java).apply {
-                        putExtra("showPath", it.link)
-                        putExtra("showName", model.name)
-                        putExtra("referer", it.headers["referer"])
-                        putExtra("chapterModel", it.toJson())
-                        putExtra("downloadOrStream", false)
-                    }
+                context.navigateToVideoPlayer(
+                    navController,
+                    it.link,
+                    model.name,
+                    false,
+                    it.headers["referer"] ?: it.source.orEmpty()
                 )
             }
         }
@@ -145,7 +143,8 @@ class GenericAnime(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
-        activity: FragmentActivity
+        activity: FragmentActivity,
+        navController: NavController
     ) {
         if ((model.source as? ShowApi)?.canDownload == false) {
             Toast.makeText(
@@ -161,27 +160,28 @@ class GenericAnime(val context: Context) : GenericInfo {
                 getEpisodes(
                     R.string.source_no_download,
                     model,
+                    infoModel,
                     context,
                     activity,
-                    { !it.link.orEmpty().endsWith(".m3u8") }
-                ) { fetchIt(it, model) }
+                    { !it.link.orEmpty().endsWith(".m3u8") },
+                    navController,
+                    false
+                ) { fetchIt(it, model, activity) }
             }
         }
     }
 
-    private fun fetchIt(i: Storage, ep: ChapterModel) {
-
+    fun fetchIt(i: Storage, ep: ChapterModel, activity: FragmentActivity) {
         try {
-
             fetch.setGlobalNetworkType(NetworkType.ALL)
 
             fun getNameFromUrl(url: String): String {
-                return Uri.parse(url).lastPathSegment?.let { if (it.isNotEmpty()) it else ep.name } ?: ep.name
+                return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { ep.name } } ?: ep.name
             }
 
             val requestList = arrayListOf<Request>()
 
-            val filePath = context.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
+            val filePath = activity.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
             val request = Request(i.link!!, filePath)
             request.priority = Priority.HIGH
             request.networkType = NetworkType.ALL
@@ -202,16 +202,19 @@ class GenericAnime(val context: Context) : GenericInfo {
 
             fetch.enqueue(requestList) {}
         } catch (e: Exception) {
-            MainActivity.activity.runOnUiThread { Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
+            activity.runOnUiThread { Toast.makeText(activity, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
         }
     }
 
     private fun getEpisodes(
         errorId: Int,
         model: ChapterModel,
+        infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
         filter: (Storage) -> Boolean = { true },
+        navController: NavController,
+        isStreaming: Boolean,
         onAction: (Storage) -> Unit
     ) {
         val dialog = MaterialAlertDialogBuilder(context)
@@ -220,55 +223,34 @@ class GenericAnime(val context: Context) : GenericInfo {
             .setIcon(R.mipmap.ic_launcher)
             .setCancelable(false)
             .create()
-
-        model.getChapterInfo()
-            .doOnSubscribe { runOnUIThread { dialog.show() } }
-            .onErrorReturnItem(emptyList())
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .timeout(15, TimeUnit.SECONDS)
-            .doOnError {
-                runOnUIThread {
-                    Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
+        activity.lifecycleScope.launch {
+            model.getChapterInfo()
+                .onStart { runOnUIThread { dialog.show() } }
+                .catch {
+                    runOnUIThread {
+                        Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                    emit(emptyList())
                 }
-            }
-            .map { it.filter(filter) }
-            .subscribeBy { c ->
-                dialog.dismiss()
-                when {
-                    c.size == 1 -> {
-                        when (model.source) {
-                            else -> c.firstOrNull()?.let { onAction(it) }
+                .map { it.filter(filter) }
+                .collect { c ->
+                    dialog.dismiss()
+                    when {
+                        c.size == 1 -> {
+                            when (model.source) {
+                                else -> c.firstOrNull()?.let { onAction(it) }
+                            }
+                        }
+                        c.isNotEmpty() -> {
+                            navController.navigate(VideoSourceViewModel.createNavigationRoute(c, infoModel, isStreaming, model))
+                        }
+                        else -> {
+                            Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
                         }
                     }
-                    c.isNotEmpty() -> {
-                        ListBottomSheet(
-                            title = context.getString(R.string.choose_quality_for, model.name),
-                            list = c,
-                            onClick = { onAction(it) }
-                        ) {
-                            ListBottomSheetItemModel(
-                                primaryText = it.quality.orEmpty(),
-                                icon = when (getQualityFromName(it.quality.orEmpty())) {
-                                    Qualities.Unknown -> Icons.Default.DeviceUnknown
-                                    Qualities.P360 -> Icons.Default._360
-                                    Qualities.P480 -> Icons.Default._4mp
-                                    Qualities.P720 -> Icons.Default._7mp
-                                    Qualities.P1080 -> Icons.Default._10mp
-                                    Qualities.P1440 -> Icons.Default._1k
-                                    Qualities.P2160 -> Icons.Default._4k
-                                    else -> Icons.Default.DeviceUnknown
-                                }
-                            )
-                        }.show(activity.supportFragmentManager, "qualityChooser")
-                    }
-                    else -> {
-                        Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
-                    }
                 }
-            }
-            .addTo(disposable)
+        }
     }
 
     override fun sourceList(): List<ApiService> = Sources.values().filterNot(Sources::notWorking).toList()
@@ -281,11 +263,9 @@ class GenericAnime(val context: Context) : GenericInfo {
         null
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     @Composable
     override fun DetailActions(infoModel: InfoModel, tint: Color) {
-        val showCast by MainActivity.cast.sessionConnected()
-            .subscribeAsState(initial = true)
+        val showCast by MainActivity.cast.sessionConnected().collectAsState(initial = true)
 
         AnimatedVisibility(
             visible = showCast,
@@ -304,7 +284,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
         LazyColumn {
@@ -345,8 +324,6 @@ class GenericAnime(val context: Context) : GenericInfo {
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class,
         ExperimentalMaterial3Api::class,
     )
@@ -397,13 +374,9 @@ class GenericAnime(val context: Context) : GenericInfo {
         var connection by mutableStateOf(false)
         var session by mutableStateOf(false)
 
-        private val connectionStatus = MainActivity.cast.sessionConnected().subscribe { connection = it }
-        private val sessionStatus = MainActivity.cast.sessionStatus().subscribe { session = it }
-
-        override fun onCleared() {
-            super.onCleared()
-            connectionStatus.dispose()
-            sessionStatus.dispose()
+        init {
+            viewModelScope.launch { MainActivity.cast.sessionConnected().onEach { connection = it }.collect() }
+            viewModelScope.launch { MainActivity.cast.sessionStatus().onEach { session = it }.collect() }
         }
     }
 
@@ -419,7 +392,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloadViewModel.VideoViewerRoute) { launchSingleTop = true } }
+                ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
             )
 
             val castingViewModel: CastingViewModel = viewModel()
@@ -444,7 +417,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                         } else {
                             MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
                                 .also { m ->
-                                    CastContext.getSharedInstance(context).mergedSelector?.let { m.routeSelector = it }
+                                    CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
                                 }
                                 .show(activity.supportFragmentManager, "media_chooser")
                         }
@@ -465,6 +438,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         generalSettings {
             val context = LocalContext.current
             var folderLocation by remember { mutableStateOf(context.folderLocation) }
+            val activity = LocalActivity.current
 
             PreferenceSetting(
                 settingTitle = { androidx.compose.material3.Text(stringResource(R.string.folder_location)) },
@@ -474,7 +448,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
-                    MainActivity.activity.requestPermissions(
+                    activity.requestPermissions(
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     ) {
@@ -500,8 +474,19 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
 
         playerSettings {
+
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
+
+            val player by context.useNewPlayerFlow.collectAsState(true)
+
+            SwitchSetting(
+                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.use_new_player)) },
+                summaryValue = { androidx.compose.material3.Text(stringResource(R.string.use_new_player_description)) },
+                settingIcon = { androidx.compose.material3.Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
+                value = player,
+                updateValue = { scope.launch { context.updatePref(USER_NEW_PLAYER, it) } }
+            )
 
             val ignoreSsl by context.ignoreSsl.collectAsState(initial = true)
 
@@ -515,40 +500,19 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     }
 
-    override fun settingNavSetup(fragment: Fragment, navController: NavController) {
-        /*navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                    id = ViewVideosFragment::class.java.hashCode()
-                    setClassName(ViewVideosFragment::class.java.name)
-                    addDeepLink(MainActivity.VIEW_VIDEOS)
-                }
-            )
-
-        navController
-            .graph
-            .addDestination(
-                FragmentNavigator(fragment.requireContext(), fragment.childFragmentManager, R.id.setting_nav).createDestination().apply {
-                    id = DownloadViewerFragment::class.java.hashCode()
-                    setClassName(DownloadViewerFragment::class.java.name)
-                    addDeepLink(MainActivity.VIEW_DOWNLOADS)
-                }
-            )*/
-    }
-
     @OptIn(
         ExperimentalAnimationApi::class,
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class
+        ExperimentalMaterialApi::class,
+        ExperimentalMaterialNavigationApi::class
     )
     override fun NavGraphBuilder.navSetup() {
 
         composable(
-            DownloadViewModel.VideoViewerRoute,
+            ViewVideoViewModel.VideoViewerRoute,
             enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
-            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloadViewModel.VideoViewerRoute}" })
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
 
         composable(
@@ -558,17 +522,19 @@ class GenericAnime(val context: Context) : GenericInfo {
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
         ) { DownloaderUi() }
 
-    }
+        composable(
+            VideoViewModel.VideoPlayerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+        ) { VideoPlayerUi() }
 
-    @Composable
-    override fun BottomBarAdditions() {
-        AndroidViewBinding(factory = { l, v, b -> MiniControllerBinding.inflate(l, v, b) })
+        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            deepLinkDetailsUri(itemModel),
             context,
             MainActivity::class.java
         )
@@ -582,7 +548,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     override fun deepLinkSettings(context: Context): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            "$deepLinkUri${Screen.NotificationScreen.route}".toUri(),
+            deepLinkSettingsUri(),
             context,
             MainActivity::class.java
         )
@@ -592,5 +558,4 @@ class GenericAnime(val context: Context) : GenericInfo {
             getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
-
 }

@@ -14,26 +14,24 @@ import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.leanback.media.PlaybackTransportControlGlue
 import androidx.leanback.widget.*
-import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.PlaybackControlsRow.*
-import com.google.android.exoplayer2.Format
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.analytics.AnalyticsListener
-import com.google.android.exoplayer2.ext.leanback.LeanbackPlayerAdapter
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.video.VideoSize
+import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.Format
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.Util
+import androidx.media3.datasource.DefaultDataSourceFactory
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.SimpleExoPlayer
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.ui.leanback.LeanbackPlayerAdapter
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.BehaviorSubject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -42,8 +40,6 @@ import java.util.concurrent.TimeUnit
 class PlaybackVideoFragment : VideoSupportFragment() {
 
     private lateinit var mTransportControlGlue: VideoPlayerGlue//PlaybackTransportControlGlue<MediaPlayerAdapter>
-
-    private val disposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,75 +73,76 @@ class PlaybackVideoFragment : VideoSupportFragment() {
 
         //playerAdapter.setDataSource(Uri.parse(videoUrl))
 
-        item.getChapterInfo()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnError {
-                Toast.makeText(requireContext(), "Something went wrong", Toast.LENGTH_SHORT).show()
-                activity?.finish()
-            }
-            .subscribeBy { videos ->
-                //playerAdapter.setDataSource(Uri.parse(it.firstOrNull()?.link))
-                /*val userAgent: String = com.google.android.exoplayer2.util.Util.getUserAgent(requireActivity(), "VideoPlayerGlue")
-                val mediaSource: MediaSource = DefaultMediaSourceFactory(
-                    Uri.parse(it.firstOrNull()?.link),
-                    DefaultDataSourceFactory(requireActivity(), userAgent),
-                    DefaultExtractorsFactory(),
-                    null,
-                    null
-                )*/
+        lifecycleScope.launch {
+            item.getChapterInfo()
+                .flowOn(Dispatchers.Main)
+                .catch {
+                    Toast.makeText(requireContext(), "Something went wrong", Toast.LENGTH_SHORT).show()
+                    activity?.finish()
+                }
+                .onEach { videos ->
+                    //playerAdapter.setDataSource(Uri.parse(it.firstOrNull()?.link))
+                    /*val userAgent: String = com.google.android.exoplayer2.util.Util.getUserAgent(requireActivity(), "VideoPlayerGlue")
+                    val mediaSource: MediaSource = DefaultMediaSourceFactory(
+                        Uri.parse(it.firstOrNull()?.link),
+                        DefaultDataSourceFactory(requireActivity(), userAgent),
+                        DefaultExtractorsFactory(),
+                        null,
+                        null
+                    )*/
 
-                fun startVideo(storage: Storage?) {
-                    val dataSourceFactory = if (storage?.headers?.isEmpty() == true) {
-                        DefaultDataSourceFactory(
+                    fun startVideo(storage: Storage?) {
+                        val dataSourceFactory = if (storage?.headers?.isEmpty() == true) {
+                            DefaultDataSourceFactory(
+                                requireContext(),
+                                Util.getUserAgent(requireContext(), "AnimeWorld")
+                            )
+                        } else {
+                            DefaultHttpDataSource.Factory()
+                                .setUserAgent(Util.getUserAgent(requireContext(), "AnimeWorld"))
+                                .setDefaultRequestProperties(hashMapOf("Referer" to storage?.headers?.get("referer").orEmpty()))
+                        }
+
+                        /*val dataSourceFactory = DefaultDataSourceFactory(
                             requireContext(),
                             com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
-                        )
-                    } else {
-                        DefaultHttpDataSource.Factory()
-                            .setUserAgent(com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld"))
-                            .setDefaultRequestProperties(hashMapOf("Referer" to storage?.headers?.get("referer").orEmpty()))
+                        )*/
+                        val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .createMediaSource(MediaItem.fromUri(Uri.parse(storage?.link)))
+
+                        exoPlayer.setMediaSource(mediaSource)
+                        exoPlayer.playWhenReady = true
+                        mTransportControlGlue.play()
                     }
 
-                    /*val dataSourceFactory = DefaultDataSourceFactory(
-                        requireContext(),
-                        com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
-                    )*/
-                    val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                        .createMediaSource(MediaItem.fromUri(Uri.parse(storage?.link)))
-
-                    exoPlayer.setMediaSource(mediaSource)
-                    exoPlayer.playWhenReady = true
-                    mTransportControlGlue.play()
+                    if (videos.size <= 1) {
+                        startVideo(videos.firstOrNull())
+                    } else {
+                        AlertDialog.Builder(requireContext())
+                            .setTitle(getString(R.string.choose_quality_for, item.name))
+                            .setItems(videos.mapNotNull { it.quality }.toTypedArray()) { d, i ->
+                                d.dismiss()
+                                startVideo(videos.getOrNull(i))
+                            }
+                            .setNegativeButton(R.string.videoPlayerBack) { d, _ ->
+                                d.dismiss()
+                                activity?.finish()
+                            }
+                            .show()
+                    }
                 }
-
-                if (videos.size <= 1) {
-                    startVideo(videos.firstOrNull())
-                } else {
-                    AlertDialog.Builder(requireContext())
-                        .setTitle(getString(R.string.choose_quality_for, item.name))
-                        .setItems(videos.mapNotNull { it.quality }.toTypedArray()) { d, i ->
-                            d.dismiss()
-                            startVideo(videos.getOrNull(i))
-                        }
-                        .setNegativeButton(R.string.videoPlayerBack) { d, _ ->
-                            d.dismiss()
-                            activity?.finish()
-                        }
-                        .show()
-                }
-            }
-            .addTo(disposable)
+                .collect()
+        }
 
         setupStatsForNerds(exoPlayer)
     }
 
     private fun setupStatsForNerds(exoPlayer: SimpleExoPlayer) {
 
-        val bandwidthSubject = BehaviorSubject.create<Int>()
+        /*val bandwidthSubject = BehaviorSubject.create<Int>()
         val resolutionSubject = BehaviorSubject.create<String>()
         val bitrateSubject = BehaviorSubject.create<Double>()
-        val droppedFramesSubject = BehaviorSubject.createDefault(0)
+        val droppedFramesSubject = BehaviorSubject.createDefault(0)*/
 
         /*
         Dropped frames of video - got it
@@ -155,7 +152,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         Resolution - got it
          */
 
-        exoPlayer.addAnalyticsListener(object : AnalyticsListener {
+        /*exoPlayer.addAnalyticsListener(object : AnalyticsListener {
             override fun onBandwidthEstimate(
                 eventTime: AnalyticsListener.EventTime,
                 totalLoadTimeMs: Int,
@@ -204,10 +201,10 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         val row = ListRow(header, statsAdapter)
         rowsAdapter.add(row)
 
-        adapter = rowsAdapter
+        adapter = rowsAdapter*/
     }
 
-    class Stats<T : Any>(val type: String, val subject: Observable<T>)
+    class Stats<T : Any>(val type: String)
 
     private fun getResolution(videoSize: Format): String =
         "${videoSize.width}x${videoSize.height}${if (videoSize.frameRate > 0) "@${videoSize.frameRate.toInt()}" else ""}"
@@ -219,12 +216,6 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         val mbit = bitrate.toFloat() / 1000000
         return String.format(Locale.ENGLISH, "%.2fMbit", mbit)
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
-    }
-
     override fun onPause() {
         super.onPause()
         mTransportControlGlue.pause()
@@ -254,10 +245,10 @@ class PlaybackVideoFragment : VideoSupportFragment() {
             when (item) {
                 is Stats<*> -> {
                     textView?.text = item.type
-                    item
+                    /*item
                         .subject
                         .subscribe { textView?.text = "${item.type}: $it" }
-                        .addTo(disposable)
+                        .addTo(disposable)*/
                 }
                 is String -> {
                     textView?.text = item

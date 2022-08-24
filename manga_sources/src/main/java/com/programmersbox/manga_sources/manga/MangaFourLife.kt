@@ -9,7 +9,6 @@ import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.models.*
-import io.reactivex.Single
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
@@ -45,22 +44,6 @@ object MangaFourLife : ApiService {
         return mangaList.subList((pageNumber - 1) * 24, endRange)
     }
 
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = Single.create<List<ItemModel>> {
-        if (mangaList.isEmpty()) {
-            mangaList.addAll(
-                ("vm\\.Directory = (.*?.*;)".toRegex()
-                    .find(getApi("https://manga4life.com/search/?sort=lt&desc=true").toString())
-                    ?.groupValues?.get(1)?.dropLast(1)
-                    ?.fromJson<List<LifeBase>>()
-                    ?.sortedByDescending { m -> m.lt?.let { 1000 * it.toDouble() } }
-                    ?.fastMap(toMangaModel) ?: getApiVersion())
-                    .orEmpty()
-            )
-        }
-        it.onSuccess(mangaList)
-    }
-        .flatMap { super.searchList(searchText, page, it) }
-
     override fun searchListFlow(searchText: CharSequence, page: Int, list: List<ItemModel>): Flow<List<ItemModel>> = flow {
         if (mangaList.isEmpty()) {
             mangaList.addAll(
@@ -77,23 +60,7 @@ object MangaFourLife : ApiService {
     }
         .flatMapMerge { super.searchListFlow(searchText, page, list) }
 
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        try {
-            getManga(page).let(emitter::onSuccess)
-        } catch (e: Exception) {
-            emitter.onError(e)
-        }
-    }
-
     override suspend fun recent(page: Int): List<ItemModel> = getManga(page)
-
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        try {
-            getManga(page).let(emitter::onSuccess)
-        } catch (e: Exception) {
-            emitter.onError(e)
-        }
-    }
 
     override suspend fun allList(page: Int): List<ItemModel> = getManga(page)
 
@@ -120,45 +87,6 @@ object MangaFourLife : ApiService {
     @SuppressLint("ConstantLocale")
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = Jsoup.connect(model.url).get()
-        val description = doc.select("div.BoxBody > div.row").select("div.Content").text()
-        val genres = "\"genre\":[^:]+(?=,|\$)".toRegex().find(doc.html())
-            ?.groupValues?.get(0)?.removePrefix("\"genre\": ")?.fromJson<List<String>>().orEmpty()
-        val altNames = "\"alternateName\":[^:]+(?=,|\$)".toRegex().find(doc.html())
-            ?.groupValues?.get(0)?.removePrefix("\"alternateName\": ")?.fromJson<List<String>>().orEmpty()
-        emitter.onSuccess(
-            InfoModel(
-                title = model.title,
-                description = description,
-                url = model.url,
-                imageUrl = model.imageUrl,
-                chapters = "vm.Chapters = (.*?);".toRegex().find(doc.html())
-                    ?.groupValues?.get(0)?.removePrefix("vm.Chapters = ")?.removeSuffix(";")
-                    ?.fromJson<List<LifeChapter>>()?.fastMap {
-                        ChapterModel(
-                            name = chapterImage(it.Chapter!!),
-                            url = "https://manga4life.com/read-online/${
-                                model.url.split("/")
-                                    .last()
-                            }${chapterURLEncode(it.Chapter)}",
-                            uploaded = it.Date.toString(),
-                            sourceUrl = model.url,
-                            source = this
-                        ).apply {
-                            try {
-                                uploadedTime = dateFormat.parse(uploaded.substringBefore(" "))?.time
-                            } catch (_: Exception) {
-                            }
-                        }
-                    }.orEmpty(),
-                genres = genres,
-                alternativeNames = altNames,
-                source = this
-            )
-        )
-    }
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
         val doc = Jsoup.connect(model.url).get()
@@ -197,21 +125,6 @@ object MangaFourLife : ApiService {
         )
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        val doc = Jsoup.connect(url).get()
-        val title = doc.select("li.list-group-item, li.d-none, li.d-sm-block").select("h1").text()
-        val description = doc.select("div.BoxBody > div.row").select("div.Content").text()
-        it.onSuccess(
-            ItemModel(
-                title = title,
-                description = description,
-                url = url,
-                imageUrl = doc.select("img.img-fluid, img.bottom-5").attr("abs:src"),
-                source = this
-            )
-        )
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
         val doc = Jsoup.connect(url).get()
         val title = doc.select("li.list-group-item, li.d-none, li.d-sm-block").select("h1").text()
@@ -240,29 +153,6 @@ object MangaFourLife : ApiService {
         val a = e.substring(1, e.length - 1)
         val b = e.substring(e.length - 1).toInt()
         return if (b == 0) a else "$a.$b"
-    }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-        val document = Jsoup.connect(chapterModel.url).get()
-        val script = document.select("script:containsData(MainFunction)").first()!!.data()
-        val curChapter = script.substringAfter("vm.CurChapter = ").substringBefore(";").fromJson<JsonElement>()!!
-
-        val pageTotal = curChapter["Page"].string.toInt()
-
-        val host = "https://" + script.substringAfter("vm.CurPathName = \"").substringBefore("\"")
-        val titleURI = script.substringAfter("vm.IndexName = \"").substringBefore("\"")
-        val seasonURI = curChapter["Directory"].string
-            .let { if (it.isEmpty()) "" else "$it/" }
-        val path = "$host/manga/$titleURI/$seasonURI"
-
-        val chNum = chapterImage(curChapter["Chapter"].string)
-
-        IntRange(1, pageTotal).mapIndexed { i, _ ->
-            val imageNum = (i + 1).toString().let { "000$it" }.let { it.substring(it.length - 3) }
-            "$path$chNum-$imageNum.png"
-        }
-            .fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
-            .let(emitter::onSuccess)
     }
 
     override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {

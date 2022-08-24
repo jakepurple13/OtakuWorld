@@ -47,6 +47,7 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.CustomChip2
 import com.skydoves.landscapist.glide.GlideImage
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable

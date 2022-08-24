@@ -10,9 +10,6 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.rxutils.toLatestFlowable
-import io.reactivex.Completable
-import io.reactivex.subjects.PublishSubject
 
 data class FirebaseDb2(
     val DOCUMENT_ID: String,

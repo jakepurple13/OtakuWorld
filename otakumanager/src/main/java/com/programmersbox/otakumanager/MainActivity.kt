@@ -55,7 +55,7 @@ import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.CoverCard
-import com.programmersbox.uiviews.utils.CustomChip2
+import com.programmersbox.uiviews.utils.components.CustomChip2
 import io.reactivex.Flowable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable

@@ -1,8 +1,10 @@
 package com.programmersbox.uiviews
 
+import android.Manifest
 import android.app.assist.AssistContent
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +12,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -19,19 +22,17 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.rxjava2.subscribeAsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
@@ -39,32 +40,38 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
+import com.google.accompanist.navigation.material.bottomSheet
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.sharedutils.appUpdateCheck
+import com.programmersbox.sharedutils.updateAppCheck
+import com.programmersbox.uiviews.all.AllView
+import com.programmersbox.uiviews.all.AllViewModel
+import com.programmersbox.uiviews.details.DetailsScreen
+import com.programmersbox.uiviews.favorite.FavoriteChoiceScreen
+import com.programmersbox.uiviews.favorite.FavoriteUi
+import com.programmersbox.uiviews.globalsearch.GlobalSearchView
+import com.programmersbox.uiviews.history.HistoryUi
+import com.programmersbox.uiviews.notifications.NotificationsScreen
+import com.programmersbox.uiviews.recent.RecentView
+import com.programmersbox.uiviews.recent.RecentViewModel
+import com.programmersbox.uiviews.settings.SettingScreen
+import com.programmersbox.uiviews.settings.SourceChooserScreen
+import com.programmersbox.uiviews.settings.TranslationScreen
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.Single
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import com.programmersbox.uiviews.utils.Screen as SScreen
 
 abstract class BaseMainActivity : AppCompatActivity() {
-
-    protected val disposable = CompositeDisposable()
-
-    //protected var currentNavController: LiveData<NavController>? = null
 
     protected val genericInfo: GenericInfo by inject()
     private val logo: MainLogo by inject()
@@ -77,6 +84,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected abstract fun onCreate()
 
+    @Composable
+    protected open fun BottomBarAdditions() = Unit
+
     companion object {
         var showNavBar by mutableStateOf(true)
     }
@@ -88,7 +98,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        genericInfo.toSource(currentService.orEmpty())?.let { sourcePublish.onNext(it) }
+        lifecycleScope.launch {
+            genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
+        }
 
         when (runBlocking { themeSetting.first() }) {
             "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
@@ -99,26 +111,33 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         onCreate()
 
-        Single.create<AppUpdate.AppUpdates> { AppUpdate.getUpdate()?.let(it::onSuccess) ?: it.onError(Throwable("Something went wrong")) }
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .doOnError {}
-            .subscribe(appUpdateCheck::onNext)
-            .addTo(disposable)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        lifecycleScope.launch {
+            flow { emit(AppUpdate.getUpdate()) }
+                .catch { emit(null) }
+                .dispatchIo()
+                .onEach(updateAppCheck::emit)
+                .collect()
+        }
 
         setContent {
-            val bottomSheetNavigator = rememberBottomSheetNavigator()
+            val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
             navController = rememberAnimatedNavController(bottomSheetNavigator)
 
+            val systemUiController = rememberSystemUiController()
+
             if (showNavBar) {
-                showSystemBars()
-                WindowCompat.setDecorFitsSystemWindows(window, true)
+                systemUiController.isSystemBarsVisible = true
+                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
-                hideSystemBars()
-                WindowCompat.setDecorFitsSystemWindows(window, false)
+                systemUiController.isSystemBarsVisible = false
+                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
 
             OtakuMaterialTheme(navController, genericInfo) {
+                AskForNotificationPermissions()
+
                 val showAllItem by showAll.collectAsState(false)
 
                 com.google.accompanist.navigation.material.ModalBottomSheetLayout(
@@ -128,13 +147,14 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
                 ) {
                     Scaffold(
+                        modifier = Modifier.navigationBarsPadding(),
                         bottomBar = {
                             Column {
-                                genericInfo.BottomBarAdditions()
+                                BottomBarAdditions()
                                 AnimatedVisibility(
                                     visible = showNavBar,
-                                    enter = slideInVertically { it / 2 },
-                                    exit = slideOutVertically { it / 2 }
+                                    enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
+                                    exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
                                 ) {
                                     NavigationBar {
                                         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -221,6 +241,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             composable(
                                 SScreen.SettingsScreen.route,
+                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.SettingsScreen.route }),
                                 //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Start) },
                                 //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.End) },
                             ) {
@@ -297,32 +318,34 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 )
                             }
 
+                            bottomSheet(SScreen.TranslationScreen.route) { TranslationScreen() }
+
+                            bottomSheet(
+                                SScreen.FavoriteChoiceScreen.route + "/{${SScreen.FavoriteChoiceScreen.dbitemsArgument}}",
+                            ) { FavoriteChoiceScreen() }
+
+                            bottomSheet(SScreen.SourceChooserScreen.route) { SourceChooserScreen() }
+
                             with(genericInfo) { navSetup() }
                         }
                     }
                 }
             }
         }
+    }
 
-        /*intent.data?.let {
-            if (URLUtil.isValidUrl(it.toString())) {
-                currentService?.let { it1 ->
-                    genericInfo.toSource(it1)?.getSourceByUrl(it.toString())
-                        ?.subscribeOn(Schedulers.io())
-                        ?.observeOn(AndroidSchedulers.mainThread())
-                        ?.subscribeBy { it2 ->
-                            currentNavController?.value?.navigate(RecentFragmentDirections.actionRecentFragment2ToDetailsFragment2(it2))
-                        }
-                        ?.addTo(disposable)
-                }
-            }
-        }*/
-
+    @OptIn(ExperimentalPermissionsApi::class)
+    @Composable
+    fun AskForNotificationPermissions() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            val permissions = rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
+            LaunchedEffect(Unit) { permissions.launchPermissionRequest() }
+        }
     }
 
     @Composable
     fun updateCheck(): Boolean {
-        val appUpdate by appUpdateCheck.subscribeAsState(null)
+        val appUpdate by updateAppCheck.collectAsState(null)
 
         return AppUpdate.checkForUpdate(
             remember { packageManager.getPackageInfo(packageName, 0)?.versionName.orEmpty() },
@@ -330,44 +353,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
         )
     }
 
-    private fun hideSystemBars() {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        // Configure the behavior of the hidden system bars
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        // Hide both the status bar and the navigation bar
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-    }
-
-    private fun showSystemBars() {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        // Configure the behavior of the hidden system bars
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        // Hide both the status bar and the navigation bar
-        windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-    }
-
-    class AssetParamType(val info: GenericInfo) : NavType<ItemModel>(isNullableAllowed = true) {
-        override fun get(bundle: Bundle, key: String): ItemModel? {
-            return bundle.getSerializable(key) as? ItemModel
-        }
-
-        override fun parseValue(value: String): ItemModel {
-            return value.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(info))!!
-        }
-
-        override fun put(bundle: Bundle, key: String, value: ItemModel) {
-            bundle.putSerializable(key, value)
-        }
-    }
-
     override fun onProvideAssistContent(outContent: AssistContent?) {
         super.onProvideAssistContent(outContent)
         outContent?.webUri = Uri.parse(currentDetailsUrl)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        //setupBottomNavBar()
     }
 
     enum class Screen(val route: SScreen) { RECENT(SScreen.RecentScreen), ALL(SScreen.AllScreen), SETTINGS(SScreen.SettingsScreen) }
@@ -378,19 +366,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        disposable.dispose()
-        super.onDestroy()
-    }
-
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        if (isNavInitialized()) {
-            navController.handleDeepLink(intent)
-            newIntent(intent)
-        }
+        if (isNavInitialized()) navController.handleDeepLink(intent)
     }
-
-    protected fun newIntent(intent: Intent?) = Unit
 
 }

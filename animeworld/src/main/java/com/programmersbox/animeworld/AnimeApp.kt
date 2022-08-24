@@ -11,6 +11,8 @@ import androidx.core.content.FileProvider
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.icon
+import com.programmersbox.animeworld.downloads.DownloaderViewModel
+import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseDb
@@ -99,7 +101,7 @@ class AnimeApp : OtakuApp() {
             .setIntent(Intent(Intent.ACTION_MAIN, Uri.parse(MainActivity.VIEW_DOWNLOADS), this, MainActivity::class.java))
             .build(),
         //video viewer
-        ShortcutInfo.Builder(this, DownloadViewModel.VideoViewerRoute)
+        ShortcutInfo.Builder(this, ViewVideoViewModel.VideoViewerRoute)
             .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
             .setShortLabel(getString(R.string.view_videos))
             .setLongLabel(getString(R.string.view_videos))

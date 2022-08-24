@@ -17,18 +17,17 @@ import androidx.core.content.ContextCompat
 import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.BrowseSupportFragment
 import androidx.leanback.widget.*
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.appUpdateCheck
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import com.programmersbox.sharedutils.updateAppCheck
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -93,8 +92,6 @@ class MainFragment : BrowseSupportFragment() {
         searchAffordanceColor = ContextCompat.getColor(requireContext(), R.color.search_opaque)
     }
 
-    private val disposable = CompositeDisposable()
-
     private fun loadRows() {
         /*val list = Sources.ANIMEKISA_SUBBED.getRecent().blockingGet()
             .map {
@@ -128,68 +125,50 @@ class MainFragment : BrowseSupportFragment() {
         val mGridPresenter = GridItemPresenter()
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
 
-        sourcePublish
-            .flatMapSingle {
-                it.getList()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .onErrorReturnItem(emptyList())
-            }
-            //Yts.getRecent()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { items ->
-                /*it.map {
-                    MovieList.buildMovieInfo(
-                        title = it.title,
-                        description = it.description,
-                        studio = it.source.serviceName,
-                        videoUrl = it.url,
-                        cardImageUrl = it.imageUrl,//MovieList.list[0].cardImageUrl!!,//it.imageUrl,
-                        backgroundImageUrl = it.imageUrl
-                    ).also { m ->
-                        m.model = it.source.serviceName
+        lifecycleScope.launch {
+            sourceFlow
+                .filterNotNull()
+                .flowOn(Dispatchers.IO)
+                .flatMapMerge { it.getListFlow() }
+                .map { items -> items.groupBy { it.title.firstOrNull() } }
+                .flowOn(Dispatchers.Main)
+                .onEach {
+                    rowsAdapter.clear()
 
+                    val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
+
+                    /*val mGridPresenter = GridItemPresenter()
+                    val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
+                    gridRowAdapter.add(resources.getString(R.string.favorites))
+                    //gridRowAdapter.add(resources.getString(R.string.grid_view))
+                    //gridRowAdapter.add(getString(R.string.error_fragment))
+                    gridRowAdapter.add(resources.getString(R.string.personal_settings))*/
+                    rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
+
+                    it.entries.forEach { item ->
+                        val (t, u) = item
+                        val listRowAdapter = ArrayObjectAdapter(cardPresenter)
+
+                        listRowAdapter.addAll(0, u)
+
+                        val header = HeaderItem(t?.hashCode()?.toLong() ?: 0L, t.toString())
+                        rowsAdapter.add(ListRow(header, listRowAdapter))
                     }
-                }*/
-                items.groupBy { it.title.firstOrNull() }
-            }
-            .subscribeBy {
-                rowsAdapter.clear()
 
-                val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
-
-                /*val mGridPresenter = GridItemPresenter()
-                val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
-                gridRowAdapter.add(resources.getString(R.string.favorites))
-                //gridRowAdapter.add(resources.getString(R.string.grid_view))
-                //gridRowAdapter.add(getString(R.string.error_fragment))
-                gridRowAdapter.add(resources.getString(R.string.personal_settings))*/
-                rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
-
-                it.entries.forEach { item ->
-                    val (t, u) = item
-                    val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-
-                    listRowAdapter.addAll(0, u)
-
-                    val header = HeaderItem(t?.hashCode()?.toLong() ?: 0L, t.toString())
-                    rowsAdapter.add(ListRow(header, listRowAdapter))
+                    /*for (i in 0 until NUM_ROWS) {
+                        if (i != 0) {
+                            Collections.shuffle(it)
+                        }
+                        val listRowAdapter = ArrayObjectAdapter(cardPresenter)
+                        for (j in 0 until NUM_COLS) {
+                            listRowAdapter.add(it[j % 5])
+                        }
+                        val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
+                        rowsAdapter.add(ListRow(header, listRowAdapter))
+                    }*/
                 }
-
-                /*for (i in 0 until NUM_ROWS) {
-                    if (i != 0) {
-                        Collections.shuffle(it)
-                    }
-                    val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-                    for (j in 0 until NUM_COLS) {
-                        listRowAdapter.add(it[j % 5])
-                    }
-                    val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
-                    rowsAdapter.add(ListRow(header, listRowAdapter))
-                }*/
-            }
-            .addTo(disposable)
+                .collect()
+        }
 
         val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
 
@@ -202,16 +181,19 @@ class MainFragment : BrowseSupportFragment() {
         gridRowAdapter.add(resources.getString(R.string.personal_settings))
         rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
-        appUpdateCheck
-            .map {
-                val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
-                AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
-            }
-            .subscribe {
-                if (it) gridRowAdapter.add(resources.getString(R.string.update_available))
-                else gridRowAdapter.remove(resources.getString(R.string.update_available))
-            }
-            .addTo(disposable)
+        lifecycleScope.launch {
+            updateAppCheck
+                .filterNotNull()
+                .map {
+                    val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
+                    AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
+                }
+                .onEach {
+                    if (it) gridRowAdapter.add(resources.getString(R.string.update_available))
+                    else gridRowAdapter.remove(resources.getString(R.string.update_available))
+                }
+                .collect()
+        }
 
         adapter = rowsAdapter
     }

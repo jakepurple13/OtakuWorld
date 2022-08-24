@@ -3,8 +3,8 @@ package com.programmersbox.manga_sources.manga
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.gsonutils.header
-import com.programmersbox.models.*
-import io.reactivex.Single
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.ItemModel
 import okhttp3.Request
 
 object Mangamutiny : ApiService {
@@ -25,93 +25,21 @@ object Mangamutiny : ApiService {
 
     private val header: Request.Builder.() -> Unit = { header(*headers.toTypedArray()) }
 
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
-        if (searchText.isBlank()) {
-            super.searchList(searchText, page, list)
-        } else {
-            Single.create { emitter ->
-                emitter.onSuccess(
-                    getJsonApi<Munity>(
-                        "$baseUrl$mangaApiPath?sort=-titles&limit=20&text=$searchText${if (page != 1) "&skip=${page * 20}" else ""}",
-                        header
-                    )
-                        ?.items?.fastMap {
-                            ItemModel(
-                                title = it.title.orEmpty(),
-                                description = "",
-                                url = "$baseUrl$mangaApiPath/${it.slug}",
-                                imageUrl = it.thumbnail.orEmpty(),
-                                source = this
-                            )
-                        }
-                        .orEmpty()
+    override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
+        return getJsonApi<Munity>(
+            "$baseUrl$mangaApiPath?sort=-titles&limit=20&text=$searchText${if (page != 1) "&skip=${page * 20}" else ""}",
+            header
+        )
+            ?.items?.fastMap {
+                ItemModel(
+                    title = it.title.orEmpty(),
+                    description = "",
+                    url = "$baseUrl$mangaApiPath/${it.slug}",
+                    imageUrl = it.thumbnail.orEmpty(),
+                    source = this
                 )
             }
-        }
-    } catch (e: Exception) {
-        super.searchList(searchText, page, list)
-    }
-
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        emitter.onSuccess(
-            getJsonApi<Munity>(
-                "$baseUrl$mangaApiPath?sort=-lastReleasedAt&limit=20${if (page != 1) "&skip=${page * 20}" else ""}",
-                header
-            )
-                ?.items
-                ?.fastMap {
-                    ItemModel(
-                        title = it.title.orEmpty(),
-                        description = "",
-                        url = "$baseUrl$mangaApiPath/${it.slug}",
-                        imageUrl = it.thumbnail.orEmpty(),
-                        source = this
-                    )
-                }.orEmpty()
-        )
-    }
-
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        emitter.onSuccess(
-            getJsonApi<Munity>(
-                "$baseUrl$mangaApiPath?sort=-lastReleasedAt&limit=20${if (page != 1) "&skip=${page * 20}" else ""}",
-                header
-            )
-                ?.items
-                ?.fastMap {
-                    ItemModel(
-                        title = it.title.orEmpty(),
-                        description = "",
-                        url = "$baseUrl$mangaApiPath/${it.slug}",
-                        imageUrl = it.thumbnail.orEmpty(),
-                        source = this
-                    )
-                }.orEmpty()
-        )
-    }
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        getJsonApi<MangaInfoMunity>(model.url, header)?.let {
-            InfoModel(
-                title = model.title,
-                description = it.summary.orEmpty(),
-                url = model.url,
-                imageUrl = model.imageUrl,
-                chapters = it.chapters?.fastMap { c ->
-                    ChapterModel(
-                        name = chapterTitleBuilder(c),
-                        url = "$baseUrl$chapterApiPath/${c.slug}",
-                        uploaded = c.releasedAt.orEmpty(),
-                        sourceUrl = model.url,
-                        source = this
-                    )
-                }.orEmpty(),
-                genres = it.genres.orEmpty(),
-                alternativeNames = listOf(it.alias.orEmpty()),
-                source = this
-            )
-                .let { emitter.onSuccess(it) }
-        } ?: emitter.onError(Throwable("Failed to Get ${model.title}"))
+            .orEmpty()
     }
 
     private fun chapterTitleBuilder(rootNode: MunityChapters): String {
@@ -129,28 +57,6 @@ object Mangamutiny : ApiService {
             chapterTitle.append(textTitle)
         }
         return chapterTitle.toString()
-    }
-
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        getJsonApi<MangaInfoMunity>(url, header).let {
-            ItemModel(
-                title = it?.title.orEmpty(),
-                description = it?.summary.orEmpty(),
-                url = url,
-                imageUrl = it?.thumbnail.orEmpty(),
-                source = this
-            )
-        }.let(it::onSuccess)
-    }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-        getJsonApi<MunityPage>(chapterModel.url, header)?.let {
-            val chapterUrl = "${it.storage}/${it.manga}/${it.id}/"
-            it.images?.fastMap { i -> "$chapterUrl$i" }
-        }
-            ?.fastMap { Storage(link = it, source = chapterModel.url, quality = "Good", sub = "Yes") }
-            .orEmpty()
-            .let { emitter.onSuccess(it) }
     }
 
     override val canScroll: Boolean get() = true

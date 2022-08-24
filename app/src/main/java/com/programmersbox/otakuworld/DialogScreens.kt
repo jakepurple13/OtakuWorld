@@ -44,11 +44,12 @@ import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.constraintlayout.compose.MotionLayout
 import androidx.constraintlayout.compose.MotionLayoutDebugFlags
 import androidx.constraintlayout.compose.MotionScene
-import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.FullDynamicThemePrimaryColorsFromImage
+import com.programmersbox.uiviews.utils.components.rememberDynamicColorState
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -73,7 +74,7 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
         savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(viewLifecycleOwner))
-        setContent { ProvideWindowInsets { MaterialTheme(currentScheme) { TestView { dismiss() } } } }
+        setContent { MaterialTheme(currentScheme) { TestView { dismiss() } } }
     }
 
     override fun onStart() {
@@ -98,7 +99,7 @@ enum class SettingLocation {
 @ExperimentalMaterialApi
 @Composable
 fun TestView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarScrollState()
+    val topBarState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
@@ -226,7 +227,7 @@ fun TestView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun SwitchView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarScrollState()
+    val topBarState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
@@ -265,7 +266,7 @@ fun SwitchView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun CheckView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarScrollState()
+    val topBarState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
@@ -305,7 +306,7 @@ fun CheckView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun PagerView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarScrollState()
+    val topBarState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
     val state = rememberPagerState()
@@ -617,7 +618,7 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun OptimisticView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarScrollState()
+    val topBarState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
 
@@ -738,7 +739,7 @@ fun OptimisticView(closeClick: () -> Unit) {
 @ExperimentalMotionApi
 @Composable
 fun MotionLayoutView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarScrollState()
+    val topBarState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     Scaffold(
         topBar = {
@@ -826,7 +827,7 @@ fun MotionLayoutView(closeClick: () -> Unit) {
 @ExperimentalFoundationApi
 @Composable
 fun ThemeingView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarScrollState()
+    val topBarState = rememberTopAppBarState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val scope = rememberCoroutineScope()
 

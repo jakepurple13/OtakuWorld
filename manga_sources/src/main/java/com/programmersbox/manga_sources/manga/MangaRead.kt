@@ -6,7 +6,6 @@ import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.POST
 import com.programmersbox.manga_sources.utilities.asJsoup
 import com.programmersbox.models.*
-import io.reactivex.Single
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.jsoup.Jsoup
@@ -54,31 +53,6 @@ object MangaRead : ApiService, KoinComponent {
         add("vars[manga_archives_item_layout]", "big_thumbnail")
     }
 
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        val request = client.newCall(
-            POST(
-                "$baseUrl/wp-admin/admin-ajax.php",
-                headersBuilder().build(),
-                formBuilder(page, false).build(),
-                CacheControl.FORCE_NETWORK
-            )
-        ).execute()
-        emitter.onSuccess(
-            request.asJsoup()
-                .select("div.page-item-detail:not(:has(a[href*='bilibilicomics.com']))")
-                .map {
-                    val info = it.select("div.post-title a")
-                    ItemModel(
-                        url = info.attr("abs:href"), // intentionally not using setUrlWithoutDomain
-                        title = info.text(),
-                        imageUrl = it.select("img").first()?.let { imageFromElement(it) }.orEmpty(),
-                        source = Sources.MANGA_READ,
-                        description = ""
-                    ).also { it.extras["Referer"] = it.url }
-                }
-        )
-    }
-
     override suspend fun recent(page: Int): List<ItemModel> {
         val request = client.newCall(
             POST(
@@ -111,8 +85,6 @@ object MangaRead : ApiService, KoinComponent {
         }
     }
 
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.never()
-
     override suspend fun allList(page: Int): List<ItemModel> {
         val request = client.newCall(
             POST(
@@ -135,8 +107,6 @@ object MangaRead : ApiService, KoinComponent {
                 ).also { it.extras["Referer"] = it.url }
             }
     }
-
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.never()
 
     override suspend fun itemInfo(model: ItemModel): InfoModel {
         val doc = Jsoup.connect(model.url).get()
@@ -257,8 +227,6 @@ object MangaRead : ApiService, KoinComponent {
                 ?: element.select("span a").firstOrNull()?.attr("title") ?: ""
         )
     }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.never()
 
     override suspend fun chapterInfo(chapterModel: ChapterModel): List<Storage> {
         val doc = client.newCall(GET(chapterModel.url, headersBuilder().build())).execute().asJsoup()

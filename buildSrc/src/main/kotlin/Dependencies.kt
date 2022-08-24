@@ -1,10 +1,4 @@
 object Deps {
-    const val otakuVersionName = "30.0.0"
-    const val compileVersion = 32
-    const val minimumSdk = 23
-    const val targetSdk = 32
-    const val buildVersion = "30.0.3"
-
     private const val jakepurple13 = "10.6.5"
 
     const val flowutils = "com.github.jakepurple13.HelpfulTools:flowutils:$jakepurple13"
@@ -13,15 +7,16 @@ object Deps {
     const val loggingutils = "com.github.jakepurple13.HelpfulTools:loggingutils:$jakepurple13"
     const val dragswipe = "com.github.jakepurple13.HelpfulTools:dragswipe:$jakepurple13"
     const val funutils = "com.github.jakepurple13.HelpfulTools:funutils:$jakepurple13"
-    const val rxutils = "com.github.jakepurple13.HelpfulTools:rxutils:$jakepurple13"
     const val thirdpartyutils = "com.github.jakepurple13.HelpfulTools:thirdpartyutils:$jakepurple13"
 
-    /*const val jakepurple13Tools = arrayOf(
-        gsonutils, helpfulutils, loggingutils, funutils, rxutils, dragswipe
-    )*/
+    val jakepurple13Libs = arrayOf(
+        gsonutils,
+        helpfulutils,
+        loggingutils,
+        dragswipe,
+        funutils
+    )
 
-    const val palette = "androidx.palette:palette-ktx:1.0.0"
-    const val junit = "junit:junit:4.+"
-    const val androidJunit = "androidx.test.ext:junit:1.1.3"
-    const val androidEspresso = "androidx.test.espresso:espresso-core:3.4.0"
+    const val materialTypeface = "com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar"
+    const val fontawesomeTypeface = "com.mikepenz:fontawesome-typeface:5.13.3.0-kotlin@aar"
 }

@@ -65,9 +65,9 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.components.MaterialCard
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.palette.BitmapPalette
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
@@ -78,7 +78,6 @@ import com.programmersbox.novel_sources.Sources as NSources
 
 class MainActivity : AppCompatActivity() {
 
-    private val disposable = CompositeDisposable()
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
 
@@ -142,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }*/
 
-                val topBarState = rememberTopAppBarScrollState()
+                val topBarState = rememberTopAppBarState()
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
@@ -233,6 +232,11 @@ class MainActivity : AppCompatActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            val connectivityStatus by connectivityStatus()
+                            Text("ConnectionState: ${connectivityStatus.name}")
+                        }
 
                         Text("Outlined Button")
                         androidx.compose.material3.OutlinedButton(
@@ -654,11 +658,6 @@ class MainActivity : AppCompatActivity() {
             }*/
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disposable.dispose()
     }
 }
 

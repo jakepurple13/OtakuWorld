@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.BrowseSupportFragment
 import androidx.leanback.widget.*
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
@@ -25,12 +26,9 @@ import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.FirebaseDb
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.util.*
 
 class FavoriteFragment : BrowseSupportFragment() {
@@ -71,7 +69,6 @@ class FavoriteFragment : BrowseSupportFragment() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: " + mBackgroundTimer?.toString())
         mBackgroundTimer?.cancel()
-        disposable.dispose()
         itemListener.unregister()
     }
 
@@ -95,7 +92,6 @@ class FavoriteFragment : BrowseSupportFragment() {
         searchAffordanceColor = ContextCompat.getColor(requireContext(), R.color.search_opaque)
     }
 
-    private val disposable = CompositeDisposable()
     private val itemDao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
 
@@ -129,50 +125,48 @@ class FavoriteFragment : BrowseSupportFragment() {
             rowsAdapter.add(ListRow(header, listRowAdapter))
         }*/
 
-        Flowables.combineLatest(
-            itemListener.getAllShowsFlowable(),
-            itemDao.getAllFavorites()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-        ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
-            //Yts.getRecent()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { items ->
-                items.mapNotNull {
-                    try {
-                        it.toItemModel(Sources.valueOf(it.source))
-                    } catch (e: IllegalArgumentException) {
-                        null
-                    }
-                }.sortedBy { it.title }
-            }
-            .map { d -> d.groupBy { it.source } }
-            .subscribeBy {
-                rowsAdapter.clear()
-                it.entries.forEach { item ->
-                    val (t, u) = item
-                    val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-
-                    listRowAdapter.addAll(0, u)
-
-                    val header = HeaderItem(t.hashCode().toLong(), t.toString())
-                    rowsAdapter.add(ListRow(header, listRowAdapter))
+        lifecycleScope.launch {
+            combine(
+                itemListener.getAllShowsFlow(),
+                itemDao.getAllFavorites()
+            ) { fire, db -> (db + fire).groupBy(DbModel::url).map { it.value.maxByOrNull(DbModel::numChapters)!! } }
+                .map { items ->
+                    items.mapNotNull {
+                        try {
+                            it.toItemModel(Sources.valueOf(it.source))
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
+                    }.sortedBy { it.title }
                 }
+                .map { d -> d.groupBy { it.source } }
+                .flowOn(Dispatchers.Main)
+                .onEach {
+                    rowsAdapter.clear()
+                    it.entries.forEach { item ->
+                        val (t, u) = item
+                        val listRowAdapter = ArrayObjectAdapter(cardPresenter)
 
-                /*for (i in 0 until NUM_ROWS) {
-                    if (i != 0) {
-                        Collections.shuffle(it)
+                        listRowAdapter.addAll(0, u)
+
+                        val header = HeaderItem(t.hashCode().toLong(), t.toString())
+                        rowsAdapter.add(ListRow(header, listRowAdapter))
                     }
-                    val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-                    for (j in 0 until NUM_COLS) {
-                        listRowAdapter.add(it[j % 5])
-                    }
-                    val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
-                    rowsAdapter.add(ListRow(header, listRowAdapter))
-                }*/
-            }
-            .addTo(disposable)
+
+                    /*for (i in 0 until NUM_ROWS) {
+                        if (i != 0) {
+                            Collections.shuffle(it)
+                        }
+                        val listRowAdapter = ArrayObjectAdapter(cardPresenter)
+                        for (j in 0 until NUM_COLS) {
+                            listRowAdapter.add(it[j % 5])
+                        }
+                        val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
+                        rowsAdapter.add(ListRow(header, listRowAdapter))
+                    }*/
+                }
+                .collect()
+        }
 
         adapter = rowsAdapter
     }

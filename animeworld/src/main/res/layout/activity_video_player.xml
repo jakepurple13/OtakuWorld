@@ -5,14 +5,14 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:keepScreenOn="true"
-    tools:context=".VideoPlayerActivity">
+    tools:context=".videoplayer.VideoPlayerActivity">
 
     <!--<hb.xvideoplayer.MxVideoPlayerWidget
          android:id="@+id/mpw_video_player"
          android:layout_width="match_parent"
          android:layout_height="match_parent" />-->
 
-    <com.google.android.exoplayer2.ui.PlayerView
+    <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         app:controller_layout_id="@layout/exo_controls"
         app:surface_type="texture_view"

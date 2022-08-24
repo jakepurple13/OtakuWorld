@@ -15,7 +15,6 @@ import java.util.regex.Pattern
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.collections.HashMap
 import kotlin.math.pow
 
 fun getApi(url: String, block: HttpUrl.Builder.() -> Unit = {}): ApiResponse = apiAccess(url, block) { get() }
@@ -601,3 +600,30 @@ fun ShowApi.fixUrl(url: String): String {
         return "$baseUrl/$url"
     }
 }
+
+/*val json by lazy {
+    Json {
+        prettyPrint = true
+        isLenient = true
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
+}
+
+val client by lazy {
+    HttpClient {
+        install(Logging) {
+            logger = Logger.SIMPLE
+            level = LogLevel.ALL
+        }
+        install(ContentNegotiation) {
+            json(json)
+        }
+        defaultRequest {
+            header(HttpHeaders.CacheControl, "no-cache")
+            header(HttpHeaders.ContentType, "application/json; charset=utf-8")
+            header(HttpHeaders.Accept, "application/json")
+            header(HttpHeaders.AcceptEncoding, "gzip")
+        }
+    }
+}*/

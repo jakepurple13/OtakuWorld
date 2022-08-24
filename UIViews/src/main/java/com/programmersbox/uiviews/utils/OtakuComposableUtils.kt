@@ -35,6 +35,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.models.ItemModel
+import com.programmersbox.uiviews.utils.components.BannerBox
+import com.programmersbox.uiviews.utils.components.BannerBox2
 import com.skydoves.landscapist.glide.GlideImage
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -278,8 +280,6 @@ fun M3CoverCard(
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-
     androidx.compose.material3.Surface(
         modifier = Modifier
             .size(
@@ -411,9 +411,9 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
 @ExperimentalMaterialApi
 @Composable
 fun M3OtakuBannerBox(
+    modifier: Modifier = Modifier,
     showBanner: Boolean = false,
     placeholder: Int,
-    modifier: Modifier = Modifier,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val context = LocalContext.current

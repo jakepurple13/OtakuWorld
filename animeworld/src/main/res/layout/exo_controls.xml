@@ -27,10 +27,6 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!--<ImageButton
-            android:id="@id/exo_prev"
-            style="@style/ExoMediaButton.Previous" />-->
-
         <me.ertugrul.lib.Rewind
             android:id="@+id/backThirty"
             app:r_color="#FFFFFF"
@@ -46,12 +42,16 @@
             style="@style/ExoMediaButton.Rewind" />
 
         <ImageButton
+            android:id="@id/exo_play_pause"
+            style="@style/ExoStyledControls.Button.Center.PlayPause" />
+
+        <!--<ImageButton
             android:id="@id/exo_play"
             style="@style/ExoMediaButton.Play" />
 
         <ImageButton
             android:id="@id/exo_pause"
-            style="@style/ExoMediaButton.Pause" />
+            style="@style/ExoMediaButton.Pause" />-->
 
         <ImageButton
             android:id="@id/exo_ffwd"
@@ -66,10 +66,6 @@
             app:f_strokeWidth="3dp"
             android:layout_width="104dp"
             android:layout_height="52dp" />
-
-        <!--<ImageButton
-            android:id="@id/exo_next"
-            style="@style/ExoMediaButton.Next" />-->
 
     </LinearLayout>
 
@@ -87,7 +83,7 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:text="18:20" />
 
-    <com.github.rubensousa.previewseekbar.exoplayer.PreviewTimeBar
+    <!--<com.github.rubensousa.previewseekbar.exoplayer.PreviewTimeBar
         android:id="@+id/exo_progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -100,7 +96,19 @@
         app:previewAnimationEnabled="true"
         app:previewFrameLayout="@id/previewFrameLayout"
         app:scrubber_dragged_size="24dp"
-        app:scrubber_enabled_size="16dp" />
+        app:scrubber_enabled_size="16dp" />-->
+
+    <androidx.media3.ui.DefaultTimeBar
+        android:id="@id/exo_progress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/exo_position"
+        app:layout_constraintEnd_toStartOf="@id/exo_duration"
+        app:layout_constraintStart_toEndOf="@+id/exo_position"
+        app:layout_constraintTop_toTopOf="@+id/exo_position" />
 
     <TextView
         android:id="@id/exo_duration"
@@ -117,7 +125,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="25:23" />
 
-    <FrameLayout
+    <!--<FrameLayout
         android:id="@+id/previewFrameLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -141,7 +149,7 @@
             android:layout_height="match_parent"
             android:layout_margin="@dimen/video_frame_width"
             android:scaleType="fitXY" />
-    </FrameLayout>
+    </FrameLayout>-->
 
     <View
         android:background="#CC000000"
@@ -204,6 +212,10 @@
             android:text="Unlocked"
             app:icon="@android:drawable/ic_lock_idle_lock"
             tools:ignore="HardcodedText" />
+
+        <ImageButton
+            android:id="@id/exo_settings"
+            style="@style/ExoStyledControls.Button.Bottom.Settings" />
 
     </LinearLayout>
 

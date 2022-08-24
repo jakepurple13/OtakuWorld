@@ -124,6 +124,9 @@ If not using `adb`:
 
 2. Follow [Android Authority][aa]'s steps
 
+# Building Locally
+Be sure to change the build variant to a `noFirebase` variant. Other than that, nothing needs to change to run/build locally!
+
 # Issues
 
 If you run into any issues, please create an issue request with the following details:

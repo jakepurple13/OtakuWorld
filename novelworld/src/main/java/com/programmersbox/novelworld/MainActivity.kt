@@ -1,20 +1,21 @@
 package com.programmersbox.novelworld
 
-import com.programmersbox.models.sourcePublish
+import androidx.lifecycle.lifecycleScope
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.novel_sources.Sources
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.currentService
+import kotlinx.coroutines.launch
 
 class MainActivity : BaseMainActivity() {
     override fun onCreate() {
 
-        if (currentService == null) {
-            val s = Sources.values().random()
-
-            sourcePublish.onNext(s)
-            currentService = s.serviceName
+        lifecycleScope.launch {
+            if (currentService == null) {
+                val s = Sources.values().random()
+                sourceFlow.emit(s)
+                currentService = s.serviceName
+            }
         }
-
     }
-
 }

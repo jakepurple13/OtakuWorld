@@ -5,7 +5,6 @@ import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Environment
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -43,22 +42,29 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.NetworkHelper
+import com.programmersbox.mangaworld.downloads.DownloadScreen
+import com.programmersbox.mangaworld.downloads.DownloadViewModel
+import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.mangaworld.reader.ReadView
+import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.models.*
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.ComposeSettingsDsl
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.*
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.dsl.module
@@ -71,11 +77,26 @@ val appModule = module {
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
 }
 
+class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
+    fun set(item: List<ChapterModel>?) {
+        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
+        context.defaultSharedPref.edit().putString("chapterList", i).commit()
+    }
+
+    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
+        "chapterList",
+        null,
+        ChapterModel::class.java to ChapterModelDeserializer(genericInfo)
+    )
+
+    fun clear() {
+        context.defaultSharedPref.edit().remove("chapterList").apply()
+    }
+}
+
 class GenericManga(val context: Context) : GenericInfo {
 
     override val deepLinkUri: String get() = "mangaworld://"
-
-    private val disposable = CompositeDisposable()
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") manga_no_firebase_file else manga_file }
     override val scrollBuffer: Int = 4
@@ -88,6 +109,7 @@ class GenericManga(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
+        ChapterList(context, this@GenericManga).set(allChapters)
         if (runBlocking { context.useNewReaderFlow.first() }) {
             /*navController
                 .navigate(
@@ -122,33 +144,34 @@ class GenericManga(val context: Context) : GenericInfo {
         val direct = File("$fileLocation$title/${model.name}/")
         if (!direct.exists()) direct.mkdir()
 
-        model.getChapterInfo()
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .map { it.mapNotNull(Storage::link) }
-            .map {
-                it.mapIndexed { index, s ->
-                    //val location = "/$fileLocation/$title/${model.name}"
+        GlobalScope.launch {
+            model.getChapterInfo()
+                .dispatchIo()
+                .map { it.mapNotNull(Storage::link) }
+                .map {
+                    it.mapIndexed { index, s ->
+                        //val location = "/$fileLocation/$title/${model.name}"
 
-                    //val file = File(Environment.getExternalStorageDirectory().path + location, "${String.format("%03d", index)}.png")
+                        //val file = File(Environment.getExternalStorageDirectory().path + location, "${String.format("%03d", index)}.png")
 
-                    DownloadManager.Request(s.toUri())
-                        //.setDestinationUri(file.toUri())
-                        .setDestinationInExternalPublicDir(
-                            Environment.DIRECTORY_DOWNLOADS,
-                            "MangaWorld/$title/${model.name}/${String.format("%03d", index)}"
-                        )
-                        .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                        .setAllowedOverRoaming(true)
-                        .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                        .setMimeType("image/*")
-                        .setTitle(model.name)
-                        .addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77")
-                        .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
+                        DownloadManager.Request(s.toUri())
+                            //.setDestinationUri(file.toUri())
+                            .setDestinationInExternalPublicDir(
+                                Environment.DIRECTORY_DOWNLOADS,
+                                "MangaWorld/$title/${model.name}/${String.format("%03d", index)}"
+                            )
+                            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            .setAllowedOverRoaming(true)
+                            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                            .setMimeType("image/*")
+                            .setTitle(model.name)
+                            .addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77")
+                            .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
+                    }
                 }
-            }
-            .subscribeBy { it.fastForEach(context.downloadManager::enqueue) }
-            .addTo(disposable)
+                .onEach { it.fastForEach(context.downloadManager::enqueue) }
+                .collect()
+        }
     }
 
     override fun downloadChapter(
@@ -156,7 +179,8 @@ class GenericManga(val context: Context) : GenericInfo {
         allChapters: List<ChapterModel>,
         infoModel: InfoModel,
         context: Context,
-        activity: FragmentActivity
+        activity: FragmentActivity,
+        navController: NavController
     ) {
         activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
             if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
@@ -164,7 +188,12 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     override fun sourceList(): List<ApiService> =
-        if (runBlocking { context.showAdultFlow.first() }) Sources.values().toList() else Sources.values().filterNot(Sources::isAdult).toList()
+        if (runBlocking { context.showAdultFlow.first() }) {
+            Sources.values().toList()
+        } else {
+            Sources.values().filterNot(Sources::isAdult).toList()
+        }
+            .filterNot(ApiService::notWorking)
 
     override fun toSource(s: String): ApiService? = try {
         Sources.valueOf(s)
@@ -180,7 +209,9 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
-            modifier = Modifier.padding(vertical = 4.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
@@ -198,10 +229,10 @@ class GenericManga(val context: Context) : GenericInfo {
         onLongPress: (ItemModel, ComponentState) -> Unit,
         onClick: (ItemModel) -> Unit
     ) {
-        //TODO: See if you can modify this to perform better
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
             state = listState,
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -258,8 +289,8 @@ class GenericManga(val context: Context) : GenericInfo {
                 settingIcon = { Icon(Icons.Default.TextFormat, null, modifier = Modifier.fillMaxSize()) },
                 updateValue = {
                     scope.launch { context.updatePref(SHOW_ADULT, it) }
-                    if (!it && (sourcePublish.value as? Sources)?.isAdult == true) {
-                        sourcePublish.onNext(sourceList().random())
+                    if (!it && (sourceFlow.value as? Sources)?.isAdult == true) {
+                        sourceFlow.tryEmit(sourceList().random())
                     }
                 }
             )
@@ -430,7 +461,7 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            "${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri(),
+            deepLinkDetailsUri(itemModel),
             context,
             MainActivity::class.java
         )
@@ -444,7 +475,7 @@ class GenericManga(val context: Context) : GenericInfo {
     override fun deepLinkSettings(context: Context): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
-            Screen.NotificationScreen.route.toUri(),
+            deepLinkSettingsUri(),
             context,
             MainActivity::class.java
         )

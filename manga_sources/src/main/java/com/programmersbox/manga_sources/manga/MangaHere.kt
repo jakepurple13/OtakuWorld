@@ -1,11 +1,14 @@
 package com.programmersbox.manga_sources.manga
 
 import androidx.compose.ui.util.fastMap
+import app.cash.zipline.Zipline
 import com.programmersbox.models.*
-import com.squareup.duktape.Duktape
-import io.reactivex.Single
-import okhttp3.CacheControl
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cache.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jsoup.Jsoup
@@ -13,7 +16,6 @@ import org.jsoup.nodes.Document
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 object MangaHere : ApiService {
 
@@ -21,26 +23,20 @@ object MangaHere : ApiService {
 
     override val serviceName: String get() = "MANGA_HERE"
 
-    override fun getRecent(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        Jsoup.connect("$baseUrl/directory/$page.htm?latest")
-            .header("Referer", baseUrl)
-            .cookie("isAdult", "1").get()
-            .select(".manga-list-1-list li").fastMap {
-                ItemModel(
-                    title = it.select("a").first()!!.attr("title"),
-                    description = "",
-                    url = it.select("a").first()!!.attr("abs:href"),
-                    imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
-                    source = this
-                ).apply { extras["Referer"] = baseUrl }
-            }.filter { it.title.isNotEmpty() }
-            .let { emitter.onSuccess(it) }
+    private val client by lazy {
+        createHttpClient {
+            defaultRequest {
+                header("Referer", baseUrl)
+                cookie("isAdult", "1")
+                url.takeFrom(URLBuilder().takeFrom(baseUrl).appendPathSegments(url.encodedPath))
+            }
+            install(HttpCache)
+            followRedirects = true
+        }
     }
 
     override suspend fun recent(page: Int): List<ItemModel> {
-        return Jsoup.connect("$baseUrl/directory/$page.htm?latest")
-            .header("Referer", baseUrl)
-            .cookie("isAdult", "1").get()
+        return client.get("/directory/$page.htm?latest").body<Document>()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
@@ -50,28 +46,10 @@ object MangaHere : ApiService {
                     source = this
                 ).apply { extras["Referer"] = baseUrl }
             }.filter { it.title.isNotEmpty() }
-    }
-
-    override fun getList(page: Int): Single<List<ItemModel>> = Single.create { emitter ->
-        Jsoup.connect("$baseUrl/directory/$page.htm")
-            .header("Referer", baseUrl)
-            .cookie("isAdult", "1").get()
-            .select(".manga-list-1-list li").fastMap {
-                ItemModel(
-                    title = it.select("a").first()!!.attr("title"),
-                    description = "",
-                    url = it.select("a").first()!!.attr("abs:href"),
-                    imageUrl = it.select("img.manga-list-1-cover").first()?.attr("src") ?: "",
-                    source = this
-                ).apply { extras["Referer"] = baseUrl }
-            }.filter { it.title.isNotEmpty() }
-            .let { emitter.onSuccess(it) }
     }
 
     override suspend fun allList(page: Int): List<ItemModel> {
-        return Jsoup.connect("$baseUrl/directory/$page.htm")
-            .header("Referer", baseUrl)
-            .cookie("isAdult", "1").get()
+        return client.get("/directory/$page.htm").body<Document>()
             .select(".manga-list-1-list li").fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
@@ -83,69 +61,23 @@ object MangaHere : ApiService {
             }.filter { it.title.isNotEmpty() }
     }
 
-    override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> = try {
-        if (searchText.isBlank()) throw Exception("No search necessary")
-        Single.create { emitter ->
-            val url = "$baseUrl/search".toHttpUrlOrNull()!!.newBuilder().apply {
-                addEncodedQueryParameter("page", page.toString())
-                addEncodedQueryParameter("title", searchText.toString())
-                addEncodedQueryParameter("sort", null)
-                addEncodedQueryParameter("stype", 1.toString())
-                addEncodedQueryParameter("name", null)
-                addEncodedQueryParameter("author_method", "cw")
-                addEncodedQueryParameter("author", null)
-                addEncodedQueryParameter("artist_method", "cw")
-                addEncodedQueryParameter("artist", null)
-                addEncodedQueryParameter("rating_method", "eq")
-                addEncodedQueryParameter("rating", null)
-                addEncodedQueryParameter("released_method", "eq")
-                addEncodedQueryParameter("released", null)
-            }.build()
-            val request = Request.Builder()
-                .url(url)
-                .cacheControl(CacheControl.Builder().maxAge(10, TimeUnit.MINUTES).build())
-                .build()
-            val client = OkHttpClient().newCall(request).execute()
-            Jsoup.parse(client.body?.string()).select(".manga-list-4-list > li")
-                .fastMap {
-                    ItemModel(
-                        title = it.select("a").first()!!.attr("title"),
-                        description = it.select("p.manga-list-4-item-tip").last()!!.text(),
-                        url = "$baseUrl${it.select(".manga-list-4-item-title > a").first()!!.attr("href")}",
-                        imageUrl = it.select("img.manga-list-4-cover").first()!!.attr("abs:src"),
-                        source = this
-                    ).apply { extras["Referer"] = baseUrl }
-                }
-                .filter { it.title.isNotEmpty() }
-                .let { emitter.onSuccess(it) }
-        }
-
-    } catch (e: Exception) {
-        super.searchList(searchText, page, list)
-    }
-
     override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> {
-        val url = "$baseUrl/search".toHttpUrlOrNull()!!.newBuilder().apply {
-            addEncodedQueryParameter("page", page.toString())
-            addEncodedQueryParameter("title", searchText.toString())
-            addEncodedQueryParameter("sort", null)
-            addEncodedQueryParameter("stype", 1.toString())
-            addEncodedQueryParameter("name", null)
-            addEncodedQueryParameter("author_method", "cw")
-            addEncodedQueryParameter("author", null)
-            addEncodedQueryParameter("artist_method", "cw")
-            addEncodedQueryParameter("artist", null)
-            addEncodedQueryParameter("rating_method", "eq")
-            addEncodedQueryParameter("rating", null)
-            addEncodedQueryParameter("released_method", "eq")
-            addEncodedQueryParameter("released", null)
-        }.build()
-        val request = Request.Builder()
-            .url(url)
-            .cacheControl(CacheControl.Builder().maxAge(10, TimeUnit.MINUTES).build())
-            .build()
-        val client = OkHttpClient().newCall(request).execute()
-        return Jsoup.parse(client.body?.string()).select(".manga-list-4-list > li")
+        return client.get("/search") {
+            parameter("page", page.toString())
+            parameter("title", searchText.toString())
+            parameter("sort", null)
+            parameter("stype", 1.toString())
+            parameter("name", null)
+            parameter("author_method", "cw")
+            parameter("author", null)
+            parameter("artist_method", "cw")
+            parameter("artist", null)
+            parameter("rating_method", "eq")
+            parameter("rating", null)
+            parameter("released_method", "eq")
+            parameter("released", null)
+        }.body<Document>()
+            .select(".manga-list-4-list > li")
             .fastMap {
                 ItemModel(
                     title = it.select("a").first()!!.attr("title"),
@@ -158,32 +90,8 @@ object MangaHere : ApiService {
             .filter { it.title.isNotEmpty() }
     }
 
-    override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.create { emitter ->
-        val doc = Jsoup.connect(model.url).header("Referer", baseUrl).get()
-        emitter.onSuccess(
-            InfoModel(
-                title = model.title,
-                description = doc.select("p.fullcontent").text(),
-                url = model.url,
-                imageUrl = doc.select("img.detail-info-cover-img").select("img[src^=http]").attr("abs:src"),
-                chapters = doc.select("div[id=chapterlist]").select("ul.detail-main-list").select("li").map {
-                    ChapterModel(
-                        name = it.select("a").select("p.title3").text(),
-                        url = it.select("a").attr("abs:href"),
-                        uploaded = it.select("a").select("p.title2").text(),
-                        sourceUrl = model.url,
-                        source = this
-                    ).apply { uploadedTime = parseChapterDate(uploaded) }
-                },
-                genres = doc.select("p.detail-info-right-tag-list").select("a").eachText(),
-                alternativeNames = emptyList(),
-                source = this
-            ).apply { extras["Referer"] = baseUrl }
-        )
-    }
-
     override suspend fun itemInfo(model: ItemModel): InfoModel {
-        val doc = Jsoup.connect(model.url).header("Referer", baseUrl).get()
+        val doc = client.get { url(model.url) }.body<Document>()
         return InfoModel(
             title = model.title,
             description = doc.select("p.fullcontent").text(),
@@ -229,41 +137,14 @@ object MangaHere : ApiService {
         }
     }
 
-    override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create {
-        try {
-            val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
-            ItemModel(
-                title = doc.select("span.detail-info-right-title-font").text(),
-                description = doc.select("p.fullcontent").text(),
-                url = url,
-                imageUrl = doc.select("img.detail-info-cover-img").select("img[src^=http]").attr("abs:src"),
-                source = this
-            )
-                .let(it::onSuccess)
-        } catch (e: Exception) {
-            it.onError(e)
-        }
-    }
-
     override suspend fun sourceByUrl(url: String): ItemModel {
-        val doc = Jsoup.connect(url).header("Referer", baseUrl).get()
+        val doc = client.get { url(url) }.body<Document>()
         return ItemModel(
             title = doc.select("span.detail-info-right-title-font").text(),
             description = doc.select("p.fullcontent").text(),
             url = url,
             imageUrl = doc.select("img.detail-info-cover-img").select("img[src^=http]").attr("abs:src"),
             source = this
-        )
-    }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
-        it.onSuccess(
-            pageListParse(Jsoup.connect(chapterModel.url).header("Referer", baseUrl).get())
-                .fastMap { p ->
-                    Storage(link = p, source = chapterModel.url, quality = "Good", sub = "Yes").apply {
-                        headers["Referer"] = baseUrl
-                    }
-                }
         )
     }
 
@@ -278,7 +159,7 @@ object MangaHere : ApiService {
 
     private fun pageListParse(document: Document): List<String> {
         val bar = document.select("script[src*=chapter_bar]")
-        val duktape = Duktape.create()
+        val zipline = Zipline.create(Dispatchers.IO)
 
         /*
             function to drop last imageUrl if it's broken/unneccesary, working imageUrls are incremental (e.g. t001, t002, etc); if the difference between
@@ -302,14 +183,14 @@ object MangaHere : ApiService {
         // if-branch is for webtoon reader, else is for page-by-page
         return if (bar.isNotEmpty()) {
             val script = document.select("script:containsData(function(p,a,c,k,e,d))").html().removePrefix("eval")
-            val deobfuscatedScript = duktape.evaluate(script).toString()
+            val deobfuscatedScript = zipline.quickJs.evaluate(script).toString()
             val urls = deobfuscatedScript.substringAfter("newImgs=['").substringBefore("'];").split("','")
-            duktape.close()
+            zipline.close()
             urls.fastMap { s -> "https:$s" }
         } else {
             val html = document.html()
             val link = document.location()
-            var secretKey = extractSecretKey(html, duktape)
+            var secretKey = extractSecretKey(html, zipline)
             val chapterIdStartLoc = html.indexOf("chapterid")
             val chapterId = html.substring(
                 chapterIdStartLoc + 11,
@@ -340,7 +221,7 @@ object MangaHere : ApiService {
                     else
                         secretKey = ""
                 }
-                val deobfuscatedScript = duktape.evaluate(responseText.removePrefix("eval")).toString()
+                val deobfuscatedScript = zipline.quickJs.evaluate(responseText.removePrefix("eval")).toString()
                 val baseLinkStartPos = deobfuscatedScript.indexOf("pix=") + 5
                 val baseLinkEndPos = deobfuscatedScript.indexOf(";", baseLinkStartPos) - 1
                 val baseLink = deobfuscatedScript.substring(baseLinkStartPos, baseLinkEndPos)
@@ -351,20 +232,20 @@ object MangaHere : ApiService {
             }
         }
             .dropLastIfBroken()
-            .also { duktape.close() }
+            .also { zipline.close() }
     }
 
-    private fun extractSecretKey(html: String, duktape: Duktape): String {
+    private fun extractSecretKey(html: String, zipline: Zipline): String {
         val secretKeyScriptLocation = html.indexOf("eval(function(p,a,c,k,e,d)")
         val secretKeyScriptEndLocation = html.indexOf("</script>", secretKeyScriptLocation)
         val secretKeyScript = html.substring(secretKeyScriptLocation, secretKeyScriptEndLocation).removePrefix("eval")
-        val secretKeyDeobfuscatedScript = duktape.evaluate(secretKeyScript).toString()
+        val secretKeyDeobfuscatedScript = zipline.quickJs.evaluate(secretKeyScript).toString()
         val secretKeyStartLoc = secretKeyDeobfuscatedScript.indexOf("'")
         val secretKeyEndLoc = secretKeyDeobfuscatedScript.indexOf(";")
         val secretKeyResultScript = secretKeyDeobfuscatedScript.substring(
             secretKeyStartLoc, secretKeyEndLoc
         )
-        return duktape.evaluate(secretKeyResultScript).toString()
+        return zipline.quickJs.evaluate(secretKeyResultScript).toString()
     }
 
     override val canScroll: Boolean = true

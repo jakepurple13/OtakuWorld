@@ -100,4 +100,7 @@
     <string name="loading_please_wait">Loading, Please Wait</string>
 
     <string name="ignore_ssl">Ignore SSL</string>
+
+    <string name="use_new_player">Use The New Video Player</string>
+    <string name="use_new_player_description">The new player is made using a new UI framework!</string>
 </resources>

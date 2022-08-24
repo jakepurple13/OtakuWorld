@@ -1,16 +1,6 @@
 package com.programmersbox.anime_sources.anime
 
-import android.util.Base64
-import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.ShowApi
-import com.programmersbox.anime_sources.toJsoup
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
-import io.reactivex.Single
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 
 object PutlockerTV : Putlocker("tv-series.html") {
     override val serviceName: String get() = "PUTLOCKERTV"
@@ -33,7 +23,7 @@ abstract class Putlocker(allPath: String) : ShowApi(
     allPath = allPath,
     recentPath = "recently-added.html"
 ) {
-    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create {
+    /*fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create {
         doc
             .select("ul.list")
             .select("div.item")
@@ -83,7 +73,7 @@ abstract class Putlocker(allPath: String) : ShowApi(
             .onErrorResumeNext(super.searchList(searchText, page, list))
     }
 
-    override fun getList(doc: Document): Single<List<ItemModel>> = Single.create {
+    fun getList(doc: Document): Single<List<ItemModel>> = Single.create {
         doc
             .select("ul.list")
             .select("div.item")
@@ -104,65 +94,6 @@ abstract class Putlocker(allPath: String) : ShowApi(
                 )
             }
             .let(it::onSuccess)
-    }
-
-    override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create {
-        val info = doc.select("div.info")
-        InfoModel(
-            source = this,
-            title = source.title,
-            url = source.url,
-            alternativeNames = emptyList(),
-            description = info.select("p").last()?.text().orEmpty(),
-            imageUrl = source.imageUrl,
-            genres = info.select("p:eq(2)").text().removePrefix("Genres:").split(","),
-            chapters = doc.select("a.episode")
-                .fastMap {
-                    ChapterModel(
-                        it.text(),
-                        it.select("a").attr("abs:href"),
-                        "",
-                        source.url,
-                        this
-                    )
-                }.reversed()
-                .ifEmpty {
-                    listOf(
-                        ChapterModel(
-                            source.title,
-                            source.url,
-                            "",
-                            source.url,
-                            this
-                        )
-                    )
-                }
-        )
-            .let(it::onSuccess)
-    }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> {
-        return Single.create {
-
-            val d = chapterModel.url.toJsoup()
-
-            val regex = "Base64.decode\\(\"(.*)\"\\)".toRegex().find(d?.toString().orEmpty())?.groups?.get(1)?.value
-            val b = Jsoup.parse(String(Base64.decode(regex, Base64.DEFAULT))).select("iframe").attr("abs:src")
-            val links = b.toJsoup().select("source").attr("src")
-
-            it.onSuccess(
-                listOf(
-                    Storage(
-                        link = links,
-                        source = chapterModel.url,
-                        quality = "Good",
-                        sub = "Yes"
-                    ).apply {
-                        headers["referer"] = "http://eplayvid.com/"
-                    }
-                )
-            )
-        }
-    }
+    }*/
 
 }

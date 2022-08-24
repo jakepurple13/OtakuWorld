@@ -10,7 +10,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.*
 import com.programmersbox.uiviews.utils.CustomChip
-import io.reactivex.Single
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.system.measureNanoTime
@@ -47,10 +46,6 @@ object TestItems {
 
     val TEST_SOURCE = object : ApiService {
         override val baseUrl: String get() = ""
-        override fun getRecent(page: Int): Single<List<ItemModel>> = Single.never()
-        override fun getList(page: Int): Single<List<ItemModel>> = Single.never()
-        override fun getItemInfo(model: ItemModel): Single<InfoModel> = Single.never()
-        override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.never()
     }
 
     val TEST_SWATCH = SwatchInfo(

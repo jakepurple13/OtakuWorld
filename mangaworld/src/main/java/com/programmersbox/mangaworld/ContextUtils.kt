@@ -24,8 +24,6 @@ import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.uiviews.utils.dataStore
-import io.reactivex.subjects.BehaviorSubject
-import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -131,13 +129,11 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
         contentObserver?.let { chaptersContex.contentResolver.unregisterContentObserver(it) }
     }
 
-    val chapters = PublishSubject.create<List<Chapters>>()
     val chapters2 = MutableStateFlow<List<Chapters>>(emptyList())
 
     fun loadChapters(scope: CoroutineScope, contentLocation: Uri) {
         scope.launch {
             val imageList = getAllMangaContent(contentLocation)
-            chapters.onNext(imageList)
 
             if (contentObserver == null) {
                 contentObserver = chaptersContex.contentResolver.registerObserver(contentLocation) {
@@ -150,7 +146,6 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
     fun loadChapters(scope: CoroutineScope, folderLocation: String) {
         scope.launch {
             val imageList = getMangaFolders(chaptersContex, folderLocation)
-            chapters.onNext(imageList)
             chapters2.tryEmit(imageList)
 
             if (contentObserver == null) {
@@ -224,8 +219,6 @@ val Context.pagePadding get() = dataStore.data.map { it[PAGE_PADDING] ?: 4 }
 
 val LIST_OR_PAGER = booleanPreferencesKey("list_or_padding")
 val Context.listOrPager get() = dataStore.data.map { it[LIST_OR_PAGER] ?: true }
-
-val showOrHideNav = BehaviorSubject.createDefault(true)
 
 /**
  * Potentially animate showing a [BottomNavigationView].

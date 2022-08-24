@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.leanback.preference.LeanbackPreferenceFragmentCompat
 import androidx.leanback.preference.LeanbackSettingsFragmentCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.DialogPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -13,17 +14,14 @@ import androidx.preference.PreferenceScreen
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.models.sourcePublish
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.CustomFirebaseUser
 import com.programmersbox.sharedutils.FirebaseAuthentication
-import com.programmersbox.sharedutils.appUpdateCheck
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
+import com.programmersbox.sharedutils.updateAppCheck
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
 class SettingsActivity : FragmentActivity() {
@@ -74,8 +72,6 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
 
     class PrefFragment : LeanbackPreferenceFragmentCompat() {
 
-        private val disposable = CompositeDisposable()
-
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
             //setPreferencesFromResource(R.xml.leanback_preferences, s)
             val root = arguments?.getString(PREFERENCE_ROOT, null)
@@ -105,14 +101,18 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
             }
 
             findPreference<PreferenceScreen>("prefs_about")?.let { p ->
-                appUpdateCheck
-                    .subscribe {
-                        val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
-                        p.summary = if (AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty()))
-                            getString(R.string.updateVersionAvailable, it.update_real_version.orEmpty())
-                        else ""
-                    }
-                    .addTo(disposable)
+                lifecycleScope.launch {
+                    updateAppCheck
+                        .filterNotNull()
+                        .flowOn(Dispatchers.Main)
+                        .onEach {
+                            val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
+                            p.summary = if (AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty()))
+                                getString(R.string.updateVersionAvailable, it.update_real_version.orEmpty())
+                            else ""
+                        }
+                        .collect()
+                }
             }
 
             findPreference<Preference>("about_version")?.let { p ->
@@ -130,13 +130,17 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
 
             findPreference<Preference>("updateAvailable")?.let { p ->
                 p.isVisible = false
-                appUpdateCheck
-                    .subscribe {
-                        p.summary = getString(R.string.currentVersion, it.update_real_version.orEmpty())
-                        val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
-                        p.isVisible = AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
-                    }
-                    .addTo(disposable)
+                lifecycleScope.launch {
+                    updateAppCheck
+                        .filterNotNull()
+                        .flowOn(Dispatchers.Main)
+                        .onEach {
+                            p.summary = getString(R.string.currentVersion, it.update_real_version.orEmpty())
+                            val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
+                            p.isVisible = AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
+                        }
+                        .collect()
+                }
             }
 
             findPreference<Preference>("current_source")?.let { p ->
@@ -150,7 +154,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                             list.map { it.serviceName }.toTypedArray(),
                             list.indexOfFirst { it.serviceName == service }
                         ) { d, i ->
-                            sourcePublish.onNext(list[i])
+                            sourceFlow.tryEmit(list[i])
                             requireContext().currentService = list[i].serviceName
                             d.dismiss()
                         }
@@ -158,8 +162,13 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         .show()
                     true
                 }
-                sourcePublish.subscribe { p.title = getString(R.string.currentSource, it.serviceName) }
-                    .addTo(disposable)
+                lifecycleScope.launch {
+                    sourceFlow
+                        .filterNotNull()
+                        .flowOn(Dispatchers.Main)
+                        .onEach { p.title = getString(R.string.currentSource, it.serviceName) }
+                        .collect()
+                }
             }
         }
 
@@ -167,19 +176,19 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
 
         private fun updateSetter() {
             if (!checker.get()) {
-                Single.create<AppUpdate.AppUpdates> {
-                    checker.set(true)
-                    AppUpdate.getUpdate()?.let { d -> it.onSuccess(d) } ?: it.onError(Exception("Something went wrong"))
-                }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnError {}
-                    .subscribeBy {
-                        appUpdateCheck.onNext(it)
-                        checker.set(false)
-                        context?.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() }
+                lifecycleScope.launch {
+                    flow {
+                        checker.set(true)
+                        emit(AppUpdate.getUpdate())
                     }
-                    .addTo(disposable)
+                        .flowOn(Dispatchers.IO)
+                        .onEach {
+                            updateAppCheck.emit(it)
+                            checker.set(false)
+                            context?.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() }
+                        }
+                        .collect()
+                }
             }
         }
 
@@ -209,12 +218,6 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
             }
             return super.onPreferenceTreeClick(preference)
         }
-
-        override fun onDestroy() {
-            super.onDestroy()
-            disposable.dispose()
-        }
-
     }
 
     companion object {

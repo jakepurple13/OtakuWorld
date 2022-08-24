@@ -5,7 +5,6 @@ import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.sharedutils.MainLogo
-import io.reactivex.plugins.RxJavaPlugins
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
@@ -25,11 +24,6 @@ class AnimeWorldTV : Application() {
         FirebaseDb.COLLECTION_ID = "animeworld"
         FirebaseDb.ITEM_ID = "showUrl"
         FirebaseDb.READ_OR_WATCHED_ID = "numEpisodes"
-
-        RxJavaPlugins.setErrorHandler {
-            it.printStackTrace()
-            //FirebaseCrashlytics.getInstance().recordException(it)
-        }
 
         startKoin {
             androidLogger()

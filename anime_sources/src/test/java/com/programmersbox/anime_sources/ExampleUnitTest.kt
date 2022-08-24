@@ -5,11 +5,8 @@ import androidx.compose.ui.util.fastMap
 import com.programmersbox.anime_sources.anime.*
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.header
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
-import io.reactivex.Single
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -17,7 +14,6 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.junit.Test
 import java.security.KeyManagementException
 import java.security.NoSuchAlgorithmException
@@ -36,6 +32,16 @@ import javax.net.ssl.X509TrustManager
 class ExampleUnitTest {
 
     @Test
+    fun allanimeTest() = runBlocking {
+        val f = AllAnime.recent(1)
+        println(f)
+        val f1 = f.first().toInfoModel().first().getOrNull()
+        println(f1)
+        val f2 = f1?.chapters?.first()?.getChapterInfo()?.first()
+        println(f2)
+    }
+
+    @Test
     fun kawaiifuTest() {
         val url = "https://kawaiifu.com"
         val f = Jsoup.connect(url)
@@ -48,7 +54,7 @@ class ExampleUnitTest {
                 description = it.select("div.info").select("p").text(),
                 imageUrl = it.selectFirst("img")?.attr("src").orEmpty(),
                 url = it.selectFirst("a")?.attr("href").orEmpty(),
-                source = AnimeHeaven
+                source = Kawaiifu
             )
         }
 
@@ -84,15 +90,15 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun gogoanimevcTest() {
+    fun gogoanimevcTest() = runBlocking {
 
         println(listOf(-1, -2, 1, 2, 3, 0).sortedByDescending { it })
 
-        val f = GogoAnimeVC.getRecent().blockingGet()
+        val f = GogoAnimeVC.recent()
         //println(f.joinToString("\n"))
-        val e = f.random().toInfoModel().blockingGet()
+        val e = f.random().toInfoModel().first().getOrThrow()
         println(e)
-        val c = e.chapters.first().getChapterInfo().blockingGet()
+        val c = e.chapters.first().getChapterInfo().first()
         println(c.joinToString("\n"))
 
         //val a = GogoAnimeVC.searchList("Mushi", 1, emptyList()).blockingGet()
@@ -100,7 +106,7 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun putlockerTest() {
+    fun putlockerTest() = runBlocking {
 
         //val f = "http://putlockers.fm/recently-added.html".toJsoup()
         //println(f)
@@ -114,8 +120,8 @@ class ExampleUnitTest {
         //println(list.joinToString("\n"))
         println(list?.link)*/
 
-        val search = PutlockerTV.searchList("the mask", list = emptyList()).blockingGet()
-        println(search.first().toInfoModel().blockingGet())
+        val search = PutlockerTV.searchListFlow("the mask", list = emptyList()).first()
+        println(search.first().toInfoModel().first())
 
         //println(list?.link?.toJsoup())
 
@@ -144,7 +150,7 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun animesimpleTest() {
+    fun animesimpleTest() = runBlocking {
 
         //val f = AnimeSimpleSubbed.getList().blockingGet()
 
@@ -154,11 +160,11 @@ class ExampleUnitTest {
 
         //println("https://ww1.animesimple.com".toJsoup())
 
-        val f = AnimeSimpleSubbed.searchList("mushi", list = emptyList()).blockingGet()
+        val f = AnimeSimpleSubbed.searchListFlow("mushi", list = emptyList()).first()
         //println(f.joinToString("\n"))
-        val d = f.random().toInfoModel().blockingGet()
+        val d = f.random().toInfoModel().first().getOrThrow()
         println(d)
-        val e = d.chapters.first().getChapterInfo().blockingGet().first().link
+        val e = d.chapters.first().getChapterInfo().first().first().link
         println(e)
         println(e?.toJsoup())
 
@@ -302,7 +308,7 @@ class ExampleUnitTest {
     )
 
     @Test
-    fun vidStreamingTest() {
+    fun vidStreamingTest() = runBlocking {
 
         //val f = "https://vidstreaming.io/popular".toJsoup()
         //println(f)
@@ -311,10 +317,10 @@ class ExampleUnitTest {
 
         //println(f)
 
-        val f = Vidstreaming.searchList("cheat kusushi", list = emptyList()).blockingGet().firstOrNull()
+        val f = Vidstreaming.searchListFlow("cheat kusushi", list = emptyList()).first().firstOrNull()
         println(f)
 
-        val e = f?.toInfoModel()?.blockingGet()?.chapters?.firstOrNull()?.getChapterInfo()?.blockingGet()
+        val e = f?.toInfoModel()?.first()?.getOrThrow()?.chapters?.firstOrNull()?.getChapterInfo()?.first()
         println(e)
 
         /*val e = "https://vidstreaming.io/videos/tensei-shitara-slime-datta-ken-episode-24-9".toJsoup()
@@ -360,7 +366,7 @@ class ExampleUnitTest {
             var num1 = num
             val fullTable = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             //println("$num - $n")
-            val table = fullTable.substring(0..n - 1)
+            val table = fullTable.substring(0 until n)
             if (num1 == 0) return table[0].toString()
             var ret = ""
             while (num1 > 0) {
@@ -401,7 +407,7 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun animekisaTest() {
+    fun animekisaTest() = runBlocking {
 
         /*val f = AnimeKisaSubbed.getList().blockingGet().take(10)
         println(f.joinToString("\n"))
@@ -412,177 +418,11 @@ class ExampleUnitTest {
         val c = e.chapters.first().getChapterInfo().blockingGet()
         println(c)*/
 
-        val f = AnimeKisaSubbed.searchList("mushi", list = emptyList()).blockingGet().take(10)
+        val f = AnimeKisaSubbed.searchListFlow("mushi", list = emptyList()).first().take(10)
         println(f.joinToString("\n"))
 
         //val v = c.first().link?.toJsoup()
         //println(v)
-
-    }
-
-    @Test
-    fun animeheavenpro() {
-
-        val url = "https://www.animeheaven.pro"
-
-        //val r = getApiPost("$url/ajax/list/recently_updated")
-
-        //println(r)
-
-        val recent = AnimeHeaven.getRecent().blockingGet()
-
-        println(recent)
-
-        val info = recent.first().toInfoModel().blockingGet()
-
-        println(info)
-
-        val chapter = info.chapters.first().getChapterInfo().blockingGet()
-
-        println(chapter)
-
-    }
-
-    object AnimeHeaven : ShowApi(
-        baseUrl = "https://www.animeheaven.pro",
-        allPath = "",
-        recentPath = ""
-    ) {
-
-        override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
-            doc
-                .select("section#RecentlyUpdated")
-                .select("div.flw-item")
-                .select("div.film-poster")
-                .map {
-                    //println(it)
-                    ItemModel(
-                        title = it.select("img").attr("title"),
-                        description = "",
-                        imageUrl = it.select("img").attr("data-src"),
-                        url = it.select("a").attr("abs:href")
-                            .let { it.dropLast(9 + it.split("-").last().length) }
-                            .replace("/watch/", "/anime/"),
-                        source = AnimeHeaven
-                    )
-                }
-                .let(emitter::onSuccess)
-        }
-
-        override fun getList(doc: Document): Single<List<ItemModel>> {
-            TODO("Not yet implemented")
-        }
-
-        override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
-            //println(doc)
-            emitter.onSuccess(
-                InfoModel(
-                    source = AnimeHeaven,
-                    url = source.url,
-                    title = source.title,
-                    description = doc.select("div.description").text(),
-                    imageUrl = source.imageUrl,
-                    genres = emptyList(),
-                    chapters = doc
-                        .select("div.slce-list")
-                        .select("ul.nav")
-                        .select("li.nav-item")
-                        .map {
-                            ChapterModel(
-                                name = it.select("a").attr("title"),
-                                url = it.select("a").attr("abs:href"),
-                                uploaded = "",
-                                source = AnimeHeaven,
-                                sourceUrl = source.url
-                            )
-                        },
-                    alternativeNames = emptyList()
-                )
-            )
-        }
-
-        data class Graph(
-            val `@context`: String?,
-            val `@type`: String?,
-            val url: String?,
-            val name: String?,
-            val episodeNumber: String?,
-            val position: String?,
-            val dateModified: String?,
-            val thumbnailUrl: String?,
-            val director: String?,
-            val datePublished: String?,
-            val potentialAction: PotentialAction?,
-            val video: Video?,
-            val inLanguage: String?,
-            val subtitleLanguage: String?
-        )
-
-        data class Base(val `@context`: String?, val `@graph`: List<Graph>?)
-
-        data class PotentialAction(val `@type`: String?, val target: String?)
-
-        data class Video(
-            val `@type`: String?,
-            val url: String?,
-            val name: String?,
-            val uploadDate: String?,
-            val thumbnailUrl: String?,
-            val description: String?,
-            val videoQuality: String?,
-            val embedUrl: String?,
-            val potentialAction: PotentialAction?
-        )
-
-        override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create {
-            val f = chapterModel.url.toJsoup()
-                .also { println(it) }
-
-            //https://storage.googleapis.com/134634f609a35cb2c21b/28893/3f2aad38a1e38efba011cbd4cb0491fb.mp4
-
-            val a = f
-                .select("div#servers-list")
-                .select("ul.nav")
-                .select("li.nav-item")
-                .select("a")
-                .map { Triple(it.attr("data-embed"), it.text(), it.attr("data-eid")) }
-
-            println(a)
-
-            a.forEach { p ->
-                Jsoup.connect(p.first)
-                    .data("Referer", chapterModel.url)
-                    .data("id", p.third)
-                    .get()
-                    .let {
-                        println("${p.second}${"------".repeat(10)}")
-                        println(it)
-                    }
-            }
-
-            /*val v = f
-                .select("div#main-wrapper")
-                .select("script")
-                .first()
-                .data()
-                .fromJson<Base>()
-                ?.`@graph`?.first()?.let {
-                    Jsoup.connect(it.video?.embedUrl).get()
-                }
-
-            println(v)*/
-
-            /*
-            Storage(
-                link = chapterModel.url.toJsoup().select("a[download^=http]").attr("abs:download"),
-                source = chapterModel.url,
-                quality = "Good",
-                sub = "Yes"
-            )
-             */
-
-            it.onSuccess(emptyList())
-        }
 
     }
 
@@ -656,290 +496,23 @@ class ExampleUnitTest {
     }
 
     @Test
-    fun animetoon() {
+    fun animetoon() = runBlocking {
         val f = AnimeToonDubbed
 
-        val r = f.getRecent().blockingGet()
+        val r = f.recent()
 
         println(r)
 
-        val d = r.first().toInfoModel().blockingGet()
+        val d = r.first().toInfoModel().first().getOrThrow()
 
         println(d)
 
-        val v = d.chapters.first().getChapterInfo().blockingGet()
+        val v = d.chapters.first().getChapterInfo().first()
 
         println(v)
 
         println(Jsoup.connect(v.random().link!!).get())
     }
 
-    @Test
-    fun dubbedAnime() {
-        val f = DubbedAnimeBiz.getRecent()
-
-        //println(info.joinToString("\n"))
-
-        val v = f.blockingGet().first()
-            .also { println(it) }
-            .toInfoModel()
-            .blockingGet()
-
-        println(v)
-
-        val c = v.chapters.last()
-            .getChapterInfo()
-            .blockingGet()
-
-        println(c)
-        /*val x = c.first().link?.let { getApi(it) }
-
-        println(x)
-
-        val b = x?.let { getApi("https:$it") }
-
-        println(b)*/
-
-    }
-
 }
 
-
-object DubbedAnimeBiz : ShowApi(
-    baseUrl = "https://www.dubbedanime.biz",
-    allPath = "topic/series/page/",
-    recentPath = "status/ongoing/page/"
-) {
-
-    override fun recentPage(page: Int): String = page.toString()
-    override fun allPage(page: Int): String = page.toString()
-
-    override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
-        doc
-            .select("div.ml-item")
-            .map {
-                ItemModel(
-                    title = it.select("a.ml-mask").attr("oldtitle"),
-                    description = "",
-                    imageUrl = it.select("img").attr("abs:src"),
-                    url = it.select("a.ml-mask").attr("abs:href"),
-                    source = this
-                )
-            }
-            .let(emitter::onSuccess)
-    }
-
-    override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { emitter ->
-        doc
-            .select("div.ml-item")
-            .map {
-                ItemModel(
-                    title = it.select("a.ml-mask").attr("oldtitle"),
-                    description = "",
-                    imageUrl = it.select("img").attr("abs:src"),
-                    url = it.select("a.ml-mask").attr("abs:href"),
-                    source = this
-                )
-            }
-            .let(emitter::onSuccess)
-    }
-
-    override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
-        InfoModel(
-            source = this,
-            url = source.url,
-            title = source.title,
-            description = "",
-            imageUrl = source.imageUrl,
-            genres = doc.select("div.mvic-info").select("div.mvici-left").select("a[rel=tag]").eachText(),
-            chapters = doc.select("div#seasonss").select("div.les-title").map {
-                ChapterModel(
-                    name = it.select("a").text(),
-                    url = it.select("a").attr("abs:href"),
-                    uploaded = "",
-                    source = this,
-                    sourceUrl = source.url
-                )
-            },
-            alternativeNames = emptyList()
-        )
-            .let(emitter::onSuccess)
-    }
-
-    private val serverList = listOf(
-        "rapidvideo",
-        "vip",
-        "drive",
-        "drives",
-        "photo",
-        "openload",
-        "streamango"
-    )
-        .map { "$baseUrl/ajax-get-link-stream/?server=$it&filmId=" }
-
-    override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-
-        val f = Jsoup.connect(chapterModel.url).get()
-            //.also { println(it) }
-            .select("div.list-episodes")
-            .select("select.form-control")
-            .select("option")
-            .map { it.attr("abs:href") to it.attr("episodeid") }
-            .first { it.first == chapterModel.url }
-            .second
-            .let {
-                val link = Jsoup.parse(getApi("https:${getApi("$baseUrl/ajax-get-link-stream/?server=rapidvideo&filmId=$it")}"))
-                    .select("li.linkserver")
-                    .eachAttr("data-video")
-                    //.also { println(it) }
-                    .first { it.contains(".mp4") }
-                    .let { Jsoup.connect(it).get().select("div#videolink").text().let { "https:$it" } }
-                /*serverList.map { s -> "$s$it" }
-                    .first {  }*/
-                Storage(
-                    link = link,
-                    source = chapterModel.url,
-                    quality = "Good",
-                    sub = "Yes"
-                )
-            }
-
-        emitter.onSuccess(listOf(f))
-    }
-
-    @Test
-    fun afdahTopTest() {
-        /*object AfdahTop : ShowApi(
-            baseUrl = "https://afdah.top",
-            recentPath = "", allPath = ""
-        ) {
-            override val serviceName: String get() = "AFDAH"
-            override val canDownload: Boolean get() = false
-
-            override fun getRecent(doc: Document): Single<List<ItemModel>> = Single.create { s ->
-                doc
-                    .select("div.items")
-                    .select("article.tvshows")
-                    .fastMap {
-                        ItemModel(
-                            title = it.select("div.poster").select("img").attr("alt"),
-                            description = "",
-                            imageUrl = it.select("div.poster").select("img").attr("abs:src"),
-                            url = it.select("a").attr("href").orEmpty(),
-                            source = Sources.AFDAH
-                        )
-                    }
-                    .let(s::onSuccess)
-            }
-
-            override fun getList(doc: Document): Single<List<ItemModel>> = Single.create { s ->
-                doc
-                    .select("div.items")
-                    .select("article.movies")
-                    .fastMap {
-                        ItemModel(
-                            title = it.select("div.poster").select("img").attr("alt"),
-                            description = "",
-                            imageUrl = it.select("div.poster").select("img").attr("abs:src"),
-                            url = it.select("a").attr("href").orEmpty(),
-                            source = Sources.AFDAH
-                        )
-                    }
-                    .let(s::onSuccess)
-            }
-
-            override fun getItemInfo(source: ItemModel, doc: Document): Single<InfoModel> = Single.create { emitter ->
-                val poster = doc.select("div.sheader").select("div.poster").select("img").attr("src")
-                val title = source.title
-                val description = doc.select("p").text()
-                val genres = doc.select("div.sgeneros").select("a").eachText()
-                val episodes = doc.select("div#episodes")
-                    .select("li")
-                    .fastMap {
-                        val name = it.select("a").text()
-                        val link = it.select("a").attr("abs:href")
-                        ChapterModel(
-                            name,
-                            link,
-                            it.select("span.date").text(),
-                            source.url,
-                            Sources.AFDAH
-                        )
-                    }
-                    .reversed()
-
-                InfoModel(
-                    source = Sources.AFDAH,
-                    title = title,
-                    url = source.url,
-                    alternativeNames = emptyList(),
-                    description = description,
-                    imageUrl = poster,
-                    genres = genres,
-                    chapters = episodes
-                )
-                    .let(emitter::onSuccess)
-            }
-
-            override fun getChapterInfo(chapterModel: ChapterModel): Single<List<Storage>> = Single.create { emitter ->
-                //https://hlspanel.xyz/player/index.php?data=b110ae3636fc62aee44893300d695f99&do=getVideo
-
-                val data = chapterModel.url
-                val doc = data.toJsoup()
-                //println(doc)
-
-                val shortLink = doc.select("link[rel=shortlink]").attr("href")
-                println(shortLink)
-                val id = shortLink.split("=").lastOrNull()
-                println(id)
-                val j = post(
-                    "$baseUrl/wp-admin/admin-ajax.php",
-                    headers = mapOf("referer" to data),
-                    data = mapOf("body" to "action=doo_player_ajax&post=$id&nume=1&type=tv")
-                )
-                println(j)
-                *//*val url = doc
-                    .select("div.pframe")
-                    .select("iframe")
-                    .attr("src")
-                println(url)*//*
-
-                //val json = get("https://hlspanel.xyz/player/index.php?data=$url&do=getVideo")
-                //println(json)
-
-                emitter.onSuccess(emptyList())
-            }
-
-            override fun searchList(searchText: CharSequence, page: Int, list: List<ItemModel>): Single<List<ItemModel>> =
-                Single.create<List<ItemModel>> { s ->
-                    //"https://afdah.top/?s={search_term_string}"
-                    Jsoup.connect("$baseUrl/search.php?search=$searchText").get()
-                        .select(".row.mt-2")
-                        .fastMap {
-                            ItemModel(
-                                title = it.selectFirst("h5 > a")?.text().orEmpty(),
-                                description = "",
-                                imageUrl = baseUrl + it.selectFirst("img")?.attr("src")?.replace("70x110", "225x320").orEmpty(),
-                                url = baseUrl + it.selectFirst("a")?.attr("href").orEmpty(),
-                                source = Sources.ANIMEFLICK
-                            )
-                        }
-                        .let(s::onSuccess)
-                }
-                    .onErrorResumeNext(super.searchList(searchText, page, list))
-
-            override fun getSourceByUrl(url: String): Single<ItemModel> = Single.create { emitter ->
-                val doc = url.toJsoup()
-                ItemModel(
-                    title = doc.select("h2.title").text(),
-                    description = doc.select("p").text(),
-                    imageUrl = baseUrl + doc.select("img.rounded").attr("src"),
-                    url = url,
-                    source = this
-                ).let(emitter::onSuccess)
-            }
-
-        }*/
-    }
-
-}

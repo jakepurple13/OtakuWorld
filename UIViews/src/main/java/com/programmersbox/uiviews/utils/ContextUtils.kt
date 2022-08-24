@@ -1,10 +1,13 @@
 package com.programmersbox.uiviews.utils
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.app.DownloadManager
 import android.content.*
 import android.graphics.*
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,14 +23,15 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
@@ -45,26 +49,15 @@ import com.google.gson.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
-import com.programmersbox.gsonutils.sharedPrefNotNullObjectDelegate
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
-import com.programmersbox.rxutils.toLatestFlowable
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.Flowables
-import io.reactivex.rxkotlin.addTo
-import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.BehaviorSubject
-import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.rx2.asObservable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -72,17 +65,10 @@ import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.set
 import kotlin.properties.Delegates
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
-
-var Context.shouldCheck: Boolean by sharedPrefNotNullObjectDelegate(true)
-
-var Context.lastUpdateCheck: Long? by sharedPrefDelegate(null)
-var Context.lastUpdateCheckEnd: Long? by sharedPrefDelegate(null)
-
-val updateCheckPublish = BehaviorSubject.create<Long>()
-val updateCheckPublishEnd = BehaviorSubject.create<Long>()
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     "otakuworld",
@@ -106,6 +92,12 @@ val Context.showAll get() = dataStore.data.map { it[SHOW_ALL] ?: true }
 
 val HISTORY_SAVE = intPreferencesKey("history_save")
 val Context.historySave get() = dataStore.data.map { it[HISTORY_SAVE] ?: 50 }
+
+val UPDATE_CHECKING_START = longPreferencesKey("lastUpdateCheckStart")
+val Context.updateCheckingStart get() = dataStore.data.map { it[UPDATE_CHECKING_START] ?: System.currentTimeMillis() }
+
+val UPDATE_CHECKING_END = longPreferencesKey("lastUpdateCheckEnd")
+val Context.updateCheckingEnd get() = dataStore.data.map { it[UPDATE_CHECKING_END] ?: System.currentTimeMillis() }
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 
@@ -259,9 +251,6 @@ abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
 class BatteryInformation(val context: Context) {
 
-    val batteryLevelAlert = PublishSubject.create<Float>()
-    val batteryInfoItem = PublishSubject.create<Battery>()
-
     val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
     val batteryInfo by lazy { MutableSharedFlow<Battery>() }
 
@@ -271,40 +260,6 @@ class BatteryInformation(val context: Context) {
         FULL(GoogleMaterial.Icon.gmd_battery_full, Icons.Default.BatteryFull),
         ALERT(GoogleMaterial.Icon.gmd_battery_alert, Icons.Default.BatteryAlert),
         UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.Default.BatteryUnknown)
-    }
-
-    fun composeSetup(
-        disposable: CompositeDisposable,
-        normalBatteryColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White,
-        subscribe: (Pair<androidx.compose.ui.graphics.Color, BatteryViewType>) -> Unit
-    ) {
-        Flowables.combineLatest(
-            Observable.combineLatest(
-                batteryLevelAlert,
-                context.batteryPercent.asObservable()
-            ) { b, d -> b <= d }
-                .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor }
-                .toLatestFlowable(),
-            Observable.combineLatest(
-                batteryInfoItem,
-                context.batteryPercent.asObservable()
-            ) { b, d -> b to d }
-                .map {
-                    when {
-                        it.first.isCharging -> BatteryViewType.CHARGING_FULL
-                        it.first.percent <= it.second -> BatteryViewType.ALERT
-                        it.first.percent >= 95 -> BatteryViewType.FULL
-                        it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                        else -> BatteryViewType.DEFAULT
-                    }
-                }
-                .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(subscribe)
-            .addTo(disposable)
     }
 
     suspend fun composeSetupFlow(
@@ -336,22 +291,20 @@ class BatteryInformation(val context: Context) {
             .collect()
     }
 
-    fun setup(
-        disposable: CompositeDisposable,
+    suspend fun setupFlow(
         normalBatteryColor: Int = Color.WHITE,
         size: Int,
         subscribe: (Pair<Int, IconicsDrawable>) -> Unit
     ) {
-        Flowables.combineLatest(
-            Observable.combineLatest(
-                batteryLevelAlert,
-                context.batteryPercent.asObservable()
+        combine(
+            combine(
+                batteryLevel,
+                context.batteryPercent
             ) { b, d -> b <= d }
-                .map { if (it) Color.RED else normalBatteryColor }
-                .toLatestFlowable(),
-            Observable.combineLatest(
-                batteryInfoItem,
-                context.batteryPercent.asObservable()
+                .map { if (it) Color.RED else normalBatteryColor },
+            combine(
+                batteryInfo,
+                context.batteryPercent
             ) { b, d -> b to d }
                 .map {
                     when {
@@ -363,13 +316,10 @@ class BatteryInformation(val context: Context) {
                     }
                 }
                 .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(context, it.icon).apply { sizePx = size } }
-                .toLatestFlowable()
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(subscribe)
-            .addTo(disposable)
+                .map { IconicsDrawable(context, it.icon).apply { sizePx = size } },
+        ) { l, b -> l to b }
+            .onEach(subscribe)
+            .collect()
     }
 
 }
@@ -622,9 +572,7 @@ class ExpirableLRUCache<K, V>(
     }
 }
 
-val LocalActivity = staticCompositionLocalOf<FragmentActivity> {
-    error("Context is not an Activity.")
-}
+val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
 
 fun Context.findActivity(): FragmentActivity {
     var currentContext = this
@@ -651,11 +599,46 @@ fun rememberBackStackEntry(
     route: String,
 ): NavBackStackEntry {
     val controller = LocalNavController.current
-    return remember { controller.getBackStackEntry(route) }
+    return remember(controller.currentBackStackEntry) { controller.getBackStackEntry(route) }
 }
 
-val LocalNavController = staticCompositionLocalOf<NavHostController> {
-    error("No NavController Found!")
-}
-
+val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }
+
+enum class Status { Available, Losing, Lost, Unavailable }
+
+@RequiresApi(Build.VERSION_CODES.N)
+@RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+@Composable
+fun connectivityStatus(
+    initialValue: Status = Status.Unavailable,
+    context: Context = LocalContext.current,
+    vararg key: Any
+): State<Status> = produceState(initialValue = initialValue, keys = key) {
+    val callback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            super.onAvailable(network)
+            value = Status.Available
+        }
+
+        override fun onLosing(network: Network, maxMsToLive: Int) {
+            super.onLosing(network, maxMsToLive)
+            value = Status.Losing
+        }
+
+        override fun onLost(network: Network) {
+            super.onLost(network)
+            value = Status.Lost
+        }
+
+        override fun onUnavailable() {
+            super.onUnavailable()
+            value = Status.Unavailable
+        }
+    }
+
+    val manager = context.connectivityManager
+    manager.registerDefaultNetworkCallback(callback)
+
+    awaitDispose { manager.unregisterNetworkCallback(callback) }
+}

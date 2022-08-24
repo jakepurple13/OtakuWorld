@@ -1,7 +1,7 @@
 package com.programmersbox.sharedutils
 
 import com.programmersbox.gsonutils.getJsonApi
-import io.reactivex.subjects.BehaviorSubject
+import kotlinx.coroutines.flow.MutableStateFlow
 
 object AppUpdate {
     private const val url = "https://raw.githubusercontent.com/jakepurple13/OtakuWorld/master/update.json"
@@ -23,6 +23,8 @@ object AppUpdate {
         fun downloadUrl(url: AppUpdates.() -> String?) = "$update_url${url()}"
     }
 
+    private fun String.removeVariantSuffix() = removeSuffix("-noFirebase")
+
     fun checkForUpdate(oldVersion: String, newVersion: String): Boolean = try {
         val items = oldVersion.split(".").zip(newVersion.split("."))
         val major = items[0]
@@ -39,7 +41,7 @@ object AppUpdate {
             major.second.toInt() == major.first.toInt() && minor.second.toInt() > minor.first.toInt() -> true
             major.second.toInt() == major.first.toInt()
                     && minor.second.toInt() == minor.first.toInt()
-                    && patch.second.toInt() > patch.first.toInt() -> true
+                    && patch.second.removeVariantSuffix().toInt() > patch.first.removeVariantSuffix().toInt() -> true
             else -> false
         }
     } catch (e: Exception) {
@@ -47,4 +49,4 @@ object AppUpdate {
     }
 }
 
-val appUpdateCheck = BehaviorSubject.create<AppUpdate.AppUpdates>()
+val updateAppCheck = MutableStateFlow<AppUpdate.AppUpdates?>(null)

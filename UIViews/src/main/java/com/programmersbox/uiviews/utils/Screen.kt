@@ -6,10 +6,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -17,6 +14,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
@@ -33,11 +32,21 @@ sealed class Screen(val route: String) {
     object FavoriteScreen : Screen("favorite")
     object AboutScreen : Screen("about")
     object DebugScreen : Screen("debug")
+    object TranslationScreen : Screen("translation_models")
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
             navController.navigate("$route?searchFor=$title") { launchSingleTop = true }
         }
     }
+
+    object FavoriteChoiceScreen : Screen("favorite_choice") {
+        const val dbitemsArgument = "dbitems"
+        fun navigate(navController: NavController, items: List<DbModel>) {
+            navController.navigate("$route/${Uri.encode(items.toJson())}") { launchSingleTop = true }
+        }
+    }
+
+    object SourceChooserScreen : Screen("source_chooser")
 
     companion object {
         val bottomItems = listOf(RecentScreen, AllScreen, SettingsScreen)
@@ -71,6 +80,19 @@ fun OtakuMaterialTheme(
                     secondary = Color(0xff90CAF9)
                 ),
         ) {
+            val systemUiController = rememberSystemUiController()
+
+            SideEffect {
+                systemUiController.setNavigationBarColor(
+                    color = Color.Transparent,
+                    darkIcons = !darkTheme
+                )
+                systemUiController.setStatusBarColor(
+                    color = Color.Transparent,
+                    darkIcons = !darkTheme
+                )
+            }
+
             CompositionLocalProvider(
                 LocalActivity provides remember { context.findActivity() },
                 LocalNavController provides navController,

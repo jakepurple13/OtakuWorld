@@ -2,22 +2,27 @@ package com.programmersbox.uiviews
 
 import android.app.PendingIntent
 import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.fragment.app.Fragment
+import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.uiviews.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.utils.ApiServiceSerializer
 import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.Screen
 
 interface GenericInfo {
 
@@ -27,6 +32,11 @@ interface GenericInfo {
 
     fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
     fun deepLinkSettings(context: Context): PendingIntent?
+
+    fun deepLinkDetailsUri(itemModel: ItemModel?) =
+        "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri()
+
+    fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
 
     fun chapterOnClick(
         model: ChapterModel,
@@ -41,7 +51,14 @@ interface GenericInfo {
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
     fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
-    fun downloadChapter(model: ChapterModel, allChapters: List<ChapterModel>, infoModel: InfoModel, context: Context, activity: FragmentActivity)
+    fun downloadChapter(
+        model: ChapterModel,
+        allChapters: List<ChapterModel>,
+        infoModel: InfoModel,
+        context: Context,
+        activity: FragmentActivity,
+        navController: NavController,
+    )
 
     @Composable
     fun DetailActions(infoModel: InfoModel, tint: Color) = Unit
@@ -81,12 +98,5 @@ interface GenericInfo {
 
     fun debugMenuItem(context: Context): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
-    fun recentNavSetup(fragment: Fragment, navController: NavController) = Unit
-    fun allNavSetup(fragment: Fragment, navController: NavController) = Unit
-    fun settingNavSetup(fragment: Fragment, navController: NavController) = Unit
-
     fun NavGraphBuilder.navSetup() = Unit
-
-    @Composable
-    fun BottomBarAdditions() = Unit
 }

@@ -20,12 +20,15 @@ enum class Sources(
     NINE_ANIME(domain = "nineanime", source = NineAnime),
 
     //MANGAKAKALOT(domain = "mangakakalot", source = Mangakakalot),
-    MANGAMUTINY(domain = "mangamutiny", source = Mangamutiny),
+    MANGAMUTINY(domain = "mangamutiny", source = Mangamutiny, filterOutOfUpdate = true) {
+        override val notWorking: Boolean get() = true
+    },
 
     //MANGA_DOG(domain = "mangadog", source = MangaDog),
     //INKR(domain = "mangarock", source = com.programmersbox.manga_sources.mangasources.manga.INKR),
     TSUMINO(domain = "tsumino", isAdult = true, source = Tsumino),
-    MANGA_READ(domain = "mangaread", source = MangaRead)
+    MANGA_READ(domain = "mangaread", source = MangaRead),
+    MANGATOWN(domain = "mangatown", source = MangaTown)
     ;
 
     override val serviceName: String get() = this.name
