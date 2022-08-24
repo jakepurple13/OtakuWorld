@@ -262,7 +262,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    
+
      - name: Download APK from build
        uses: actions/download-artifact@v3
        with:
@@ -317,15 +317,15 @@ jobs:
          tag_name: ${{ env.VERSION_TAG }}
          name: Release ${{ env.VERSION_TAG }}
          files: |
-           Signed Manga App/mangaworld-release.apk
-           Signed Anime App/animeworld-release.apk
-           Signed Novel App/novelworld-release.apk
-           Signed AnimeTV App/animeworldtv-release.apk
+           mangaworld-release.apk
+           animeworld-release.apk
+           novelworld-release.apk
+           animeworldtv-release.apk
 
-           Signed Manga No Firebase App/mangaworld-no-firebase-release.apk
-           Signed Anime No Firebase App/animeworld-no-firebase-release.apk
-           Signed Novel No Firebase App/novelworld-no-firebase-release.apk
-           Signed AnimeTV No Firebase App/animeworldtv-no-firebase-release.apk
+           mangaworld-no-firebase-release.apk
+           animeworld-no-firebase-release.apk
+           novelworld-no-firebase-release.apk
+           animeworldtv-no-firebase-release.apk
 
      - name: Discord notification
        env:
