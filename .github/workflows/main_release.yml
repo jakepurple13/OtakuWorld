@@ -313,6 +313,7 @@ jobs:
        env:
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        with:
+         fail_on_unmatched_files: true
          tag_name: ${{ env.VERSION_TAG }}
          name: Release ${{ env.VERSION_TAG }}
          files: |
