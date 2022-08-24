@@ -122,17 +122,7 @@ fun <T> BottomSheetDeleteScaffold(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Surface(
-                        modifier = Modifier
-                            .animateContentSize()
-                            .let {
-                                if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
-                                    it.padding(WindowInsets.statusBars.asPaddingValues())
-                                } else {
-                                    it
-                                }
-                            }
-                    ) {
+                    Surface(modifier = Modifier.animateContentSize()) {
                         Button(
                             onClick = {
                                 scope.launch {
@@ -142,6 +132,13 @@ fun <T> BottomSheetDeleteScaffold(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .let {
+                                    if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
+                                        it.padding(WindowInsets.statusBars.asPaddingValues())
+                                    } else {
+                                        it
+                                    }
+                                }
                                 .heightIn(ButtonDefaults.MinHeight + 4.dp),
                             shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                         ) { Text(stringResource(R.string.delete_multiple)) }
@@ -380,17 +377,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Surface(
-                        modifier = Modifier
-                            .animateContentSize()
-                            .let {
-                                if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
-                                    it.padding(WindowInsets.statusBars.asPaddingValues())
-                                } else {
-                                    it
-                                }
-                            }
-                    ) {
+                    Surface(modifier = Modifier.animateContentSize()) {
                         Button(
                             onClick = {
                                 scope.launch {
@@ -400,6 +387,13 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .let {
+                                    if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
+                                        it.padding(WindowInsets.statusBars.asPaddingValues())
+                                    } else {
+                                        it
+                                    }
+                                }
                                 .heightIn(ButtonDefaults.MinHeight + 4.dp),
                             shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                         ) { Text(stringResource(R.string.delete_multiple)) }
