@@ -69,7 +69,14 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 )
 @Composable
 fun ViewVideoScreen() {
-    PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+    PermissionRequest(
+        if (Build.VERSION.SDK_INT >= 33)
+            listOf(Manifest.permission.READ_MEDIA_VIDEO)
+        else listOf(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+        )
+    ) {
         val context = LocalContext.current
         val viewModel: ViewVideoViewModel = viewModel { ViewVideoViewModel(context) }
         VideoLoad(viewModel)
@@ -98,8 +105,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
     itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, video = it) }
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     BottomSheetDeleteScaffold(
         bottomScrollBehavior = scrollBehavior,
@@ -219,12 +225,12 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
             )
         }
     ) { p, itemList ->
-        Scaffold(
+        OtakuScaffold(
             modifier = Modifier.padding(p),
             //bottomBar = { AndroidViewBinding(factory = MiniControllerBinding::inflate) }
         ) { p1 ->
             if (items.isEmpty()) {
-                EmptyState()
+                EmptyState(p1)
             } else {
                 AnimatedLazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -251,9 +257,13 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 }
 
 @Composable
-private fun EmptyState() {
+private fun EmptyState(paddingValues: PaddingValues) {
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize()
+    ) {
 
         Surface(
             modifier = Modifier

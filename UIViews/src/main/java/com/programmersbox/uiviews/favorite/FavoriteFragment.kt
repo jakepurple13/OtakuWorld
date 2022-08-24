@@ -2,7 +2,6 @@ package com.programmersbox.uiviews.favorite
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -77,14 +76,11 @@ fun FavoriteUi(logo: MainLogo) {
         placeholder = logo.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
     ) { itemInfo ->
-        Scaffold(
+        OtakuScaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.background(
-                        TopAppBarDefaults.smallTopAppBarColors().containerColor(scrollBehavior.state.overlappedFraction).value
-                    )
                 ) {
                     InsetSmallTopAppBar(
                         scrollBehavior = scrollBehavior,

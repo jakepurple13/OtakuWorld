@@ -46,7 +46,10 @@ fun PermissionRequest(permissionsList: List<String>, content: @Composable () -> 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NeedsPermissions(onClick: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()

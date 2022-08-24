@@ -29,8 +29,7 @@ fun DebugView() {
     val scope = rememberCoroutineScope()
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

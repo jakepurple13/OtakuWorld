@@ -26,11 +26,8 @@ import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
-import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -60,10 +57,9 @@ fun RecentView(
         if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context, source!!)
     }
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-    Scaffold(
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
@@ -77,7 +73,8 @@ fun RecentView(
                 },
                 scrollBehavior = scrollBehavior
             )
-        }
+        },
+        bottomBar = { Spacer(modifier = Modifier.height(1.dp)) }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
         M3OtakuBannerBox(

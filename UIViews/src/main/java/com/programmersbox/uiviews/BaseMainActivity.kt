@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -146,8 +145,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     sheetContentColor = MaterialTheme.colorScheme.onSurface,
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
                 ) {
-                    Scaffold(
-                        modifier = Modifier.navigationBarsPadding(),
+                    OtakuScaffold(
                         bottomBar = {
                             Column {
                                 BottomBarAdditions()

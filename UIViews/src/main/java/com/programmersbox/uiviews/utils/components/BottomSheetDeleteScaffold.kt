@@ -56,7 +56,7 @@ fun <T> BottomSheetDeleteScaffold(
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
     topAppBarScrollState: TopAppBarState = rememberTopAppBarState(),
-    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) },
+    bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState),
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit
@@ -145,12 +145,8 @@ fun <T> BottomSheetDeleteScaffold(
                     }
                 },
                 bottomBar = {
-                    BottomAppBar(
+                    androidx.compose.material3.BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
-                        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollBehavior.state.overlappedFraction).value,
-                        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollBehavior.state.overlappedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
@@ -371,8 +367,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 
             }
 
-            val topAppBarScrollState = rememberTopAppBarState()
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+            val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -400,12 +395,8 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                     }
                 },
                 bottomBar = {
-                    BottomAppBar(
+                    androidx.compose.material3.BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
-                        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollBehavior.state.overlappedFraction).value,
-                        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollBehavior.state.overlappedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },

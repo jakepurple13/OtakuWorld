@@ -6,7 +6,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +19,6 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -41,11 +39,8 @@ import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
-import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -86,9 +81,8 @@ fun AllView(
 
     val state = rememberLazyGridState()
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
-    Scaffold(
+    val scrollBehaviorTop = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
@@ -139,18 +133,11 @@ fun AllView(
                             sheetContent = {
                                 val focusManager = LocalFocusManager.current
                                 val searchList = allVm.searchList
-                                val searchTopAppBarScrollState = rememberTopAppBarState()
-                                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(searchTopAppBarScrollState) }
-                                Scaffold(
+                                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+                                OtakuScaffold(
                                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                                     topBar = {
-                                        Column(
-                                            modifier = Modifier
-                                                .background(
-                                                    TopAppBarDefaults.smallTopAppBarColors()
-                                                        .containerColor(scrollBehavior.state.overlappedFraction).value
-                                                )
-                                        ) {
+                                        Column {
                                             Button(
                                                 onClick = {
                                                     scope.launch {

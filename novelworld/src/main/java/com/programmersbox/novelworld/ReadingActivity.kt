@@ -260,8 +260,7 @@ fun NovelReader() {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                val topAppBarScrollState = rememberTopAppBarState()
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
                 Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     topBar = {
@@ -518,12 +517,8 @@ fun BottomBar(
         enter = slideInVertically { it / 2 } + fadeIn(),
         exit = slideOutVertically { it / 2 } + fadeOut()
     ) {
-        BottomAppBar(
+        androidx.compose.material3.BottomAppBar(
             modifier = modifier,
-            containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                .containerColor(contentScrollBehavior.state.overlappedFraction).value,
-            contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                .titleContentColor(contentScrollBehavior.state.overlappedFraction).value
         ) {
 
             val prevShown = readVm.currentChapter < readVm.list.lastIndex

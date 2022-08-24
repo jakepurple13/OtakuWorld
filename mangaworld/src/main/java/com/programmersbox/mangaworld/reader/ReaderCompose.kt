@@ -29,7 +29,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -205,8 +204,7 @@ fun ReadView() {
 
     val showItems = readVm.showInfo || listShowItems || pagerShowItems
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
@@ -299,9 +297,8 @@ fun DrawerView(
     readVm: ReadViewModel,
     showToast: () -> Unit
 ) {
-    val drawerTopAppBarScrollState = rememberTopAppBarState()
-    val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
-    Scaffold(
+    val drawerScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
@@ -383,8 +380,7 @@ fun SheetView(
     listState: LazyListState
 ) {
     val scope = rememberCoroutineScope()
-    val sheetTopAppBarScrollState = rememberTopAppBarState()
-    val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
+    val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
         topBar = {
@@ -857,12 +853,8 @@ private fun BottomBar(
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit
 ) {
-    BottomAppBar(
+    androidx.compose.material3.BottomAppBar(
         modifier = modifier,
-        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .containerColor(scrollBehavior.state.overlappedFraction).value,
-        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .titleContentColor(scrollBehavior.state.overlappedFraction).value
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0

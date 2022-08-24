@@ -5,6 +5,7 @@ import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Environment
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -182,9 +183,10 @@ class GenericManga(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
-        activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) { p ->
-            if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
-        }
+        activity.requestPermissions(
+            *if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
+            else arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }
     }
 
     override fun sourceList(): List<ApiService> =

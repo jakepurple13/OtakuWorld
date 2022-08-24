@@ -115,9 +115,8 @@ fun NotificationsScreen(
     BackHandler(state.bottomSheetState.isExpanded) {
         scope.launch { state.bottomSheetState.collapse() }
     }
-    val topAppBarScrollState = rememberTopAppBarState()
 
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     BottomSheetDeleteScaffold(
         listOfItems = items,

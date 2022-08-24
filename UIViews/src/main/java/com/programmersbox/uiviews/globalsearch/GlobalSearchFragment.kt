@@ -132,14 +132,7 @@ fun GlobalSearchView(
             scaffoldState = bottomScaffold,
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                Column(
-                    modifier = Modifier
-                        .background(
-                            TopAppBarDefaults
-                                .smallTopAppBarColors()
-                                .containerColor(scrollBehavior.state.overlappedFraction).value
-                        )
-                ) {
+                Column {
                     InsetSmallTopAppBar(
                         navigationIcon = { BackButton() },
                         title = { Text(stringResource(R.string.global_search)) },
@@ -212,13 +205,12 @@ fun GlobalSearchView(
             },
             sheetContent = searchModelBottom?.let { s ->
                 {
-                    val topAppBarScrollState = rememberTopAppBarState()
-                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+                    val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
                     Scaffold(
-                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                         topBar = {
                             SmallTopAppBar(
-                                scrollBehavior = scrollBehavior,
+                                scrollBehavior = sheetScrollBehavior,
                                 title = { Text(s.apiName) },
                                 actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
                             )

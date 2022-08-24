@@ -12,7 +12,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +58,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bumptech.glide.load.model.GlideUrl
+import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.*
@@ -576,14 +576,12 @@ private fun DetailsView(
     val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
         ?: M3MaterialTheme.colorScheme.onSurface
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     BottomSheetScaffold(
         backgroundColor = Color.Transparent,
         sheetContent = {
-            val markAsTopAppBarScrollState = rememberTopAppBarState()
-            val scrollBehaviorMarkAs = remember { TopAppBarDefaults.pinnedScrollBehavior(markAsTopAppBarScrollState) }
+            val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
             Scaffold(
                 topBar = {
@@ -1184,113 +1182,97 @@ private fun DetailsHeader(
                 )
         )
 
-        Row(
+        Column(
             modifier = Modifier
                 .padding(5.dp)
                 .animateContentSize()
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.padding(5.dp)
-            ) {
-                GlideImage(
-                    imageModel = imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    error = logo,
-                    placeHolder = logo,
-                    bitmapPalette = BitmapPalette { p ->
-                        swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .combinedClickable(
-                            onClick = {},
-                            onDoubleClick = { imagePopup = true }
-                        )
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
-                )
-            }
-
-            Column(
-                modifier = Modifier.padding(start = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-
-                Text(
-                    model.source.serviceName,
-                    style = M3MaterialTheme.typography.labelSmall,
-                    color = M3MaterialTheme.colorScheme.onSurface
-                )
-
-                var descriptionVisibility by remember { mutableStateOf(false) }
-
-                Text(
-                    model.title,
-                    style = M3MaterialTheme.typography.titleMedium,
-                    modifier = Modifier
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { descriptionVisibility = !descriptionVisibility }
-                        .fillMaxWidth(),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                    color = M3MaterialTheme.colorScheme.onSurface
-                )
-
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    items(model.genres) {
-                        AssistChip(
-                            onClick = {},
-                            modifier = Modifier.fadeInAnimation(),
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
-                                    .animate().value,
-                                labelColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
-                                    .animate().value
-                                    .copy(alpha = ChipDefaults.ContentOpacity)
-                            ),
-                            label = { Text(it) }
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { favoriteClick(isFavorite) }
-                        .semantics(true) {}
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+            Row {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.padding(5.dp)
                 ) {
-                    Icon(
-                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    GlideImage(
+                        imageModel = imageUrl,
                         contentDescription = null,
-                        tint = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
-                            ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        contentScale = ContentScale.Fit,
+                        error = logo,
+                        placeHolder = logo,
+                        bitmapPalette = BitmapPalette { p ->
+                            swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .combinedClickable(
+                                onClick = {},
+                                onDoubleClick = { imagePopup = true }
+                            )
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                     )
-                    Crossfade(targetState = isFavorite) { target ->
-                        Text(
-                            stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
-                            style = M3MaterialTheme.typography.headlineSmall,
-                            fontSize = 20.sp,
-                            modifier = Modifier.align(Alignment.CenterVertically),
-                            color = M3MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                 }
 
-                Text(
-                    stringResource(R.string.chapter_count, model.chapters.size),
-                    style = M3MaterialTheme.typography.bodyMedium,
-                    color = M3MaterialTheme.colorScheme.onSurface
-                )
+                Column(
+                    modifier = Modifier.padding(start = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
 
-                /*if(model.alternativeNames.isNotEmpty()) {
+                    Text(
+                        model.source.serviceName,
+                        style = M3MaterialTheme.typography.labelSmall,
+                        color = M3MaterialTheme.colorScheme.onSurface
+                    )
+
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+
+                    Text(
+                        model.title,
+                        style = M3MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) { descriptionVisibility = !descriptionVisibility }
+                            .fillMaxWidth(),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                        color = M3MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) { favoriteClick(isFavorite) }
+                            .semantics(true) {}
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            tint = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
+                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Crossfade(targetState = isFavorite) { target ->
+                            Text(
+                                stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
+                                style = M3MaterialTheme.typography.headlineSmall,
+                                fontSize = 20.sp,
+                                modifier = Modifier.align(Alignment.CenterVertically),
+                                color = M3MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    Text(
+                        stringResource(R.string.chapter_count, model.chapters.size),
+                        style = M3MaterialTheme.typography.bodyMedium,
+                        color = M3MaterialTheme.colorScheme.onSurface
+                    )
+
+                    /*if(model.alternativeNames.isNotEmpty()) {
                     Text(
                         stringResource(R.string.alternateNames, model.alternativeNames.joinToString(", ")),
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
@@ -1301,7 +1283,7 @@ private fun DetailsHeader(
                     )
                 }*/
 
-                /*
+                    /*
             var descriptionVisibility by remember { mutableStateOf(false) }
             Text(
                 model.description,
@@ -1313,6 +1295,27 @@ private fun DetailsHeader(
                 style = MaterialTheme.typography.body2,
             )*/
 
+                }
+            }
+
+            FlowRow(
+                mainAxisSpacing = 4.dp,
+                crossAxisSpacing = 2.dp,
+            ) {
+                model.genres.forEach {
+                    AssistChip(
+                        onClick = {},
+                        modifier = Modifier.fadeInAnimation(),
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = (swatchInfo.value?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
+                                .animate().value,
+                            labelColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
+                                .animate().value
+                                .copy(alpha = ChipDefaults.ContentOpacity)
+                        ),
+                        label = { Text(it) }
+                    )
+                }
             }
         }
     }

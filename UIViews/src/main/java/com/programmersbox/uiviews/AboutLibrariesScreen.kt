@@ -39,6 +39,7 @@ import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.OtakuScaffold
 
 @Composable
 fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
@@ -59,10 +60,9 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
     //var searchText by remember { mutableStateOf("") }
     val libs = libraries?.libraries/*?.filter { it.name.contains(searchText, true) }*/.orEmpty()
 
-    val state = rememberTopAppBarState()
-    val topAppBarScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(state) }
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(

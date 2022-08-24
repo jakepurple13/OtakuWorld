@@ -2,7 +2,10 @@ package com.programmersbox.uiviews.utils.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -38,7 +41,7 @@ fun <T> ListBottomScreen(
     ) {
         stickyHeader {
             InsetSmallTopAppBar(
-                insetPadding = if (includeInsetPadding) WindowInsets.statusBars.asPaddingValues() else PaddingValues(0.dp),
+                insetPadding = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
                 title = { Text(title) },
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) } },
                 actions = { if (list.isNotEmpty()) Text("(${list.size})") }
