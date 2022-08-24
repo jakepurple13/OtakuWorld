@@ -794,6 +794,7 @@ private fun TopBar(
     vm: ReadViewModel
 ) {
     CenterAlignedTopAppBar(
+        windowInsets = WindowInsets(0.dp),
         scrollBehavior = scrollBehavior,
         modifier = modifier,
         navigationIcon = {
