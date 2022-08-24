@@ -124,7 +124,7 @@ class GenericManga(val context: Context) : GenericInfo {
                     },
                     SettingsDsl.customAnimationOptions
                 )*/
-            ReadViewModel.navigateToMangaReader(navController, model, allChapters, infoModel.title, model.url, model.sourceUrl)
+            ReadViewModel.navigateToMangaReader(navController, model, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {

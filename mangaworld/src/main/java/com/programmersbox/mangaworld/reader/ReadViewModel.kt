@@ -78,12 +78,11 @@ class ReadViewModel(
 
     companion object {
         const val MangaReaderRoute =
-            "mangareader?currentChapter={currentChapter}&allChapters={allChapters}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
+            "mangareader?currentChapter={currentChapter}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
 
         fun navigateToMangaReader(
             navController: NavController,
             currentChapter: ChapterModel? = null,
-            allChapters: List<ChapterModel>? = null,
             mangaTitle: String? = null,
             mangaUrl: String? = null,
             mangaInfoUrl: String? = null,
@@ -91,10 +90,9 @@ class ReadViewModel(
             filePath: String? = null
         ) {
             val current = Uri.encode(currentChapter?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-            val all = Uri.encode(allChapters?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
 
             navController.navigate(
-                "mangareader?currentChapter=$current&allChapters=$all&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
+                "mangareader?currentChapter=$current&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
             ) { launchSingleTop = true }
         }
     }
