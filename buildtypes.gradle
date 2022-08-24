@@ -21,6 +21,11 @@ android {
 
     easylauncher {
         defaultFlavorNaming true
+        productFlavors {
+            noFirebase {
+                filters customColorRibbonFilter("No Firebase", "#0000FF", "#FFFFFF", "bottom")
+            }
+        }
         buildTypes {
             debug { filters blueRibbonFilter() }
             beta { filters blueRibbonFilter() }
