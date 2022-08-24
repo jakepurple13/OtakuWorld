@@ -79,105 +79,107 @@ fun FavoriteUi(logo: MainLogo) {
         OtakuScaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    InsetSmallTopAppBar(
-                        scrollBehavior = scrollBehavior,
-                        navigationIcon = { BackButton() },
-                        title = { Text(stringResource(R.string.viewFavoritesMenu)) },
-                        actions = {
-
-                            val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                                animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
-                            }
-
-                            GroupButton(
-                                selected = viewModel.sortedBy,
-                                options = listOf(
-                                    GroupButtonModel(SortFavoritesBy.TITLE) {
-                                        Icon(
-                                            Icons.Default.SortByAlpha,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
-                                        )
-                                    },
-                                    GroupButtonModel(SortFavoritesBy.COUNT) {
-                                        Icon(
-                                            Icons.Default.Sort,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
-                                        )
-                                    },
-                                    GroupButtonModel(SortFavoritesBy.CHAPTERS) {
-                                        Icon(
-                                            Icons.Default.ReadMore,
-                                            null,
-                                            modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
-                                        )
-                                    }
-                                )
-                            ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
-                        }
-                    )
-
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        label = {
-                            Text(
-                                context.resources.getQuantityString(
-                                    R.plurals.numFavorites,
-                                    showing.size,
-                                    showing.size
-                                )
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { searchText = "" }) {
-                                Icon(Icons.Default.Cancel, null)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                    )
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                Surface {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        item {
-                            FilterChip(
-                                selected = true,
-                                modifier = Modifier.combinedClickable(
-                                    onClick = { viewModel.resetSources() },
-                                    onLongClick = { viewModel.selectedSources.clear() }
-                                ),
-                                label = { Text("ALL") },
-                                onClick = { viewModel.allClick() }
-                            )
-                        }
+                        InsetSmallTopAppBar(
+                            scrollBehavior = scrollBehavior,
+                            navigationIcon = { BackButton() },
+                            title = { Text(stringResource(R.string.viewFavoritesMenu)) },
+                            actions = {
 
-                        items(
-                            (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                .groupBy { it }
-                                .toList()
-                                .sortedBy { it.first }
-                        ) {
-                            FilterChip(
-                                selected = it.first in viewModel.selectedSources,
-                                onClick = { viewModel.newSource(it.first) },
-                                label = { Text(it.first) },
-                                leadingIcon = { Text("${it.second.size - 1}") },
-                                modifier = Modifier.combinedClickable(
-                                    onClick = { viewModel.newSource(it.first) },
-                                    onLongClick = { viewModel.singleSource(it.first) }
+                                val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
+                                    animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
+                                }
+
+                                GroupButton(
+                                    selected = viewModel.sortedBy,
+                                    options = listOf(
+                                        GroupButtonModel(SortFavoritesBy.TITLE) {
+                                            Icon(
+                                                Icons.Default.SortByAlpha,
+                                                null,
+                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.TITLE))
+                                            )
+                                        },
+                                        GroupButtonModel(SortFavoritesBy.COUNT) {
+                                            Icon(
+                                                Icons.Default.Sort,
+                                                null,
+                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
+                                            )
+                                        },
+                                        GroupButtonModel(SortFavoritesBy.CHAPTERS) {
+                                            Icon(
+                                                Icons.Default.ReadMore,
+                                                null,
+                                                modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
+                                            )
+                                        }
+                                    )
+                                ) { if (viewModel.sortedBy != it) viewModel.sortedBy = it else viewModel.reverse = !viewModel.reverse }
+                            }
+                        )
+
+                        OutlinedTextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            label = {
+                                Text(
+                                    context.resources.getQuantityString(
+                                        R.plurals.numFavorites,
+                                        showing.size,
+                                        showing.size
+                                    )
                                 )
-                            )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { searchText = "" }) {
+                                    Icon(Icons.Default.Cancel, null)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 5.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                        ) {
+                            item {
+                                FilterChip(
+                                    selected = true,
+                                    modifier = Modifier.combinedClickable(
+                                        onClick = { viewModel.resetSources() },
+                                        onLongClick = { viewModel.selectedSources.clear() }
+                                    ),
+                                    label = { Text("ALL") },
+                                    onClick = { viewModel.allClick() }
+                                )
+                            }
+
+                            items(
+                                (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
+                                    .groupBy { it }
+                                    .toList()
+                                    .sortedBy { it.first }
+                            ) {
+                                FilterChip(
+                                    selected = it.first in viewModel.selectedSources,
+                                    onClick = { viewModel.newSource(it.first) },
+                                    label = { Text(it.first) },
+                                    leadingIcon = { Text("${it.second.size - 1}") },
+                                    modifier = Modifier.combinedClickable(
+                                        onClick = { viewModel.newSource(it.first) },
+                                        onLongClick = { viewModel.singleSource(it.first) }
+                                    )
+                                )
+                            }
                         }
                     }
                 }
