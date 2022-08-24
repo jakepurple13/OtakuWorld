@@ -41,16 +41,56 @@ jobs:
       #       - name: Build APK
       #         run: bash ./gradlew assembleRelease --stacktrace
 
-      - name: Build all artifacts
-        id: buildAllApks
-        uses: eskatos/gradle-command-action@v2.2.5
+      #      - name: Build all artifacts
+      #        id: buildAllApks
+      #        uses: eskatos/gradle-command-action@v2.2.5
+      #        with:
+      #          gradle-version: current
+      #          wrapper-cache-enabled: true
+      #          dependencies-cache-enabled: true
+      #          configuration-cache-enabled: true
+      #          arguments: assembleRelease
+
+      - name: Build MangaWorld artifacts
+        id: buildMangaApks
+        uses: gradle/gradle-build-action@v2
         with:
           gradle-version: current
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
-          arguments: assembleRelease
-        
+          arguments: mangaworld:assembleRelease
+
+      - name: Build AnimeWorld artifacts
+        id: buildAnimeApks
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: animeworld:assembleRelease
+
+      - name: Build NovelWorld artifacts
+        id: buildNovelApks
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: novelworld:assembleRelease
+
+      - name: Build AnimeWorldTV artifacts
+        id: buildAnimeTvApks
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: animeworldtv:assembleRelease
+
       - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: manga_sign
