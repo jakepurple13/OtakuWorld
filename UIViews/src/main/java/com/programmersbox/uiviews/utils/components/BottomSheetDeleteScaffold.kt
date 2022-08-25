@@ -55,8 +55,7 @@ fun <T> BottomSheetDeleteScaffold(
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
-    topAppBarScrollState: TopAppBarState = rememberTopAppBarState(),
-    bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState),
+    bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit

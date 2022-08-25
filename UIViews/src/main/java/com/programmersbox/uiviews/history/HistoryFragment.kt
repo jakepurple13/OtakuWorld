@@ -124,7 +124,7 @@ fun HistoryUi(
         ) {
             items(recentItems) { item ->
                 if (item != null) {
-                    HistoryItem(item, dao, hm, logo, scope)
+                    HistoryItem(item, dao, logo, scope)
                 } else {
                     HistoryItemPlaceholder()
                 }
@@ -137,7 +137,7 @@ fun HistoryUi(
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
-private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel, logo: MainLogo, scope: CoroutineScope) {
+private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope) {
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {

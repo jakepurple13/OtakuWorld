@@ -63,7 +63,7 @@ class GlobalSearchViewModel(
         }
     }
 
-    fun <A, B> List<A>.apmap(f: suspend (A) -> B): List<B> = runBlocking {
+    private fun <A, B> List<A>.apmap(f: suspend (A) -> B): List<B> = runBlocking {
         map { async { f(it) } }.map { it.await() }
     }
 

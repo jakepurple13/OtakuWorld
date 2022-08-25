@@ -65,7 +65,24 @@ fun FavoriteUi(logo: MainLogo) {
 
     var searchText by rememberSaveable { mutableStateOf("") }
 
-    val showing = favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
+    val showing = remember(favoriteItems, searchText, viewModel.selectedSources) {
+        favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
+    }
+
+    val showingList = remember(viewModel.sortedBy, viewModel.reverse, showing) {
+        showing
+            .groupBy(DbModel::title)
+            .entries
+            .let {
+                when (val s = viewModel.sortedBy) {
+                    is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
+                    is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
+                    is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
+                }
+            }
+            .let { if (viewModel.reverse) it.reversed() else it }
+            .toTypedArray()
+    }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -235,18 +252,7 @@ fun FavoriteUi(logo: MainLogo) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(
-                        showing
-                            .groupBy(DbModel::title)
-                            .entries
-                            .let {
-                                when (val s = viewModel.sortedBy) {
-                                    is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
-                                    is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
-                                    is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
-                                }
-                            }
-                            .let { if (viewModel.reverse) it.reversed() else it }
-                            .toTypedArray(),
+                        showingList,
                         key = { it.key }
                     ) { info ->
                         M3CoverCard(
