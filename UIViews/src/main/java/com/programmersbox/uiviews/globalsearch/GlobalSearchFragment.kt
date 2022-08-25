@@ -141,13 +141,13 @@ fun GlobalSearchView(
                     AutoCompleteBox(
                         items = history.asAutoCompleteEntities { _, _ -> true },
                         trailingIcon = {
-                            androidx.compose.material3.IconButton(
+                            IconButton(
                                 onClick = { scope.launch { dao.deleteHistory(it.value) } },
                                 modifier = Modifier.weight(.1f)
-                            ) { androidx.compose.material3.Icon(Icons.Default.Cancel, null) }
+                            ) { Icon(Icons.Default.Cancel, null) }
                         },
                         itemContent = {
-                            androidx.compose.material3.Text(
+                            Text(
                                 text = it.value.searchText,
                                 style = M3MaterialTheme.typography.titleSmall,
                                 modifier = Modifier
@@ -302,7 +302,7 @@ fun GlobalSearchView(
                                     }
                                 } else if (viewModel.searchListPublisher.isNotEmpty()) {
                                     items(viewModel.searchListPublisher) { i ->
-                                        androidx.compose.material3.Surface(
+                                        Surface(
                                             modifier = Modifier.clickable {
                                                 searchModelBottom = i
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
@@ -379,7 +379,7 @@ fun SearchCoverCard(
     onLongPress: (ComponentState) -> Unit,
     onClick: () -> Unit = {}
 ) {
-    androidx.compose.material3.ElevatedCard(
+    ElevatedCard(
         modifier = Modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
