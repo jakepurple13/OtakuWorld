@@ -141,8 +141,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }*/
 
-                val topBarState = rememberTopAppBarState()
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
                 BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
@@ -1059,7 +1058,7 @@ fun NestedScrollExample() {
             title = { Text("toolbar offset is ${toolbarOffsetHeightPx.value}") }
         )
 
-        BottomAppBar(
+        androidx.compose.material3.BottomAppBar(
             modifier = Modifier
                 .height(toolbarHeight)
                 .align(Alignment.BottomCenter)
@@ -1095,7 +1094,7 @@ fun CustomNestedScrollExample() {
     val bottomBar = remember {
         CoordinatorModel(56.dp) { it, model ->
             val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
-            BottomAppBar(
+            androidx.compose.material3.BottomAppBar(
                 modifier = Modifier
                     .height(56.dp)
                     .alpha(1f - (-animateBottomBar / model.heightPx))
@@ -1193,7 +1192,7 @@ fun ScaffoldNestedScrollExample() {
     val bottomBar = remember {
         CoordinatorModel1(56.dp) { it, model ->
             val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
-            BottomAppBar(
+            androidx.compose.material3.BottomAppBar(
                 modifier = Modifier
                     .height(56.dp - with(LocalDensity.current) { -animateBottomBar.toDp() })
                     .alpha(1f - (-animateBottomBar / model.heightPx))
