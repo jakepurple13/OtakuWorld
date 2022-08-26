@@ -16,10 +16,16 @@ import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
+
+    val observeNetwork = ReactiveNetwork()
+        .observeInternetConnectivity()
+        .flowOn(Dispatchers.IO)
 
     var searchText by mutableStateOf("")
     var searchList by mutableStateOf<List<ItemModel>>(emptyList())

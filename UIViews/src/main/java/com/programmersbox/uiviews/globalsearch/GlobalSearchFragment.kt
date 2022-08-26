@@ -5,7 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -58,17 +61,14 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AutoCompleteBox
 import com.programmersbox.uiviews.utils.components.asAutoCompleteEntities
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import ru.beryukhov.reactivenetwork.ReactiveNetwork
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
-    ExperimentalAnimationApi::class,
-    ExperimentalFoundationApi::class
+    ExperimentalAnimationApi::class
 )
 @Composable
 fun GlobalSearchView(
@@ -95,10 +95,7 @@ fun GlobalSearchView(
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = viewModel.isRefreshing)
     val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
-    val networkState by ReactiveNetwork()
-        .observeInternetConnectivity()
-        .flowOn(Dispatchers.IO)
-        .collectAsState(initial = true)
+    val networkState by viewModel.observeNetwork.collectAsState(initial = true)
 
     val history by dao
         .searchHistory("%${viewModel.searchText}%")

@@ -219,8 +219,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 val context = LocalContext.current
                                 RecentView(
                                     recentVm = viewModel { RecentViewModel(dao, context) },
-                                    info = genericInfo,
-                                    navController = navController,
                                     logo = logo
                                 )
                             }
@@ -231,8 +229,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 val context = LocalContext.current
                                 AllView(
                                     allVm = viewModel { AllViewModel(dao, context) },
-                                    info = genericInfo,
-                                    navController = navController,
                                     logo = logo
                                 )
                             }

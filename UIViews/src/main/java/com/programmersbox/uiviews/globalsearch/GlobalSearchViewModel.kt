@@ -9,16 +9,22 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class GlobalSearchViewModel(
     val info: GenericInfo,
     val dao: HistoryDao,
     initialSearch: String
 ) : ViewModel() {
+
+    val observeNetwork = ReactiveNetwork()
+        .observeInternetConnectivity()
+        .flowOn(Dispatchers.IO)
 
     var searchText by mutableStateOf(initialSearch)
     var searchListPublisher by mutableStateOf<List<SearchModel>>(emptyList())
