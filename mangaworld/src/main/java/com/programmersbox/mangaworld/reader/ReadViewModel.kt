@@ -36,13 +36,13 @@ class ReadViewModel(
     handle: SavedStateHandle,
     context: Context,
     val genericInfo: GenericInfo,
-    val headers: MutableMap<String, String> = mutableMapOf<String, String>(),
+    val headers: MutableMap<String, String> = mutableMapOf(),
     model: Flow<List<String>>? = handle
         .get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
         ?.getChapterInfo()
         ?.map {
-            headers.putAll(it.flatMap { it.headers.toList() })
+            headers.putAll(it.flatMap { h -> h.headers.toList() })
             it.mapNotNull(Storage::link)
         },
     /*?.subscribeOn(Schedulers.io())
@@ -61,7 +61,7 @@ class ReadViewModel(
         }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())*/
-        flow<List<String>> {
+        flow {
             filePath
                 .listFiles()
                 ?.sortedBy { f -> f.name.split(".").first().toInt() }
@@ -101,7 +101,7 @@ class ReadViewModel(
 
     val ad: AdRequest by lazy { AdRequest.Builder().build() }
 
-    val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
+    private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 
     private val chapterList by lazy { ChapterList(context, genericInfo) }
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
@@ -178,7 +178,7 @@ class ReadViewModel(
             list.getOrNull(currentChapter)
                 ?.getChapterInfo()
                 ?.map {
-                    headers.putAll(it.flatMap { it.headers.toList() })
+                    headers.putAll(it.flatMap { h -> h.headers.toList() })
                     it.mapNotNull(Storage::link)
                 }
         )
