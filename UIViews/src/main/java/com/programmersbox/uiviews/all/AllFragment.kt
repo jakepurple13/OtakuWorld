@@ -12,9 +12,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,16 +93,18 @@ fun AllView(
                     }
                 ) {
                     // Add tabs for all of our pages
-                    Tab(
+                    LeadingIconTab(
                         text = { Text(stringResource(R.string.all)) },
                         selected = pagerState.currentPage == 0,
                         onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                        icon = { Icon(Icons.Default.BrowseGallery, null) }
                     )
 
-                    Tab(
+                    LeadingIconTab(
                         text = { Text(stringResource(R.string.search)) },
                         selected = pagerState.currentPage == 1,
                         onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                        icon = { Icon(Icons.Default.Search, null) }
                     )
                 }
             }
