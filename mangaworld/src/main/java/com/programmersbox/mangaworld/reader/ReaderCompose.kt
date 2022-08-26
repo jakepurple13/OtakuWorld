@@ -264,7 +264,6 @@ fun ReadView() {
                         exit = slideOutVertically { it / 2 } + fadeOut()
                     ) {
                         BottomBar(
-                            scrollBehavior = scrollBehavior,
                             onPageSelectClick = { scope.launch { sheetState.show() } },
                             onSettingsClick = { settingsPopup = true },
                             chapterChange = ::showToast,
@@ -844,12 +843,10 @@ private fun TopBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomBar(
     modifier: Modifier = Modifier,
     vm: ReadViewModel,
-    scrollBehavior: TopAppBarScrollBehavior,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit
