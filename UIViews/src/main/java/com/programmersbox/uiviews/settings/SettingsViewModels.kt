@@ -101,13 +101,6 @@ class TranslationViewModel : ViewModel() {
         TranslatorUtils.getModels { translationModels = it }
     }
 
-    fun getModels(onSuccess: () -> Unit) {
-        TranslatorUtils.getModels {
-            translationModels = it
-            onSuccess()
-        }
-    }
-
     suspend fun deleteModel(model: CustomRemoteModel) {
         TranslatorUtils.deleteModel(model)
         TranslatorUtils.getModels { translationModels = it }

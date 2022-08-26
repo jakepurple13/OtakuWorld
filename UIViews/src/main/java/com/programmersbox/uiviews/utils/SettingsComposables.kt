@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.ripple.rememberRipple
@@ -29,7 +28,6 @@ import androidx.constraintlayout.compose.Dimension
 
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
-@ExperimentalMaterialApi
 @Composable
 fun <T> ListSetting(
     modifier: Modifier = Modifier,
@@ -40,7 +38,7 @@ fun <T> ListSetting(
     dialogIcon: (@Composable () -> Unit)? = null,
     cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
     confirmText: @Composable (MutableState<Boolean>) -> Unit,
-    radioButtonColors: androidx.compose.material3.RadioButtonColors = androidx.compose.material3.RadioButtonDefaults.colors(),
+    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
     value: T,
     options: List<T>,
     viewText: (T) -> String = { it.toString() },
@@ -68,7 +66,7 @@ fun <T> ListSetting(
                                 ) { updateValue(it, dialogPopup) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                         ) {
-                            androidx.compose.material3.RadioButton(
+                            RadioButton(
                                 selected = it == value,
                                 onClick = { updateValue(it, dialogPopup) },
                                 modifier = Modifier.padding(8.dp),
@@ -103,7 +101,6 @@ fun <T> ListSetting(
 
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
-@ExperimentalMaterialApi
 @Composable
 fun <T> MultiSelectListSetting(
     modifier: Modifier = Modifier,
@@ -114,7 +111,7 @@ fun <T> MultiSelectListSetting(
     dialogIcon: (@Composable () -> Unit)? = null,
     cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
     confirmText: @Composable (MutableState<Boolean>) -> Unit,
-    checkboxColors: androidx.compose.material3.CheckboxColors = androidx.compose.material3.CheckboxDefaults.colors(),
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(),
     values: List<T>,
     options: List<T>,
     viewText: (T) -> String = { it.toString() },
@@ -142,7 +139,7 @@ fun <T> MultiSelectListSetting(
                                 ) { updateValue(it, it !in values) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                         ) {
-                            androidx.compose.material3.Checkbox(
+                            Checkbox(
                                 checked = it in values,
                                 onCheckedChange = { b -> updateValue(it, b) },
                                 colors = checkboxColors,
@@ -175,7 +172,6 @@ fun <T> MultiSelectListSetting(
     )
 }
 
-@ExperimentalMaterialApi
 @Composable
 fun PreferenceSetting(
     modifier: Modifier = Modifier,
@@ -191,7 +187,6 @@ fun PreferenceSetting(
     content = endIcon
 )
 
-@ExperimentalMaterialApi
 @Composable
 fun SwitchSetting(
     modifier: Modifier = Modifier,
@@ -216,7 +211,7 @@ fun SwitchSetting(
         settingTitle = settingTitle,
         summaryValue = summaryValue
     ) {
-        androidx.compose.material3.Switch(
+        Switch(
             checked = value,
             onCheckedChange = updateValue,
             colors = switchColors
@@ -225,14 +220,13 @@ fun SwitchSetting(
 }
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @Composable
 fun CheckBoxSetting(
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: @Composable () -> Unit,
     summaryValue: (@Composable () -> Unit)? = null,
-    checkboxColors: androidx.compose.material3.CheckboxColors = androidx.compose.material3.CheckboxDefaults.colors(),
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(),
     value: Boolean,
     updateValue: (Boolean) -> Unit
 ) {
@@ -245,7 +239,7 @@ fun CheckBoxSetting(
         settingTitle = settingTitle,
         summaryValue = summaryValue
     ) {
-        androidx.compose.material3.Checkbox(
+        Checkbox(
             checked = value,
             onCheckedChange = updateValue,
             colors = checkboxColors
@@ -262,7 +256,7 @@ fun SliderSetting(
     settingSummary: (@Composable () -> Unit)? = null,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
-    colors: SliderColors = androidx.compose.material3.SliderDefaults.colors(),
+    colors: SliderColors = SliderDefaults.colors(),
     format: (Float) -> String = { it.toInt().toString() },
     onValueChangedFinished: (() -> Unit)? = null,
     updateValue: (Float) -> Unit
@@ -299,15 +293,15 @@ fun SliderSetting(
                 width = Dimension.fillToConstraints
             }
         ) {
-            androidx.compose.material3.ProvideTextStyle(
+            ProvideTextStyle(
                 MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
             ) { settingTitle() }
             settingSummary?.let {
-                androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
+                ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
             }
         }
 
-        androidx.compose.material3.Slider(
+        Slider(
             value = sliderValue,
             onValueChange = updateValue,
             onValueChangeFinished = onValueChangedFinished,
@@ -403,11 +397,11 @@ private fun DefaultPreferenceLayout(
                 width = Dimension.fillToConstraints
             }
         ) {
-            androidx.compose.material3.ProvideTextStyle(
+            ProvideTextStyle(
                 MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
             ) { settingTitle() }
             summaryValue?.let {
-                androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
+                ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
             }
         }
 
@@ -424,7 +418,6 @@ private fun DefaultPreferenceLayout(
     }
 }
 
-@ExperimentalMaterialApi
 @Composable
 fun CategorySetting(
     modifier: Modifier = Modifier,
@@ -432,7 +425,7 @@ fun CategorySetting(
     settingTitle: @Composable () -> Unit
 ) {
     CompositionLocalProvider(
-        androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary
+        LocalContentColor provides MaterialTheme.colorScheme.primary
     ) {
         ConstraintLayout(
             modifier = Modifier
@@ -464,7 +457,7 @@ fun CategorySetting(
                     width = Dimension.fillToConstraints
                 }
             ) {
-                androidx.compose.material3.ProvideTextStyle(
+                ProvideTextStyle(
                     MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start)
                 ) { settingTitle() }
             }
@@ -475,4 +468,77 @@ fun CategorySetting(
 @Composable
 fun ShowWhen(visibility: Boolean, content: @Composable () -> Unit) {
     Column(modifier = Modifier.animateContentSize()) { if (visibility) content() }
+}
+
+@ExperimentalMaterial3Api
+@ExperimentalComposeUiApi
+@Composable
+fun <T> DynamicListSetting(
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    summaryValue: (@Composable () -> Unit)? = null,
+    settingTitle: @Composable () -> Unit,
+    dialogTitle: @Composable () -> Unit,
+    dialogIcon: (@Composable () -> Unit)? = null,
+    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
+    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
+    value: T,
+    options: () -> List<T>,
+    viewText: (T) -> String = { it.toString() },
+    updateValue: (T, MutableState<Boolean>) -> Unit
+) {
+    val dialogPopup = remember { mutableStateOf(false) }
+
+    if (dialogPopup.value) {
+
+        AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            onDismissRequest = { dialogPopup.value = false },
+            title = dialogTitle,
+            icon = dialogIcon,
+            text = {
+                LazyColumn {
+                    items(options()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = rememberRipple(),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { updateValue(it, dialogPopup) }
+                                .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
+                        ) {
+                            RadioButton(
+                                selected = it == value,
+                                onClick = { updateValue(it, dialogPopup) },
+                                modifier = Modifier.padding(8.dp),
+                                colors = radioButtonColors
+                            )
+                            Text(
+                                viewText(it),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = { confirmText(dialogPopup) },
+            dismissButton = cancelText?.let { { it(dialogPopup) } }
+        )
+
+    }
+
+    PreferenceSetting(
+        settingTitle = settingTitle,
+        summaryValue = summaryValue,
+        settingIcon = settingIcon,
+        modifier = Modifier
+            .clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { dialogPopup.value = true }
+            .then(modifier)
+    )
 }

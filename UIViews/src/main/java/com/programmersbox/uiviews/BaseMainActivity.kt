@@ -342,7 +342,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         val appUpdate by updateAppCheck.collectAsState(null)
 
         return AppUpdate.checkForUpdate(
-            remember { packageManager.getPackageInfo(packageName, 0)?.versionName.orEmpty() },
+            appVersion(),
             appUpdate?.update_real_version.orEmpty()
         )
     }

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.app.DownloadManager
 import android.content.*
+import android.content.pm.PackageManager
 import android.graphics.*
 import android.net.ConnectivityManager
 import android.net.Network
@@ -641,4 +642,20 @@ fun connectivityStatus(
     manager.registerDefaultNetworkCallback(callback)
 
     awaitDispose { manager.unregisterNetworkCallback(callback) }
+}
+
+val Context.appVersion: String
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        packageManager.getPackageInfo(
+            packageName,
+            PackageManager.PackageInfoFlags.of(0L)
+        ).versionName
+    } else {
+        packageManager.getPackageInfo(packageName, 0)?.versionName
+    }.orEmpty()
+
+@Composable
+fun appVersion(): String {
+    val context = LocalContext.current
+    return remember(context) { context.appVersion }
 }

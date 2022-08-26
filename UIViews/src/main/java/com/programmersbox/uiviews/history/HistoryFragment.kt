@@ -327,8 +327,3 @@ private fun HistoryItemPlaceholder() {
         )
     }
 }
-
-sealed class SortRecentlyBy<K>(val sort: (RecentModel) -> K) {
-    object TIMESTAMP : SortRecentlyBy<Long>(RecentModel::timestamp)
-    object TITLE : SortRecentlyBy<String>(RecentModel::title)
-}

@@ -8,19 +8,20 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -32,7 +33,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -88,7 +88,6 @@ class ComposeSettingsDsl {
 }
 
 @ExperimentalComposeUiApi
-@ExperimentalMaterialApi
 @ExperimentalMaterial3Api
 @Composable
 fun SettingScreen(
@@ -195,7 +194,6 @@ fun SettingScreen(
 
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun AccountSettings(context: Context, activity: ComponentActivity, logo: MainLogo) {
     CategorySetting { Text(stringResource(R.string.account_category_title)) }
@@ -225,8 +223,6 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
-@ExperimentalMaterialApi
 @Composable
 private fun AboutSettings(
     context: Context,
@@ -251,22 +247,12 @@ private fun AboutSettings(
     val appUpdate by updateAppCheck.collectAsState(null)
 
     PreferenceSetting(
-        settingTitle = {
-            Text(
-                stringResource(
-                    R.string.currentVersion,
-                    context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
-                )
-            )
-        },
+        settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
         modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { aboutViewModel.updateChecker(context) } }
     )
 
     ShowWhen(
-        visibility = AppUpdate.checkForUpdate(
-            context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty(),
-            appUpdate?.update_real_version.orEmpty()
-        )
+        visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
     ) {
         var showDialog by remember { mutableStateOf(false) }
 
@@ -454,7 +440,6 @@ fun SourceChooserScreen() {
     }
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun NotificationSettings(
     context: Context,
@@ -521,7 +506,6 @@ private fun NotificationSettings(
     }
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun ViewSettings(
     customSettings: (@Composable () -> Unit)?,
@@ -573,7 +557,6 @@ private fun ViewSettings(
 
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
-@ExperimentalMaterialApi
 @Composable
 private fun GeneralSettings(
     context: Context,
@@ -683,7 +666,6 @@ private fun GeneralSettings(
     customSettings?.invoke()
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings: (@Composable () -> Unit)?) {
     CategorySetting { Text(stringResource(R.string.playSettings)) }
@@ -705,7 +687,6 @@ private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings
     customSettings?.invoke()
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
     CategorySetting(settingTitle = { Text(stringResource(R.string.more_info_category)) })
@@ -748,80 +729,6 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
         ) { context.openInCustomChromeBrowser("https://ko-fi.com/V7V3D3JI") }
     )
 
-}
-
-@ExperimentalMaterial3Api
-@ExperimentalComposeUiApi
-@ExperimentalMaterialApi
-@Composable
-fun <T> DynamicListSetting(
-    modifier: Modifier = Modifier,
-    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    summaryValue: (@Composable () -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
-    dialogTitle: @Composable () -> Unit,
-    dialogIcon: (@Composable () -> Unit)? = null,
-    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
-    confirmText: @Composable (MutableState<Boolean>) -> Unit,
-    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
-    value: T,
-    options: () -> List<T>,
-    viewText: (T) -> String = { it.toString() },
-    updateValue: (T, MutableState<Boolean>) -> Unit
-) {
-    val dialogPopup = remember { mutableStateOf(false) }
-
-    if (dialogPopup.value) {
-
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            onDismissRequest = { dialogPopup.value = false },
-            title = dialogTitle,
-            icon = dialogIcon,
-            text = {
-                LazyColumn {
-                    items(options()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    indication = rememberRipple(),
-                                    interactionSource = remember { MutableInteractionSource() }
-                                ) { updateValue(it, dialogPopup) }
-                                .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
-                        ) {
-                            RadioButton(
-                                selected = it == value,
-                                onClick = { updateValue(it, dialogPopup) },
-                                modifier = Modifier.padding(8.dp),
-                                colors = radioButtonColors
-                            )
-                            Text(
-                                viewText(it),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = { confirmText(dialogPopup) },
-            dismissButton = cancelText?.let { { it(dialogPopup) } }
-        )
-
-    }
-
-    PreferenceSetting(
-        settingTitle = settingTitle,
-        summaryValue = summaryValue,
-        settingIcon = settingIcon,
-        modifier = Modifier
-            .clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { dialogPopup.value = true }
-            .then(modifier)
-    )
 }
 
 @Composable

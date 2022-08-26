@@ -365,8 +365,6 @@ fun GlobalSearchView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 fun SearchCoverCard(
     modifier: Modifier = Modifier,

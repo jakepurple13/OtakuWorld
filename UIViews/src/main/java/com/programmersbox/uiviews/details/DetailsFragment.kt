@@ -15,20 +15,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -86,7 +77,6 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
-    ExperimentalMaterialApi::class,
     ExperimentalComposeUiApi::class,
     ExperimentalAnimationApi::class
 )
@@ -218,7 +208,6 @@ private fun Color.animate() = animateColorAsState(this)
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
-@ExperimentalMaterialApi
 @Composable
 private fun DetailsViewLandscape(
     info: InfoModel,
@@ -236,13 +225,17 @@ private fun DetailsViewLandscape(
 
     var reverseChapters by remember { mutableStateOf(false) }
 
-    val scope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val hostState = remember { SnackbarHostState() }
 
-    BackHandler(scaffoldState.bottomSheetState.isExpanded) {
+    val scope = rememberCoroutineScope()
+    val scaffoldState = rememberDrawerState(DrawerValue.Closed)
+
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    BackHandler(scaffoldState.isOpen) {
         scope.launch {
             try {
-                scaffoldState.bottomSheetState.collapse()
+                scaffoldState.close()
             } catch (e: Exception) {
                 navController.popBackStack()
             }
@@ -252,286 +245,259 @@ private fun DetailsViewLandscape(
     val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
         ?: M3MaterialTheme.colorScheme.onSurface
 
-    BottomSheetScaffold(
-        backgroundColor = Color.Transparent,
-        sheetContent = {
-            Scaffold(
-                topBar = {
-                    SmallTopAppBar(
-                        title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
-                        colors = TopAppBarDefaults.smallTopAppBarColors(
-                            containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
-                        ),
-                        navigationIcon = {
-                            IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
-                                Icon(Icons.Default.Close, null, tint = topBarColor)
-                            }
-                        }
-                    )
-                },
-            ) { p ->
-                LazyColumn(
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    items(info.chapters) { c ->
-                        /*fun markAs(b: Boolean) {
-                            ChapterWatched(url = c.url, name = c.name, favoriteUrl = info.url)
-                                .let {
-                                    Completable.mergeArray(
-                                        if (b) FirebaseDb.insertEpisodeWatched(it) else FirebaseDb.removeEpisodeWatched(it),
-                                        if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                                    )
-                                }
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe {}
-                                .addTo(disposable)
-                        }*/
-
-                        Surface(
-                            shape = RoundedCornerShape(0.dp),
-                            tonalElevation = 5.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    indication = rememberRipple(),
-                                    interactionSource = remember { MutableInteractionSource() },
-                                ) { vm.markAs(c, !vm.chapters.fastAny { it.url == c.url }) },
-                            color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
-                        ) {
-                            ListItem(
-                                modifier = Modifier.padding(horizontal = 4.dp),
-                                headlineText = {
-                                    Text(
-                                        c.name,
-                                        color = swatchInfo.value
-                                            ?.bodyColor
-                                            ?.toComposeColor()
-                                            ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
-                                    )
-                                },
-                                leadingContent = {
-                                    androidx.compose.material3.Checkbox(
-                                        checked = vm.chapters.fastAny { it.url == c.url },
-                                        onCheckedChange = { b -> vm.markAs(c, b) },
-                                        colors = androidx.compose.material3.CheckboxDefaults.colors(
-                                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                ?: M3MaterialTheme.colorScheme.secondary,
-                                            uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
-                                                ?: M3MaterialTheme.colorScheme.surface
-                                        )
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
+    ModalNavigationDrawer(
+        drawerState = scaffoldState,
+        drawerContent = {
+            ModalDrawerSheet {
+                MarkAsScreen(
+                    topBarColor = topBarColor,
+                    swatchInfo = swatchInfo,
+                    drawerState = scaffoldState,
+                    info = info,
+                    vm = vm
+                )
             }
-        },
-        sheetPeekHeight = 0.dp,
-        sheetGesturesEnabled = false,
-        scaffoldState = scaffoldState,
-        topBar = {
-            SmallTopAppBar(
-                colors = TopAppBarDefaults.smallTopAppBarColors(
-                    titleContentColor = topBarColor,
-                    containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
-                ),
-                modifier = Modifier.zIndex(2f),
-                title = { Text(info.title) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
-                    }
-                },
-                actions = {
-                    var showDropDown by remember { mutableStateOf(false) }
-
-                    val dropDownDismiss = { showDropDown = false }
-
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = showDropDown,
-                        onDismissRequest = dropDownDismiss,
-                    ) {
-
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                scope.launch { scaffoldState.bottomSheetState.expand() }
-                            },
-                            text = { Text(stringResource(id = R.string.markAs)) },
-                            leadingIcon = { Icon(Icons.Default.Check, null) }
+        }
+    ) {
+        OtakuScaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                InsetSmallTopAppBar(
+                    modifier = Modifier.zIndex(2f),
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        titleContentColor = topBarColor,
+                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
+                            M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
+                        } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
+                            backgroundColor = M3MaterialTheme.colorScheme.surface,
+                            elevation = 1.dp
                         )
+                    ),
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(info.title) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                        }
+                    },
+                    actions = {
+                        var showDropDown by remember { mutableStateOf(false) }
 
-                        androidx.compose.material3.Divider()
+                        val dropDownDismiss = { showDropDown = false }
 
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                            },
-                            text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
-                            leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
-                        )
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss,
+                        ) {
 
-                        androidx.compose.material3.Divider()
-
-                        if (!isSaved) {
-                            androidx.compose.material3.DropdownMenuItem(
+                            DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.insertNotification(
-                                            NotificationItem(
-                                                id = info.hashCode(),
-                                                url = info.url,
-                                                summaryText = context
-                                                    .getString(
-                                                        R.string.hadAnUpdate,
-                                                        info.title,
-                                                        info.chapters.firstOrNull()?.name.orEmpty()
-                                                    ),
-                                                notiTitle = info.title,
-                                                imageUrl = info.imageUrl,
-                                                source = info.source.serviceName,
-                                                contentTitle = info.title
-                                            )
-                                        )
-                                    }
+                                    scope.launch { scaffoldState.open() }
                                 },
-                                text = { Text(stringResource(id = R.string.save_for_later)) },
-                                leadingIcon = { Icon(Icons.Default.Save, null) }
+                                text = { Text(stringResource(id = R.string.markAs)) },
+                                leadingIcon = { Icon(Icons.Default.Check, null) }
                             )
 
-                            androidx.compose.material3.Divider()
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                },
+                                text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
+                                leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+                            )
+
+                            if (!isSaved) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        scope.launch(Dispatchers.IO) {
+                                            dao.insertNotification(
+                                                NotificationItem(
+                                                    id = info.hashCode(),
+                                                    url = info.url,
+                                                    summaryText = context
+                                                        .getString(
+                                                            R.string.hadAnUpdate,
+                                                            info.title,
+                                                            info.chapters.firstOrNull()?.name.orEmpty()
+                                                        ),
+                                                    notiTitle = info.title,
+                                                    imageUrl = info.imageUrl,
+                                                    source = info.source.serviceName,
+                                                    contentTitle = info.title
+                                                )
+                                            )
+                                        }
+                                    },
+                                    text = { Text(stringResource(id = R.string.save_for_later)) },
+                                    leadingIcon = { Icon(Icons.Default.Save, null) }
+                                )
+                            } else {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        scope.launch(Dispatchers.IO) {
+                                            dao.getNotificationItemFlow(info.url)
+                                                .firstOrNull()
+                                                ?.let { dao.deleteNotification(it) }
+                                        }
+                                    },
+                                    text = { Text(stringResource(R.string.removeNotification)) },
+                                    leadingIcon = { Icon(Icons.Default.Delete, null) }
+                                )
+                            }
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    Screen.GlobalSearchScreen.navigate(navController, info.title)
+                                },
+                                text = { Text(stringResource(id = R.string.global_search_by_name)) },
+                                leadingIcon = { Icon(Icons.Default.Search, null) }
+                            )
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    reverseChapters = !reverseChapters
+                                },
+                                text = { Text(stringResource(id = R.string.reverseOrder)) },
+                                leadingIcon = { Icon(Icons.Default.Sort, null) }
+                            )
                         }
 
-                        androidx.compose.material3.DropdownMenuItem(
+                        IconButton(
                             onClick = {
-                                dropDownDismiss()
-                                Screen.GlobalSearchScreen.navigate(navController, info.title)
-                            },
-                            text = { Text(stringResource(id = R.string.global_search_by_name)) },
-                            leadingIcon = { Icon(Icons.Default.Search, null) }
-                        )
+                                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, info.url)
+                                    putExtra(Intent.EXTRA_TITLE, info.title)
+                                }, context.getString(R.string.share_item, info.title)))
+                            }
+                        ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
 
-                        androidx.compose.material3.Divider()
+                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
 
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                reverseChapters = !reverseChapters
-                            },
-                            text = { Text(stringResource(id = R.string.reverseOrder)) },
-                            leadingIcon = { Icon(Icons.Default.Sort, null) }
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, info.url)
-                                putExtra(Intent.EXTRA_TITLE, info.title)
-                            }, context.getString(R.string.share_item, info.title)))
+                        IconButton(onClick = { showDropDown = true }) {
+                            Icon(Icons.Default.MoreVert, null, tint = topBarColor)
                         }
-                    ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
-
-                    genericInfo.DetailActions(infoModel = info, tint = topBarColor)
-
-                    IconButton(onClick = { showDropDown = true }) {
-                        Icon(Icons.Default.MoreVert, null, tint = topBarColor)
                     }
-                }
-            )
-        },
-        snackbarHost = {
-            SnackbarHost(it) { data ->
-                val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.color
-                val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
-                Snackbar(
-                    elevation = 15.dp,
-                    backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), M3MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
-                    contentColor = font,
-                    snackbarData = data
                 )
-            }
-        },
-        modifier = Modifier
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        swatchInfo.value?.rgb
-                            ?.toComposeColor()
-                            ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
-                        M3MaterialTheme.colorScheme.background
+            },
+            snackbarHost = {
+                SnackbarHost(hostState) { data ->
+                    val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.color
+                    val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
+                    Snackbar(
+                        containerColor = Color(ColorUtils.blendARGB(background.toArgb(), M3MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
+                        contentColor = font,
+                        snackbarData = data
+                    )
+                }
+            },
+            modifier = Modifier
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            swatchInfo.value?.rgb
+                                ?.toComposeColor()
+                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
+                            M3MaterialTheme.colorScheme.background
+                        )
                     )
                 )
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        ) { p ->
+            DetailsLandscapeContent(
+                p = p,
+                info = info,
+                shareChapter = shareChapter,
+                swatchInfo = swatchInfo,
+                navController = navController,
+                historyDao = historyDao,
+                vm = vm,
+                genericInfo = genericInfo,
+                logo = logo,
+                reverseChapters = reverseChapters
             )
-    ) { p ->
+        }
+    }
+}
 
-        Row(
-            modifier = Modifier.padding(p)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun DetailsLandscapeContent(
+    p: PaddingValues,
+    info: InfoModel,
+    shareChapter: Boolean,
+    swatchInfo: MutableState<SwatchInfo?>,
+    navController: NavController,
+    historyDao: HistoryDao,
+    vm: DetailsViewModel,
+    genericInfo: GenericInfo,
+    logo: NotificationLogo,
+    reverseChapters: Boolean
+) {
+    Row(
+        modifier = Modifier.padding(p)
+    ) {
+
+        DetailsHeader(
+            modifier = Modifier.weight(1f),
+            model = info,
+            logo = painterResource(id = logo.notificationId),
+            isFavorite = vm.favoriteListener,
+            swatchInfo = swatchInfo
+        ) { b -> if (b) vm.removeItem() else vm.addItem() }
+
+        val listState = rememberLazyListState()
+
+        var descriptionVisibility by remember { mutableStateOf(false) }
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
+                .padding(vertical = 5.dp),
+            state = listState
         ) {
 
-            DetailsHeader(
-                modifier = Modifier.weight(1f),
-                model = info,
-                logo = painterResource(id = logo.notificationId),
-                isFavorite = vm.favoriteListener,
-                swatchInfo = swatchInfo
-            ) { b -> if (b) vm.removeItem() else vm.addItem() }
-
-            val listState = rememberLazyListState()
-
-            var descriptionVisibility by remember { mutableStateOf(false) }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
-                    .padding(vertical = 5.dp),
-                state = listState
-            ) {
-
-                if (info.description.isNotEmpty()) {
-                    item {
-                        Text(
-                            info.description,
-                            modifier = Modifier
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
-                                ) { descriptionVisibility = !descriptionVisibility }
-                                .padding(horizontal = 5.dp)
-                                //.fillMaxWidth()
-                                .animateContentSize(),
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                            style = M3MaterialTheme.typography.bodyMedium,
-                            color = M3MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-
-                items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
-                    ChapterItem(
-                        infoModel = info,
-                        c = c,
-                        read = vm.chapters,
-                        chapters = info.chapters,
-                        swatchInfo = swatchInfo,
-                        shareChapter = shareChapter,
-                        historyDao = historyDao,
-                        vm = vm,
-                        genericInfo = genericInfo,
-                        navController = navController,
+            if (info.description.isNotEmpty()) {
+                item {
+                    Text(
+                        info.description,
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple()
+                            ) { descriptionVisibility = !descriptionVisibility }
+                            .padding(horizontal = 5.dp)
+                            //.fillMaxWidth()
+                            .animateContentSize(),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                        style = M3MaterialTheme.typography.bodyMedium,
+                        color = M3MaterialTheme.colorScheme.onSurface
                     )
                 }
+            }
+
+            items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                ChapterItem(
+                    infoModel = info,
+                    c = c,
+                    read = vm.chapters,
+                    chapters = info.chapters,
+                    swatchInfo = swatchInfo,
+                    shareChapter = shareChapter,
+                    historyDao = historyDao,
+                    vm = vm,
+                    genericInfo = genericInfo,
+                    navController = navController,
+                )
             }
         }
     }
@@ -541,7 +507,6 @@ private fun DetailsViewLandscape(
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
-@ExperimentalMaterialApi
 @Composable
 private fun DetailsView(
     info: InfoModel,
@@ -558,15 +523,17 @@ private fun DetailsView(
 
     var reverseChapters by remember { mutableStateOf(false) }
 
+    val hostState = remember { SnackbarHostState() }
+
     val scope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val scaffoldState = rememberDrawerState(DrawerValue.Closed)
 
     val context = LocalContext.current
 
-    BackHandler(scaffoldState.bottomSheetState.isExpanded) {
+    BackHandler(scaffoldState.isOpen) {
         scope.launch {
             try {
-                scaffoldState.bottomSheetState.collapse()
+                scaffoldState.close()
             } catch (e: Exception) {
                 navController.popBackStack()
             }
@@ -578,90 +545,287 @@ private fun DetailsView(
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    BottomSheetScaffold(
-        backgroundColor = Color.Transparent,
-        sheetContent = {
-            val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    ModalNavigationDrawer(
+        drawerState = scaffoldState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerShape = RoundedCornerShape(
+                    topStart = 0.0.dp,
+                    topEnd = 8.0.dp,
+                    bottomEnd = 8.0.dp,
+                    bottomStart = 0.0.dp
+                ),
+                windowInsets = WindowInsets(0.dp)
+            ) {
+                MarkAsScreen(
+                    topBarColor = topBarColor,
+                    swatchInfo = swatchInfo,
+                    drawerState = scaffoldState,
+                    info = info,
+                    vm = vm
+                )
+            }
+        }
+    ) {
+        OtakuScaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                InsetSmallTopAppBar(
+                    modifier = Modifier.zIndex(2f),
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        titleContentColor = topBarColor,
+                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
+                            M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
+                        } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
+                            backgroundColor = M3MaterialTheme.colorScheme.surface,
+                            elevation = 1.dp
+                        )
+                    ),
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(info.title) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                        }
+                    },
+                    actions = {
+                        var showDropDown by remember { mutableStateOf(false) }
 
-            Scaffold(
-                topBar = {
-                    InsetSmallTopAppBar(
-                        title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
-                        colors = TopAppBarDefaults.smallTopAppBarColors(
-                            containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
-                            scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
-                                M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
-                            } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
-                                backgroundColor = M3MaterialTheme.colorScheme.surface,
-                                elevation = 1.dp
-                            )
-                        ),
-                        navigationIcon = {
-                            IconButton(onClick = { scope.launch { scaffoldState.bottomSheetState.collapse() } }) {
-                                Icon(Icons.Default.Close, null, tint = topBarColor)
-                            }
-                        },
-                        scrollBehavior = scrollBehaviorMarkAs
-                    )
-                },
-                modifier = Modifier.nestedScroll(scrollBehaviorMarkAs.nestedScrollConnection)
-            ) { p ->
-                LazyColumn(
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    items(info.chapters) { c ->
-                        Surface(
-                            shape = RoundedCornerShape(0.dp),
-                            tonalElevation = 5.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
-                                ) { vm.markAs(c, !vm.chapters.fastAny { it.url == c.url }) },
-                            color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                        val dropDownDismiss = { showDropDown = false }
+
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss,
                         ) {
-                            ListItem(
-                                modifier = Modifier.padding(horizontal = 4.dp),
-                                headlineText = {
-                                    Text(
-                                        c.name,
-                                        color = swatchInfo.value
-                                            ?.bodyColor
-                                            ?.toComposeColor()
-                                            ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
-                                    )
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    scope.launch { scaffoldState.open() }
                                 },
-                                leadingContent = {
-                                    androidx.compose.material3.Checkbox(
-                                        checked = vm.chapters.fastAny { it.url == c.url },
-                                        onCheckedChange = { b -> vm.markAs(c, b) },
-                                        colors = androidx.compose.material3.CheckboxDefaults.colors(
-                                            checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                ?: M3MaterialTheme.colorScheme.secondary,
-                                            uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-                                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                            checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
-                                                ?: M3MaterialTheme.colorScheme.surface
-                                        )
+                                text = { Text(stringResource(id = R.string.markAs)) },
+                                leadingIcon = { Icon(Icons.Default.Check, null) }
+                            )
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                },
+                                text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
+                                leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+                            )
+
+                            if (!isSaved) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        scope.launch(Dispatchers.IO) {
+                                            dao.insertNotification(
+                                                NotificationItem(
+                                                    id = info.hashCode(),
+                                                    url = info.url,
+                                                    summaryText = context
+                                                        .getString(
+                                                            R.string.hadAnUpdate,
+                                                            info.title,
+                                                            info.chapters.firstOrNull()?.name.orEmpty()
+                                                        ),
+                                                    notiTitle = info.title,
+                                                    imageUrl = info.imageUrl,
+                                                    source = info.source.serviceName,
+                                                    contentTitle = info.title
+                                                )
+                                            )
+                                        }
+                                    },
+                                    text = { Text(stringResource(id = R.string.save_for_later)) },
+                                    leadingIcon = { Icon(Icons.Default.Save, null) }
+                                )
+                            } else {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        dropDownDismiss()
+                                        scope.launch(Dispatchers.IO) {
+                                            dao.getNotificationItemFlow(info.url)
+                                                .firstOrNull()
+                                                ?.let { dao.deleteNotification(it) }
+                                        }
+                                    },
+                                    text = { Text(stringResource(R.string.removeNotification)) },
+                                    leadingIcon = { Icon(Icons.Default.Delete, null) }
+                                )
+                            }
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    Screen.GlobalSearchScreen.navigate(navController, info.title)
+                                },
+                                text = { Text(stringResource(id = R.string.global_search_by_name)) },
+                                leadingIcon = { Icon(Icons.Default.Search, null) }
+                            )
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    reverseChapters = !reverseChapters
+                                },
+                                text = { Text(stringResource(id = R.string.reverseOrder)) },
+                                leadingIcon = { Icon(Icons.Default.Sort, null) }
+                            )
+                        }
+
+                        IconButton(
+                            onClick = {
+                                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, info.url)
+                                    putExtra(Intent.EXTRA_TITLE, info.title)
+                                }, context.getString(R.string.share_item, info.title)))
+                            }
+                        ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
+
+                        IconButton(onClick = { showDropDown = true }) {
+                            Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+                        }
+                    }
+                )
+            },
+            snackbarHost = {
+                SnackbarHost(hostState) { data ->
+                    val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.color
+                    val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
+                    Snackbar(
+                        containerColor = Color(ColorUtils.blendARGB(background.toArgb(), M3MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
+                        contentColor = font,
+                        snackbarData = data
+                    )
+                }
+            },
+            modifier = Modifier
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            swatchInfo.value?.rgb
+                                ?.toComposeColor()
+                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
+                            M3MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        ) { p ->
+
+            val header: @Composable () -> Unit = {
+                DetailsHeader(
+                    model = info,
+                    logo = painterResource(id = logo.notificationId),
+                    isFavorite = vm.favoriteListener,
+                    swatchInfo = swatchInfo
+                ) { b -> if (b) vm.removeItem() else vm.addItem() }
+            }
+
+            val state = rememberCollapsingToolbarScaffoldState()
+
+            CollapsingToolbarScaffold(
+                modifier = Modifier.padding(p),
+                state = state,
+                scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                toolbar = { header() }
+            ) {
+                val listState = rememberLazyListState()
+
+                LazyColumnScrollbar(
+                    enabled = true,
+                    thickness = 8.dp,
+                    padding = 2.dp,
+                    listState = listState,
+                    thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.primary,
+                    thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+                ) {
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 5.dp),
+                        state = listState
+                    ) {
+
+                        if (info.description.isNotEmpty()) {
+                            item {
+                                Box {
+                                    val progress = remember { mutableStateOf(false) }
+
+                                    Text(
+                                        vm.description,
+                                        modifier = Modifier
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = rememberRipple(),
+                                                onClick = { descriptionVisibility = !descriptionVisibility },
+                                                onLongClick = { vm.translateDescription(progress) }
+                                            )
+                                            .padding(horizontal = 5.dp)
+                                            .fillMaxWidth()
+                                            .animateContentSize(),
+                                        overflow = TextOverflow.Ellipsis,
+                                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                        style = M3MaterialTheme.typography.bodyMedium,
+                                        color = M3MaterialTheme.colorScheme.onSurface
                                     )
+
+                                    if (progress.value) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
+                            }
+                        }
+
+                        items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                            ChapterItem(
+                                infoModel = info,
+                                c = c,
+                                read = vm.chapters,
+                                chapters = info.chapters,
+                                swatchInfo = swatchInfo,
+                                shareChapter = shareChapter,
+                                historyDao = historyDao,
+                                vm = vm,
+                                genericInfo = genericInfo,
+                                navController = navController,
                             )
                         }
                     }
                 }
             }
-        },
-        sheetPeekHeight = 0.dp,
-        sheetGesturesEnabled = false,
-        scaffoldState = scaffoldState,
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MarkAsScreen(
+    topBarColor: Color,
+    swatchInfo: MutableState<SwatchInfo?>,
+    drawerState: DrawerState,
+    info: InfoModel,
+    vm: DetailsViewModel
+) {
+    val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val scope = rememberCoroutineScope()
+
+    OtakuScaffold(
         topBar = {
             InsetSmallTopAppBar(
-                modifier = Modifier.zIndex(2f),
+                title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
-                    titleContentColor = topBarColor,
                     containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
                         M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
@@ -670,227 +834,59 @@ private fun DetailsView(
                         elevation = 1.dp
                     )
                 ),
-                scrollBehavior = scrollBehavior,
-                title = { Text(info.title) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                    IconButton(onClick = { scope.launch { drawerState.close() } }) {
+                        Icon(Icons.Default.Close, null, tint = topBarColor)
                     }
                 },
-                actions = {
-                    var showDropDown by remember { mutableStateOf(false) }
-
-                    val dropDownDismiss = { showDropDown = false }
-
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = showDropDown,
-                        onDismissRequest = dropDownDismiss,
-                    ) {
-
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                scope.launch { scaffoldState.bottomSheetState.expand() }
-                            },
-                            text = { Text(stringResource(id = R.string.markAs)) },
-                            leadingIcon = { Icon(Icons.Default.Check, null) }
-                        )
-
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
-                            },
-                            text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
-                            leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
-                        )
-
-                        if (!isSaved) {
-                            androidx.compose.material3.DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.insertNotification(
-                                            NotificationItem(
-                                                id = info.hashCode(),
-                                                url = info.url,
-                                                summaryText = context
-                                                    .getString(
-                                                        R.string.hadAnUpdate,
-                                                        info.title,
-                                                        info.chapters.firstOrNull()?.name.orEmpty()
-                                                    ),
-                                                notiTitle = info.title,
-                                                imageUrl = info.imageUrl,
-                                                source = info.source.serviceName,
-                                                contentTitle = info.title
-                                            )
-                                        )
-                                    }
-                                },
-                                text = { Text(stringResource(id = R.string.save_for_later)) },
-                                leadingIcon = { Icon(Icons.Default.Save, null) }
-                            )
-                        } else {
-                            androidx.compose.material3.DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.getNotificationItemFlow(info.url)
-                                            .firstOrNull()
-                                            ?.let { dao.deleteNotification(it) }
-                                    }
-                                },
-                                text = { Text(stringResource(R.string.removeNotification)) },
-                                leadingIcon = { Icon(Icons.Default.Delete, null) }
-                            )
-                        }
-
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                Screen.GlobalSearchScreen.navigate(navController, info.title)
-                            },
-                            text = { Text(stringResource(id = R.string.global_search_by_name)) },
-                            leadingIcon = { Icon(Icons.Default.Search, null) }
-                        )
-
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                reverseChapters = !reverseChapters
-                            },
-                            text = { Text(stringResource(id = R.string.reverseOrder)) },
-                            leadingIcon = { Icon(Icons.Default.Sort, null) }
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, info.url)
-                                putExtra(Intent.EXTRA_TITLE, info.title)
-                            }, context.getString(R.string.share_item, info.title)))
-                        }
-                    ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
-
-                    genericInfo.DetailActions(infoModel = info, tint = topBarColor)
-
-                    IconButton(onClick = { showDropDown = true }) {
-                        Icon(Icons.Default.MoreVert, null, tint = topBarColor)
-                    }
-                }
+                scrollBehavior = scrollBehaviorMarkAs
             )
         },
-        snackbarHost = {
-            SnackbarHost(it) { data ->
-                val background = swatchInfo.value?.rgb?.toComposeColor() ?: SnackbarDefaults.color
-                val font = swatchInfo.value?.titleColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface
-                Snackbar(
-                    elevation = 15.dp,
-                    backgroundColor = Color(ColorUtils.blendARGB(background.toArgb(), M3MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
-                    contentColor = font,
-                    snackbarData = data
-                )
-            }
-        },
-        modifier = Modifier
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        swatchInfo.value?.rgb
-                            ?.toComposeColor()
-                            ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
-                        M3MaterialTheme.colorScheme.background
-                    )
-                )
-            )
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
+        modifier = Modifier.nestedScroll(scrollBehaviorMarkAs.nestedScrollConnection)
     ) { p ->
-
-        val header: @Composable () -> Unit = {
-            DetailsHeader(
-                model = info,
-                logo = painterResource(id = logo.notificationId),
-                isFavorite = vm.favoriteListener,
-                swatchInfo = swatchInfo
-            ) { b -> if (b) vm.removeItem() else vm.addItem() }
-        }
-
-        val state = rememberCollapsingToolbarScaffoldState()
-
-        CollapsingToolbarScaffold(
-            modifier = Modifier.padding(p),
-            state = state,
-            scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-            toolbar = { header() }
+        LazyColumn(
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
-            val listState = rememberLazyListState()
-
-            LazyColumnScrollbar(
-                enabled = true,
-                thickness = 8.dp,
-                padding = 2.dp,
-                listState = listState,
-                thumbColor = swatchInfo.value?.bodyColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.primary,
-                thumbSelectedColor = (swatchInfo.value?.bodyColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.primary).copy(alpha = .6f),
-            ) {
-                var descriptionVisibility by remember { mutableStateOf(false) }
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+            items(info.chapters) { c ->
+                Surface(
+                    shape = RoundedCornerShape(0.dp),
+                    tonalElevation = 5.dp,
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(vertical = 5.dp),
-                    state = listState
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple()
+                        ) { vm.markAs(c, !vm.chapters.fastAny { it.url == c.url }) },
+                    color = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
                 ) {
-
-                    if (info.description.isNotEmpty()) {
-                        item {
-                            Box {
-                                val progress = remember { mutableStateOf(false) }
-
-                                Text(
-                                    vm.description,
-                                    modifier = Modifier
-                                        .combinedClickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = rememberRipple(),
-                                            onClick = { descriptionVisibility = !descriptionVisibility },
-                                            onLongClick = { vm.translateDescription(progress) }
-                                        )
-                                        .padding(horizontal = 5.dp)
-                                        .fillMaxWidth()
-                                        .animateContentSize(),
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                    style = M3MaterialTheme.typography.bodyMedium,
-                                    color = M3MaterialTheme.colorScheme.onSurface
+                    ListItem(
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        headlineText = {
+                            Text(
+                                c.name,
+                                color = swatchInfo.value
+                                    ?.bodyColor
+                                    ?.toComposeColor()
+                                    ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
+                            )
+                        },
+                        leadingContent = {
+                            Checkbox(
+                                checked = vm.chapters.fastAny { it.url == c.url },
+                                onCheckedChange = { b -> vm.markAs(c, b) },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                        ?: M3MaterialTheme.colorScheme.secondary,
+                                    uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
+                                        ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    checkmarkColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
+                                        ?: M3MaterialTheme.colorScheme.surface
                                 )
-
-                                if (progress.value) {
-                                    androidx.compose.material3.CircularProgressIndicator(
-                                        modifier = Modifier.align(Alignment.Center)
-                                    )
-                                }
-                            }
+                            )
                         }
-                    }
-
-                    items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
-                        ChapterItem(
-                            infoModel = info,
-                            c = c,
-                            read = vm.chapters,
-                            chapters = info.chapters,
-                            swatchInfo = swatchInfo,
-                            shareChapter = shareChapter,
-                            historyDao = historyDao,
-                            vm = vm,
-                            genericInfo = genericInfo,
-                            navController = navController,
-                        )
-                    }
+                    )
                 }
             }
         }
@@ -898,7 +894,6 @@ private fun DetailsView(
 }
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @Composable
 private fun ChapterItem(
     infoModel: InfoModel,
@@ -934,7 +929,7 @@ private fun ChapterItem(
 
     val interactionSource = remember { MutableInteractionSource() }
 
-    androidx.compose.material3.ElevatedCard(
+    ElevatedCard(
         shape = RoundedCornerShape(2.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -956,10 +951,10 @@ private fun ChapterItem(
                 ) {
                     val (checkbox, text, share) = createRefs()
 
-                    androidx.compose.material3.Checkbox(
+                    Checkbox(
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b -> vm.markAs(c, b) },
-                        colors = androidx.compose.material3.CheckboxDefaults.colors(
+                        colors = CheckboxDefaults.colors(
                             checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
                                 ?: M3MaterialTheme.colorScheme.secondary,
                             uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
@@ -1013,10 +1008,10 @@ private fun ChapterItem(
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(
+                    Checkbox(
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b -> vm.markAs(c, b) },
-                        colors = androidx.compose.material3.CheckboxDefaults.colors(
+                        colors = CheckboxDefaults.colors(
                             checkedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
                                 ?: M3MaterialTheme.colorScheme.secondary,
                             uncheckedColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
@@ -1115,7 +1110,6 @@ private fun ChapterItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
-@ExperimentalMaterialApi
 @Composable
 private fun DetailsHeader(
     modifier: Modifier = Modifier,
@@ -1189,7 +1183,7 @@ private fun DetailsHeader(
         ) {
             Row {
                 Surface(
-                    shape = MaterialTheme.shapes.medium,
+                    shape = M3MaterialTheme.shapes.medium,
                     modifier = Modifier.padding(5.dp)
                 ) {
                     GlideImage(
@@ -1311,7 +1305,6 @@ private fun DetailsHeader(
                                 .animate().value,
                             labelColor = (swatchInfo.value?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
                                 .animate().value
-                                .copy(alpha = ChipDefaults.ContentOpacity)
                         ),
                         label = { Text(it) }
                     )
@@ -1321,9 +1314,7 @@ private fun DetailsHeader(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalFoundationApi
-@ExperimentalMaterialApi
 @Composable
 private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
@@ -1339,7 +1330,7 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
         Row(modifier = Modifier.padding(5.dp)) {
 
-            androidx.compose.material3.Card(
+            Card(
                 shape = RoundedCornerShape(5.dp),
                 modifier = Modifier.padding(5.dp)
             ) {
