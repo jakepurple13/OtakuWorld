@@ -28,7 +28,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import coil.annotation.ExperimentalCoilApi
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.bumptech.glide.Glide
@@ -407,8 +406,7 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
     }
 }
 
-@OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun M3OtakuBannerBox(
     modifier: Modifier = Modifier,
@@ -416,13 +414,7 @@ fun M3OtakuBannerBox(
     placeholder: Int,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
-    val context = LocalContext.current
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
-    val placeHolderImage = remember {
-        AppCompatResources
-            .getDrawable(context, placeholder)
-            ?.toBitmap()?.asImageBitmap()
-    }
 
     BannerBox(
         modifier = modifier,
