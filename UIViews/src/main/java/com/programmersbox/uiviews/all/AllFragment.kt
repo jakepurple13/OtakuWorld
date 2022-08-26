@@ -140,18 +140,17 @@ fun AllView(
                         HorizontalPager(
                             count = 2,
                             state = pagerState,
+                            contentPadding = p1
                         ) { page ->
                             when (page) {
                                 0 -> AllScreen(
                                     allVm = allVm,
-                                    p1 = p1,
                                     itemInfo = itemInfo,
                                     state = state,
                                     showBanner = { showBanner = it }
                                 )
                                 1 -> SearchScreen(
                                     allVm = allVm,
-                                    p1 = p1,
                                     itemInfo = itemInfo,
                                     showBanner = { showBanner = it }
                                 )
@@ -169,7 +168,6 @@ fun AllView(
 @Composable
 fun AllScreen(
     allVm: AllViewModel,
-    p1: PaddingValues,
     itemInfo: MutableState<ItemModel?>,
     state: LazyGridState,
     showBanner: (Boolean) -> Unit
@@ -178,9 +176,7 @@ fun AllScreen(
     val source by sourceFlow.collectAsState(initial = null)
     val navController = LocalNavController.current
     val context = LocalContext.current
-    OtakuScaffold(
-        modifier = Modifier.padding(p1)
-    ) { p ->
+    OtakuScaffold { p ->
         if (allVm.sourceList.isEmpty()) {
             info.ComposeShimmerItem()
         } else {
@@ -214,7 +210,6 @@ fun AllScreen(
 @Composable
 fun SearchScreen(
     allVm: AllViewModel,
-    p1: PaddingValues = PaddingValues(0.dp),
     itemInfo: MutableState<ItemModel?>,
     showBanner: (Boolean) -> Unit
 ) {
@@ -227,9 +222,7 @@ fun SearchScreen(
     val navController = LocalNavController.current
 
     OtakuScaffold(
-        modifier = Modifier
-            .padding(p1)
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             OutlinedTextField(
                 value = allVm.searchText,
