@@ -186,7 +186,6 @@ fun SettingScreen(
 
             /*More Info*/
             InfoSettings(
-                context = context,
                 usedLibraryClick = usedLibraryClick
             )
         }
@@ -232,6 +231,8 @@ private fun AboutSettings(
     logo: MainLogo,
     aboutViewModel: AboutViewModel = viewModel { AboutViewModel(context) }
 ) {
+
+    val navController = LocalNavController.current
 
     CategorySetting(
         settingTitle = { Text(stringResource(R.string.about)) },
@@ -288,7 +289,7 @@ private fun AboutSettings(
                     TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
                     TextButton(
                         onClick = {
-                            context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                            navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest")
                             showDialog = false
                         }
                     ) { Text(stringResource(R.string.gotoBrowser)) }
@@ -399,7 +400,6 @@ private fun AboutSettings(
     }
 
     val source by sourceFlow.collectAsState(initial = null)
-    val navController = LocalNavController.current
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
@@ -568,6 +568,8 @@ private fun GeneralSettings(
 
     val source by sourceFlow.collectAsState(initial = null)
 
+    val navController = LocalNavController.current
+
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
         settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
@@ -579,14 +581,20 @@ private fun GeneralSettings(
                 interactionSource = remember { MutableInteractionSource() }
             ) {
                 source?.baseUrl?.let {
-                    context.openInCustomChromeBrowser(it) {
-                        setStartAnimations(context, R.anim.slide_in_right, R.anim.slide_out_left)
-                    }
+                    navController.navigateChromeCustomTabs(
+                        it,
+                        {
+                            anim {
+                                enter = R.anim.slide_in_right
+                                popEnter = R.anim.slide_in_right
+                                exit = R.anim.slide_out_left
+                                popExit = R.anim.slide_out_left
+                            }
+                        }
+                    )
                 }
             }
     )
-
-    val navController = LocalNavController.current
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
@@ -688,7 +696,9 @@ private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings
 }
 
 @Composable
-private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
+private fun InfoSettings(usedLibraryClick: () -> Unit) {
+    val navController = LocalNavController.current
+
     CategorySetting(settingTitle = { Text(stringResource(R.string.more_info_category)) })
 
     PreferenceSetting(
@@ -707,7 +717,7 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+        ) { navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
     )
 
     PreferenceSetting(
@@ -716,7 +726,7 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://discord.gg/MhhHMWqryg") }
+        ) { navController.navigateChromeCustomTabs("https://discord.gg/MhhHMWqryg") }
     )
 
     PreferenceSetting(
@@ -726,7 +736,7 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://ko-fi.com/V7V3D3JI") }
+        ) { navController.navigateChromeCustomTabs("https://ko-fi.com/V7V3D3JI") }
     )
 
 }

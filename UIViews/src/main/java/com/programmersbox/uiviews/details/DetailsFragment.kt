@@ -3,7 +3,6 @@ package com.programmersbox.uiviews.details
 import android.content.Intent
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -113,7 +112,7 @@ fun DetailsScreen(
                         IconButton(
                             onClick = {
                                 details.itemModel?.url?.let {
-                                    localContext.openInCustomChromeBrowser(it) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                    navController.navigateChromeCustomTabs(it)
                                 }
                             }
                         ) { Icon(Icons.Default.OpenInBrowser, null) }
@@ -303,7 +302,7 @@ private fun DetailsViewLandscape(
                             DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                    navController.navigateChromeCustomTabs(info.url)
                                 },
                                 text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
                                 leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
@@ -611,7 +610,7 @@ private fun DetailsView(
                             DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    context.openInCustomChromeBrowser(info.url) { setShareState(CustomTabsIntent.SHARE_STATE_ON) }
+                                    navController.navigateChromeCustomTabs(info.url)
                                 },
                                 text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
                                 leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }

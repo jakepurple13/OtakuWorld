@@ -122,7 +122,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
-            navController = rememberAnimatedNavController(bottomSheetNavigator)
+            navController = rememberAnimatedNavController(bottomSheetNavigator, remember {
+                ChromeCustomTabsNavigator(this)
+            })
 
             val systemUiController = rememberSystemUiController()
 
@@ -319,6 +321,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             ) { FavoriteChoiceScreen() }
 
                             bottomSheet(SScreen.SourceChooserScreen.route) { SourceChooserScreen() }
+
+                            chromeCustomTabs()
 
                             with(genericInfo) { navSetup() }
                         }
