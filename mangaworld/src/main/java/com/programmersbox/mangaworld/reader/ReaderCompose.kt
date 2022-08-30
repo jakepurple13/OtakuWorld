@@ -44,6 +44,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -126,7 +127,7 @@ fun ReadView() {
     }
 
     val scope = rememberCoroutineScope()
-    val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages.value)
+    val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages)
 
     val pages = readVm.pageList
 
@@ -514,37 +515,127 @@ fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List
 
 @Composable
 private fun LastPageReached(vm: ReadViewModel) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(
-            stringResource(id = R.string.lastPage),
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally)
-        )
-        if (vm.currentChapter <= 0) {
+    ChangeChapterSwipe(vm = vm) {
+        Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            //readVm.list.size - readVm.currentChapter
+            //If things start getting WAY too long, just replace with "Chapter ${vm.list.size - vm.currentChapter}
             Text(
-                stringResource(id = R.string.reachedLastChapter),
-                style = MaterialTheme.typography.headlineSmall,
+                vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+                style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
+                    .align(Alignment.TopCenter)
             )
-        }
-        if (BuildConfig.BUILD_TYPE == "release") {
-            val context = LocalContext.current
-            AndroidView(
-                modifier = Modifier.fillMaxWidth(),
-                factory = {
-                    AdView(it).apply {
-                        setAdSize(AdSize.BANNER)
-                        adUnitId = context.getString(R.string.ad_unit_id)
-                        loadAd(vm.ad)
-                    }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    stringResource(id = R.string.lastPage),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                )
+                if (vm.currentChapter <= 0) {
+                    Text(
+                        stringResource(id = R.string.reachedLastChapter),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    )
                 }
-            )
+                Text(
+                    stringResource(id = R.string.swipeChapter),
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                )
+            }
+
+            if (BuildConfig.BUILD_TYPE == "release") {
+                val context = LocalContext.current
+                AndroidView(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
+                    factory = {
+                        AdView(it).apply {
+                            setAdSize(AdSize.BANNER)
+                            adUnitId = context.getString(R.string.ad_unit_id)
+                            loadAd(vm.ad)
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ChangeChapterSwipe(vm: ReadViewModel, content: @Composable () -> Unit) {
+    BoxWithConstraints {
+        val dismissState = rememberDismissState(
+            confirmStateChange = {
+                when (it) {
+                    DismissValue.DismissedToEnd -> vm.addChapterToWatched(++vm.currentChapter) {}
+                    DismissValue.DismissedToStart -> vm.addChapterToWatched(--vm.currentChapter) {}
+                    else -> Unit
+                }
+                false
+            }
+        )
+
+        SwipeToDismiss(
+            state = dismissState,
+            directions = if (vm.isLoadingPages)
+                emptySet()
+            else
+                setOfNotNull(
+                    if (vm.currentChapter <= 0) null else DismissDirection.EndToStart,
+                    DismissDirection.StartToEnd
+                ),
+            background = {
+                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+                val alignment = when (direction) {
+                    DismissDirection.StartToEnd -> Alignment.CenterStart
+                    DismissDirection.EndToStart -> Alignment.CenterEnd
+                }
+
+                val icon = when (direction) {
+                    DismissDirection.StartToEnd -> Icons.Default.FastRewind
+                    DismissDirection.EndToStart -> Icons.Default.FastForward
+                }
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = alignment
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.scale(scale),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                    )
+                }
+            }
+        ) {
+            OutlinedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(this@BoxWithConstraints.maxHeight / 2)
+            ) { content() }
         }
     }
 }

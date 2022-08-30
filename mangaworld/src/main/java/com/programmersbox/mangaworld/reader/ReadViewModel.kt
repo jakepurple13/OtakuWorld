@@ -117,7 +117,7 @@ class ReadViewModel(
     val batteryInformation by lazy { BatteryInformation(context) }
 
     val pageList = mutableStateListOf<String>()
-    val isLoadingPages = mutableStateOf(false)
+    var isLoadingPages by mutableStateOf(false)
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -161,12 +161,12 @@ class ReadViewModel(
         viewModelScope.launch {
             modelPath
                 ?.onStart {
-                    isLoadingPages.value = true
+                    isLoadingPages = true
                     pageList.clear()
                 }
                 ?.onEach {
                     pageList.addAll(it)
-                    isLoadingPages.value = false
+                    isLoadingPages = false
                 }
                 ?.collect()
         }

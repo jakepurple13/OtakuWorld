@@ -42,6 +42,8 @@
     <string name="lastPage">Reached Last Page</string>
     <string name="goBack">Go Back</string>
 
+    <string name="swipeChapter">Swipe left or right to go to the previous or next chapter</string>
+
     <string name="searchFavorites">Search Favorites</string>
 
     <string name="notNow">Not Now</string>
