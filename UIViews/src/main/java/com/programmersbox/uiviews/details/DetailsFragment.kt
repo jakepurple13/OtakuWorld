@@ -862,15 +862,14 @@ fun MarkAsScreen(
                 ) {
                     ListItem(
                         modifier = Modifier.padding(horizontal = 4.dp),
-                        headlineText = {
-                            Text(
-                                c.name,
-                                color = swatchInfo.value
-                                    ?.bodyColor
-                                    ?.toComposeColor()
-                                    ?.animate()?.value ?: M3MaterialTheme.typography.titleMedium.color
-                            )
-                        },
+                        colors = ListItemDefaults.colors(
+                            headlineColor = swatchInfo.value
+                                ?.bodyColor
+                                ?.toComposeColor()
+                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.onSurface,
+                            containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                        ),
+                        headlineText = { Text(c.name) },
                         leadingContent = {
                             Checkbox(
                                 checked = vm.chapters.fastAny { it.url == c.url },
