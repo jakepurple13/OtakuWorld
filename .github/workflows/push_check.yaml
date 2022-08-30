@@ -1,4 +1,4 @@
-name: Minimal Android CI Workflow
+name: Android Push Workflow
 
 on:
   push:
