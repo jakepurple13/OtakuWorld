@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -200,11 +201,11 @@ fun NotificationsScreen(
                 trailingContent = {
                     var showDropDown by remember { mutableStateOf(false) }
 
-                    androidx.compose.material3.DropdownMenu(
+                    DropdownMenu(
                         expanded = showDropDown,
                         onDismissRequest = { showDropDown = false }
                     ) {
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(stringResource(id = R.string.remove_same_name)) },
                             onClick = {
                                 scope.launch {
@@ -413,11 +414,11 @@ private fun NotificationItem(
 
                     val dropDownDismiss = { showDropDown = false }
 
-                    androidx.compose.material3.DropdownMenu(
+                    DropdownMenu(
                         expanded = showDropDown,
                         onDismissRequest = dropDownDismiss
                     ) {
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.notify)) },
                             onClick = {
                                 dropDownDismiss()
@@ -427,9 +428,9 @@ private fun NotificationItem(
                             }
                         )
 
-                        androidx.compose.material3.Divider()
+                        Divider()
 
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.notifyAtTime)) },
                             onClick = {
                                 dropDownDismiss()
@@ -493,9 +494,9 @@ private fun NotificationItem(
                             }
                         )
 
-                        androidx.compose.material3.Divider()
+                        Divider()
 
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             onClick = {
                                 dropDownDismiss()
                                 showPopup = true
