@@ -75,7 +75,6 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-import com.programmersbox.helpfulutils.BuildConfig
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.*
