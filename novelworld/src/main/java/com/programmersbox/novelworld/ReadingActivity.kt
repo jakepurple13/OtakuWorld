@@ -355,14 +355,12 @@ fun NovelReader() {
             bottomBar = {
                 BottomBar(
                     showItems = showItems,
-                    contentScrollBehavior = contentScrollBehavior,
                     readVm = readVm,
                     showToast = ::showToast,
                     settingsPopup = { settingsPopup = it }
                 )
             }
         ) { p ->
-            //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
             SwipeRefresh(
                 state = swipeState,
                 onRefresh = {
@@ -507,7 +505,6 @@ fun TopBar(
 fun BottomBar(
     modifier: Modifier = Modifier,
     showItems: Boolean,
-    contentScrollBehavior: TopAppBarScrollBehavior,
     readVm: ReadViewModel,
     showToast: () -> Unit,
     settingsPopup: (Boolean) -> Unit

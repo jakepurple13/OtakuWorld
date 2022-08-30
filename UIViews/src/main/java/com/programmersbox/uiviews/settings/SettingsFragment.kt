@@ -49,13 +49,10 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.BuildConfig
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.OtakuApp
+import com.programmersbox.uiviews.*
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
