@@ -141,5 +141,4 @@ abstract class AnimeKisa(allPath: String) : ShowApi(
             source = this
         )
     }
-
 }
