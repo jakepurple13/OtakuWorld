@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".ReadActivity">
+    tools:context=".reader.ReadActivity">
 
     <RelativeLayout
         android:translationZ="3dp"
@@ -19,6 +19,7 @@
         android:padding="5dp">
 
         <com.google.android.material.slider.Slider
+
             android:id="@+id/pageChoice"
             android:layout_alignParentStart="true"
             android:layout_width="wrap_content"
