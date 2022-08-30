@@ -550,104 +550,6 @@ private fun LastPageReached(vm: ReadViewModel) {
 }
 
 private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
-
-    /*items(pages) {
-        var scale by remember { mutableStateOf(1f) }
-        var offset by remember { mutableStateOf(Offset.Zero) }
-        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-            scale = (scale * zoomChange).coerceAtLeast(1f)
-            offset += offsetChange
-        }
-
-        Box(
-            modifier = Modifier
-                // add transformable to listen to multitouch transformation events
-                // after offset
-                .transformable(state = state)
-                //TODO: For some reason this is causing the weird performance issue
-                // it is a known issue: https://issuetracker.google.com/issues/204328131
-                // when that gets resolved, look into adding back the nestedScrollConnection by scrollBehavior
-                .combinedClickable(
-                    onClick = {
-                        showInfo = !showInfo
-                        if (!showInfo) {
-                            toolbarOffsetHeightPx.value = -toolbarHeightPx
-                            topBarOffsetHeightPx.value = -topBarHeightPx
-                        }
-                    },
-                    onDoubleClick = {
-                        scale = 1f
-                        offset = Offset.Zero
-                    },
-                    onLongClick = {},
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                )
-        ) {
-            Text(
-                stringResource(R.string.doubleTapToReset),
-                modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center
-            )
-            val scaleAnim = animateFloatAsState(scale).value
-            val (x, y) = animateOffsetAsState(targetValue = offset).value
-
-            *//*GlideImage(
-                    imageModel = it,
-                    contentScale = ContentScale.FillWidth,
-                    loading = {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = M3MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    success = {
-                        val byteArray = remember {
-                            val stream = ByteArrayOutputStream()
-                            it.drawable?.toBitmap()?.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                            val b = stream.toByteArray()
-                            ByteArrayInputStream(b)
-                        }
-                        SubSampledImage(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                                .align(Alignment.Center)
-                                .clipToBounds(),
-                            imageSource = rememberInputStreamImageSource(inputStream = byteArray)
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .align(Alignment.Center)
-                        .clipToBounds()
-                )*//*
-
-                GlideImage(
-                    imageModel = it,
-                    contentScale = ContentScale.FillWidth,
-                    loading = {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = M3MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .align(Alignment.Center)
-                        .clipToBounds()
-                        .graphicsLayer(
-                            scaleX = scaleAnim,
-                            scaleY = scaleAnim,
-                            translationX = x,
-                            translationY = y
-                        )
-                )
-            }
-        }*/
-
     items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth) }
     item { LastPageReached(vm = vm) }
 }
@@ -851,8 +753,9 @@ private fun BottomBar(
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit
 ) {
-    androidx.compose.material3.BottomAppBar(
+    BottomAppBar(
         modifier = modifier,
+        windowInsets = WindowInsets(0.dp)
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0
