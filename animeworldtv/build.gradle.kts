@@ -4,6 +4,7 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("com.starter.easylauncher") version "5.1.2"
 }
 
 android {
@@ -81,3 +82,5 @@ dependencies {
     implementation(libs.koinAndroid)
     implementation(libs.bundles.roomLibs)
 }
+
+apply(from = "$rootDir/buildtypes.gradle")

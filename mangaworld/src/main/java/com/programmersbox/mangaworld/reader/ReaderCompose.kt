@@ -57,12 +57,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -74,6 +76,7 @@ import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.programmersbox.helpfulutils.battery
@@ -510,33 +513,74 @@ fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List
         itemSpacing = itemSpacing,
         contentPadding = contentPadding,
         key = { it }
-    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit) } ?: LastPageReached(vm = vm) }
+    ) { page ->
+        pages.getOrNull(page)?.let {
+            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit)
+        } ?: LastPageReached(
+            isLoading = vm.isLoadingPages,
+            currentChapter = vm.currentChapter,
+            chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+            nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+            previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+            adRequest = vm.ad
+        )
+    }
 }
 
 @Composable
-private fun LastPageReached(vm: ReadViewModel) {
-    ChangeChapterSwipe(vm = vm) {
-        Box(
-            Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            if (vm.isLoadingPages) {
-                CircularProgressIndicator()
+private fun LastPageReached(
+    isLoading: Boolean,
+    currentChapter: Int,
+    chapterName: String,
+    nextChapter: () -> Unit,
+    previousChapter: () -> Unit,
+    adRequest: AdRequest = remember { AdRequest.Builder().build() }
+) {
+    val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f)
+
+    ChangeChapterSwipe(
+        nextChapter = nextChapter,
+        previousChapter = previousChapter,
+        isLoading = isLoading,
+        currentChapter = currentChapter
+    ) {
+        ConstraintLayout(Modifier.fillMaxSize()) {
+
+            val (loading, name, lastInfo, swipeInfo, ad) = createRefs()
+
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.constrainAs(loading) {
+                        centerVerticallyTo(parent)
+                        centerHorizontallyTo(parent)
+                    }
+                )
             }
+
             //readVm.list.size - readVm.currentChapter
             //If things start getting WAY too long, just replace with "Chapter ${vm.list.size - vm.currentChapter}
             Text(
-                vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+                chapterName,
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .alpha(if (vm.isLoadingPages) 0f else 1f)
                     .fillMaxWidth()
-                    .align(Alignment.TopCenter)
+                    .constrainAs(name) {
+                        top.linkTo(parent.top)
+                        centerHorizontallyTo(parent)
+                    }
             )
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier.alpha(if (vm.isLoadingPages) 0f else 1f)
+                modifier = Modifier
+                    .alpha(alpha)
+                    .constrainAs(lastInfo) {
+                        centerVerticallyTo(parent)
+                        centerHorizontallyTo(parent)
+                        bottom.linkTo(swipeInfo.top)
+                        top.linkTo(name.bottom)
+                    }
             ) {
                 Text(
                     stringResource(id = R.string.lastPage),
@@ -546,7 +590,7 @@ private fun LastPageReached(vm: ReadViewModel) {
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally)
                 )
-                if (vm.currentChapter <= 0) {
+                if (currentChapter <= 0) {
                     Text(
                         stringResource(id = R.string.reachedLastChapter),
                         style = MaterialTheme.typography.headlineSmall,
@@ -556,44 +600,71 @@ private fun LastPageReached(vm: ReadViewModel) {
                             .align(Alignment.CenterHorizontally)
                     )
                 }
-                Text(
-                    stringResource(id = R.string.swipeChapter),
-                    style = MaterialTheme.typography.labelLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
-                )
             }
+
+            Text(
+                stringResource(id = R.string.swipeChapter),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .constrainAs(swipeInfo) {
+                        bottom.linkTo(ad.top)
+                        centerHorizontallyTo(parent)
+                    }
+            )
 
             if (BuildConfig.BUILD_TYPE == "release") {
                 val context = LocalContext.current
                 AndroidView(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
+                        .constrainAs(ad) {
+                            bottom.linkTo(parent.bottom)
+                            centerHorizontallyTo(parent)
+                        }
                         .fillMaxWidth(),
                     factory = {
                         AdView(it).apply {
                             setAdSize(AdSize.BANNER)
                             adUnitId = context.getString(R.string.ad_unit_id)
-                            loadAd(vm.ad)
+                            loadAd(adRequest)
                         }
                     }
                 )
+            } else {
+                Spacer(
+                    Modifier
+                        .height(10.dp)
+                        .constrainAs(ad) {
+                            bottom.linkTo(parent.bottom)
+                            centerHorizontallyTo(parent)
+                        }
+                )
             }
+
         }
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ChangeChapterSwipe(vm: ReadViewModel, content: @Composable () -> Unit) {
-    BoxWithConstraints {
+fun ChangeChapterSwipe(
+    nextChapter: () -> Unit,
+    previousChapter: () -> Unit,
+    currentChapter: Int,
+    isLoading: Boolean,
+    content: @Composable () -> Unit
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .heightIn(min = 100.dp)
+            .wrapContentHeight()
+    ) {
         val dismissState = rememberDismissState(
             confirmStateChange = {
                 when (it) {
-                    DismissValue.DismissedToEnd -> vm.addChapterToWatched(++vm.currentChapter) {}
-                    DismissValue.DismissedToStart -> vm.addChapterToWatched(--vm.currentChapter) {}
+                    DismissValue.DismissedToEnd -> nextChapter()
+                    DismissValue.DismissedToStart -> previousChapter()
                     else -> Unit
                 }
                 false
@@ -602,11 +673,11 @@ fun ChangeChapterSwipe(vm: ReadViewModel, content: @Composable () -> Unit) {
 
         SwipeToDismiss(
             state = dismissState,
-            directions = if (vm.isLoadingPages)
+            directions = if (isLoading)
                 emptySet()
             else
                 setOfNotNull(
-                    if (vm.currentChapter <= 0) null else DismissDirection.EndToStart,
+                    if (currentChapter <= 0) null else DismissDirection.EndToStart,
                     DismissDirection.StartToEnd
                 ),
             background = {
@@ -649,7 +720,16 @@ fun ChangeChapterSwipe(vm: ReadViewModel, content: @Composable () -> Unit) {
 
 private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
     items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth) }
-    item { LastPageReached(vm = vm) }
+    item {
+        LastPageReached(
+            isLoading = vm.isLoadingPages,
+            currentChapter = vm.currentChapter,
+            chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+            nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+            previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+            adRequest = vm.ad
+        )
+    }
 }
 
 @Composable
@@ -1038,5 +1118,17 @@ private fun SliderSetting(
             scope.launch { activity.updatePref(preference, sliderValue.toInt()) }
         },
         settingIcon = { Icon(settingIcon, null) }
+    )
+}
+
+@Preview
+@Composable
+fun LastPagePreview() {
+    LastPageReached(
+        isLoading = true,
+        currentChapter = 3,
+        chapterName = "Name".repeat(100),
+        nextChapter = {},
+        previousChapter = {}
     )
 }
