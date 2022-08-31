@@ -42,6 +42,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
@@ -519,6 +520,9 @@ private fun LastPageReached(vm: ReadViewModel) {
             Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+            if (vm.isLoadingPages) {
+                CircularProgressIndicator()
+            }
             //readVm.list.size - readVm.currentChapter
             //If things start getting WAY too long, just replace with "Chapter ${vm.list.size - vm.currentChapter}
             Text(
@@ -526,10 +530,14 @@ private fun LastPageReached(vm: ReadViewModel) {
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
+                    .alpha(if (vm.isLoadingPages) 0f else 1f)
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)
             )
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.alpha(if (vm.isLoadingPages) 0f else 1f)
+            ) {
                 Text(
                     stringResource(id = R.string.lastPage),
                     style = MaterialTheme.typography.headlineSmall,
