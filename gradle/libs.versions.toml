@@ -152,7 +152,7 @@ jsoup = "org.jsoup:jsoup:1.15.3"
 
 crashlytics = "com.google.firebase:firebase-crashlytics:18.2.13"
 analytics = "com.google.firebase:firebase-analytics:21.1.1"
-playServices = "com.google.android.gms:play-services-auth:20.2.0"
+playServices = "com.google.android.gms:play-services-auth:20.3.0"
 
 preference = "androidx.preference:preference-ktx:1.2.0"
 
