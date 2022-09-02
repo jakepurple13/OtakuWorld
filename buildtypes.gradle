@@ -23,12 +23,12 @@ android {
         defaultFlavorNaming true
         productFlavors {
             noFirebase {
-                filters customColorRibbonFilter("No Firebase", "#0000FF", "#FFFFFF", "bottom")
+                filters chromeLike()
             }
         }
         buildTypes {
-            debug { filters blueRibbonFilter() }
-            beta { filters blueRibbonFilter() }
+            debug { filters chromeLike(gravity: "Top") }
+            beta { filters chromeLike(gravity: "Top") }
         }
     }
 }
