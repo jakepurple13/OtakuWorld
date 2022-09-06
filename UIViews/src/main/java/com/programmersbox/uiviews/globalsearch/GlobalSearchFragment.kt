@@ -18,15 +18,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -267,18 +266,19 @@ fun GlobalSearchView(
                         ) {
                             LazyColumn(
                                 state = listState,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 if (swipeRefreshState.isRefreshing) {
                                     items(3) {
                                         val placeholderColor =
-                                            contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
+                                            m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
                                                 .copy(0.1f)
                                                 .compositeOver(M3MaterialTheme.colorScheme.surface)
                                         Surface(
                                             modifier = Modifier.placeholder(true, color = placeholderColor),
                                             tonalElevation = 5.dp,
-                                            shape = MaterialTheme.shapes.medium
+                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -305,7 +305,7 @@ fun GlobalSearchView(
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
                                             },
                                             tonalElevation = 5.dp,
-                                            shape = MaterialTheme.shapes.medium
+                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(
@@ -354,6 +354,9 @@ fun GlobalSearchView(
                                                 }
                                             }
                                         }
+                                    }
+                                    if (viewModel.isSearching) {
+                                        item { CircularProgressIndicator() }
                                     }
                                 }
                             }
