@@ -15,7 +15,7 @@ jetpack = "1.3.0-beta01"
 jetpackCompiler = "1.3.0"
 accompanist = "0.26.1-alpha"
 okhttpVersion = "4.10.0"
-ktorVersion = "2.1.0"
+ktorVersion = "2.1.1"
 workVersion = "2.7.1"
 ziplineVersion = "0.9.0"
 
