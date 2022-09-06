@@ -9,8 +9,11 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class GlobalSearchViewModel(
@@ -40,7 +43,7 @@ class GlobalSearchViewModel(
             isRefreshing = true
             isSearching = true
             searchListPublisher = emptyList()
-            withContext(Dispatchers.Default) {
+            async {
                 info.searchList()
                     .apmap { a ->
                         a
@@ -66,7 +69,7 @@ class GlobalSearchViewModel(
                 .onCompletion { isRefreshing = false }
                 .onEach { searchListPublisher = it }
                 .collect()*/
-            }
+            }.await()
             isSearching = false
         }
     }
