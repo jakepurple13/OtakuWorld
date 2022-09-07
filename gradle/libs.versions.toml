@@ -79,7 +79,7 @@ glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
 
 androidCore = "androidx.core:core-ktx:1.8.0"
-appCompat = "androidx.appcompat:appcompat:1.5.0"
+appCompat = "androidx.appcompat:appcompat:1.5.1"
 material = "com.google.android.material:material:1.7.0-rc01"
 
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
