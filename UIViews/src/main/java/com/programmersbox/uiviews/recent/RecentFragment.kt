@@ -64,8 +64,7 @@ fun RecentView(
                 },
                 scrollBehavior = scrollBehavior
             )
-        },
-        bottomBar = { Spacer(modifier = Modifier.height(1.dp)) }
+        }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
         M3OtakuBannerBox(

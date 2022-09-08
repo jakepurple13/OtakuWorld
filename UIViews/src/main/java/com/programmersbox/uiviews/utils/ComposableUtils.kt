@@ -392,9 +392,10 @@ fun InsetLargeTopAppBar(
 @Composable
 fun OtakuScaffold(
     modifier: Modifier = Modifier,
-    topBar: @Composable () -> Unit = { Spacer(Modifier.height(1.dp)) },
-    bottomBar: @Composable () -> Unit = { Spacer(Modifier.height(1.dp)) },
+    topBar: @Composable () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
+    contentWindowInsets: WindowInsets = WindowInsets(0.dp),
     floatingActionButton: @Composable () -> Unit = {},
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     containerColor: Color = MaterialTheme.colorScheme.background,
@@ -410,7 +411,7 @@ fun OtakuScaffold(
         floatingActionButtonPosition,
         containerColor,
         contentColor,
-        WindowInsets(0.dp),
+        contentWindowInsets,
         content
     )
 }

@@ -83,7 +83,14 @@ fun DownloadScreen() {
             )
         }
     ) { p1 ->
-        PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+        PermissionRequest(
+            if (Build.VERSION.SDK_INT >= 33)
+                listOf(Manifest.permission.READ_MEDIA_VIDEO)
+            else listOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+            )
+        ) {
             val context = LocalContext.current
             val viewModel: DownloadViewModel = viewModel { DownloadViewModel(context, defaultPathname) }
             DownloadViewer(viewModel, p1)

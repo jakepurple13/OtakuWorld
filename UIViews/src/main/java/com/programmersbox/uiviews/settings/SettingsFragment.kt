@@ -13,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -65,7 +64,6 @@ import java.io.File
 import java.util.*
 
 class ComposeSettingsDsl {
-
     internal var generalSettings: (@Composable () -> Unit)? = null
     internal var viewSettings: (@Composable () -> Unit)? = null
     internal var playerSettings: (@Composable () -> Unit)? = null
@@ -81,7 +79,6 @@ class ComposeSettingsDsl {
     fun playerSettings(block: @Composable () -> Unit) {
         playerSettings = block
     }
-
 }
 
 @ExperimentalComposeUiApi
@@ -113,14 +110,13 @@ fun SettingScreen(
                 title = { Text(stringResource(R.string.settings)) },
                 scrollBehavior = scrollBehavior
             )
-        }
+        },
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets
     ) { p ->
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(p)
-                .navigationBarsPadding()
-                .padding(bottom = 10.dp)
         ) {
 
             if (BuildConfig.FLAVOR != "noFirebase") {
@@ -143,7 +139,7 @@ fun SettingScreen(
                 logo = logo
             )
 
-            Divider(modifier = Modifier.padding(top = 5.dp))
+            Divider(modifier = Modifier.padding(top = 4.dp))
 
             /*Notifications*/
             NotificationSettings(
@@ -179,7 +175,7 @@ fun SettingScreen(
                 customSettings = customPreferences.playerSettings
             )
 
-            Divider(modifier = Modifier.padding(top = 5.dp))
+            Divider(modifier = Modifier.padding(top = 4.dp))
 
             /*More Info*/
             InfoSettings(
