@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -539,8 +540,7 @@ private fun DetailsView(
         }
     }
 
-    val topBarColor = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value
-        ?: M3MaterialTheme.colorScheme.onSurface
+    val topBarColor by animateColorAsState(swatchInfo.value?.bodyColor?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -566,6 +566,9 @@ private fun DetailsView(
             }
         }
     ) {
+        val b = M3MaterialTheme.colorScheme.background
+        val c by animateColorAsState(swatchInfo.value?.rgb?.toComposeColor() ?: b)
+
         OtakuScaffold(
             containerColor = Color.Transparent,
             topBar = {
@@ -706,16 +709,7 @@ private fun DetailsView(
                 }
             },
             modifier = Modifier
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            swatchInfo.value?.rgb
-                                ?.toComposeColor()
-                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.background,
-                            M3MaterialTheme.colorScheme.background
-                        )
-                    )
-                )
+                .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
 
@@ -1123,7 +1117,6 @@ private fun DetailsHeader(
     var imagePopup by remember { mutableStateOf(false) }
 
     if (imagePopup) {
-
         AlertDialog(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { imagePopup = false },
@@ -1140,7 +1133,6 @@ private fun DetailsHeader(
             },
             confirmButton = { TextButton(onClick = { imagePopup = false }) { Text(stringResource(R.string.done)) } }
         )
-
     }
 
     Box(

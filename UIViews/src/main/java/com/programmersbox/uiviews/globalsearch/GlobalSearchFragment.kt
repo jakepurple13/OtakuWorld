@@ -205,7 +205,7 @@ fun GlobalSearchView(
                     Scaffold(
                         modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                         topBar = {
-                            SmallTopAppBar(
+                            TopAppBar(
                                 scrollBehavior = sheetScrollBehavior,
                                 title = { Text(s.apiName) },
                                 actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }

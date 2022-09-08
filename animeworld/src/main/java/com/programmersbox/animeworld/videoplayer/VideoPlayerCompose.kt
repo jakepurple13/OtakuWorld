@@ -242,7 +242,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
         enter = slideInVertically() + fadeIn(),
         exit = slideOutVertically() + fadeOut()
     ) {
-        SmallTopAppBar(
+        TopAppBar(
             title = { Text(viewModel.showName.orEmpty()) },
             navigationIcon = { BackButton() },
             actions = {

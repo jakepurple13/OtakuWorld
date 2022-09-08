@@ -387,7 +387,7 @@ fun SheetView(
     Scaffold(
         modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
         topBar = {
-            SmallTopAppBar(
+            TopAppBar(
                 scrollBehavior = sheetScrollBehavior,
                 title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
                 actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },

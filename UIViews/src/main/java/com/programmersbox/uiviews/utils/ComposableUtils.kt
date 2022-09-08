@@ -311,14 +311,14 @@ fun InsetSmallTopAppBar(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {}
 ) {
-    SmallTopAppBar(
-        modifier = modifier,
-        windowInsets = insetPadding,
+    TopAppBar(
         title = title,
+        modifier = modifier,
         navigationIcon = navigationIcon,
         actions = actions,
-        scrollBehavior = scrollBehavior,
-        colors = colors
+        windowInsets = insetPadding,
+        colors = colors,
+        scrollBehavior = scrollBehavior
     )
 }
 
@@ -410,6 +410,7 @@ fun OtakuScaffold(
         floatingActionButtonPosition,
         containerColor,
         contentColor,
+        WindowInsets(0.dp),
         content
     )
 }
