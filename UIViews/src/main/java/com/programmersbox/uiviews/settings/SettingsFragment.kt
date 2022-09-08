@@ -134,8 +134,6 @@ fun SettingScreen(
             AboutSettings(
                 context = context,
                 scope = scope,
-                activity = activity,
-                genericInfo = genericInfo,
                 logo = logo
             )
 
@@ -179,6 +177,10 @@ fun SettingScreen(
 
             /*More Info*/
             InfoSettings(
+                logo = logo,
+                scope = scope,
+                activity = activity,
+                genericInfo = genericInfo,
                 usedLibraryClick = usedLibraryClick
             )
         }
@@ -219,8 +221,6 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
 private fun AboutSettings(
     context: Context,
     scope: CoroutineScope,
-    activity: ComponentActivity,
-    genericInfo: GenericInfo,
     logo: MainLogo,
     aboutViewModel: AboutViewModel = viewModel { AboutViewModel(context) }
 ) {
@@ -237,76 +237,6 @@ private fun AboutSettings(
             )
         }
     )
-
-    val appUpdate by updateAppCheck.collectAsState(null)
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
-        modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { aboutViewModel.updateChecker(context) } }
-    )
-
-    ShowWhen(
-        visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
-    ) {
-        var showDialog by remember { mutableStateOf(false) }
-
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
-                text = { Text(stringResource(R.string.please_update_for_latest_features)) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            activity.requestPermissions(
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                            ) {
-                                if (it.isGranted) {
-                                    updateAppCheck.value
-                                        ?.let { a ->
-                                            val isApkAlreadyThere = File(
-                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
-                                                a.let(genericInfo.apkString).toString()
-                                            )
-                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
-                                        }
-                                }
-                            }
-                            showDialog = false
-                        }
-                    ) { Text(stringResource(R.string.update)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
-                    TextButton(
-                        onClick = {
-                            navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                            showDialog = false
-                        }
-                    ) { Text(stringResource(R.string.gotoBrowser)) }
-                }
-            )
-        }
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.update_available)) },
-            summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { showDialog = true },
-            settingIcon = {
-                Icon(
-                    Icons.Default.SystemUpdateAlt,
-                    null,
-                    tint = Color(0xFF00E676),
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        )
-    }
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
@@ -689,8 +619,16 @@ private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings
 }
 
 @Composable
-private fun InfoSettings(usedLibraryClick: () -> Unit) {
+private fun InfoSettings(
+    infoViewModel: MoreInfoViewModel = viewModel(),
+    logo: MainLogo,
+    scope: CoroutineScope,
+    activity: ComponentActivity,
+    genericInfo: GenericInfo,
+    usedLibraryClick: () -> Unit
+) {
     val navController = LocalNavController.current
+    val context = LocalContext.current
 
     CategorySetting(settingTitle = { Text(stringResource(R.string.more_info_category)) })
 
@@ -731,6 +669,83 @@ private fun InfoSettings(usedLibraryClick: () -> Unit) {
             interactionSource = remember { MutableInteractionSource() }
         ) { navController.navigateChromeCustomTabs("https://ko-fi.com/V7V3D3JI") }
     )
+
+    val appUpdate by updateAppCheck.collectAsState(null)
+
+    PreferenceSetting(
+        settingIcon = {
+            Image(
+                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                null,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+        settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
+        modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
+    )
+
+    ShowWhen(
+        visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
+    ) {
+        var showDialog by remember { mutableStateOf(false) }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+                text = { Text(stringResource(R.string.please_update_for_latest_features)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            activity.requestPermissions(
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.READ_EXTERNAL_STORAGE
+                            ) {
+                                if (it.isGranted) {
+                                    updateAppCheck.value
+                                        ?.let { a ->
+                                            val isApkAlreadyThere = File(
+                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                                a.let(genericInfo.apkString).toString()
+                                            )
+                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                        }
+                                }
+                            }
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.update)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
+                    TextButton(
+                        onClick = {
+                            navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.gotoBrowser)) }
+                }
+            )
+        }
+
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.update_available)) },
+            summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+            modifier = Modifier.clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ) { showDialog = true },
+            settingIcon = {
+                Icon(
+                    Icons.Default.SystemUpdateAlt,
+                    null,
+                    tint = Color(0xFF00E676),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        )
+    }
 
 }
 

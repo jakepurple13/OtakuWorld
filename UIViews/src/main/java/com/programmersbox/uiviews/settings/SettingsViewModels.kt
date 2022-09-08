@@ -76,6 +76,25 @@ class AboutViewModel(context: Context) : ViewModel() {
     }
 }
 
+class MoreInfoViewModel : ViewModel() {
+
+    private val checker = AtomicBoolean(false)
+
+    suspend fun updateChecker(context: Context) {
+        try {
+            if (!checker.get()) {
+                checker.set(true)
+                AppUpdate.getUpdate()?.let(updateAppCheck::tryEmit)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            checker.set(false)
+            withContext(Dispatchers.Main) { context.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() } }
+        }
+    }
+}
+
 class NotificationViewModel(dao: ItemDao) : ViewModel() {
 
     var savedNotifications by mutableStateOf(0)
