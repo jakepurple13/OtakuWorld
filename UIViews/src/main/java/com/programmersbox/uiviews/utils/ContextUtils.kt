@@ -31,6 +31,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -61,6 +62,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 import kotlin.properties.Delegates
+import kotlin.properties.PropertyDelegateProvider
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
 
@@ -601,4 +603,40 @@ val Context.appVersion: String
 fun appVersion(): String {
     val context = LocalContext.current
     return remember(context) { context.appVersion }
+}
+
+internal inline fun <T> SavedStateHandle.state(
+    key: String? = null,
+    crossinline initialValue: () -> T,
+) = PropertyDelegateProvider<Any, MutableState<T>> { thisRef, property ->
+    val internalKey = key ?: "${thisRef.javaClass.name}#${property.name}"
+    getMutableState(internalKey, initialValue())
+}
+
+internal fun <T> SavedStateHandle.getMutableState(
+    key: String,
+    initialValue: T,
+): MutableState<T> {
+    val stateFlow = getStateFlow(key, initialValue)
+    // Sync initial value with `stateFlow`.
+    val base = mutableStateOf(stateFlow.value)
+
+    return object : MutableState<T> by base {
+
+        override var value: T
+            get() {
+                // Sync `base` value with `stateFlow`.
+                if (base.value != stateFlow.value) {
+                    base.value = stateFlow.value
+                }
+                return base.value
+            }
+            set(value) {
+                // Sync `base` value with `stateFlow`.
+                if (stateFlow.value != value) {
+                    set(key, value)
+                    base.value = get<T>(key) ?: value
+                }
+            }
+    }
 }
