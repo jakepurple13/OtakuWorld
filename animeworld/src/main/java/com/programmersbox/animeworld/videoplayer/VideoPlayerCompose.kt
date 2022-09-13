@@ -21,10 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerInputScope
@@ -779,7 +779,7 @@ fun Modifier.quickSeekAnimation(
             ShadowedIcon(
                 Icons.Filled.FastRewind,
                 modifier = Modifier
-                    .alpha(alphaRewind.value)
+                    .graphicsLayer { alpha = alphaRewind.value }
                     .align(Alignment.Center)
             )
         }
@@ -792,7 +792,7 @@ fun Modifier.quickSeekAnimation(
             ShadowedIcon(
                 if (quickSeekDirection == QuickSeekDirection.Pause) Icons.Default.Pause else Icons.Filled.PlayArrow,
                 modifier = Modifier
-                    .alpha(alphaPlayPause.value)
+                    .graphicsLayer { alpha = alphaPlayPause.value }
                     .align(Alignment.Center)
             )
         }
@@ -805,7 +805,7 @@ fun Modifier.quickSeekAnimation(
             ShadowedIcon(
                 Icons.Filled.FastForward,
                 modifier = Modifier
-                    .alpha(alphaForward.value)
+                    .graphicsLayer { alpha = alphaForward.value }
                     .align(Alignment.Center)
             )
         }

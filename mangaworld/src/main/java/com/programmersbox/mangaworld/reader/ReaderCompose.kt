@@ -42,7 +42,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
@@ -575,7 +574,7 @@ private fun LastPageReached(
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 modifier = Modifier
-                    .alpha(alpha)
+                    .graphicsLayer { this.alpha = alpha }
                     .constrainAs(lastInfo) {
                         centerVerticallyTo(parent)
                         centerHorizontallyTo(parent)
