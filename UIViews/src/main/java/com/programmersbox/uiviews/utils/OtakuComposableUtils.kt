@@ -36,6 +36,7 @@ import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.components.BannerBox
 import com.programmersbox.uiviews.utils.components.BannerBox2
+import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -73,8 +74,7 @@ fun CoverCard(
         Box {
             GlideImage(
                 imageModel = imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                 requestBuilder = {
                     Glide.with(LocalView.current)
                         .asDrawable()
@@ -231,8 +231,7 @@ fun OtakuBannerBox(
                     leadingContent = {
                         GlideImage(
                             imageModel = itemInfo.value?.imageUrl.orEmpty(),
-                            contentDescription = null,
-                            contentScale = ContentScale.Fit,
+                            imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                             loading = {
                                 Image(

@@ -18,6 +18,7 @@ okhttpVersion = "4.10.0"
 ktorVersion = "2.1.1"
 workVersion = "2.7.1"
 ziplineVersion = "0.9.4"
+landscapist = "2.0.0"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -51,7 +52,9 @@ composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-al
 composeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpack" }
 composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.17"
 composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.17"
-landscapistGlide = "com.github.skydoves:landscapist-glide:1.6.1"
+landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
+landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
+landscapistPlaceholder = { module = "com.github.skydoves:landscapist-placeholder", version.ref = "landscapist" }
 composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
 composeAnimation = { module = "androidx.compose.animation:animation", version.ref = "jetpack" }
 uiUtil = { module = "androidx.compose.ui:ui-util", version.ref = "jetpack" }
@@ -251,7 +254,8 @@ compose = [
     "composeActivity", "composeLifecycle", "composeLifecycleRuntime",
     "composeRuntimeLivedata",
     "composeMaterialThemeAdapter", "composeMaterial3ThemeAdapter",
-    "landscapistGlide", "coilCompose",
+    "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
+    "coilCompose",
     "composeConstraintLayout", "permissions",
     "materialPlaceholder", "drawablePainter", "uiUtil",
     "materialYou",

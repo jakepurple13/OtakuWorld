@@ -55,6 +55,7 @@ import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.PermissionRequest
+import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import java.io.File
@@ -192,8 +193,10 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
                         GlideImage(
                             imageModel = item.assetFileStringUri.orEmpty(),
-                            contentDescription = item.videoName,
-                            contentScale = ContentScale.Crop,
+                            imageOptions = ImageOptions(
+                                contentDescription = item.videoName,
+                                contentScale = ContentScale.Crop,
+                            ),
                             requestBuilder = {
                                 Glide.with(LocalView.current)
                                     .asDrawable()
@@ -428,8 +431,7 @@ private fun VideoContentView(item: VideoContent) {
 
                     GlideImage(
                         imageModel = item.assetFileStringUri.orEmpty(),
-                        contentDescription = "",
-                        contentScale = ContentScale.Crop,
+                        imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         requestBuilder = {
                             Glide.with(LocalView.current)
                                 .asDrawable()

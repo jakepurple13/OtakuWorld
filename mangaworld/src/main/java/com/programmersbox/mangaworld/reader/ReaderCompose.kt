@@ -85,6 +85,7 @@ import com.programmersbox.mangaworld.*
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
+import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -444,7 +445,7 @@ fun SheetView(
                         ) {
                             GlideImage(
                                 imageModel = it,
-                                contentScale = ContentScale.Crop,
+                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                                 loading = {
                                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                                 },
@@ -820,7 +821,7 @@ private fun ZoomableImage(
         if (showTheThing) {
             GlideImage(
                 imageModel = if (isDownloaded) painter else remember(painter) { GlideUrl(painter) { headers } },
-                contentScale = contentScale,
+                imageOptions = ImageOptions(contentScale = contentScale),
                 loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {
                     Text(

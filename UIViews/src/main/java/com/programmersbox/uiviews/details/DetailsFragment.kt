@@ -59,8 +59,11 @@ import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
+import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.glide.GlideImage
-import com.skydoves.landscapist.palette.BitmapPalette
+import com.skydoves.landscapist.palette.PalettePlugin
+import com.skydoves.landscapist.placeholder.placeholder.PlaceholderPlugin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -1124,8 +1127,7 @@ private fun DetailsHeader(
             text = {
                 GlideImage(
                     imageModel = imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
+                    imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                     modifier = Modifier
                         .scaleRotateOffsetReset()
                         .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -1143,8 +1145,7 @@ private fun DetailsHeader(
     ) {
         GlideImage(
             imageModel = imageUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
             modifier = Modifier.matchParentSize(),
         )
 
@@ -1178,12 +1179,13 @@ private fun DetailsHeader(
                 ) {
                     GlideImage(
                         imageModel = imageUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        error = logo,
-                        placeHolder = logo,
-                        bitmapPalette = BitmapPalette { p ->
-                            swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
+                        imageOptions = ImageOptions(contentScale = ContentScale.Fit),
+                        component = rememberImageComponent {
+                            +PalettePlugin { p ->
+                                swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
+                            }
+                            +PlaceholderPlugin.Loading(logo)
+                            +PlaceholderPlugin.Failure(logo)
                         },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
