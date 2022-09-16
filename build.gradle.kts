@@ -9,7 +9,7 @@ buildscript {
         classpath("com.android.tools.build:gradle:7.2.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
         classpath("com.google.gms:google-services:4.3.13")
-        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.1")
+        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.2")
         classpath("com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${libs.versions.latestAboutLibsRelease.get()}")
         classpath("org.jetbrains.kotlin:kotlin-serialization:${libs.versions.kotlin.get()}")
         // NOTE: Do not place your application dependencies here; they belong
