@@ -24,6 +24,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -73,8 +76,6 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -130,7 +131,7 @@ fun ReadView() {
     }
 
     val scope = rememberCoroutineScope()
-    val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages)
+    val pullRefreshState = rememberPullRefreshState(refreshing = readVm.isLoadingPages, onRefresh = readVm::refresh)
 
     val pages = readVm.pageList
 
@@ -276,10 +277,10 @@ fun ReadView() {
                     }
                 }
             ) { paddingValues ->
-                SwipeRefresh(
-                    state = swipeState,
-                    onRefresh = { readVm.refresh() },
-                    indicatorPadding = paddingValues
+                Box(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .pullRefresh(pullRefreshState)
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
                     Crossfade(targetState = listOrPager) {
@@ -288,6 +289,15 @@ fun ReadView() {
                         }
                         else PagerView(pagerState, PaddingValues(0.dp), pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
                     }
+
+                    PullRefreshIndicator(
+                        refreshing = readVm.isLoadingPages,
+                        state = pullRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        backgroundColor = MaterialTheme.colorScheme.background,
+                        contentColor = MaterialTheme.colorScheme.onBackground,
+                        scale = true
+                    )
                 }
             }
         }

@@ -77,10 +77,8 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
                 .getListFlow(count)
                 .dispatchIoAndCatchList { context?.showErrorToast() }
                 .onStart { isRefreshing = true }
-                .onEach {
-                    sourceList.addAll(it)
-                    isRefreshing = false
-                }
+                .onEach { sourceList.addAll(it) }
+                .onCompletion { isRefreshing = false }
                 .collect()
         }
     }

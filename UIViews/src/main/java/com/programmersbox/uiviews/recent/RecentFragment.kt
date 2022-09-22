@@ -6,9 +6,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,8 +22,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
@@ -28,7 +30,7 @@ import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun RecentView(
     recentVm: RecentViewModel,
@@ -40,7 +42,7 @@ fun RecentView(
     val state = rememberLazyGridState()
     val scope = rememberCoroutineScope()
     val source by sourceFlow.collectAsState(initial = null)
-    val refresh = rememberSwipeRefreshState(isRefreshing = recentVm.isRefreshing)
+    val pull = rememberPullRefreshState(refreshing = recentVm.isRefreshing, onRefresh = { source?.let { recentVm.reset(context, it) } })
 
     val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
 
@@ -93,14 +95,12 @@ fun RecentView(
                         }
                     }
                     true -> {
-                        when {
-                            recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
-                            else -> {
-                                SwipeRefresh(
-                                    //modifier = Modifier.padding(p),
-                                    state = refresh,
-                                    onRefresh = { source?.let { recentVm.reset(context, it) } }
-                                ) {
+                        Box(
+                            modifier = Modifier.pullRefresh(pull)
+                        ) {
+                            when {
+                                recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
+                                else -> {
                                     info.ItemListView(
                                         list = recentVm.sourceList,
                                         listState = state,
@@ -112,6 +112,14 @@ fun RecentView(
                                     ) { navController.navigateToDetails(it) }
                                 }
                             }
+                            PullRefreshIndicator(
+                                refreshing = recentVm.isRefreshing,
+                                state = pull,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                backgroundColor = M3MaterialTheme.colorScheme.background,
+                                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                                scale = true
+                            )
                         }
 
                         if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {

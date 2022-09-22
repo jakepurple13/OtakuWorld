@@ -19,6 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -51,8 +54,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -204,7 +205,16 @@ fun NovelReader() {
     }
 
     val scope = rememberCoroutineScope()
-    val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages.value)
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = readVm.isLoadingPages.value,
+        onRefresh = {
+            readVm.loadPages(
+                readVm.list.getOrNull(readVm.currentChapter)
+                    ?.getChapterInfo()
+                    ?.map { it.mapNotNull(Storage::link) }
+            )
+        }
+    )
 
     var showInfo by remember { mutableStateOf(true) }
 
@@ -361,16 +371,10 @@ fun NovelReader() {
                 )
             }
         ) { p ->
-            SwipeRefresh(
-                state = swipeState,
-                onRefresh = {
-                    readVm.loadPages(
-                        readVm.list.getOrNull(readVm.currentChapter)
-                            ?.getChapterInfo()
-                            ?.map { it.mapNotNull(Storage::link) }
-                    )
-                },
-                indicatorPadding = p
+            Box(
+                modifier = Modifier
+                    .padding(p)
+                    .pullRefresh(pullRefreshState)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -417,6 +421,15 @@ fun NovelReader() {
                         )
                     }
                 }
+
+                PullRefreshIndicator(
+                    refreshing = readVm.isLoadingPages.value,
+                    state = pullRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    backgroundColor = M3MaterialTheme.colorScheme.background,
+                    contentColor = M3MaterialTheme.colorScheme.onBackground,
+                    scale = true
+                )
             }
         }
     }

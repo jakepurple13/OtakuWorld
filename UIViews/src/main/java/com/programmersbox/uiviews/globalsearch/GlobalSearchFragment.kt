@@ -24,6 +24,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,8 +52,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
@@ -91,7 +92,7 @@ fun GlobalSearchView(
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = viewModel.isRefreshing)
+    val pullRefreshState = rememberPullRefreshState(refreshing = viewModel.isRefreshing, onRefresh = {})
     val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
     val networkState by viewModel.observeNetwork.collectAsState(initial = true)
@@ -258,18 +259,15 @@ fun GlobalSearchView(
                         }
                     }
                     true -> {
-                        SwipeRefresh(
-                            state = swipeRefreshState,
-                            onRefresh = {},
-                            swipeEnabled = false,
-                            modifier = Modifier.padding(it)
+                        Box(
+                            modifier = Modifier.pullRefresh(pullRefreshState, false)
                         ) {
                             LazyColumn(
                                 state = listState,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                if (swipeRefreshState.isRefreshing) {
+                                if (viewModel.isRefreshing) {
                                     items(3) {
                                         val placeholderColor =
                                             m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
@@ -360,6 +358,15 @@ fun GlobalSearchView(
                                     }
                                 }
                             }
+
+                            PullRefreshIndicator(
+                                refreshing = viewModel.isRefreshing,
+                                state = pullRefreshState,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                backgroundColor = M3MaterialTheme.colorScheme.background,
+                                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                                scale = true
+                            )
                         }
                     }
                 }

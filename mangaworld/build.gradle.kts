@@ -101,7 +101,6 @@ dependencies {
     implementation(libs.bundles.koinLibs)
     implementation(libs.bundles.compose)
     implementation(libs.composePager)
-    implementation(libs.swiperefresh)
     implementation(libs.coilGif)
     implementation(libs.bundles.datastoreLibs)
 

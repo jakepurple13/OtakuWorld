@@ -13,6 +13,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,8 +34,6 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
@@ -136,7 +137,6 @@ fun AllView(
                         }
                     }
                     true -> {
-
                         HorizontalPager(
                             count = 2,
                             state = pagerState,
@@ -155,7 +155,6 @@ fun AllView(
                                     showBanner = { showBanner = it }
                                 )
                             }
-
                         }
                     }
                 }
@@ -164,7 +163,7 @@ fun AllView(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun AllScreen(
     allVm: AllViewModel,
@@ -176,16 +175,16 @@ fun AllScreen(
     val source by sourceFlow.collectAsState(initial = null)
     val navController = LocalNavController.current
     val context = LocalContext.current
+    val pullRefreshState = rememberPullRefreshState(allVm.isRefreshing, onRefresh = { source?.let { allVm.reset(context, it) } })
     OtakuScaffold { p ->
-        if (allVm.sourceList.isEmpty()) {
-            info.ComposeShimmerItem()
-        } else {
-            val refresh = rememberSwipeRefreshState(isRefreshing = allVm.isRefreshing)
-            SwipeRefresh(
-                modifier = Modifier.padding(p),
-                state = refresh,
-                onRefresh = { source?.let { allVm.reset(context, it) } }
-            ) {
+        Box(
+            modifier = Modifier
+                .padding(p)
+                .pullRefresh(pullRefreshState)
+        ) {
+            if (allVm.sourceList.isEmpty()) {
+                info.ComposeShimmerItem()
+            } else {
                 info.AllListView(
                     list = allVm.sourceList,
                     listState = state,
@@ -196,6 +195,14 @@ fun AllScreen(
                     }
                 ) { navController.navigateToDetails(it) }
             }
+            PullRefreshIndicator(
+                refreshing = allVm.isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = M3MaterialTheme.colorScheme.background,
+                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                scale = true
+            )
         }
 
         if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
@@ -206,7 +213,7 @@ fun AllScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SearchScreen(
     allVm: AllViewModel,
@@ -255,22 +262,30 @@ fun SearchScreen(
             )
         }
     ) { p ->
-        Box(modifier = Modifier.padding(p)) {
-            SwipeRefresh(
-                state = rememberSwipeRefreshState(isRefreshing = allVm.isSearching),
-                onRefresh = {},
-                swipeEnabled = false
-            ) {
-                info.SearchListView(
-                    list = searchList,
-                    listState = rememberLazyGridState(),
-                    favorites = allVm.favoriteList,
-                    onLongPress = { item, c ->
-                        itemInfo.value = if (c == ComponentState.Pressed) item else null
-                        showBanner(c == ComponentState.Pressed)
-                    }
-                ) { navController.navigateToDetails(it) }
-            }
+        val pullRefreshState = rememberPullRefreshState(allVm.isSearching, onRefresh = {})
+        Box(
+            modifier = Modifier
+                .pullRefresh(pullRefreshState, false)
+                .padding(p)
+        ) {
+            info.SearchListView(
+                list = searchList,
+                listState = rememberLazyGridState(),
+                favorites = allVm.favoriteList,
+                onLongPress = { item, c ->
+                    itemInfo.value = if (c == ComponentState.Pressed) item else null
+                    showBanner(c == ComponentState.Pressed)
+                }
+            ) { navController.navigateToDetails(it) }
+
+            PullRefreshIndicator(
+                refreshing = allVm.isSearching,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = M3MaterialTheme.colorScheme.background,
+                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                scale = true
+            )
         }
     }
 }

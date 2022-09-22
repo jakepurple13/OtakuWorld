@@ -79,7 +79,6 @@ dependencies {
 
     implementation(libs.bundles.firebaseCrashLibs)
     implementation(libs.bundles.compose)
-    implementation(libs.swipeRefresh)
 
     implementation(libs.bundles.datastoreLibs)
 
