@@ -3,7 +3,7 @@ kotlin = "1.7.10"
 latestAboutLibsRelease = "10.4.0"
 jakepurple13 = "10.6.5"
 coroutinesVersion = "1.6.4"
-glideVersion = "4.13.2"
+glideVersion = "4.14.0"
 pagingVersion = "3.1.1"
 roomVersion = "2.5.0-alpha03"
 navVersion = "2.5.2"
@@ -79,6 +79,7 @@ coroutinesPlayServices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-pl
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
 glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
+glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.0-SNAPSHOT"
 
 androidCore = "androidx.core:core-ktx:1.9.0"
 appCompat = "androidx.appcompat:appcompat:1.5.1"

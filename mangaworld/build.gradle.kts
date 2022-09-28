@@ -104,6 +104,8 @@ dependencies {
     implementation(libs.coilGif)
     implementation(libs.bundles.datastoreLibs)
 
+    implementation(libs.glideCompose)
+
 }
 
 apply(from = "$rootDir/buildtypes.gradle")
