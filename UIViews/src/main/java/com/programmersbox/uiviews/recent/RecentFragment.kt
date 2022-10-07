@@ -10,6 +10,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -58,6 +59,9 @@ fun RecentView(
             InsetSmallTopAppBar(
                 title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
                 actions = {
+                    IconButton(onClick = { navController.navigate(Screen.SourceChooserScreen.route) }) {
+                        Icon(Icons.Default.Source, null)
+                    }
                     AnimatedVisibility(visible = showButton) {
                         IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
                             Icon(Icons.Default.ArrowUpward, null)
