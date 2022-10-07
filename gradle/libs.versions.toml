@@ -148,8 +148,8 @@ showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 toolbarCompose = "me.onebone:toolbar-compose:2.3.4"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.5.1"
 
-datastore = "androidx.datastore:datastore:1.0.0"
-datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
+datastore = "androidx.datastore:datastore:1.1.0-dev01"
+datastorePref = "androidx.datastore:datastore-preferences:1.1.0-dev01"
 
 jsoup = "org.jsoup:jsoup:1.15.3"
 
