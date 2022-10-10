@@ -3,7 +3,7 @@ kotlin = "1.7.20"
 latestAboutLibsRelease = "10.5.0"
 jakepurple13 = "10.6.5"
 coroutinesVersion = "1.6.4"
-glideVersion = "4.14.1"
+glideVersion = "4.14.2"
 pagingVersion = "3.1.1"
 roomVersion = "2.5.0-beta01"
 navVersion = "2.5.2"
@@ -17,7 +17,7 @@ accompanist = "0.26.2-beta"
 okhttpVersion = "4.10.0"
 ktorVersion = "2.1.2"
 workVersion = "2.7.1"
-ziplineVersion = "0.9.4"
+ziplineVersion = "0.9.5"
 landscapist = "2.0.0"
 
 ### MangaWorld
@@ -50,8 +50,8 @@ composeActivity = "androidx.activity:activity-compose:1.6.0"
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha02"
 composeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpack" }
-composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.19"
-composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.19"
+composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.20"
+composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.20"
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
 landscapistPlaceholder = { module = "com.github.skydoves:landscapist-placeholder", version.ref = "landscapist" }
@@ -79,7 +79,7 @@ coroutinesPlayServices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-pl
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
 glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
-glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.0"
+glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.1"
 
 androidCore = "androidx.core:core-ktx:1.9.0"
 appCompat = "androidx.appcompat:appcompat:1.5.1"

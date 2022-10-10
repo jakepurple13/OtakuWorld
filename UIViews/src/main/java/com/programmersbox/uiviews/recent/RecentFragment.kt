@@ -58,12 +58,10 @@ fun RecentView(
         topBar = {
             InsetSmallTopAppBar(
                 title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                navigationIcon = {
+                actions = {
                     IconButton(onClick = { navController.navigate(Screen.SourceChooserScreen.route) }) {
                         Icon(Icons.Default.Source, null)
                     }
-                },
-                actions = {
                     AnimatedVisibility(visible = showButton) {
                         IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
                             Icon(Icons.Default.ArrowUpward, null)
