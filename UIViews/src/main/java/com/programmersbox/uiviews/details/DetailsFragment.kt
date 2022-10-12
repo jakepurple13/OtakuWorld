@@ -1126,7 +1126,7 @@ private fun DetailsHeader(
             title = { Text(model.title, modifier = Modifier.padding(5.dp)) },
             text = {
                 GlideImage(
-                    imageModel = imageUrl,
+                    imageModel = { imageUrl },
                     imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                     modifier = Modifier
                         .scaleRotateOffsetReset()
@@ -1144,7 +1144,7 @@ private fun DetailsHeader(
             .then(modifier)
     ) {
         GlideImage(
-            imageModel = imageUrl,
+            imageModel = { imageUrl },
             imageOptions = ImageOptions(contentScale = ContentScale.Crop),
             modifier = Modifier.matchParentSize(),
         )
@@ -1178,7 +1178,7 @@ private fun DetailsHeader(
                     modifier = Modifier.padding(5.dp)
                 ) {
                     GlideImage(
-                        imageModel = imageUrl,
+                        imageModel = { imageUrl },
                         imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                         component = rememberImageComponent {
                             +PalettePlugin { p ->

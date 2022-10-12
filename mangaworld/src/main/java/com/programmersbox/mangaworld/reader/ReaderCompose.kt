@@ -453,7 +453,7 @@ fun SheetView(
                                 }
                         ) {
                             GlideImage(
-                                imageModel = it,
+                                imageModel = { it },
                                 imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                                 loading = {
                                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -828,8 +828,9 @@ private fun ZoomableImage(
         var showTheThing by remember { mutableStateOf(true) }
 
         if (showTheThing) {
+            val url = remember(painter) { GlideUrl(painter) { headers } }
             GlideImage(
-                imageModel = if (isDownloaded) painter else remember(painter) { GlideUrl(painter) { headers } },
+                imageModel = { if (isDownloaded) painter else url },
                 imageOptions = ImageOptions(contentScale = contentScale),
                 loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {

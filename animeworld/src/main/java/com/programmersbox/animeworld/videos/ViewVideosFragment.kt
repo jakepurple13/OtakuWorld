@@ -192,7 +192,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         }
 
                         GlideImage(
-                            imageModel = item.assetFileStringUri.orEmpty(),
+                            imageModel = { item.assetFileStringUri.orEmpty() },
                             imageOptions = ImageOptions(
                                 contentDescription = item.videoName,
                                 contentScale = ContentScale.Crop,
@@ -430,7 +430,7 @@ private fun VideoContentView(item: VideoContent) {
                     }
 
                     GlideImage(
-                        imageModel = item.assetFileStringUri.orEmpty(),
+                        imageModel = { item.assetFileStringUri.orEmpty() },
                         imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                         requestBuilder = {
                             Glide.with(LocalView.current)

@@ -73,7 +73,7 @@ fun CoverCard(
     ) {
         Box {
             GlideImage(
-                imageModel = imageUrl,
+                imageModel = { imageUrl },
                 imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                 requestBuilder = {
                     Glide.with(LocalView.current)
@@ -230,7 +230,7 @@ fun OtakuBannerBox(
                 ListItem(
                     leadingContent = {
                         GlideImage(
-                            imageModel = itemInfo.value?.imageUrl.orEmpty(),
+                            imageModel = { itemInfo.value?.imageUrl.orEmpty() },
                             imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                             loading = {
