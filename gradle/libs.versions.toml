@@ -131,7 +131,7 @@ iconicsCore = "com.mikepenz:iconics-core:5.4.0"
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
 firebaseAuth = "com.google.firebase:firebase-auth:21.0.8"
-googlePlayAds = "com.google.android.gms:play-services-ads:21.2.0"
+googlePlayAds = "com.google.android.gms:play-services-ads:21.3.0"
 
 pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha16"
 
@@ -177,7 +177,7 @@ mediaRouter = "androidx.mediarouter:mediarouter:1.3.1"
 fetch = "androidx.tonyodev.fetch2:xfetch2:3.1.6"
 fetchOkHttp = "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
-castFramework = "com.google.android.gms:play-services-cast-framework:21.1.0"
+castFramework = "com.google.android.gms:play-services-cast-framework:21.2.0"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
 
