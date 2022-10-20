@@ -52,6 +52,7 @@ android {
             dimension = "version"
         }
     }
+    namespace = "com.programmersbox.uiviews"
 }
 
 dependencies {

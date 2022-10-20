@@ -51,6 +51,7 @@ android {
             java.srcDirs("src/noFirebase/java")
         }
     }
+    namespace = "com.programmersbox.sharedutils"
 }
 
 dependencies {

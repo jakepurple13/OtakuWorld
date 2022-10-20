@@ -11,6 +11,7 @@ plugins {
 }
 
 android {
+    namespace = "com.programmersbox.mangaworld"
     compileSdk = AppInfo.compileVersion
     buildToolsVersion = AppInfo.buildVersion
 

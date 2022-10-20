@@ -48,6 +48,7 @@ android {
             dimension = "version"
         }
     }
+    namespace = "com.programmersbox.animeworldtv"
 
     configurations.all {
         resolutionStrategy.force("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")

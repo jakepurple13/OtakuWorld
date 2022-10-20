@@ -10,6 +10,7 @@ plugins {
 }
 
 android {
+    namespace = "com.programmersbox.novelworld"
     compileSdk = AppInfo.compileVersion
     buildToolsVersion = AppInfo.buildVersion
 

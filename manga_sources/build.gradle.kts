@@ -32,6 +32,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    namespace = "com.programmersbox.manga_sources"
 }
 
 dependencies {

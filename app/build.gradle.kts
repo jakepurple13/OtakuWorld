@@ -55,6 +55,7 @@ android {
             dimension = "version"
         }
     }
+    namespace = "com.programmersbox.otakuworld"
 }
 
 dependencies {
