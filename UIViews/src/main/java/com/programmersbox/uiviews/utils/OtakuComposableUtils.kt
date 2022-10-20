@@ -284,9 +284,10 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
+            .bounceClick(.9f)
             .combineClickableWithIndication(onLongPress, onClick)
             .then(modifier),
-        tonalElevation = 5.dp,
+        tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium
     ) {
         Box(
