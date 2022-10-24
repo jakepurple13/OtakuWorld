@@ -11,7 +11,7 @@ koinVersion = "3.2.3"
 lottieVersion = "5.2.0"
 coil = "2.2.2"
 lifecycle = "2.5.1"
-jetpack = "1.3.0-rc01"
+jetpack = "1.4.0-alpha01"
 jetpackCompiler = "1.3.2"
 accompanist = "0.26.2-beta"
 okhttpVersion = "4.10.0"
@@ -44,7 +44,7 @@ composeUi = { module = "androidx.compose.ui:ui", version.ref = "jetpack" }
 composeUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "jetpack" }
 composeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "jetpack" }
 composeMaterial = { module = "androidx.compose.material:material", version.ref = "jetpack" }
-materialYou = "androidx.compose.material3:material3:1.0.0-rc01"
+materialYou = "androidx.compose.material3:material3:1.1.0-alpha01"
 composeMaterialIconsCore = { module = "androidx.compose.material:material-icons-core", version.ref = "jetpack" }
 composeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "jetpack" }
 composeActivity = "androidx.activity:activity-compose:1.6.0"
