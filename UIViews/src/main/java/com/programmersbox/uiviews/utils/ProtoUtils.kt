@@ -9,6 +9,7 @@ import com.google.protobuf.GeneratedMessageLite
 import com.google.protobuf.InvalidProtocolBufferException
 import com.programmersbox.uiviews.Settings
 import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -49,14 +50,14 @@ val Context.settings: DataStore<Settings> by dataStore(
 
 object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
     override val defaultValue: Settings
-        get() = Settings.getDefaultInstance()
-            .toBuilder()
-            .setBatteryPercent(20)
-            .setHistorySave(50)
-            .setShareChapter(true)
-            .setShowAll(true)
-            .setShouldCheckUpdate(true)
-            .build()
+        get() = settings {
+            batteryPercent = 20
+            historySave = 50
+            shareChapter = true
+            showAll = true
+            shouldCheckUpdate = true
+            themeSetting = SystemThemeMode.FollowSystem
+        }
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
 
