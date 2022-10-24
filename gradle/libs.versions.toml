@@ -19,6 +19,7 @@ ktorVersion = "2.1.2"
 workVersion = "2.7.1"
 ziplineVersion = "0.9.5"
 landscapist = "2.0.2"
+protobufVersion = "3.21.1"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -246,6 +247,9 @@ firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.1.0"
 firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.4.0"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
+protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
+protobufKotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufVersion" }
+
 [bundles]
 compose = [
     "composeUi", "composeUiTooling", "composeFoundation", "composeMaterial",
@@ -301,3 +305,5 @@ ktorLibs = [
 roomLibs = ["roomRuntime", "roomKtx"]
 
 pagingLibs = ["pagingRuntime", "roomPaging"]
+
+protobuf = ["protobufJava", "protobufKotlin"]

@@ -14,6 +14,7 @@ import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseUIStyle
+import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -47,7 +48,12 @@ abstract class OtakuApp : Application() {
         startKoin {
             androidLogger()
             androidContext(this@OtakuApp)
-            loadKoinModules(module { single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) } })
+            loadKoinModules(
+                module {
+                    single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
+                    single { SettingsHandling(get()) }
+                }
+            )
         }
 
         onCreated()

@@ -80,9 +80,6 @@ val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true 
 val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
 val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
 
-val THEME_SETTING = stringPreferencesKey("theme")
-val Context.themeSetting get() = dataStore.data.map { it[THEME_SETTING] ?: "System" }
-
 val SHOW_ALL = booleanPreferencesKey("show_all")
 val Context.showAll get() = dataStore.data.map { it[SHOW_ALL] ?: true }
 
@@ -517,6 +514,8 @@ class ExpirableLRUCache<K, V>(
         private const val PRESENT = true
     }
 }
+
+val LocalSettingsHandling = staticCompositionLocalOf<SettingsHandling> { error("Not Set") }
 
 val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
 

@@ -539,24 +539,37 @@ private fun GeneralSettings(
         )
     )
 
-    val theme by context.themeSetting.collectAsState(initial = "System")
+    val handling = LocalSettingsHandling.current
+
+    val themeSetting by handling.systemThemeMode.collectAsState(initial = SystemThemeMode.FollowSystem)
+
+    val themeText by remember {
+        derivedStateOf {
+            when (themeSetting) {
+                SystemThemeMode.FollowSystem -> "System"
+                SystemThemeMode.Day -> "Light"
+                SystemThemeMode.Night -> "Dark"
+                else -> "None"
+            }
+        }
+    }
 
     ListSetting(
         settingTitle = { Text(stringResource(R.string.theme_choice_title)) },
         dialogIcon = { Icon(Icons.Default.SettingsBrightness, null) },
         settingIcon = { Icon(Icons.Default.SettingsBrightness, null, modifier = Modifier.fillMaxSize()) },
         dialogTitle = { Text(stringResource(R.string.choose_a_theme)) },
-        summaryValue = { Text(theme) },
+        summaryValue = { Text(themeText) },
         confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
-        value = theme,
-        options = listOf("System", "Light", "Dark"),
+        value = themeSetting,
+        options = listOf(SystemThemeMode.FollowSystem, SystemThemeMode.Day, SystemThemeMode.Night),
         updateValue = { it, d ->
             d.value = false
-            scope.launch { context.updatePref(THEME_SETTING, it) }
+            scope.launch { handling.setSystemThemeMode(it) }
             when (it) {
-                "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                "Light" -> AppCompatDelegate.MODE_NIGHT_NO
-                "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
+                SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
                 else -> null
             }?.let(AppCompatDelegate::setDefaultNightMode)
         }

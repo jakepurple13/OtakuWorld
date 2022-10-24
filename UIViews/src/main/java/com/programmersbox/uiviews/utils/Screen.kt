@@ -20,6 +20,7 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
+import org.koin.androidx.compose.get
 
 sealed class Screen(val route: String) {
 
@@ -96,7 +97,8 @@ fun OtakuMaterialTheme(
             CompositionLocalProvider(
                 LocalActivity provides remember { context.findActivity() },
                 LocalNavController provides navController,
-                LocalGenericInfo provides genericInfo
+                LocalGenericInfo provides genericInfo,
+                LocalSettingsHandling provides get()
             ) { content() }
         }
     }

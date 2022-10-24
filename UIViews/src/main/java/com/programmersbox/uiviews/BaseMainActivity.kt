@@ -81,6 +81,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected fun isNavInitialized() = ::navController.isInitialized
 
+    private val settingsHandling: SettingsHandling by inject()
+
     protected abstract fun onCreate()
 
     @Composable
@@ -101,10 +103,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
             genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
         }
 
-        when (runBlocking { themeSetting.first() }) {
-            "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            "Light" -> AppCompatDelegate.MODE_NIGHT_NO
-            "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+        when (runBlocking { settingsHandling.systemThemeMode.firstOrNull() }) {
+            SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
+            SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
             else -> null
         }?.let(AppCompatDelegate::setDefaultNightMode)
 
