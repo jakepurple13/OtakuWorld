@@ -71,14 +71,8 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
 )
 
-val SHARE_CHAPTER = booleanPreferencesKey("share_chapter")
-val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true }
-
 val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
 val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
-
-val SHOW_ALL = booleanPreferencesKey("show_all")
-val Context.showAll get() = dataStore.data.map { it[SHOW_ALL] ?: true }
 
 val HISTORY_SAVE = intPreferencesKey("history_save")
 val Context.historySave get() = dataStore.data.map { it[HISTORY_SAVE] ?: 50 }

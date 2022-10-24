@@ -574,22 +574,22 @@ private fun GeneralSettings(
         }
     )
 
-    val shareChapter by context.shareChapter.collectAsState(initial = true)
+    val shareChapter by handling.shareChapter.collectAsState(initial = true)
 
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.share_chapters)) },
         settingIcon = { Icon(Icons.Default.Share, null, modifier = Modifier.fillMaxSize()) },
         value = shareChapter,
-        updateValue = { scope.launch { context.updatePref(SHARE_CHAPTER, it) } }
+        updateValue = { scope.launch { handling.setShareChapter(it) } }
     )
 
-    val showAllScreen by context.showAll.collectAsState(initial = true)
+    val showAllScreen by handling.showAll.collectAsState(initial = true)
 
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.show_all_screen)) },
         settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
         value = showAllScreen,
-        updateValue = { scope.launch { context.updatePref(SHOW_ALL, it) } }
+        updateValue = { scope.launch { handling.setShowAll(it) } }
     )
 
     var sliderValue by remember { mutableStateOf(runBlocking { context.historySave.first().toFloat() }) }

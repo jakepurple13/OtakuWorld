@@ -128,9 +128,11 @@ fun DetailsScreen(
         ) { PlaceHolderHeader(it) }
     } else if (details.info != null) {
 
+        val handling = LocalSettingsHandling.current
+
         val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsState(initial = false)
 
-        val shareChapter by localContext.shareChapter.collectAsState(initial = true)
+        val shareChapter by handling.shareChapter.collectAsState(initial = true)
         val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
 
         val systemUiController = rememberSystemUiController()

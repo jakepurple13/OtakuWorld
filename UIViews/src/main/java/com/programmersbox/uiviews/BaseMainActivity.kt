@@ -141,7 +141,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             OtakuMaterialTheme(navController, genericInfo) {
                 AskForNotificationPermissions()
 
-                val showAllItem by showAll.collectAsState(false)
+                val showAllItem by settingsHandling.showAll.collectAsState(false)
 
                 com.google.accompanist.navigation.material.ModalBottomSheetLayout(
                     bottomSheetNavigator,

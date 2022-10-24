@@ -70,4 +70,10 @@ class SettingsHandling(context: Context) {
 
     val batteryPercentage = all.map { it.batteryPercent }
     suspend fun setBatteryPercentage(percent: Int) = preferences.update { setBatteryPercent(percent) }
+
+    val shareChapter = all.map { it.shareChapter }
+    suspend fun setShareChapter(share: Boolean) = preferences.update { setShareChapter(share) }
+
+    val showAll = all.map { it.showAll }
+    suspend fun setShowAll(show: Boolean) = preferences.update { setShowAll(show) }
 }
