@@ -56,6 +56,7 @@ class ReadActivity : AppCompatActivity() {
     private var isDownloaded = false
     private val loader by lazy { Glide.with(this) }
     private val genericInfo by inject<GenericInfo>()
+    private val settingsHandling: SettingsHandling by inject()
 
     private fun View.slideUp() {
         val layoutParams = this.layoutParams
@@ -218,12 +219,12 @@ class ReadActivity : AppCompatActivity() {
                 readerBinding.sliderValue.text = value.toInt().toString()
             }
 
-            val battery = runBlocking { dataStore.data.first()[BATTERY_PERCENT] ?: 20 }
+            val battery = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 }
             readerBinding.batterySlider.value = battery.toFloat()
             readerBinding.batterySliderValue.text = battery.toString()
             readerBinding.batterySlider.addOnChangeListener { _, value, fromUser ->
                 if (fromUser) {
-                    lifecycleScope.launch(Dispatchers.IO) { updatePref(BATTERY_PERCENT, value.toInt()) }
+                    lifecycleScope.launch(Dispatchers.IO) { settingsHandling.setBatteryPercentage(value.toInt()) }
                 }
                 readerBinding.batterySliderValue.text = value.toInt().toString()
             }

@@ -168,7 +168,6 @@ fun SettingScreen(
 
             /*Player*/
             PlaySettings(
-                context = context,
                 scope = scope,
                 customSettings = customPreferences.playerSettings
             )
@@ -611,10 +610,12 @@ private fun GeneralSettings(
 }
 
 @Composable
-private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings: (@Composable () -> Unit)?) {
+private fun PlaySettings(scope: CoroutineScope, customSettings: (@Composable () -> Unit)?) {
     CategorySetting { Text(stringResource(R.string.playSettings)) }
 
-    var sliderValue by remember { mutableStateOf(runBlocking { context.batteryPercent.first().toFloat() }) }
+    val settingsHandling = LocalSettingsHandling.current
+    val slider by settingsHandling.batteryPercentage.collectAsState(runBlocking { settingsHandling.batteryPercentage.first() })
+    var sliderValue by remember(slider) { mutableStateOf(slider.toFloat()) }
 
     SliderSetting(
         sliderValue = sliderValue,
@@ -622,10 +623,8 @@ private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings
         settingSummary = { Text(stringResource(R.string.battery_default)) },
         settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
         range = 1f..100f,
-        updateValue = {
-            sliderValue = it
-            scope.launch { context.updatePref(BATTERY_PERCENT, sliderValue.toInt()) }
-        }
+        updateValue = { sliderValue = it },
+        onValueChangedFinished = { scope.launch { settingsHandling.setBatteryPercentage(sliderValue.toInt()) } }
     )
 
     customSettings?.invoke()

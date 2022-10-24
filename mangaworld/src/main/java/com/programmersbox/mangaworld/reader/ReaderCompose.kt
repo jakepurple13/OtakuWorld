@@ -67,7 +67,6 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
@@ -90,6 +89,7 @@ import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -145,6 +145,7 @@ fun ReadView() {
 
     val paddingPage by context.pagePadding.collectAsState(initial = 4)
     var settingsPopup by remember { mutableStateOf(false) }
+    val settingsHandling = LocalSettingsHandling.current
 
     if (settingsPopup) {
         AlertDialog(
@@ -161,22 +162,22 @@ fun ReadView() {
                         settingIcon = Icons.Default.BatteryAlert,
                         settingTitle = R.string.battery_alert_percentage,
                         settingSummary = R.string.battery_default,
-                        preference = BATTERY_PERCENT,
-                        initialValue = runBlocking { context.dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
+                        preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
+                        initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
                         range = 1f..100f
                     )
                     Divider()
+                    val activity = LocalActivity.current
                     SliderSetting(
                         scope = scope,
                         settingIcon = Icons.Default.FormatLineSpacing,
                         settingTitle = R.string.reader_padding_between_pages,
                         settingSummary = R.string.default_padding_summary,
-                        preference = PAGE_PADDING,
+                        preferenceUpdate = { activity.updatePref(PAGE_PADDING, it) },
                         initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
                         range = 0f..10f
                     )
                     Divider()
-                    val activity = LocalActivity.current
                     SwitchSetting(
                         settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
@@ -1111,13 +1112,11 @@ private fun SliderSetting(
     settingIcon: ImageVector,
     @StringRes settingTitle: Int,
     @StringRes settingSummary: Int,
-    preference: Preferences.Key<Int>,
+    preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>
 ) {
     var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
-
-    val activity = LocalActivity.current
 
     SliderSetting(
         sliderValue = sliderValue,
@@ -1126,7 +1125,7 @@ private fun SliderSetting(
         range = range,
         updateValue = {
             sliderValue = it
-            scope.launch { activity.updatePref(preference, sliderValue.toInt()) }
+            scope.launch { preferenceUpdate(sliderValue.toInt()) }
         },
         settingIcon = { Icon(settingIcon, null) }
     )

@@ -51,6 +51,11 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
     override val defaultValue: Settings
         get() = Settings.getDefaultInstance()
             .toBuilder()
+            .setBatteryPercent(20)
+            .setHistorySave(50)
+            .setShareChapter(true)
+            .setShowAll(true)
+            .setShouldCheckUpdate(true)
             .build()
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
@@ -61,4 +66,7 @@ class SettingsHandling(context: Context) {
 
     val systemThemeMode = all.map { it.themeSetting }
     suspend fun setSystemThemeMode(mode: SystemThemeMode) = preferences.update { setThemeSetting(mode) }
+
+    val batteryPercentage = all.map { it.batteryPercent }
+    suspend fun setBatteryPercentage(percent: Int) = preferences.update { setBatteryPercent(percent) }
 }

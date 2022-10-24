@@ -47,7 +47,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.text.HtmlCompat
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -216,6 +215,8 @@ fun NovelReader() {
         }
     )
 
+    val settingsHandling = LocalSettingsHandling.current
+
     var showInfo by remember { mutableStateOf(true) }
 
     var settingsPopup by remember { mutableStateOf(false) }
@@ -237,8 +238,8 @@ fun NovelReader() {
                         settingIcon = Icons.Default.BatteryAlert,
                         settingTitle = R.string.battery_alert_percentage,
                         settingSummary = R.string.battery_default,
-                        preference = BATTERY_PERCENT,
-                        initialValue = runBlocking { context.dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
+                        preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
+                        initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
                         range = 1f..100f,
                         steps = 0
                     )
@@ -664,7 +665,7 @@ private fun SliderSetting(
     settingIcon: ImageVector,
     @StringRes settingTitle: Int,
     @StringRes settingSummary: Int,
-    preference: Preferences.Key<Int>,
+    preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0
@@ -725,7 +726,7 @@ private fun SliderSetting(
             value = sliderValue,
             onValueChange = {
                 sliderValue = it
-                scope.launch { context.updatePref(preference, sliderValue.toInt()) }
+                scope.launch { preferenceUpdate(sliderValue.toInt()) }
             },
             valueRange = range,
             steps = steps,

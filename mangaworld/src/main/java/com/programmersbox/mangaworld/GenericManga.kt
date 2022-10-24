@@ -403,7 +403,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 settingIcon = { Icon(Icons.Default.FormatLineSpacing, null) },
                 range = 0f..10f,
                 updateValue = { padding = it },
-                onValueChangedFinished = { scope.launch { context.updatePref(BATTERY_PERCENT, padding.toInt()) } }
+                onValueChangedFinished = { scope.launch { context.updatePref(PAGE_PADDING, padding.toInt()) } }
             )
 
             val reader by context.useNewReaderFlow.collectAsState(true)

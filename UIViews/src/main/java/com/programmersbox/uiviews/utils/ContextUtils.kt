@@ -71,9 +71,6 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
 )
 
-val BATTERY_PERCENT = intPreferencesKey("battery_percent")
-val Context.batteryPercent get() = dataStore.data.map { it[BATTERY_PERCENT] ?: 20 }
-
 val SHARE_CHAPTER = booleanPreferencesKey("share_chapter")
 val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true }
 
@@ -192,10 +189,11 @@ abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
 }
 
-class BatteryInformation(val context: Context) {
+class BatteryInformation(val context: Context) : KoinComponent {
 
     val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
     val batteryInfo by lazy { MutableSharedFlow<Battery>() }
+    val settingsHandling: SettingsHandling by inject()
 
     enum class BatteryViewType(val icon: GoogleMaterial.Icon, val composeIcon: ImageVector) {
         CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full, Icons.Default.BatteryChargingFull),
@@ -212,12 +210,12 @@ class BatteryInformation(val context: Context) {
         combine(
             combine(
                 batteryLevel,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b <= d }
                 .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
             combine(
                 batteryInfo,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b to d }
                 .map {
                     when {
@@ -242,12 +240,12 @@ class BatteryInformation(val context: Context) {
         combine(
             combine(
                 batteryLevel,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b <= d }
                 .map { if (it) Color.RED else normalBatteryColor },
             combine(
                 batteryInfo,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b to d }
                 .map {
                     when {
