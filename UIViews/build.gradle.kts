@@ -6,7 +6,7 @@ plugins {
     id("androidx.navigation.safeargs.kotlin")
     kotlin("kapt")
     id("kotlinx-serialization")
-    id("com.google.protobuf") version "0.8.17"
+    id("com.google.protobuf") version "0.9.1"
 }
 
 android {
