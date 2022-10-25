@@ -3,7 +3,9 @@ package com.programmersbox.novel_sources
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getJsonApi
 import com.programmersbox.novel_sources.novels.BestLightNovel
+import com.programmersbox.novel_sources.novels.NovelUpdates
 import com.programmersbox.novel_sources.novels.WuxiaWorld
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -15,6 +17,17 @@ import org.junit.Test
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
+
+    @Test
+    fun novelUpdates() = runBlocking {
+        val n = NovelUpdates
+        val r = n.recent()
+        println(r)
+        val d = r.first().toInfoModel().first().getOrNull()
+        println(d)
+        val c = d?.chapters?.first()?.getChapterInfo()?.first()
+        println(c)
+    }
 
     @Test
     fun bestlightnovelTest() = runBlocking {
@@ -43,11 +56,7 @@ class ExampleUnitTest {
 
         //println(WuxiaWorld.getSourceByUrl("https://wuxiaworld.online/236130/start-a-dungeon"))
 
-        println(
-            WuxiaWorld.searchList("solo", 1, emptyList())
-                .blockingGet()
-                .joinToString("\n")
-        )
+        println(WuxiaWorld.search("solo", 1, emptyList()).joinToString("\n"))
 
     }
 

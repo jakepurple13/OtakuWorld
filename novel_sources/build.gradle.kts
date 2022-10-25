@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.uiUtil)
 
     implementation(projects.models)
+    implementation(libs.bundles.ktorLibs)
 
     implementation(libs.bundles.koinLibs)
 }

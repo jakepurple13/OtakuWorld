@@ -380,14 +380,14 @@ fun NovelReader() {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
+                        .padding(horizontal = 4.dp)
                         .verticalScroll(rememberScrollState())
-                        .padding(p)
                         .fillMaxSize()
                 ) {
                     AndroidView(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(5.dp)
+                            .padding(4.dp)
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
@@ -670,7 +670,6 @@ private fun SliderSetting(
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0
 ) {
-    val context = LocalContext.current
     ConstraintLayout(
         modifier = Modifier
             .padding(8.dp)
