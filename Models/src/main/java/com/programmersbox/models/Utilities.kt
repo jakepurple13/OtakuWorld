@@ -15,6 +15,6 @@ fun createHttpClient(block: HttpClientConfig<OkHttpConfig>.() -> Unit = {}) = Ht
             logger = Logger.SIMPLE
             level = LogLevel.ALL
         }
-    } * /
+    }
     block()
 }
