@@ -37,7 +37,7 @@ ksp = { id = "com.google.devtools.ksp", version = "1.7.20-1.0.7" }
 [libraries]
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 palette = "androidx.palette:palette-ktx:1.0.0"
-gson = "com.google.code.gson:gson:2.9.1"
+gson = "com.google.code.gson:gson:2.10"
 
 #Compose
 composeUi = { module = "androidx.compose.ui:ui", version.ref = "jetpack" }
