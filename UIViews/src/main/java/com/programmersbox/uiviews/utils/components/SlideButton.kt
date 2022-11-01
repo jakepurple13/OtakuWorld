@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.utils.components
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
@@ -16,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -37,19 +37,12 @@ enum class SwipeState { Swiped, Unswiped }
 @Composable
 fun SwipeButton(
     modifier: Modifier = Modifier,
-    swipeableState: SwipeableState<SwipeState> = rememberSwipeableState(initialValue = SwipeState.Unswiped),
+    swipeableState: SwipeableState<SwipeState> = rememberSwipeableState(SwipeState.Unswiped),
     shape: Shape = MaterialTheme.shapes.extraLarge,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     borderStroke: BorderStroke = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
     elevation: Dp = 8.dp,
-    transitionSpec: @Composable Transition.Segment<SwipeState>.() -> FiniteAnimationSpec<Float> = {
-        when {
-            SwipeState.Swiped isTransitioningTo SwipeState.Unswiped ->
-                spring(stiffness = 50f)
-            else ->
-                tween(durationMillis = 500)
-        }
-    },
+    iconGraphicsLayer: GraphicsLayerScope.() -> Unit = {},
     icon: @Composable () -> Unit = {
         Icon(
             imageVector = Icons.Filled.ArrowForward,
@@ -60,32 +53,6 @@ fun SwipeButton(
     text: @Composable BoxScope.() -> Unit = {},
     onSwipe: () -> Unit
 ) {
-    val transition = updateTransition(targetState = swipeableState.currentValue, label = "endingStart")
-
-    val textAlpha by animateFloatAsState(
-        if (swipeableState.offset.value > 10f) (1 - swipeableState.progress.fraction) else 1f
-    )
-
-    val scale by transition.animateFloat(
-        label = "scale",
-        transitionSpec = transitionSpec
-    ) {
-        when (it) {
-            SwipeState.Swiped -> 0f
-            SwipeState.Unswiped -> 1f
-        }
-    }
-
-    val rotate by transition.animateFloat(
-        label = "rotate",
-        transitionSpec = transitionSpec
-    ) {
-        when (it) {
-            SwipeState.Swiped -> 360f
-            SwipeState.Unswiped -> 0f
-        }
-    }
-
     if (swipeableState.isAnimationRunning) {
         DisposableEffect(Unit) {
             onDispose {
@@ -114,9 +81,7 @@ fun SwipeButton(
             }
 
             ProvideTextStyle(MaterialTheme.typography.bodyLarge) {
-                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground.copy(alpha = textAlpha)) {
-                    text()
-                }
+                text()
             }
             Box(
                 modifier = Modifier
@@ -132,13 +97,7 @@ fun SwipeButton(
                     )
                     .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
             ) {
-                Box(
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        rotationZ = rotate
-                    }
-                ) { icon() }
+                Box(modifier = Modifier.graphicsLayer(iconGraphicsLayer)) { icon() }
             }
         }
     }

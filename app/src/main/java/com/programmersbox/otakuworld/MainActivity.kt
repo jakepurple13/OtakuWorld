@@ -228,7 +228,40 @@ class MainActivity : AppCompatActivity() {
 
                         val transition = updateTransition(targetState = swipeableState.currentValue, label = "")
 
+                        val transitionSpec: @Composable Transition.Segment<SwipeState>.() -> FiniteAnimationSpec<Float> = {
+                            when {
+                                SwipeState.Swiped isTransitioningTo SwipeState.Unswiped ->
+                                    spring(stiffness = 50f)
+                                else ->
+                                    tween(durationMillis = 500)
+                            }
+                        }
+
+                        val scale by transition.animateFloat(
+                            label = "scale",
+                            transitionSpec = transitionSpec
+                        ) {
+                            when (it) {
+                                SwipeState.Swiped -> 0f
+                                SwipeState.Unswiped -> 1f
+                            }
+                        }
+
+                        val rotate by transition.animateFloat(
+                            label = "rotate",
+                            transitionSpec = transitionSpec
+                        ) {
+                            when (it) {
+                                SwipeState.Swiped -> 360f
+                                SwipeState.Unswiped -> 0f
+                            }
+                        }
+
                         androidx.compose.material3.Button(onClick = { scope.launch { swipeableState.animateTo(SwipeState.Unswiped) } }) {
+                            androidx.compose.material3.Text("Animate Unswipe")
+                        }
+
+                        androidx.compose.material3.Button(onClick = { scope.launch { swipeableState.snapTo(SwipeState.Unswiped) } }) {
                             androidx.compose.material3.Text("Unswipe")
                         }
 
@@ -236,6 +269,11 @@ class MainActivity : AppCompatActivity() {
 
                         com.programmersbox.uiviews.utils.components.SwipeButton(
                             swipeableState = swipeableState,
+                            iconGraphicsLayer = {
+                                scaleX = scale
+                                scaleY = scale
+                                rotationZ = rotate
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp),
@@ -258,12 +296,17 @@ class MainActivity : AppCompatActivity() {
                                     color = androidx.compose.material3.LocalContentColor.current.copy(alpha = textAlpha)
                                 )
 
+                                val textAlphaInverse by animateFloatAsState(
+                                    if (swipeableState.offset.value > 10f) (1 - swipeableState.progress.fraction) else 1f
+                                )
+
                                 androidx.compose.material3.Text(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .align(Alignment.Center),
                                     textAlign = TextAlign.End,
                                     text = "Swipe",
+                                    color = androidx.compose.material3.LocalContentColor.current.copy(alpha = textAlphaInverse)
                                 )
                             },
                             onSwipe = {}
