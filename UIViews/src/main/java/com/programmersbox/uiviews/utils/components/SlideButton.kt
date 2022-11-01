@@ -15,10 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -51,7 +50,13 @@ fun SwipeButton(
                 tween(durationMillis = 500)
         }
     },
-    icon: @Composable () -> Unit,
+    icon: @Composable () -> Unit = {
+        Icon(
+            imageVector = Icons.Filled.ArrowForward,
+            modifier = Modifier.size(56.dp),
+            contentDescription = null
+        )
+    },
     text: @Composable BoxScope.() -> Unit = {},
     onSwipe: () -> Unit
 ) {
@@ -128,12 +133,12 @@ fun SwipeButton(
                     .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
             ) {
                 Box(
-                    modifier = Modifier
-                        .scale(scale)
-                        .rotate(rotate)
-                ) {
-                    icon()
-                }
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        rotationZ = rotate
+                    }
+                ) { icon() }
             }
         }
     }

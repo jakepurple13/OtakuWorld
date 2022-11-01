@@ -237,19 +237,12 @@ class MainActivity : AppCompatActivity() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(24.dp),
-                            icon = {
-                                androidx.compose.material3.Icon(
-                                    imageVector = Icons.Filled.ArrowForward,
-                                    modifier = Modifier.size(56.dp),
-                                    contentDescription = null
-                                )
-                            },
                             text = {
                                 val textAlpha by transition.animateFloat(
                                     transitionSpec = { tween(1000) },
                                     label = ""
-                                ) {
-                                    when (it) {
+                                ) { swipeState ->
+                                    when (swipeState) {
                                         SwipeState.Swiped -> 1f
                                         SwipeState.Unswiped -> 0f
                                     }
