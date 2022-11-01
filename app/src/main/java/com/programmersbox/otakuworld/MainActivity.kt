@@ -1040,7 +1040,7 @@ fun CustomNestedScrollExample() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/*@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScaffoldNestedScrollExample() {
     val scope = rememberCoroutineScope()
@@ -1168,7 +1168,7 @@ fun ScaffoldNestedScrollExample() {
 
         scrollToBottom.Content()
     }
-}
+}*/
 
 class CoordinatorModel1(
     val height: Dp,
