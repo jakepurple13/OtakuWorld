@@ -232,6 +232,8 @@ class MainActivity : AppCompatActivity() {
                             androidx.compose.material3.Text("Unswipe")
                         }
 
+                        Text("${swipeableState.progress.fraction}")
+
                         com.programmersbox.uiviews.utils.components.SwipeButton(
                             swipeableState = swipeableState,
                             modifier = Modifier
