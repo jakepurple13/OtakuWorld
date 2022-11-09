@@ -36,8 +36,8 @@ enum class SwipeState { Swiped, Unswiped }
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SwipeButton(
+    swipeableState: SwipeableState<SwipeState>,
     modifier: Modifier = Modifier,
-    swipeableState: SwipeableState<SwipeState> = rememberSwipeableState(SwipeState.Unswiped),
     shape: Shape = MaterialTheme.shapes.extraLarge,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     borderStroke: BorderStroke = BorderStroke(2.dp, MaterialTheme.colorScheme.onBackground),
@@ -80,9 +80,7 @@ fun SwipeButton(
                 this@BoxWithConstraints.maxWidth.toPx() - iconSize.width
             }
 
-            ProvideTextStyle(MaterialTheme.typography.bodyLarge) {
-                text()
-            }
+            ProvideTextStyle(MaterialTheme.typography.bodyLarge) { text() }
             Box(
                 modifier = Modifier
                     .onGloballyPositioned { iconSize = it.size }
