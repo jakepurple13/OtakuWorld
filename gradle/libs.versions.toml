@@ -51,8 +51,8 @@ composeActivity = "androidx.activity:activity-compose:1.6.1"
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha03"
 composeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpack" }
-composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.1.21"
-composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.0.21"
+composeMaterialThemeAdapter = "com.google.android.material:compose-theme-adapter:1.2.0"
+composeMaterial3ThemeAdapter = "com.google.android.material:compose-theme-adapter-3:1.1.0"
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
 landscapistPlaceholder = { module = "com.github.skydoves:landscapist-placeholder", version.ref = "landscapist" }
