@@ -4,7 +4,7 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
-    id("com.starter.easylauncher") version "6.1.0"
+    id("com.starter.easylauncher") version "5.1.2"
 }
 
 android {
