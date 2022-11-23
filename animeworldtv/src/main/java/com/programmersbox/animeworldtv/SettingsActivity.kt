@@ -44,8 +44,8 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
     }
 
     override fun onPreferenceStartFragment(
-        preferenceFragment: PreferenceFragmentCompat?,
-        preference: Preference?
+        preferenceFragment: PreferenceFragmentCompat,
+        preference: Preference
     ): Boolean {
         return false
     }
@@ -54,7 +54,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
         mPreferenceFragment?.findPreference(key)
 
     override fun onPreferenceStartScreen(
-        preferenceFragment: PreferenceFragmentCompat?,
+        preferenceFragment: PreferenceFragmentCompat,
         preferenceScreen: PreferenceScreen
     ): Boolean {
         startPreferenceFragment(buildPreferenceFragment(R.xml.leanback_preferences, preferenceScreen.key))
