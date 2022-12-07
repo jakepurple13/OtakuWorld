@@ -32,3 +32,14 @@ allprojects {
 tasks.register("clean").configure {
     delete("build")
 }
+
+plugins {
+    id("io.github.jakepurple13.ProjectInfo") version "1.0.8"
+}
+
+projectInfo {
+    filter {
+        exclude("**/*.png", "**/*.webp", "**/*.ttf", "**/*.json")
+    }
+    sortWith = compareByDescending { it.second.sumOf { it.size } }
+}
