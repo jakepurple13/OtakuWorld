@@ -44,7 +44,7 @@ composeUi = { module = "androidx.compose.ui:ui", version.ref = "jetpack" }
 composeUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "jetpack" }
 composeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "jetpack" }
 composeMaterial = { module = "androidx.compose.material:material", version.ref = "jetpack" }
-materialYou = "androidx.compose.material3:material3:1.1.0-alpha02"
+materialYou = "androidx.compose.material3:material3:1.1.0-alpha03"
 composeMaterialIconsCore = { module = "androidx.compose.material:material-icons-core", version.ref = "jetpack" }
 composeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "jetpack" }
 composeActivity = "androidx.activity:activity-compose:1.6.1"
