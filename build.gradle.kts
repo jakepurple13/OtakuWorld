@@ -34,7 +34,7 @@ tasks.register("clean").configure {
 }
 
 plugins {
-    id("io.github.jakepurple13.ProjectInfo") version "1.0.8"
+    id("io.github.jakepurple13.ProjectInfo") version "1.1.0"
 }
 
 projectInfo {
