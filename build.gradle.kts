@@ -34,12 +34,13 @@ tasks.register("clean").configure {
 }
 
 plugins {
-    id("io.github.jakepurple13.ProjectInfo") version "1.0.8"
+    id("io.github.jakepurple13.ProjectInfo") version "1.1.1"
 }
 
 projectInfo {
     filter {
-        exclude("**/*.png", "**/*.webp", "**/*.ttf", "**/*.json")
+        exclude("otakumanager/**")
+        excludeFileTypes("png", "webp", "ttf", "json")
     }
-    sortWith = compareByDescending { it.second.sumOf { it.size } }
+    showTopCount = 3
 }
