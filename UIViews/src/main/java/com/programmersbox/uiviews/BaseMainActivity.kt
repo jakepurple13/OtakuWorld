@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -82,6 +81,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected fun isNavInitialized() = ::navController.isInitialized
 
+    private val settingsHandling: SettingsHandling by inject()
+
     protected abstract fun onCreate()
 
     @Composable
@@ -102,10 +103,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
             genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
         }
 
-        when (runBlocking { themeSetting.first() }) {
-            "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            "Light" -> AppCompatDelegate.MODE_NIGHT_NO
-            "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+        when (runBlocking { settingsHandling.systemThemeMode.firstOrNull() }) {
+            SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
+            SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
             else -> null
         }?.let(AppCompatDelegate::setDefaultNightMode)
 
@@ -123,7 +124,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
-            navController = rememberAnimatedNavController(bottomSheetNavigator)
+            navController = rememberAnimatedNavController(bottomSheetNavigator, remember {
+                ChromeCustomTabsNavigator(this)
+            })
 
             val systemUiController = rememberSystemUiController()
 
@@ -138,7 +141,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             OtakuMaterialTheme(navController, genericInfo) {
                 AskForNotificationPermissions()
 
-                val showAllItem by showAll.collectAsState(false)
+                val showAllItem by settingsHandling.showAll.collectAsState(false)
 
                 com.google.accompanist.navigation.material.ModalBottomSheetLayout(
                     bottomSheetNavigator,
@@ -146,8 +149,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     sheetContentColor = MaterialTheme.colorScheme.onSurface,
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
                 ) {
-                    Scaffold(
-                        modifier = Modifier.navigationBarsPadding(),
+                    OtakuScaffold(
                         bottomBar = {
                             Column {
                                 BottomBarAdditions()
@@ -221,8 +223,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 val context = LocalContext.current
                                 RecentView(
                                     recentVm = viewModel { RecentViewModel(dao, context) },
-                                    info = genericInfo,
-                                    navController = navController,
                                     logo = logo
                                 )
                             }
@@ -233,8 +233,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 val context = LocalContext.current
                                 AllView(
                                     allVm = viewModel { AllViewModel(dao, context) },
-                                    info = genericInfo,
-                                    navController = navController,
                                     logo = logo
                                 )
                             }
@@ -326,6 +324,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             bottomSheet(SScreen.SourceChooserScreen.route) { SourceChooserScreen() }
 
+                            chromeCustomTabs()
+
                             with(genericInfo) { navSetup() }
                         }
                     }
@@ -348,7 +348,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         val appUpdate by updateAppCheck.collectAsState(null)
 
         return AppUpdate.checkForUpdate(
-            remember { packageManager.getPackageInfo(packageName, 0)?.versionName.orEmpty() },
+            appVersion(),
             appUpdate?.update_real_version.orEmpty()
         )
     }

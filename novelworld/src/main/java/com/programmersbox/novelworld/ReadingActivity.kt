@@ -19,6 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -44,15 +47,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.text.HtmlCompat
-import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -204,7 +204,18 @@ fun NovelReader() {
     }
 
     val scope = rememberCoroutineScope()
-    val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages.value)
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = readVm.isLoadingPages.value,
+        onRefresh = {
+            readVm.loadPages(
+                readVm.list.getOrNull(readVm.currentChapter)
+                    ?.getChapterInfo()
+                    ?.map { it.mapNotNull(Storage::link) }
+            )
+        }
+    )
+
+    val settingsHandling = LocalSettingsHandling.current
 
     var showInfo by remember { mutableStateOf(true) }
 
@@ -227,8 +238,8 @@ fun NovelReader() {
                         settingIcon = Icons.Default.BatteryAlert,
                         settingTitle = R.string.battery_alert_percentage,
                         settingSummary = R.string.battery_default,
-                        preference = BATTERY_PERCENT,
-                        initialValue = runBlocking { context.dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
+                        preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
+                        initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
                         range = 1f..100f,
                         steps = 0
                     )
@@ -260,8 +271,7 @@ fun NovelReader() {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                val topAppBarScrollState = rememberTopAppBarState()
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
                 Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     topBar = {
@@ -356,36 +366,28 @@ fun NovelReader() {
             bottomBar = {
                 BottomBar(
                     showItems = showItems,
-                    contentScrollBehavior = contentScrollBehavior,
                     readVm = readVm,
                     showToast = ::showToast,
                     settingsPopup = { settingsPopup = it }
                 )
             }
         ) { p ->
-            //TODO: If/when swipe refresh gains a swipe up to refresh, make the swipe up go to the next chapter
-            SwipeRefresh(
-                state = swipeState,
-                onRefresh = {
-                    readVm.loadPages(
-                        readVm.list.getOrNull(readVm.currentChapter)
-                            ?.getChapterInfo()
-                            ?.map { it.mapNotNull(Storage::link) }
-                    )
-                },
-                indicatorPadding = p
+            Box(
+                modifier = Modifier
+                    .padding(p)
+                    .pullRefresh(pullRefreshState)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
+                        .padding(horizontal = 4.dp)
                         .verticalScroll(rememberScrollState())
-                        .padding(p)
                         .fillMaxSize()
                 ) {
                     AndroidView(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(5.dp)
+                            .padding(4.dp)
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
@@ -420,6 +422,15 @@ fun NovelReader() {
                         )
                     }
                 }
+
+                PullRefreshIndicator(
+                    refreshing = readVm.isLoadingPages.value,
+                    state = pullRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    backgroundColor = M3MaterialTheme.colorScheme.background,
+                    contentColor = M3MaterialTheme.colorScheme.onBackground,
+                    scale = true
+                )
             }
         }
     }
@@ -508,7 +519,6 @@ fun TopBar(
 fun BottomBar(
     modifier: Modifier = Modifier,
     showItems: Boolean,
-    contentScrollBehavior: TopAppBarScrollBehavior,
     readVm: ReadViewModel,
     showToast: () -> Unit,
     settingsPopup: (Boolean) -> Unit
@@ -518,12 +528,8 @@ fun BottomBar(
         enter = slideInVertically { it / 2 } + fadeIn(),
         exit = slideOutVertically { it / 2 } + fadeOut()
     ) {
-        BottomAppBar(
+        androidx.compose.material3.BottomAppBar(
             modifier = modifier,
-            containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                .containerColor(contentScrollBehavior.state.overlappedFraction).value,
-            contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                .titleContentColor(contentScrollBehavior.state.overlappedFraction).value
         ) {
 
             val prevShown = readVm.currentChapter < readVm.list.lastIndex
@@ -659,12 +665,11 @@ private fun SliderSetting(
     settingIcon: ImageVector,
     @StringRes settingTitle: Int,
     @StringRes settingSummary: Int,
-    preference: Preferences.Key<Int>,
+    preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>,
     steps: Int = 0
 ) {
-    val context = LocalContext.current
     ConstraintLayout(
         modifier = Modifier
             .padding(8.dp)
@@ -720,7 +725,7 @@ private fun SliderSetting(
             value = sliderValue,
             onValueChange = {
                 sliderValue = it
-                scope.launch { context.updatePref(preference, sliderValue.toInt()) }
+                scope.launch { preferenceUpdate(sliderValue.toInt()) }
             },
             valueRange = range,
             steps = steps,

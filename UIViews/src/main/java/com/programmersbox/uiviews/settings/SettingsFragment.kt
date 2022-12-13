@@ -8,19 +8,19 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -32,7 +32,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -49,13 +48,10 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.BuildConfig
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.OtakuApp
+import com.programmersbox.uiviews.*
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
@@ -68,7 +64,6 @@ import java.io.File
 import java.util.*
 
 class ComposeSettingsDsl {
-
     internal var generalSettings: (@Composable () -> Unit)? = null
     internal var viewSettings: (@Composable () -> Unit)? = null
     internal var playerSettings: (@Composable () -> Unit)? = null
@@ -84,11 +79,9 @@ class ComposeSettingsDsl {
     fun playerSettings(block: @Composable () -> Unit) {
         playerSettings = block
     }
-
 }
 
 @ExperimentalComposeUiApi
-@ExperimentalMaterialApi
 @ExperimentalMaterial3Api
 @Composable
 fun SettingScreen(
@@ -108,24 +101,22 @@ fun SettingScreen(
 
     val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
                 title = { Text(stringResource(R.string.settings)) },
                 scrollBehavior = scrollBehavior
             )
-        }
+        },
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets
     ) { p ->
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(p)
-                .navigationBarsPadding()
-                .padding(bottom = 10.dp)
         ) {
 
             if (BuildConfig.FLAVOR != "noFirebase") {
@@ -143,12 +134,10 @@ fun SettingScreen(
             AboutSettings(
                 context = context,
                 scope = scope,
-                activity = activity,
-                genericInfo = genericInfo,
                 logo = logo
             )
 
-            Divider(modifier = Modifier.padding(top = 5.dp))
+            Divider(modifier = Modifier.padding(top = 4.dp))
 
             /*Notifications*/
             NotificationSettings(
@@ -179,16 +168,18 @@ fun SettingScreen(
 
             /*Player*/
             PlaySettings(
-                context = context,
                 scope = scope,
                 customSettings = customPreferences.playerSettings
             )
 
-            Divider(modifier = Modifier.padding(top = 5.dp))
+            Divider(modifier = Modifier.padding(top = 4.dp))
 
             /*More Info*/
             InfoSettings(
-                context = context,
+                logo = logo,
+                scope = scope,
+                activity = activity,
+                genericInfo = genericInfo,
                 usedLibraryClick = usedLibraryClick
             )
         }
@@ -196,7 +187,6 @@ fun SettingScreen(
 
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun AccountSettings(context: Context, activity: ComponentActivity, logo: MainLogo) {
     CategorySetting { Text(stringResource(R.string.account_category_title)) }
@@ -226,17 +216,15 @@ private fun AccountSettings(context: Context, activity: ComponentActivity, logo:
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
-@ExperimentalMaterialApi
 @Composable
 private fun AboutSettings(
     context: Context,
     scope: CoroutineScope,
-    activity: ComponentActivity,
-    genericInfo: GenericInfo,
     logo: MainLogo,
     aboutViewModel: AboutViewModel = viewModel { AboutViewModel(context) }
 ) {
+
+    val navController = LocalNavController.current
 
     CategorySetting(
         settingTitle = { Text(stringResource(R.string.about)) },
@@ -248,86 +236,6 @@ private fun AboutSettings(
             )
         }
     )
-
-    val appUpdate by updateAppCheck.collectAsState(null)
-
-    PreferenceSetting(
-        settingTitle = {
-            Text(
-                stringResource(
-                    R.string.currentVersion,
-                    context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty()
-                )
-            )
-        },
-        modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { aboutViewModel.updateChecker(context) } }
-    )
-
-    ShowWhen(
-        visibility = AppUpdate.checkForUpdate(
-            context.packageManager.getPackageInfo(context.packageName, 0)?.versionName.orEmpty(),
-            appUpdate?.update_real_version.orEmpty()
-        )
-    ) {
-        var showDialog by remember { mutableStateOf(false) }
-
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
-                text = { Text(stringResource(R.string.please_update_for_latest_features)) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            activity.requestPermissions(
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                            ) {
-                                if (it.isGranted) {
-                                    updateAppCheck.value
-                                        ?.let { a ->
-                                            val isApkAlreadyThere = File(
-                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
-                                                a.let(genericInfo.apkString).toString()
-                                            )
-                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
-                                        }
-                                }
-                            }
-                            showDialog = false
-                        }
-                    ) { Text(stringResource(R.string.update)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
-                    TextButton(
-                        onClick = {
-                            context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                            showDialog = false
-                        }
-                    ) { Text(stringResource(R.string.gotoBrowser)) }
-                }
-            )
-        }
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.update_available)) },
-            summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { showDialog = true },
-            settingIcon = {
-                Icon(
-                    Icons.Default.SystemUpdateAlt,
-                    null,
-                    tint = Color(0xFF00E676),
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        )
-    }
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
@@ -414,7 +322,6 @@ private fun AboutSettings(
     }
 
     val source by sourceFlow.collectAsState(initial = null)
-    val navController = LocalNavController.current
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
@@ -455,7 +362,6 @@ fun SourceChooserScreen() {
     }
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun NotificationSettings(
     context: Context,
@@ -522,7 +428,6 @@ private fun NotificationSettings(
     }
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun ViewSettings(
     customSettings: (@Composable () -> Unit)?,
@@ -574,7 +479,6 @@ private fun ViewSettings(
 
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
-@ExperimentalMaterialApi
 @Composable
 private fun GeneralSettings(
     context: Context,
@@ -585,6 +489,8 @@ private fun GeneralSettings(
     CategorySetting { Text(stringResource(R.string.general_menu_title)) }
 
     val source by sourceFlow.collectAsState(initial = null)
+
+    val navController = LocalNavController.current
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
@@ -597,14 +503,20 @@ private fun GeneralSettings(
                 interactionSource = remember { MutableInteractionSource() }
             ) {
                 source?.baseUrl?.let {
-                    context.openInCustomChromeBrowser(it) {
-                        setStartAnimations(context, R.anim.slide_in_right, R.anim.slide_out_left)
-                    }
+                    navController.navigateChromeCustomTabs(
+                        it,
+                        {
+                            anim {
+                                enter = R.anim.slide_in_right
+                                popEnter = R.anim.slide_in_right
+                                exit = R.anim.slide_out_left
+                                popExit = R.anim.slide_out_left
+                            }
+                        }
+                    )
                 }
             }
     )
-
-    val navController = LocalNavController.current
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
@@ -626,45 +538,58 @@ private fun GeneralSettings(
         )
     )
 
-    val theme by context.themeSetting.collectAsState(initial = "System")
+    val handling = LocalSettingsHandling.current
+
+    val themeSetting by handling.systemThemeMode.collectAsState(initial = SystemThemeMode.FollowSystem)
+
+    val themeText by remember {
+        derivedStateOf {
+            when (themeSetting) {
+                SystemThemeMode.FollowSystem -> "System"
+                SystemThemeMode.Day -> "Light"
+                SystemThemeMode.Night -> "Dark"
+                else -> "None"
+            }
+        }
+    }
 
     ListSetting(
         settingTitle = { Text(stringResource(R.string.theme_choice_title)) },
         dialogIcon = { Icon(Icons.Default.SettingsBrightness, null) },
         settingIcon = { Icon(Icons.Default.SettingsBrightness, null, modifier = Modifier.fillMaxSize()) },
         dialogTitle = { Text(stringResource(R.string.choose_a_theme)) },
-        summaryValue = { Text(theme) },
+        summaryValue = { Text(themeText) },
         confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
-        value = theme,
-        options = listOf("System", "Light", "Dark"),
+        value = themeSetting,
+        options = listOf(SystemThemeMode.FollowSystem, SystemThemeMode.Day, SystemThemeMode.Night),
         updateValue = { it, d ->
             d.value = false
-            scope.launch { context.updatePref(THEME_SETTING, it) }
+            scope.launch { handling.setSystemThemeMode(it) }
             when (it) {
-                "System" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                "Light" -> AppCompatDelegate.MODE_NIGHT_NO
-                "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
+                SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
                 else -> null
             }?.let(AppCompatDelegate::setDefaultNightMode)
         }
     )
 
-    val shareChapter by context.shareChapter.collectAsState(initial = true)
+    val shareChapter by handling.shareChapter.collectAsState(initial = true)
 
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.share_chapters)) },
         settingIcon = { Icon(Icons.Default.Share, null, modifier = Modifier.fillMaxSize()) },
         value = shareChapter,
-        updateValue = { scope.launch { context.updatePref(SHARE_CHAPTER, it) } }
+        updateValue = { scope.launch { handling.setShareChapter(it) } }
     )
 
-    val showAllScreen by context.showAll.collectAsState(initial = true)
+    val showAllScreen by handling.showAll.collectAsState(initial = true)
 
     SwitchSetting(
         settingTitle = { Text(stringResource(R.string.show_all_screen)) },
         settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
         value = showAllScreen,
-        updateValue = { scope.launch { context.updatePref(SHOW_ALL, it) } }
+        updateValue = { scope.launch { handling.setShowAll(it) } }
     )
 
     var sliderValue by remember { mutableStateOf(runBlocking { context.historySave.first().toFloat() }) }
@@ -684,12 +609,13 @@ private fun GeneralSettings(
     customSettings?.invoke()
 }
 
-@ExperimentalMaterialApi
 @Composable
-private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings: (@Composable () -> Unit)?) {
+private fun PlaySettings(scope: CoroutineScope, customSettings: (@Composable () -> Unit)?) {
     CategorySetting { Text(stringResource(R.string.playSettings)) }
 
-    var sliderValue by remember { mutableStateOf(runBlocking { context.batteryPercent.first().toFloat() }) }
+    val settingsHandling = LocalSettingsHandling.current
+    val slider by settingsHandling.batteryPercentage.collectAsState(runBlocking { settingsHandling.batteryPercentage.first() })
+    var sliderValue by remember(slider) { mutableStateOf(slider.toFloat()) }
 
     SliderSetting(
         sliderValue = sliderValue,
@@ -697,18 +623,25 @@ private fun PlaySettings(context: Context, scope: CoroutineScope, customSettings
         settingSummary = { Text(stringResource(R.string.battery_default)) },
         settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
         range = 1f..100f,
-        updateValue = {
-            sliderValue = it
-            scope.launch { context.updatePref(BATTERY_PERCENT, sliderValue.toInt()) }
-        }
+        updateValue = { sliderValue = it },
+        onValueChangedFinished = { scope.launch { settingsHandling.setBatteryPercentage(sliderValue.toInt()) } }
     )
 
     customSettings?.invoke()
 }
 
-@ExperimentalMaterialApi
 @Composable
-private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
+private fun InfoSettings(
+    infoViewModel: MoreInfoViewModel = viewModel(),
+    logo: MainLogo,
+    scope: CoroutineScope,
+    activity: ComponentActivity,
+    genericInfo: GenericInfo,
+    usedLibraryClick: () -> Unit
+) {
+    val navController = LocalNavController.current
+    val context = LocalContext.current
+
     CategorySetting(settingTitle = { Text(stringResource(R.string.more_info_category)) })
 
     PreferenceSetting(
@@ -727,7 +660,7 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+        ) { navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
     )
 
     PreferenceSetting(
@@ -736,7 +669,7 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://discord.gg/MhhHMWqryg") }
+        ) { navController.navigateChromeCustomTabs("https://discord.gg/MhhHMWqryg") }
     )
 
     PreferenceSetting(
@@ -746,83 +679,86 @@ private fun InfoSettings(context: Context, usedLibraryClick: () -> Unit) {
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { context.openInCustomChromeBrowser("https://ko-fi.com/V7V3D3JI") }
+        ) { navController.navigateChromeCustomTabs("https://ko-fi.com/V7V3D3JI") }
     )
 
-}
-
-@ExperimentalMaterial3Api
-@ExperimentalComposeUiApi
-@ExperimentalMaterialApi
-@Composable
-fun <T> DynamicListSetting(
-    modifier: Modifier = Modifier,
-    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    summaryValue: (@Composable () -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
-    dialogTitle: @Composable () -> Unit,
-    dialogIcon: (@Composable () -> Unit)? = null,
-    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
-    confirmText: @Composable (MutableState<Boolean>) -> Unit,
-    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
-    value: T,
-    options: () -> List<T>,
-    viewText: (T) -> String = { it.toString() },
-    updateValue: (T, MutableState<Boolean>) -> Unit
-) {
-    val dialogPopup = remember { mutableStateOf(false) }
-
-    if (dialogPopup.value) {
-
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            onDismissRequest = { dialogPopup.value = false },
-            title = dialogTitle,
-            icon = dialogIcon,
-            text = {
-                LazyColumn {
-                    items(options()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    indication = rememberRipple(),
-                                    interactionSource = remember { MutableInteractionSource() }
-                                ) { updateValue(it, dialogPopup) }
-                                .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
-                        ) {
-                            RadioButton(
-                                selected = it == value,
-                                onClick = { updateValue(it, dialogPopup) },
-                                modifier = Modifier.padding(8.dp),
-                                colors = radioButtonColors
-                            )
-                            Text(
-                                viewText(it),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = { confirmText(dialogPopup) },
-            dismissButton = cancelText?.let { { it(dialogPopup) } }
-        )
-
-    }
+    val appUpdate by updateAppCheck.collectAsState(null)
 
     PreferenceSetting(
-        settingTitle = settingTitle,
-        summaryValue = summaryValue,
-        settingIcon = settingIcon,
-        modifier = Modifier
-            .clickable(
+        settingIcon = {
+            Image(
+                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                null,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+        settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
+        modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
+    )
+
+    ShowWhen(
+        visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
+    ) {
+        var showDialog by remember { mutableStateOf(false) }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+                text = { Text(stringResource(R.string.please_update_for_latest_features)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            activity.requestPermissions(
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.READ_EXTERNAL_STORAGE
+                            ) {
+                                if (it.isGranted) {
+                                    updateAppCheck.value
+                                        ?.let { a ->
+                                            val isApkAlreadyThere = File(
+                                                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
+                                                a.let(genericInfo.apkString).toString()
+                                            )
+                                            if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                            DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                        }
+                                }
+                            }
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.update)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
+                    TextButton(
+                        onClick = {
+                            navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.gotoBrowser)) }
+                }
+            )
+        }
+
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.update_available)) },
+            summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+            modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
-            ) { dialogPopup.value = true }
-            .then(modifier)
-    )
+            ) { showDialog = true },
+            settingIcon = {
+                Icon(
+                    Icons.Default.SystemUpdateAlt,
+                    null,
+                    tint = Color(0xFF00E676),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        )
+    }
+
 }
 
 @Composable

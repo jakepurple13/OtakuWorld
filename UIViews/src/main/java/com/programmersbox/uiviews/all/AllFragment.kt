@@ -1,58 +1,49 @@
 package com.programmersbox.uiviews.all
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.ui.unit.lerp
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
+import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
-import com.programmersbox.uiviews.utils.navigateToDetails
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import ru.beryukhov.reactivenetwork.ReactiveNetwork
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
+@OptIn(ExperimentalPagerApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -61,47 +52,63 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 fun AllView(
     allVm: AllViewModel,
     logo: MainLogo,
-    info: GenericInfo,
-    navController: NavController
 ) {
     val context = LocalContext.current
-
-    val isConnected by ReactiveNetwork()
-        .observeInternetConnectivity()
-        .flowOn(Dispatchers.IO)
-        .collectAsState(initial = true)
-
+    val isConnected by allVm.observeNetwork.collectAsState(initial = true)
     val source by sourceFlow.collectAsState(initial = null)
 
     LaunchedEffect(isConnected) {
         if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(context, source!!)
     }
 
-    val scaffoldState = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
-
-    BackHandler(scaffoldState.bottomSheetState.isExpanded) {
-        scope.launch { scaffoldState.bottomSheetState.collapse() }
-    }
-
     val state = rememberLazyGridState()
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehaviorTop = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
-    Scaffold(
+    val scrollBehaviorTop = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val pagerState = rememberPagerState()
+
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
         topBar = {
-            InsetSmallTopAppBar(
-                title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                actions = {
-                    AnimatedVisibility(visible = showButton && scaffoldState.bottomSheetState.isCollapsed) {
-                        androidx.compose.material3.IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
-                            Icon(Icons.Default.ArrowUpward, null)
+            Column {
+                InsetSmallTopAppBar(
+                    title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
+                    actions = {
+                        AnimatedVisibility(visible = showButton) {
+                            IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
+                                Icon(Icons.Default.ArrowUpward, null)
+                            }
                         }
+                    },
+                    scrollBehavior = scrollBehaviorTop
+                )
+
+                TabRow(
+                    // Our selected tab is our current page
+                    selectedTabIndex = pagerState.currentPage,
+                    // Override the indicator, using the provided pagerTabIndicatorOffset modifier
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
+                        )
                     }
-                },
-                scrollBehavior = scrollBehaviorTop
-            )
+                ) {
+                    // Add tabs for all of our pages
+                    LeadingIconTab(
+                        text = { Text(stringResource(R.string.all)) },
+                        selected = pagerState.currentPage == 0,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                        icon = { Icon(Icons.Default.BrowseGallery, null) }
+                    )
+
+                    LeadingIconTab(
+                        text = { Text(stringResource(R.string.search)) },
+                        selected = pagerState.currentPage == 1,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                        icon = { Icon(Icons.Default.Search, null) }
+                    )
+                }
+            }
         }
     ) { p1 ->
         var showBanner by remember { mutableStateOf(false) }
@@ -130,128 +137,202 @@ fun AllView(
                         }
                     }
                     true -> {
-                        BottomSheetScaffold(
-                            modifier = Modifier.padding(p1),
-                            backgroundColor = M3MaterialTheme.colorScheme.background,
-                            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
-                            scaffoldState = scaffoldState,
-                            sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
-                            sheetContent = {
-                                val focusManager = LocalFocusManager.current
-                                val searchList = allVm.searchList
-                                val searchTopAppBarScrollState = rememberTopAppBarState()
-                                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(searchTopAppBarScrollState) }
-                                Scaffold(
-                                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                                    topBar = {
-                                        Column(
-                                            modifier = Modifier
-                                                .background(
-                                                    TopAppBarDefaults.smallTopAppBarColors()
-                                                        .containerColor(scrollBehavior.state.overlappedFraction).value
-                                                )
-                                        ) {
-                                            Button(
-                                                onClick = {
-                                                    scope.launch {
-                                                        if (scaffoldState.bottomSheetState.isCollapsed) scaffoldState.bottomSheetState.expand()
-                                                        else scaffoldState.bottomSheetState.collapse()
-                                                    }
-                                                },
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                                                shape = RoundedCornerShape(0f)
-                                            ) { Text(stringResource(R.string.search)) }
-
-                                            androidx.compose.material3.OutlinedTextField(
-                                                value = allVm.searchText,
-                                                onValueChange = { allVm.searchText = it },
-                                                label = {
-                                                    Text(
-                                                        stringResource(
-                                                            R.string.searchFor,
-                                                            source?.serviceName.orEmpty()
-                                                        )
-                                                    )
-                                                },
-                                                trailingIcon = {
-                                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                                        Text(searchList.size.toString())
-                                                        IconButton(onClick = { allVm.searchText = "" }) {
-                                                            Icon(Icons.Default.Cancel, null)
-                                                        }
-                                                    }
-                                                },
-                                                modifier = Modifier
-                                                    .padding(5.dp)
-                                                    .fillMaxWidth(),
-                                                singleLine = true,
-                                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                                keyboardActions = KeyboardActions(onSearch = {
-                                                    focusManager.clearFocus()
-                                                    allVm.search()
-                                                })
-                                            )
-                                        }
-                                    }
-                                ) { p ->
-                                    Box(modifier = Modifier.padding(p)) {
-                                        SwipeRefresh(
-                                            state = rememberSwipeRefreshState(isRefreshing = allVm.isSearching),
-                                            onRefresh = {},
-                                            swipeEnabled = false
-                                        ) {
-                                            info.SearchListView(
-                                                list = searchList,
-                                                listState = rememberLazyGridState(),
-                                                favorites = allVm.favoriteList,
-                                                onLongPress = { item, c ->
-                                                    itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                                    showBanner = c == ComponentState.Pressed
-                                                }
-                                            ) {
-                                                //findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
-                                                navController.navigateToDetails(it)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        ) { p ->
-                            if (allVm.sourceList.isEmpty()) {
-                                info.ComposeShimmerItem()
-                            } else {
-                                val refresh = rememberSwipeRefreshState(isRefreshing = allVm.isRefreshing)
-                                SwipeRefresh(
-                                    modifier = Modifier.padding(p),
-                                    state = refresh,
-                                    onRefresh = { source?.let { allVm.reset(context, it) } }
-                                ) {
-                                    info.AllListView(
-                                        list = allVm.sourceList,
-                                        listState = state,
-                                        favorites = allVm.favoriteList,
-                                        onLongPress = { item, c ->
-                                            itemInfo.value = if (c == ComponentState.Pressed) item else null
-                                            showBanner = c == ComponentState.Pressed
-                                        }
-                                    ) {
-                                        //findNavController().navigate(AllFragmentDirections.actionAllFragment2ToDetailsFragment3(it))
-                                        navController.navigateToDetails(it)
-                                    }
-                                }
-                            }
-
-                            if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
-                                InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                    source?.let { allVm.loadMore(context, it) }
-                                }
+                        HorizontalPager(
+                            count = 2,
+                            state = pagerState,
+                            contentPadding = p1
+                        ) { page ->
+                            when (page) {
+                                0 -> AllScreen(
+                                    allVm = allVm,
+                                    itemInfo = itemInfo,
+                                    state = state,
+                                    showBanner = { showBanner = it }
+                                )
+                                1 -> SearchScreen(
+                                    allVm = allVm,
+                                    itemInfo = itemInfo,
+                                    showBanner = { showBanner = it }
+                                )
                             }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@Composable
+fun AllScreen(
+    allVm: AllViewModel,
+    itemInfo: MutableState<ItemModel?>,
+    state: LazyGridState,
+    showBanner: (Boolean) -> Unit
+) {
+    val info = LocalGenericInfo.current
+    val source by sourceFlow.collectAsState(initial = null)
+    val navController = LocalNavController.current
+    val context = LocalContext.current
+    val pullRefreshState = rememberPullRefreshState(allVm.isRefreshing, onRefresh = { source?.let { allVm.reset(context, it) } })
+    OtakuScaffold { p ->
+        Box(
+            modifier = Modifier
+                .padding(p)
+                .pullRefresh(pullRefreshState)
+        ) {
+            if (allVm.sourceList.isEmpty()) {
+                info.ComposeShimmerItem()
+            } else {
+                info.AllListView(
+                    list = allVm.sourceList,
+                    listState = state,
+                    favorites = allVm.favoriteList,
+                    onLongPress = { item, c ->
+                        itemInfo.value = if (c == ComponentState.Pressed) item else null
+                        showBanner(c == ComponentState.Pressed)
+                    }
+                ) { navController.navigateToDetails(it) }
+            }
+            PullRefreshIndicator(
+                refreshing = allVm.isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = M3MaterialTheme.colorScheme.background,
+                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                scale = true
+            )
+        }
+
+        if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
+            InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                source?.let { allVm.loadMore(context, it) }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@Composable
+fun SearchScreen(
+    allVm: AllViewModel,
+    itemInfo: MutableState<ItemModel?>,
+    showBanner: (Boolean) -> Unit
+) {
+
+    val info = LocalGenericInfo.current
+    val focusManager = LocalFocusManager.current
+    val searchList = allVm.searchList
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val source by sourceFlow.collectAsState(initial = null)
+    val navController = LocalNavController.current
+
+    OtakuScaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            OutlinedTextField(
+                value = allVm.searchText,
+                onValueChange = { allVm.searchText = it },
+                label = {
+                    Text(
+                        stringResource(
+                            R.string.searchFor,
+                            source?.serviceName.orEmpty()
+                        )
+                    )
+                },
+                trailingIcon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(searchList.size.toString())
+                        IconButton(onClick = { allVm.searchText = "" }) {
+                            Icon(Icons.Default.Cancel, null)
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    focusManager.clearFocus()
+                    allVm.search()
+                })
+            )
+        }
+    ) { p ->
+        val pullRefreshState = rememberPullRefreshState(allVm.isSearching, onRefresh = {})
+        Box(
+            modifier = Modifier
+                .pullRefresh(pullRefreshState, false)
+                .padding(p)
+        ) {
+            info.SearchListView(
+                list = searchList,
+                listState = rememberLazyGridState(),
+                favorites = allVm.favoriteList,
+                onLongPress = { item, c ->
+                    itemInfo.value = if (c == ComponentState.Pressed) item else null
+                    showBanner(c == ComponentState.Pressed)
+                }
+            ) { navController.navigateToDetails(it) }
+
+            PullRefreshIndicator(
+                refreshing = allVm.isSearching,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = M3MaterialTheme.colorScheme.background,
+                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                scale = true
+            )
+        }
+    }
+}
+
+// This is because we can't get access to the library one
+@OptIn(ExperimentalPagerApi::class)
+fun Modifier.pagerTabIndicatorOffset(
+    pagerState: PagerState,
+    tabPositions: List<TabPosition>,
+    pageIndexMapping: (Int) -> Int = { it },
+): Modifier = layout { measurable, constraints ->
+    if (tabPositions.isEmpty()) {
+        // If there are no pages, nothing to show
+        layout(constraints.maxWidth, 0) {}
+    } else {
+        val currentPage = minOf(tabPositions.lastIndex, pageIndexMapping(pagerState.currentPage))
+        val currentTab = tabPositions[currentPage]
+        val previousTab = tabPositions.getOrNull(currentPage - 1)
+        val nextTab = tabPositions.getOrNull(currentPage + 1)
+        val fraction = pagerState.currentPageOffset
+        val indicatorWidth = if (fraction > 0 && nextTab != null) {
+            lerp(currentTab.width, nextTab.width, fraction).roundToPx()
+        } else if (fraction < 0 && previousTab != null) {
+            lerp(currentTab.width, previousTab.width, -fraction).roundToPx()
+        } else {
+            currentTab.width.roundToPx()
+        }
+        val indicatorOffset = if (fraction > 0 && nextTab != null) {
+            lerp(currentTab.left, nextTab.left, fraction).roundToPx()
+        } else if (fraction < 0 && previousTab != null) {
+            lerp(currentTab.left, previousTab.left, -fraction).roundToPx()
+        } else {
+            currentTab.left.roundToPx()
+        }
+        val placeable = measurable.measure(
+            Constraints(
+                minWidth = indicatorWidth,
+                maxWidth = indicatorWidth,
+                minHeight = 0,
+                maxHeight = constraints.maxHeight
+            )
+        )
+        layout(constraints.maxWidth, maxOf(placeable.height, constraints.minHeight)) {
+            placeable.placeRelative(
+                indicatorOffset,
+                maxOf(constraints.minHeight - placeable.height, 0)
+            )
         }
     }
 }

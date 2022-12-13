@@ -52,7 +52,7 @@ class DetailsViewModel(
     init {
         viewModelScope.launch {
             itemModel?.url?.let { url ->
-                Cached.cache[url]?.let { flow<Result<InfoModel>> { emit(Result.success(it)) } } ?: itemModel.toInfoModel()
+                Cached.cache[url]?.let { flow { emit(Result.success(it)) } } ?: itemModel.toInfoModel()
             }
                 ?.dispatchIo()
                 ?.catch {

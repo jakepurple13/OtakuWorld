@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.app.DownloadManager
 import android.content.*
+import android.content.pm.PackageManager
 import android.graphics.*
 import android.net.ConnectivityManager
 import android.net.Network
@@ -12,16 +13,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.Parcel
-import android.text.Spannable
-import android.text.Spanned
 import android.text.format.DateFormat
-import android.text.method.TransformationMethod
-import android.text.style.URLSpan
-import android.text.util.Linkify
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
@@ -37,6 +31,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -67,6 +62,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 import kotlin.properties.Delegates
+import kotlin.properties.PropertyDelegateProvider
 
 var Context.currentService: String? by sharedPrefObjectDelegate(null)
 
@@ -75,20 +71,8 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
 )
 
-val BATTERY_PERCENT = intPreferencesKey("battery_percent")
-val Context.batteryPercent get() = dataStore.data.map { it[BATTERY_PERCENT] ?: 20 }
-
-val SHARE_CHAPTER = booleanPreferencesKey("share_chapter")
-val Context.shareChapter get() = dataStore.data.map { it[SHARE_CHAPTER] ?: true }
-
 val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
 val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
-
-val THEME_SETTING = stringPreferencesKey("theme")
-val Context.themeSetting get() = dataStore.data.map { it[THEME_SETTING] ?: "System" }
-
-val SHOW_ALL = booleanPreferencesKey("show_all")
-val Context.showAll get() = dataStore.data.map { it[SHOW_ALL] ?: true }
 
 val HISTORY_SAVE = intPreferencesKey("history_save")
 val Context.historySave get() = dataStore.data.map { it[HISTORY_SAVE] ?: 50 }
@@ -110,56 +94,6 @@ fun Context.openInCustomChromeBrowser(url: Uri, build: CustomTabsIntent.Builder.
     .build().launchUrl(this, url)
 
 fun Context.openInCustomChromeBrowser(url: String, build: CustomTabsIntent.Builder.() -> Unit = {}) = openInCustomChromeBrowser(Uri.parse(url), build)
-
-private class CustomTabsURLSpan : URLSpan {
-    private val context: Context
-    private val builder: CustomTabsIntent.Builder.() -> Unit
-
-    constructor(url: String?, context: Context, build: CustomTabsIntent.Builder.() -> Unit = {}) : super(url) {
-        this.context = context
-        this.builder = build
-    }
-
-    constructor(src: Parcel, context: Context, build: CustomTabsIntent.Builder.() -> Unit = {}) : super(src) {
-        this.context = context
-        this.builder = build
-    }
-
-    override fun onClick(widget: View) {
-        context.openInCustomChromeBrowser(url, builder)
-        // attempt to open with custom tabs, if that fails, call super.onClick
-    }
-}
-
-class ChromeCustomTabTransformationMethod(private val context: Context, private val build: CustomTabsIntent.Builder.() -> Unit = {}) :
-    TransformationMethod {
-    override fun getTransformation(source: CharSequence, view: View?): CharSequence {
-        if (view is TextView) {
-            Linkify.addLinks(view, Linkify.WEB_URLS)
-            if (view.text == null || view.text !is Spannable) return source
-            val text: Spannable = view.text as Spannable
-            val spans: Array<URLSpan> = text.getSpans(0, view.length(), URLSpan::class.java)
-            for (i in spans.indices.reversed()) {
-                val oldSpan = spans[i]
-                val start: Int = text.getSpanStart(oldSpan)
-                val end: Int = text.getSpanEnd(oldSpan)
-                val url = oldSpan.url
-                text.removeSpan(oldSpan)
-                text.setSpan(CustomTabsURLSpan(url, context, build), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-            return text
-        }
-        return source
-    }
-
-    override fun onFocusChanged(
-        view: View?,
-        sourceText: CharSequence?,
-        focused: Boolean,
-        direction: Int,
-        previouslyFocusedRect: Rect?
-    ) = Unit
-}
 
 fun View.toolTipText(text: CharSequence) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) tooltipText = text
@@ -249,10 +183,11 @@ abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
 }
 
-class BatteryInformation(val context: Context) {
+class BatteryInformation(val context: Context) : KoinComponent {
 
     val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
     val batteryInfo by lazy { MutableSharedFlow<Battery>() }
+    val settingsHandling: SettingsHandling by inject()
 
     enum class BatteryViewType(val icon: GoogleMaterial.Icon, val composeIcon: ImageVector) {
         CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full, Icons.Default.BatteryChargingFull),
@@ -269,12 +204,12 @@ class BatteryInformation(val context: Context) {
         combine(
             combine(
                 batteryLevel,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b <= d }
                 .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
             combine(
                 batteryInfo,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b to d }
                 .map {
                     when {
@@ -299,12 +234,12 @@ class BatteryInformation(val context: Context) {
         combine(
             combine(
                 batteryLevel,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b <= d }
                 .map { if (it) Color.RED else normalBatteryColor },
             combine(
                 batteryInfo,
-                context.batteryPercent
+                settingsHandling.batteryPercentage
             ) { b, d -> b to d }
                 .map {
                     when {
@@ -572,6 +507,8 @@ class ExpirableLRUCache<K, V>(
     }
 }
 
+val LocalSettingsHandling = staticCompositionLocalOf<SettingsHandling> { error("Not Set") }
+
 val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
 
 fun Context.findActivity(): FragmentActivity {
@@ -641,4 +578,56 @@ fun connectivityStatus(
     manager.registerDefaultNetworkCallback(callback)
 
     awaitDispose { manager.unregisterNetworkCallback(callback) }
+}
+
+val Context.appVersion: String
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        packageManager.getPackageInfo(
+            packageName,
+            PackageManager.PackageInfoFlags.of(0L)
+        ).versionName
+    } else {
+        packageManager.getPackageInfo(packageName, 0)?.versionName
+    }.orEmpty()
+
+@Composable
+fun appVersion(): String {
+    val context = LocalContext.current
+    return remember(context) { context.appVersion }
+}
+
+internal inline fun <T> SavedStateHandle.state(
+    key: String? = null,
+    crossinline initialValue: () -> T,
+) = PropertyDelegateProvider<Any, MutableState<T>> { thisRef, property ->
+    val internalKey = key ?: "${thisRef.javaClass.name}#${property.name}"
+    getMutableState(internalKey, initialValue())
+}
+
+internal fun <T> SavedStateHandle.getMutableState(
+    key: String,
+    initialValue: T,
+): MutableState<T> {
+    val stateFlow = getStateFlow(key, initialValue)
+    // Sync initial value with `stateFlow`.
+    val base = mutableStateOf(stateFlow.value)
+
+    return object : MutableState<T> by base {
+
+        override var value: T
+            get() {
+                // Sync `base` value with `stateFlow`.
+                if (base.value != stateFlow.value) {
+                    base.value = stateFlow.value
+                }
+                return base.value
+            }
+            set(value) {
+                // Sync `base` value with `stateFlow`.
+                if (stateFlow.value != value) {
+                    set(key, value)
+                    base.value = get<T>(key) ?: value
+                }
+            }
+    }
 }

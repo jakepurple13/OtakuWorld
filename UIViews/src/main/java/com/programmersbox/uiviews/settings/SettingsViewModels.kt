@@ -13,8 +13,8 @@ import com.programmersbox.sharedutils.*
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -48,16 +48,33 @@ class AboutViewModel(context: Context) : ViewModel() {
     init {
         viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
 
-        viewModelScope.launch {
-            combine(
-                context.updateCheckingStart.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
-                context.updateCheckingEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
-            ) { s, e -> s to e }
-                .map { "${it.first}\n${it.second}" }
-                .onEach { time = it }
-                .collect()
+        combine(
+            context.updateCheckingStart.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
+            context.updateCheckingEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+        ) { s, e -> s to e }
+            .map { "${it.first}\n${it.second}" }
+            .onEach { time = it }
+            .launchIn(viewModelScope)
+    }
+
+    private val checker = AtomicBoolean(false)
+
+    suspend fun updateChecker(context: Context) {
+        try {
+            if (!checker.get()) {
+                checker.set(true)
+                AppUpdate.getUpdate()?.let(updateAppCheck::tryEmit)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            checker.set(false)
+            withContext(Dispatchers.Main) { context.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() } }
         }
     }
+}
+
+class MoreInfoViewModel : ViewModel() {
 
     private val checker = AtomicBoolean(false)
 
@@ -82,12 +99,10 @@ class NotificationViewModel(dao: ItemDao) : ViewModel() {
         private set
 
     init {
-        viewModelScope.launch {
-            dao.getAllNotificationCount()
-                .dispatchIo()
-                .onEach { savedNotifications = it }
-                .collect()
-        }
+        dao.getAllNotificationCount()
+            .dispatchIo()
+            .onEach { savedNotifications = it }
+            .launchIn(viewModelScope)
     }
 
 }
@@ -99,13 +114,6 @@ class TranslationViewModel : ViewModel() {
 
     fun loadModels() {
         TranslatorUtils.getModels { translationModels = it }
-    }
-
-    fun getModels(onSuccess: () -> Unit) {
-        TranslatorUtils.getModels {
-            translationModels = it
-            onSuccess()
-        }
     }
 
     suspend fun deleteModel(model: CustomRemoteModel) {

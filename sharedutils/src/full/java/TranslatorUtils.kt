@@ -19,45 +19,49 @@ class TranslateItems {
                 } else if (languageCode != "en") {
                     println("Language: $languageCode")
 
-                    if (englishTranslator == null) {
-                        val options = TranslatorOptions.Builder()
-                            .setSourceLanguage(TranslateLanguage.fromLanguageTag(languageCode)!!)
-                            .setTargetLanguage(TranslateLanguage.ENGLISH)
-                            .build()
-                        englishTranslator = Translation.getClient(options)
+                    try {
+                        if (englishTranslator == null) {
+                            val options = TranslatorOptions.Builder()
+                                .setSourceLanguage(TranslateLanguage.fromLanguageTag(languageCode)!!)
+                                .setTargetLanguage(TranslateLanguage.ENGLISH)
+                                .build()
+                            englishTranslator = Translation.getClient(options)
 
-                        val conditions = DownloadConditions.Builder()
-                            .requireWifi()
-                            .build()
+                            val conditions = DownloadConditions.Builder()
+                                .requireWifi()
+                                .build()
 
-                        englishTranslator!!.downloadModelIfNeeded(conditions)
-                            .addOnSuccessListener { _ ->
-                                // Model downloaded successfully. Okay to start translating.
-                                // (Set a flag, unhide the translation UI, etc.)
-                                englishTranslator!!.translate(textToTranslate)
-                                    .addOnSuccessListener { translated ->
-                                        // Model downloaded successfully. Okay to start translating.
-                                        // (Set a flag, unhide the translation UI, etc.)
+                            englishTranslator!!.downloadModelIfNeeded(conditions)
+                                .addOnSuccessListener { _ ->
+                                    // Model downloaded successfully. Okay to start translating.
+                                    // (Set a flag, unhide the translation UI, etc.)
+                                    englishTranslator!!.translate(textToTranslate)
+                                        .addOnSuccessListener { translated ->
+                                            // Model downloaded successfully. Okay to start translating.
+                                            // (Set a flag, unhide the translation UI, etc.)
 
-                                        translatedText(translated)
-                                        progress(false)
-                                    }
-                            }
-                            .addOnFailureListener { exception ->
-                                // Model couldn’t be downloaded or other internal error.
-                                // ...
-                                progress(false)
-                            }
-                    } else {
-                        englishTranslator!!.translate(textToTranslate)
-                            .addOnSuccessListener { translated ->
-                                // Model downloaded successfully. Okay to start translating.
-                                // (Set a flag, unhide the translation UI, etc.)
+                                            translatedText(translated)
+                                            progress(false)
+                                        }
+                                }
+                                .addOnFailureListener { exception ->
+                                    // Model couldn’t be downloaded or other internal error.
+                                    // ...
+                                    progress(false)
+                                }
+                        } else {
+                            englishTranslator!!.translate(textToTranslate)
+                                .addOnSuccessListener { translated ->
+                                    // Model downloaded successfully. Okay to start translating.
+                                    // (Set a flag, unhide the translation UI, etc.)
 
-                                translatedText(translated)
-                                progress(false)
-                            }
-                            .addOnFailureListener { progress(false) }
+                                    translatedText(translated)
+                                    progress(false)
+                                }
+                                .addOnFailureListener { progress(false) }
+                        }
+                    } catch (e: Exception) {
+                        progress(false)
                     }
 
                 } else {

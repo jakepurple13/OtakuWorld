@@ -25,11 +25,7 @@ object AllAnime : ShowApi(
 ) {
     override val canDownload: Boolean get() = false
 
-    private val client by lazy {
-        createHttpClient(
-
-        )
-    }
+    private val client by lazy { createHttpClient() }
 
     override suspend fun recent(page: Int): List<ItemModel> {
         val url =

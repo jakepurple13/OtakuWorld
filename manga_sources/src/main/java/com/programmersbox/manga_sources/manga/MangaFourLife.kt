@@ -79,7 +79,7 @@ object MangaFourLife : ApiService {
             title = it.s.toString(),
             description = "Last updated: ${it.ls}",
             url = "https://manga4life.com/manga/${it.i}",
-            imageUrl = "https://cover.nep.li/cover/${it.i}.jpg",
+            imageUrl = "https://temp.compsci88.com/cover/${it.i}.jpg",
             source = this
         )
     }
@@ -99,7 +99,7 @@ object MangaFourLife : ApiService {
             title = model.title,
             description = description,
             url = model.url,
-            imageUrl = model.imageUrl,
+            imageUrl = doc.select("div.BoxBody > div.row").select("img").attr("abs:src"),
             chapters = "vm.Chapters = (.*?);".toRegex().find(doc.html())
                 ?.groupValues?.get(0)?.removePrefix("vm.Chapters = ")?.removeSuffix(";")
                 ?.fromJson<List<LifeChapter>>()?.fastMap {

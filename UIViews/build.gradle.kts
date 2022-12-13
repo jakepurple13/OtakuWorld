@@ -1,9 +1,12 @@
+import com.google.protobuf.gradle.*
+
 plugins {
     id("com.android.library")
     kotlin("android")
     id("androidx.navigation.safeargs.kotlin")
     kotlin("kapt")
     id("kotlinx-serialization")
+    id("com.google.protobuf") version "0.8.17"
 }
 
 android {
@@ -52,6 +55,7 @@ android {
             dimension = "version"
         }
     }
+    namespace = "com.programmersbox.uiviews"
 }
 
 dependencies {
@@ -135,4 +139,19 @@ dependencies {
     implementation(libs.pagingCompose)
     implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
+    implementation(libs.composePager)
+
+    implementation(libs.bundles.protobuf)
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:3.21.1" }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                id("java") { option("lite") }
+                id("kotlin") { option("lite") }
+            }
+        }
+    }
 }

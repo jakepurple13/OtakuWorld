@@ -46,10 +46,7 @@ import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.mangaworld.useNewReaderFlow
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalActivity
-import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.PermissionRequest
 import com.programmersbox.uiviews.utils.components.animatedItems
 import com.programmersbox.uiviews.utils.components.updateAnimatedItemsState
@@ -74,10 +71,9 @@ fun DownloadScreen() {
 
     val defaultPathname = remember { File(DOWNLOAD_FILE_PATH) }
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
@@ -87,7 +83,14 @@ fun DownloadScreen() {
             )
         }
     ) { p1 ->
-        PermissionRequest(listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+        PermissionRequest(
+            if (Build.VERSION.SDK_INT >= 33)
+                listOf(Manifest.permission.READ_MEDIA_VIDEO)
+            else listOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+            )
+        ) {
             val context = LocalContext.current
             val viewModel: DownloadViewModel = viewModel { DownloadViewModel(context, defaultPathname) }
             DownloadViewer(viewModel, p1)

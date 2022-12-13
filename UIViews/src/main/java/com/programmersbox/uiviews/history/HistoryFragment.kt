@@ -3,10 +3,7 @@ package com.programmersbox.uiviews.history
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -14,14 +11,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,16 +89,9 @@ fun HistoryUi(
 
     }
 
-    val topAppBarScrollState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    val scrollBehavior = remember {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-            exponentialDecay(),
-            topAppBarScrollState
-        )
-    }
-
-    Scaffold(
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetMediumTopAppBar(
@@ -129,7 +121,7 @@ fun HistoryUi(
         ) {
             items(recentItems) { item ->
                 if (item != null) {
-                    HistoryItem(item, dao, hm, logo, scope)
+                    HistoryItem(item, dao, logo, scope)
                 } else {
                     HistoryItemPlaceholder()
                 }
@@ -142,7 +134,7 @@ fun HistoryUi(
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
-private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel, logo: MainLogo, scope: CoroutineScope) {
+private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope) {
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -225,10 +217,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, hm: HistoryViewModel
         Surface(
             tonalElevation = 5.dp,
             shape = MaterialTheme.shapes.medium,
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() },
-            ) {
+            onClick = {
                 scope.launch {
                     info.toSource(item.source)
                         ?.getSourceByUrlFlow(item.url)
@@ -331,9 +320,4 @@ private fun HistoryItemPlaceholder() {
             }
         )
     }
-}
-
-sealed class SortRecentlyBy<K>(val sort: (RecentModel) -> K) {
-    object TIMESTAMP : SortRecentlyBy<Long>(RecentModel::timestamp)
-    object TITLE : SortRecentlyBy<String>(RecentModel::title)
 }

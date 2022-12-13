@@ -16,13 +16,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ButtonElevation
-import androidx.compose.material.FabPosition
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -31,8 +29,9 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,32 +48,25 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastAny
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.itemRangeOf
-import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.MaterialCard
-import com.skydoves.landscapist.glide.GlideImage
-import com.skydoves.landscapist.palette.BitmapPalette
+import com.programmersbox.uiviews.utils.components.SwipeState
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 import kotlin.random.Random
-import com.programmersbox.anime_sources.Sources as ASources
-import com.programmersbox.manga_sources.Sources as MSources
-import com.programmersbox.novel_sources.Sources as NSources
 
 class MainActivity : AppCompatActivity() {
 
@@ -141,8 +133,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }*/
 
-                val topBarState = rememberTopAppBarState()
-                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
                 BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
@@ -232,6 +223,94 @@ class MainActivity : AppCompatActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+
+                        val swipeableState = rememberSwipeableState(initialValue = SwipeState.Unswiped)
+
+                        val transition = updateTransition(targetState = swipeableState.currentValue, label = "")
+
+                        val transitionSpec: @Composable Transition.Segment<SwipeState>.() -> FiniteAnimationSpec<Float> = {
+                            when {
+                                SwipeState.Swiped isTransitioningTo SwipeState.Unswiped ->
+                                    spring(stiffness = 50f)
+                                else ->
+                                    tween(durationMillis = 500)
+                            }
+                        }
+
+                        val scale by transition.animateFloat(
+                            label = "scale",
+                            transitionSpec = transitionSpec
+                        ) {
+                            when (it) {
+                                SwipeState.Swiped -> 0f
+                                SwipeState.Unswiped -> 1f
+                            }
+                        }
+
+                        val rotate by transition.animateFloat(
+                            label = "rotate",
+                            transitionSpec = transitionSpec
+                        ) {
+                            when (it) {
+                                SwipeState.Swiped -> 360f
+                                SwipeState.Unswiped -> 0f
+                            }
+                        }
+
+                        androidx.compose.material3.Button(onClick = { scope.launch { swipeableState.animateTo(SwipeState.Unswiped) } }) {
+                            androidx.compose.material3.Text("Animate Unswipe")
+                        }
+
+                        androidx.compose.material3.Button(onClick = { scope.launch { swipeableState.snapTo(SwipeState.Unswiped) } }) {
+                            androidx.compose.material3.Text("Unswipe")
+                        }
+
+                        Text("${swipeableState.progress.fraction}")
+
+                        com.programmersbox.uiviews.utils.components.SwipeButton(
+                            swipeableState = swipeableState,
+                            iconGraphicsLayer = {
+                                scaleX = scale
+                                scaleY = scale
+                                rotationZ = rotate
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            text = {
+                                val textAlpha by transition.animateFloat(
+                                    transitionSpec = { tween(1000) },
+                                    label = ""
+                                ) { swipeState ->
+                                    when (swipeState) {
+                                        SwipeState.Swiped -> 1f
+                                        SwipeState.Unswiped -> 0f
+                                    }
+                                }
+                                androidx.compose.material3.Text(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.Center),
+                                    textAlign = TextAlign.Center,
+                                    text = "Completed",
+                                    color = androidx.compose.material3.LocalContentColor.current.copy(alpha = textAlpha)
+                                )
+
+                                val textAlphaInverse by animateFloatAsState(
+                                    if (swipeableState.offset.value > 10f) (1 - swipeableState.progress.fraction) else 1f
+                                )
+
+                                androidx.compose.material3.Text(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.Center),
+                                    textAlign = TextAlign.End,
+                                    text = "Swipe",
+                                    color = androidx.compose.material3.LocalContentColor.current.copy(alpha = textAlphaInverse)
+                                )
+                            },
+                            onSwipe = {}
+                        )
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             val connectivityStatus by connectivityStatus()
@@ -661,179 +740,8 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-enum class SourceChoice(vararg val choices: ApiService) {
-    ANIME(ASources.GOGOANIME_VC, ASources.VIDSTREAMING),
-    MANGA(MSources.MANGA_HERE, MSources.MANGAMUTINY),
-    NOVEL(NSources.WUXIAWORLD)
-}
-
 @Composable
 private fun Color.animate() = animateColorAsState(this)
-
-@ExperimentalMaterialApi
-@Composable
-fun InfoCard2(
-    info: ItemModel,
-    favorites: List<DbModel>,
-    onClick: () -> Unit
-) {
-    val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
-
-    MaterialCard(
-        backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface,
-        modifier = Modifier.clickable { onClick() },
-        media = {
-            GlideImage(
-                imageModel = info.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                bitmapPalette = BitmapPalette { p ->
-                    swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(ComposableUtils.IMAGE_HEIGHT)
-                    /*.size(
-                        ComposableUtils.IMAGE_WIDTH,
-                        ComposableUtils.IMAGE_HEIGHT
-                    )*/
-                    .align(Alignment.CenterHorizontally)
-            )
-        },
-        headerOnTop = false,
-        header = {
-            ListItem(
-                icon = {
-                    Box {
-                        if (favorites.fastAny { f -> f.url == info.url }) {
-                            Icon(
-                                Icons.Default.Favorite,
-                                contentDescription = null,
-                                tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primary,
-                                modifier = Modifier.align(Alignment.TopStart)
-                            )
-                        }
-                        Icon(
-                            Icons.Default.FavoriteBorder,
-                            contentDescription = null,
-                            tint = MaterialTheme.colors.onPrimary,
-                            modifier = Modifier.align(Alignment.TopStart)
-                        )
-                    }
-                },
-                text = {
-                    Text(
-                        info.title,
-                        color = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: Color.Unspecified
-                    )
-                },
-                secondaryText = {
-                    Text(
-                        info.source.serviceName,
-                        color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: Color.Unspecified
-                    )
-                }
-            )
-        },
-        supportingText = {
-            Text(
-                info.description,
-                color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: Color.Unspecified
-            )
-        }
-    )
-}
-
-@ExperimentalMaterialApi
-@Composable
-fun InfoCard(
-    info: ItemModel,
-    favorites: List<DbModel>,
-    onClick: () -> Unit
-) {
-
-    val swatchInfo = remember { mutableStateOf<SwatchInfo?>(null) }
-
-    Card(
-        backgroundColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.surface,
-        modifier = Modifier.padding(4.dp),
-        onClick = onClick
-    ) {
-        Column {
-            Row {
-                GlideImage(
-                    imageModel = info.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    bitmapPalette = BitmapPalette { p ->
-                        swatchInfo.value = p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
-                    },
-                    modifier = Modifier
-                        .clip(
-                            MaterialTheme.shapes.medium
-                                .copy(
-                                    topEnd = CornerSize(0.dp),
-                                    bottomStart = CornerSize(0.dp),
-                                    bottomEnd = CornerSize(0.dp)
-                                )
-                        )
-                        .size(
-                            ComposableUtils.IMAGE_WIDTH / 1.5f,
-                            ComposableUtils.IMAGE_HEIGHT / 1.5f
-                        )
-                )
-
-                ListItem(
-                    overlineText = {
-                        Text(
-                            info.source.serviceName,
-                            color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: Color.Unspecified
-                        )
-                    },
-                    text = {
-                        Text(
-                            info.title,
-                            color = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: Color.Unspecified
-                        )
-                    },
-                    secondaryText = {
-                        Text(
-                            info.description,
-                            color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: Color.Unspecified
-                        )
-                    }
-                )
-
-            }
-
-            androidx.compose.material3.Divider(
-                thickness = 0.5.dp,
-                color = swatchInfo.value?.titleColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.onSurface.copy(alpha = .12f)
-            )
-
-            Row {
-
-                Box(Modifier.padding(5.dp)) {
-                    if (favorites.fastAny { f -> f.url == info.url }) {
-                        Icon(
-                            Icons.Default.Favorite,
-                            contentDescription = null,
-                            tint = swatchInfo.value?.bodyColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colors.primary,
-                            modifier = Modifier.align(Alignment.TopStart)
-                        )
-                    }
-                    Icon(
-                        Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                        tint = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.align(Alignment.TopStart)
-                    )
-                }
-
-            }
-        }
-    }
-}
 
 fun Random.nextColor(
     alpha: Int = nextInt(0, 255),
@@ -1009,6 +917,7 @@ fun MaterialCardPreview() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NestedScrollExample() {
     // here we use LazyColumn that has build-in nested scroll, but we want to act like a
@@ -1059,7 +968,7 @@ fun NestedScrollExample() {
             title = { Text("toolbar offset is ${toolbarOffsetHeightPx.value}") }
         )
 
-        BottomAppBar(
+        androidx.compose.material3.BottomAppBar(
             modifier = Modifier
                 .height(toolbarHeight)
                 .align(Alignment.BottomCenter)
@@ -1068,6 +977,7 @@ fun NestedScrollExample() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomNestedScrollExample() {
 
@@ -1095,7 +1005,7 @@ fun CustomNestedScrollExample() {
     val bottomBar = remember {
         CoordinatorModel(56.dp) { it, model ->
             val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
-            BottomAppBar(
+            androidx.compose.material3.BottomAppBar(
                 modifier = Modifier
                     .height(56.dp)
                     .alpha(1f - (-animateBottomBar / model.heightPx))
@@ -1168,6 +1078,7 @@ fun CustomNestedScrollExample() {
     }
 }
 
+/*@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScaffoldNestedScrollExample() {
     val scope = rememberCoroutineScope()
@@ -1193,7 +1104,7 @@ fun ScaffoldNestedScrollExample() {
     val bottomBar = remember {
         CoordinatorModel1(56.dp) { it, model ->
             val animateBottomBar by animateIntAsState(if (showInfo) 0 else (it.roundToInt()), animationSpec)
-            BottomAppBar(
+            androidx.compose.material3.BottomAppBar(
                 modifier = Modifier
                     .height(56.dp - with(LocalDensity.current) { -animateBottomBar.toDp() })
                     .alpha(1f - (-animateBottomBar / model.heightPx))
@@ -1295,7 +1206,7 @@ fun ScaffoldNestedScrollExample() {
 
         scrollToBottom.Content()
     }
-}
+}*/
 
 class CoordinatorModel1(
     val height: Dp,
@@ -1343,7 +1254,6 @@ fun SwipeButton(
     val collapsed = swipeButtonState == SwipeButtonState.COLLAPSED
     val swiped = swipeButtonState == SwipeButtonState.SWIPED
 
-    rememberRipple()
     Surface(
         onClick = {},
         modifier = modifier.animateContentSize(),

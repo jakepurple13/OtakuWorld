@@ -36,13 +36,13 @@ class ReadViewModel(
     handle: SavedStateHandle,
     context: Context,
     val genericInfo: GenericInfo,
-    val headers: MutableMap<String, String> = mutableMapOf<String, String>(),
+    val headers: MutableMap<String, String> = mutableMapOf(),
     model: Flow<List<String>>? = handle
         .get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
         ?.getChapterInfo()
         ?.map {
-            headers.putAll(it.flatMap { it.headers.toList() })
+            headers.putAll(it.flatMap { h -> h.headers.toList() })
             it.mapNotNull(Storage::link)
         },
     /*?.subscribeOn(Schedulers.io())
@@ -61,7 +61,7 @@ class ReadViewModel(
         }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())*/
-        flow<List<String>> {
+        flow {
             filePath
                 .listFiles()
                 ?.sortedBy { f -> f.name.split(".").first().toInt() }
@@ -78,12 +78,11 @@ class ReadViewModel(
 
     companion object {
         const val MangaReaderRoute =
-            "mangareader?currentChapter={currentChapter}&allChapters={allChapters}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
+            "mangareader?currentChapter={currentChapter}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
 
         fun navigateToMangaReader(
             navController: NavController,
             currentChapter: ChapterModel? = null,
-            allChapters: List<ChapterModel>? = null,
             mangaTitle: String? = null,
             mangaUrl: String? = null,
             mangaInfoUrl: String? = null,
@@ -91,10 +90,9 @@ class ReadViewModel(
             filePath: String? = null
         ) {
             val current = Uri.encode(currentChapter?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-            val all = Uri.encode(allChapters?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
 
             navController.navigate(
-                "mangareader?currentChapter=$current&allChapters=$all&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
+                "mangareader?currentChapter=$current&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
             ) { launchSingleTop = true }
         }
     }
@@ -103,7 +101,7 @@ class ReadViewModel(
 
     val ad: AdRequest by lazy { AdRequest.Builder().build() }
 
-    val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
+    private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 
     private val chapterList by lazy { ChapterList(context, genericInfo) }
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
@@ -119,7 +117,7 @@ class ReadViewModel(
     val batteryInformation by lazy { BatteryInformation(context) }
 
     val pageList = mutableStateListOf<String>()
-    val isLoadingPages = mutableStateOf(false)
+    var isLoadingPages by mutableStateOf(false)
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -163,12 +161,12 @@ class ReadViewModel(
         viewModelScope.launch {
             modelPath
                 ?.onStart {
-                    isLoadingPages.value = true
+                    isLoadingPages = true
                     pageList.clear()
                 }
                 ?.onEach {
                     pageList.addAll(it)
-                    isLoadingPages.value = false
+                    isLoadingPages = false
                 }
                 ?.collect()
         }
@@ -180,7 +178,7 @@ class ReadViewModel(
             list.getOrNull(currentChapter)
                 ?.getChapterInfo()
                 ?.map {
-                    headers.putAll(it.flatMap { it.headers.toList() })
+                    headers.putAll(it.flatMap { h -> h.headers.toList() })
                     it.mapNotNull(Storage::link)
                 }
         )

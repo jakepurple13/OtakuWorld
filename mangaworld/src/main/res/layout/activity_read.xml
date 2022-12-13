@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".ReadActivity">
+    tools:context=".reader.ReadActivity">
 
     <RelativeLayout
         android:translationZ="3dp"
@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?colorSurface"
-        app:layout_behavior=".CustomHideBottomViewOnScrollBehavior"
+        app:layout_behavior="com.programmersbox.mangaworld.CustomHideBottomViewOnScrollBehavior"
         android:layout_gravity="bottom"
         android:padding="5dp">
 
@@ -37,7 +37,8 @@
             android:id="@+id/reader_settings"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_baseline_settings_24"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:contentDescription="settings" />
 
     </RelativeLayout>
 
@@ -49,7 +50,7 @@
         app:layout_anchor="@id/bottomMenu"
         android:layout_gravity="end"
         app:layout_anchorGravity="end|top"
-        app:layout_behavior=".CustomHideBottomViewOnScrollBehavior"
+        app:layout_behavior="com.programmersbox.mangaworld.CustomHideBottomViewOnScrollBehavior"
         android:src="@drawable/ic_baseline_vertical_align_top_24"
         app:backgroundTint="?attr/colorPrimary"
         tools:ignore="ContentDescription" />

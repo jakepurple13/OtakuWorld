@@ -45,7 +45,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : Corouti
     override suspend fun doWork(): Result {
         return try {
             val f = withTimeoutOrNull(60000) { AppUpdate.getUpdate()?.update_real_version.orEmpty() }
-            val appVersion = applicationContext.packageManager?.getPackageInfo(applicationContext.packageName, 0)?.versionName.orEmpty()
+            val appVersion = applicationContext.appVersion
             if (f != null && AppUpdate.checkForUpdate(appVersion, f)) {
                 val n = NotificationDslBuilder.builder(
                     applicationContext,

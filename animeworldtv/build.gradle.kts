@@ -4,6 +4,7 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("com.starter.easylauncher") version "5.1.2"
 }
 
 android {
@@ -47,6 +48,7 @@ android {
             dimension = "version"
         }
     }
+    namespace = "com.programmersbox.animeworldtv"
 
     configurations.all {
         resolutionStrategy.force("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
@@ -81,3 +83,5 @@ dependencies {
     implementation(libs.koinAndroid)
     implementation(libs.bundles.roomLibs)
 }
+
+apply(from = "$rootDir/buildtypes.gradle")

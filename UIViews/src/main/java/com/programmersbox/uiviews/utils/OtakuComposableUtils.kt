@@ -28,7 +28,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import coil.annotation.ExperimentalCoilApi
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.bumptech.glide.Glide
@@ -37,6 +36,7 @@ import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.components.BannerBox
 import com.programmersbox.uiviews.utils.components.BannerBox2
+import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -73,9 +73,8 @@ fun CoverCard(
     ) {
         Box {
             GlideImage(
-                imageModel = imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+                imageModel = { imageUrl },
+                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                 requestBuilder = {
                     Glide.with(LocalView.current)
                         .asDrawable()
@@ -231,9 +230,8 @@ fun OtakuBannerBox(
                 ListItem(
                     leadingContent = {
                         GlideImage(
-                            imageModel = itemInfo.value?.imageUrl.orEmpty(),
-                            contentDescription = null,
-                            contentScale = ContentScale.Fit,
+                            imageModel = { itemInfo.value?.imageUrl.orEmpty() },
+                            imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                             loading = {
                                 Image(
@@ -286,9 +284,10 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
+            .bounceClick(.9f)
             .combineClickableWithIndication(onLongPress, onClick)
             .then(modifier),
-        tonalElevation = 5.dp,
+        tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium
     ) {
         Box(
@@ -407,8 +406,7 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
     }
 }
 
-@OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun M3OtakuBannerBox(
     modifier: Modifier = Modifier,
@@ -416,13 +414,7 @@ fun M3OtakuBannerBox(
     placeholder: Int,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
-    val context = LocalContext.current
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
-    val placeHolderImage = remember {
-        AppCompatResources
-            .getDrawable(context, placeholder)
-            ?.toBitmap()?.asImageBitmap()
-    }
 
     BannerBox(
         modifier = modifier,

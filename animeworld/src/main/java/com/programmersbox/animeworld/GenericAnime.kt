@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.compose.animation.*
@@ -154,7 +155,14 @@ class GenericAnime(val context: Context) : GenericInfo {
             ).show()
             return
         }
-        activity.requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE) { p ->
+        activity.requestPermissions(
+            *if (Build.VERSION.SDK_INT >= 33)
+                arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
+            else arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+            )
+        ) { p ->
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
                 getEpisodes(

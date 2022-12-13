@@ -10,6 +10,7 @@ plugins {
 }
 
 android {
+    namespace = "com.programmersbox.novelworld"
     compileSdk = AppInfo.compileVersion
     buildToolsVersion = AppInfo.buildVersion
 
@@ -79,7 +80,6 @@ dependencies {
 
     implementation(libs.bundles.firebaseCrashLibs)
     implementation(libs.bundles.compose)
-    implementation(libs.swipeRefresh)
 
     implementation(libs.bundles.datastoreLibs)
 

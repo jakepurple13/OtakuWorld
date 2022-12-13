@@ -24,12 +24,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +47,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,13 +59,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
-import androidx.datastore.preferences.core.Preferences
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
@@ -71,21 +75,21 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
-import com.programmersbox.helpfulutils.BuildConfig
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.*
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
+import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -127,7 +131,7 @@ fun ReadView() {
     }
 
     val scope = rememberCoroutineScope()
-    val swipeState = rememberSwipeRefreshState(isRefreshing = readVm.isLoadingPages.value)
+    val pullRefreshState = rememberPullRefreshState(refreshing = readVm.isLoadingPages, onRefresh = readVm::refresh)
 
     val pages = readVm.pageList
 
@@ -141,6 +145,7 @@ fun ReadView() {
 
     val paddingPage by context.pagePadding.collectAsState(initial = 4)
     var settingsPopup by remember { mutableStateOf(false) }
+    val settingsHandling = LocalSettingsHandling.current
 
     if (settingsPopup) {
         AlertDialog(
@@ -157,22 +162,22 @@ fun ReadView() {
                         settingIcon = Icons.Default.BatteryAlert,
                         settingTitle = R.string.battery_alert_percentage,
                         settingSummary = R.string.battery_default,
-                        preference = BATTERY_PERCENT,
-                        initialValue = runBlocking { context.dataStore.data.first()[BATTERY_PERCENT] ?: 20 },
+                        preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
+                        initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
                         range = 1f..100f
                     )
                     Divider()
+                    val activity = LocalActivity.current
                     SliderSetting(
                         scope = scope,
                         settingIcon = Icons.Default.FormatLineSpacing,
                         settingTitle = R.string.reader_padding_between_pages,
                         settingSummary = R.string.default_padding_summary,
-                        preference = PAGE_PADDING,
+                        preferenceUpdate = { activity.updatePref(PAGE_PADDING, it) },
                         initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
                         range = 0f..10f
                     )
                     Divider()
-                    val activity = LocalActivity.current
                     SwitchSetting(
                         settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
@@ -205,8 +210,7 @@ fun ReadView() {
 
     val showItems = readVm.showInfo || listShowItems || pagerShowItems
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
@@ -266,7 +270,6 @@ fun ReadView() {
                         exit = slideOutVertically { it / 2 } + fadeOut()
                     ) {
                         BottomBar(
-                            scrollBehavior = scrollBehavior,
                             onPageSelectClick = { scope.launch { sheetState.show() } },
                             onSettingsClick = { settingsPopup = true },
                             chapterChange = ::showToast,
@@ -275,10 +278,10 @@ fun ReadView() {
                     }
                 }
             ) { paddingValues ->
-                SwipeRefresh(
-                    state = swipeState,
-                    onRefresh = { readVm.refresh() },
-                    indicatorPadding = paddingValues
+                Box(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .pullRefresh(pullRefreshState)
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
                     Crossfade(targetState = listOrPager) {
@@ -287,6 +290,15 @@ fun ReadView() {
                         }
                         else PagerView(pagerState, PaddingValues(0.dp), pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
                     }
+
+                    PullRefreshIndicator(
+                        refreshing = readVm.isLoadingPages,
+                        state = pullRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        backgroundColor = MaterialTheme.colorScheme.background,
+                        contentColor = MaterialTheme.colorScheme.onBackground,
+                        scale = true
+                    )
                 }
             }
         }
@@ -299,9 +311,8 @@ fun DrawerView(
     readVm: ReadViewModel,
     showToast: () -> Unit
 ) {
-    val drawerTopAppBarScrollState = rememberTopAppBarState()
-    val drawerScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(drawerTopAppBarScrollState) }
-    Scaffold(
+    val drawerScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
@@ -383,12 +394,11 @@ fun SheetView(
     listState: LazyListState
 ) {
     val scope = rememberCoroutineScope()
-    val sheetTopAppBarScrollState = rememberTopAppBarState()
-    val sheetScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(sheetTopAppBarScrollState) }
+    val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
         topBar = {
-            SmallTopAppBar(
+            TopAppBar(
                 scrollBehavior = sheetScrollBehavior,
                 title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
                 actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
@@ -444,8 +454,8 @@ fun SheetView(
                                 }
                         ) {
                             GlideImage(
-                                imageModel = it,
-                                contentScale = ContentScale.Crop,
+                                imageModel = { it },
+                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
                                 loading = {
                                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                                 },
@@ -514,147 +524,223 @@ fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List
         itemSpacing = itemSpacing,
         contentPadding = contentPadding,
         key = { it }
-    ) { page -> pages.getOrNull(page)?.let { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit) } ?: LastPageReached(vm = vm) }
+    ) { page ->
+        pages.getOrNull(page)?.let {
+            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit)
+        } ?: LastPageReached(
+            isLoading = vm.isLoadingPages,
+            currentChapter = vm.currentChapter,
+            chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+            nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+            previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+            adRequest = vm.ad
+        )
+    }
 }
 
 @Composable
-private fun LastPageReached(vm: ReadViewModel) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(
-            stringResource(id = R.string.lastPage),
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally)
-        )
-        if (vm.currentChapter <= 0) {
+private fun LastPageReached(
+    isLoading: Boolean,
+    currentChapter: Int,
+    chapterName: String,
+    nextChapter: () -> Unit,
+    previousChapter: () -> Unit,
+    adRequest: AdRequest = remember { AdRequest.Builder().build() }
+) {
+    val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f)
+
+    ChangeChapterSwipe(
+        nextChapter = nextChapter,
+        previousChapter = previousChapter,
+        isLoading = isLoading,
+        currentChapter = currentChapter
+    ) {
+        ConstraintLayout(Modifier.fillMaxSize()) {
+
+            val (loading, name, lastInfo, swipeInfo, ad) = createRefs()
+
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.constrainAs(loading) {
+                        centerVerticallyTo(parent)
+                        centerHorizontallyTo(parent)
+                    }
+                )
+            }
+
+            //readVm.list.size - readVm.currentChapter
+            //If things start getting WAY too long, just replace with "Chapter ${vm.list.size - vm.currentChapter}
             Text(
-                stringResource(id = R.string.reachedLastChapter),
-                style = MaterialTheme.typography.headlineSmall,
+                chapterName,
+                style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-            )
-        }
-        if (BuildConfig.BUILD_TYPE == "release") {
-            val context = LocalContext.current
-            AndroidView(
-                modifier = Modifier.fillMaxWidth(),
-                factory = {
-                    AdView(it).apply {
-                        setAdSize(AdSize.BANNER)
-                        adUnitId = context.getString(R.string.ad_unit_id)
-                        loadAd(vm.ad)
+                    .constrainAs(name) {
+                        top.linkTo(parent.top)
+                        centerHorizontallyTo(parent)
                     }
-                }
             )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier
+                    .graphicsLayer { this.alpha = alpha }
+                    .constrainAs(lastInfo) {
+                        centerVerticallyTo(parent)
+                        centerHorizontallyTo(parent)
+                        bottom.linkTo(swipeInfo.top)
+                        top.linkTo(name.bottom)
+                    }
+            ) {
+                Text(
+                    stringResource(id = R.string.lastPage),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                )
+                if (currentChapter <= 0) {
+                    Text(
+                        stringResource(id = R.string.reachedLastChapter),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    )
+                }
+            }
+
+            Text(
+                stringResource(id = R.string.swipeChapter),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .constrainAs(swipeInfo) {
+                        bottom.linkTo(ad.top)
+                        centerHorizontallyTo(parent)
+                    }
+            )
+
+            if (BuildConfig.BUILD_TYPE == "release") {
+                val context = LocalContext.current
+                AndroidView(
+                    modifier = Modifier
+                        .constrainAs(ad) {
+                            bottom.linkTo(parent.bottom)
+                            centerHorizontallyTo(parent)
+                        }
+                        .fillMaxWidth(),
+                    factory = {
+                        AdView(it).apply {
+                            setAdSize(AdSize.BANNER)
+                            adUnitId = context.getString(R.string.ad_unit_id)
+                            loadAd(adRequest)
+                        }
+                    }
+                )
+            } else {
+                Spacer(
+                    Modifier
+                        .height(10.dp)
+                        .constrainAs(ad) {
+                            bottom.linkTo(parent.bottom)
+                            centerHorizontallyTo(parent)
+                        }
+                )
+            }
+
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ChangeChapterSwipe(
+    nextChapter: () -> Unit,
+    previousChapter: () -> Unit,
+    currentChapter: Int,
+    isLoading: Boolean,
+    content: @Composable () -> Unit
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .heightIn(min = 100.dp)
+            .wrapContentHeight()
+    ) {
+        val dismissState = rememberDismissState(
+            confirmStateChange = {
+                when (it) {
+                    DismissValue.DismissedToEnd -> nextChapter()
+                    DismissValue.DismissedToStart -> previousChapter()
+                    else -> Unit
+                }
+                false
+            }
+        )
+
+        SwipeToDismiss(
+            state = dismissState,
+            directions = if (isLoading)
+                emptySet()
+            else
+                setOfNotNull(
+                    if (currentChapter <= 0) null else DismissDirection.EndToStart,
+                    DismissDirection.StartToEnd
+                ),
+            background = {
+                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+                val alignment = when (direction) {
+                    DismissDirection.StartToEnd -> Alignment.CenterStart
+                    DismissDirection.EndToStart -> Alignment.CenterEnd
+                }
+
+                val icon = when (direction) {
+                    DismissDirection.StartToEnd -> Icons.Default.FastRewind
+                    DismissDirection.EndToStart -> Icons.Default.FastForward
+                }
+
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = alignment
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.scale(scale),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                    )
+                }
+            }
+        ) {
+            OutlinedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(this@BoxWithConstraints.maxHeight / 2)
+            ) { content() }
         }
     }
 }
 
 private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
-
-    /*items(pages) {
-        var scale by remember { mutableStateOf(1f) }
-        var offset by remember { mutableStateOf(Offset.Zero) }
-        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-            scale = (scale * zoomChange).coerceAtLeast(1f)
-            offset += offsetChange
-        }
-
-        Box(
-            modifier = Modifier
-                // add transformable to listen to multitouch transformation events
-                // after offset
-                .transformable(state = state)
-                //TODO: For some reason this is causing the weird performance issue
-                // it is a known issue: https://issuetracker.google.com/issues/204328131
-                // when that gets resolved, look into adding back the nestedScrollConnection by scrollBehavior
-                .combinedClickable(
-                    onClick = {
-                        showInfo = !showInfo
-                        if (!showInfo) {
-                            toolbarOffsetHeightPx.value = -toolbarHeightPx
-                            topBarOffsetHeightPx.value = -topBarHeightPx
-                        }
-                    },
-                    onDoubleClick = {
-                        scale = 1f
-                        offset = Offset.Zero
-                    },
-                    onLongClick = {},
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                )
-        ) {
-            Text(
-                stringResource(R.string.doubleTapToReset),
-                modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center
-            )
-            val scaleAnim = animateFloatAsState(scale).value
-            val (x, y) = animateOffsetAsState(targetValue = offset).value
-
-            *//*GlideImage(
-                    imageModel = it,
-                    contentScale = ContentScale.FillWidth,
-                    loading = {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = M3MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    success = {
-                        val byteArray = remember {
-                            val stream = ByteArrayOutputStream()
-                            it.drawable?.toBitmap()?.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                            val b = stream.toByteArray()
-                            ByteArrayInputStream(b)
-                        }
-                        SubSampledImage(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                                .align(Alignment.Center)
-                                .clipToBounds(),
-                            imageSource = rememberInputStreamImageSource(inputStream = byteArray)
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .align(Alignment.Center)
-                        .clipToBounds()
-                )*//*
-
-                GlideImage(
-                    imageModel = it,
-                    contentScale = ContentScale.FillWidth,
-                    loading = {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = M3MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .align(Alignment.Center)
-                        .clipToBounds()
-                        .graphicsLayer(
-                            scaleX = scaleAnim,
-                            scaleY = scaleAnim,
-                            translationX = x,
-                            translationY = y
-                        )
-                )
-            }
-        }*/
-
     items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth) }
-    item { LastPageReached(vm = vm) }
+    item {
+        LastPageReached(
+            isLoading = vm.isLoadingPages,
+            currentChapter = vm.currentChapter,
+            chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+            nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+            previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+            adRequest = vm.ad
+        )
+    }
 }
 
 @Composable
@@ -743,9 +829,10 @@ private fun ZoomableImage(
         var showTheThing by remember { mutableStateOf(true) }
 
         if (showTheThing) {
+            val url = remember(painter) { GlideUrl(painter) { headers } }
             GlideImage(
-                imageModel = if (isDownloaded) painter else remember(painter) { GlideUrl(painter) { headers } },
-                contentScale = contentScale,
+                imageModel = { if (isDownloaded) painter else url },
+                imageOptions = ImageOptions(contentScale = contentScale),
                 loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
                 failure = {
                     Text(
@@ -798,6 +885,7 @@ private fun TopBar(
     vm: ReadViewModel
 ) {
     CenterAlignedTopAppBar(
+        windowInsets = WindowInsets(0.dp),
         scrollBehavior = scrollBehavior,
         modifier = modifier,
         navigationIcon = {
@@ -847,22 +935,17 @@ private fun TopBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomBar(
     modifier: Modifier = Modifier,
     vm: ReadViewModel,
-    scrollBehavior: TopAppBarScrollBehavior,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit
 ) {
     BottomAppBar(
         modifier = modifier,
-        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .containerColor(scrollBehavior.state.overlappedFraction).value,
-        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-            .titleContentColor(scrollBehavior.state.overlappedFraction).value
+        windowInsets = WindowInsets(0.dp)
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0
@@ -1029,13 +1112,11 @@ private fun SliderSetting(
     settingIcon: ImageVector,
     @StringRes settingTitle: Int,
     @StringRes settingSummary: Int,
-    preference: Preferences.Key<Int>,
+    preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>
 ) {
     var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
-
-    val activity = LocalActivity.current
 
     SliderSetting(
         sliderValue = sliderValue,
@@ -1044,8 +1125,20 @@ private fun SliderSetting(
         range = range,
         updateValue = {
             sliderValue = it
-            scope.launch { activity.updatePref(preference, sliderValue.toInt()) }
+            scope.launch { preferenceUpdate(sliderValue.toInt()) }
         },
         settingIcon = { Icon(settingIcon, null) }
+    )
+}
+
+@Preview
+@Composable
+fun LastPagePreview() {
+    LastPageReached(
+        isLoading = true,
+        currentChapter = 3,
+        chapterName = "Name".repeat(100),
+        nextChapter = {},
+        previousChapter = {}
     )
 }

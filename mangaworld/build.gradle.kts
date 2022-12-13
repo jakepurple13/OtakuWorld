@@ -11,6 +11,7 @@ plugins {
 }
 
 android {
+    namespace = "com.programmersbox.mangaworld"
     compileSdk = AppInfo.compileVersion
     buildToolsVersion = AppInfo.buildVersion
 
@@ -101,9 +102,10 @@ dependencies {
     implementation(libs.bundles.koinLibs)
     implementation(libs.bundles.compose)
     implementation(libs.composePager)
-    implementation(libs.swiperefresh)
     implementation(libs.coilGif)
     implementation(libs.bundles.datastoreLibs)
+
+    implementation(libs.glideCompose)
 
 }
 

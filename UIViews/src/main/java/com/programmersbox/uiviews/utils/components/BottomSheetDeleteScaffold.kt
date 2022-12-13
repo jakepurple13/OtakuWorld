@@ -6,8 +6,6 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
@@ -16,7 +14,6 @@ import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -55,8 +52,7 @@ fun <T> BottomSheetDeleteScaffold(
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
-    topAppBarScrollState: TopAppBarState = rememberTopAppBarState(),
-    bottomScrollBehavior: TopAppBarScrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) },
+    bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
     itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit
@@ -145,12 +141,8 @@ fun <T> BottomSheetDeleteScaffold(
                     }
                 },
                 bottomBar = {
-                    BottomAppBar(
+                    androidx.compose.material3.BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
-                        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollBehavior.state.overlappedFraction).value,
-                        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollBehavior.state.overlappedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
@@ -283,12 +275,8 @@ private fun <T> DeleteItemView(
         }
     ) {
         OutlinedCard(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
-                ) { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
+            onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
+            modifier = Modifier.fillMaxSize(),
             border = BorderStroke(
                 animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
                 animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline).value
@@ -371,8 +359,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 
             }
 
-            val topAppBarScrollState = rememberTopAppBarState()
-            val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+            val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -400,12 +387,8 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                     }
                 },
                 bottomBar = {
-                    BottomAppBar(
+                    androidx.compose.material3.BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
-                        containerColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .containerColor(scrollBehavior.state.overlappedFraction).value,
-                        contentColor = TopAppBarDefaults.centerAlignedTopAppBarColors()
-                            .titleContentColor(scrollBehavior.state.overlappedFraction).value
                     ) {
                         Button(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
@@ -448,6 +431,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
     ) { mainView(it, listOfItems) }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalMaterialApi
 @Composable
 private fun <T : Any> DeleteItemView(
@@ -525,13 +509,9 @@ private fun <T : Any> DeleteItemView(
         }
     ) {
         Surface(
+            onClick = { onClick(item) },
             tonalElevation = 5.dp,
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
-                ) { onClick(item) },
+            modifier = Modifier.fillMaxSize(),
             shape = MaterialTheme.shapes.medium,
             border = BorderStroke(
                 animateDpAsState(targetValue = if (selectedForDeletion) 5.dp else 1.dp).value,

@@ -5,7 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,15 +18,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,8 +52,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
@@ -58,17 +61,14 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AutoCompleteBox
 import com.programmersbox.uiviews.utils.components.asAutoCompleteEntities
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import ru.beryukhov.reactivenetwork.ReactiveNetwork
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
-    ExperimentalAnimationApi::class,
-    ExperimentalFoundationApi::class
+    ExperimentalAnimationApi::class
 )
 @Composable
 fun GlobalSearchView(
@@ -92,13 +92,10 @@ fun GlobalSearchView(
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = viewModel.isRefreshing)
+    val pullRefreshState = rememberPullRefreshState(refreshing = viewModel.isRefreshing, onRefresh = {})
     val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
 
-    val networkState by ReactiveNetwork()
-        .observeInternetConnectivity()
-        .flowOn(Dispatchers.IO)
-        .collectAsState(initial = true)
+    val networkState by viewModel.observeNetwork.collectAsState(initial = true)
 
     val history by dao
         .searchHistory("%${viewModel.searchText}%")
@@ -132,14 +129,7 @@ fun GlobalSearchView(
             scaffoldState = bottomScaffold,
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                Column(
-                    modifier = Modifier
-                        .background(
-                            TopAppBarDefaults
-                                .smallTopAppBarColors()
-                                .containerColor(scrollBehavior.state.overlappedFraction).value
-                        )
-                ) {
+                Column {
                     InsetSmallTopAppBar(
                         navigationIcon = { BackButton() },
                         title = { Text(stringResource(R.string.global_search)) },
@@ -148,13 +138,13 @@ fun GlobalSearchView(
                     AutoCompleteBox(
                         items = history.asAutoCompleteEntities { _, _ -> true },
                         trailingIcon = {
-                            androidx.compose.material3.IconButton(
+                            IconButton(
                                 onClick = { scope.launch { dao.deleteHistory(it.value) } },
                                 modifier = Modifier.weight(.1f)
-                            ) { androidx.compose.material3.Icon(Icons.Default.Cancel, null) }
+                            ) { Icon(Icons.Default.Cancel, null) }
                         },
                         itemContent = {
-                            androidx.compose.material3.Text(
+                            Text(
                                 text = it.value.searchText,
                                 style = M3MaterialTheme.typography.titleSmall,
                                 modifier = Modifier
@@ -212,13 +202,12 @@ fun GlobalSearchView(
             },
             sheetContent = searchModelBottom?.let { s ->
                 {
-                    val topAppBarScrollState = rememberTopAppBarState()
-                    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+                    val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
                     Scaffold(
-                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                         topBar = {
-                            SmallTopAppBar(
-                                scrollBehavior = scrollBehavior,
+                            TopAppBar(
+                                scrollBehavior = sheetScrollBehavior,
                                 title = { Text(s.apiName) },
                                 actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
                             )
@@ -270,26 +259,24 @@ fun GlobalSearchView(
                         }
                     }
                     true -> {
-                        SwipeRefresh(
-                            state = swipeRefreshState,
-                            onRefresh = {},
-                            swipeEnabled = false,
-                            modifier = Modifier.padding(it)
+                        Box(
+                            modifier = Modifier.pullRefresh(pullRefreshState, false)
                         ) {
                             LazyColumn(
                                 state = listState,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                if (swipeRefreshState.isRefreshing) {
+                                if (viewModel.isRefreshing) {
                                     items(3) {
                                         val placeholderColor =
-                                            contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
+                                            m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
                                                 .copy(0.1f)
                                                 .compositeOver(M3MaterialTheme.colorScheme.surface)
                                         Surface(
                                             modifier = Modifier.placeholder(true, color = placeholderColor),
                                             tonalElevation = 5.dp,
-                                            shape = MaterialTheme.shapes.medium
+                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -310,13 +297,13 @@ fun GlobalSearchView(
                                     }
                                 } else if (viewModel.searchListPublisher.isNotEmpty()) {
                                     items(viewModel.searchListPublisher) { i ->
-                                        androidx.compose.material3.Surface(
+                                        Surface(
                                             modifier = Modifier.clickable {
                                                 searchModelBottom = i
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
                                             },
                                             tonalElevation = 5.dp,
-                                            shape = MaterialTheme.shapes.medium
+                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(
@@ -366,8 +353,20 @@ fun GlobalSearchView(
                                             }
                                         }
                                     }
+                                    if (viewModel.isSearching) {
+                                        item { CircularProgressIndicator() }
+                                    }
                                 }
                             }
+
+                            PullRefreshIndicator(
+                                refreshing = viewModel.isRefreshing,
+                                state = pullRefreshState,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                backgroundColor = M3MaterialTheme.colorScheme.background,
+                                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                                scale = true
+                            )
                         }
                     }
                 }
@@ -376,8 +375,6 @@ fun GlobalSearchView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 fun SearchCoverCard(
     modifier: Modifier = Modifier,
@@ -387,7 +384,7 @@ fun SearchCoverCard(
     onLongPress: (ComponentState) -> Unit,
     onClick: () -> Unit = {}
 ) {
-    androidx.compose.material3.ElevatedCard(
+    ElevatedCard(
         modifier = Modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,

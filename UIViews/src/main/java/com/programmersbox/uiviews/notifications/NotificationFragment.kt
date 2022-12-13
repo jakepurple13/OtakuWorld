@@ -8,24 +8,19 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -115,9 +110,8 @@ fun NotificationsScreen(
     BackHandler(state.bottomSheetState.isExpanded) {
         scope.launch { state.bottomSheetState.collapse() }
     }
-    val topAppBarScrollState = rememberTopAppBarState()
 
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     BottomSheetDeleteScaffold(
         listOfItems = items,
@@ -207,11 +201,11 @@ fun NotificationsScreen(
                 trailingContent = {
                     var showDropDown by remember { mutableStateOf(false) }
 
-                    androidx.compose.material3.DropdownMenu(
+                    DropdownMenu(
                         expanded = showDropDown,
                         onDismissRequest = { showDropDown = false }
                     ) {
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(stringResource(id = R.string.remove_same_name)) },
                             onClick = {
                                 scope.launch {
@@ -356,40 +350,32 @@ private fun NotificationItem(
             }
         }
     ) {
-
-        val interactionSource = remember { MutableInteractionSource() }
-
-        androidx.compose.material3.ElevatedCard(
-            modifier = Modifier
-                .padding(horizontal = 5.dp)
-                .clickable(
-                    onClickLabel = item.notiTitle,
-                    interactionSource = interactionSource,
-                    indication = rememberRipple()
-                ) {
-                    scope.launch {
-                        genericInfo
-                            .toSource(item.source)
-                            ?.let { source ->
-                                Cached.cache[item.url]?.let {
-                                    flow {
-                                        emit(
-                                            it
-                                                .toDbModel()
-                                                .toItemModel(source)
-                                        )
-                                    }
-                                } ?: source.getSourceByUrlFlow(item.url)
-                            }
-                            ?.dispatchIo()
-                            ?.onStart { showLoadingDialog = true }
-                            ?.onEach {
-                                showLoadingDialog = false
-                                navController.navigateToDetails(it)
-                            }
-                            ?.collect()
-                    }
+        ElevatedCard(
+            onClick = {
+                scope.launch {
+                    genericInfo
+                        .toSource(item.source)
+                        ?.let { source ->
+                            Cached.cache[item.url]?.let {
+                                flow {
+                                    emit(
+                                        it
+                                            .toDbModel()
+                                            .toItemModel(source)
+                                    )
+                                }
+                            } ?: source.getSourceByUrlFlow(item.url)
+                        }
+                        ?.dispatchIo()
+                        ?.onStart { showLoadingDialog = true }
+                        ?.onEach {
+                            showLoadingDialog = false
+                            navController.navigateToDetails(it)
+                        }
+                        ?.collect()
                 }
+            },
+            modifier = Modifier.padding(horizontal = 5.dp)
         ) {
             Row {
                 val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
@@ -428,11 +414,11 @@ private fun NotificationItem(
 
                     val dropDownDismiss = { showDropDown = false }
 
-                    androidx.compose.material3.DropdownMenu(
+                    DropdownMenu(
                         expanded = showDropDown,
                         onDismissRequest = dropDownDismiss
                     ) {
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.notify)) },
                             onClick = {
                                 dropDownDismiss()
@@ -442,9 +428,9 @@ private fun NotificationItem(
                             }
                         )
 
-                        androidx.compose.material3.Divider()
+                        Divider()
 
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.notifyAtTime)) },
                             onClick = {
                                 dropDownDismiss()
@@ -508,9 +494,9 @@ private fun NotificationItem(
                             }
                         )
 
-                        androidx.compose.material3.Divider()
+                        Divider()
 
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             onClick = {
                                 dropDownDismiss()
                                 showPopup = true

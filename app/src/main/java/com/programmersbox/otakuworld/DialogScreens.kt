@@ -99,8 +99,7 @@ enum class SettingLocation {
 @ExperimentalMaterialApi
 @Composable
 fun TestView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
     var location: SettingLocation? by remember { mutableStateOf(null) }
@@ -227,8 +226,7 @@ fun TestView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun SwitchView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         topBar = {
             Column {
@@ -266,8 +264,7 @@ fun SwitchView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun CheckView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         topBar = {
             Column {
@@ -306,8 +303,7 @@ fun CheckView(closeClick: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun PagerView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val scope = rememberCoroutineScope()
     val state = rememberPagerState()
     val currentPage by remember { derivedStateOf { state.currentPage } }
@@ -618,8 +614,7 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun OptimisticView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -739,8 +734,7 @@ fun OptimisticView(closeClick: () -> Unit) {
 @ExperimentalMotionApi
 @Composable
 fun MotionLayoutView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         topBar = {
             Column {
@@ -827,8 +821,7 @@ fun MotionLayoutView(closeClick: () -> Unit) {
 @ExperimentalFoundationApi
 @Composable
 fun ThemeingView(closeClick: () -> Unit) {
-    val topBarState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val scope = rememberCoroutineScope()
 
     Scaffold(

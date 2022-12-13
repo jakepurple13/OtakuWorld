@@ -16,14 +16,20 @@ import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<ItemModel>()
     val favoriteList = mutableStateListOf<DbModel>()
+
+    val observeNetwork = ReactiveNetwork()
+        .observeInternetConnectivity()
+        .flowOn(Dispatchers.IO)
 
     var count = 1
 

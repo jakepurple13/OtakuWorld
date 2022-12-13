@@ -9,10 +9,12 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class GlobalSearchViewModel(
     val info: GenericInfo,
@@ -20,9 +22,14 @@ class GlobalSearchViewModel(
     initialSearch: String
 ) : ViewModel() {
 
+    val observeNetwork = ReactiveNetwork()
+        .observeInternetConnectivity()
+        .flowOn(Dispatchers.IO)
+
     var searchText by mutableStateOf(initialSearch)
     var searchListPublisher by mutableStateOf<List<SearchModel>>(emptyList())
     var isRefreshing by mutableStateOf(false)
+    var isSearching by mutableStateOf(false)
 
     init {
         if (initialSearch.isNotEmpty()) {
@@ -34,20 +41,22 @@ class GlobalSearchViewModel(
         viewModelScope.launch {
             // this populates dynamically
             isRefreshing = true
+            isSearching = true
             searchListPublisher = emptyList()
-            info.searchList()
-                .apmap { a ->
-                    a
-                        .searchSourceList(searchText, list = emptyList())
-                        .dispatchIoAndCatchList()
-                        .map { SearchModel(a.serviceName, it) }
-                        .filter { it.data.isNotEmpty() }
-                        .onEach { searchListPublisher = searchListPublisher + it }
-                        .onCompletion { isRefreshing = false }
-                }
-                .forEach { launch { it.collect() } }
-            // this populates after it all finishes
-            /*combine(
+            async {
+                info.searchList()
+                    .apmap { a ->
+                        a
+                            .searchSourceList(searchText, list = emptyList())
+                            .dispatchIoAndCatchList()
+                            .map { SearchModel(a.serviceName, it) }
+                            .filter { it.data.isNotEmpty() }
+                            .onEach { searchListPublisher = searchListPublisher + it }
+                            .onCompletion { isRefreshing = false }
+                    }
+                    .forEach { launch { it.collect() } }
+                // this populates after it all finishes
+                /*combine(
                 info.searchList()
                     .apmap { a ->
                         a
@@ -60,10 +69,12 @@ class GlobalSearchViewModel(
                 .onCompletion { isRefreshing = false }
                 .onEach { searchListPublisher = it }
                 .collect()*/
+            }.await()
+            isSearching = false
         }
     }
 
-    fun <A, B> List<A>.apmap(f: suspend (A) -> B): List<B> = runBlocking {
+    private fun <A, B> List<A>.apmap(f: suspend (A) -> B): List<B> = runBlocking {
         map { async { f(it) } }.map { it.await() }
     }
 

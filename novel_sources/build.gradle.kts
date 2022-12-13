@@ -27,6 +27,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    namespace = "com.programmersbox.novel_sources"
 }
 
 dependencies {
@@ -50,6 +51,7 @@ dependencies {
     implementation(libs.uiUtil)
 
     implementation(projects.models)
+    implementation(libs.bundles.ktorLibs)
 
     implementation(libs.bundles.koinLibs)
 }

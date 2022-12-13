@@ -10,6 +10,10 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Source
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,56 +23,45 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
-import com.programmersbox.uiviews.utils.navigateToDetails
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
-import ru.beryukhov.reactivenetwork.ReactiveNetwork
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun RecentView(
     recentVm: RecentViewModel,
-    info: GenericInfo,
-    navController: NavController,
     logo: MainLogo
 ) {
+    val info = LocalGenericInfo.current
+    val navController = LocalNavController.current
     val context = LocalContext.current
     val state = rememberLazyGridState()
     val scope = rememberCoroutineScope()
     val source by sourceFlow.collectAsState(initial = null)
-    val refresh = rememberSwipeRefreshState(isRefreshing = recentVm.isRefreshing)
+    val pull = rememberPullRefreshState(refreshing = recentVm.isRefreshing, onRefresh = { source?.let { recentVm.reset(context, it) } })
 
-    val isConnected by ReactiveNetwork()
-        .observeInternetConnectivity()
-        .flowOn(Dispatchers.IO)
-        .collectAsState(initial = true)
+    val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
 
     LaunchedEffect(isConnected) {
         if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context, source!!)
     }
 
-    val topAppBarScrollState = rememberTopAppBarState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topAppBarScrollState) }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-    Scaffold(
+    OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
                 title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
                 actions = {
+                    IconButton(onClick = { navController.navigate(Screen.SourceChooserScreen.route) }) {
+                        Icon(Icons.Default.Source, null)
+                    }
                     AnimatedVisibility(visible = showButton) {
                         IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
                             Icon(Icons.Default.ArrowUpward, null)
@@ -106,14 +99,12 @@ fun RecentView(
                         }
                     }
                     true -> {
-                        when {
-                            recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
-                            else -> {
-                                SwipeRefresh(
-                                    //modifier = Modifier.padding(p),
-                                    state = refresh,
-                                    onRefresh = { source?.let { recentVm.reset(context, it) } }
-                                ) {
+                        Box(
+                            modifier = Modifier.pullRefresh(pull)
+                        ) {
+                            when {
+                                recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
+                                else -> {
                                     info.ItemListView(
                                         list = recentVm.sourceList,
                                         listState = state,
@@ -125,6 +116,14 @@ fun RecentView(
                                     ) { navController.navigateToDetails(it) }
                                 }
                             }
+                            PullRefreshIndicator(
+                                refreshing = recentVm.isRefreshing,
+                                state = pull,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                backgroundColor = M3MaterialTheme.colorScheme.background,
+                                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                                scale = true
+                            )
                         }
 
                         if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {

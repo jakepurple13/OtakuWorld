@@ -35,12 +35,12 @@ import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-
 /** Handles video playback with media controls. */
 class PlaybackVideoFragment : VideoSupportFragment() {
 
     private lateinit var mTransportControlGlue: VideoPlayerGlue//PlaybackTransportControlGlue<MediaPlayerAdapter>
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -63,7 +63,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         val exoPlayer = SimpleExoPlayer.Builder(requireContext()).build()//.newSimpleInstance(activity, trackSelector)
         val playerAdapter = LeanbackPlayerAdapter(requireActivity(), exoPlayer, 16)
         //MediaPlayerAdapter(context)
-        playerAdapter.setRepeatAction(PlaybackControlsRow.RepeatAction.INDEX_NONE)
+        playerAdapter.setRepeatAction(RepeatAction.INDEX_NONE)
 
         mTransportControlGlue = VideoPlayerGlue(context, playerAdapter, null)//PlaybackTransportControlGlue(activity, playerAdapter)
         mTransportControlGlue.host = glueHost
@@ -107,12 +107,17 @@ class PlaybackVideoFragment : VideoSupportFragment() {
                             requireContext(),
                             com.google.android.exoplayer2.util.Util.getUserAgent(requireContext(), "AnimeWorld")
                         )*/
-                        val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .createMediaSource(MediaItem.fromUri(Uri.parse(storage?.link)))
+                        storage?.link?.let {
+                            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+                                .createMediaSource(MediaItem.fromUri(Uri.parse(it)))
 
-                        exoPlayer.setMediaSource(mediaSource)
-                        exoPlayer.playWhenReady = true
-                        mTransportControlGlue.play()
+                            exoPlayer.setMediaSource(mediaSource)
+                            exoPlayer.playWhenReady = true
+                            mTransportControlGlue.play()
+                        } ?: run {
+                            Toast.makeText(requireContext(), "Something went wrong", Toast.LENGTH_SHORT).show()
+                            activity?.finish()
+                        }
                     }
 
                     if (videos.size <= 1) {
@@ -365,14 +370,16 @@ class VideoPlayerGlue(
         mActionListener?.onPrevious()
     }
 
-    /** Skips backwards 10 seconds.  */
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+            /** Skips backwards 10 seconds.  */
     fun rewind() {
         var newPosition = currentPosition - TEN_SECONDS
         newPosition = if (newPosition < 0) 0 else newPosition
         playerAdapter!!.seekTo(newPosition)
     }
 
-    /** Skips forward 10 seconds.  */
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+            /** Skips forward 10 seconds.  */
     fun fastForward() {
         if (duration > -1) {
             var newPosition = currentPosition + TEN_SECONDS
@@ -381,6 +388,7 @@ class VideoPlayerGlue(
         }
     }
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     fun skipOpening() {
         if (duration > -1) {
             var newPosition = currentPosition + TimeUnit.SECONDS.toMillis(90)
