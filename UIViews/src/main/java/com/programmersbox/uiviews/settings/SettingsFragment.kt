@@ -151,7 +151,8 @@ fun SettingScreen(
                 customSettings = customPreferences.viewSettings,
                 debugMenuClick = debugMenuClick,
                 favoritesClick = favoritesClick,
-                historyClick = historyClick
+                historyClick = historyClick,
+                globalSearchClick = globalSearchClick
             )
 
             Divider()
@@ -161,7 +162,6 @@ fun SettingScreen(
                 context = context,
                 scope = scope,
                 customSettings = customPreferences.generalSettings,
-                globalSearchClick = globalSearchClick
             )
 
             Divider()
@@ -433,7 +433,8 @@ private fun ViewSettings(
     customSettings: (@Composable () -> Unit)?,
     debugMenuClick: () -> Unit,
     favoritesClick: () -> Unit,
-    historyClick: () -> Unit
+    historyClick: () -> Unit,
+    globalSearchClick: () -> Unit
 ) {
     CategorySetting { Text(stringResource(R.string.view_menu_category_title)) }
 
@@ -456,6 +457,16 @@ private fun ViewSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = favoritesClick
+        )
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.global_search)) },
+        settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = globalSearchClick
         )
     )
 
@@ -484,7 +495,6 @@ private fun GeneralSettings(
     context: Context,
     scope: CoroutineScope,
     customSettings: (@Composable () -> Unit)?,
-    globalSearchClick: () -> Unit
 ) {
     CategorySetting { Text(stringResource(R.string.general_menu_title)) }
 
@@ -525,16 +535,6 @@ private fun GeneralSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = { navController.navigate(Screen.TranslationScreen.route) }
-        )
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.global_search)) },
-        settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() },
-            onClick = globalSearchClick
         )
     )
 
