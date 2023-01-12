@@ -32,6 +32,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -657,7 +659,7 @@ private fun LastPageReached(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeChapterSwipe(
     nextChapter: () -> Unit,
@@ -672,7 +674,7 @@ fun ChangeChapterSwipe(
             .wrapContentHeight()
     ) {
         val dismissState = rememberDismissState(
-            confirmStateChange = {
+            confirmValueChange = {
                 when (it) {
                     DismissValue.DismissedToEnd -> nextChapter()
                     DismissValue.DismissedToStart -> previousChapter()
@@ -718,14 +720,15 @@ fun ChangeChapterSwipe(
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                     )
                 }
+            },
+            dismissContent = {
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(this@BoxWithConstraints.maxHeight / 2)
+                ) { content() }
             }
-        ) {
-            OutlinedCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(this@BoxWithConstraints.maxHeight / 2)
-            ) { content() }
-        }
+        )
     }
 }
 
@@ -813,6 +816,7 @@ private fun ZoomableImage(
                             scale > 2f -> {
                                 scale = 1f
                             }
+
                             else -> {
                                 scale = 3f
 

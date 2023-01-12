@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,23 +15,22 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -43,7 +41,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
@@ -58,8 +55,6 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
-import com.programmersbox.uiviews.utils.components.AutoCompleteBox
-import com.programmersbox.uiviews.utils.components.asAutoCompleteEntities
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -135,69 +130,70 @@ fun GlobalSearchView(
                         title = { Text(stringResource(R.string.global_search)) },
                         scrollBehavior = scrollBehavior
                     )
-                    AutoCompleteBox(
-                        items = history.asAutoCompleteEntities { _, _ -> true },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { scope.launch { dao.deleteHistory(it.value) } },
-                                modifier = Modifier.weight(.1f)
-                            ) { Icon(Icons.Default.Cancel, null) }
-                        },
-                        itemContent = {
-                            Text(
-                                text = it.value.searchText,
-                                style = M3MaterialTheme.typography.titleSmall,
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .weight(.9f)
-                            )
-                        },
-                        content = {
+                    var active by rememberSaveable { mutableStateOf(false) }
 
-                            boxWidthPercentage = 1f
-                            boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
-
-                            onItemSelected {
-                                viewModel.searchText = it.value.searchText
-                                filter(viewModel.searchText)
-                                focusManager.clearFocus()
-                                viewModel.searchForItems()
+                    fun closeSearchBar() {
+                        focusManager.clearFocus()
+                        active = false
+                    }
+                    SearchBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        windowInsets = WindowInsets(0.dp),
+                        query = viewModel.searchText,
+                        onQueryChange = { viewModel.searchText = it },
+                        onSearch = {
+                            closeSearchBar()
+                            if (viewModel.searchText.isNotEmpty()) {
+                                scope.launch(Dispatchers.IO) {
+                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                }
                             }
-
-                            androidx.compose.material3.OutlinedTextField(
-                                value = viewModel.searchText,
-                                onValueChange = {
-                                    viewModel.searchText = it
-                                    filter(it)
-                                },
-                                label = { Text(stringResource(id = R.string.search)) },
-                                trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            viewModel.searchText = ""
-                                            filter("")
-                                            viewModel.searchListPublisher = emptyList()
+                            viewModel.searchForItems()
+                        },
+                        active = active,
+                        onActiveChange = {
+                            active = it
+                            if (!active) focusManager.clearFocus()
+                        },
+                        placeholder = { Text(stringResource(id = R.string.search)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            IconButton(onClick = { viewModel.searchText = "" }) {
+                                Icon(Icons.Default.Cancel, null)
+                            }
+                        },
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            history.forEachIndexed { index, historyModel ->
+                                ListItem(
+                                    headlineText = { Text(historyModel.searchText) },
+                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                    trailingContent = {
+                                        IconButton(
+                                            onClick = { scope.launch { dao.deleteHistory(historyModel) } },
+                                            modifier = Modifier.weight(.1f)
+                                        ) { Icon(Icons.Default.Cancel, null) }
+                                    },
+                                    modifier = Modifier.clickable {
+                                        viewModel.searchText = historyModel.searchText
+                                        closeSearchBar()
+                                        if (viewModel.searchText.isNotEmpty()) {
+                                            scope.launch(Dispatchers.IO) {
+                                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                            }
                                         }
-                                    ) { Icon(Icons.Default.Cancel, null) }
-                                },
-                                modifier = Modifier
-                                    .padding(5.dp)
-                                    .fillMaxWidth()
-                                    .onFocusChanged { isSearching = it.isFocused },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                keyboardActions = KeyboardActions(onSearch = {
-                                    focusManager.clearFocus()
-                                    if (viewModel.searchText.isNotEmpty()) {
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
-                                        }
+                                        viewModel.searchForItems()
                                     }
-                                    viewModel.searchForItems()
-                                })
-                            )
+                                )
+                                if (index != history.lastIndex) {
+                                    Divider()
+                                }
+                            }
                         }
-                    )
+                    }
                 }
             },
             sheetContent = searchModelBottom?.let { s ->
@@ -234,14 +230,14 @@ fun GlobalSearchView(
                 }
             } ?: {},
             sheetPeekHeight = 0.dp,
-        ) {
+        ) { padding ->
             Crossfade(targetState = networkState) { network ->
                 when (network) {
                     false -> {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(it),
+                                .padding(padding),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -258,14 +254,17 @@ fun GlobalSearchView(
                             )
                         }
                     }
+
                     true -> {
                         Box(
                             modifier = Modifier.pullRefresh(pullRefreshState, false)
                         ) {
                             LazyColumn(
                                 state = listState,
+                                contentPadding = padding,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(top = 4.dp)
                             ) {
                                 if (viewModel.isRefreshing) {
                                     items(3) {

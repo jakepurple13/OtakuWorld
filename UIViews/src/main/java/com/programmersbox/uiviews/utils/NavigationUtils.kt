@@ -31,7 +31,7 @@ fun rememberBottomSheetNavigator(
     val sheetState = rememberModalBottomSheetState(
         ModalBottomSheetValue.Hidden,
         animationSpec,
-        skipHalfExpanded,
+        skipHalfExpanded = skipHalfExpanded,
     )
     return remember(sheetState) { BottomSheetNavigator(sheetState = sheetState) }
 }

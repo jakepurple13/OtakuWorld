@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.favorite
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -10,8 +11,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -25,7 +24,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.createSavedStateHandle
@@ -139,10 +137,24 @@ fun FavoriteUi(logo: MainLogo) {
                             }
                         )
 
-                        OutlinedTextField(
-                            value = searchText,
-                            onValueChange = { searchText = it },
-                            label = {
+                        var active by rememberSaveable { mutableStateOf(false) }
+
+                        fun closeSearchBar() {
+                            focusManager.clearFocus()
+                            active = false
+                        }
+                        SearchBar(
+                            modifier = Modifier.fillMaxWidth(),
+                            windowInsets = WindowInsets(0.dp),
+                            query = searchText,
+                            onQueryChange = { searchText = it },
+                            onSearch = { closeSearchBar() },
+                            active = active,
+                            onActiveChange = {
+                                active = it
+                                if (!active) focusManager.clearFocus()
+                            },
+                            placeholder = {
                                 Text(
                                     context.resources.getQuantityString(
                                         R.plurals.numFavorites,
@@ -151,18 +163,33 @@ fun FavoriteUi(logo: MainLogo) {
                                     )
                                 )
                             },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             trailingIcon = {
                                 IconButton(onClick = { searchText = "" }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 5.dp),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                        )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                showing.take(4).forEachIndexed { index, dbModel ->
+                                    ListItem(
+                                        headlineText = { Text(dbModel.title) },
+                                        supportingText = { Text(dbModel.source) },
+                                        leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
+                                        modifier = Modifier.clickable {
+                                            searchText = dbModel.title
+                                            closeSearchBar()
+                                        }
+                                    )
+                                    if (index != 3) {
+                                        Divider()
+                                    }
+                                }
+                            }
+                        }
 
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(5.dp),

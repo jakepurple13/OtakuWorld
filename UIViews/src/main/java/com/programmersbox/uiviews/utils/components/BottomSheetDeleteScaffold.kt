@@ -17,8 +17,11 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
@@ -232,7 +235,7 @@ private fun <T> DeleteItemView(
     }
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
                 if (customSingleRemoveDialog(item)) {
                     showPopup = true
@@ -272,18 +275,18 @@ private fun <T> DeleteItemView(
                     modifier = Modifier.scale(scale)
                 )
             }
+        },
+        dismissContent = {
+            OutlinedCard(
+                onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
+                modifier = Modifier.fillMaxSize(),
+                border = BorderStroke(
+                    animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
+                    animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline).value
+                )
+            ) { itemUi(item) }
         }
-    ) {
-        OutlinedCard(
-            onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
-            modifier = Modifier.fillMaxSize(),
-            border = BorderStroke(
-                animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
-                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline).value
-            )
-        ) { itemUi(item) }
-    }
-
+    )
 }
 
 @ExperimentalMaterial3Api
@@ -432,7 +435,6 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun <T : Any> DeleteItemView(
     item: T,
@@ -466,7 +468,7 @@ private fun <T : Any> DeleteItemView(
     }
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
                 if (customSingleRemoveDialog(item)) {
                     showPopup = true
@@ -506,18 +508,18 @@ private fun <T : Any> DeleteItemView(
                     modifier = Modifier.scale(scale)
                 )
             }
+        },
+        dismissContent = {
+            Surface(
+                onClick = { onClick(item) },
+                tonalElevation = 5.dp,
+                modifier = Modifier.fillMaxSize(),
+                shape = MaterialTheme.shapes.medium,
+                border = BorderStroke(
+                    animateDpAsState(targetValue = if (selectedForDeletion) 5.dp else 1.dp).value,
+                    animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
+                )
+            ) { itemUi(item) }
         }
-    ) {
-        Surface(
-            onClick = { onClick(item) },
-            tonalElevation = 5.dp,
-            modifier = Modifier.fillMaxSize(),
-            shape = MaterialTheme.shapes.medium,
-            border = BorderStroke(
-                animateDpAsState(targetValue = if (selectedForDeletion) 5.dp else 1.dp).value,
-                animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
-            )
-        ) { itemUi(item) }
-    }
-
+    )
 }
