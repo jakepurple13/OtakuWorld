@@ -38,9 +38,7 @@ import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -409,6 +407,73 @@ private fun NotificationItem(
 
                         val dropDownDismiss = { showDropDown = false }
 
+                        var showDatePicker by remember { mutableStateOf(false) }
+
+                        if (showDatePicker) {
+                            val state = rememberDatePickerState(
+                                initialSelectedDateMillis = System.currentTimeMillis()
+                            )
+                            AlertDialog(
+                                text = {
+                                    DatePicker(
+                                        datePickerState = state,
+                                        dateValidator = { DateValidatorPointForward.now().isValid(it) },
+                                        title = { Text(stringResource(R.string.selectDate)) }
+                                    )
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showDatePicker = false
+                                            val c = Calendar.getInstance()
+                                            val timePicker = MaterialTimePicker.Builder()
+                                                .setTitleText(R.string.selectTime)
+                                                .setPositiveButtonText(R.string.ok)
+                                                .setTimeFormat(
+                                                    if (DateFormat.is24HourFormat(context)) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
+                                                )
+                                                .setHour(c[Calendar.HOUR_OF_DAY])
+                                                .setMinute(c[Calendar.MINUTE])
+                                                .build()
+
+                                            timePicker.addOnPositiveButtonClickListener { _ ->
+                                                c.timeInMillis = state.selectedDateMillis ?: 0L
+                                                c[Calendar.HOUR_OF_DAY] = timePicker.hour
+                                                c[Calendar.MINUTE] = timePicker.minute
+
+                                                WorkManager.getInstance(context)
+                                                    .enqueueUniqueWork(
+                                                        item.notiTitle,
+                                                        ExistingWorkPolicy.REPLACE,
+                                                        OneTimeWorkRequestBuilder<NotifySingleWorker>()
+                                                            .setInputData(
+                                                                Data.Builder()
+                                                                    .putString("notiData", item.toJson())
+                                                                    .build()
+                                                            )
+                                                            .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                                                            .build()
+                                                    )
+
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(
+                                                        R.string.willNotifyAt,
+                                                        context.getSystemDateTimeFormat().format(c.timeInMillis)
+                                                    ),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
+                                            timePicker.show(parentFragmentManager, "timePicker")
+                                        }
+                                    ) { Text(stringResource(R.string.ok)) }
+                                },
+                                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
+                                onDismissRequest = {}
+                            )
+                        }
+
                         DropdownMenu(
                             expanded = showDropDown,
                             onDismissRequest = dropDownDismiss
@@ -429,63 +494,7 @@ private fun NotificationItem(
                                 text = { Text(stringResource(R.string.notifyAtTime)) },
                                 onClick = {
                                     dropDownDismiss()
-                                    val datePicker = MaterialDatePicker.Builder.datePicker()
-                                        .setTitleText(R.string.selectDate)
-                                        .setCalendarConstraints(
-                                            CalendarConstraints.Builder()
-                                                .setOpenAt(System.currentTimeMillis())
-                                                .setValidator(DateValidatorPointForward.now())
-                                                .build()
-                                        )
-                                        .setSelection(System.currentTimeMillis())
-                                        .build()
-
-                                    datePicker.addOnPositiveButtonClickListener {
-                                        val c = Calendar.getInstance()
-                                        val timePicker = MaterialTimePicker.Builder()
-                                            .setTitleText(R.string.selectTime)
-                                            .setPositiveButtonText(R.string.ok)
-                                            .setTimeFormat(
-                                                if (DateFormat.is24HourFormat(context)) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
-                                            )
-                                            .setHour(c[Calendar.HOUR_OF_DAY])
-                                            .setMinute(c[Calendar.MINUTE])
-                                            .build()
-
-                                        timePicker.addOnPositiveButtonClickListener { _ ->
-                                            c.timeInMillis = it
-                                            c.add(Calendar.DAY_OF_YEAR, 1)
-                                            c[Calendar.HOUR_OF_DAY] = timePicker.hour
-                                            c[Calendar.MINUTE] = timePicker.minute
-
-                                            WorkManager.getInstance(context)
-                                                .enqueueUniqueWork(
-                                                    item.notiTitle,
-                                                    ExistingWorkPolicy.REPLACE,
-                                                    OneTimeWorkRequestBuilder<NotifySingleWorker>()
-                                                        .setInputData(
-                                                            Data.Builder()
-                                                                .putString("notiData", item.toJson())
-                                                                .build()
-                                                        )
-                                                        .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                                                        .build()
-                                                )
-
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(
-                                                    R.string.willNotifyAt,
-                                                    context.getSystemDateTimeFormat().format(c.timeInMillis)
-                                                ),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-
-                                        timePicker.show(parentFragmentManager, "timePicker")
-                                    }
-
-                                    datePicker.show(parentFragmentManager, "datePicker")
+                                    showDatePicker = true
                                 }
                             )
 
