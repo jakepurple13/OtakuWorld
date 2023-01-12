@@ -9,12 +9,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -163,11 +160,11 @@ fun GlobalSearchView(
                             }
                         },
                     ) {
-                        Column(
+                        LazyColumn(
                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            history.take(5).forEachIndexed { index, historyModel ->
+                            itemsIndexed(history) { index, historyModel ->
                                 ListItem(
                                     headlineText = { Text(historyModel.searchText) },
                                     leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
