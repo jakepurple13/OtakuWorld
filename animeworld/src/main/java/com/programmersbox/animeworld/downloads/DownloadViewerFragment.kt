@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -186,6 +188,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
@@ -195,7 +198,7 @@ private fun DownloadItem(download: DownloadData, actionListener: ActionListener)
     SlideToDeleteDialog(showDialog = showDialog, download = download.download)
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
                 showDialog.value = true
             }
@@ -234,137 +237,138 @@ private fun DownloadItem(download: DownloadData, actionListener: ActionListener)
                     tint = M3MaterialTheme.colorScheme.onSurface
                 )
             }
-        }
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp),
-            tonalElevation = 5.dp,
-            shape = MaterialTheme.shapes.medium
-        ) {
+        },
+        dismissContent = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 5.dp),
+                tonalElevation = 5.dp,
+                shape = MaterialTheme.shapes.medium
+            ) {
 
-            ConstraintLayout {
+                ConstraintLayout {
 
-                val (
-                    title, progress,
-                    action, progressText,
-                    speed, remaining,
-                    status
-                ) = createRefs()
+                    val (
+                        title, progress,
+                        action, progressText,
+                        speed, remaining,
+                        status
+                    ) = createRefs()
 
-                Text(
-                    download.download.url.toUri().lastPathSegment.orEmpty(),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier
-                        .constrainAs(title) {
-                            start.linkTo(parent.start)
-                            top.linkTo(parent.top)
-                        }
-                        .padding(horizontal = 8.dp)
-                        .padding(top = 8.dp)
-                )
-
-                val prog = download.download.progress.coerceAtLeast(0)
-
-                androidx.compose.material3.LinearProgressIndicator(
-                    progress = animateFloatAsState(targetValue = prog.toFloat() / 100f).value,
-                    modifier = Modifier
-                        .constrainAs(progress) {
-                            start.linkTo(parent.start)
-                            bottom.linkTo(action.bottom)
-                            end.linkTo(action.start)
-                            top.linkTo(action.top)
-                        }
-                        .padding(8.dp)
-                )
-
-                OutlinedButton(
-                    onClick = {
-                        when (download.download.status) {
-                            Status.FAILED -> actionListener.onRetryDownload(download.download.id)
-                            Status.PAUSED -> actionListener.onResumeDownload(download.download.id)
-                            Status.DOWNLOADING, Status.QUEUED -> actionListener.onPauseDownload(download.download.id)
-                            Status.ADDED -> actionListener.onResumeDownload(download.download.id)
-                            else -> {
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .constrainAs(action) {
-                            end.linkTo(parent.end)
-                            top.linkTo(title.bottom)
-                        }
-                        .padding(top = 8.dp, end = 8.dp)
-                ) {
                     Text(
-                        stringResource(
-                            id = when (download.download.status) {
-                                Status.COMPLETED -> R.string.view
-                                Status.FAILED -> R.string.retry
-                                Status.PAUSED -> R.string.resume
-                                Status.DOWNLOADING, Status.QUEUED -> R.string.pause
-                                Status.ADDED -> R.string.download
-                                else -> R.string.error_text
+                        download.download.url.toUri().lastPathSegment.orEmpty(),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .constrainAs(title) {
+                                start.linkTo(parent.start)
+                                top.linkTo(parent.top)
                             }
-                        )
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 8.dp)
                     )
+
+                    val prog = download.download.progress.coerceAtLeast(0)
+
+                    androidx.compose.material3.LinearProgressIndicator(
+                        progress = animateFloatAsState(targetValue = prog.toFloat() / 100f).value,
+                        modifier = Modifier
+                            .constrainAs(progress) {
+                                start.linkTo(parent.start)
+                                bottom.linkTo(action.bottom)
+                                end.linkTo(action.start)
+                                top.linkTo(action.top)
+                            }
+                            .padding(8.dp)
+                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            when (download.download.status) {
+                                Status.FAILED -> actionListener.onRetryDownload(download.download.id)
+                                Status.PAUSED -> actionListener.onResumeDownload(download.download.id)
+                                Status.DOWNLOADING, Status.QUEUED -> actionListener.onPauseDownload(download.download.id)
+                                Status.ADDED -> actionListener.onResumeDownload(download.download.id)
+                                else -> {
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .constrainAs(action) {
+                                end.linkTo(parent.end)
+                                top.linkTo(title.bottom)
+                            }
+                            .padding(top = 8.dp, end = 8.dp)
+                    ) {
+                        Text(
+                            stringResource(
+                                id = when (download.download.status) {
+                                    Status.COMPLETED -> R.string.view
+                                    Status.FAILED -> R.string.retry
+                                    Status.PAUSED -> R.string.resume
+                                    Status.DOWNLOADING, Status.QUEUED -> R.string.pause
+                                    Status.ADDED -> R.string.download
+                                    else -> R.string.error_text
+                                }
+                            )
+                        )
+                    }
+
+                    Text(
+                        stringResource(R.string.percent_progress, prog),
+                        modifier = Modifier
+                            .constrainAs(progressText) {
+                                top.linkTo(progress.bottom)
+                                start.linkTo(progress.start)
+                            }
+                            .padding(horizontal = 8.dp)
+                    )
+
+                    Text(
+                        if (download.downloadedBytesPerSecond == 0L) "" else getDownloadSpeedString(download.downloadedBytesPerSecond),
+                        modifier = Modifier
+                            .constrainAs(speed) {
+                                top.linkTo(progress.bottom)
+                                end.linkTo(progress.end)
+                            }
+                            .padding(horizontal = 8.dp)
+                            .padding(bottom = 8.dp)
+                    )
+
+                    Text(
+                        if (download.eta == -1L) "" else getETAString(download.eta, true),
+                        modifier = Modifier
+                            .constrainAs(remaining) {
+                                bottom.linkTo(parent.bottom)
+                                baseline.linkTo(parent.baseline)
+                                top.linkTo(progressText.bottom)
+                                start.linkTo(parent.start)
+                            }
+                            .padding(8.dp)
+                    )
+
+                    Text(
+                        stringResource(id = getStatusString(download.download.status)),
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .constrainAs(status) {
+                                bottom.linkTo(parent.bottom)
+                                baseline.linkTo(parent.baseline)
+                                top.linkTo(remaining.top)
+                                start.linkTo(remaining.end)
+                                end.linkTo(parent.end)
+                            }
+                            .padding(8.dp)
+                    )
+
                 }
 
-                Text(
-                    stringResource(R.string.percent_progress, prog),
-                    modifier = Modifier
-                        .constrainAs(progressText) {
-                            top.linkTo(progress.bottom)
-                            start.linkTo(progress.start)
-                        }
-                        .padding(horizontal = 8.dp)
-                )
-
-                Text(
-                    if (download.downloadedBytesPerSecond == 0L) "" else getDownloadSpeedString(download.downloadedBytesPerSecond),
-                    modifier = Modifier
-                        .constrainAs(speed) {
-                            top.linkTo(progress.bottom)
-                            end.linkTo(progress.end)
-                        }
-                        .padding(horizontal = 8.dp)
-                        .padding(bottom = 8.dp)
-                )
-
-                Text(
-                    if (download.eta == -1L) "" else getETAString(download.eta, true),
-                    modifier = Modifier
-                        .constrainAs(remaining) {
-                            bottom.linkTo(parent.bottom)
-                            baseline.linkTo(parent.baseline)
-                            top.linkTo(progressText.bottom)
-                            start.linkTo(parent.start)
-                        }
-                        .padding(8.dp)
-                )
-
-                Text(
-                    stringResource(id = getStatusString(download.download.status)),
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .constrainAs(status) {
-                            bottom.linkTo(parent.bottom)
-                            baseline.linkTo(parent.baseline)
-                            top.linkTo(remaining.top)
-                            start.linkTo(remaining.end)
-                            end.linkTo(parent.end)
-                        }
-                        .padding(8.dp)
-                )
-
             }
-
         }
-    }
+    )
 }
 
 private fun getStatusString(status: Status): Int = when (status) {

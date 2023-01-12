@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -310,6 +312,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
@@ -322,7 +325,7 @@ private fun VideoContentView(item: VideoContent) {
     val context = LocalContext.current
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd) {
                 if (MainActivity.cast.isCastActive()) {
                     MainActivity.cast.loadMedia(
@@ -380,118 +383,119 @@ private fun VideoContentView(item: VideoContent) {
                     modifier = Modifier.scale(scale)
                 )
             }
-        }
-    ) {
-        ElevatedCard(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
-                ) {
-                    if (MainActivity.cast.isCastActive()) {
-                        MainActivity.cast.loadMedia(
-                            File(item.path!!),
-                            context
-                                .getSharedPreferences("videos", Context.MODE_PRIVATE)
-                                .getLong(item.assetFileStringUri, 0),
-                            null, null
-                        )
-                    } else {
-                        context.navigateToVideoPlayer(
-                            navController,
-                            item.assetFileStringUri,
-                            item.videoName,
-                            true,
-                            ""
-                        )
-                    }
-                }
-        ) {
-            Row {
-                Box {
-                    /*convert millis to appropriate time*/
-                    val runTimeString = remember {
-                        val duration = item.videoDuration
-                        if (duration > TimeUnit.HOURS.toMillis(1)) {
-                            String.format(
-                                "%02d:%02d:%02d",
-                                TimeUnit.MILLISECONDS.toHours(duration),
-                                TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
-                                TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+        },
+        dismissContent = {
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        if (MainActivity.cast.isCastActive()) {
+                            MainActivity.cast.loadMedia(
+                                File(item.path!!),
+                                context
+                                    .getSharedPreferences("videos", Context.MODE_PRIVATE)
+                                    .getLong(item.assetFileStringUri, 0),
+                                null, null
                             )
                         } else {
-                            String.format(
-                                "%02d:%02d",
-                                TimeUnit.MILLISECONDS.toMinutes(duration),
-                                TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+                            context.navigateToVideoPlayer(
+                                navController,
+                                item.assetFileStringUri,
+                                item.videoName,
+                                true,
+                                ""
                             )
                         }
                     }
+            ) {
+                Row {
+                    Box {
+                        /*convert millis to appropriate time*/
+                        val runTimeString = remember {
+                            val duration = item.videoDuration
+                            if (duration > TimeUnit.HOURS.toMillis(1)) {
+                                String.format(
+                                    "%02d:%02d:%02d",
+                                    TimeUnit.MILLISECONDS.toHours(duration),
+                                    TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
+                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+                                )
+                            } else {
+                                String.format(
+                                    "%02d:%02d",
+                                    TimeUnit.MILLISECONDS.toMinutes(duration),
+                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+                                )
+                            }
+                        }
 
-                    GlideImage(
-                        imageModel = { item.assetFileStringUri.orEmpty() },
-                        imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                        requestBuilder = {
-                            Glide.with(LocalView.current)
-                                .asDrawable()
-                                .thumbnail(0.5f)
-                        },
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH),
-                        failure = { Text(text = "image request failed.") }
-                    )
-
-                    Text(
-                        runTimeString,
-                        color = Color.White,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .background(Color(0x99000000))
-                            .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 5.dp))
-                    )
-
-                }
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp, top = 4.dp)
-                ) {
-                    val shared = context.getSharedPreferences("videos", Context.MODE_PRIVATE)
-                    if (shared.contains(item.assetFileStringUri))
-                        Text(shared.getLong(item.assetFileStringUri, 0).stringForTime(), style = M3MaterialTheme.typography.labelMedium)
-                    Text(item.videoName.orEmpty(), style = M3MaterialTheme.typography.titleSmall)
-                    Text(item.path.orEmpty(), style = M3MaterialTheme.typography.bodyMedium, fontSize = 10.sp)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Top)
-                        .padding(horizontal = 2.dp)
-                ) {
-
-                    var showDropDown by remember { mutableStateOf(false) }
-
-                    val dropDownDismiss = { showDropDown = false }
-
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = showDropDown,
-                        onDismissRequest = dropDownDismiss
-                    ) {
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                showDialog.value = true
+                        GlideImage(
+                            imageModel = { item.assetFileStringUri.orEmpty() },
+                            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
+                            requestBuilder = {
+                                Glide.with(LocalView.current)
+                                    .asDrawable()
+                                    .thumbnail(0.5f)
                             },
-                            text = { Text(stringResource(R.string.remove)) }
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH),
+                            failure = { Text(text = "image request failed.") }
                         )
+
+                        Text(
+                            runTimeString,
+                            color = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .background(Color(0x99000000))
+                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 5.dp))
+                        )
+
                     }
 
-                    IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp, top = 4.dp)
+                    ) {
+                        val shared = context.getSharedPreferences("videos", Context.MODE_PRIVATE)
+                        if (shared.contains(item.assetFileStringUri))
+                            Text(shared.getLong(item.assetFileStringUri, 0).stringForTime(), style = M3MaterialTheme.typography.labelMedium)
+                        Text(item.videoName.orEmpty(), style = M3MaterialTheme.typography.titleSmall)
+                        Text(item.path.orEmpty(), style = M3MaterialTheme.typography.bodyMedium, fontSize = 10.sp)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Top)
+                            .padding(horizontal = 2.dp)
+                    ) {
+
+                        var showDropDown by remember { mutableStateOf(false) }
+
+                        val dropDownDismiss = { showDropDown = false }
+
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss
+                        ) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    showDialog.value = true
+                                },
+                                text = { Text(stringResource(R.string.remove)) }
+                            )
+                        }
+
+                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                    }
                 }
             }
         }
-    }
+    )
 }
