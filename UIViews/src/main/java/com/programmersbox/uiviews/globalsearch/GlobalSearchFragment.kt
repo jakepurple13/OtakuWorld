@@ -167,7 +167,7 @@ fun GlobalSearchView(
                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            history.forEachIndexed { index, historyModel ->
+                            history.take(5).forEachIndexed { index, historyModel ->
                                 ListItem(
                                     headlineText = { Text(historyModel.searchText) },
                                     leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
@@ -264,7 +264,7 @@ fun GlobalSearchView(
                                 contentPadding = padding,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(top = 4.dp)
+                                modifier = Modifier.padding(top = 8.dp)
                             ) {
                                 if (viewModel.isRefreshing) {
                                     items(3) {
