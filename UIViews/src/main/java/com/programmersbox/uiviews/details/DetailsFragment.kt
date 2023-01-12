@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -100,7 +101,12 @@ fun DetailsScreen(
             topBar = {
                 InsetSmallTopAppBar(
                     modifier = Modifier.zIndex(2f),
-                    title = { Text(details.itemModel?.title.orEmpty()) },
+                    title = {
+                        Text(
+                            details.itemModel?.title.orEmpty(),
+                            maxLines = 1
+                        )
+                    },
                     navigationIcon = { BackButton() },
                     actions = {
                         IconButton(
@@ -579,18 +585,24 @@ private fun DetailsView(
             topBar = {
                 InsetSmallTopAppBar(
                     modifier = Modifier.zIndex(2f),
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        titleContentColor = topBarColor,
-                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+                    colors = topAppBarColors(
+                        containerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value
+                            ?: M3MaterialTheme.colorScheme.surface,
                         scrolledContainerColor = swatchInfo.value?.rgb?.toComposeColor()?.animate()?.value?.let {
                             M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
                         } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
                             backgroundColor = M3MaterialTheme.colorScheme.surface,
                             elevation = 1.dp
-                        )
+                        ),
+                        titleContentColor = topBarColor
                     ),
                     scrollBehavior = scrollBehavior,
-                    title = { Text(info.title) },
+                    title = {
+                        Text(
+                            info.title,
+                            modifier = Modifier.basicMarquee()
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
