@@ -83,7 +83,7 @@ fun NotificationsScreen(
     notificationLogo: NotificationLogo,
     fragmentManager: FragmentManager,
     settingsHandling: SettingsHandling = LocalSettingsHandling.current,
-    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling) }
+    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, genericInfo) }
 ) {
     val items = vm.items
 
@@ -259,14 +259,14 @@ fun NotificationsScreen(
                     ) {
 
                         vm.groupedList.toList().forEach { item ->
-                            var expanded by mutableStateOf(false)
+                            val expanded = vm.groupedListState[item.first]?.value == true
 
                             stickyHeader {
                                 Surface(
                                     shape = M3MaterialTheme.shapes.medium,
                                     tonalElevation = 4.dp,
                                     modifier = Modifier.fillMaxWidth(),
-                                    onClick = { expanded = !expanded }
+                                    onClick = { vm.toggleGroupedState(item.first) }
                                 ) {
                                     ListItem(
                                         modifier = Modifier.padding(4.dp),

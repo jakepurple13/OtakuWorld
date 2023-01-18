@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.utils.SettingsHandling
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,7 @@ import kotlinx.coroutines.withContext
 class NotificationScreenViewModel(
     db: ItemDao,
     private val settingsHandling: SettingsHandling,
+    genericInfo: GenericInfo,
 ) : ViewModel() {
 
     val items = mutableStateListOf<NotificationItem>()
@@ -25,6 +27,10 @@ class NotificationScreenViewModel(
     val groupedList by derivedStateOf {
         items.groupBy { it.source }
     }
+
+    val groupedListState = mutableStateMapOf(
+        *genericInfo.sourceList().map { it.serviceName to mutableStateOf(false) }.toTypedArray()
+    )
 
     init {
         db.getAllNotificationsFlow()
@@ -44,6 +50,10 @@ class NotificationScreenViewModel(
             withContext(Dispatchers.Default) { db.deleteNotification(item) }
             block()
         }
+    }
+
+    fun toggleGroupedState(source: String) {
+        groupedListState[source]?.let { it.value = !it.value }
     }
 
     fun toggleSort() {
