@@ -269,7 +269,7 @@ fun NotificationsScreen(
                                     onClick = { expanded = !expanded }
                                 ) {
                                     ListItem(
-                                        modifier = Modifier.padding(5.dp),
+                                        modifier = Modifier.padding(4.dp),
                                         headlineText = { Text(item.first) },
                                         leadingContent = { Text(item.second.size.toString()) },
                                         trailingContent = {
@@ -288,25 +288,19 @@ fun NotificationsScreen(
                                     modifier = Modifier.animateContentSize(),
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    AnimatedVisibility(
-                                        visible = expanded
-                                    ) {
-                                        Column(
-                                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            item.second.forEach {
-                                                NotificationItem(
-                                                    item = it,
-                                                    navController = navController,
-                                                    vm = vm,
-                                                    notificationManager = notificationManager,
-                                                    db = db,
-                                                    parentFragmentManager = fragmentManager,
-                                                    genericInfo = genericInfo,
-                                                    logo = logo,
-                                                    notificationLogo = notificationLogo
-                                                )
-                                            }
+                                    if (expanded) {
+                                        item.second.forEach {
+                                            NotificationItem(
+                                                item = it,
+                                                navController = navController,
+                                                vm = vm,
+                                                notificationManager = notificationManager,
+                                                db = db,
+                                                parentFragmentManager = fragmentManager,
+                                                genericInfo = genericInfo,
+                                                logo = logo,
+                                                notificationLogo = notificationLogo
+                                            )
                                         }
                                     }
                                 }
