@@ -7,9 +7,8 @@ import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
@@ -17,7 +16,6 @@ import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -73,7 +71,7 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class, ExperimentalMaterialApi::class,
+    ExperimentalMaterialApi::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
 )
 @Composable
 fun NotificationsScreen(
@@ -261,40 +259,35 @@ fun NotificationsScreen(
                     ) {
 
                         vm.groupedList.toList().forEach { item ->
+                            var expanded by mutableStateOf(false)
+
+                            stickyHeader {
+                                Surface(
+                                    shape = M3MaterialTheme.shapes.medium,
+                                    tonalElevation = 4.dp,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = { expanded = !expanded }
+                                ) {
+                                    ListItem(
+                                        modifier = Modifier.padding(5.dp),
+                                        headlineText = { Text(item.first) },
+                                        leadingContent = { Text(item.second.size.toString()) },
+                                        trailingContent = {
+                                            Icon(
+                                                Icons.Default.ArrowDropDown,
+                                                null,
+                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
 
                             item {
-
-                                var expanded by remember { mutableStateOf(false) }
-
                                 Column(
                                     modifier = Modifier.animateContentSize(),
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-
-                                    Surface(
-                                        shape = M3MaterialTheme.shapes.medium,
-                                        tonalElevation = 4.dp,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable(
-                                                indication = rememberRipple(),
-                                                interactionSource = remember { MutableInteractionSource() }
-                                            ) { expanded = !expanded }
-                                    ) {
-                                        ListItem(
-                                            modifier = Modifier.padding(5.dp),
-                                            headlineText = { Text(item.first) },
-                                            leadingContent = { Text(item.second.size.toString()) },
-                                            trailingContent = {
-                                                Icon(
-                                                    Icons.Default.ArrowDropDown,
-                                                    null,
-                                                    modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
-                                                )
-                                            }
-                                        )
-                                    }
-
                                     AnimatedVisibility(
                                         visible = expanded
                                     ) {
