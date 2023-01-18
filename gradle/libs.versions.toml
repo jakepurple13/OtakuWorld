@@ -17,7 +17,7 @@ accompanist = "0.29.0-alpha"
 okhttpVersion = "4.10.0"
 ktorVersion = "2.2.2"
 workVersion = "2.7.1"
-ziplineVersion = "0.9.12"
+ziplineVersion = "0.9.14"
 landscapist = "2.1.1"
 protobufVersion = "3.21.12"
 
