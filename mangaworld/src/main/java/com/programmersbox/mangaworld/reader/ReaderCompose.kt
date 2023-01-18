@@ -324,7 +324,7 @@ fun DrawerView(
             )
         },
         bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release") {
+            if (BuildConfig.BUILD_TYPE == "release" && false) {
                 AndroidView(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -412,7 +412,7 @@ fun SheetView(
             )
         },
         bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release") {
+            if (BuildConfig.BUILD_TYPE == "release" && false) {
                 AndroidView(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -627,7 +627,7 @@ private fun LastPageReached(
                     }
             )
 
-            if (BuildConfig.BUILD_TYPE == "release") {
+            if (BuildConfig.BUILD_TYPE == "release" && false) {
                 val context = LocalContext.current
                 AndroidView(
                     modifier = Modifier
