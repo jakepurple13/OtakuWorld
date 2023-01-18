@@ -5,7 +5,7 @@ jakepurple13 = "10.6.5"
 coroutinesVersion = "1.6.4"
 glideVersion = "4.14.2"
 pagingVersion = "3.1.1"
-roomVersion = "2.5.0-rc01"
+roomVersion = "2.5.0"
 navVersion = "2.5.3"
 koinVersion = "3.3.0"
 lottieVersion = "5.2.0"
@@ -81,7 +81,7 @@ glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integrati
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.1"
 
 androidCore = "androidx.core:core-ktx:1.9.0"
-appCompat = "androidx.appcompat:appcompat:1.5.1"
+appCompat = "androidx.appcompat:appcompat:1.6.0"
 material = "com.google.android.material:material:1.7.0"
 
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
@@ -113,7 +113,7 @@ ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.0.0"
 workRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "workVersion" }
 
 pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
-roomPaging = "androidx.room:room-paging:2.4.3"
+roomPaging = "androidx.room:room-paging:2.5.0"
 
 aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref = "latestAboutLibsRelease" }
 aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose", version.ref = "latestAboutLibsRelease" }
