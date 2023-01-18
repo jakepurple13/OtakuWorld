@@ -550,7 +550,7 @@ fun PagerView(closeClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun Modifier.minimumTouchTargetSizeCustom(): Modifier = composed {
-    if (androidx.compose.material3.LocalMinimumTouchTargetEnforcement.current) {
+    if (LocalMinimumInteractiveComponentEnforcement.current) {
         // TODO: consider using a hardcoded value of 48.dp instead to avoid inconsistent UI if the
         // LocalViewConfiguration changes across devices / during runtime.
         val size = LocalViewConfiguration.current.minimumTouchTargetSize

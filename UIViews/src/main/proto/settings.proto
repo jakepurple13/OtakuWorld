@@ -10,10 +10,16 @@ message Settings {
   bool shareChapter = 4;
   bool showAll = 5;
   int32 historySave = 6;
+  NotificationSortBy notificationSortBy = 7;
 }
 
 enum SystemThemeMode {
   FollowSystem = 0;
   Day = 1;
   Night = 2;
+}
+
+enum NotificationSortBy {
+    Date = 0;
+    Grouped = 1;
 }

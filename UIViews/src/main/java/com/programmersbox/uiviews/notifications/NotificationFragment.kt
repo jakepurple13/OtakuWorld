@@ -5,21 +5,24 @@ import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ClearAll
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -48,10 +51,8 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.NotifySingleWorker
+import com.programmersbox.uiviews.*
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SavedNotifications
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
@@ -83,9 +84,10 @@ fun NotificationsScreen(
     logo: MainLogo,
     notificationLogo: NotificationLogo,
     fragmentManager: FragmentManager,
-    vm: NotificationScreenViewModel = viewModel()
+    settingsHandling: SettingsHandling = LocalSettingsHandling.current,
+    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling) }
 ) {
-    val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
+    val items = vm.items
 
     LaunchedEffect(Unit) {
         db.getAllNotificationCount()
@@ -150,7 +152,10 @@ fun NotificationsScreen(
                 title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
                 actions = {
                     IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
-                    IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                    IconToggleButton(
+                        checked = vm.sortedBy == NotificationSortBy.Grouped,
+                        onCheckedChange = { vm.toggleSort() }
+                    ) { Icon(Icons.Default.Sort, null) }
                 },
                 navigationIcon = { BackButton() }
             )
@@ -224,7 +229,103 @@ fun NotificationsScreen(
         }
     ) { p, itemList ->
 
-        AnimatedLazyColumn(
+        Crossfade(targetState = vm.sortedBy) { target ->
+            when (target) {
+                NotificationSortBy.Date -> {
+                    AnimatedLazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        items = itemList.fastMap {
+                            AnimatedLazyListItem(key = it.url, value = it) {
+                                NotificationItem(
+                                    item = it,
+                                    navController = navController,
+                                    vm = vm,
+                                    notificationManager = notificationManager,
+                                    db = db,
+                                    parentFragmentManager = fragmentManager,
+                                    genericInfo = genericInfo,
+                                    logo = logo,
+                                    notificationLogo = notificationLogo
+                                )
+                            }
+                        }
+                    )
+                }
+                NotificationSortBy.Grouped -> {
+                    LazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    ) {
+
+                        vm.groupedList.toList().forEach { item ->
+
+                            item {
+
+                                var expanded by remember { mutableStateOf(false) }
+
+                                Column(
+                                    modifier = Modifier.animateContentSize(),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+
+                                    Surface(
+                                        shape = M3MaterialTheme.shapes.medium,
+                                        tonalElevation = 4.dp,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable(
+                                                indication = rememberRipple(),
+                                                interactionSource = remember { MutableInteractionSource() }
+                                            ) { expanded = !expanded }
+                                    ) {
+                                        ListItem(
+                                            modifier = Modifier.padding(5.dp),
+                                            headlineText = { Text(item.first) },
+                                            leadingContent = { Text(item.second.size.toString()) },
+                                            trailingContent = {
+                                                Icon(
+                                                    Icons.Default.ArrowDropDown,
+                                                    null,
+                                                    modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
+                                                )
+                                            }
+                                        )
+                                    }
+
+                                    AnimatedVisibility(
+                                        visible = expanded
+                                    ) {
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            item.second.forEach {
+                                                NotificationItem(
+                                                    item = it,
+                                                    navController = navController,
+                                                    vm = vm,
+                                                    notificationManager = notificationManager,
+                                                    db = db,
+                                                    parentFragmentManager = fragmentManager,
+                                                    genericInfo = genericInfo,
+                                                    logo = logo,
+                                                    notificationLogo = notificationLogo
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                NotificationSortBy.UNRECOGNIZED -> {}
+            }
+        }
+
+        /*AnimatedLazyColumn(
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(vertical = 4.dp),
@@ -243,7 +344,7 @@ fun NotificationsScreen(
                     )
                 }
             }
-        )
+        )*/
 
         /*LazyColumn(
             contentPadding = p,

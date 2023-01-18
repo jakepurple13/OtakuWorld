@@ -7,6 +7,7 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import com.google.protobuf.GeneratedMessageLite
 import com.google.protobuf.InvalidProtocolBufferException
+import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.Settings
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.settings
@@ -76,4 +77,9 @@ class SettingsHandling(context: Context) {
 
     val showAll = all.map { it.showAll }
     suspend fun setShowAll(show: Boolean) = preferences.update { setShowAll(show) }
+
+    val notificationSortBy = all.map { it.notificationSortBy }
+
+    suspend fun setNotificationSortBy(sort: NotificationSortBy) = preferences.update { setNotificationSortBy(sort) }
+
 }
