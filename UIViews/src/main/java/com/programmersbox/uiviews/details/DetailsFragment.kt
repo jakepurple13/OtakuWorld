@@ -1257,27 +1257,27 @@ private fun DetailsHeader(
                     )
 
                     /*if(model.alternativeNames.isNotEmpty()) {
-                    Text(
-                        stringResource(R.string.alternateNames, model.alternativeNames.joinToString(", ")),
-                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
-                        style = MaterialTheme.typography.body2,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { descriptionVisibility = !descriptionVisibility }
-                    )
-                }*/
+                        Text(
+                            stringResource(R.string.alternateNames, model.alternativeNames.joinToString(", ")),
+                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
+                            style = MaterialTheme.typography.body2,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { descriptionVisibility = !descriptionVisibility }
+                        )
+                    }*/
 
                     /*
-            var descriptionVisibility by remember { mutableStateOf(false) }
-            Text(
-                model.description,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { descriptionVisibility = !descriptionVisibility },
-                overflow = TextOverflow.Ellipsis,
-                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
-                style = MaterialTheme.typography.body2,
-            )*/
+                    var descriptionVisibility by remember { mutableStateOf(false) }
+                    Text(
+                        model.description,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { descriptionVisibility = !descriptionVisibility },
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
+                        style = MaterialTheme.typography.body2,
+                    )*/
 
                 }
             }
