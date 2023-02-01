@@ -70,6 +70,7 @@ import javax.net.ssl.SSLSession
 import kotlin.math.abs
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoPlayerUi() {
@@ -170,6 +171,7 @@ fun VideoPlayerUi() {
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun VideoPlayer(
     modifier: Modifier = Modifier,

@@ -161,7 +161,9 @@ fun GlobalSearchView(
                         },
                     ) {
                         LazyColumn(
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             itemsIndexed(history) { index, historyModel ->
@@ -241,7 +243,7 @@ fun GlobalSearchView(
                             Image(
                                 Icons.Default.CloudOff,
                                 null,
-                                modifier = Modifier.size(50.dp, 50.dp),
+                                modifier = Modifier.size(50.dp),
                                 colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                             )
                             Text(
@@ -271,7 +273,7 @@ fun GlobalSearchView(
                                                 .compositeOver(M3MaterialTheme.colorScheme.surface)
                                         Surface(
                                             modifier = Modifier.placeholder(true, color = placeholderColor),
-                                            tonalElevation = 5.dp,
+                                            tonalElevation = 4.dp,
                                             shape = androidx.compose.material3.MaterialTheme.shapes.medium
                                         ) {
                                             Column {
@@ -280,7 +282,7 @@ fun GlobalSearchView(
                                                         "Otaku",
                                                         modifier = Modifier
                                                             .align(Alignment.CenterStart)
-                                                            .padding(start = 5.dp)
+                                                            .padding(start = 4.dp)
                                                     )
                                                     IconButton(
                                                         onClick = {},
@@ -298,8 +300,8 @@ fun GlobalSearchView(
                                                 searchModelBottom = i
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
                                             },
-                                            tonalElevation = 5.dp,
-                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
+                                            tonalElevation = 4.dp,
+                                            shape = M3MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(
@@ -314,7 +316,7 @@ fun GlobalSearchView(
                                                         i.apiName,
                                                         modifier = Modifier
                                                             .align(Alignment.CenterStart)
-                                                            .padding(start = 5.dp)
+                                                            .padding(start = 4.dp)
                                                     )
                                                     IconButton(
                                                         onClick = {

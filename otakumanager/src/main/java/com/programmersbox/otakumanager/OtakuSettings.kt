@@ -68,9 +68,9 @@ val THEME_SETTING = stringPreferencesKey("theme")
 @Composable
 fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(5.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .padding(5.dp)
+            .padding(4.dp)
             .verticalScroll(rememberScrollState())
     ) {
 
@@ -89,7 +89,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
         }
 
         SettingsGroup(
-            title = { Text(text = stringResource(id = R.string.account_category_title), modifier = Modifier.padding(start = 5.dp)) }
+            title = { Text(text = stringResource(id = R.string.account_category_title), modifier = Modifier.padding(start = 4.dp)) }
         ) {
 
             SettingsMenuLink(
@@ -101,7 +101,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                         requestBuilder = { Glide.with(LocalView.current).asDrawable().circleCrop() },
                     )
                 },
-                title = { Text(text = accountInfo?.displayName ?: "User", modifier = Modifier.padding(start = 5.dp)) },
+                title = { Text(text = accountInfo?.displayName ?: "User", modifier = Modifier.padding(start = 4.dp)) },
                 onClick = {
                     FirebaseAuthentication.signInOrOut(activity, activity, R.string.logOut, R.string.areYouSureLogOut, R.string.yes, R.string.no)
                 },
@@ -110,7 +110,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
         }
 
         SettingsGroup(
-            title = { Text(text = stringResource(id = R.string.about), modifier = Modifier.padding(start = 5.dp)) }
+            title = { Text(text = stringResource(id = R.string.about), modifier = Modifier.padding(start = 4.dp)) }
         ) {
 
             /* val appUpdate by appUpdateCheck
@@ -121,8 +121,8 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
              val currentAppInfo = rememberSaveable { packageManager?.getPackageInfo(activity.packageName, 0)?.versionName.orEmpty() }
 
              SettingsMenuLink(
-                 title = { Text(text = stringResource(id = R.string.currentVersion, currentAppInfo), modifier = Modifier.padding(start = 5.dp)) },
-                 subtitle = { Text(text = stringResource(id = R.string.press_to_check_for_updates), modifier = Modifier.padding(start = 5.dp)) },
+                 title = { Text(text = stringResource(id = R.string.currentVersion, currentAppInfo), modifier = Modifier.padding(start = 4.dp)) },
+                 subtitle = { Text(text = stringResource(id = R.string.press_to_check_for_updates), modifier = Modifier.padding(start = 4.dp)) },
                  onClick = {
                      scope.launch(Dispatchers.IO) {
                          AppUpdate.getUpdate()?.let(appUpdateCheck::onNext)
@@ -172,7 +172,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
 
                 SettingsMenuLink(
                     icon = { Icon(Icons.Default.Update, contentDescription = null) },
-                    title = { Text(text = stringResource(id = R.string.update_available), modifier = Modifier.padding(start = 5.dp)) },
+                    title = { Text(text = stringResource(id = R.string.update_available), modifier = Modifier.padding(start = 4.dp)) },
                     subtitle = {
                         Text(
                             text = stringResource(
@@ -180,7 +180,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
                                 appUpdate?.update_real_version.orEmpty()
                             ),
                             modifier = Modifier.padding(
-                                start = 5.dp
+                                start = 4.dp
                             )
                         )
                     },
@@ -198,8 +198,8 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
 
             SettingsMenuLink(
                 icon = { Image(painter = painterResource(id = R.drawable.github_icon), contentDescription = null) },
-                title = { Text(text = stringResource(id = R.string.view_on_github), modifier = Modifier.padding(start = 5.dp)) },
-                //subtitle = { Text(text = "", modifier = Modifier.padding(start = 5.dp)) },
+                title = { Text(text = stringResource(id = R.string.view_on_github), modifier = Modifier.padding(start = 4.dp)) },
+                //subtitle = { Text(text = "", modifier = Modifier.padding(start = 4.dp)) },
                 onClick = { activity.openInCustomChromeBrowser("https://github.com/jakepurple13/OtakuWorld/") },
                 action = {
                     Icon(
@@ -213,7 +213,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
         }
 
         SettingsGroup(
-            title = { Text(text = "Otaku Apps", modifier = Modifier.padding(start = 5.dp)) }
+            title = { Text(text = "Otaku Apps", modifier = Modifier.padding(start = 4.dp)) }
         ) {
 
             SettingItem(
@@ -262,7 +262,7 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
              */
 
         SettingsGroup(
-            title = { Text(text = stringResource(id = R.string.general_menu_title), modifier = Modifier.padding(start = 5.dp)) }
+            title = { Text(text = stringResource(id = R.string.general_menu_title), modifier = Modifier.padding(start = 4.dp)) }
         ) {
 
             val theme by activity.dataStore.data
@@ -273,8 +273,8 @@ fun OtakuSettings(activity: ComponentActivity, genericInfo: GenericInfo) {
 
             SettingsMenuLink(
                 icon = { Icon(Icons.Default.SettingsBrightness, contentDescription = null) },
-                title = { Text(text = stringResource(id = R.string.theme_choice_title), modifier = Modifier.padding(start = 5.dp)) },
-                subtitle = { Text(text = theme, modifier = Modifier.padding(start = 5.dp)) },
+                title = { Text(text = stringResource(id = R.string.theme_choice_title), modifier = Modifier.padding(start = 4.dp)) },
+                subtitle = { Text(text = theme, modifier = Modifier.padding(start = 4.dp)) },
                 onClick = {
                     /*MaterialAlertDialogBuilder(activity)
                         .setTitle(R.string.choose_a_theme)
@@ -316,11 +316,11 @@ fun SettingItem(text: String, icon: Int, packageName: String, packageManager: Pa
 
     SettingsMenuLink(
         icon = { Image(painter = painterResource(id = icon), contentDescription = text) },
-        title = { Text(text = text, modifier = Modifier.padding(start = 5.dp)) },
+        title = { Text(text = text, modifier = Modifier.padding(start = 4.dp)) },
         subtitle = {
             Text(
                 text = if (world != null) "Installed - Version: $version" else "Not Installed",
-                modifier = Modifier.padding(start = 5.dp)
+                modifier = Modifier.padding(start = 4.dp)
             )
         },
         onClick = onClick,

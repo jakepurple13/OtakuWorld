@@ -3,7 +3,6 @@ package com.programmersbox.mangaworld.reader
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -116,7 +115,7 @@ class ReadViewModel(
 
     val batteryInformation by lazy { BatteryInformation(context) }
 
-    val pageList = mutableStateListOf<String>()
+    var pageList by mutableStateOf<List<String>>(emptyList())
     var isLoadingPages by mutableStateOf(false)
 
     init {
@@ -158,18 +157,11 @@ class ReadViewModel(
     }
 
     private fun loadPages(modelPath: Flow<List<String>>?) {
-        viewModelScope.launch {
-            modelPath
-                ?.onStart {
-                    isLoadingPages = true
-                    pageList.clear()
-                }
-                ?.onEach {
-                    pageList.addAll(it)
-                    isLoadingPages = false
-                }
-                ?.collect()
-        }
+        modelPath
+            ?.onStart { isLoadingPages = true }
+            ?.onEach { pageList = it }
+            ?.onCompletion { isLoadingPages = false }
+            ?.launchIn(viewModelScope)
     }
 
     fun refresh() {

@@ -251,7 +251,7 @@ fun SearchScreen(
                     }
                 },
                 modifier = Modifier
-                    .padding(5.dp)
+                    .padding(4.dp)
                     .fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),

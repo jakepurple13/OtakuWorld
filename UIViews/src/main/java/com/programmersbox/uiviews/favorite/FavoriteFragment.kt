@@ -171,7 +171,9 @@ fun FavoriteUi(logo: MainLogo) {
                             },
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 showing.take(4).forEachIndexed { index, dbModel ->
@@ -192,8 +194,8 @@ fun FavoriteUi(logo: MainLogo) {
                         }
 
                         LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
                         ) {
                             item {
                                 FilterChip(
@@ -239,9 +241,9 @@ fun FavoriteUi(logo: MainLogo) {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(5.dp),
-                        tonalElevation = 5.dp,
-                        shape = RoundedCornerShape(5.dp)
+                            .padding(4.dp),
+                        tonalElevation = 4.dp,
+                        shape = RoundedCornerShape(4.dp)
                     ) {
 
                         Column(modifier = Modifier) {
@@ -262,7 +264,7 @@ fun FavoriteUi(logo: MainLogo) {
                                 onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
-                                    .padding(vertical = 5.dp)
+                                    .padding(vertical = 4.dp)
                             ) { Text(text = stringResource(R.string.add_a_favorite)) }
 
                         }

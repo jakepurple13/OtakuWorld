@@ -176,7 +176,7 @@ fun NotificationsScreen(
         deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
         itemUi = { item ->
             ListItem(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier.padding(4.dp),
                 leadingContent = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -226,7 +226,6 @@ fun NotificationsScreen(
             )
         }
     ) { p, itemList ->
-
         Crossfade(targetState = vm.sortedBy) { target ->
             when (target) {
                 NotificationSortBy.Date -> {
@@ -433,30 +432,28 @@ private fun NotificationItem(
         dismissContent = {
             ElevatedCard(
                 onClick = {
-                    scope.launch {
-                        genericInfo
-                            .toSource(item.source)
-                            ?.let { source ->
-                                Cached.cache[item.url]?.let {
-                                    flow {
-                                        emit(
-                                            it
-                                                .toDbModel()
-                                                .toItemModel(source)
-                                        )
-                                    }
-                                } ?: source.getSourceByUrlFlow(item.url)
-                            }
-                            ?.dispatchIo()
-                            ?.onStart { showLoadingDialog = true }
-                            ?.onEach {
-                                showLoadingDialog = false
-                                navController.navigateToDetails(it)
-                            }
-                            ?.collect()
-                    }
+                    genericInfo
+                        .toSource(item.source)
+                        ?.let { source ->
+                            Cached.cache[item.url]?.let {
+                                flow {
+                                    emit(
+                                        it
+                                            .toDbModel()
+                                            .toItemModel(source)
+                                    )
+                                }
+                            } ?: source.getSourceByUrlFlow(item.url)
+                        }
+                        ?.dispatchIo()
+                        ?.onStart { showLoadingDialog = true }
+                        ?.onEach {
+                            showLoadingDialog = false
+                            navController.navigateToDetails(it)
+                        }
+                        ?.launchIn(scope)
                 },
-                modifier = Modifier.padding(horizontal = 5.dp)
+                modifier = Modifier.padding(horizontal = 4.dp)
             ) {
                 Row {
                     val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }

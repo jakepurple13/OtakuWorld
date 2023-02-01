@@ -794,7 +794,7 @@ fun MaterialCardPreview() {
     }
 
     Column(
-        modifier = Modifier.padding(5.dp),
+        modifier = Modifier.padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
 
@@ -901,7 +901,7 @@ fun MaterialCardPreview() {
             shape = RoundedCornerShape(16.dp),
             backgroundColor = Color.Blue,
             border = BorderStroke(1.dp, Color.Red),
-            elevation = 5.dp,
+            elevation = 4.dp,
             headerOnTop = false,
             supportingText = supportingText,
             header = {

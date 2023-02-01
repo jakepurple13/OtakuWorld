@@ -151,7 +151,7 @@ fun <T> BottomSheetDeleteScaffold(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.cancel)) }
 
                         Button(
@@ -159,7 +159,7 @@ fun <T> BottomSheetDeleteScaffold(
                             enabled = itemsToDelete.isNotEmpty(),
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.remove)) }
                     }
                 }
@@ -167,7 +167,7 @@ fun <T> BottomSheetDeleteScaffold(
                 AnimatedLazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
-                    modifier = Modifier.padding(5.dp),
+                    modifier = Modifier.padding(4.dp),
                     items = listOfItems.fastMap { i ->
                         AnimatedLazyListItem(key = i.hashCode().toString(), value = i) {
                             DeleteItemView(
@@ -184,7 +184,7 @@ fun <T> BottomSheetDeleteScaffold(
                 /*LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
-                    modifier = Modifier.padding(5.dp)
+                    modifier = Modifier.padding(4.dp)
                 ) {
                     items(listOfItems) { i ->
                         DeleteItemView(
@@ -281,7 +281,7 @@ private fun <T> DeleteItemView(
                 onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
                 modifier = Modifier.fillMaxSize(),
                 border = BorderStroke(
-                    animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
+                    animateDpAsState(targetValue = if (item in deleteItemList) 4.dp else 1.dp).value,
                     animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline).value
                 )
             ) { itemUi(item) }
@@ -397,7 +397,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                             onClick = { scope.launch { state.bottomSheetState.collapse() } },
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.cancel)) }
 
                         Button(
@@ -405,7 +405,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                             enabled = itemsToDelete.isNotEmpty(),
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.remove)) }
                     }
                 }
@@ -413,7 +413,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
-                    modifier = Modifier.padding(5.dp)
+                    modifier = Modifier.padding(4.dp)
                 ) {
                     items(listOfItems, key = { i -> i.hashCode().toString() }) { i ->
                         i?.let { d ->
@@ -512,11 +512,11 @@ private fun <T : Any> DeleteItemView(
         dismissContent = {
             Surface(
                 onClick = { onClick(item) },
-                tonalElevation = 5.dp,
+                tonalElevation = 4.dp,
                 modifier = Modifier.fillMaxSize(),
                 shape = MaterialTheme.shapes.medium,
                 border = BorderStroke(
-                    animateDpAsState(targetValue = if (selectedForDeletion) 5.dp else 1.dp).value,
+                    animateDpAsState(targetValue = if (selectedForDeletion) 4.dp else 1.dp).value,
                     animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
                 )
             ) { itemUi(item) }

@@ -182,7 +182,7 @@ fun DetailsScreen(
         model?.let {
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = p
             ) {
 
@@ -245,7 +245,7 @@ private fun MenuItem(
 ) {
     DropdownMenuItem(onClick = action, enabled = enabled) {
         icon?.let { Icon(imageVector = it, null) }
-        Text(text, style = style, modifier = Modifier.padding(horizontal = 5.dp))
+        Text(text, style = style, modifier = Modifier.padding(horizontal = 4.dp))
     }
 }
 
@@ -259,7 +259,7 @@ private fun MenuItem(
 ) {
     DropdownMenuItem(onClick = action, enabled = enabled) {
         icon?.let { Icon(imageVector = it, null) }
-        Text(stringResource(text), style = style, modifier = Modifier.padding(horizontal = 5.dp))
+        Text(stringResource(text), style = style, modifier = Modifier.padding(horizontal = 4.dp))
     }
 }
 
@@ -307,13 +307,13 @@ fun DetailsHeader(
 
         Row(
             modifier = Modifier
-                .padding(5.dp)
+                .padding(4.dp)
                 .animateContentSize()
         ) {
 
             Card(
-                shape = RoundedCornerShape(5.dp),
-                modifier = Modifier.padding(5.dp)
+                shape = RoundedCornerShape(4.dp),
+                modifier = Modifier.padding(4.dp)
             ) {
                 GlideImage(
                     imageModel = model.imageUrl,
@@ -342,12 +342,12 @@ fun DetailsHeader(
             }
 
             Column(
-                modifier = Modifier.padding(start = 5.dp)
+                modifier = Modifier.padding(start = 4.dp)
             ) {
 
                 LazyRow(
-                    modifier = Modifier.padding(vertical = 5.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(model.genres) {
                         CustomChip2(
@@ -362,7 +362,7 @@ fun DetailsHeader(
                 Row(
                     modifier = Modifier
                         .clickable { favoriteClick(isFavorite) }
-                        .padding(vertical = 5.dp)
+                        .padding(vertical = 4.dp)
                         .fillMaxWidth()
                 ) {
                     Icon(
@@ -381,7 +381,7 @@ fun DetailsHeader(
                 Text(
                     model.description,
                     modifier = Modifier
-                        .padding(vertical = 5.dp)
+                        .padding(vertical = 4.dp)
                         .fillMaxWidth()
                         .clickable { descriptionVisibility = !descriptionVisibility },
                     overflow = TextOverflow.Ellipsis,
@@ -424,14 +424,14 @@ fun ComposeChapterItem(
             onClick = { checkChange(check) },
             shape = RoundedCornerShape(0.dp),
             modifier = Modifier
-                .padding(vertical = 5.dp)
+                .padding(vertical = 4.dp)
                 .fillMaxWidth(),
             backgroundColor = swatchInfo?.rgb?.let { Color(it) } ?: MaterialTheme.colors.surface
         ) {
 
             Column(modifier = Modifier.padding(16.dp)) {
 
-                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
 
                     Checkbox(
                         checked = check,
@@ -457,7 +457,7 @@ fun ComposeChapterItem(
                         .let { b -> swatchInfo?.bodyColor?.toComposeColor()?.let { b.copy(color = it) } ?: b },
                     modifier = Modifier
                         .align(Alignment.End)
-                        .padding(5.dp)
+                        .padding(4.dp)
                 )
 
             }

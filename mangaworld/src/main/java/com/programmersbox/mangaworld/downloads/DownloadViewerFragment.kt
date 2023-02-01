@@ -130,7 +130,7 @@ private fun EmptyState(p1: PaddingValues) {
             tonalElevation = 4.dp,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp)
+                .padding(4.dp)
         ) {
             Column(modifier = Modifier) {
 
@@ -153,7 +153,7 @@ private fun EmptyState(p1: PaddingValues) {
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 5.dp)
+                        .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(id = R.string.go_download)) }
             }
         }
@@ -182,7 +182,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                 ) { expanded = !expanded }
         ) {
             ListItem(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier.padding(4.dp),
                 headlineText = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
                 supportingText = { Text(stringResource(R.string.chapter_count, file.value.size)) },
                 trailingContent = {
@@ -318,7 +318,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                                 }
                         ) {
                             ListItem(
-                                modifier = Modifier.padding(5.dp),
+                                modifier = Modifier.padding(4.dp),
                                 headlineText = { Text(c?.chapterName.orEmpty()) },
                                 supportingText = { Text(stringResource(R.string.page_count, chapter.size)) },
                                 trailingContent = { Icon(Icons.Default.ChevronRight, null) }

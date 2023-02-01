@@ -53,8 +53,8 @@ fun NeedsPermissions(onClick: () -> Unit) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp),
-            shape = RoundedCornerShape(5.dp)
+                .padding(4.dp),
+            shape = RoundedCornerShape(4.dp)
         ) {
             Column(modifier = Modifier) {
                 Text(
@@ -75,7 +75,7 @@ fun NeedsPermissions(onClick: () -> Unit) {
                     onClick = onClick,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 5.dp)
+                        .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(R.string.enable)) }
             }
         }

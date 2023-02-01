@@ -1,10 +1,7 @@
 package com.programmersbox.uiviews.recent
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,14 +15,13 @@ import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<ItemModel>()
-    val favoriteList = mutableStateListOf<DbModel>()
+    var favoriteList = mutableStateListOf<DbModel>()
 
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
@@ -36,27 +32,21 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
     private val itemListener = FirebaseDb.FirebaseListener()
 
     init {
-        viewModelScope.launch {
-            combine(
-                itemListener.getAllShowsFlow(),
-                dao.getAllFavorites()
-            ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-                .collect {
-                    favoriteList.clear()
-                    favoriteList.addAll(it)
-                }
-        }
+        combine(
+            itemListener.getAllShowsFlow(),
+            dao.getAllFavorites()
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+            .onEach { favoriteList = it.toMutableStateList() }
+            .launchIn(viewModelScope)
 
-        viewModelScope.launch {
-            sourceFlow
-                .filterNotNull()
-                .onEach {
-                    count = 1
-                    sourceList.clear()
-                    sourceLoadCompose(context, it)
-                }
-                .collect()
-        }
+        sourceFlow
+            .filterNotNull()
+            .onEach {
+                count = 1
+                sourceList.clear()
+                sourceLoadCompose(context, it)
+            }
+            .launchIn(viewModelScope)
     }
 
     fun reset(context: Context?, sources: ApiService) {
@@ -71,19 +61,17 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
     }
 
     private fun sourceLoadCompose(context: Context?, sources: ApiService) {
-        viewModelScope.launch {
-            sources
-                .getRecentFlow(count)
-                .dispatchIoAndCatchList()
-                .catch {
-                    context?.showErrorToast()
-                    emit(emptyList())
-                }
-                .onStart { isRefreshing = true }
-                .onCompletion { isRefreshing = false }
-                .onEach { sourceList.addAll(it) }
-                .collect()
-        }
+        sources
+            .getRecentFlow(count)
+            .dispatchIoAndCatchList()
+            .catch {
+                context?.showErrorToast()
+                emit(emptyList())
+            }
+            .onStart { isRefreshing = true }
+            .onCompletion { isRefreshing = false }
+            .onEach { sourceList.addAll(it) }
+            .launchIn(viewModelScope)
     }
 
     override fun onCleared() {

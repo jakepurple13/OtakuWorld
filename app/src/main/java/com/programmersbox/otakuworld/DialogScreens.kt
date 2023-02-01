@@ -398,7 +398,7 @@ fun PagerView(closeClick: () -> Unit) {
                                     var currentSelection by remember { mutableStateOf(dropDownSetting) }
 
                                     AlertDialog(
-                                        shape = RoundedCornerShape(5.dp),
+                                        shape = RoundedCornerShape(4.dp),
                                         onDismissRequest = { showPopup = false },
                                         title = { Text("Choose a Favorite") },
                                         text = {
@@ -875,7 +875,7 @@ fun ThemeingView(closeClick: () -> Unit) {
                         MaterialTheme(current) {
                             Box(
                                 modifier = Modifier
-                                    .height(15.dp)
+                                    .height(14.dp)
                                     .weight(1f)
                                     .background(MaterialTheme.colorScheme.choice())
                             )
@@ -884,7 +884,7 @@ fun ThemeingView(closeClick: () -> Unit) {
                         FullDynamicThemePrimaryColorsFromImage(dominantColor) {
                             Box(
                                 modifier = Modifier
-                                    .height(15.dp)
+                                    .height(14.dp)
                                     .weight(1f)
                                     .background(MaterialTheme.colorScheme.choice())
                             )

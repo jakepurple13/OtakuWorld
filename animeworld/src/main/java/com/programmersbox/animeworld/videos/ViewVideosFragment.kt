@@ -165,7 +165,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
         },
         itemUi = { item ->
             ListItem(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier.padding(4.dp),
                 leadingContent = {
                     Box {
                         /*convert millis to appropriate time*/
@@ -217,7 +217,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .background(Color(0x99000000))
-                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(5.dp))
+                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(4.dp))
                         )
 
                     }
@@ -249,7 +249,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = p1,
                 state = rememberLazyListState(),
-                modifier = Modifier.padding(5.dp)
+                modifier = Modifier.padding(4.dp)
             ) {
                 animatedItems(
                     videos,
@@ -273,9 +273,9 @@ private fun EmptyState(paddingValues: PaddingValues) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp),
-            tonalElevation = 5.dp,
-            shape = RoundedCornerShape(5.dp)
+                .padding(4.dp),
+            tonalElevation = 4.dp,
+            shape = RoundedCornerShape(4.dp)
         ) {
 
             Column(modifier = Modifier) {
@@ -302,7 +302,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 5.dp)
+                        .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(id = R.string.go_download)) }
 
             }
@@ -452,7 +452,7 @@ private fun VideoContentView(item: VideoContent) {
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .background(Color(0x99000000))
-                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 5.dp))
+                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 4.dp))
                         )
 
                     }

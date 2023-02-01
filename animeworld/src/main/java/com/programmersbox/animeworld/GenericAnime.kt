@@ -299,7 +299,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(5.dp)
+                        .padding(4.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -323,7 +323,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                             "",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(5.dp)
+                                .padding(4.dp)
                         )
                     }
                 }
@@ -353,7 +353,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 5.dp)
+                        .padding(horizontal = 4.dp)
                         .combineClickableWithIndication(
                             onLongPress = { c -> onLongPress(it, c) },
                             onClick = { onClick(it) }

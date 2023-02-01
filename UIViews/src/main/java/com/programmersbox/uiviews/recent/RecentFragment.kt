@@ -92,7 +92,7 @@ fun RecentView(
                             Image(
                                 Icons.Default.CloudOff,
                                 null,
-                                modifier = Modifier.size(50.dp, 50.dp),
+                                modifier = Modifier.size(50.dp),
                                 colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                             )
                             Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)

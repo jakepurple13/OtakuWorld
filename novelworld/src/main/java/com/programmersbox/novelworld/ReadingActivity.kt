@@ -231,7 +231,7 @@ fun NovelReader() {
             title = { Text(stringResource(R.string.settings)) },
             text = {
                 Column(
-                    modifier = Modifier.padding(5.dp)
+                    modifier = Modifier.padding(4.dp)
                 ) {
                     SliderSetting(
                         scope = scope,
@@ -327,7 +327,7 @@ fun NovelReader() {
                                 }
 
                                 Surface(
-                                    modifier = Modifier.padding(horizontal = 5.dp),
+                                    modifier = Modifier.padding(horizontal = 4.dp),
                                     border = BorderStroke(
                                         1.dp,
                                         animateColorAsState(
@@ -336,7 +336,7 @@ fun NovelReader() {
                                         ).value
                                     ),
                                     shape = MaterialTheme.shapes.medium,
-                                    tonalElevation = 5.dp
+                                    tonalElevation = 4.dp
                                 ) {
                                     ListItem(
                                         headlineText = { Text(c.name) },

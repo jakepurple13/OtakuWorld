@@ -50,25 +50,23 @@ class DetailsViewModel(
     var description: String by mutableStateOf("")
 
     init {
-        viewModelScope.launch {
-            itemModel?.url?.let { url ->
-                Cached.cache[url]?.let { flow { emit(Result.success(it)) } } ?: itemModel.toInfoModel()
-            }
-                ?.dispatchIo()
-                ?.catch {
-                    it.printStackTrace()
-                    context.showErrorToast()
-                }
-                ?.onEach {
-                    if (it.isSuccess) {
-                        info = it.getOrThrow()
-                        description = it.getOrThrow().description
-                        setup(it.getOrThrow())
-                        Cached.cache[it.getOrThrow().url] = it.getOrThrow()
-                    }
-                }
-                ?.collect()
+        itemModel?.url?.let { url ->
+            Cached.cache[url]?.let { flow { emit(Result.success(it)) } } ?: itemModel.toInfoModel()
         }
+            ?.dispatchIo()
+            ?.catch {
+                it.printStackTrace()
+                context.showErrorToast()
+            }
+            ?.onEach {
+                if (it.isSuccess) {
+                    info = it.getOrThrow()
+                    description = it.getOrThrow().description
+                    setup(it.getOrThrow())
+                    Cached.cache[it.getOrThrow().url] = it.getOrThrow()
+                }
+            }
+            ?.launchIn(viewModelScope)
     }
 
     private val englishTranslator = TranslateItems()
@@ -90,24 +88,21 @@ class DetailsViewModel(
                 .collect { favoriteListener = it }
         }
 
-        viewModelScope.launch {
-            combine(
-                chapterListener.getAllEpisodesByShowFlow(info.url),
-                dao.getAllChapters(info.url)
-            ) { f, d -> (f + d).distinctBy { it.url } }
-                .onEach { chapters = it }
-                .collect()
-        }
+        combine(
+            chapterListener.getAllEpisodesByShowFlow(info.url),
+            dao.getAllChapters(info.url)
+        ) { f, d -> (f + d).distinctBy { it.url } }
+            .onEach { chapters = it }
+            .launchIn(viewModelScope)
     }
 
     fun markAs(c: ChapterModel, b: Boolean) {
-        ChapterWatched(url = c.url, name = c.name, favoriteUrl = info!!.url)
-            .let {
-                viewModelScope.launch {
-                    if (b) dao.insertChapter(it) else dao.deleteChapter(it)
-                    (if (b) FirebaseDb.insertEpisodeWatchedFlow(it) else FirebaseDb.removeEpisodeWatchedFlow(it)).collect()
-                }
+        ChapterWatched(url = c.url, name = c.name, favoriteUrl = info!!.url).let {
+            viewModelScope.launch {
+                if (b) dao.insertChapter(it) else dao.deleteChapter(it)
+                (if (b) FirebaseDb.insertEpisodeWatchedFlow(it) else FirebaseDb.removeEpisodeWatchedFlow(it)).collect()
             }
+        }
     }
 
     fun addItem() {

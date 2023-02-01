@@ -116,7 +116,7 @@ fun DownloaderUi() {
         },
         itemUi = { download ->
             ListItem(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier.padding(4.dp),
                 headlineText = { Text(download.download.url.toUri().lastPathSegment.orEmpty()) },
                 overlineText = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -137,7 +137,7 @@ fun DownloaderUi() {
             EmptyState(p)
         } else {
             LazyColumn(
-                modifier = Modifier.padding(top = 5.dp),
+                modifier = Modifier.padding(top = 4.dp),
                 contentPadding = p,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) { items(items) { d -> DownloadItem(d, viewModel) } }
@@ -157,9 +157,9 @@ private fun EmptyState(paddingValues: PaddingValues) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp),
-            tonalElevation = 5.dp,
-            shape = RoundedCornerShape(5.dp)
+                .padding(4.dp),
+            tonalElevation = 4.dp,
+            shape = RoundedCornerShape(4.dp)
         ) {
             Column(modifier = Modifier) {
                 Text(
@@ -181,7 +181,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 5.dp)
+                        .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(id = R.string.go_download)) }
             }
         }
@@ -242,8 +242,8 @@ private fun DownloadItem(download: DownloadData, actionListener: ActionListener)
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 5.dp),
-                tonalElevation = 5.dp,
+                    .padding(horizontal = 4.dp),
+                tonalElevation = 4.dp,
                 shape = MaterialTheme.shapes.medium
             ) {
 

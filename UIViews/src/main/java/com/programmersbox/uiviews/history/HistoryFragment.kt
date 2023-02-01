@@ -215,7 +215,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
         val navController = LocalNavController.current
 
         Surface(
-            tonalElevation = 5.dp,
+            tonalElevation = 4.dp,
             shape = MaterialTheme.shapes.medium,
             onClick = {
                 scope.launch {
@@ -294,7 +294,7 @@ private fun HistoryItemPlaceholder() {
         .compositeOver(M3MaterialTheme.colorScheme.surface)
 
     Surface(
-        tonalElevation = 5.dp,
+        tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier.placeholder(true, color = placeholderColor)
     ) {

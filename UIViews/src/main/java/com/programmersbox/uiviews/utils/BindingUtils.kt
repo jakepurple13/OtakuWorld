@@ -5,7 +5,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import androidx.annotation.NonNull
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
@@ -35,12 +34,12 @@ class CustomTargetBuilder<T> internal constructor() {
 
     fun build() = object : CustomTarget<T>() {
         override fun onLoadCleared(placeholder: Drawable?) = loadCleared(placeholder)
-        override fun onResourceReady(resource: T, transition: Transition<in T>?) = resourceReady(resource, transition)
+        override fun onResourceReady(resource: T & Any, transition: Transition<in T>?) = resourceReady(resource, transition)
     }
 
 }
 
-abstract class DragSwipeGlideAdapter<T, VH : RecyclerView.ViewHolder, Model>(
+abstract class DragSwipeGlideAdapter<T, VH : RecyclerView.ViewHolder, Model : Any>(
     dataList: MutableList<T> = mutableListOf()
 ) : DragSwipeAdapter<T, VH>(dataList), ListPreloader.PreloadModelProvider<Model> {
 
@@ -48,10 +47,8 @@ abstract class DragSwipeGlideAdapter<T, VH : RecyclerView.ViewHolder, Model>(
     protected abstract val thumbRequest: RequestBuilder<Drawable>
     protected abstract val itemToModel: (T) -> Model
 
-    @NonNull
     override fun getPreloadItems(position: Int): List<Model> = dataList.subList(position, position + 1).map(itemToModel).toList()
 
-    @NonNull
     override fun getPreloadRequestBuilder(item: Model): RequestBuilder<Drawable?>? = fullRequest.thumbnail(thumbRequest.load(item)).load(item)
 }
 

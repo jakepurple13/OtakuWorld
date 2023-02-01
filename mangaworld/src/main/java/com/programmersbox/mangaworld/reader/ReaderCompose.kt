@@ -442,7 +442,7 @@ fun SheetView(
                                 .fillMaxSize()
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 .border(
-                                    animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp).value,
                                     color = animateColorAsState(
                                         if (currentPage == i) MaterialTheme.colorScheme.primary
                                         else Color.Transparent

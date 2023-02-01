@@ -9,6 +9,8 @@ import android.os.Build
 import android.os.Environment
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -450,7 +452,9 @@ class GenericManga(val context: Context) : GenericInfo {
                 navArgument("mangaInfoUrl") { nullable = true },
                 navArgument("downloaded") {},
                 navArgument("filePath") { nullable = true }
-            )
+            ),
+            enterTransition = { fadeIn() },
+            exitTransition = { fadeOut() },
         ) { ReadView() }
 
         composable(
