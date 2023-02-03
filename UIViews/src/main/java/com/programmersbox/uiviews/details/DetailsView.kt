@@ -61,8 +61,7 @@ fun DetailsView(
     dao: ItemDao,
     historyDao: HistoryDao,
     vm: DetailsViewModel,
-    logo: NotificationLogo,
-    swatchChange: (SwatchInfo?) -> Unit
+    logo: NotificationLogo
 ) {
     val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
@@ -269,8 +268,7 @@ fun DetailsView(
                     model = info,
                     logo = painterResource(id = logo.notificationId),
                     isFavorite = vm.favoriteListener,
-                    favoriteClick = { b -> if (b) vm.removeItem() else vm.addItem() },
-                    swatchChange = swatchChange
+                    favoriteClick = { b -> if (b) vm.removeItem() else vm.addItem() }
                 )
             }
 
@@ -363,8 +361,7 @@ fun DetailsViewLandscape(
     dao: ItemDao,
     historyDao: HistoryDao,
     vm: DetailsViewModel,
-    logo: NotificationLogo,
-    swatchChange: (SwatchInfo?) -> Unit
+    logo: NotificationLogo
 ) {
     val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
@@ -564,8 +561,7 @@ fun DetailsViewLandscape(
                 historyDao = historyDao,
                 vm = vm,
                 logo = logo,
-                reverseChapters = reverseChapters,
-                swatchChange = swatchChange
+                reverseChapters = reverseChapters
             )
         }
     }
@@ -580,8 +576,7 @@ private fun DetailsLandscapeContent(
     historyDao: HistoryDao,
     vm: DetailsViewModel,
     logo: NotificationLogo,
-    reverseChapters: Boolean,
-    swatchChange: (SwatchInfo?) -> Unit
+    reverseChapters: Boolean
 ) {
     Row(
         modifier = Modifier.padding(p)
@@ -592,7 +587,6 @@ private fun DetailsLandscapeContent(
             logo = painterResource(id = logo.notificationId),
             isFavorite = vm.favoriteListener,
             favoriteClick = { b -> if (b) vm.removeItem() else vm.addItem() },
-            swatchChange = swatchChange
         )
 
         val listState = rememberLazyListState()

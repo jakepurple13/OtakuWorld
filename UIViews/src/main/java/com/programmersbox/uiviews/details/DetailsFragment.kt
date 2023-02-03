@@ -162,7 +162,10 @@ fun DetailsScreen(
 
         val orientation = LocalConfiguration.current.orientation
 
-        CompositionLocalProvider(LocalSwatchInfo provides remember(swatchInfo) { SwatchInfoColors(swatchInfo) }) {
+        CompositionLocalProvider(
+            LocalSwatchInfo provides remember(swatchInfo) { SwatchInfoColors(swatchInfo) },
+            LocalSwatchChange provides rememberUpdatedState(newValue = { it: SwatchInfo? -> swatchInfo = it }).value
+        ) {
             if (
                 windowSize == WindowSize.Medium ||
                 windowSize == WindowSize.Expanded ||
@@ -175,8 +178,7 @@ fun DetailsScreen(
                     dao,
                     historyDao,
                     details,
-                    logo,
-                    swatchChange = { swatchInfo = it }
+                    logo
                 )
             } else {
                 DetailsView(
@@ -186,8 +188,7 @@ fun DetailsScreen(
                     dao,
                     historyDao,
                     details,
-                    logo,
-                    swatchChange = { swatchInfo = it }
+                    logo
                 )
             }
         }
@@ -484,11 +485,11 @@ fun ChapterItem(
 internal fun DetailsHeader(
     model: InfoModel,
     logo: Any?,
-    swatchChange: (SwatchInfo?) -> Unit,
     isFavorite: Boolean,
     favoriteClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val swatchChange = LocalSwatchChange.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val surface = M3MaterialTheme.colorScheme.surface
     val imageUrl = remember {
@@ -764,9 +765,7 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
                         .placeholder(true, color = placeholderColor),
                     maxLines = 2
                 )
-
             }
-
         }
     }
 }
@@ -775,4 +774,5 @@ data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?)
 
 internal data class SwatchInfoColors(val colors: SwatchInfo? = null)
 
-internal val LocalSwatchInfo = compositionLocalOf<SwatchInfoColors> { SwatchInfoColors() }
+internal val LocalSwatchInfo = compositionLocalOf { SwatchInfoColors() }
+internal val LocalSwatchChange = staticCompositionLocalOf<(SwatchInfo?) -> Unit> { {} }
