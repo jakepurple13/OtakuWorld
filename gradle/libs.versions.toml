@@ -135,7 +135,7 @@ googlePlayAds = "com.google.android.gms:play-services-ads:21.3.0"
 pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha17"
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
-storage = "com.anggrayudi:storage:1.5.2"
+storage = "com.anggrayudi:storage:1.5.4"
 
 androidxWindow = "androidx.window:window:1.1.0-alpha04"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
