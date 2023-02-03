@@ -50,6 +50,3 @@ data class Storage(
 ) {
     val headers = mutableMapOf<String, String>()
 }
-
-data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?)
-

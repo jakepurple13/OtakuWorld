@@ -48,7 +48,6 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
-import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.ImageOptions
@@ -771,6 +770,8 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
         }
     }
 }
+
+data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?)
 
 internal data class SwatchInfoColors(val colors: SwatchInfo? = null)
 

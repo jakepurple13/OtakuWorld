@@ -1,15 +1,11 @@
 package com.programmersbox.uiviews
 
-import android.content.res.Configuration
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastMap
-import com.programmersbox.models.*
-import com.programmersbox.uiviews.utils.CustomChip
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.InfoModel
+import com.programmersbox.uiviews.details.SwatchInfo
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.system.measureNanoTime
@@ -65,17 +61,6 @@ object TestItems {
         source = TEST_SOURCE
     )
 
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO, name = "Light")
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Dark")
-@Composable
-fun PreviewChip() {
-    MaterialTheme {
-        LazyColumn {
-            items(5) { CustomChip("Hello") }
-        }
-    }
 }
 
 /*

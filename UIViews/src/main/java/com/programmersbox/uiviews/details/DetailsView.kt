@@ -38,7 +38,6 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.models.InfoModel
-import com.programmersbox.models.SwatchInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import kotlinx.coroutines.Dispatchers
