@@ -307,8 +307,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
                                 DetailsScreen(
-                                    navController = navController,
-                                    genericInfo = genericInfo,
                                     logo = notificationLogo,
                                     dao = dao,
                                     historyDao = historyDao,

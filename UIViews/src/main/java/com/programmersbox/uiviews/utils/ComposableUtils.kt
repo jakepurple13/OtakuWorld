@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -446,3 +447,6 @@ fun LoadingDialog(
 val Emerald = Color(0xFF2ecc71)
 val Sunflower = Color(0xFFf1c40f)
 val Alizarin = Color(0xFFe74c3c)
+
+@Composable
+fun Color.animate() = animateColorAsState(this)
