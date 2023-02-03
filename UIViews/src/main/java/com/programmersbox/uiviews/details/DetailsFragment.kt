@@ -563,12 +563,13 @@ internal fun DetailsHeader(
                     shape = M3MaterialTheme.shapes.medium,
                     modifier = Modifier.padding(4.dp)
                 ) {
+                    val latestSwatch by rememberUpdatedState(newValue = swatchInfo)
                     GlideImage(
                         imageModel = { imageUrl },
                         imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                         component = rememberImageComponent {
                             +PalettePlugin { p ->
-                                if (swatchInfo == null) {
+                                if (latestSwatch == null) {
                                     swatchChange(p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) })
                                 }
                             }
