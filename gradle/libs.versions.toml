@@ -49,7 +49,7 @@ composeMaterialIconsCore = { module = "androidx.compose.material:material-icons-
 composeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "jetpack" }
 composeActivity = "androidx.activity:activity-compose:1.6.1"
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
-composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha03"
+composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-beta01"
 composeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpack" }
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
