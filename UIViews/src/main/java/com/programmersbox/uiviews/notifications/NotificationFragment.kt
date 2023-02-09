@@ -29,7 +29,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.work.Data
@@ -40,8 +39,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -75,13 +72,12 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
 )
 @Composable
 fun NotificationsScreen(
-    navController: NavController,
-    genericInfo: GenericInfo,
+    navController: NavController = LocalNavController.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
     db: ItemDao,
     notificationManager: NotificationManager,
     logo: MainLogo,
     notificationLogo: NotificationLogo,
-    fragmentManager: FragmentManager,
     settingsHandling: SettingsHandling = LocalSettingsHandling.current,
     vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, genericInfo) }
 ) {
@@ -241,7 +237,6 @@ fun NotificationsScreen(
                                     vm = vm,
                                     notificationManager = notificationManager,
                                     db = db,
-                                    parentFragmentManager = fragmentManager,
                                     genericInfo = genericInfo,
                                     logo = logo,
                                     notificationLogo = notificationLogo
@@ -295,7 +290,6 @@ fun NotificationsScreen(
                                                 vm = vm,
                                                 notificationManager = notificationManager,
                                                 db = db,
-                                                parentFragmentManager = fragmentManager,
                                                 genericInfo = genericInfo,
                                                 logo = logo,
                                                 notificationLogo = notificationLogo
@@ -348,7 +342,6 @@ private fun NotificationItem(
     vm: NotificationScreenViewModel,
     notificationManager: NotificationManager,
     db: ItemDao,
-    parentFragmentManager: FragmentManager,
     genericInfo: GenericInfo,
     logo: MainLogo,
     notificationLogo: NotificationLogo,
@@ -493,70 +486,81 @@ private fun NotificationItem(
                         val dropDownDismiss = { showDropDown = false }
 
                         var showDatePicker by remember { mutableStateOf(false) }
+                        var showTimePicker by remember { mutableStateOf(false) }
+
+                        val dateState = rememberDatePickerState(
+                            initialSelectedDateMillis = System.currentTimeMillis()
+                        )
+                        val calendar = remember { Calendar.getInstance() }
+                        val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
+                        val timeState = rememberTimePickerState(
+                            initialHour = calendar[Calendar.HOUR_OF_DAY],
+                            initialMinute = calendar[Calendar.MINUTE],
+                            is24Hour = is24HourFormat
+                        )
+
+                        if (showTimePicker) {
+                            AlertDialog(
+                                onDismissRequest = { showTimePicker = false },
+                                title = { Text(stringResource(id = R.string.selectTime)) },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showTimePicker = false
+                                            val c = Calendar.getInstance()
+                                            c.timeInMillis = dateState.selectedDateMillis ?: 0L
+                                            c[Calendar.HOUR_OF_DAY] = timeState.hour
+                                            c[Calendar.MINUTE] = timeState.minute
+
+                                            WorkManager.getInstance(context)
+                                                .enqueueUniqueWork(
+                                                    item.notiTitle,
+                                                    ExistingWorkPolicy.REPLACE,
+                                                    OneTimeWorkRequestBuilder<NotifySingleWorker>()
+                                                        .setInputData(
+                                                            Data.Builder()
+                                                                .putString("notiData", item.toJson())
+                                                                .build()
+                                                        )
+                                                        .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                                                        .build()
+                                                )
+
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(
+                                                    R.string.willNotifyAt,
+                                                    context.getSystemDateTimeFormat().format(c.timeInMillis)
+                                                ),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    ) { Text(stringResource(R.string.ok)) }
+                                },
+                                dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
+                                text = { TimePicker(state = timeState) }
+                            )
+                        }
 
                         if (showDatePicker) {
-                            val state = rememberDatePickerState(
-                                initialSelectedDateMillis = System.currentTimeMillis()
-                            )
-                            AlertDialog(
-                                text = {
-                                    DatePicker(
-                                        datePickerState = state,
-                                        dateValidator = { DateValidatorPointForward.now().isValid(it) },
-                                        title = { Text(stringResource(R.string.selectDate)) }
-                                    )
-                                },
+                            DatePickerDialog(
+                                onDismissRequest = { showDatePicker = false },
+                                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
                                 confirmButton = {
                                     TextButton(
                                         onClick = {
                                             showDatePicker = false
-                                            val c = Calendar.getInstance()
-                                            val timePicker = MaterialTimePicker.Builder()
-                                                .setTitleText(R.string.selectTime)
-                                                .setPositiveButtonText(R.string.ok)
-                                                .setTimeFormat(
-                                                    if (DateFormat.is24HourFormat(context)) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
-                                                )
-                                                .setHour(c[Calendar.HOUR_OF_DAY])
-                                                .setMinute(c[Calendar.MINUTE])
-                                                .build()
-
-                                            timePicker.addOnPositiveButtonClickListener { _ ->
-                                                c.timeInMillis = state.selectedDateMillis ?: 0L
-                                                c[Calendar.HOUR_OF_DAY] = timePicker.hour
-                                                c[Calendar.MINUTE] = timePicker.minute
-
-                                                WorkManager.getInstance(context)
-                                                    .enqueueUniqueWork(
-                                                        item.notiTitle,
-                                                        ExistingWorkPolicy.REPLACE,
-                                                        OneTimeWorkRequestBuilder<NotifySingleWorker>()
-                                                            .setInputData(
-                                                                Data.Builder()
-                                                                    .putString("notiData", item.toJson())
-                                                                    .build()
-                                                            )
-                                                            .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                                                            .build()
-                                                    )
-
-                                                Toast.makeText(
-                                                    context,
-                                                    context.getString(
-                                                        R.string.willNotifyAt,
-                                                        context.getSystemDateTimeFormat().format(c.timeInMillis)
-                                                    ),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-
-                                            timePicker.show(parentFragmentManager, "timePicker")
+                                            showTimePicker = true
                                         }
                                     ) { Text(stringResource(R.string.ok)) }
-                                },
-                                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
-                                onDismissRequest = {}
-                            )
+                                }
+                            ) {
+                                DatePicker(
+                                    state = dateState,
+                                    dateValidator = { DateValidatorPointForward.now().isValid(it) },
+                                    title = { Text(stringResource(R.string.selectDate)) }
+                                )
+                            }
                         }
 
                         DropdownMenu(

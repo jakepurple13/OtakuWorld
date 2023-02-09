@@ -263,13 +263,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
                                 NotificationsScreen(
-                                    navController = navController,
-                                    genericInfo = genericInfo,
                                     db = dao,
                                     notificationManager = LocalContext.current.notificationManager,
                                     logo = logo,
-                                    notificationLogo = notificationLogo,
-                                    fragmentManager = supportFragmentManager
+                                    notificationLogo = notificationLogo
                                 )
                             }
 
