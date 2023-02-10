@@ -68,16 +68,18 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalFoundationApi::class,
 )
 @Composable
 fun NotificationsScreen(
-    navController: NavController = LocalNavController.current,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    db: ItemDao = LocalItemDao.current,
     notificationManager: NotificationManager,
     logo: MainLogo,
     notificationLogo: NotificationLogo,
+    navController: NavController = LocalNavController.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    db: ItemDao = LocalItemDao.current,
     settingsHandling: SettingsHandling = LocalSettingsHandling.current,
     vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, genericInfo) }
 ) {

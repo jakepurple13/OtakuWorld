@@ -85,6 +85,7 @@ import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.*
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -102,7 +103,17 @@ import kotlinx.coroutines.runBlocking
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
 @Composable
-fun ReadView() {
+fun ReadView(
+    context: Context = LocalContext.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    readVm: ReadViewModel = viewModel {
+        ReadViewModel(
+            handle = createSavedStateHandle(),
+            context = context,
+            genericInfo = genericInfo
+        )
+    }
+) {
 
     LifecycleHandle(
         onStop = { BaseMainActivity.showNavBar = true },
@@ -112,16 +123,7 @@ fun ReadView() {
         onResume = { BaseMainActivity.showNavBar = false }
     )
 
-    val context = LocalContext.current
-    val genericInfo = LocalGenericInfo.current
 
-    val readVm: ReadViewModel = viewModel {
-        ReadViewModel(
-            handle = createSavedStateHandle(),
-            context = context,
-            genericInfo = genericInfo
-        )
-    }
 
     DisposableEffect(LocalContext.current) {
         val batteryInfo = context.battery {
@@ -320,7 +322,7 @@ fun DrawerView(
             LargeTopAppBar(
                 scrollBehavior = drawerScrollBehavior,
                 title = { Text(readVm.title) },
-                actions = { PageIndicator(Modifier, readVm.list.size - readVm.currentChapter, readVm.list.size) }
+                actions = { PageIndicator(currentPage = readVm.list.size - readVm.currentChapter, pageCount = readVm.list.size) }
             )
         },
         bottomBar = {
@@ -403,7 +405,7 @@ fun SheetView(
             TopAppBar(
                 scrollBehavior = sheetScrollBehavior,
                 title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
-                actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
+                actions = { PageIndicator(currentPage + 1, pages.size) },
                 navigationIcon = {
                     IconButton(onClick = { scope.launch { sheetState.hide() } }) {
                         Icon(Icons.Default.Close, null)
@@ -773,11 +775,11 @@ private fun ChapterPage(
 
 @Composable
 private fun ZoomableImage(
-    modifier: Modifier = Modifier,
     painter: String,
     isDownloaded: Boolean,
-    contentScale: ContentScale = ContentScale.Fit,
     headers: Map<String, String>,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
     onClick: () -> Unit = {}
 ) {
     var centerPoint by remember { mutableStateOf(Offset.Zero) }
@@ -882,11 +884,11 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
 @ExperimentalAnimationApi
 @Composable
 private fun TopBar(
-    modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior,
     pages: List<String>,
     currentPage: Int,
-    vm: ReadViewModel
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
         windowInsets = WindowInsets(0.dp),
@@ -929,11 +931,11 @@ private fun TopBar(
         },
         actions = {
             PageIndicator(
-                Modifier
+                currentPage = currentPage + 1,
+                pageCount = pages.size,
+                modifier = Modifier
                     .padding(4.dp)
-                    .align(Alignment.CenterVertically),
-                currentPage + 1,
-                pages.size
+                    .align(Alignment.CenterVertically)
             )
         }
     )
@@ -941,11 +943,11 @@ private fun TopBar(
 
 @Composable
 private fun BottomBar(
-    modifier: Modifier = Modifier,
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    chapterChange: () -> Unit
+    chapterChange: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     BottomAppBar(
         modifier = modifier,
@@ -1071,7 +1073,11 @@ private fun WrapHeightNavigationDrawerItem(
 
 @ExperimentalAnimationApi
 @Composable
-private fun PageIndicator(modifier: Modifier = Modifier, currentPage: Int, pageCount: Int) {
+private fun PageIndicator(
+    currentPage: Int,
+    pageCount: Int,
+    modifier: Modifier = Modifier
+) {
     Text(
         "$currentPage/$pageCount",
         style = MaterialTheme.typography.bodyLarge,
@@ -1095,7 +1101,11 @@ private fun GoBackButton(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NextButton(modifier: Modifier = Modifier, vm: ReadViewModel, nextChapter: () -> Unit) {
+private fun NextButton(
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier,
+    nextChapter: () -> Unit
+) {
     Button(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
         modifier = modifier
@@ -1103,7 +1113,11 @@ private fun NextButton(modifier: Modifier = Modifier, vm: ReadViewModel, nextCha
 }
 
 @Composable
-private fun PreviousButton(modifier: Modifier = Modifier, vm: ReadViewModel, previousChapter: () -> Unit) {
+private fun PreviousButton(
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier,
+    previousChapter: () -> Unit
+) {
     TextButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
         modifier = modifier

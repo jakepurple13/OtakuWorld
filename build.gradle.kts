@@ -1,3 +1,5 @@
+import com.android.build.gradle.api.AndroidBasePlugin
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -26,6 +28,26 @@ allprojects {
         maven("https://jitpack.io")
         //maven { url "https://dl.bintray.com/piasy/maven" }
         maven("https://oss.sonatype.org/content/repositories/snapshots")
+    }
+}
+
+subprojects {
+    afterEvaluate {
+        if (plugins.findPlugin(AndroidBasePlugin::class) != null) {
+            configureAndroidBasePlugin()
+        }
+    }
+}
+
+fun Project.configureAndroidBasePlugin() {
+    extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+        lintOptions {
+            disable += setOf("ComposeModifierMissing", "ComposeMultipleContentEmitters")
+        }
+
+        dependencies {
+            "lintChecks"("com.slack.lint.compose:compose-lint-checks:1.0.0")
+        }
     }
 }
 

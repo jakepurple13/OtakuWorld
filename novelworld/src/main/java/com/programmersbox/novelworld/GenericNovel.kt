@@ -113,7 +113,7 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun ComposeShimmerItem() {
         LazyColumn {
             items(10) {
-                androidx.compose.material3.Surface(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(4.dp),
@@ -175,10 +175,10 @@ class GenericNovel(val context: Context) : GenericInfo {
                                 contentDescription = null,
                             )
                         },
-                        headlineText = { androidx.compose.material3.Text(it.title) },
-                        overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
+                        headlineText = { Text(it.title) },
+                        overlineText = { Text(it.source.serviceName) },
                         supportingText = if (it.description.isNotEmpty()) {
-                            { androidx.compose.material3.Text(it.description) }
+                            { Text(it.description) }
                         } else null
                     )
                 }

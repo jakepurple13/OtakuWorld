@@ -50,10 +50,10 @@ object ComposableUtils {
 @ExperimentalMaterialApi
 @Composable
 fun CoverCard(
-    modifier: Modifier = Modifier,
     imageUrl: String,
     name: String,
     placeHolder: Int,
+    modifier: Modifier = Modifier,
     error: Int = placeHolder,
     onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
@@ -210,8 +210,8 @@ fun PlaceHolderCoverCard(placeHolder: Int) {
 @ExperimentalMaterialApi
 @Composable
 fun OtakuBannerBox(
-    showBanner: Boolean = false,
     placeholder: Int,
+    showBanner: Boolean = false,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val context = LocalContext.current
@@ -268,10 +268,10 @@ fun OtakuBannerBox(
 @ExperimentalMaterialApi
 @Composable
 fun M3CoverCard(
-    modifier: Modifier = Modifier,
     imageUrl: String,
     name: String,
     placeHolder: Int,
+    modifier: Modifier = Modifier,
     error: Int = placeHolder,
     headers: Map<String, Any> = emptyMap(),
     onLongPress: (ComponentState) -> Unit = {},
@@ -409,9 +409,9 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun M3OtakuBannerBox(
+    placeholder: Int,
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    placeholder: Int,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }

@@ -43,7 +43,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.programmersbox.favoritesdatabase.HistoryDatabase
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.sourceFlow
@@ -188,10 +188,14 @@ fun SettingScreen(
 }
 
 @Composable
-private fun AccountSettings(context: Context, activity: ComponentActivity, logo: MainLogo) {
+private fun AccountSettings(
+    context: Context,
+    activity: ComponentActivity,
+    logo: MainLogo,
+    viewModel: AccountViewModel = viewModel()
+) {
     CategorySetting { Text(stringResource(R.string.account_category_title)) }
 
-    val viewModel: AccountViewModel = viewModel()
     val accountInfo = viewModel.accountInfo
 
     PreferenceSetting(
@@ -223,7 +227,6 @@ private fun AboutSettings(
     logo: MainLogo,
     aboutViewModel: AboutViewModel = viewModel { AboutViewModel(context) }
 ) {
-
     val navController = LocalNavController.current
 
     CategorySetting(
@@ -366,11 +369,10 @@ fun SourceChooserScreen() {
 private fun NotificationSettings(
     context: Context,
     scope: CoroutineScope,
-    notificationClick: () -> Unit
+    notificationClick: () -> Unit,
+    dao: ItemDao = LocalItemDao.current,
+    notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao = dao) }
 ) {
-    val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-    val notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao = dao) }
-
     ShowWhen(notiViewModel.savedNotifications > 0) {
         CategorySetting { Text(stringResource(R.string.notifications_category_title)) }
 
@@ -637,7 +639,7 @@ private fun InfoSettings(
     scope: CoroutineScope,
     activity: ComponentActivity,
     genericInfo: GenericInfo,
-    usedLibraryClick: () -> Unit
+    usedLibraryClick: () -> Unit,
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -762,8 +764,7 @@ private fun InfoSettings(
 }
 
 @Composable
-fun TranslationScreen() {
-    val vm = viewModel<TranslationViewModel>()
+fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
 
     LifecycleHandle(onResume = { vm.loadModels() })

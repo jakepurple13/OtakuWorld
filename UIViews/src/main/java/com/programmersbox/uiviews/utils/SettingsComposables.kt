@@ -30,19 +30,19 @@ import androidx.constraintlayout.compose.Dimension
 @ExperimentalComposeUiApi
 @Composable
 fun <T> ListSetting(
+    value: T,
+    options: List<T>,
+    updateValue: (T, MutableState<Boolean>) -> Unit,
+    settingTitle: @Composable () -> Unit,
+    dialogTitle: @Composable () -> Unit,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     summaryValue: (@Composable () -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
-    dialogTitle: @Composable () -> Unit,
     dialogIcon: (@Composable () -> Unit)? = null,
     cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
-    confirmText: @Composable (MutableState<Boolean>) -> Unit,
     radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
-    value: T,
-    options: List<T>,
     viewText: (T) -> String = { it.toString() },
-    updateValue: (T, MutableState<Boolean>) -> Unit
 ) {
     val dialogPopup = remember { mutableStateOf(false) }
 
@@ -103,19 +103,19 @@ fun <T> ListSetting(
 @ExperimentalComposeUiApi
 @Composable
 fun <T> MultiSelectListSetting(
-    modifier: Modifier = Modifier,
-    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     settingTitle: @Composable () -> Unit,
-    settingSummary: (@Composable () -> Unit)? = null,
-    dialogTitle: @Composable () -> Unit,
-    dialogIcon: (@Composable () -> Unit)? = null,
-    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
-    confirmText: @Composable (MutableState<Boolean>) -> Unit,
-    checkboxColors: CheckboxColors = CheckboxDefaults.colors(),
     values: List<T>,
     options: List<T>,
+    updateValue: (T, Boolean) -> Unit,
+    dialogTitle: @Composable () -> Unit,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingSummary: (@Composable () -> Unit)? = null,
+    dialogIcon: (@Composable () -> Unit)? = null,
+    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
+    checkboxColors: CheckboxColors = CheckboxDefaults.colors(),
     viewText: (T) -> String = { it.toString() },
-    updateValue: (T, Boolean) -> Unit
 ) {
     val dialogPopup = remember { mutableStateOf(false) }
 
@@ -174,9 +174,9 @@ fun <T> MultiSelectListSetting(
 
 @Composable
 fun PreferenceSetting(
+    settingTitle: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
     summaryValue: (@Composable () -> Unit)? = null,
     endIcon: (@Composable () -> Unit)? = null
 ) = DefaultPreferenceLayout(
@@ -189,13 +189,13 @@ fun PreferenceSetting(
 
 @Composable
 fun SwitchSetting(
+    value: Boolean,
+    settingTitle: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
     summaryValue: (@Composable () -> Unit)? = null,
     switchColors: SwitchColors = SwitchDefaults.colors(),
-    value: Boolean,
-    updateValue: (Boolean) -> Unit
+    updateValue: (Boolean) -> Unit,
 ) {
     DefaultPreferenceLayout(
         modifier = modifier
@@ -222,13 +222,13 @@ fun SwitchSetting(
 @ExperimentalMaterial3Api
 @Composable
 fun CheckBoxSetting(
+    settingTitle: @Composable () -> Unit,
+    value: Boolean,
+    updateValue: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
     summaryValue: (@Composable () -> Unit)? = null,
     checkboxColors: CheckboxColors = CheckboxDefaults.colors(),
-    value: Boolean,
-    updateValue: (Boolean) -> Unit
 ) {
     DefaultPreferenceLayout(
         modifier = modifier.clickable(
@@ -249,17 +249,17 @@ fun CheckBoxSetting(
 
 @Composable
 fun SliderSetting(
-    modifier: Modifier = Modifier,
     sliderValue: Float,
-    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
-    settingSummary: (@Composable () -> Unit)? = null,
+    updateValue: (Float) -> Unit,
     range: ClosedFloatingPointRange<Float>,
+    settingTitle: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    settingSummary: (@Composable () -> Unit)? = null,
     steps: Int = 0,
     colors: SliderColors = SliderDefaults.colors(),
     format: (Float) -> String = { it.toInt().toString() },
     onValueChangedFinished: (() -> Unit)? = null,
-    updateValue: (Float) -> Unit
 ) {
     ConstraintLayout(
         modifier = Modifier
@@ -332,9 +332,9 @@ fun SliderSetting(
 
 @Composable
 fun ShowMoreSetting(
+    settingTitle: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
     summaryValue: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
@@ -361,9 +361,9 @@ fun ShowMoreSetting(
 
 @Composable
 private fun DefaultPreferenceLayout(
+    settingTitle: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
     summaryValue: (@Composable () -> Unit)? = null,
     content: (@Composable () -> Unit)? = null
 ) {
@@ -474,17 +474,17 @@ fun ShowWhen(visibility: Boolean, content: @Composable () -> Unit) {
 @ExperimentalComposeUiApi
 @Composable
 fun <T> DynamicListSetting(
+    settingTitle: @Composable () -> Unit,
+    value: T,
+    options: () -> List<T>,
+    dialogTitle: @Composable () -> Unit,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
     summaryValue: (@Composable () -> Unit)? = null,
-    settingTitle: @Composable () -> Unit,
-    dialogTitle: @Composable () -> Unit,
     dialogIcon: (@Composable () -> Unit)? = null,
     cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
-    confirmText: @Composable (MutableState<Boolean>) -> Unit,
     radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
-    value: T,
-    options: () -> List<T>,
     viewText: (T) -> String = { it.toString() },
     updateValue: (T, MutableState<Boolean>) -> Unit
 ) {

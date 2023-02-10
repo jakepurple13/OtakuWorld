@@ -4,7 +4,6 @@ import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,10 +45,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
-import com.programmersbox.favoritesdatabase.HistoryDatabase
+import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import kotlinx.coroutines.Dispatchers
@@ -60,26 +60,23 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
-    ExperimentalAnimationApi::class
 )
 @Composable
 fun GlobalSearchView(
     mainLogo: MainLogo,
-    notificationLogo: NotificationLogo
-) {
-    val navController = LocalNavController.current
-    val info = LocalGenericInfo.current
-    val context = LocalContext.current
-
-    val dao = remember { HistoryDatabase.getInstance(context).historyDao() }
-
-    val viewModel: GlobalSearchViewModel = viewModel {
+    notificationLogo: NotificationLogo,
+    info: GenericInfo = LocalGenericInfo.current,
+    dao: HistoryDao = LocalHistoryDao.current,
+    viewModel: GlobalSearchViewModel = viewModel {
         GlobalSearchViewModel(
             info = info,
             initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
             dao = dao,
         )
     }
+) {
+    val navController = LocalNavController.current
+    val context = LocalContext.current
 
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
@@ -375,11 +372,11 @@ fun GlobalSearchView(
 
 @Composable
 fun SearchCoverCard(
-    modifier: Modifier = Modifier,
     model: ItemModel,
     placeHolder: Drawable?,
-    error: Drawable? = placeHolder,
     onLongPress: (ComponentState) -> Unit,
+    modifier: Modifier = Modifier,
+    error: Drawable? = placeHolder,
     onClick: () -> Unit = {}
 ) {
     ElevatedCard(

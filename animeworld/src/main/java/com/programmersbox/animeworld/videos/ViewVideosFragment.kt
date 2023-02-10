@@ -104,9 +104,9 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     }
 
     var itemToDelete by remember { mutableStateOf<VideoContent?>(null) }
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, video = it) }
+    itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = it) }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -136,11 +136,11 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
         deleteTitle = { it.videoName.orEmpty() },
         onRemove = {
             itemToDelete = it
-            showDialog.value = true
+            showDialog = true
         },
         customSingleRemoveDialog = {
             itemToDelete = it
-            showDialog.value = true
+            showDialog = true
             false
         },
         onMultipleRemove = { downloadedItems ->
@@ -317,9 +317,9 @@ private fun EmptyState(paddingValues: PaddingValues) {
 @ExperimentalMaterialApi
 @Composable
 private fun VideoContentView(item: VideoContent) {
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    SlideToDeleteDialog(showDialog = showDialog, video = item)
+    SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = item)
 
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -343,7 +343,7 @@ private fun VideoContentView(item: VideoContent) {
                     )
                 }
             } else if (it == DismissValue.DismissedToStart) {
-                showDialog.value = true
+                showDialog = true
             }
             false
         }
@@ -486,7 +486,7 @@ private fun VideoContentView(item: VideoContent) {
                             androidx.compose.material3.DropdownMenuItem(
                                 onClick = {
                                     dropDownDismiss()
-                                    showDialog.value = true
+                                    showDialog = true
                                 },
                                 text = { Text(stringResource(R.string.remove)) }
                             )

@@ -1233,8 +1233,8 @@ fun TestData() = Column { repeat(10) { Text("Hello $it") } }
 @Composable
 fun SwipeButton(
     onSwiped: () -> Unit,
-    modifier: Modifier = Modifier,
     swipeButtonState: SwipeButtonState,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     elevation: ButtonElevation? = ButtonDefaults.elevation(),
@@ -1424,8 +1424,8 @@ fun DrawCanvas(
 @ExperimentalFoundationApi
 @Composable
 fun BannerBox(
-    showBanner: Boolean = false,
     banner: @Composable () -> Unit,
+    showBanner: Boolean = false,
     content: @Composable () -> Unit
 ) {
     Box(Modifier.fillMaxSize()) {

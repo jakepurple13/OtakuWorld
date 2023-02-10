@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -33,13 +32,15 @@ import java.io.File
 @ExperimentalMaterialApi
 @Composable
 fun SlideToDeleteDialog(
-    showDialog: MutableState<Boolean>,
+    showDialog: Boolean,
+    onDialogDismiss: (Boolean) -> Unit,
     video: VideoContent
 ) {
     val context = LocalContext.current
     SlideToDeleteDialog(
         title = video.videoName.orEmpty(),
         showDialog = showDialog,
+        onDialogDismiss = onDialogDismiss,
         onSlide = {
             runOnUIThread {
                 try {
@@ -69,12 +70,14 @@ fun SlideToDeleteDialog(
 @ExperimentalMaterialApi
 @Composable
 fun SlideToDeleteDialog(
-    showDialog: MutableState<Boolean>,
+    showDialog: Boolean,
+    onDialogDismiss: (Boolean) -> Unit,
     download: Download
 ) {
     SlideToDeleteDialog(
         title = Uri.parse(download.url).lastPathSegment.orEmpty(),
         showDialog = showDialog,
+        onDialogDismiss,
         onSlide = { Fetch.getDefaultInstance().delete(download.id) },
         onCancel = { Fetch.getDefaultInstance().resume(download.id) }
     )
@@ -85,13 +88,14 @@ fun SlideToDeleteDialog(
 @Composable
 private fun SlideToDeleteDialog(
     title: String,
-    showDialog: MutableState<Boolean>,
+    showDialog: Boolean,
+    onDialogDismiss: (Boolean) -> Unit,
     onSlide: suspend () -> Unit,
     onCancel: () -> Unit
 ) {
-    if (showDialog.value) {
+    if (showDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog.value = false },
+            onDismissRequest = { onDialogDismiss(false) },
             title = { Text(stringResource(R.string.do_you_want_to_delete)) },
             text = {
                 Column {
@@ -118,7 +122,7 @@ private fun SlideToDeleteDialog(
                             },
                             endIcon = { Icon(Icons.Filled.Done, contentDescription = null) },
                             onSlideComplete = {
-                                showDialog.value = false
+                                onDialogDismiss(false)
                                 onSlide()
                             }
                         ) { Text(stringResource(R.string.delete)) }
@@ -128,7 +132,7 @@ private fun SlideToDeleteDialog(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDialog.value = false
+                        onDialogDismiss(false)
                         onCancel()
                     }
                 ) { Text(stringResource(R.string.cancel)) }

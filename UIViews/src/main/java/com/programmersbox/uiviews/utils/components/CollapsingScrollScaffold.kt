@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -29,8 +28,8 @@ import kotlin.math.roundToInt
 fun CollapsingScrollScaffold(
     topBarFixed: @Composable (Float) -> Unit,
     topBarCollapsing: @Composable (Float) -> Unit,
-    bottomBar: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
+    bottomBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     val toolbarHeightPx = remember { mutableStateOf(0f) }
@@ -49,7 +48,7 @@ fun CollapsingScrollScaffold(
         bottomBar = bottomBar
     ) { padding ->
         CoordinatedScroll(
-            collapsingAreaHeightPx = toolbarHeightPx
+            collapsingAreaHeightPx = toolbarHeightPx.value
         ) { offset, nestedScroll ->
             topPanelOffset.value = offset
 
@@ -81,7 +80,7 @@ fun CollapsingScrollScaffold(
 
 @Composable
 internal fun CoordinatedScroll(
-    collapsingAreaHeightPx: MutableState<Float> = remember { mutableStateOf(0f) },
+    collapsingAreaHeightPx: Float = 0f,
     content: @Composable (Float, NestedScrollConnection) -> Unit
 ) {
     val currentOffsetPx = remember { mutableStateOf(0f) }
@@ -98,15 +97,15 @@ internal fun CoordinatedScroll(
                 }
                 currentAbsoluteOffsetPx.value = absoluteOffset
 
-                if (absoluteOffset >= -collapsingAreaHeightPx.value) {
+                if (absoluteOffset >= -collapsingAreaHeightPx) {
                     currentOffsetPx.value = absoluteOffset
                 } else {
-                    currentOffsetPx.value = -collapsingAreaHeightPx.value
+                    currentOffsetPx.value = -collapsingAreaHeightPx
                 }
 
                 return when {
                     // The panel is completely collapsed - an internal scroll must be turned on
-                    abs(currentOffsetPx.value) == collapsingAreaHeightPx.value -> Offset.Zero
+                    abs(currentOffsetPx.value) == collapsingAreaHeightPx -> Offset.Zero
 
                     // The panel is completely expanded - we must turn on an internal scroll
                     // to complete content scrolling
@@ -129,8 +128,8 @@ internal fun CoordinatedScroll(
 internal fun TopBarCollapsing(
     currentOffset: Float,
     maxOffset: Float,
-    modifier: Modifier = Modifier,
     onHeightCalculated: (Float) -> Unit,
+    modifier: Modifier = Modifier,
     topBar: @Composable (Float) -> Unit
 ) {
     val alpha = (abs(currentOffset) / maxOffset).pow(0.75f)

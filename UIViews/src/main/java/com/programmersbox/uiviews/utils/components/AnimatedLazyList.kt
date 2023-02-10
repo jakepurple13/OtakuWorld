@@ -410,9 +410,9 @@ data class AnimatedLazyListItem<out T>(
 
 @Composable
 fun <T> AnimatedLazyRow(
+    items: List<AnimatedLazyListItem<T>>,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
-    items: List<AnimatedLazyListItem<T>>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     reverseLayout: Boolean = false,
     horizontalArrangement: Arrangement.Horizontal = if (!reverseLayout) Arrangement.Start else Arrangement.End,
@@ -454,9 +454,9 @@ fun <T> AnimatedLazyRow(
 
 @Composable
 fun <T> AnimatedLazyColumn(
+    items: List<AnimatedLazyListItem<T>>,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
-    items: List<AnimatedLazyListItem<T>>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     reverseLayout: Boolean = false,
     verticalArrangement: Arrangement.Vertical = if (!reverseLayout) Arrangement.Top else Arrangement.Bottom,

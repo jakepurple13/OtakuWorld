@@ -1,5 +1,6 @@
 package com.programmersbox.animeworld.videochoice
 
+import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.models.Storage
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -21,11 +23,11 @@ import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 
 @Composable
-fun VideoChoiceScreen() {
-    val genericInfo = LocalGenericInfo.current
-    val context = LocalContext.current
-    val vm = viewModel { VideoSourceViewModel(createSavedStateHandle(), genericInfo) }
-
+fun VideoChoiceScreen(
+    context: Context = LocalContext.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    vm: VideoSourceViewModel = viewModel { VideoSourceViewModel(createSavedStateHandle(), genericInfo) }
+) {
     val navController = LocalNavController.current
     val activity = LocalActivity.current
 

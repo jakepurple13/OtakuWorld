@@ -28,10 +28,10 @@ class ListBottomSheetItemModel(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun <T> ListBottomScreen(
-    includeInsetPadding: Boolean = true,
     title: String,
     list: List<T>,
     onClick: (T) -> Unit,
+    includeInsetPadding: Boolean = true,
     itemContent: (T) -> ListBottomSheetItemModel
 ) {
     val navController = LocalNavController.current

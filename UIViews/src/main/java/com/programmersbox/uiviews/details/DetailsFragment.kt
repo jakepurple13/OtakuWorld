@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.details
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -48,6 +49,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.ImageOptions
@@ -71,13 +73,13 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 @Composable
 fun DetailsScreen(
     logo: NotificationLogo,
-    windowSize: WindowSize
+    windowSize: WindowSize,
+    localContext: Context = LocalContext.current,
+    dao: ItemDao = LocalItemDao.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) }
 ) {
-    val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
-    val localContext = LocalContext.current
-    val dao = LocalItemDao.current
-    val details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) }
 
     if (details.info == null) {
         Scaffold(

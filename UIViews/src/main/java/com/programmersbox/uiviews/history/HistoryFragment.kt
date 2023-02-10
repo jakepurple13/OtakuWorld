@@ -58,9 +58,9 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalMaterialApi
 @Composable
 fun HistoryUi(
+    logo: MainLogo,
     dao: HistoryDao = LocalHistoryDao.current,
     hm: HistoryViewModel = viewModel { HistoryViewModel(dao) },
-    logo: MainLogo
 ) {
 
     val recentItems = hm.historyItems.collectAsLazyPagingItems()

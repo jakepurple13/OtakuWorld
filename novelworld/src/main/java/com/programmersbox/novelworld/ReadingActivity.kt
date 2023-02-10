@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -47,6 +46,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.text.HtmlCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -174,13 +174,14 @@ class ReadViewModel(
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
-    ExperimentalComposeUiApi::class,
-    ExperimentalAnimationApi::class,
-    ExperimentalFoundationApi::class
+    ExperimentalAnimationApi::class
 )
 @Composable
-fun NovelReader() {
-
+fun NovelReader(
+    activity: FragmentActivity = LocalActivity.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
+) {
     LifecycleHandle(
         onStop = { BaseMainActivity.showNavBar = true },
         onDestroy = { BaseMainActivity.showNavBar = true },
@@ -189,10 +190,7 @@ fun NovelReader() {
         onResume = { BaseMainActivity.showNavBar = false }
     )
 
-    val genericInfo = LocalGenericInfo.current
-    val activity = LocalActivity.current
     val context = LocalContext.current
-    val readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
 
     DisposableEffect(context) {
         val batteryInfo = context.battery {
@@ -439,10 +437,10 @@ fun NovelReader() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun TopBar(
-    modifier: Modifier = Modifier,
     showItems: Boolean,
     contentScrollBehavior: TopAppBarScrollBehavior,
-    readVm: ReadViewModel
+    readVm: ReadViewModel,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     AnimatedVisibility(
@@ -517,11 +515,11 @@ fun TopBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomBar(
-    modifier: Modifier = Modifier,
     showItems: Boolean,
     readVm: ReadViewModel,
     showToast: () -> Unit,
-    settingsPopup: (Boolean) -> Unit
+    settingsPopup: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     AnimatedVisibility(
         visible = showItems,

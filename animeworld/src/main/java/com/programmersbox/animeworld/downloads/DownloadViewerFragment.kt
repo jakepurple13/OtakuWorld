@@ -1,5 +1,6 @@
 package com.programmersbox.animeworld.downloads
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -57,9 +58,10 @@ interface ActionListener {
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
-fun DownloaderUi() {
-    val context = LocalContext.current
-    val viewModel = viewModel { DownloaderViewModel(context) }
+fun DownloaderUi(
+    context: Context = LocalContext.current,
+    viewModel: DownloaderViewModel = viewModel { DownloaderViewModel(context) }
+) {
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
 
@@ -80,9 +82,9 @@ fun DownloaderUi() {
     }
 
     var itemToDelete by remember { mutableStateOf<DownloadData?>(null) }
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    itemToDelete?.download?.let { SlideToDeleteDialog(showDialog = showDialog, download = it) }
+    itemToDelete?.download?.let { SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, download = it) }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -93,11 +95,11 @@ fun DownloaderUi() {
         multipleTitle = stringResource(id = R.string.delete),
         onRemove = { download ->
             itemToDelete = download
-            showDialog.value = true
+            showDialog = true
         },
         customSingleRemoveDialog = { download ->
             itemToDelete = download
-            showDialog.value = true
+            showDialog = true
             false
         },
         onMultipleRemove = { downloadItems -> viewModel.fetch.delete(downloadItems.fastMap { it.id }) },
@@ -193,14 +195,14 @@ private fun EmptyState(paddingValues: PaddingValues) {
 @ExperimentalMaterialApi
 @Composable
 private fun DownloadItem(download: DownloadData, actionListener: ActionListener) {
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    SlideToDeleteDialog(showDialog = showDialog, download = download.download)
+    SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, download = download.download)
 
     val dismissState = rememberDismissState(
         confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
-                showDialog.value = true
+                showDialog = true
             }
             false
         }

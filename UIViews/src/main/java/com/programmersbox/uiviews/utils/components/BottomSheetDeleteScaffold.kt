@@ -47,17 +47,17 @@ import kotlinx.coroutines.launch
 @ExperimentalMaterialApi
 @Composable
 fun <T> BottomSheetDeleteScaffold(
-    modifier: Modifier = Modifier,
     listOfItems: List<T>,
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
-    itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -173,6 +173,9 @@ fun <T> BottomSheetDeleteScaffold(
                             DeleteItemView(
                                 item = i,
                                 deleteItemList = itemsToDelete,
+                                onAddOrRemove = { item ->
+                                    if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
+                                },
                                 deleteTitle = deleteTitle,
                                 customSingleRemoveDialog = customSingleRemoveDialog,
                                 onRemove = onRemove,
@@ -206,13 +209,13 @@ fun <T> BottomSheetDeleteScaffold(
 @Composable
 private fun <T> DeleteItemView(
     item: T,
-    deleteItemList: SnapshotStateList<T>,
+    deleteItemList: List<T>,
+    onAddOrRemove: (T) -> Unit,
     customSingleRemoveDialog: (T) -> Boolean,
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     onRemove: (T) -> Unit,
-    itemUi: @Composable (T) -> Unit
+    itemUi: @Composable (T) -> Unit,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
 ) {
-
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -278,7 +281,7 @@ private fun <T> DeleteItemView(
         },
         dismissContent = {
             OutlinedCard(
-                onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
+                onClick = { onAddOrRemove(item) },
                 modifier = Modifier.fillMaxSize(),
                 border = BorderStroke(
                     animateDpAsState(targetValue = if (item in deleteItemList) 4.dp else 1.dp).value,
@@ -293,17 +296,17 @@ private fun <T> DeleteItemView(
 @ExperimentalMaterialApi
 @Composable
 fun <T : Any> BottomSheetDeleteScaffoldPaging(
-    modifier: Modifier = Modifier,
     listOfItems: LazyPagingItems<T>,
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
     onRemove: (T) -> Unit,
-    onMultipleRemove: (SnapshotStateList<T>) -> Unit,
-    customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior,
+    onMultipleRemove: (SnapshotStateList<T>) -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    customSingleRemoveDialog: (T) -> Boolean = { true },
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     topBar: @Composable (() -> Unit)? = null,
-    itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, LazyPagingItems<T>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -439,10 +442,10 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 private fun <T : Any> DeleteItemView(
     item: T,
     selectedForDeletion: Boolean,
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     onClick: (T) -> Unit,
     customSingleRemoveDialog: (T) -> Boolean,
     onRemove: (T) -> Unit,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     itemUi: @Composable (T) -> Unit
 ) {
 

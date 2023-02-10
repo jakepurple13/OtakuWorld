@@ -29,11 +29,12 @@ import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.GroupButton
@@ -46,15 +47,16 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @Composable
-fun FavoriteUi(logo: MainLogo) {
+fun FavoriteUi(
+    logo: MainLogo,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    dao: ItemDao = LocalItemDao.current,
+    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
+) {
 
-    val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val activity = LocalActivity.current
     val context = LocalContext.current
-    val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-
-    val viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
 
     val favoriteItems: List<DbModel> = viewModel.favoriteList
     val allSources: List<ApiService> = genericInfo.sourceList()
@@ -334,8 +336,7 @@ fun FavoriteUi(logo: MainLogo) {
 }
 
 @Composable
-fun FavoriteChoiceScreen() {
-    val vm = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }
+fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }) {
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     ListBottomScreen(

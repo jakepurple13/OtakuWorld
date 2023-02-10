@@ -145,13 +145,13 @@ fun AllView(
                             when (page) {
                                 0 -> AllScreen(
                                     allVm = allVm,
-                                    itemInfo = itemInfo,
+                                    itemInfoChange = { itemInfo.value = it },
                                     state = state,
                                     showBanner = { showBanner = it }
                                 )
                                 1 -> SearchScreen(
                                     allVm = allVm,
-                                    itemInfo = itemInfo,
+                                    itemInfoChange = { itemInfo.value = it },
                                     showBanner = { showBanner = it }
                                 )
                             }
@@ -167,7 +167,7 @@ fun AllView(
 @Composable
 fun AllScreen(
     allVm: AllViewModel,
-    itemInfo: MutableState<ItemModel?>,
+    itemInfoChange: (ItemModel?) -> Unit,
     state: LazyGridState,
     showBanner: (Boolean) -> Unit
 ) {
@@ -190,7 +190,7 @@ fun AllScreen(
                     listState = state,
                     favorites = allVm.favoriteList,
                     onLongPress = { item, c ->
-                        itemInfo.value = if (c == ComponentState.Pressed) item else null
+                        itemInfoChange(if (c == ComponentState.Pressed) item else null)
                         showBanner(c == ComponentState.Pressed)
                     }
                 ) { navController.navigateToDetails(it) }
@@ -217,7 +217,7 @@ fun AllScreen(
 @Composable
 fun SearchScreen(
     allVm: AllViewModel,
-    itemInfo: MutableState<ItemModel?>,
+    itemInfoChange: (ItemModel?) -> Unit,
     showBanner: (Boolean) -> Unit
 ) {
 
@@ -273,7 +273,7 @@ fun SearchScreen(
                 listState = rememberLazyGridState(),
                 favorites = allVm.favoriteList,
                 onLongPress = { item, c ->
-                    itemInfo.value = if (c == ComponentState.Pressed) item else null
+                    itemInfoChange(if (c == ComponentState.Pressed) item else null)
                     showBanner(c == ComponentState.Pressed)
                 }
             ) { navController.navigateToDetails(it) }
