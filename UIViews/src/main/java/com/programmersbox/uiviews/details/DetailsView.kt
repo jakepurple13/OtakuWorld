@@ -5,7 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,9 +37,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
-import com.programmersbox.favoritesdatabase.HistoryDao
-import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.*
@@ -58,11 +61,15 @@ fun DetailsView(
     info: InfoModel,
     isSaved: Boolean,
     shareChapter: Boolean,
-    dao: ItemDao,
-    historyDao: HistoryDao,
-    vm: DetailsViewModel,
-    logo: NotificationLogo
+    chapters: List<ChapterWatched>,
+    isFavorite: Boolean,
+    onFavoriteClick: (Boolean) -> Unit,
+    markAs: (ChapterModel, Boolean) -> Unit,
+    logo: NotificationLogo,
+    description: String,
+    onTranslateDescription: (MutableState<Boolean>) -> Unit
 ) {
+    val dao = LocalItemDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
@@ -105,7 +112,8 @@ fun DetailsView(
                     topBarColor = topBarColor,
                     drawerState = scaffoldState,
                     info = info,
-                    vm = vm
+                    chapters = chapters,
+                    markAs = markAs
                 )
             }
         }
@@ -267,8 +275,8 @@ fun DetailsView(
                 DetailsHeader(
                     model = info,
                     logo = painterResource(id = logo.notificationId),
-                    isFavorite = vm.favoriteListener,
-                    favoriteClick = { b -> if (b) vm.removeItem() else vm.addItem() }
+                    isFavorite = isFavorite,
+                    favoriteClick = onFavoriteClick
                 )
             }
 
@@ -305,13 +313,13 @@ fun DetailsView(
                                     val progress = remember { mutableStateOf(false) }
 
                                     Text(
-                                        vm.description,
+                                        description,
                                         modifier = Modifier
                                             .combinedClickable(
                                                 interactionSource = remember { MutableInteractionSource() },
                                                 indication = rememberRipple(),
                                                 onClick = { descriptionVisibility = !descriptionVisibility },
-                                                onLongClick = { vm.translateDescription(progress) }
+                                                onLongClick = { onTranslateDescription(progress) }
                                             )
                                             .padding(horizontal = 4.dp)
                                             .fillMaxWidth()
@@ -335,11 +343,10 @@ fun DetailsView(
                             ChapterItem(
                                 infoModel = info,
                                 c = c,
-                                read = vm.chapters,
+                                read = chapters,
                                 chapters = info.chapters,
                                 shareChapter = shareChapter,
-                                historyDao = historyDao,
-                                vm = vm,
+                                markAs = markAs
                             )
                         }
                     }
@@ -358,11 +365,15 @@ fun DetailsViewLandscape(
     info: InfoModel,
     isSaved: Boolean,
     shareChapter: Boolean,
-    dao: ItemDao,
-    historyDao: HistoryDao,
-    vm: DetailsViewModel,
-    logo: NotificationLogo
+    chapters: List<ChapterWatched>,
+    isFavorite: Boolean,
+    onFavoriteClick: (Boolean) -> Unit,
+    markAs: (ChapterModel, Boolean) -> Unit,
+    logo: NotificationLogo,
+    description: String,
+    onTranslateDescription: (MutableState<Boolean>) -> Unit
 ) {
+    val dao = LocalItemDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
@@ -397,7 +408,8 @@ fun DetailsViewLandscape(
                     topBarColor = topBarColor,
                     drawerState = scaffoldState,
                     info = info,
-                    vm = vm
+                    chapters = chapters,
+                    markAs = markAs
                 )
             }
         }
@@ -558,10 +570,14 @@ fun DetailsViewLandscape(
                 p = p,
                 info = info,
                 shareChapter = shareChapter,
-                historyDao = historyDao,
-                vm = vm,
                 logo = logo,
-                reverseChapters = reverseChapters
+                reverseChapters = reverseChapters,
+                description = description,
+                onTranslateDescription = onTranslateDescription,
+                chapters = chapters,
+                markAs = markAs,
+                isFavorite = isFavorite,
+                onFavoriteClick = onFavoriteClick
             )
         }
     }
@@ -573,8 +589,12 @@ private fun DetailsLandscapeContent(
     p: PaddingValues,
     info: InfoModel,
     shareChapter: Boolean,
-    historyDao: HistoryDao,
-    vm: DetailsViewModel,
+    isFavorite: Boolean,
+    onFavoriteClick: (Boolean) -> Unit,
+    markAs: (ChapterModel, Boolean) -> Unit,
+    description: String,
+    onTranslateDescription: (MutableState<Boolean>) -> Unit,
+    chapters: List<ChapterWatched>,
     logo: NotificationLogo,
     reverseChapters: Boolean
 ) {
@@ -585,8 +605,8 @@ private fun DetailsLandscapeContent(
             modifier = Modifier.weight(1f),
             model = info,
             logo = painterResource(id = logo.notificationId),
-            isFavorite = vm.favoriteListener,
-            favoriteClick = { b -> if (b) vm.removeItem() else vm.addItem() },
+            isFavorite = isFavorite,
+            favoriteClick = onFavoriteClick
         )
 
         val listState = rememberLazyListState()
@@ -603,21 +623,33 @@ private fun DetailsLandscapeContent(
 
             if (info.description.isNotEmpty()) {
                 item {
-                    Text(
-                        info.description,
-                        modifier = Modifier
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) { descriptionVisibility = !descriptionVisibility }
-                            .padding(horizontal = 4.dp)
-                            //.fillMaxWidth()
-                            .animateContentSize(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Box {
+                        val progress = remember { mutableStateOf(false) }
+
+                        Text(
+                            description,
+                            modifier = Modifier
+                                .combinedClickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple(),
+                                    onClick = { descriptionVisibility = !descriptionVisibility },
+                                    onLongClick = { onTranslateDescription(progress) }
+                                )
+                                .padding(horizontal = 4.dp)
+                                .fillMaxWidth()
+                                .animateContentSize(),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        if (progress.value) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -625,11 +657,10 @@ private fun DetailsLandscapeContent(
                 ChapterItem(
                     infoModel = info,
                     c = c,
-                    read = vm.chapters,
+                    read = chapters,
                     chapters = info.chapters,
                     shareChapter = shareChapter,
-                    historyDao = historyDao,
-                    vm = vm,
+                    markAs = markAs
                 )
             }
         }

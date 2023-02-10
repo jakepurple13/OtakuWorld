@@ -15,7 +15,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.*
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
@@ -98,11 +98,16 @@ fun OtakuMaterialTheme(
                 LocalActivity provides remember { context.findActivity() },
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides get()
+                LocalSettingsHandling provides get(),
+                LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
+                LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
             ) { content() }
         }
     }
 }
+
+val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
+val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
 
 @Composable
 fun LifecycleHandle(

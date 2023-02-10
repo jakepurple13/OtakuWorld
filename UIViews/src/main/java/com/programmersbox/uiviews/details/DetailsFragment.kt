@@ -71,13 +71,12 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 @Composable
 fun DetailsScreen(
     logo: NotificationLogo,
-    dao: ItemDao,
-    historyDao: HistoryDao,
     windowSize: WindowSize
 ) {
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val localContext = LocalContext.current
+    val dao = LocalItemDao.current
     val details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) }
 
     if (details.info == null) {
@@ -172,23 +171,29 @@ fun DetailsScreen(
                 orientation == Configuration.ORIENTATION_LANDSCAPE
             ) {
                 DetailsViewLandscape(
-                    details.info!!,
-                    isSaved,
-                    shareChapter,
-                    dao,
-                    historyDao,
-                    details,
-                    logo
+                    info = details.info!!,
+                    isSaved = isSaved,
+                    shareChapter = shareChapter,
+                    logo = logo,
+                    isFavorite = details.favoriteListener,
+                    onFavoriteClick = { b -> if (b) details.removeItem() else details.addItem() },
+                    chapters = details.chapters,
+                    markAs = details::markAs,
+                    description = details.description,
+                    onTranslateDescription = details::translateDescription
                 )
             } else {
                 DetailsView(
-                    details.info!!,
-                    isSaved,
-                    shareChapter,
-                    dao,
-                    historyDao,
-                    details,
-                    logo
+                    info = details.info!!,
+                    isSaved = isSaved,
+                    shareChapter = shareChapter,
+                    logo = logo,
+                    isFavorite = details.favoriteListener,
+                    onFavoriteClick = { b -> if (b) details.removeItem() else details.addItem() },
+                    chapters = details.chapters,
+                    markAs = details::markAs,
+                    description = details.description,
+                    onTranslateDescription = details::translateDescription
                 )
             }
         }
@@ -201,7 +206,8 @@ fun MarkAsScreen(
     topBarColor: Color,
     drawerState: DrawerState,
     info: InfoModel,
-    vm: DetailsViewModel
+    chapters: List<ChapterWatched>,
+    markAs: (ChapterModel, Boolean) -> Unit
 ) {
     val swatchInfo = LocalSwatchInfo.current.colors
     val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -244,7 +250,7 @@ fun MarkAsScreen(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple()
-                        ) { vm.markAs(c, !vm.chapters.fastAny { it.url == c.url }) },
+                        ) { markAs(c, !chapters.fastAny { it.url == c.url }) },
                     color = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
                 ) {
                     ListItem(
@@ -258,8 +264,8 @@ fun MarkAsScreen(
                         headlineText = { Text(c.name) },
                         leadingContent = {
                             Checkbox(
-                                checked = vm.chapters.fastAny { it.url == c.url },
-                                onCheckedChange = { b -> vm.markAs(c, b) },
+                                checked = chapters.fastAny { it.url == c.url },
+                                onCheckedChange = { b -> markAs(c, b) },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
                                         ?: M3MaterialTheme.colorScheme.secondary,
@@ -285,9 +291,9 @@ fun ChapterItem(
     read: List<ChapterWatched>,
     chapters: List<ChapterModel>,
     shareChapter: Boolean,
-    historyDao: HistoryDao,
-    vm: DetailsViewModel,
+    markAs: (ChapterModel, Boolean) -> Unit
 ) {
+    val historyDao = LocalHistoryDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val navController = LocalNavController.current
     val genericInfo = LocalGenericInfo.current
@@ -320,7 +326,7 @@ fun ChapterItem(
             .clickable(
                 indication = rememberRipple(),
                 interactionSource = interactionSource,
-            ) { vm.markAs(c, !read.fastAny { it.url == c.url }) },
+            ) { markAs(c, !read.fastAny { it.url == c.url }) },
         colors = CardDefaults.elevatedCardColors(
             containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface).value,
         )
@@ -331,7 +337,7 @@ fun ChapterItem(
                     leadingContent = {
                         Checkbox(
                             checked = read.fastAny { it.url == c.url },
-                            onCheckedChange = { b -> vm.markAs(c, b) },
+                            onCheckedChange = { b -> markAs(c, b) },
                             colors = CheckboxDefaults.colors(
                                 checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
                                     ?: M3MaterialTheme.colorScheme.secondary,
@@ -376,7 +382,7 @@ fun ChapterItem(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         checked = read.fastAny { it.url == c.url },
-                        onCheckedChange = { b -> vm.markAs(c, b) },
+                        onCheckedChange = { b -> markAs(c, b) },
                         colors = CheckboxDefaults.colors(
                             checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
                                 ?: M3MaterialTheme.colorScheme.secondary,
@@ -405,8 +411,6 @@ fun ChapterItem(
                     .padding(4.dp)
             )
 
-            val activity = LocalActivity.current
-
             Row(
                 modifier = Modifier
                     .align(Alignment.End)
@@ -415,9 +419,9 @@ fun ChapterItem(
                 if (infoModel.source.canPlay) {
                     OutlinedButton(
                         onClick = {
-                            genericInfo.chapterOnClick(c, chapters, infoModel, context, activity, navController)
+                            genericInfo.chapterOnClick(c, chapters, infoModel, context, context.findActivity(), navController)
                             insertRecent()
-                            if (!read.fastAny { it.url == c.url }) vm.markAs(c, true)
+                            if (!read.fastAny { it.url == c.url }) markAs(c, true)
                         },
                         modifier = Modifier
                             .weight(1f, true)
@@ -446,9 +450,9 @@ fun ChapterItem(
                 if (infoModel.source.canDownload) {
                     OutlinedButton(
                         onClick = {
-                            genericInfo.downloadChapter(c, chapters, infoModel, context, activity, navController)
+                            genericInfo.downloadChapter(c, chapters, infoModel, context, context.findActivity(), navController)
                             insertRecent()
-                            if (!read.fastAny { it.url == c.url }) vm.markAs(c, true)
+                            if (!read.fastAny { it.url == c.url }) markAs(c, true)
                         },
                         modifier = Modifier
                             .weight(1f, true)
@@ -514,6 +518,7 @@ internal fun DetailsHeader(
                 GlideImage(
                     imageModel = { imageUrl },
                     imageOptions = ImageOptions(contentScale = ContentScale.Fit),
+                    previewPlaceholder = R.drawable.ic_baseline_battery_alert_24,
                     modifier = Modifier
                         .scaleRotateOffsetReset()
                         .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -533,6 +538,7 @@ internal fun DetailsHeader(
             imageModel = { imageUrl },
             imageOptions = ImageOptions(contentScale = ContentScale.Crop),
             modifier = Modifier.matchParentSize(),
+            previewPlaceholder = R.drawable.ic_baseline_battery_alert_24
         )
 
         Box(

@@ -58,7 +58,7 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalMaterialApi
 @Composable
 fun HistoryUi(
-    dao: HistoryDao,
+    dao: HistoryDao = LocalHistoryDao.current,
     hm: HistoryViewModel = viewModel { HistoryViewModel(dao) },
     logo: MainLogo
 ) {

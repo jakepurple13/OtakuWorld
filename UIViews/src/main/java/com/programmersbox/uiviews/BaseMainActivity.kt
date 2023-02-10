@@ -43,8 +43,6 @@ import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.programmersbox.favoritesdatabase.HistoryDatabase
-import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
@@ -75,8 +73,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     protected val genericInfo: GenericInfo by inject()
     private val logo: MainLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
-    private val dao by lazy { ItemDatabase.getInstance(this).itemDao() }
-    private val historyDao by lazy { HistoryDatabase.getInstance(this).historyDao() }
     protected lateinit var navController: NavHostController
 
     protected fun isNavInitialized() = ::navController.isInitialized
@@ -221,6 +217,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 SScreen.RecentScreen.route
                             ) {
                                 val context = LocalContext.current
+                                val dao = LocalItemDao.current
                                 RecentView(
                                     recentVm = viewModel { RecentViewModel(dao, context) },
                                     logo = logo
@@ -231,6 +228,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 SScreen.AllScreen.route
                             ) {
                                 val context = LocalContext.current
+                                val dao = LocalItemDao.current
                                 AllView(
                                     allVm = viewModel { AllViewModel(dao, context) },
                                     logo = logo
@@ -263,7 +261,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
                                 NotificationsScreen(
-                                    db = dao,
                                     notificationManager = LocalContext.current.notificationManager,
                                     logo = logo,
                                     notificationLogo = notificationLogo
@@ -287,7 +284,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 SScreen.HistoryScreen.route,
                                 enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
-                            ) { HistoryUi(dao = historyDao, logo = logo) }
+                            ) { HistoryUi(logo = logo) }
 
                             composable(
                                 SScreen.AboutScreen.route,
@@ -305,8 +302,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             ) {
                                 DetailsScreen(
                                     logo = notificationLogo,
-                                    dao = dao,
-                                    historyDao = historyDao,
                                     windowSize = rememberWindowSizeClass()
                                 )
                             }

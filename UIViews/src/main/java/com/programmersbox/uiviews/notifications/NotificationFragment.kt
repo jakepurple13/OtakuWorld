@@ -74,7 +74,7 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
 fun NotificationsScreen(
     navController: NavController = LocalNavController.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    db: ItemDao,
+    db: ItemDao = LocalItemDao.current,
     notificationManager: NotificationManager,
     logo: MainLogo,
     notificationLogo: NotificationLogo,
