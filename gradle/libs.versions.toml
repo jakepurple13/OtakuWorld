@@ -139,7 +139,7 @@ storage = "com.anggrayudi:storage:1.5.2"
 
 androidxWindow = "androidx.window:window:1.1.0-alpha04"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
-androidxBrowser = "androidx.browser:browser:1.4.0"
+androidxBrowser = "androidx.browser:browser:1.5.0"
 
 fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
