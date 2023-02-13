@@ -306,7 +306,7 @@ fun BackButton() {
 fun InsetSmallTopAppBar(
     modifier: Modifier = Modifier,
     insetPadding: WindowInsets = TopAppBarDefaults.windowInsets,
-    colors: TopAppBarColors = TopAppBarDefaults.smallTopAppBarColors(),
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},

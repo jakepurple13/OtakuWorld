@@ -77,7 +77,6 @@ jobs:
         id: buildMangaApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
@@ -88,7 +87,6 @@ jobs:
         id: buildAnimeApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
@@ -99,7 +97,6 @@ jobs:
         id: buildAnimeTvApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
@@ -110,7 +107,6 @@ jobs:
         id: buildNovelApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
