@@ -114,7 +114,6 @@ fun ReadView(
         )
     }
 ) {
-
     LifecycleHandle(
         onStop = { BaseMainActivity.showNavBar = true },
         onDestroy = { BaseMainActivity.showNavBar = true },
@@ -122,8 +121,6 @@ fun ReadView(
         onStart = { BaseMainActivity.showNavBar = false },
         onResume = { BaseMainActivity.showNavBar = false }
     )
-
-
 
     DisposableEffect(LocalContext.current) {
         val batteryInfo = context.battery {
@@ -520,7 +517,14 @@ fun ListView(
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List<String>, vm: ReadViewModel, itemSpacing: Dp, onClick: () -> Unit) {
+fun PagerView(
+    pagerState: PagerState,
+    contentPadding: PaddingValues,
+    pages: List<String>,
+    vm: ReadViewModel,
+    itemSpacing: Dp,
+    onClick: () -> Unit
+) {
     VerticalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),

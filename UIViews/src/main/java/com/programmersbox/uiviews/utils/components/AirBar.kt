@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.utils.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -89,75 +89,78 @@ private fun AirBarSetup(
         return String.format("%.2f", ((percentage / 100) * (maxValue - minValue) + minValue)).toFloat()
     }
 
-    Box(modifier = modifier, contentAlignment = if (isHorizontal) Alignment.CenterStart else Alignment.Center) {
-        Canvas(modifier = modifier.pointerInteropFilter { event ->
-            if (!isHorizontal) {
-                when {
-                    event.y in 0.0..bottomY.toDouble() -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
+    Box(
+        modifier = modifier
+            .pointerInteropFilter { event ->
+                if (!isHorizontal) {
+                    when {
+                        event.y in 0.0..bottomY.toDouble() -> {
+                            valueChanged(calculateValues(event.y, event.x))
+                            true
+                        }
+                        event.y > 100 -> {
+                            valueChanged(calculateValues(event.y, event.x))
+                            true
+                        }
+                        event.y < 0 -> {
+                            valueChanged(calculateValues(event.y, event.x))
+                            true
+                        }
+                        else -> false
                     }
-                    event.y > 100 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
+                } else {
+                    when {
+                        event.x in 0.0..rightX.toDouble() -> {
+                            valueChanged(calculateValues(event.y, event.x))
+                            true
+                        }
+                        event.x > 100 -> {
+                            valueChanged(calculateValues(event.y, event.x))
+                            true
+                        }
+                        event.x < 0 -> {
+                            valueChanged(calculateValues(event.y, event.x))
+                            true
+                        }
+                        else -> false
                     }
-                    event.y < 0 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    else -> false
-                }
-            } else {
-                when {
-                    event.x in 0.0..rightX.toDouble() -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.x > 100 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    event.x < 0 -> {
-                        valueChanged(calculateValues(event.y, event.x))
-                        true
-                    }
-                    else -> false
                 }
             }
-        }) {
-            bottomY = size.height
-            rightX = size.width
+            .drawBehind {
+                bottomY = size.height
+                rightX = size.width
 
-            val path = Path()
-            path.addRoundRect(
-                roundRect = RoundRect(
-                    0F,
-                    0F,
-                    size.width,
-                    size.height,
-                    cornerRadius
+                val path = Path()
+                path.addRoundRect(
+                    roundRect = RoundRect(
+                        0F,
+                        0F,
+                        size.width,
+                        size.height,
+                        cornerRadius
+                    )
                 )
-            )
-            drawContext.canvas.drawPath(path, Paint().apply {
-                color = backgroundColor
-                isAntiAlias = true
-            })
-            drawContext.canvas.clipPath(path = path, ClipOp.Intersect)
-            if (fillColor != null) {
-                drawRect(
-                    fillColor,
-                    Offset(0f, if (isHorizontal) 0f else reverseCalculateValues(progress)),
-                    Size(if (isHorizontal) reverseCalculateValues(progress) else rightX, size.height)
-                )
-            } else if (fillColorBrush != null) {
-                drawRect(
-                    fillColorBrush,
-                    Offset(0f, if (isHorizontal) 0f else reverseCalculateValues(progress)),
-                    Size(if (isHorizontal) reverseCalculateValues(progress) else rightX, size.height)
-                )
-            }
-
-        }
+                drawContext.canvas.drawPath(path, Paint().apply {
+                    color = backgroundColor
+                    isAntiAlias = true
+                })
+                drawContext.canvas.clipPath(path = path, ClipOp.Intersect)
+                if (fillColor != null) {
+                    drawRect(
+                        fillColor,
+                        Offset(0f, if (isHorizontal) 0f else reverseCalculateValues(progress)),
+                        Size(if (isHorizontal) reverseCalculateValues(progress) else rightX, size.height)
+                    )
+                } else if (fillColorBrush != null) {
+                    drawRect(
+                        fillColorBrush,
+                        Offset(0f, if (isHorizontal) 0f else reverseCalculateValues(progress)),
+                        Size(if (isHorizontal) reverseCalculateValues(progress) else rightX, size.height)
+                    )
+                }
+            },
+        contentAlignment = if (isHorizontal) Alignment.CenterStart else Alignment.Center
+    ) {
         topIcon?.let {
             Box(
                 modifier = (if (!isHorizontal) Modifier.padding(top = 15.dp) else Modifier.padding(start = 15.dp))

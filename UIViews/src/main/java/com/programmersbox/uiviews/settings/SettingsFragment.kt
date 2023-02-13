@@ -760,7 +760,6 @@ private fun InfoSettings(
             }
         )
     }
-
 }
 
 @Composable
