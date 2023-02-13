@@ -34,7 +34,7 @@ allprojects {
 subprojects {
     afterEvaluate {
         if (plugins.findPlugin(AndroidBasePlugin::class) != null) {
-            //configureAndroidBasePlugin()
+            configureAndroidBasePlugin()
         }
     }
 }

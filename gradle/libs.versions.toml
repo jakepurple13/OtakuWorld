@@ -16,7 +16,7 @@ jetpackCompiler = "1.4.2"
 accompanist = "0.29.0-alpha"
 okhttpVersion = "4.10.0"
 ktorVersion = "2.2.2"
-workVersion = "2.7.1"
+workVersion = "2.8.0"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.3"
 protobufVersion = "3.21.12"
@@ -32,7 +32,7 @@ media3Version = "1.0.0-beta03"
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.8.0-1.0.8" }
+ksp = { id = "com.google.devtools.ksp", version = "1.8.10-1.0.9" }
 
 [libraries]
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -81,7 +81,7 @@ glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integrati
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.1"
 
 androidCore = "androidx.core:core-ktx:1.9.0"
-appCompat = "androidx.appcompat:appcompat:1.6.0"
+appCompat = "androidx.appcompat:appcompat:1.6.1"
 material = "com.google.android.material:material:1.7.0"
 
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
@@ -139,7 +139,7 @@ storage = "com.anggrayudi:storage:1.5.2"
 
 androidxWindow = "androidx.window:window:1.1.0-alpha04"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
-androidxBrowser = "androidx.browser:browser:1.4.0"
+androidxBrowser = "androidx.browser:browser:1.5.0"
 
 fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
