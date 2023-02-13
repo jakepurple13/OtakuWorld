@@ -1,5 +1,3 @@
-import com.android.build.gradle.api.AndroidBasePlugin
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -31,7 +29,7 @@ allprojects {
     }
 }
 
-subprojects {
+/*subprojects {
     afterEvaluate {
         if (plugins.findPlugin(AndroidBasePlugin::class) != null) {
             configureAndroidBasePlugin()
@@ -49,7 +47,7 @@ fun Project.configureAndroidBasePlugin() {
             "lintChecks"("com.slack.lint.compose:compose-lint-checks:1.0.0")
         }
     }
-}
+}*/
 
 tasks.register("clean").configure {
     delete("build")
