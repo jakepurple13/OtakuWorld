@@ -1,3 +1,5 @@
+import com.android.build.gradle.api.AndroidBasePlugin
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -6,7 +8,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
+        classpath("com.android.tools.build:gradle:7.4.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
         classpath("com.google.gms:google-services:4.3.14")
         classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.2")
@@ -29,7 +31,7 @@ allprojects {
     }
 }
 
-/*subprojects {
+subprojects {
     afterEvaluate {
         if (plugins.findPlugin(AndroidBasePlugin::class) != null) {
             configureAndroidBasePlugin()
@@ -47,7 +49,7 @@ fun Project.configureAndroidBasePlugin() {
             "lintChecks"("com.slack.lint.compose:compose-lint-checks:1.0.0")
         }
     }
-}*/
+}
 
 tasks.register("clean").configure {
     delete("build")
