@@ -46,7 +46,7 @@ fun Project.configureAndroidBasePlugin() {
         }
 
         dependencies {
-            "lintChecks"("com.slack.lint.compose:compose-lint-checks:1.0.0")
+            "lintChecks"("com.slack.lint.compose:compose-lint-checks:1.0.1")
         }
     }
 }
