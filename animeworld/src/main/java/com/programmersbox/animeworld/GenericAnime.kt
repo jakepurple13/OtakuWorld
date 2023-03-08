@@ -366,9 +366,9 @@ class GenericAnime(val context: Context) : GenericInfo {
                                 contentDescription = null,
                             )
                         },
-                        headlineText = { androidx.compose.material3.Text(it.title) },
-                        overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
-                        supportingText = if (it.description.isNotEmpty()) {
+                        headlineContent = { androidx.compose.material3.Text(it.title) },
+                        overlineContent = { androidx.compose.material3.Text(it.source.serviceName) },
+                        supportingContent = if (it.description.isNotEmpty()) {
                             { androidx.compose.material3.Text(it.description) }
                         } else null
                     )

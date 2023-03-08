@@ -175,9 +175,9 @@ class GenericNovel(val context: Context) : GenericInfo {
                                 contentDescription = null,
                             )
                         },
-                        headlineText = { Text(it.title) },
-                        overlineText = { Text(it.source.serviceName) },
-                        supportingText = if (it.description.isNotEmpty()) {
+                        headlineContent = { Text(it.title) },
+                        overlineContent = { Text(it.source.serviceName) },
+                        supportingContent = if (it.description.isNotEmpty()) {
                             { Text(it.description) }
                         } else null
                     )
