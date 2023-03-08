@@ -183,8 +183,8 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
         ) {
             ListItem(
                 modifier = Modifier.padding(4.dp),
-                headlineText = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
-                supportingText = { Text(stringResource(R.string.chapter_count, file.value.size)) },
+                headlineContent = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
+                supportingContent = { Text(stringResource(R.string.chapter_count, file.value.size)) },
                 trailingContent = {
                     Icon(
                         Icons.Default.ArrowDropDown,
@@ -319,8 +319,8 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(4.dp),
-                                headlineText = { Text(c?.chapterName.orEmpty()) },
-                                supportingText = { Text(stringResource(R.string.page_count, chapter.size)) },
+                                headlineContent = { Text(c?.chapterName.orEmpty()) },
+                                supportingContent = { Text(stringResource(R.string.page_count, chapter.size)) },
                                 trailingContent = { Icon(Icons.Default.ChevronRight, null) }
                             )
                         }

@@ -11,11 +11,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -68,8 +66,6 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalMaterialApi::class,
     ExperimentalFoundationApi::class,
 )
 @Composable
@@ -99,8 +95,8 @@ fun NotificationsScreen(
     val context = LocalContext.current
     val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
-    BackHandler(state.bottomSheetState.isExpanded) {
-        scope.launch { state.bottomSheetState.collapse() }
+    BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch { state.bottomSheetState.partialExpand() }
     }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -190,9 +186,9 @@ fun NotificationsScreen(
                         modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     )
                 },
-                overlineText = { Text(item.source) },
-                headlineText = { Text(item.notiTitle) },
-                supportingText = { Text(item.summaryText) },
+                overlineContent = { Text(item.source) },
+                headlineContent = { Text(item.notiTitle) },
+                supportingContent = { Text(item.summaryText) },
                 trailingContent = {
                     var showDropDown by remember { mutableStateOf(false) }
 
@@ -266,7 +262,7 @@ fun NotificationsScreen(
                                 ) {
                                     ListItem(
                                         modifier = Modifier.padding(4.dp),
-                                        headlineText = { Text(item.first) },
+                                        headlineContent = { Text(item.first) },
                                         leadingContent = { Text(item.second.size.toString()) },
                                         trailingContent = {
                                             Icon(
@@ -501,6 +497,7 @@ private fun NotificationItem(
                             is24Hour = is24HourFormat
                         )
 
+                        //TODO: make all this code into a function
                         if (showTimePicker) {
                             AlertDialog(
                                 onDismissRequest = { showTimePicker = false },

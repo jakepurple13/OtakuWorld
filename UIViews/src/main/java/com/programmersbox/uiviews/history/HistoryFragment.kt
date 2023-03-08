@@ -236,9 +236,9 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
             }
         ) {
             ListItem(
-                headlineText = { Text(item.title) },
-                overlineText = { Text(item.source) },
-                supportingText = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
+                headlineContent = { Text(item.title) },
+                overlineContent = { Text(item.source) },
+                supportingContent = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
                 leadingContent = {
                     Surface(shape = MaterialTheme.shapes.medium) {
                         AsyncImage(
@@ -300,9 +300,9 @@ private fun HistoryItemPlaceholder() {
     ) {
         ListItem(
             modifier = Modifier.placeholder(true, color = placeholderColor),
-            headlineText = { Text("Otaku") },
-            overlineText = { Text("Otaku") },
-            supportingText = { Text("Otaku") },
+            headlineContent = { Text("Otaku") },
+            overlineContent = { Text("Otaku") },
+            supportingContent = { Text("Otaku") },
             leadingContent = {
                 Surface(shape = MaterialTheme.shapes.medium) {
                     Icon(

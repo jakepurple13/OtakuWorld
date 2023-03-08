@@ -337,7 +337,7 @@ fun NovelReader(
                                     tonalElevation = 4.dp
                                 ) {
                                     ListItem(
-                                        headlineText = { Text(c.name) },
+                                        headlineContent = { Text(c.name) },
                                         leadingContent = if (readVm.currentChapter == i) {
                                             { Icon(Icons.Default.ArrowRight, null) }
                                         } else null,

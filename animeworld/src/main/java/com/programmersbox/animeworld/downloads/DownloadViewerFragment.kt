@@ -10,17 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +38,6 @@ import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.tonyodev.fetch2.Status
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 interface ActionListener {
     fun onPauseDownload(id: Int)
@@ -69,16 +61,16 @@ fun DownloaderUi(
         onResume = viewModel::onResume
     )
 
-    LaunchedEffect(state.bottomSheetState.isExpanded) {
-        if (state.bottomSheetState.isExpanded) {
+    LaunchedEffect(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        if (state.bottomSheetState.currentValue == SheetValue.Expanded) {
             viewModel.fetch.pauseAll()
         } else {
             viewModel.fetch.resumeAll()
         }
     }
 
-    BackHandler(state.bottomSheetState.isExpanded) {
-        scope.launch { state.bottomSheetState.collapse() }
+    BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch { state.bottomSheetState.partialExpand() }
     }
 
     var itemToDelete by remember { mutableStateOf<DownloadData?>(null) }
@@ -111,7 +103,7 @@ fun DownloaderUi(
                 title = {
                     Text(
                         stringResource(id = R.string.in_progress_downloads),
-                        style = M3MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge
                     )
                 }
             )
@@ -119,12 +111,12 @@ fun DownloaderUi(
         itemUi = { download ->
             ListItem(
                 modifier = Modifier.padding(4.dp),
-                headlineText = { Text(download.download.url.toUri().lastPathSegment.orEmpty()) },
-                overlineText = {
+                headlineContent = { Text(download.download.url.toUri().lastPathSegment.orEmpty()) },
+                overlineContent = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val progress = download.download.progress.coerceAtLeast(0)
                         Text(stringResource(R.string.percent_progress, progress))
-                        androidx.compose.material3.LinearProgressIndicator(
+                        LinearProgressIndicator(
                             progress = animateFloatAsState(targetValue = progress.toFloat() / 100f).value,
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)
@@ -166,13 +158,13 @@ private fun EmptyState(paddingValues: PaddingValues) {
             Column(modifier = Modifier) {
                 Text(
                     text = stringResource(id = R.string.get_started),
-                    style = M3MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
                 Text(
                     text = stringResource(id = R.string.download_a_video),
-                    style = M3MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
@@ -236,7 +228,7 @@ private fun DownloadItem(download: DownloadData, actionListener: ActionListener)
                     Icons.Default.Delete,
                     contentDescription = null,
                     modifier = Modifier.scale(scale),
-                    tint = M3MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         },
@@ -274,7 +266,7 @@ private fun DownloadItem(download: DownloadData, actionListener: ActionListener)
 
                     val prog = download.download.progress.coerceAtLeast(0)
 
-                    androidx.compose.material3.LinearProgressIndicator(
+                    LinearProgressIndicator(
                         progress = animateFloatAsState(targetValue = prog.toFloat() / 100f).value,
                         modifier = Modifier
                             .constrainAs(progress) {

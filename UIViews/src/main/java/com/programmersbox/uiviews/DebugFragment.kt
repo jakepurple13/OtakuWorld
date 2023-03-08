@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.excludeFromSystemGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,6 +21,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import com.programmersbox.uiviews.utils.*
 
+@SuppressLint("ComposeContentEmitterReturningValues")
 @ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @ExperimentalMaterial3Api
@@ -30,7 +32,7 @@ fun DebugView() {
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {

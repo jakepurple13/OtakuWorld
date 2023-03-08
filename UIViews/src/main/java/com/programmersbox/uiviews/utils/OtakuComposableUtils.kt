@@ -249,9 +249,9 @@ fun OtakuBannerBox(
                             }
                         )
                     },
-                    overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    headlineText = { Text(itemInfo.value?.title.orEmpty()) },
-                    supportingText = {
+                    overlineContent = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
+                    headlineContent = { Text(itemInfo.value?.title.orEmpty()) },
+                    supportingContent = {
                         Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,
@@ -444,9 +444,9 @@ fun M3OtakuBannerBox(
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
                     },
-                    overlineText = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    headlineText = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
-                    supportingText = {
+                    overlineContent = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },
+                    headlineContent = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
+                    supportingContent = {
                         androidx.compose.material3.Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,

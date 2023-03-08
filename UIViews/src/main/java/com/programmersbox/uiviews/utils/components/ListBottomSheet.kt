@@ -53,9 +53,9 @@ fun <T> ListBottomScreen(
             ListItem(
                 modifier = Modifier.clickable { onClick(it) },
                 leadingContent = c.icon?.let { i -> { Icon(i, null) } },
-                headlineText = { Text(c.primaryText) },
-                supportingText = c.secondaryText?.let { i -> { Text(i) } },
-                overlineText = c.overlineText?.let { i -> { Text(i) } }
+                headlineContent = { Text(c.primaryText) },
+                supportingContent = c.secondaryText?.let { i -> { Text(i) } },
+                overlineContent = c.overlineText?.let { i -> { Text(i) } }
             )
             if (index < list.size - 1) Divider()
         }

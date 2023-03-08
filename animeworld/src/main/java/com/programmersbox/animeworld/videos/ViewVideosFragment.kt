@@ -16,19 +16,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,6 +80,7 @@ fun ViewVideoScreen() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -99,8 +94,8 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
 
-    BackHandler(state.bottomSheetState.isExpanded) {
-        scope.launch { state.bottomSheetState.collapse() }
+    BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch { state.bottomSheetState.partialExpand() }
     }
 
     var itemToDelete by remember { mutableStateOf<VideoContent?>(null) }
@@ -222,11 +217,11 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
                     }
                 },
-                overlineText = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
+                overlineContent = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
                     { Text(context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()) }
                 } else null,
-                headlineText = { Text(item.videoName.orEmpty()) },
-                supportingText = { Text(item.path.orEmpty()) }
+                headlineContent = { Text(item.videoName.orEmpty()) },
+                supportingContent = { Text(item.path.orEmpty()) }
             )
         }
     ) { p, itemList ->

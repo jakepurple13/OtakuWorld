@@ -41,13 +41,7 @@ subprojects {
 
 fun Project.configureAndroidBasePlugin() {
     extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
-        lintOptions {
-            disable += setOf("ComposeModifierMissing", "ComposeMultipleContentEmitters")
-        }
 
-        dependencies {
-            "lintChecks"("com.slack.lint.compose:compose-lint-checks:1.0.0")
-        }
     }
 }
 

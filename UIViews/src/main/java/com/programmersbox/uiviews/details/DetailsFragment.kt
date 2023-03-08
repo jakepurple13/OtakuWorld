@@ -263,7 +263,7 @@ fun MarkAsScreen(
                                 ?.animate()?.value ?: M3MaterialTheme.colorScheme.onSurface,
                             containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
                         ),
-                        headlineText = { Text(c.name) },
+                        headlineContent = { Text(c.name) },
                         leadingContent = {
                             Checkbox(
                                 checked = chapters.fastAny { it.url == c.url },
@@ -349,7 +349,7 @@ fun ChapterItem(
                             )
                         )
                     },
-                    headlineText = {
+                    headlineContent = {
                         Text(
                             c.name,
                             style = M3MaterialTheme.typography.bodyLarge

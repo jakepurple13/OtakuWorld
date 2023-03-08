@@ -180,8 +180,8 @@ fun FavoriteUi(
                             ) {
                                 showing.take(4).forEachIndexed { index, dbModel ->
                                     ListItem(
-                                        headlineText = { Text(dbModel.title) },
-                                        supportingText = { Text(dbModel.source) },
+                                        headlineContent = { Text(dbModel.title) },
+                                        supportingContent = { Text(dbModel.source) },
                                         leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
                                         modifier = Modifier.clickable {
                                             searchText = dbModel.title

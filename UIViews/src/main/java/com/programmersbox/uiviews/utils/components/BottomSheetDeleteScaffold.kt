@@ -10,21 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -44,7 +33,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @Composable
 fun <T> BottomSheetDeleteScaffold(
     listOfItems: List<T>,
@@ -65,20 +53,15 @@ fun <T> BottomSheetDeleteScaffold(
 
     BottomSheetScaffold(
         scaffoldState = state,
-        modifier = Modifier
-            .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
-            .then(modifier),
+        modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
         topBar = topBar,
-        backgroundColor = MaterialTheme.colorScheme.background,
-        contentColor = contentColorFor(MaterialTheme.colorScheme.background),
-        sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
-        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
+        sheetPeekHeight = BottomSheetDefaults.SheetPeekHeight + 56.dp,
         sheetContent = {
 
             val itemsToDelete = remember { mutableStateListOf<T>() }
 
             LaunchedEffect(state) {
-                snapshotFlow { state.bottomSheetState.isCollapsed }
+                snapshotFlow { state.bottomSheetState.currentValue == SheetValue.PartiallyExpanded }
                     .distinctUntilChanged()
                     .filter { it }
                     .collect { itemsToDelete.clear() }
@@ -106,7 +89,7 @@ fun <T> BottomSheetDeleteScaffold(
                         TextButton(
                             onClick = {
                                 onDismiss()
-                                scope.launch { state.bottomSheetState.collapse() }
+                                scope.launch { state.bottomSheetState.partialExpand() }
                                 onMultipleRemove(itemsToDelete)
                             }
                         ) { Text(stringResource(R.string.yes)) }
@@ -121,34 +104,19 @@ fun <T> BottomSheetDeleteScaffold(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Surface(modifier = Modifier.animateContentSize()) {
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
-                                    else state.bottomSheetState.collapse()
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .let {
-                                    if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
-                                        it.padding(WindowInsets.statusBars.asPaddingValues())
-                                    } else {
-                                        it
-                                    }
-                                }
-                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                        ) { Text(stringResource(R.string.delete_multiple)) }
-                    }
+                    CenterAlignedTopAppBar(
+                        title = { Text(stringResource(R.string.delete_multiple)) },
+                        windowInsets = WindowInsets(0.dp),
+                        scrollBehavior = scrollBehavior
+                    )
                 },
                 bottomBar = {
-                    androidx.compose.material3.BottomAppBar(
+                    BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
+                        windowInsets = WindowInsets(0.dp)
                     ) {
                         Button(
-                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
+                            onClick = { scope.launch { state.bottomSheetState.partialExpand() } },
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)
@@ -205,7 +173,6 @@ fun <T> BottomSheetDeleteScaffold(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun <T> DeleteItemView(
     item: T,
@@ -293,7 +260,6 @@ private fun <T> DeleteItemView(
 }
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @Composable
 fun <T : Any> BottomSheetDeleteScaffoldPaging(
     listOfItems: LazyPagingItems<T>,
@@ -318,8 +284,6 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
             .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
             .then(modifier),
         topBar = topBar,
-        backgroundColor = MaterialTheme.colorScheme.background,
-        contentColor = contentColorFor(MaterialTheme.colorScheme.background),
         sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
         sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
         sheetContent = {
@@ -327,7 +291,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
             val itemsToDelete = remember { mutableStateListOf<T>() }
 
             LaunchedEffect(state) {
-                snapshotFlow { state.bottomSheetState.isCollapsed }
+                snapshotFlow { state.bottomSheetState.currentValue == SheetValue.Hidden }
                     .distinctUntilChanged()
                     .filter { it }
                     .collect { itemsToDelete.clear() }
@@ -355,7 +319,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                         TextButton(
                             onClick = {
                                 onDismiss()
-                                scope.launch { state.bottomSheetState.collapse() }
+                                scope.launch { state.bottomSheetState.hide() }
                                 onMultipleRemove(itemsToDelete)
                             }
                         ) { Text(stringResource(R.string.yes)) }
@@ -374,14 +338,14 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
-                                    else state.bottomSheetState.collapse()
+                                    if (state.bottomSheetState.currentValue == SheetValue.Hidden) state.bottomSheetState.expand()
+                                    else state.bottomSheetState.hide()
                                 }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .let {
-                                    if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
+                                    if (state.bottomSheetState.targetValue == SheetValue.Expanded) {
                                         it.padding(WindowInsets.statusBars.asPaddingValues())
                                     } else {
                                         it
@@ -393,11 +357,11 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                     }
                 },
                 bottomBar = {
-                    androidx.compose.material3.BottomAppBar(
+                    BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
                     ) {
                         Button(
-                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
+                            onClick = { scope.launch { state.bottomSheetState.hide() } },
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)

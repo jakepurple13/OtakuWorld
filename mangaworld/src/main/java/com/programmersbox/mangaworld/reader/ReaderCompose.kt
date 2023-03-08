@@ -10,9 +10,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -54,7 +52,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -813,8 +810,14 @@ private fun ZoomableImage(
                 val size = coordinates.size.toSize() / 2.0f
                 centerPoint = Offset(size.width, size.height)
             }
-            .transformable(state)
-            .pointerInput(Unit) {
+            .clickable(
+                indication = null,
+                onClick = onClick,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+        //TODO: In compose 1.4.0-rc01, these seem to be consuming drags
+        //.transformable(state)
+        /*.pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { onClick() },
                     onDoubleTap = {
@@ -830,10 +833,9 @@ private fun ZoomableImage(
                                 offset = clampOffset(centerPoint, offset, scale)
                             }
                         }
-
                     }
                 )
-            }
+            }*/
     ) {
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }

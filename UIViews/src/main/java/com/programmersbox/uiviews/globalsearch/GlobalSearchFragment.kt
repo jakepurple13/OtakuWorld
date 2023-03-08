@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -58,8 +56,7 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
+    ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class,
 )
 @Composable
 fun GlobalSearchView(
@@ -100,10 +97,10 @@ fun GlobalSearchView(
         val bottomScaffold = rememberBottomSheetScaffoldState()
         var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
-        BackHandler(bottomScaffold.bottomSheetState.isExpanded) {
+        BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
             scope.launch {
                 try {
-                    bottomScaffold.bottomSheetState.collapse()
+                    bottomScaffold.bottomSheetState.partialExpand()
                 } catch (e: Exception) {
                     navController.popBackStack()
                 }
@@ -113,8 +110,6 @@ fun GlobalSearchView(
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
         BottomSheetScaffold(
-            backgroundColor = M3MaterialTheme.colorScheme.background,
-            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
             scaffoldState = bottomScaffold,
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
@@ -165,7 +160,7 @@ fun GlobalSearchView(
                         ) {
                             itemsIndexed(history) { index, historyModel ->
                                 ListItem(
-                                    headlineText = { Text(historyModel.searchText) },
+                                    headlineContent = { Text(historyModel.searchText) },
                                     leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
                                     trailingContent = {
                                         IconButton(
@@ -201,7 +196,8 @@ fun GlobalSearchView(
                             TopAppBar(
                                 scrollBehavior = sheetScrollBehavior,
                                 title = { Text(s.apiName) },
-                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) },
+                                windowInsets = WindowInsets(0.dp)
                             )
                         }
                     ) { p ->
@@ -209,7 +205,7 @@ fun GlobalSearchView(
                             columns = adaptiveGridCell(),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            contentPadding = p
+                            contentPadding = p,
                         ) {
                             items(s.data) { m ->
                                 SearchCoverCard(
