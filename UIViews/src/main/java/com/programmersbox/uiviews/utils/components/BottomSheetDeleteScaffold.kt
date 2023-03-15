@@ -53,9 +53,10 @@ fun <T> BottomSheetDeleteScaffold(
 
     BottomSheetScaffold(
         scaffoldState = state,
-        modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
+        modifier = modifier
+            .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
+            .statusBarsPadding(),
         topBar = topBar,
-        sheetPeekHeight = BottomSheetDefaults.SheetPeekHeight + 56.dp,
         sheetContent = {
 
             val itemsToDelete = remember { mutableStateListOf<T>() }
