@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,10 +73,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.github.piasy.biv.BigImageViewer
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.PagerState
-import com.google.accompanist.pager.VerticalPager
-import com.google.accompanist.pager.rememberPagerState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -93,7 +92,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-@OptIn(ExperimentalPagerApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
@@ -380,7 +378,7 @@ fun DrawerView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalAnimationApi::class, ExperimentalPagerApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SheetView(
     readVm: ReadViewModel,
@@ -512,7 +510,7 @@ fun ListView(
     ) { reader(pages, readVm, onClick) }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PagerView(
     pagerState: PagerState,
@@ -525,8 +523,8 @@ fun PagerView(
     VerticalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        count = pages.size + 1,
-        itemSpacing = itemSpacing,
+        pageCount = pages.size + 1,
+        pageSpacing = itemSpacing,
         contentPadding = contentPadding,
         key = { it }
     ) { page ->

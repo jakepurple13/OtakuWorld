@@ -60,7 +60,6 @@ uiUtil = { module = "androidx.compose.ui:ui-util", version.ref = "jetpack" }
 coilCompose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 #Accompanist
-composePager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist" }
 materialPlaceholder = { module = "com.google.accompanist:accompanist-placeholder-material", version.ref = "accompanist" }
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }

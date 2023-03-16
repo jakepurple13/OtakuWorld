@@ -1,11 +1,12 @@
 package com.programmersbox.uiviews.recent
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -23,9 +24,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.VerticalPager
-import com.google.accompanist.pager.rememberPagerState
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
@@ -34,7 +32,12 @@ import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalAnimationApi::class
+)
 @Composable
 fun RecentView(
     recentVm: RecentViewModel,
@@ -56,27 +59,47 @@ fun RecentView(
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+
+    val sourceList = remember { info.sourceList() }
+    val initSource = remember(source) { sourceList.indexOf(source) }
+    val pagerState = rememberPagerState(initSource.coerceAtLeast(0))
+    LaunchedEffect(initSource) {
+        if (initSource != -1) pagerState.scrollToPage(initSource)
+    }
+    LaunchedEffect(pagerState.currentPage, initSource) {
+        if (initSource != -1) {
+            sourceList.getOrNull(pagerState.currentPage)?.let { service ->
+                sourceFlow.emit(service)
+                context.currentService = service.serviceName
+            }
+        }
+    }
+
+    LaunchedEffect(source) { if (source != null) state.scrollToItem(0) }
+
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
-                title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-                actions = {
-                    val initSource = remember(source) { info.sourceList().indexOf(source) }
-                    val pagerState = rememberPagerState(initSource.coerceAtLeast(0))
-                    LaunchedEffect(initSource) {
-                        if (initSource != -1) pagerState.scrollToPage(initSource)
-                    }
-                    LaunchedEffect(pagerState.currentPage, initSource) {
-                        if (initSource != -1) {
-                            info.sourceList().getOrNull(pagerState.currentPage)?.let { service ->
-                                sourceFlow.emit(service)
-                                context.currentService = service.serviceName
-                            }
+                title = {
+                    AnimatedContent(
+                        targetState = pagerState.targetPage,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                slideInVertically { height -> height } + fadeIn() with
+                                        slideOutVertically { height -> -height } + fadeOut()
+                            } else {
+                                slideInVertically { height -> -height } + fadeIn() with
+                                        slideOutVertically { height -> height } + fadeOut()
+                            }.using(SizeTransform(clip = false))
                         }
+                    ) { targetState ->
+                        Text(stringResource(R.string.currentSource, sourceList.getOrNull(targetState)?.serviceName.orEmpty()))
                     }
+                },
+                actions = {
                     VerticalPager(
-                        count = info.sourceList().size,
+                        pageCount = info.sourceList().size,
                         state = pagerState
                     ) {
                         IconButton(onClick = { navController.navigate(Screen.SourceChooserScreen.route) }) {

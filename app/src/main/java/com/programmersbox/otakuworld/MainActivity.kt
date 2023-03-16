@@ -2,7 +2,6 @@ package com.programmersbox.otakuworld
 
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.*
@@ -51,18 +50,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.pager.ExperimentalPagerApi
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.itemRangeOf
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.MaterialCard
-import com.programmersbox.uiviews.utils.components.SwipeState
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.properties.Delegates
@@ -76,7 +72,6 @@ class MainActivity : AppCompatActivity() {
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalMaterialApi::class,
-        ExperimentalPagerApi::class,
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
@@ -136,7 +131,7 @@ class MainActivity : AppCompatActivity() {
                 val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
                 val scaffoldState = rememberBottomSheetScaffoldState()
 
-                BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
+                /*BackHandler(scaffoldState.bottomSheetState.isExpanded) { scope.launch { scaffoldState.bottomSheetState.collapse() } }
 
                 val showSettings: () -> Unit = {
                     TestDialogFragment().showNow(supportFragmentManager, null)
@@ -372,7 +367,7 @@ class MainActivity : AppCompatActivity() {
                             )
                         ) { androidx.compose.material3.Text("Open Settings") }
                     }
-                }
+                }*/
 
                 /*val scrollBehavior = remember { TopAppBarDefaults.enterAlwaysScrollBehavior() }
 

@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
@@ -44,9 +46,6 @@ import androidx.constraintlayout.compose.ExperimentalMotionApi
 import androidx.constraintlayout.compose.MotionLayout
 import androidx.constraintlayout.compose.MotionLayoutDebugFlags
 import androidx.constraintlayout.compose.MotionScene
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.rememberPagerState
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.FullDynamicThemePrimaryColorsFromImage
 import com.programmersbox.uiviews.utils.components.rememberDynamicColorState
@@ -65,7 +64,6 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
         ExperimentalMaterial3Api::class,
         ExperimentalMaterialApi::class,
         ExperimentalComposeUiApi::class,
-        ExperimentalPagerApi::class,
         ExperimentalFoundationApi::class,
         ExperimentalMotionApi::class
     )
@@ -92,7 +90,6 @@ enum class SettingLocation {
 }
 
 @ExperimentalMotionApi
-@ExperimentalPagerApi
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
@@ -296,7 +293,6 @@ fun CheckView(closeClick: () -> Unit) {
     }
 }
 
-@ExperimentalPagerApi
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
@@ -342,7 +338,7 @@ fun PagerView(closeClick: () -> Unit) {
             }
             HorizontalPager(
                 state = state,
-                count = pageCount,
+                pageCount = pageCount,
                 verticalAlignment = Alignment.Top
             ) { page ->
 

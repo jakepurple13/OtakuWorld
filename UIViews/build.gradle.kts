@@ -139,7 +139,6 @@ dependencies {
     implementation(libs.pagingCompose)
     implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
-    implementation(libs.composePager)
 
     implementation(libs.bundles.protobuf)
 }
