@@ -57,7 +57,6 @@ import com.programmersbox.uiviews.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.history.HistoryUi
 import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.recent.RecentView
-import com.programmersbox.uiviews.recent.RecentViewModel
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
@@ -213,16 +212,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             startDestination = SScreen.RecentScreen.route,
                             modifier = Modifier.padding(innerPadding)
                         ) {
-                            composable(
-                                SScreen.RecentScreen.route
-                            ) {
-                                val context = LocalContext.current
-                                val dao = LocalItemDao.current
-                                RecentView(
-                                    recentVm = viewModel { RecentViewModel(dao, context) },
-                                    logo = logo
-                                )
-                            }
+                            composable(SScreen.RecentScreen.route) { RecentView(logo = logo) }
 
                             composable(
                                 SScreen.AllScreen.route

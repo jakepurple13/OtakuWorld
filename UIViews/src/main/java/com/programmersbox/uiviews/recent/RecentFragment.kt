@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.recent
 
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -24,6 +25,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
@@ -40,12 +43,13 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 )
 @Composable
 fun RecentView(
-    recentVm: RecentViewModel,
-    logo: MainLogo
+    logo: MainLogo,
+    dao: ItemDao = LocalItemDao.current,
+    context: Context = LocalContext.current,
+    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, context) },
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
-    val context = LocalContext.current
     val state = rememberLazyGridState()
     val scope = rememberCoroutineScope()
     val source by sourceFlow.collectAsState(initial = null)
@@ -74,8 +78,6 @@ fun RecentView(
             }
         }
     }
-
-    LaunchedEffect(source) { if (source != null) state.scrollToItem(0) }
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
