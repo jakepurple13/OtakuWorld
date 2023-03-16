@@ -23,6 +23,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.VerticalPager
+import com.google.accompanist.pager.rememberPagerState
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
@@ -31,7 +34,7 @@ import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class, ExperimentalPagerApi::class)
 @Composable
 fun RecentView(
     recentVm: RecentViewModel,
@@ -59,8 +62,26 @@ fun RecentView(
             InsetSmallTopAppBar(
                 title = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
                 actions = {
-                    IconButton(onClick = { navController.navigate(Screen.SourceChooserScreen.route) }) {
-                        Icon(Icons.Default.Source, null)
+                    val initSource = remember(source) { info.sourceList().indexOf(source) }
+                    val pagerState = rememberPagerState(initSource.coerceAtLeast(0))
+                    LaunchedEffect(initSource) {
+                        if (initSource != -1) pagerState.scrollToPage(initSource)
+                    }
+                    LaunchedEffect(pagerState.currentPage, initSource) {
+                        if (initSource != -1) {
+                            info.sourceList().getOrNull(pagerState.currentPage)?.let { service ->
+                                sourceFlow.emit(service)
+                                context.currentService = service.serviceName
+                            }
+                        }
+                    }
+                    VerticalPager(
+                        count = info.sourceList().size,
+                        state = pagerState
+                    ) {
+                        IconButton(onClick = { navController.navigate(Screen.SourceChooserScreen.route) }) {
+                            Icon(Icons.Default.Source, null)
+                        }
                     }
                     AnimatedVisibility(visible = showButton) {
                         IconButton(onClick = { scope.launch { state.animateScrollToItem(0) } }) {
