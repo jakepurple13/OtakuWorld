@@ -119,9 +119,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
-            navController = rememberAnimatedNavController(bottomSheetNavigator, remember {
-                ChromeCustomTabsNavigator(this)
-            })
+            navController = rememberAnimatedNavController(
+                bottomSheetNavigator,
+                remember { ChromeCustomTabsNavigator(this) }
+            )
 
             val systemUiController = rememberSystemUiController()
 
