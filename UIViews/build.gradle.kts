@@ -133,6 +133,8 @@ dependencies {
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
+    val composeBom = platform(libs.composePlatform)
+    implementation(composeBom)
     implementation(libs.bundles.compose)
     implementation(libs.toolbarCompose)
     implementation(libs.lazyColumnScrollbar)

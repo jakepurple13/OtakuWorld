@@ -43,7 +43,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
-import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.*
@@ -484,7 +483,7 @@ fun ChapterItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @Composable
@@ -682,8 +681,9 @@ internal fun DetailsHeader(
             }
 
             FlowRow(
-                mainAxisSpacing = 4.dp,
-                crossAxisSpacing = 2.dp,
+                //mainAxisSpacing = 4.dp,
+                //crossAxisSpacing = 2.dp,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 model.genres.forEach {
                     AssistChip(

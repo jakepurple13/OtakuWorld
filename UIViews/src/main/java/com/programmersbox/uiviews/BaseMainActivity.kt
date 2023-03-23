@@ -229,6 +229,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.SettingsScreen.route,
                                 deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.SettingsScreen.route }),
+                                //TODO: PUT THESE BACK IN WHEN THEY GET SUPPORT AGAIN!
                                 //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Start) },
                                 //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.End) },
                             ) {
@@ -248,8 +249,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.NotificationScreen.route,
                                 deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.NotificationScreen.route }),
-                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                //enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                                //exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) {
                                 NotificationsScreen(
                                     notificationManager = LocalContext.current.notificationManager,
@@ -261,35 +262,37 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.GlobalSearchScreen.route + "?searchFor={searchFor}",
                                 arguments = listOf(navArgument("searchFor") { nullable = true }),
-                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
 
                             composable(
                                 SScreen.FavoriteScreen.route,
-                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) { FavoriteUi(logo) }
 
                             composable(
                                 SScreen.HistoryScreen.route,
-                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) { HistoryUi(logo = logo) }
 
                             composable(
                                 SScreen.AboutScreen.route,
-                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) { AboutLibrariesScreen(logo) }
 
                             composable(
                                 SScreen.DetailsScreen.route + "/{model}",
-                                deepLinks = listOf(navDeepLink {
-                                    uriPattern = genericInfo.deepLinkUri + "${SScreen.DetailsScreen.route}/{model}"
-                                }),
-                                enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                deepLinks = listOf(
+                                    navDeepLink {
+                                        uriPattern = genericInfo.deepLinkUri + "${SScreen.DetailsScreen.route}/{model}"
+                                    }
+                                ),
+                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
                             ) {
                                 DetailsScreen(
                                     logo = notificationLogo,

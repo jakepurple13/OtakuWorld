@@ -518,22 +518,23 @@ class GenericAnime(val context: Context) : GenericInfo {
 
         composable(
             ViewVideoViewModel.VideoViewerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            //TODO: PUT THESE BACK IN WHEN THEY GET SUPPORT AGAIN!
+            //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
 
         composable(
             DownloaderViewModel.DownloadViewerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
         ) { DownloaderUi() }
 
         composable(
             VideoViewModel.VideoPlayerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
+            //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
         ) { VideoPlayerUi() }
 
         bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }

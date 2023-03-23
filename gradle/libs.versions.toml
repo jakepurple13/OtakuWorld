@@ -13,13 +13,14 @@ coil = "2.2.2"
 lifecycle = "2.5.1"
 jetpack = "1.5.0-alpha01"
 jetpackCompiler = "1.4.4"
-accompanist = "0.29.0-alpha"
+accompanist = "0.30.0"
 okhttpVersion = "4.10.0"
 ktorVersion = "2.2.2"
 workVersion = "2.8.0"
 ziplineVersion = "0.9.12"
-landscapist = "2.1.3"
+landscapist = "2.1.9"
 protobufVersion = "3.21.12"
+composeBomVersion = "2023.03.00"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -40,23 +41,24 @@ palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.10"
 
 #Compose
-composeUi = { module = "androidx.compose.ui:ui", version.ref = "jetpack" }
-composeUiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "jetpack" }
-composeFoundation = { module = "androidx.compose.foundation:foundation", version.ref = "jetpack" }
-composeMaterial = { module = "androidx.compose.material:material", version.ref = "jetpack" }
-materialYou = "androidx.compose.material3:material3:1.1.0-beta01"
-composeMaterialIconsCore = { module = "androidx.compose.material:material-icons-core", version.ref = "jetpack" }
-composeMaterialIconsExtended = { module = "androidx.compose.material:material-icons-extended", version.ref = "jetpack" }
-composeActivity = "androidx.activity:activity-compose:1.6.1"
+composePlatform = { module = "dev.chrisbanes.compose:compose-bom", version.ref = "composeBomVersion" }
+composeUi = { group = "androidx.compose.ui", name = "ui" }
+composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
+composeMaterial = { group = "androidx.compose.material", name = "material" }
+materialYou = { group = "androidx.compose.material3", name = "material3" }
+composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
+composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
+uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
+composeAnimation = { group = "androidx.compose.animation", name = "animation" }
+composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+composeActivity = "androidx.activity:activity-compose:1.6.1"
 composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-beta01"
-composeRuntimeLivedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpack" }
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
 landscapistPlaceholder = { module = "com.github.skydoves:landscapist-placeholder", version.ref = "landscapist" }
 composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
-composeAnimation = { module = "androidx.compose.animation:animation", version.ref = "jetpack" }
-uiUtil = { module = "androidx.compose.ui:ui-util", version.ref = "jetpack" }
 coilCompose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 #Accompanist
@@ -65,7 +67,6 @@ drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter
 permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 navMaterial = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
 navAnimation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
-flowLayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanist" }
 systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
 okhttpLib = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
 okhttpDns = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpVersion" }
@@ -259,7 +260,7 @@ compose = [
     "composeConstraintLayout", "permissions",
     "materialPlaceholder", "drawablePainter", "uiUtil",
     "materialYou",
-    "navCompose", "navMaterial", "navAnimation", "systemUiController", "flowLayout"
+    "navCompose", "navMaterial", "navAnimation", "systemUiController"
 ]
 media3 = [
     "exoplayer",
