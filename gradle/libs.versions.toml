@@ -122,7 +122,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.5.5"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.5.6"
 stetho = "com.facebook.stetho:stetho:1.6.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.4.0"
