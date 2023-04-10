@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Environment
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -458,9 +459,8 @@ class GenericManga(val context: Context) : GenericInfo {
 
         composable(
             DownloadViewModel.DownloadRoute,
-            //TODO: PUT THESE BACK IN WHEN THEY GET SUPPORT AGAIN!
-            //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) { DownloadScreen() }
     }
 

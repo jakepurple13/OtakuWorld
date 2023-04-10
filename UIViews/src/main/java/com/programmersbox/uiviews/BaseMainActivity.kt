@@ -229,9 +229,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.SettingsScreen.route,
                                 deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.SettingsScreen.route }),
-                                //TODO: PUT THESE BACK IN WHEN THEY GET SUPPORT AGAIN!
-                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Start) },
-                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.End) },
+                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
                             ) {
                                 SettingScreen(
                                     navController = navController,
@@ -249,8 +248,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.NotificationScreen.route,
                                 deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.NotificationScreen.route }),
-                                //enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-                                //exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) {
                                 NotificationsScreen(
                                     notificationManager = LocalContext.current.notificationManager,
@@ -262,26 +261,26 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.GlobalSearchScreen.route + "?searchFor={searchFor}",
                                 arguments = listOf(navArgument("searchFor") { nullable = true }),
-                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
 
                             composable(
                                 SScreen.FavoriteScreen.route,
-                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { FavoriteUi(logo) }
 
                             composable(
                                 SScreen.HistoryScreen.route,
-                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { HistoryUi(logo = logo) }
 
                             composable(
                                 SScreen.AboutScreen.route,
-                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { AboutLibrariesScreen(logo) }
 
                             composable(
@@ -291,8 +290,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                         uriPattern = genericInfo.deepLinkUri + "${SScreen.DetailsScreen.route}/{model}"
                                     }
                                 ),
-                                //enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-                                //exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) {
                                 DetailsScreen(
                                     logo = notificationLogo,
