@@ -15,7 +15,7 @@ jetpack = "1.5.0-alpha01"
 jetpackCompiler = "1.4.4"
 accompanist = "0.30.0"
 okhttpVersion = "4.10.0"
-ktorVersion = "2.2.2"
+ktorVersion = "2.2.4"
 workVersion = "2.8.0"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.9"
@@ -122,7 +122,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.5.5"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.5.6"
 stetho = "com.facebook.stetho:stetho:1.6.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.4.0"
@@ -237,7 +237,7 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
-androidxWebkit = "androidx.webkit:webkit:1.5.0"
+androidxWebkit = "androidx.webkit:webkit:1.6.1"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"

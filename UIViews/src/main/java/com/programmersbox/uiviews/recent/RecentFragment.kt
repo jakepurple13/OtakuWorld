@@ -80,7 +80,6 @@ fun RecentView(
     }
 
     OtakuScaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
                 title = {
@@ -126,7 +125,9 @@ fun RecentView(
         ) { itemInfo ->
             Crossfade(
                 targetState = isConnected,
-                modifier = Modifier.padding(p)
+                modifier = Modifier
+                    .padding(p)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
             ) { connected ->
                 when (connected) {
                     false -> {

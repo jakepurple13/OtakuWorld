@@ -266,7 +266,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
                     )
                 }
             },
-            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .5f))
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .5f))
         )
     }
 }

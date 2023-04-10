@@ -800,7 +800,7 @@ private fun ZoomableImage(
         offset = clampOffset(centerPoint, offset, scale)
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
