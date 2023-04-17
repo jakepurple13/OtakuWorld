@@ -1,0 +1,35 @@
+package com.programmersbox.uiviews.lists
+
+import androidx.compose.runtime.mutableStateListOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.favoritesdatabase.ListDao
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+
+class OtakuListViewModel(
+    private val listDao: ListDao
+) : ViewModel() {
+
+    val customLists = mutableStateListOf<CustomList>()
+
+    init {
+        listDao.getAllLists()
+            .onEach {
+                customLists.clear()
+                customLists.addAll(it)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun createNewList(name: String) {
+        viewModelScope.launch { listDao.create(name) }
+    }
+
+    fun removeList(list: CustomList) {
+        //viewModelScope.launch { listDao.removeList(list) }
+    }
+
+}
