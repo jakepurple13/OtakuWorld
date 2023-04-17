@@ -21,7 +21,7 @@ import java.util.UUID
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 2,
+    version = 1,
     autoMigrations = [AutoMigration(from = 1, to = 2)]
 )
 abstract class ListDatabase : RoomDatabase() {
