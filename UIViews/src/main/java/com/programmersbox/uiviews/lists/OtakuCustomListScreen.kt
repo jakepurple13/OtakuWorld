@@ -6,14 +6,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -54,6 +62,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,13 +77,51 @@ fun OtakuCustomListScreen(
 
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val customItem = vm.customItem
+    var showAdd by remember { mutableStateOf(false) }
+
+    if (showAdd) {
+        var name by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAdd = false },
+            title = { Text("Create New List") },
+            text = {
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("List Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            customItem?.item?.copy(name = name)?.let { listDao.updateList(it) }
+                            showAdd = false
+                        }
+                    },
+                    enabled = name.isNotEmpty()
+                ) { Text("Confirm") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAdd = false }) { Text("Cancel") }
+            }
+        )
+    }
 
     OtakuScaffold(
         topBar = {
             InsetSmallTopAppBar(
-                title = { Text(vm.customItem?.item?.name.orEmpty()) },
+                title = { Text(customItem?.item?.name.orEmpty()) },
                 navigationIcon = { BackButton() },
-                actions = { Text("(${vm.customItem?.list.orEmpty().size})") },
+                actions = {
+                    IconButton(onClick = { showAdd = true }) {
+                        Icon(Icons.Default.Edit, null)
+                    }
+                    Text("(${customItem?.list.orEmpty().size})")
+                },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -86,7 +133,6 @@ fun OtakuCustomListScreen(
             showLoadingDialog = showLoadingDialog,
             onDismissRequest = { showLoadingDialog = false }
         )
-        val customItem = vm.customItem
         if (customItem != null) {
             LazyColumn(
                 contentPadding = padding,
