@@ -171,11 +171,14 @@ fun DetailsView(
                             info.source.serviceName
                         )
                         hostState.showSnackbar(
-                            if (result) {
-                                "Added to ${item.item.name}"
-                            } else {
-                                "Already in ${item.item.name}"
-                            },
+                            context.getString(
+                                if (result) {
+                                    R.string.added_to_list
+                                } else {
+                                    R.string.already_in_list
+                                },
+                                item.item.name
+                            ),
                             withDismissAction = true
                         )
                     }
@@ -270,7 +273,7 @@ fun DetailsView(
                                     dropDownDismiss()
                                     showLists = true
                                 },
-                                text = { Text("Add to List") },
+                                text = { Text(stringResource(R.string.add_to_list)) },
                                 leadingIcon = { Icon(Icons.Default.SaveAs, null) }
                             )
 

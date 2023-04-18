@@ -100,10 +100,10 @@ fun OtakuCustomListScreen(
         var listName by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { deleteList = false },
-            title = { Text("Delete List") },
+            title = { Text(stringResource(R.string.delete_list_title)) },
             text = {
                 Column {
-                    Text("Are you sure? There is no recovering.\nPlease type in the name of the list to delete.")
+                    Text(stringResource(R.string.are_you_sure_delete_list))
                     Text(customItem?.item?.name.orEmpty())
                     TextField(
                         value = listName,
@@ -127,9 +127,9 @@ fun OtakuCustomListScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     ),
                     enabled = listName == customItem?.item?.name
-                ) { Text("Confirm") }
+                ) { Text(stringResource(id = R.string.confirm)) }
             },
-            dismissButton = { TextButton(onClick = { deleteList = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { deleteList = false }) { Text(stringResource(id = R.string.cancel)) } }
         )
     }
 
@@ -139,12 +139,12 @@ fun OtakuCustomListScreen(
         var name by remember { mutableStateOf(customItem?.item?.name.orEmpty()) }
         AlertDialog(
             onDismissRequest = { showAdd = false },
-            title = { Text("Update List Name") },
+            title = { Text(stringResource(R.string.update_list_name_title)) },
             text = {
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("List Name") },
+                    label = { Text(stringResource(R.string.list_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -158,10 +158,10 @@ fun OtakuCustomListScreen(
                         }
                     },
                     enabled = name.isNotEmpty()
-                ) { Text("Confirm") }
+                ) { Text(stringResource(id = R.string.confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showAdd = false }) { Text("Cancel") }
+                TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) }
             }
         )
     }
@@ -175,7 +175,7 @@ fun OtakuCustomListScreen(
 
     BottomSheetDeleteScaffold(
         listOfItems = customItem?.list.orEmpty(),
-        multipleTitle = "Remove Items",
+        multipleTitle = stringResource(R.string.remove_items),
         onRemove = { vm.removeItem(it) },
         onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
         topBar = {

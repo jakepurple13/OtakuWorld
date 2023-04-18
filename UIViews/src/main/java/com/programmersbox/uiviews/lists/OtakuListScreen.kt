@@ -30,11 +30,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalCustomListDao
@@ -56,7 +58,7 @@ fun OtakuListScreen(
     OtakuScaffold(
         topBar = {
             InsetSmallTopAppBar(
-                title = { Text("List") },
+                title = { Text(stringResource(R.string.custom_lists_title)) },
                 navigationIcon = { BackButton() },
                 scrollBehavior = scrollBehavior
             )
@@ -100,7 +102,7 @@ fun ListChoiceScreen(
     val scope = rememberCoroutineScope()
     val list by dao.getAllLists().collectAsState(initial = emptyList())
     ListBottomScreen(
-        title = "Choose List",
+        title = stringResource(R.string.choose_list_title),
         list = list,
         onClick = onClick,
         lazyListContent = {
@@ -110,7 +112,7 @@ fun ListChoiceScreen(
                     onClick = { showAdd = !showAdd }
                 ) {
                     ListItem(
-                        headlineContent = { Text("Create New", style = MaterialTheme.typography.titleLarge) },
+                        headlineContent = { Text(stringResource(R.string.create_new_list_option), style = MaterialTheme.typography.titleLarge) },
                         trailingContent = { Icon(Icons.Default.Add, null) }
                     )
                 }
@@ -118,12 +120,12 @@ fun ListChoiceScreen(
                     var name by remember { mutableStateOf("") }
                     AlertDialog(
                         onDismissRequest = { showAdd = false },
-                        title = { Text("Create New List") },
+                        title = { Text(stringResource(R.string.create_new_list)) },
                         text = {
                             TextField(
                                 value = name,
                                 onValueChange = { name = it },
-                                label = { Text("List Name") },
+                                label = { Text(stringResource(id = R.string.list_name)) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -137,11 +139,9 @@ fun ListChoiceScreen(
                                     }
                                 },
                                 enabled = name.isNotEmpty()
-                            ) { Text("Confirm") }
+                            ) { Text(stringResource(id = R.string.confirm)) }
                         },
-                        dismissButton = {
-                            TextButton(onClick = { showAdd = false }) { Text("Cancel") }
-                        }
+                        dismissButton = { TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) } }
                     )
                 }
             }
