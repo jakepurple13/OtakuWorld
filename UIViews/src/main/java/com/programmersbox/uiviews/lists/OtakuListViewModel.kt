@@ -28,8 +28,4 @@ class OtakuListViewModel(
         viewModelScope.launch { listDao.create(name) }
     }
 
-    fun removeList(list: CustomList) {
-        //viewModelScope.launch { listDao.removeList(list) }
-    }
-
 }

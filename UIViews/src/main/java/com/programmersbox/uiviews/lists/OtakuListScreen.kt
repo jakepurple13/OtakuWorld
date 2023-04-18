@@ -14,6 +14,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,11 +56,47 @@ fun OtakuListScreen(
 ) {
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    val dao = LocalCustomListDao.current
+    val scope = rememberCoroutineScope()
+
+    var showAdd by remember { mutableStateOf(false) }
+
+    if (showAdd) {
+        var name by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAdd = false },
+            title = { Text(stringResource(R.string.create_new_list)) },
+            text = {
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(id = R.string.list_name)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            dao.create(name)
+                            showAdd = false
+                        }
+                    },
+                    enabled = name.isNotEmpty()
+                ) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = { TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) } }
+        )
+    }
+
     OtakuScaffold(
         topBar = {
             InsetSmallTopAppBar(
                 title = { Text(stringResource(R.string.custom_lists_title)) },
                 navigationIcon = { BackButton() },
+                actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Add, null) } },
                 scrollBehavior = scrollBehavior
             )
         },
