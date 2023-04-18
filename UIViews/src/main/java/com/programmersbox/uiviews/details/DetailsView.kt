@@ -133,13 +133,17 @@ fun DetailsView(
 
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)
+    var showLists by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
     BackHandler(scaffoldState.isOpen) {
         scope.launch {
             try {
-                scaffoldState.close()
+                when {
+                    scaffoldState.isOpen -> scaffoldState.close()
+                    else -> navController.popBackStack()
+                }
             } catch (e: Exception) {
                 navController.popBackStack()
             }
@@ -150,24 +154,30 @@ fun DetailsView(
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    var showLists by remember { mutableStateOf(false) }
-
     if (showLists) {
         ModalBottomSheet(
-            onDismissRequest = { showLists = false }
+            onDismissRequest = { showLists = false },
         ) {
             ListChoiceScreen(
-                onClick = {
+                onClick = { item ->
                     scope.launch {
-                        listDao.addToList(
-                            it.item.uuid,
+                        showLists = false
+                        val result = listDao.addToList(
+                            item.item.uuid,
                             info.title,
                             info.description,
                             info.url,
                             info.imageUrl,
                             info.source.serviceName
                         )
-                        showLists = false
+                        hostState.showSnackbar(
+                            if (result) {
+                                "Added to ${item.item.name}"
+                            } else {
+                                "Already in ${item.item.name}"
+                            },
+                            withDismissAction = true
+                        )
                     }
                 }
             )
@@ -259,20 +269,6 @@ fun DetailsView(
                                 onClick = {
                                     dropDownDismiss()
                                     showLists = true
-                                    /*scope.launch {
-                                        val u = UUID.fromString("0c65586e-f3dc-4878-be63-b134fb46466c")
-                                        if(l.none { it.item.uuid == u }) {
-                                            listDao.create(u, "first list")
-                                        }
-                                        listDao.addToList(
-                                            u,
-                                            info.title,
-                                            info.description,
-                                            info.url,
-                                            info.imageUrl,
-                                            info.source.serviceName
-                                        )
-                                    }*/
                                 },
                                 text = { Text("Add to List") },
                                 leadingIcon = { Icon(Icons.Default.SaveAs, null) }

@@ -1,6 +1,10 @@
 package com.programmersbox.uiviews.lists
 
+import android.content.Intent
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,20 +13,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,20 +43,25 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -54,7 +70,9 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
+import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
+import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.flow.flow
@@ -71,20 +89,57 @@ fun OtakuCustomListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) }
 ) {
-    val genericInfo = LocalGenericInfo.current
-    val navController = LocalNavController.current
     val context = LocalContext.current
-
     val scope = rememberCoroutineScope()
+    val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val customItem = vm.customItem
+    var deleteList by remember { mutableStateOf(false) }
+
+    if (deleteList) {
+        var listName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { deleteList = false },
+            title = { Text("Delete List") },
+            text = {
+                Column {
+                    Text("Are you sure? There is no recovering.\nPlease type in the name of the list to delete.")
+                    Text(customItem?.item?.name.orEmpty())
+                    TextField(
+                        value = listName,
+                        onValueChange = { listName = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            vm.deleteAll()
+                            navController.popBackStack()
+                            deleteList = false
+                        }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    enabled = listName == customItem?.item?.name
+                ) { Text("Confirm") }
+            },
+            dismissButton = { TextButton(onClick = { deleteList = false }) { Text("Cancel") } }
+        )
+    }
+
     var showAdd by remember { mutableStateOf(false) }
 
     if (showAdd) {
-        var name by remember { mutableStateOf("") }
+        var name by remember { mutableStateOf(customItem?.item?.name.orEmpty()) }
         AlertDialog(
             onDismissRequest = { showAdd = false },
-            title = { Text("Create New List") },
+            title = { Text("Update List Name") },
             text = {
                 TextField(
                     value = name,
@@ -98,7 +153,7 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            customItem?.item?.copy(name = name)?.let { listDao.updateList(it) }
+                            vm.rename(name)
                             showAdd = false
                         }
                     },
@@ -111,99 +166,216 @@ fun OtakuCustomListScreen(
         )
     }
 
-    OtakuScaffold(
+    var showLoadingDialog by remember { mutableStateOf(false) }
+
+    LoadingDialog(
+        showLoadingDialog = showLoadingDialog,
+        onDismissRequest = { showLoadingDialog = false }
+    )
+
+    BottomSheetDeleteScaffold(
+        listOfItems = customItem?.list.orEmpty(),
+        multipleTitle = "Remove Items",
+        onRemove = { vm.removeItem(it) },
+        onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
         topBar = {
             InsetSmallTopAppBar(
                 title = { Text(customItem?.item?.name.orEmpty()) },
                 navigationIcon = { BackButton() },
                 actions = {
-                    IconButton(onClick = { showAdd = true }) {
-                        Icon(Icons.Default.Edit, null)
-                    }
+                    IconButton(
+                        onClick = {
+                            context.startActivity(
+                                Intent.createChooser(
+                                    Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" })
+                                        putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
+                                    },
+                                    context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                )
+                            )
+                        }
+                    ) { Icon(Icons.Default.Share, null) }
+                    IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Edit, null) }
+                    IconButton(onClick = { deleteList = true }) { Icon(Icons.Default.DeleteForever, null, tint = Color.Red) }
                     Text("(${customItem?.list.orEmpty().size})")
                 },
                 scrollBehavior = scrollBehavior
             )
         },
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-    ) { padding ->
-        var showLoadingDialog by remember { mutableStateOf(false) }
+        itemUi = { item ->
+            Row {
+                val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .lifecycle(LocalLifecycleOwner.current)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = rememberDrawablePainter(logoDrawable),
+                    error = rememberDrawablePainter(logoDrawable),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = item.title,
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                )
 
-        LoadingDialog(
-            showLoadingDialog = showLoadingDialog,
-            onDismissRequest = { showLoadingDialog = false }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp, top = 4.dp)
+                ) {
+                    Text(item.source, style = MaterialTheme.typography.labelMedium)
+                    Text(item.title, style = MaterialTheme.typography.titleSmall)
+                    Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
+                }
+            }
+        }
+    ) { padding, ts ->
+        AnimatedLazyColumn(
+            contentPadding = padding,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
+            items = ts.fastMap { item ->
+                AnimatedLazyListItem(key = item.url, value = item) {
+                    CustomItem(
+                        item = item,
+                        logo = logo,
+                        showLoadingDialog = { showLoadingDialog = it },
+                        onDelete = { vm.removeItem(it) }
+                    )
+                }
+            }
         )
-        if (customItem != null) {
-            LazyColumn(
-                contentPadding = padding,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxSize()
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomItem(
+    item: CustomListInfo,
+    logo: MainLogo,
+    onDelete: (CustomListInfo) -> Unit,
+    showLoadingDialog: (Boolean) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val genericInfo = LocalGenericInfo.current
+    val navController = LocalNavController.current
+    val context = LocalContext.current
+    var showPopup by remember { mutableStateOf(false) }
+
+    if (showPopup) {
+        val onDismiss = { showPopup = false }
+
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.removeNoti, item.title)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        onDelete(item)
+                    }
+                ) { Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+        )
+    }
+
+    val dismissState = rememberDismissState(
+        confirmValueChange = {
+            if (it == DismissValue.DismissedToStart) {
+                showPopup = true
+            }
+            false
+        }
+    )
+
+    SwipeToDismiss(
+        state = dismissState,
+        directions = setOf(DismissDirection.EndToStart),
+        background = {
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    DismissValue.Default -> Color.Transparent
+                    DismissValue.DismissedToStart -> Color.Red
+                    DismissValue.DismissedToEnd -> Color.Red
+                }
+            )
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
             ) {
-                items(customItem.list) { item ->
-                    ElevatedCard(
-                        onClick = {
-                            genericInfo
-                                .toSource(item.source)
-                                ?.let { source ->
-                                    Cached.cache[item.url]?.let {
-                                        flow {
-                                            emit(
-                                                it
-                                                    .toDbModel()
-                                                    .toItemModel(source)
-                                            )
-                                        }
-                                    } ?: source.getSourceByUrlFlow(item.url)
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.scale(scale),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                )
+            }
+        },
+        dismissContent = {
+            ElevatedCard(
+                onClick = {
+                    genericInfo
+                        .toSource(item.source)
+                        ?.let { source ->
+                            Cached.cache[item.url]?.let {
+                                flow {
+                                    emit(
+                                        it
+                                            .toDbModel()
+                                            .toItemModel(source)
+                                    )
                                 }
-                                ?.dispatchIo()
-                                ?.onStart { showLoadingDialog = true }
-                                ?.onEach {
-                                    showLoadingDialog = false
-                                    navController.navigateToDetails(it)
-                                }
-                                ?.onCompletion { showLoadingDialog = false }
-                                ?.launchIn(scope)
-                        },
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    ) {
-                        Row {
-                            val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(item.imageUrl)
-                                    .lifecycle(LocalLifecycleOwner.current)
-                                    .crossfade(true)
-                                    .build(),
-                                placeholder = rememberDrawablePainter(logoDrawable),
-                                error = rememberDrawablePainter(logoDrawable),
-                                contentScale = ContentScale.Crop,
-                                contentDescription = item.title,
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            )
-
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 16.dp, top = 4.dp)
-                            ) {
-                                Text(item.source, style = MaterialTheme.typography.labelMedium)
-                                Text(item.title, style = MaterialTheme.typography.titleSmall)
-                                Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.Top)
-                                    .padding(horizontal = 2.dp)
-                            ) {
-
-                            }
+                            } ?: source.getSourceByUrlFlow(item.url)
                         }
+                        ?.dispatchIo()
+                        ?.onStart { showLoadingDialog(true) }
+                        ?.onEach {
+                            showLoadingDialog(false)
+                            navController.navigateToDetails(it)
+                        }
+                        ?.onCompletion { showLoadingDialog(false) }
+                        ?.launchIn(scope)
+                },
+                modifier = Modifier.padding(horizontal = 4.dp)
+            ) {
+                Row {
+                    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.imageUrl)
+                            .lifecycle(LocalLifecycleOwner.current)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = rememberDrawablePainter(logoDrawable),
+                        error = rememberDrawablePainter(logoDrawable),
+                        contentScale = ContentScale.Crop,
+                        contentDescription = item.title,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp, top = 4.dp)
+                    ) {
+                        Text(item.source, style = MaterialTheme.typography.labelMedium)
+                        Text(item.title, style = MaterialTheme.typography.titleSmall)
+                        Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
                     }
                 }
             }
         }
-    }
+    )
 }

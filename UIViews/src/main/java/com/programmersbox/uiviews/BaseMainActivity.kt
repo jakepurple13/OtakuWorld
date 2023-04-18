@@ -95,7 +95,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //TODO: Add lists
         lifecycleScope.launch {
             genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
         }

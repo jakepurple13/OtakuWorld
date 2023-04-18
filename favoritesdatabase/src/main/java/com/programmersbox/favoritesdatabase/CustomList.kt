@@ -52,6 +52,9 @@ interface ListDao {
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
     suspend fun getCustomListItem(uuid: UUID): CustomList
 
+    @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
+    fun getCustomListItemFlow(uuid: UUID): Flow<CustomList>
+
     @Insert
     suspend fun createList(listItem: CustomListItem)
 
@@ -64,8 +67,8 @@ interface ListDao {
     @Update
     suspend fun updateList(listItem: CustomListItem)
 
-    //@Delete
-    //suspend fun removeList(item: CustomList)
+    @Delete
+    suspend fun removeList(item: CustomListItem)
 
     @Ignore
     suspend fun create(name: String) {
@@ -78,10 +81,15 @@ interface ListDao {
     }
 
     @Ignore
-    suspend fun addToList(uuid: UUID, title: String, description: String, url: String, imageUrl: String, source: String) {
-        addItem(CustomListInfo(uuid = uuid, title = title, description = description, url = url, imageUrl = imageUrl, source = source))
-        val item = getCustomListItem(uuid).item
-        updateList(item.copy(time = System.currentTimeMillis()))
+    suspend fun addToList(uuid: UUID, title: String, description: String, url: String, imageUrl: String, source: String): Boolean {
+        val item = getCustomListItem(uuid)
+        return if (item.list.any { it.url == url && it.uuid == uuid }) {
+            false
+        } else {
+            addItem(CustomListInfo(uuid = uuid, title = title, description = description, url = url, imageUrl = imageUrl, source = source))
+            updateList(item.item.copy(time = System.currentTimeMillis()))
+            true
+        }
     }
 }
 

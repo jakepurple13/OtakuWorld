@@ -4,16 +4,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -28,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.CustomList
@@ -66,17 +69,23 @@ fun OtakuListScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             items(vm.customLists) {
-                Card(onClick = { Screen.CustomListItemScreen.navigate(navController, it.item.uuid) }) {
+                ElevatedCard(
+                    onClick = { Screen.CustomListItemScreen.navigate(navController, it.item.uuid) },
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
                     ListItem(
                         trailingContent = { Text("(${it.list.size})") },
                         headlineContent = { Text(it.item.name) },
                         supportingContent = {
                             Column {
-                                it.list.take(3).forEach { info -> Text(info.title) }
+                                it.list.take(3).forEach { info ->
+                                    Text(info.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
                             }
                         }
                     )
                 }
+                Divider(Modifier.padding(top = 4.dp))
             }
         }
     }
@@ -97,10 +106,14 @@ fun ListChoiceScreen(
         lazyListContent = {
             item {
                 var showAdd by remember { mutableStateOf(false) }
-                InsetSmallTopAppBar(
-                    title = { Text("Create New") },
-                    actions = { IconButton(onClick = { showAdd = !showAdd }) { Icon(Icons.Default.Add, null) } }
-                )
+                ElevatedCard(
+                    onClick = { showAdd = !showAdd }
+                ) {
+                    ListItem(
+                        headlineContent = { Text("Create New", style = MaterialTheme.typography.titleLarge) },
+                        trailingContent = { Icon(Icons.Default.Add, null) }
+                    )
+                }
                 if (showAdd) {
                     var name by remember { mutableStateOf("") }
                     AlertDialog(
