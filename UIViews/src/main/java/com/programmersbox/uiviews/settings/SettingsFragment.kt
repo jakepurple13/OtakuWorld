@@ -17,10 +17,43 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.ChangeHistory
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Source
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -50,18 +83,43 @@ import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
-import com.programmersbox.uiviews.*
+import com.programmersbox.uiviews.BuildConfig
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.UpdateFlowWorker
+import com.programmersbox.uiviews.utils.CategorySetting
+import com.programmersbox.uiviews.utils.DownloadUpdate
+import com.programmersbox.uiviews.utils.HISTORY_SAVE
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LifecycleHandle
+import com.programmersbox.uiviews.utils.ListSetting
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalItemDao
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreferenceSetting
+import com.programmersbox.uiviews.utils.SHOULD_CHECK
+import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.ShowWhen
+import com.programmersbox.uiviews.utils.SliderSetting
+import com.programmersbox.uiviews.utils.SwitchSetting
+import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.utils.currentService
+import com.programmersbox.uiviews.utils.historySave
+import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
+import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 class ComposeSettingsDsl {
     internal var generalSettings: (@Composable () -> Unit)? = null
@@ -94,7 +152,8 @@ fun SettingScreen(
     notificationClick: () -> Unit = {},
     favoritesClick: () -> Unit = {},
     historyClick: () -> Unit = {},
-    globalSearchClick: () -> Unit = {}
+    globalSearchClick: () -> Unit = {},
+    listClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -152,7 +211,8 @@ fun SettingScreen(
                 debugMenuClick = debugMenuClick,
                 favoritesClick = favoritesClick,
                 historyClick = historyClick,
-                globalSearchClick = globalSearchClick
+                globalSearchClick = globalSearchClick,
+                listClick = listClick
             )
 
             Divider()
@@ -436,7 +496,8 @@ private fun ViewSettings(
     debugMenuClick: () -> Unit,
     favoritesClick: () -> Unit,
     historyClick: () -> Unit,
-    globalSearchClick: () -> Unit
+    globalSearchClick: () -> Unit,
+    listClick: () -> Unit
 ) {
     CategorySetting { Text(stringResource(R.string.view_menu_category_title)) }
 
@@ -459,6 +520,16 @@ private fun ViewSettings(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = favoritesClick
+        )
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text("Lists") },
+        settingIcon = { Icon(Icons.Default.List, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = listClick
         )
     )
 

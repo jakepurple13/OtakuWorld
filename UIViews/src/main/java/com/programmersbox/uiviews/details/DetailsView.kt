@@ -10,16 +10,57 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.SaveAs
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -42,7 +83,18 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.lists.ListChoiceScreen
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LocalCustomListDao
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalItemDao
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.animate
+import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
+import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -77,15 +129,21 @@ fun DetailsView(
 
     val hostState = remember { SnackbarHostState() }
 
+    val listDao = LocalCustomListDao.current
+
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)
+    var showLists by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
     BackHandler(scaffoldState.isOpen) {
         scope.launch {
             try {
-                scaffoldState.close()
+                when {
+                    scaffoldState.isOpen -> scaffoldState.close()
+                    else -> navController.popBackStack()
+                }
             } catch (e: Exception) {
                 navController.popBackStack()
             }
@@ -95,6 +153,39 @@ fun DetailsView(
     val topBarColor by animateColorAsState(swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface)
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    if (showLists) {
+        ModalBottomSheet(
+            onDismissRequest = { showLists = false },
+        ) {
+            ListChoiceScreen(
+                onClick = { item ->
+                    scope.launch {
+                        showLists = false
+                        val result = listDao.addToList(
+                            item.item.uuid,
+                            info.title,
+                            info.description,
+                            info.url,
+                            info.imageUrl,
+                            info.source.serviceName
+                        )
+                        hostState.showSnackbar(
+                            context.getString(
+                                if (result) {
+                                    R.string.added_to_list
+                                } else {
+                                    R.string.already_in_list
+                                },
+                                item.item.name
+                            ),
+                            withDismissAction = true
+                        )
+                    }
+                }
+            )
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = scaffoldState,
@@ -175,6 +266,15 @@ fun DetailsView(
                                 },
                                 text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
                                 leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+                            )
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    showLists = true
+                                },
+                                text = { Text(stringResource(R.string.add_to_list)) },
+                                leadingIcon = { Icon(Icons.Default.SaveAs, null) }
                             )
 
                             if (!isSaved) {

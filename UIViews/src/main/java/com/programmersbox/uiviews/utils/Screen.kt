@@ -6,7 +6,12 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -15,12 +20,19 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.programmersbox.favoritesdatabase.*
+import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.HistoryDao
+import com.programmersbox.favoritesdatabase.HistoryDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import org.koin.androidx.compose.get
+import java.util.UUID
 
 sealed class Screen(val route: String) {
 
@@ -33,6 +45,13 @@ sealed class Screen(val route: String) {
     object FavoriteScreen : Screen("favorite")
     object AboutScreen : Screen("about")
     object DebugScreen : Screen("debug")
+    object CustomListScreen : Screen("custom_list")
+    object CustomListItemScreen : Screen("custom_list_item") {
+        fun navigate(navController: NavController, uuid: UUID) {
+            navController.navigate("$route/$uuid") { launchSingleTop = true }
+        }
+    }
+
     object TranslationScreen : Screen("translation_models")
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
@@ -101,6 +120,7 @@ fun OtakuMaterialTheme(
                 LocalSettingsHandling provides get(),
                 LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
+                LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
             ) { content() }
         }
     }
@@ -108,6 +128,7 @@ fun OtakuMaterialTheme(
 
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
+val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 
 @Composable
 fun LifecycleHandle(

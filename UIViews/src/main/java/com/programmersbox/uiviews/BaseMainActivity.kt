@@ -55,6 +55,8 @@ import com.programmersbox.uiviews.favorite.FavoriteChoiceScreen
 import com.programmersbox.uiviews.favorite.FavoriteUi
 import com.programmersbox.uiviews.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.history.HistoryUi
+import com.programmersbox.uiviews.lists.OtakuCustomListScreen
+import com.programmersbox.uiviews.lists.OtakuListScreen
 import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.recent.RecentView
 import com.programmersbox.uiviews.settings.SettingScreen
@@ -93,7 +95,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         lifecycleScope.launch {
             genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
         }
@@ -241,7 +242,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) { launchSingleTop = true } },
                                     favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) { launchSingleTop = true } },
                                     historyClick = { navController.navigate(SScreen.HistoryScreen.route) { launchSingleTop = true } },
-                                    usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) { launchSingleTop = true } }
+                                    usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) { launchSingleTop = true } },
+                                    listClick = { navController.navigate(SScreen.CustomListScreen.route) { launchSingleTop = true } }
                                 )
                             }
 
@@ -298,6 +300,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     windowSize = rememberWindowSizeClass()
                                 )
                             }
+
+                            composable(SScreen.CustomListScreen.route) { OtakuListScreen() }
+                            composable(
+                                SScreen.CustomListItemScreen.route + "/{uuid}"
+                            ) { OtakuCustomListScreen(logo) }
 
                             bottomSheet(SScreen.TranslationScreen.route) { TranslationScreen() }
 

@@ -47,3 +47,11 @@ fun InfoModel.toDbModel(numChapters: Int = 0) = DbModel(
     source = source.serviceName,
     numChapters = numChapters
 )
+
+fun CustomListInfo.toItemModel(source: ApiService) = ItemModel(
+    title = title,
+    description = description,
+    url = url,
+    imageUrl = imageUrl,
+    source = source
+)

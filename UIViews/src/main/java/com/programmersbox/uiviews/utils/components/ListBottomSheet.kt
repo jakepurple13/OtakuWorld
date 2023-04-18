@@ -7,10 +7,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,7 +28,8 @@ class ListBottomSheetItemModel(
     val primaryText: String,
     val overlineText: String? = null,
     val secondaryText: String? = null,
-    val icon: ImageVector? = null
+    val icon: ImageVector? = null,
+    val trailingText: String? = null
 )
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -32,6 +39,7 @@ fun <T> ListBottomScreen(
     list: List<T>,
     onClick: (T) -> Unit,
     includeInsetPadding: Boolean = true,
+    lazyListContent: LazyListScope.() -> Unit = {},
     itemContent: (T) -> ListBottomSheetItemModel
 ) {
     val navController = LocalNavController.current
@@ -48,6 +56,7 @@ fun <T> ListBottomScreen(
             )
             Divider()
         }
+        lazyListContent()
         itemsIndexed(list) { index, it ->
             val c = itemContent(it)
             ListItem(
@@ -55,7 +64,8 @@ fun <T> ListBottomScreen(
                 leadingContent = c.icon?.let { i -> { Icon(i, null) } },
                 headlineContent = { Text(c.primaryText) },
                 supportingContent = c.secondaryText?.let { i -> { Text(i) } },
-                overlineContent = c.overlineText?.let { i -> { Text(i) } }
+                overlineContent = c.overlineText?.let { i -> { Text(i) } },
+                trailingContent = c.trailingText?.let { i -> { Text(i) } }
             )
             if (index < list.size - 1) Divider()
         }
