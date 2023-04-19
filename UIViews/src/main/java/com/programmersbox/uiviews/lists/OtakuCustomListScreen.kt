@@ -1,6 +1,8 @@
 package com.programmersbox.uiviews.lists
 
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -19,12 +21,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -32,12 +32,16 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
@@ -83,12 +87,14 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -102,6 +108,11 @@ fun OtakuCustomListScreen(
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val customItem = vm.customItem
+
+    val pickDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { document -> document?.let { vm.writeToFile(it, context) } }
+
     var deleteList by remember { mutableStateOf(false) }
 
     if (deleteList) {
@@ -113,7 +124,7 @@ fun OtakuCustomListScreen(
                 Column {
                     Text(stringResource(R.string.are_you_sure_delete_list))
                     Text(customItem?.item?.name.orEmpty())
-                    TextField(
+                    OutlinedTextField(
                         value = listName,
                         onValueChange = { listName = it },
                         singleLine = true,
@@ -125,9 +136,9 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            vm.deleteAll()
-                            navController.popBackStack()
+                            withContext(Dispatchers.IO) { vm.deleteAll() }
                             deleteList = false
+                            navController.popBackStack()
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -192,6 +203,40 @@ fun OtakuCustomListScreen(
                     title = { Text(customItem?.item?.name.orEmpty()) },
                     navigationIcon = { BackButton() },
                     actions = {
+                        var showMenu by remember { mutableStateOf(false) }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.export_list)) },
+                                onClick = {
+                                    showMenu = false
+                                    pickDocumentLauncher.launch("${customItem?.item?.name}.json")
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.edit_import_list)) },
+                                onClick = {
+                                    showMenu = false
+                                    showAdd = true
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.delete_list_title)) },
+                                onClick = {
+                                    showMenu = false
+                                    deleteList = true
+                                },
+                                colors = MenuDefaults.itemColors(
+                                    textColor = MaterialTheme.colorScheme.onErrorContainer,
+                                ),
+                                modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
+                            )
+                        }
                         IconButton(
                             onClick = {
                                 context.startActivity(
@@ -206,8 +251,8 @@ fun OtakuCustomListScreen(
                                 )
                             }
                         ) { Icon(Icons.Default.Share, null) }
-                        IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Edit, null) }
-                        IconButton(onClick = { deleteList = true }) { Icon(Icons.Default.DeleteForever, null, tint = Color.Red) }
+
+                        IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
                         Text("(${customItem?.list.orEmpty().size})")
                     },
                     scrollBehavior = scrollBehavior
@@ -365,7 +410,7 @@ private fun CustomItem(
                     Icons.Default.Delete,
                     contentDescription = null,
                     modifier = Modifier.scale(scale),
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         },

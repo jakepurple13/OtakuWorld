@@ -7,12 +7,10 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 class OtakuListViewModel(
-    private val listDao: ListDao
+    listDao: ListDao
 ) : ViewModel() {
-
     val customLists = mutableStateListOf<CustomList>()
 
     init {
@@ -23,9 +21,4 @@ class OtakuListViewModel(
             }
             .launchIn(viewModelScope)
     }
-
-    fun createNewList(name: String) {
-        viewModelScope.launch { listDao.create(name) }
-    }
-
 }

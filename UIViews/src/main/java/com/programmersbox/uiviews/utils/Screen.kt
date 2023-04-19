@@ -52,6 +52,12 @@ sealed class Screen(val route: String) {
         }
     }
 
+    object ImportListScreen : Screen("import_list") {
+        fun navigate(navController: NavController, uri: Uri) {
+            navController.navigate("$route?uri=$uri") { launchSingleTop = true }
+        }
+    }
+
     object TranslationScreen : Screen("translation_models")
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {

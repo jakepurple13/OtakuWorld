@@ -1,5 +1,7 @@
 package com.programmersbox.uiviews.lists
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
@@ -63,6 +66,10 @@ fun OtakuListScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    val pickDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { document -> document?.let { Screen.ImportListScreen.navigate(navController, it) } }
+
     var showAdd by remember { mutableStateOf(false) }
 
     if (showAdd) {
@@ -99,7 +106,13 @@ fun OtakuListScreen(
             InsetSmallTopAppBar(
                 title = { Text(stringResource(R.string.custom_lists_title)) },
                 navigationIcon = { BackButton() },
-                actions = { IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Add, null) } },
+                actions = {
+                    IconButton(
+                        onClick = { pickDocumentLauncher.launch(arrayOf("application/json")) }
+                    ) { Icon(Icons.Default.FileDownload, null) }
+
+                    IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Add, null) }
+                },
                 scrollBehavior = scrollBehavior
             )
         },

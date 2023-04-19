@@ -195,4 +195,8 @@
     <string name="create_new_list_option">Create New</string>
     <string name="create_new_list">Create New List</string>
     <string name="custom_list_updated_at">Updated at %s</string>
+    <string name="importing_import_list">Importing!</string>
+    <string name="import_import_list">Import</string>
+    <string name="export_list">Export</string>
+    <string name="edit_import_list">Edit</string>
 </resources>

@@ -55,6 +55,7 @@ import com.programmersbox.uiviews.favorite.FavoriteChoiceScreen
 import com.programmersbox.uiviews.favorite.FavoriteUi
 import com.programmersbox.uiviews.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.history.HistoryUi
+import com.programmersbox.uiviews.lists.ImportListScreen
 import com.programmersbox.uiviews.lists.OtakuCustomListScreen
 import com.programmersbox.uiviews.lists.OtakuListScreen
 import com.programmersbox.uiviews.notifications.NotificationsScreen
@@ -305,6 +306,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             composable(
                                 SScreen.CustomListItemScreen.route + "/{uuid}"
                             ) { OtakuCustomListScreen(logo) }
+
+                            composable(
+                                SScreen.ImportListScreen.route + "?uri={uri}"
+                            ) { ImportListScreen(logo) }
 
                             bottomSheet(SScreen.TranslationScreen.route) { TranslationScreen() }
 

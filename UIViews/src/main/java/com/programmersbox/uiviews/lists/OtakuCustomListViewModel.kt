@@ -1,5 +1,7 @@
 package com.programmersbox.uiviews.lists
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,10 +12,15 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.gsonutils.toJson
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
 import java.util.UUID
+
 
 class OtakuCustomListViewModel(
     private val listDao: ListDao,
@@ -57,4 +64,23 @@ class OtakuCustomListViewModel(
         searchQuery = query
     }
 
+    fun writeToFile(document: Uri, context: Context) {
+        runCatching {
+            viewModelScope.launch {
+                try {
+                    context.contentResolver.openFileDescriptor(document, "w")?.use {
+                        FileOutputStream(it.fileDescriptor).use { f ->
+                            f.write(customItem?.toJson()?.toByteArray())
+                        }
+                    }
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+            .onSuccess { println("Written!") }
+            .onFailure { it.printStackTrace() }
+    }
 }
