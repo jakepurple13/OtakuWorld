@@ -1,4 +1,8 @@
-import com.google.protobuf.gradle.*
+import com.google.protobuf.gradle.generateProtoTasks
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.plugins
+import com.google.protobuf.gradle.protobuf
+import com.google.protobuf.gradle.protoc
 
 plugins {
     id("com.android.library")
@@ -143,6 +147,8 @@ dependencies {
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.bundles.protobuf)
+
+    implementation("com.github.skydoves:colorpicker-compose:1.0.2")
 }
 
 protobuf {

@@ -52,6 +52,12 @@ sealed class Screen(val route: String) {
         }
     }
 
+    object CustomListEditorScreen : Screen("custom_list_editor") {
+        fun navigate(navController: NavController, uuid: UUID) {
+            navController.navigate("$route/$uuid") { launchSingleTop = true }
+        }
+    }
+
     object TranslationScreen : Screen("translation_models")
     object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {

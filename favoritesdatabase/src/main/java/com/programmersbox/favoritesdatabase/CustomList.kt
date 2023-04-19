@@ -21,8 +21,8 @@ import java.util.UUID
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 2,
-    autoMigrations = [AutoMigration(from = 1, to = 2)]
+    version = 3,
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)]
 )
 abstract class ListDatabase : RoomDatabase() {
 
@@ -121,6 +121,8 @@ data class CustomListItem(
     val uuid: UUID,
     @ColumnInfo(name = "name")
     val name: String,
+    @ColumnInfo(name = "containerColor")
+    val containerColor: String? = null,
     @ColumnInfo(name = "time")
     val time: Long = System.currentTimeMillis(),
 )

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "6fe9f163de502d0b788110190c3bbb0c",
+    "identityHash": "330c166e46c8fc517064dc9d7f9661bc",
     "entities": [
       {
         "tableName": "CustomListItem",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` BLOB NOT NULL, `name` TEXT NOT NULL, `time` INTEGER NOT NULL, PRIMARY KEY(`uuid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` BLOB NOT NULL, `name` TEXT NOT NULL, `containerColor` TEXT, `time` INTEGER NOT NULL, PRIMARY KEY(`uuid`))",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -19,6 +19,12 @@
             "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "containerColor",
+            "columnName": "containerColor",
+            "affinity": "TEXT",
+            "notNull": false
           },
           {
             "fieldPath": "time",
@@ -97,7 +103,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6fe9f163de502d0b788110190c3bbb0c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '330c166e46c8fc517064dc9d7f9661bc')"
     ]
   }
 }
