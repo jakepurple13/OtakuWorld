@@ -31,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +47,7 @@ import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +61,7 @@ fun OtakuListScreen(
 
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var showAdd by remember { mutableStateOf(false) }
 
@@ -112,7 +115,9 @@ fun OtakuListScreen(
                     onClick = { Screen.CustomListItemScreen.navigate(navController, it.item.uuid) },
                     modifier = Modifier.padding(horizontal = 4.dp)
                 ) {
+                    val time = remember { context.getSystemDateTimeFormat().format(it.item.time) }
                     ListItem(
+                        overlineContent = { Text(stringResource(id = R.string.custom_list_updated_at, time)) },
                         trailingContent = { Text("(${it.list.size})") },
                         headlineContent = { Text(it.item.name) },
                         supportingContent = {

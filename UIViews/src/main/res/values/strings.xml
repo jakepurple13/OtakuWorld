@@ -194,4 +194,5 @@
     <string name="choose_list_title">Choose List</string>
     <string name="create_new_list_option">Create New</string>
     <string name="create_new_list">Create New List</string>
+    <string name="custom_list_updated_at">Updated at %s</string>
 </resources>

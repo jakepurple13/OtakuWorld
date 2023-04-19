@@ -5,29 +5,38 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissValue
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -174,35 +183,73 @@ fun OtakuCustomListScreen(
     )
 
     BottomSheetDeleteScaffold(
-        listOfItems = customItem?.list.orEmpty(),
+        listOfItems = vm.items,
         multipleTitle = stringResource(R.string.remove_items),
         onRemove = { vm.removeItem(it) },
         onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
         topBar = {
-            InsetSmallTopAppBar(
-                title = { Text(customItem?.item?.name.orEmpty()) },
-                navigationIcon = { BackButton() },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            context.startActivity(
-                                Intent.createChooser(
-                                    Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" })
-                                        putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
-                                    },
-                                    context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+            Column {
+                InsetSmallTopAppBar(
+                    title = { Text(customItem?.item?.name.orEmpty()) },
+                    navigationIcon = { BackButton() },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                context.startActivity(
+                                    Intent.createChooser(
+                                        Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" })
+                                            putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
+                                        },
+                                        context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                    )
                                 )
-                            )
+                            }
+                        ) { Icon(Icons.Default.Share, null) }
+                        IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Edit, null) }
+                        IconButton(onClick = { deleteList = true }) { Icon(Icons.Default.DeleteForever, null, tint = Color.Red) }
+                        Text("(${customItem?.list.orEmpty().size})")
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+
+                SearchBar(
+                    query = vm.searchQuery,
+                    onQueryChange = vm::setQuery,
+                    onSearch = { vm.searchBarActive = false },
+                    active = vm.searchBarActive,
+                    onActiveChange = { vm.searchBarActive = it },
+                    placeholder = { Text(stringResource(id = R.string.search)) },
+                    trailingIcon = {
+                        IconButton(onClick = { vm.setQuery("") }) {
+                            Icon(Icons.Default.Cancel, null)
                         }
-                    ) { Icon(Icons.Default.Share, null) }
-                    IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Edit, null) }
-                    IconButton(onClick = { deleteList = true }) { Icon(Icons.Default.DeleteForever, null, tint = Color.Red) }
-                    Text("(${customItem?.list.orEmpty().size})")
-                },
-                scrollBehavior = scrollBehavior
-            )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        itemsIndexed(vm.items) { index, item ->
+                            ListItem(
+                                headlineContent = { Text(item.title) },
+                                leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                modifier = Modifier.clickable {
+                                    vm.setQuery(item.title)
+                                    vm.searchBarActive = false
+                                }
+                            )
+                            if (index != vm.items.lastIndex) {
+                                Divider()
+                            }
+                        }
+                    }
+                }
+            }
         },
         itemUi = { item ->
             Row {
@@ -238,14 +285,16 @@ fun OtakuCustomListScreen(
             contentPadding = padding,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(vertical = 4.dp),
-            items = ts.fastMap { item ->
-                AnimatedLazyListItem(key = item.url, value = item) {
-                    CustomItem(
-                        item = item,
-                        logo = logo,
-                        showLoadingDialog = { showLoadingDialog = it },
-                        onDelete = { vm.removeItem(it) }
-                    )
+            items = {
+                ts.fastMap { item ->
+                    AnimatedLazyListItem(key = item.url, value = item) {
+                        CustomItem(
+                            item = item,
+                            logo = logo,
+                            showLoadingDialog = { showLoadingDialog = it },
+                            onDelete = { vm.removeItem(it) }
+                        )
+                    }
                 }
             }
         )
@@ -346,7 +395,9 @@ private fun CustomItem(
                         ?.onCompletion { showLoadingDialog(false) }
                         ?.launchIn(scope)
                 },
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier
+                    .height(ComposableUtils.IMAGE_HEIGHT)
+                    .padding(horizontal = 4.dp)
             ) {
                 Row {
                     val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }

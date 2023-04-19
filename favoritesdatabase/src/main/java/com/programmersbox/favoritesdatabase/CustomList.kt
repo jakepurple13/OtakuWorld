@@ -81,13 +81,24 @@ interface ListDao {
     }
 
     @Ignore
+    suspend fun removeList(item: CustomList) {
+        item.list.forEach { removeItem(it) }
+        removeList(item.item)
+    }
+
+    @Ignore
+    suspend fun updateFullList(item: CustomListItem) {
+        updateList(item.copy(time = System.currentTimeMillis()))
+    }
+
+    @Ignore
     suspend fun addToList(uuid: UUID, title: String, description: String, url: String, imageUrl: String, source: String): Boolean {
         val item = getCustomListItem(uuid)
         return if (item.list.any { it.url == url && it.uuid == uuid }) {
             false
         } else {
             addItem(CustomListInfo(uuid = uuid, title = title, description = description, url = url, imageUrl = imageUrl, source = source))
-            updateList(item.item.copy(time = System.currentTimeMillis()))
+            updateFullList(item.item)
             true
         }
     }

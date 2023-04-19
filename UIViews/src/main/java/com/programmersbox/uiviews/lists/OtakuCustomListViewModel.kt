@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.lists
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -24,6 +25,13 @@ class OtakuCustomListViewModel(
     var customItem: CustomList? by mutableStateOf(null)
         private set
 
+    var searchBarActive by mutableStateOf(false)
+    var searchQuery by mutableStateOf("")
+
+    val items by derivedStateOf {
+        customItem?.list.orEmpty().filter { it.title.contains(searchQuery, ignoreCase = true) }
+    }
+
     init {
         uuid?.let(listDao::getCustomListItemFlow)
             ?.onEach { customItem = it }
@@ -31,20 +39,22 @@ class OtakuCustomListViewModel(
     }
 
     fun removeItem(item: CustomListInfo) {
-        viewModelScope.launch { listDao.removeItem(item) }
+        viewModelScope.launch {
+            listDao.removeItem(item)
+            viewModelScope.launch { customItem?.item?.let { listDao.updateFullList(it) } }
+        }
     }
 
     fun rename(newName: String) {
-        viewModelScope.launch { customItem?.item?.copy(name = newName)?.let { listDao.updateList(it) } }
+        viewModelScope.launch { customItem?.item?.copy(name = newName)?.let { listDao.updateFullList(it) } }
     }
 
     fun deleteAll() {
-        viewModelScope.launch {
-            customItem?.let { item ->
-                item.list.forEach { listDao.removeItem(it) }
-                listDao.removeList(item.item)
-            }
-        }
+        viewModelScope.launch { customItem?.let { item -> listDao.removeList(item) } }
+    }
+
+    fun setQuery(query: String) {
+        searchQuery = query
     }
 
 }
