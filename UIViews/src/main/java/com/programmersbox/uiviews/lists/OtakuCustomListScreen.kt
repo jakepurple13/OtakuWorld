@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
@@ -59,7 +61,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -79,8 +80,6 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
-import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -91,7 +90,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtakuCustomListScreen(
     logo: MainLogo,
@@ -281,23 +280,21 @@ fun OtakuCustomListScreen(
             }
         }
     ) { padding, ts ->
-        AnimatedLazyColumn(
+        LazyColumn(
             contentPadding = padding,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(vertical = 4.dp),
-            items = {
-                ts.fastMap { item ->
-                    AnimatedLazyListItem(key = item.url, value = item) {
-                        CustomItem(
-                            item = item,
-                            logo = logo,
-                            showLoadingDialog = { showLoadingDialog = it },
-                            onDelete = { vm.removeItem(it) }
-                        )
-                    }
-                }
+        ) {
+            items(ts) { item ->
+                CustomItem(
+                    item = item,
+                    logo = logo,
+                    showLoadingDialog = { showLoadingDialog = it },
+                    onDelete = { vm.removeItem(it) },
+                    modifier = Modifier.animateItemPlacement()
+                )
             }
-        )
+        }
     }
 }
 
@@ -307,7 +304,8 @@ private fun CustomItem(
     item: CustomListInfo,
     logo: MainLogo,
     onDelete: (CustomListInfo) -> Unit,
-    showLoadingDialog: (Boolean) -> Unit
+    showLoadingDialog: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
     val genericInfo = LocalGenericInfo.current
@@ -343,6 +341,7 @@ private fun CustomItem(
     )
 
     SwipeToDismiss(
+        modifier = modifier,
         state = dismissState,
         directions = setOf(DismissDirection.EndToStart),
         background = {
