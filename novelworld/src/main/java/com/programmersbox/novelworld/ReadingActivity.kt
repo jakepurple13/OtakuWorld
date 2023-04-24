@@ -330,7 +330,7 @@ fun NovelReader(
                                         1.dp,
                                         animateColorAsState(
                                             if (readVm.currentChapter == i) M3MaterialTheme.colorScheme.onSurface
-                                            else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                            else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), label = ""
                                         ).value
                                     ),
                                     shape = MaterialTheme.shapes.medium,
@@ -461,21 +461,21 @@ fun TopBar(
                         contentDescription = null,
                         tint = animateColorAsState(
                             if (readVm.batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
-                            else readVm.batteryColor
+                            else readVm.batteryColor, label = ""
                         ).value
                     )
                     AnimatedContent(
                         targetState = readVm.batteryPercent.toInt(),
                         transitionSpec = {
                             if (targetState > initialState) {
-                                slideInVertically { height -> height } + fadeIn() with
+                                slideInVertically { height -> height } + fadeIn() togetherWith
                                         slideOutVertically { height -> -height } + fadeOut()
                             } else {
-                                slideInVertically { height -> -height } + fadeIn() with
+                                slideInVertically { height -> -height } + fadeIn() togetherWith
                                         slideOutVertically { height -> height } + fadeOut()
                             }
                                 .using(SizeTransform(clip = false))
-                        }
+                        }, label = ""
                     ) { targetBattery ->
                         Text(
                             "$targetBattery%",
@@ -495,10 +495,10 @@ fun TopBar(
                 AnimatedContent(
                     targetState = time,
                     transitionSpec = {
-                        (slideInVertically { height -> height } + fadeIn() with
+                        (slideInVertically { height -> height } + fadeIn() togetherWith
                                 slideOutVertically { height -> -height } + fadeOut())
                             .using(SizeTransform(clip = false))
-                    }
+                    }, label = ""
                 ) { targetTime ->
                     Text(
                         DateFormat.getTimeFormat(LocalContext.current).format(targetTime).toString(),
@@ -561,7 +561,7 @@ fun BottomBar(
                                 prevShown && nextShown -> 8f / 3f
                                 prevShown || nextShown -> 4f
                                 else -> 8f
-                            }
+                            }, label = ""
                         ).value
                     )
             )
@@ -608,14 +608,14 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
             targetState = currentPage,
             transitionSpec = {
                 if (targetState > initialState) {
-                    slideInVertically { height -> height } + fadeIn() with
+                    slideInVertically { height -> height } + fadeIn() togetherWith
                             slideOutVertically { height -> -height } + fadeOut()
                 } else {
-                    slideInVertically { height -> -height } + fadeIn() with
+                    slideInVertically { height -> -height } + fadeIn() togetherWith
                             slideOutVertically { height -> height } + fadeOut()
                 }
                     .using(SizeTransform(clip = false))
-            }
+            }, label = ""
         ) { targetPage ->
             Text(
                 "$targetPage",

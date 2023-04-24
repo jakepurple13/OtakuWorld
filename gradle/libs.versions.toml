@@ -1,44 +1,50 @@
 [versions]
-kotlin = "1.8.10"
+firebaseCrashlyticsGradle = "2.9.5"
+googleServices = "4.3.15"
+gradle = "7.4.2"
+kotlin = "1.8.20"
 latestAboutLibsRelease = "10.5.2"
 jakepurple13 = "10.6.5"
 coroutinesVersion = "1.6.4"
-glideVersion = "4.14.2"
+glideVersion = "4.15.1"
 pagingVersion = "3.1.1"
-roomVersion = "2.5.0"
-navVersion = "2.6.0-alpha09"
+roomVersion = "2.5.1"
+navVersion = "2.6.0-beta01"
 koinVersion = "3.3.0"
 lottieVersion = "5.2.0"
 coil = "2.2.2"
 lifecycle = "2.6.1"
-jetpack = "1.5.0-alpha01"
-jetpackCompiler = "1.4.4"
+jetpack = "1.5.0-alpha03"
+jetpackCompiler = "1.4.6"
 accompanist = "0.31.0-alpha"
 okhttpVersion = "4.10.0"
-ktorVersion = "2.2.4"
-workVersion = "2.8.0"
+ktorVersion = "2.3.0"
+workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.9"
 protobufVersion = "3.21.12"
-composeBomVersion = "2023.03.00"
+composeBomVersion = "2023.04.00-alpha03"
 
 ### MangaWorld
 piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.0.0-beta03"
+media3Version = "1.0.1"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.8.10-1.0.9" }
+ksp = { id = "com.google.devtools.ksp", version = "1.8.20-1.0.11" }
 
 [libraries]
+firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
+google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
+gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 palette = "androidx.palette:palette-ktx:1.0.0"
-gson = "com.google.code.gson:gson:2.10"
+gson = "com.google.code.gson:gson:2.10.1"
 
 #Compose
 composePlatform = { module = "dev.chrisbanes.compose:compose-bom", version.ref = "composeBomVersion" }
@@ -53,8 +59,8 @@ uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
-composeActivity = "androidx.activity:activity-compose:1.6.1"
-composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-beta01"
+composeActivity = "androidx.activity:activity-compose:1.7.1"
+composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.1"
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
 landscapistPlaceholder = { module = "com.github.skydoves:landscapist-placeholder", version.ref = "landscapist" }
@@ -80,9 +86,9 @@ glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.1"
 
-androidCore = "androidx.core:core-ktx:1.9.0"
+androidCore = "androidx.core:core-ktx:1.10.0"
 appCompat = "androidx.appcompat:appcompat:1.6.1"
-material = "com.google.android.material:material:1.7.0"
+material = "com.google.android.material:material:1.8.0"
 
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
 lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -113,7 +119,7 @@ ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.0.0"
 workRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "workVersion" }
 
 pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
-roomPaging = "androidx.room:room-paging:2.5.0"
+roomPaging = "androidx.room:room-paging:2.5.1"
 
 aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref = "latestAboutLibsRelease" }
 aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose", version.ref = "latestAboutLibsRelease" }
@@ -122,22 +128,22 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.5.6"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.5.7"
 stetho = "com.facebook.stetho:stetho:1.6.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.4.0"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:21.1.0"
-googlePlayAds = "com.google.android.gms:play-services-ads:21.3.0"
+firebaseAuth = "com.google.firebase:firebase-auth:21.3.0"
+googlePlayAds = "com.google.android.gms:play-services-ads:22.0.0"
 
-pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha17"
+pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha18"
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 storage = "com.anggrayudi:storage:1.5.2"
 
-androidxWindow = "androidx.window:window:1.1.0-alpha04"
+androidxWindow = "androidx.window:window:1.1.0-beta02"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
 androidxBrowser = "androidx.browser:browser:1.5.0"
 
@@ -152,13 +158,13 @@ datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
 jsoup = "org.jsoup:jsoup:1.15.3"
 
-crashlytics = "com.google.firebase:firebase-crashlytics:18.3.2"
-analytics = "com.google.firebase:firebase-analytics:21.2.0"
-playServices = "com.google.android.gms:play-services-auth:20.4.0"
+crashlytics = "com.google.firebase:firebase-crashlytics:18.3.6"
+analytics = "com.google.firebase:firebase-analytics:21.2.2"
+playServices = "com.google.android.gms:play-services-auth:20.5.0"
 
 preference = "androidx.preference:preference-ktx:1.2.0"
 
-recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
+recyclerview = "androidx.recyclerview:recyclerview:1.3.0"
 constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
 swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
@@ -176,7 +182,7 @@ mediaRouter = "androidx.mediarouter:mediarouter:1.3.1"
 fetch = "androidx.tonyodev.fetch2:xfetch2:3.1.6"
 fetchOkHttp = "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
-castFramework = "com.google.android.gms:play-services-cast-framework:21.2.0"
+castFramework = "com.google.android.gms:play-services-cast-framework:21.3.0"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
 
@@ -236,13 +242,13 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
 androidxWebkit = "androidx.webkit:webkit:1.6.1"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
-firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.1.0"
-firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.4.1"
+firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.2.0"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.5.0"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
