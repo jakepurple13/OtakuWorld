@@ -68,7 +68,6 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
@@ -422,7 +421,7 @@ fun SheetView(
             }
         }
     ) { p ->
-        Crossfade(targetState = sheetState.isVisible) { target ->
+        Crossfade(targetState = sheetState.isVisible, label = "") { target ->
             if (target) {
                 LazyVerticalGrid(
                     columns = adaptiveGridCell(),
@@ -530,14 +529,17 @@ fun PagerView(
     ) { page ->
         pages.getOrNull(page)?.let {
             ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit)
-        } ?: LastPageReached(
-            isLoading = vm.isLoadingPages,
-            currentChapter = vm.currentChapter,
-            chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
-            nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
-            previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-            adRequest = vm.ad
-        )
+        } ?: Box(modifier = Modifier.fillMaxSize()) {
+            LastPageReached(
+                isLoading = vm.isLoadingPages,
+                currentChapter = vm.currentChapter,
+                chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+                nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+                previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+                adRequest = vm.ad,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 
@@ -548,6 +550,7 @@ private fun LastPageReached(
     chapterName: String,
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
+    modifier: Modifier = Modifier,
     adRequest: AdRequest = remember { AdRequest.Builder().build() }
 ) {
     val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f)
@@ -556,9 +559,59 @@ private fun LastPageReached(
         nextChapter = nextChapter,
         previousChapter = previousChapter,
         isLoading = isLoading,
-        currentChapter = currentChapter
+        currentChapter = currentChapter,
+        modifier = modifier
     ) {
-        ConstraintLayout(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    chapterName,
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.graphicsLayer { this.alpha = alpha }
+                ) {
+                    Text(
+                        stringResource(id = R.string.lastPage),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    )
+                    if (currentChapter <= 0) {
+                        Text(
+                            stringResource(id = R.string.reachedLastChapter),
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
+                }
+
+                Text(
+                    stringResource(id = R.string.swipeChapter),
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        /*ConstraintLayout(Modifier.fillMaxSize()) {
 
             val (loading, name, lastInfo, swipeInfo, ad) = createRefs()
 
@@ -656,7 +709,7 @@ private fun LastPageReached(
                 )
             }
 
-        }
+        }*/
     }
 }
 
@@ -667,10 +720,12 @@ fun ChangeChapterSwipe(
     previousChapter: () -> Unit,
     currentChapter: Int,
     isLoading: Boolean,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     BoxWithConstraints(
-        modifier = Modifier
+        contentAlignment = Alignment.Center,
+        modifier = modifier
             .heightIn(min = 100.dp)
             .wrapContentHeight()
     ) {

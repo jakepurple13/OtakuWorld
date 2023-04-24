@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -60,8 +61,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -107,6 +110,7 @@ fun OtakuCustomListScreen(
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val focusManager = LocalFocusManager.current
     val customItem = vm.customItem
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
@@ -197,6 +201,7 @@ fun OtakuCustomListScreen(
         multipleTitle = stringResource(R.string.remove_items),
         onRemove = { vm.removeItem(it) },
         onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             Column {
                 InsetSmallTopAppBar(
@@ -263,13 +268,17 @@ fun OtakuCustomListScreen(
                     onQueryChange = vm::setQuery,
                     onSearch = { vm.searchBarActive = false },
                     active = vm.searchBarActive,
-                    onActiveChange = { vm.searchBarActive = it },
+                    onActiveChange = {
+                        vm.searchBarActive = it
+                        if (!vm.searchBarActive) focusManager.clearFocus()
+                    },
                     placeholder = { Text(stringResource(id = R.string.search)) },
                     trailingIcon = {
                         IconButton(onClick = { vm.setQuery("") }) {
                             Icon(Icons.Default.Cancel, null)
                         }
                     },
+                    windowInsets = WindowInsets(0.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     LazyColumn(
