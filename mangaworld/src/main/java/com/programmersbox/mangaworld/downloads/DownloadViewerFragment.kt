@@ -39,7 +39,6 @@ import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.mangaworld.useNewReaderFlow
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.PermissionRequest
 import com.programmersbox.uiviews.utils.components.animatedItems
@@ -119,7 +118,6 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
 @Composable
 private fun EmptyState(p1: PaddingValues) {
     val navController = LocalNavController.current
-    val activity = LocalActivity.current
     Box(
         modifier = Modifier
             .padding(p1)
@@ -147,10 +145,7 @@ private fun EmptyState(p1: PaddingValues) {
                 )
 
                 Button(
-                    onClick = {
-                        navController.popBackStack()
-                        (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
-                    },
+                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)

@@ -74,7 +74,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
-import com.programmersbox.uiviews.utils.Screen as SScreen
 
 abstract class BaseMainActivity : AppCompatActivity() {
 
@@ -166,13 +165,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     NavigationBar {
                                         val navBackStackEntry by navController.currentBackStackEntryAsState()
                                         val currentDestination = navBackStackEntry?.destination
-                                        SScreen.bottomItems.forEach { screen ->
-                                            if (screen !is SScreen.AllScreen || showAllItem) {
+                                        Screen.bottomItems.forEach { screen ->
+                                            if (screen !is Screen.AllScreen || showAllItem) {
                                                 NavigationBarItem(
                                                     icon = {
                                                         BadgedBox(
                                                             badge = {
-                                                                if (screen is SScreen.Settings) {
+                                                                if (screen is Screen.Settings) {
                                                                     val updateAvailable = updateCheck()
                                                                     if (updateAvailable) {
                                                                         Badge { Text("") }
@@ -182,9 +181,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                         ) {
                                                             Icon(
                                                                 when (screen) {
-                                                                    SScreen.RecentScreen -> Icons.Default.History
-                                                                    SScreen.AllScreen -> Icons.Default.BrowseGallery
-                                                                    SScreen.Settings -> Icons.Default.Settings
+                                                                    Screen.RecentScreen -> Icons.Default.History
+                                                                    Screen.AllScreen -> Icons.Default.BrowseGallery
+                                                                    Screen.Settings -> Icons.Default.Settings
                                                                     else -> Icons.Default.BrokenImage
                                                                 },
                                                                 null
@@ -194,9 +193,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                     label = {
                                                         Text(
                                                             when (screen) {
-                                                                SScreen.AllScreen -> stringResource(R.string.all)
-                                                                SScreen.RecentScreen -> stringResource(R.string.recent)
-                                                                SScreen.Settings -> stringResource(R.string.settings)
+                                                                Screen.AllScreen -> stringResource(R.string.all)
+                                                                Screen.RecentScreen -> stringResource(R.string.recent)
+                                                                Screen.Settings -> stringResource(R.string.settings)
                                                                 else -> ""
                                                             }
                                                         )
@@ -219,13 +218,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     ) { innerPadding ->
                         AnimatedNavHost(
                             navController = navController,
-                            startDestination = SScreen.RecentScreen.route,
+                            startDestination = Screen.RecentScreen.route,
                             modifier = Modifier.padding(innerPadding)
                         ) {
-                            composable(SScreen.RecentScreen.route) { RecentView(logo = logo) }
+                            composable(Screen.RecentScreen.route) { RecentView(logo = logo) }
 
                             composable(
-                                SScreen.AllScreen.route
+                                Screen.AllScreen.route
                             ) {
                                 val context = LocalContext.current
                                 val dao = LocalItemDao.current
@@ -235,57 +234,56 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 )
                             }
 
-                            navigation(SScreen.SettingsScreen.route, SScreen.Settings.route) {
+                            navigation(Screen.SettingsScreen.route, Screen.Settings.route) {
                                 composable(
-                                    SScreen.SettingsScreen.route,
-                                    deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.SettingsScreen.route }),
+                                    Screen.SettingsScreen.route,
+                                    deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.SettingsScreen.route }),
                                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
                                 ) {
                                     SettingScreen(
                                         composeSettingsDsl = customPreferences,
-                                        notificationClick = { navController.navigate(SScreen.NotificationScreen.route) { launchSingleTop = true } },
-                                        favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) { launchSingleTop = true } },
-                                        historyClick = { navController.navigate(SScreen.HistoryScreen.route) { launchSingleTop = true } },
-                                        globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) { launchSingleTop = true } },
-                                        listClick = { navController.navigate(SScreen.CustomListScreen.route) { launchSingleTop = true } }
+                                        notificationClick = { navController.navigate(Screen.NotificationScreen.route) { launchSingleTop = true } },
+                                        favoritesClick = { navController.navigate(Screen.FavoriteScreen.route) { launchSingleTop = true } },
+                                        historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
+                                        globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
+                                        listClick = { navController.navigate(Screen.CustomListScreen.route) { launchSingleTop = true } }
                                     )
                                 }
 
                                 composable(
-                                    SScreen.NotificationsSettings.route,
+                                    Screen.NotificationsSettings.route,
                                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
                                 ) { NotificationSettings() }
 
                                 composable(
-                                    SScreen.GeneralSettings.route,
+                                    Screen.GeneralSettings.route,
                                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
                                 ) { GeneralSettings(customPreferences.generalSettings) }
 
                                 composable(
-                                    SScreen.MoreInfoSettings.route,
+                                    Screen.MoreInfoSettings.route,
                                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
                                 ) {
                                     InfoSettings(
                                         logo = logo,
-                                        usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) { launchSingleTop = true } }
+                                        usedLibraryClick = { navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true } }
                                     )
                                 }
 
                                 composable(
-                                    SScreen.OtherSettings.route,
+                                    Screen.OtherSettings.route,
                                     enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                                     exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
                                 ) { PlaySettings(customPreferences.playerSettings) }
-
                             }
 
                             composable(
-                                SScreen.NotificationScreen.route,
-                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.NotificationScreen.route }),
+                                Screen.NotificationScreen.route,
+                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
                                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) {
@@ -297,35 +295,35 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
 
                             composable(
-                                SScreen.GlobalSearchScreen.route + "?searchFor={searchFor}",
+                                Screen.GlobalSearchScreen.route + "?searchFor={searchFor}",
                                 arguments = listOf(navArgument("searchFor") { nullable = true }),
                                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
 
                             composable(
-                                SScreen.FavoriteScreen.route,
+                                Screen.FavoriteScreen.route,
                                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { FavoriteUi(logo) }
 
                             composable(
-                                SScreen.HistoryScreen.route,
+                                Screen.HistoryScreen.route,
                                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { HistoryUi(logo = logo) }
 
                             composable(
-                                SScreen.AboutScreen.route,
+                                Screen.AboutScreen.route,
                                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
                             ) { AboutLibrariesScreen(logo) }
 
                             composable(
-                                SScreen.DetailsScreen.route + "/{model}",
+                                Screen.DetailsScreen.route + "/{model}",
                                 deepLinks = listOf(
                                     navDeepLink {
-                                        uriPattern = genericInfo.deepLinkUri + "${SScreen.DetailsScreen.route}/{model}"
+                                        uriPattern = genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}"
                                     }
                                 ),
                                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
@@ -337,22 +335,22 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 )
                             }
 
-                            composable(SScreen.CustomListScreen.route) { OtakuListScreen() }
+                            composable(Screen.CustomListScreen.route) { OtakuListScreen() }
                             composable(
-                                SScreen.CustomListItemScreen.route + "/{uuid}"
+                                Screen.CustomListItemScreen.route + "/{uuid}"
                             ) { OtakuCustomListScreen(logo) }
 
                             composable(
-                                SScreen.ImportListScreen.route + "?uri={uri}"
+                                Screen.ImportListScreen.route + "?uri={uri}"
                             ) { ImportListScreen(logo) }
 
-                            bottomSheet(SScreen.TranslationScreen.route) { TranslationScreen() }
+                            bottomSheet(Screen.TranslationScreen.route) { TranslationScreen() }
 
                             bottomSheet(
-                                SScreen.FavoriteChoiceScreen.route + "/{${SScreen.FavoriteChoiceScreen.dbitemsArgument}}",
+                                Screen.FavoriteChoiceScreen.route + "/{${Screen.FavoriteChoiceScreen.dbitemsArgument}}",
                             ) { FavoriteChoiceScreen() }
 
-                            bottomSheet(SScreen.SourceChooserScreen.route) { SourceChooserScreen() }
+                            bottomSheet(Screen.SourceChooserScreen.route) { SourceChooserScreen() }
 
                             chromeCustomTabs()
 
@@ -386,14 +384,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     override fun onProvideAssistContent(outContent: AssistContent?) {
         super.onProvideAssistContent(outContent)
         outContent?.webUri = Uri.parse(currentDetailsUrl)
-    }
-
-    enum class Screen(val route: SScreen) { RECENT(SScreen.RecentScreen), ALL(SScreen.AllScreen), SETTINGS(SScreen.SettingsScreen) }
-
-    fun goToScreen(screen: Screen) {
-        if (::navController.isInitialized) {
-            navController.navigate(screen.route.route)
-        }
     }
 
     override fun onNewIntent(intent: Intent?) {

@@ -32,7 +32,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.tonyodev.fetch2.Status
@@ -169,10 +168,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
                 )
 
                 Button(
-                    onClick = {
-                        navController.popBackStack()
-                        (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
-                    },
+                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)

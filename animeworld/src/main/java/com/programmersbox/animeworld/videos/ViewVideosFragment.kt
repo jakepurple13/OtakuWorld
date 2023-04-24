@@ -45,7 +45,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.animeworld.*
 import com.programmersbox.animeworld.R
 import com.programmersbox.helpfulutils.stringForTime
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
@@ -258,7 +257,6 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
 @Composable
 private fun EmptyState(paddingValues: PaddingValues) {
-
     Box(
         modifier = Modifier
             .padding(paddingValues)
@@ -288,13 +286,9 @@ private fun EmptyState(paddingValues: PaddingValues) {
                 )
 
                 val navController = LocalNavController.current
-                val activity = LocalActivity.current
 
                 Button(
-                    onClick = {
-                        navController.popBackStack()
-                        (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
-                    },
+                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)
