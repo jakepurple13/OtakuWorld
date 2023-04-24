@@ -137,7 +137,7 @@ pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha17"
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 storage = "com.anggrayudi:storage:1.5.2"
 
-androidxWindow = "androidx.window:window:1.1.0-alpha04"
+androidxWindow = "androidx.window:window:1.1.0-beta02"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
 androidxBrowser = "androidx.browser:browser:1.5.0"
 
