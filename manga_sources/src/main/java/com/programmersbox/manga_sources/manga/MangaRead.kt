@@ -5,21 +5,49 @@ import com.programmersbox.manga_sources.utilities.GET
 import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.manga_sources.utilities.POST
 import com.programmersbox.manga_sources.utilities.asJsoup
-import com.programmersbox.models.*
-import okhttp3.*
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
+import com.programmersbox.models.ItemModel
+import com.programmersbox.models.Storage
+import okhttp3.CacheControl
+import okhttp3.FormBody
+import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
-object MangaRead : ApiService, KoinComponent {
+object MangaRead : Madara(
+    "https://www.mangaread.org",
+    "MANGA_READ",
+) {
+    override val sources: Sources
+        get() = Sources.MANGA_READ
+}
 
-    override val baseUrl: String get() = "https://www.mangaread.org"
+object MangaReadCo : Madara(
+    "https://mangaread.co",
+    "MANGA_READ_CO",
+) {
+    override val sources: Sources
+        get() = Sources.MANGA_READ_CO
+}
+
+abstract class Madara(
+    override val baseUrl: String,
+    override val serviceName: String,
+) : ApiService, KoinComponent {
+
+    abstract val sources: Sources
 
     override val canScroll: Boolean = true
 
@@ -36,7 +64,7 @@ object MangaRead : ApiService, KoinComponent {
 
     private fun headersBuilder(): Headers.Builder = Headers.Builder()
         .add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/78.0$userAgentRandomizer")
-        .add("Referer", baseUrl)
+        .add("Referer", "$baseUrl/")
 
     private fun formBuilder(page: Int, popular: Boolean) = FormBody.Builder().apply {
         add("action", "madara_load_more")
@@ -70,7 +98,7 @@ object MangaRead : ApiService, KoinComponent {
                     url = info.attr("abs:href"), // intentionally not using setUrlWithoutDomain
                     title = info.text(),
                     imageUrl = it.select("img").first()?.let { imageFromElement(it) }.orEmpty(),
-                    source = Sources.MANGA_READ,
+                    source = sources,
                     description = ""
                 ).also { it.extras["Referer"] = it.url }
             }
@@ -102,7 +130,7 @@ object MangaRead : ApiService, KoinComponent {
                     url = info.attr("abs:href"), // intentionally not using setUrlWithoutDomain
                     title = info.text(),
                     imageUrl = it.select("img").first()?.let { imageFromElement(it) }.orEmpty(),
-                    source = Sources.MANGA_READ,
+                    source = sources,
                     description = ""
                 ).also { it.extras["Referer"] = it.url }
             }
@@ -142,7 +170,7 @@ object MangaRead : ApiService, KoinComponent {
             chapters = chapterListParse(client.newCall(GET(model.url, headersBuilder().build())).execute(), model.url),
             description = description,
             imageUrl = doc.select("div.summary_image img").first()?.let { imageFromElement(it) }.orEmpty(),
-            source = Sources.MANGA_READ
+            source = sources
         )
     }
 
@@ -171,7 +199,7 @@ object MangaRead : ApiService, KoinComponent {
         return POST("$mangaUrl/ajax/chapters", xhrHeaders)
     }
 
-    private val useNewChapterEndpoint: Boolean = false
+    protected val useNewChapterEndpoint: Boolean = false
 
     /**
      * Internal attribute to control if it should always use the
@@ -221,7 +249,7 @@ object MangaRead : ApiService, KoinComponent {
                 it.substringBefore("?style=paged") + if (!it.endsWith("?style=list")) "?style=list" else ""
             },
             name = info.text(),
-            source = Sources.MANGA_READ,
+            source = sources,
             sourceUrl = sourceUrl,
             uploaded = element.select("img:not(.thumb)").firstOrNull()?.attr("alt")
                 ?: element.select("span a").firstOrNull()?.attr("title") ?: ""
@@ -275,7 +303,7 @@ object MangaRead : ApiService, KoinComponent {
             url = url,
             description = description,
             imageUrl = doc.select("div.summary_image img").first()?.let { imageFromElement(it) }.orEmpty(),
-            source = Sources.MANGA_READ
+            source = sources
         )
     }
 
@@ -293,7 +321,7 @@ object MangaRead : ApiService, KoinComponent {
                     url = info.attr("abs:href"),
                     description = "",
                     imageUrl = it.select("img").first()?.let { imageFromElement(it) }.orEmpty(),
-                    source = Sources.MANGA_READ
+                    source = sources
                 )
             }
     }
