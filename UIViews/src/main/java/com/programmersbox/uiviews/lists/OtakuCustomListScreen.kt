@@ -44,6 +44,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -61,10 +62,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -110,7 +109,6 @@ fun OtakuCustomListScreen(
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val focusManager = LocalFocusManager.current
     val customItem = vm.customItem
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
@@ -201,103 +199,104 @@ fun OtakuCustomListScreen(
         multipleTitle = stringResource(R.string.remove_items),
         onRemove = { vm.removeItem(it) },
         onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        bottomScrollBehavior = scrollBehavior,
         topBar = {
-            Column {
-                InsetSmallTopAppBar(
-                    title = { Text(customItem?.item?.name.orEmpty()) },
-                    navigationIcon = { BackButton() },
-                    actions = {
-                        var showMenu by remember { mutableStateOf(false) }
+            Surface {
+                Column {
+                    InsetSmallTopAppBar(
+                        title = { Text(customItem?.item?.name.orEmpty()) },
+                        navigationIcon = { BackButton() },
+                        actions = {
+                            var showMenu by remember { mutableStateOf(false) }
 
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.export_list)) },
-                                onClick = {
-                                    showMenu = false
-                                    pickDocumentLauncher.launch("${customItem?.item?.name}.json")
-                                }
-                            )
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.export_list)) },
+                                    onClick = {
+                                        showMenu = false
+                                        pickDocumentLauncher.launch("${customItem?.item?.name}.json")
+                                    }
+                                )
 
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.edit_import_list)) },
-                                onClick = {
-                                    showMenu = false
-                                    showAdd = true
-                                }
-                            )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.edit_import_list)) },
+                                    onClick = {
+                                        showMenu = false
+                                        showAdd = true
+                                    }
+                                )
 
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.delete_list_title)) },
-                                onClick = {
-                                    showMenu = false
-                                    deleteList = true
-                                },
-                                colors = MenuDefaults.itemColors(
-                                    textColor = MaterialTheme.colorScheme.onErrorContainer,
-                                ),
-                                modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                context.startActivity(
-                                    Intent.createChooser(
-                                        Intent(Intent.ACTION_SEND).apply {
-                                            type = "text/plain"
-                                            putExtra(Intent.EXTRA_TEXT, customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" })
-                                            putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
-                                        },
-                                        context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
-                                    )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.delete_list_title)) },
+                                    onClick = {
+                                        showMenu = false
+                                        deleteList = true
+                                    },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = MaterialTheme.colorScheme.onErrorContainer,
+                                    ),
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
                                 )
                             }
-                        ) { Icon(Icons.Default.Share, null) }
-
-                        IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
-                        Text("(${customItem?.list.orEmpty().size})")
-                    },
-                    scrollBehavior = scrollBehavior
-                )
-
-                SearchBar(
-                    query = vm.searchQuery,
-                    onQueryChange = vm::setQuery,
-                    onSearch = { vm.searchBarActive = false },
-                    active = vm.searchBarActive,
-                    onActiveChange = {
-                        vm.searchBarActive = it
-                        if (!vm.searchBarActive) focusManager.clearFocus()
-                    },
-                    placeholder = { Text(stringResource(id = R.string.search)) },
-                    trailingIcon = {
-                        IconButton(onClick = { vm.setQuery("") }) {
-                            Icon(Icons.Default.Cancel, null)
-                        }
-                    },
-                    windowInsets = WindowInsets(0.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        itemsIndexed(vm.items) { index, item ->
-                            ListItem(
-                                headlineContent = { Text(item.title) },
-                                leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                modifier = Modifier.clickable {
-                                    vm.setQuery(item.title)
-                                    vm.searchBarActive = false
+                            IconButton(
+                                onClick = {
+                                    context.startActivity(
+                                        Intent.createChooser(
+                                            Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(
+                                                    Intent.EXTRA_TEXT,
+                                                    customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" })
+                                                putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
+                                            },
+                                            context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                        )
+                                    )
                                 }
-                            )
-                            if (index != vm.items.lastIndex) {
-                                Divider()
+                            ) { Icon(Icons.Default.Share, null) }
+
+                            IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
+                            Text("(${customItem?.list.orEmpty().size})")
+                        },
+                        scrollBehavior = scrollBehavior
+                    )
+
+                    SearchBar(
+                        query = vm.searchQuery,
+                        onQueryChange = vm::setQuery,
+                        onSearch = { vm.searchBarActive = false },
+                        active = vm.searchBarActive,
+                        onActiveChange = { vm.searchBarActive = it },
+                        placeholder = { Text(stringResource(id = R.string.search)) },
+                        trailingIcon = {
+                            IconButton(onClick = { vm.setQuery("") }) {
+                                Icon(Icons.Default.Cancel, null)
+                            }
+                        },
+                        windowInsets = WindowInsets(0.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            itemsIndexed(vm.items) { index, item ->
+                                ListItem(
+                                    headlineContent = { Text(item.title) },
+                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                    modifier = Modifier.clickable {
+                                        vm.setQuery(item.title)
+                                        vm.searchBarActive = false
+                                    }
+                                )
+                                if (index != vm.items.lastIndex) {
+                                    Divider()
+                                }
                             }
                         }
                     }

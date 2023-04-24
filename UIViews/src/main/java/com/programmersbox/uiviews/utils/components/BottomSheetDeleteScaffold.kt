@@ -54,8 +54,7 @@ fun <T> BottomSheetDeleteScaffold(
     BottomSheetScaffold(
         scaffoldState = state,
         modifier = modifier
-            .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
-            .statusBarsPadding(),
+            .nestedScroll(bottomScrollBehavior.nestedScrollConnection),//.statusBarsPadding(),
         topBar = topBar,
         sheetContent = {
 
