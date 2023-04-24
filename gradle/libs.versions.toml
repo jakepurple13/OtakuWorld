@@ -113,7 +113,7 @@ ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.0.0"
 workRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "workVersion" }
 
 pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
-roomPaging = "androidx.room:room-paging:2.5.0"
+roomPaging = "androidx.room:room-paging:2.5.1"
 
 aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref = "latestAboutLibsRelease" }
 aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose", version.ref = "latestAboutLibsRelease" }
