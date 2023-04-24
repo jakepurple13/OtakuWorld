@@ -38,7 +38,12 @@ sealed class Screen(val route: String) {
 
     object RecentScreen : Screen("recent")
     object AllScreen : Screen("all")
-    object SettingsScreen : Screen("settings")
+    object Settings : Screen("settings")
+    object SettingsScreen : Screen("settings_screen")
+    object GeneralSettings : Screen("general_settings")
+    object OtherSettings : Screen("others_settings")
+    object MoreInfoSettings : Screen("more_info_settings")
+    object NotificationsSettings : Screen("notifications_settings")
     object DetailsScreen : Screen("details")
     object NotificationScreen : Screen("notifications")
     object HistoryScreen : Screen("history")
@@ -75,7 +80,7 @@ sealed class Screen(val route: String) {
     object SourceChooserScreen : Screen("source_chooser")
 
     companion object {
-        val bottomItems = listOf(RecentScreen, AllScreen, SettingsScreen)
+        val bottomItems = listOf(RecentScreen, AllScreen, Settings)
     }
 
 }

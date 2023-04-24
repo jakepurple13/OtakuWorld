@@ -35,6 +35,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import androidx.navigation.navigation
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -60,6 +61,11 @@ import com.programmersbox.uiviews.lists.OtakuCustomListScreen
 import com.programmersbox.uiviews.lists.OtakuListScreen
 import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.recent.RecentView
+import com.programmersbox.uiviews.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.settings.GeneralSettings
+import com.programmersbox.uiviews.settings.InfoSettings
+import com.programmersbox.uiviews.settings.NotificationSettings
+import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
@@ -127,6 +133,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
 
             val systemUiController = rememberSystemUiController()
+            val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
 
             if (showNavBar) {
                 systemUiController.isSystemBarsVisible = true
@@ -165,7 +172,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                     icon = {
                                                         BadgedBox(
                                                             badge = {
-                                                                if (screen is SScreen.SettingsScreen) {
+                                                                if (screen is SScreen.Settings) {
                                                                     val updateAvailable = updateCheck()
                                                                     if (updateAvailable) {
                                                                         Badge { Text("") }
@@ -177,7 +184,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                                 when (screen) {
                                                                     SScreen.RecentScreen -> Icons.Default.History
                                                                     SScreen.AllScreen -> Icons.Default.BrowseGallery
-                                                                    SScreen.SettingsScreen -> Icons.Default.Settings
+                                                                    SScreen.Settings -> Icons.Default.Settings
                                                                     else -> Icons.Default.BrokenImage
                                                                 },
                                                                 null
@@ -189,7 +196,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                             when (screen) {
                                                                 SScreen.AllScreen -> stringResource(R.string.all)
                                                                 SScreen.RecentScreen -> stringResource(R.string.recent)
-                                                                SScreen.SettingsScreen -> stringResource(R.string.settings)
+                                                                SScreen.Settings -> stringResource(R.string.settings)
                                                                 else -> ""
                                                             }
                                                         )
@@ -228,24 +235,52 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 )
                             }
 
-                            composable(
-                                SScreen.SettingsScreen.route,
-                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.SettingsScreen.route }),
-                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-                            ) {
-                                SettingScreen(
-                                    navController = navController,
-                                    logo = logo,
-                                    genericInfo = genericInfo,
-                                    activity = this@BaseMainActivity,
-                                    notificationClick = { navController.navigate(SScreen.NotificationScreen.route) { launchSingleTop = true } },
-                                    globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) { launchSingleTop = true } },
-                                    favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) { launchSingleTop = true } },
-                                    historyClick = { navController.navigate(SScreen.HistoryScreen.route) { launchSingleTop = true } },
-                                    usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) { launchSingleTop = true } },
-                                    listClick = { navController.navigate(SScreen.CustomListScreen.route) { launchSingleTop = true } }
-                                )
+                            navigation(SScreen.SettingsScreen.route, SScreen.Settings.route) {
+                                composable(
+                                    SScreen.SettingsScreen.route,
+                                    deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + SScreen.SettingsScreen.route }),
+                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+                                ) {
+                                    SettingScreen(
+                                        composeSettingsDsl = customPreferences,
+                                        notificationClick = { navController.navigate(SScreen.NotificationScreen.route) { launchSingleTop = true } },
+                                        favoritesClick = { navController.navigate(SScreen.FavoriteScreen.route) { launchSingleTop = true } },
+                                        historyClick = { navController.navigate(SScreen.HistoryScreen.route) { launchSingleTop = true } },
+                                        globalSearchClick = { navController.navigate(SScreen.GlobalSearchScreen.route) { launchSingleTop = true } },
+                                        listClick = { navController.navigate(SScreen.CustomListScreen.route) { launchSingleTop = true } }
+                                    )
+                                }
+
+                                composable(
+                                    SScreen.NotificationsSettings.route,
+                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+                                ) { NotificationSettings() }
+
+                                composable(
+                                    SScreen.GeneralSettings.route,
+                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+                                ) { GeneralSettings(customPreferences.generalSettings) }
+
+                                composable(
+                                    SScreen.MoreInfoSettings.route,
+                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+                                ) {
+                                    InfoSettings(
+                                        logo = logo,
+                                        usedLibraryClick = { navController.navigate(SScreen.AboutScreen.route) { launchSingleTop = true } }
+                                    )
+                                }
+
+                                composable(
+                                    SScreen.OtherSettings.route,
+                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+                                ) { PlaySettings(customPreferences.playerSettings) }
+
                             }
 
                             composable(

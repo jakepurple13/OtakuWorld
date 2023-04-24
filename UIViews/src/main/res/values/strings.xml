@@ -199,4 +199,6 @@
     <string name="import_import_list">Import</string>
     <string name="export_list">Export</string>
     <string name="edit_import_list">Edit</string>
+    <string name="additional_settings">Additional Settings</string>
+    <string name="notification_settings">Notification Settings</string>
 </resources>

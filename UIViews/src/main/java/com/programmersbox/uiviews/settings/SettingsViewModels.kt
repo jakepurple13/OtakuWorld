@@ -9,9 +9,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.sharedutils.*
+import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.sharedutils.CustomFirebaseUser
+import com.programmersbox.sharedutils.CustomRemoteModel
+import com.programmersbox.sharedutils.FirebaseAuthentication
+import com.programmersbox.sharedutils.TranslatorUtils
+import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
+import com.programmersbox.uiviews.utils.shouldCheckFlow
+import com.programmersbox.uiviews.utils.updateCheckingEnd
+import com.programmersbox.uiviews.utils.updateCheckingStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -39,41 +48,6 @@ class AccountViewModel : ViewModel() {
     }
 }
 
-class AboutViewModel(context: Context) : ViewModel() {
-
-    var canCheck by mutableStateOf(false)
-
-    var time by mutableStateOf("")
-
-    init {
-        viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
-
-        combine(
-            context.updateCheckingStart.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
-            context.updateCheckingEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
-        ) { s, e -> s to e }
-            .map { "${it.first}\n${it.second}" }
-            .onEach { time = it }
-            .launchIn(viewModelScope)
-    }
-
-    private val checker = AtomicBoolean(false)
-
-    suspend fun updateChecker(context: Context) {
-        try {
-            if (!checker.get()) {
-                checker.set(true)
-                AppUpdate.getUpdate()?.let(updateAppCheck::tryEmit)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            checker.set(false)
-            withContext(Dispatchers.Main) { context.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() } }
-        }
-    }
-}
-
 class MoreInfoViewModel : ViewModel() {
 
     private val checker = AtomicBoolean(false)
@@ -93,15 +67,29 @@ class MoreInfoViewModel : ViewModel() {
     }
 }
 
-class NotificationViewModel(dao: ItemDao) : ViewModel() {
+class NotificationViewModel(dao: ItemDao, context: Context) : ViewModel() {
 
     var savedNotifications by mutableStateOf(0)
         private set
+
+    var canCheck by mutableStateOf(false)
+
+    var time by mutableStateOf("")
 
     init {
         dao.getAllNotificationCount()
             .dispatchIo()
             .onEach { savedNotifications = it }
+            .launchIn(viewModelScope)
+
+        viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
+
+        combine(
+            context.updateCheckingStart.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
+            context.updateCheckingEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+        ) { s, e -> s to e }
+            .map { "${it.first}\n${it.second}" }
+            .onEach { time = it }
             .launchIn(viewModelScope)
     }
 
@@ -121,4 +109,16 @@ class TranslationViewModel : ViewModel() {
         TranslatorUtils.getModels { translationModels = it }
     }
 
+}
+
+class SettingsViewModel(dao: ItemDao) : ViewModel() {
+    var savedNotifications by mutableStateOf(0)
+        private set
+
+    init {
+        dao.getAllNotificationCount()
+            .dispatchIo()
+            .onEach { savedNotifications = it }
+            .launchIn(viewModelScope)
+    }
 }
