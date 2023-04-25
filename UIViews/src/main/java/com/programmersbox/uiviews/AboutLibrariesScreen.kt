@@ -8,6 +8,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
@@ -99,7 +100,7 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
 
                     DefaultHeader(
                         logo = { Image(rememberDrawablePainter(drawable = mainLogoDrawable), null) },
-                        version = context.appVersion,
+                        version = appVersion(),
                     )
                 }
             },
@@ -297,8 +298,8 @@ internal fun Library(
                 library.licenses.forEach {
                     Badge(
                         modifier = Modifier.padding(padding.badgePadding),
-                        //contentColor = colors.badgeContentColor,
-                        //containerColor = colors.badgeBackgroundColor
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.primary
                     ) {
                         Text(
                             modifier = Modifier.padding(padding.badgeContentPadding),
@@ -369,33 +370,35 @@ fun DefaultHeader(
 @Composable
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 fun DefaultHeaderPreview() {
-    Surface {
-        Scaffold {
-            OutlinedLibrariesContainer(
-                libraries = fakeData,
-                contentPadding = it,
-                modifier = Modifier.fillMaxSize(),
-                header = {
-                    stickyHeader {
-                        DefaultHeader(
-                            logo = { Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null) },
-                            version = "1.2.3",
-                            description = "This is a massive description thasd;" +
-                                    "lfjkasd;lkfja;lksdfj;alskdjf;laskdjf;alksjdf;laksdjf;lksjfda",
-                            linkSites = listOf(
-                                Sites(
-                                    name = "Play Store",
-                                    url = "asdf",
-                                ),
-                                Sites(
-                                    name = "GitHub",
-                                    url = "asdf",
+    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
+        Surface {
+            Scaffold {
+                OutlinedLibrariesContainer(
+                    libraries = fakeData,
+                    contentPadding = it,
+                    modifier = Modifier.fillMaxSize(),
+                    header = {
+                        stickyHeader {
+                            DefaultHeader(
+                                logo = { Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null) },
+                                version = "1.2.3",
+                                description = "This is a massive description thasd;" +
+                                        "lfjkasd;lkfja;lksdfj;alskdjf;laskdjf;alksjdf;laksdjf;lksjfda",
+                                linkSites = listOf(
+                                    Sites(
+                                        name = "Play Store",
+                                        url = "asdf",
+                                    ),
+                                    Sites(
+                                        name = "GitHub",
+                                        url = "asdf",
+                                    )
                                 )
                             )
-                        )
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

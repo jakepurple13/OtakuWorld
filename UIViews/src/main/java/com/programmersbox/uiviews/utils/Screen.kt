@@ -8,15 +8,11 @@ import androidx.compose.material.lightColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -140,40 +136,3 @@ fun OtakuMaterialTheme(
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
 val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
-
-@Composable
-fun LifecycleHandle(
-    onCreate: () -> Unit = {},
-    onStart: () -> Unit = {},
-    onResume: () -> Unit = {},
-    onPause: () -> Unit = {},
-    onStop: () -> Unit = {},
-    onDestroy: () -> Unit = {},
-    onAny: () -> Unit = {},
-    vararg keys: Any
-) {
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    // If `lifecycleOwner` changes, dispose and reset the effect
-    DisposableEffect(lifecycleOwner, *keys) {
-        // Create an observer that triggers our remembered callbacks
-        // for sending analytics events
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_CREATE -> onCreate
-                Lifecycle.Event.ON_START -> onStart
-                Lifecycle.Event.ON_RESUME -> onResume
-                Lifecycle.Event.ON_PAUSE -> onPause
-                Lifecycle.Event.ON_STOP -> onStop
-                Lifecycle.Event.ON_DESTROY -> onDestroy
-                Lifecycle.Event.ON_ANY -> onAny
-            }()
-        }
-
-        // Add the observer to the lifecycle
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        // When the effect leaves the Composition, remove the observer
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-}
