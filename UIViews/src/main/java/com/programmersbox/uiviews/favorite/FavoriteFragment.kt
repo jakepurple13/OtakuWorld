@@ -334,7 +334,7 @@ fun FavoriteUi(
                                 } else null
                                 showBanner = c == ComponentState.Pressed
                             },
-                            imageUrl = info.value.randomOrNull()?.imageUrl.orEmpty(),
+                            imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                             name = info.key,
                             placeHolder = logo.logoId,
                             favoriteIcon = {
