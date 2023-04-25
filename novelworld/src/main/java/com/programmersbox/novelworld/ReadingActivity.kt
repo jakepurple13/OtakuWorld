@@ -468,10 +468,10 @@ fun TopBar(
                         targetState = readVm.batteryPercent.toInt(),
                         transitionSpec = {
                             if (targetState > initialState) {
-                                slideInVertically { height -> height } + fadeIn() togetherWith
+                                slideInVertically { height -> height } + fadeIn() with
                                         slideOutVertically { height -> -height } + fadeOut()
                             } else {
-                                slideInVertically { height -> -height } + fadeIn() togetherWith
+                                slideInVertically { height -> -height } + fadeIn() with
                                         slideOutVertically { height -> height } + fadeOut()
                             }
                                 .using(SizeTransform(clip = false))
@@ -495,7 +495,7 @@ fun TopBar(
                 AnimatedContent(
                     targetState = time,
                     transitionSpec = {
-                        (slideInVertically { height -> height } + fadeIn() togetherWith
+                        (slideInVertically { height -> height } + fadeIn() with
                                 slideOutVertically { height -> -height } + fadeOut())
                             .using(SizeTransform(clip = false))
                     }, label = ""
@@ -608,10 +608,10 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
             targetState = currentPage,
             transitionSpec = {
                 if (targetState > initialState) {
-                    slideInVertically { height -> height } + fadeIn() togetherWith
+                    slideInVertically { height -> height } + fadeIn() with
                             slideOutVertically { height -> -height } + fadeOut()
                 } else {
-                    slideInVertically { height -> -height } + fadeIn() togetherWith
+                    slideInVertically { height -> -height } + fadeIn() with
                             slideOutVertically { height -> height } + fadeOut()
                 }
                     .using(SizeTransform(clip = false))
