@@ -302,9 +302,9 @@ fun M3CoverCard(
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)
+                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                     .build(),
                 contentDescription = name,
-                contentScale = ContentScale.FillBounds,
                 modifier = Modifier.matchParentSize()
             )
 
