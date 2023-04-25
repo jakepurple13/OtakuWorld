@@ -81,17 +81,22 @@ abstract class Madara(
         add("vars[manga_archives_item_layout]", "big_thumbnail")
     }
 
+    protected open val filterNonMangaItems = true
+
+    protected open val mangaEntrySelector: String by lazy {
+        if (filterNonMangaItems) ".manga" else ""
+    }
+
     override suspend fun recent(page: Int): List<ItemModel> {
         val request = client.newCall(
-            POST(
-                "$baseUrl/wp-admin/admin-ajax.php",
-                headersBuilder().build(),
-                formBuilder(page, false).build(),
-                CacheControl.FORCE_NETWORK
+            GET(
+                url = "$baseUrl/$mangaSubString/${searchPage(page)}?m_orderby=latest",
+                headers = headersBuilder().build(),
+                cache = CacheControl.FORCE_NETWORK,
             )
         ).execute()
         return request.asJsoup()
-            .select("div.page-item-detail:not(:has(a[href*='bilibilicomics.com']))")
+            .select("div.page-item-detail:not(:has(a[href*='bilibilicomics.com']))$mangaEntrySelector")
             .map {
                 val info = it.select("div.post-title a")
                 ItemModel(
@@ -115,15 +120,14 @@ abstract class Madara(
 
     override suspend fun allList(page: Int): List<ItemModel> {
         val request = client.newCall(
-            POST(
-                "$baseUrl/wp-admin/admin-ajax.php",
-                headersBuilder().build(),
-                formBuilder(page, true).build(),
-                CacheControl.FORCE_NETWORK
+            GET(
+                url = "$baseUrl/$mangaSubString/${searchPage(page)}?m_orderby=views",
+                headers = headersBuilder().build(),
+                cache = CacheControl.FORCE_NETWORK,
             )
         ).execute()
         return request.asJsoup()
-            .select("div.page-item-detail:not(:has(a[href*='bilibilicomics.com']))")
+            .select("div.page-item-detail:not(:has(a[href*='bilibilicomics.com']))$mangaEntrySelector")
             .map {
                 val info = it.select("div.post-title a")
                 ItemModel(
@@ -325,5 +329,9 @@ abstract class Madara(
                 )
             }
     }
+
+    open val mangaSubString = "manga"
+
+    protected open fun searchPage(page: Int): String = "page/$page/"
 
 }
