@@ -10,18 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -41,20 +33,19 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @Composable
 fun <T> BottomSheetDeleteScaffold(
-    modifier: Modifier = Modifier,
     listOfItems: List<T>,
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
     onRemove: (T) -> Unit,
     onMultipleRemove: (SnapshotStateList<T>) -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
-    itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, List<T>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -62,20 +53,15 @@ fun <T> BottomSheetDeleteScaffold(
 
     BottomSheetScaffold(
         scaffoldState = state,
-        modifier = Modifier
-            .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
-            .then(modifier),
+        modifier = modifier
+            .nestedScroll(bottomScrollBehavior.nestedScrollConnection),//.statusBarsPadding(),
         topBar = topBar,
-        backgroundColor = MaterialTheme.colorScheme.background,
-        contentColor = contentColorFor(MaterialTheme.colorScheme.background),
-        sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
-        sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
         sheetContent = {
 
             val itemsToDelete = remember { mutableStateListOf<T>() }
 
             LaunchedEffect(state) {
-                snapshotFlow { state.bottomSheetState.isCollapsed }
+                snapshotFlow { state.bottomSheetState.currentValue == SheetValue.PartiallyExpanded }
                     .distinctUntilChanged()
                     .filter { it }
                     .collect { itemsToDelete.clear() }
@@ -103,7 +89,7 @@ fun <T> BottomSheetDeleteScaffold(
                         TextButton(
                             onClick = {
                                 onDismiss()
-                                scope.launch { state.bottomSheetState.collapse() }
+                                scope.launch { state.bottomSheetState.partialExpand() }
                                 onMultipleRemove(itemsToDelete)
                             }
                         ) { Text(stringResource(R.string.yes)) }
@@ -118,37 +104,22 @@ fun <T> BottomSheetDeleteScaffold(
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
-                    Surface(modifier = Modifier.animateContentSize()) {
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
-                                    else state.bottomSheetState.collapse()
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .let {
-                                    if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
-                                        it.padding(WindowInsets.statusBars.asPaddingValues())
-                                    } else {
-                                        it
-                                    }
-                                }
-                                .heightIn(ButtonDefaults.MinHeight + 4.dp),
-                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                        ) { Text(stringResource(R.string.delete_multiple)) }
-                    }
+                    CenterAlignedTopAppBar(
+                        title = { Text(stringResource(R.string.delete_multiple)) },
+                        windowInsets = WindowInsets(0.dp),
+                        scrollBehavior = scrollBehavior
+                    )
                 },
                 bottomBar = {
-                    androidx.compose.material3.BottomAppBar(
+                    BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
+                        windowInsets = WindowInsets(0.dp)
                     ) {
                         Button(
-                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
+                            onClick = { scope.launch { state.bottomSheetState.partialExpand() } },
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.cancel)) }
 
                         Button(
@@ -156,7 +127,7 @@ fun <T> BottomSheetDeleteScaffold(
                             enabled = itemsToDelete.isNotEmpty(),
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.remove)) }
                     }
                 }
@@ -164,12 +135,15 @@ fun <T> BottomSheetDeleteScaffold(
                 AnimatedLazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
-                    modifier = Modifier.padding(5.dp),
+                    modifier = Modifier.padding(4.dp),
                     items = listOfItems.fastMap { i ->
                         AnimatedLazyListItem(key = i.hashCode().toString(), value = i) {
                             DeleteItemView(
                                 item = i,
                                 deleteItemList = itemsToDelete,
+                                onAddOrRemove = { item ->
+                                    if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
+                                },
                                 deleteTitle = deleteTitle,
                                 customSingleRemoveDialog = customSingleRemoveDialog,
                                 onRemove = onRemove,
@@ -181,7 +155,7 @@ fun <T> BottomSheetDeleteScaffold(
                 /*LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
-                    modifier = Modifier.padding(5.dp)
+                    modifier = Modifier.padding(4.dp)
                 ) {
                     items(listOfItems) { i ->
                         DeleteItemView(
@@ -199,17 +173,16 @@ fun <T> BottomSheetDeleteScaffold(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun <T> DeleteItemView(
     item: T,
-    deleteItemList: SnapshotStateList<T>,
+    deleteItemList: List<T>,
+    onAddOrRemove: (T) -> Unit,
     customSingleRemoveDialog: (T) -> Boolean,
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     onRemove: (T) -> Unit,
-    itemUi: @Composable (T) -> Unit
+    itemUi: @Composable (T) -> Unit,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
 ) {
-
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -232,7 +205,7 @@ private fun <T> DeleteItemView(
     }
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
                 if (customSingleRemoveDialog(item)) {
                     showPopup = true
@@ -272,35 +245,34 @@ private fun <T> DeleteItemView(
                     modifier = Modifier.scale(scale)
                 )
             }
+        },
+        dismissContent = {
+            OutlinedCard(
+                onClick = { onAddOrRemove(item) },
+                modifier = Modifier.fillMaxSize(),
+                border = BorderStroke(
+                    animateDpAsState(targetValue = if (item in deleteItemList) 4.dp else 1.dp).value,
+                    animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline).value
+                )
+            ) { itemUi(item) }
         }
-    ) {
-        OutlinedCard(
-            onClick = { if (item in deleteItemList) deleteItemList.remove(item) else deleteItemList.add(item) },
-            modifier = Modifier.fillMaxSize(),
-            border = BorderStroke(
-                animateDpAsState(targetValue = if (item in deleteItemList) 5.dp else 1.dp).value,
-                animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline).value
-            )
-        ) { itemUi(item) }
-    }
-
+    )
 }
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @Composable
 fun <T : Any> BottomSheetDeleteScaffoldPaging(
-    modifier: Modifier = Modifier,
     listOfItems: LazyPagingItems<T>,
-    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     multipleTitle: String,
     onRemove: (T) -> Unit,
-    onMultipleRemove: (SnapshotStateList<T>) -> Unit,
-    customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior,
+    onMultipleRemove: (SnapshotStateList<T>) -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    customSingleRemoveDialog: (T) -> Boolean = { true },
     deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     topBar: @Composable (() -> Unit)? = null,
-    itemUi: @Composable (T) -> Unit,
     mainView: @Composable (PaddingValues, LazyPagingItems<T>) -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -312,8 +284,6 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
             .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
             .then(modifier),
         topBar = topBar,
-        backgroundColor = MaterialTheme.colorScheme.background,
-        contentColor = contentColorFor(MaterialTheme.colorScheme.background),
         sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
         sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
         sheetContent = {
@@ -321,7 +291,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
             val itemsToDelete = remember { mutableStateListOf<T>() }
 
             LaunchedEffect(state) {
-                snapshotFlow { state.bottomSheetState.isCollapsed }
+                snapshotFlow { state.bottomSheetState.currentValue == SheetValue.Hidden }
                     .distinctUntilChanged()
                     .filter { it }
                     .collect { itemsToDelete.clear() }
@@ -349,7 +319,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                         TextButton(
                             onClick = {
                                 onDismiss()
-                                scope.launch { state.bottomSheetState.collapse() }
+                                scope.launch { state.bottomSheetState.hide() }
                                 onMultipleRemove(itemsToDelete)
                             }
                         ) { Text(stringResource(R.string.yes)) }
@@ -368,14 +338,14 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    if (state.bottomSheetState.isCollapsed) state.bottomSheetState.expand()
-                                    else state.bottomSheetState.collapse()
+                                    if (state.bottomSheetState.currentValue == SheetValue.Hidden) state.bottomSheetState.expand()
+                                    else state.bottomSheetState.hide()
                                 }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .let {
-                                    if (state.bottomSheetState.progress.to == BottomSheetValue.Expanded) {
+                                    if (state.bottomSheetState.targetValue == SheetValue.Expanded) {
                                         it.padding(WindowInsets.statusBars.asPaddingValues())
                                     } else {
                                         it
@@ -387,14 +357,14 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                     }
                 },
                 bottomBar = {
-                    androidx.compose.material3.BottomAppBar(
+                    BottomAppBar(
                         contentPadding = PaddingValues(0.dp),
                     ) {
                         Button(
-                            onClick = { scope.launch { state.bottomSheetState.collapse() } },
+                            onClick = { scope.launch { state.bottomSheetState.hide() } },
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.cancel)) }
 
                         Button(
@@ -402,7 +372,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                             enabled = itemsToDelete.isNotEmpty(),
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 5.dp)
+                                .padding(horizontal = 4.dp)
                         ) { Text(stringResource(id = R.string.remove)) }
                     }
                 }
@@ -410,7 +380,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
-                    modifier = Modifier.padding(5.dp)
+                    modifier = Modifier.padding(4.dp)
                 ) {
                     items(listOfItems, key = { i -> i.hashCode().toString() }) { i ->
                         i?.let { d ->
@@ -432,15 +402,14 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun <T : Any> DeleteItemView(
     item: T,
     selectedForDeletion: Boolean,
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     onClick: (T) -> Unit,
     customSingleRemoveDialog: (T) -> Boolean,
     onRemove: (T) -> Unit,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
     itemUi: @Composable (T) -> Unit
 ) {
 
@@ -466,7 +435,7 @@ private fun <T : Any> DeleteItemView(
     }
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
                 if (customSingleRemoveDialog(item)) {
                     showPopup = true
@@ -506,18 +475,18 @@ private fun <T : Any> DeleteItemView(
                     modifier = Modifier.scale(scale)
                 )
             }
+        },
+        dismissContent = {
+            Surface(
+                onClick = { onClick(item) },
+                tonalElevation = 4.dp,
+                modifier = Modifier.fillMaxSize(),
+                shape = MaterialTheme.shapes.medium,
+                border = BorderStroke(
+                    animateDpAsState(targetValue = if (selectedForDeletion) 4.dp else 1.dp).value,
+                    animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
+                )
+            ) { itemUi(item) }
         }
-    ) {
-        Surface(
-            onClick = { onClick(item) },
-            tonalElevation = 5.dp,
-            modifier = Modifier.fillMaxSize(),
-            shape = MaterialTheme.shapes.medium,
-            border = BorderStroke(
-                animateDpAsState(targetValue = if (selectedForDeletion) 5.dp else 1.dp).value,
-                animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
-            )
-        ) { itemUi(item) }
-    }
-
+    )
 }

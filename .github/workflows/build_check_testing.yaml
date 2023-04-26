@@ -70,7 +70,6 @@ jobs:
         id: buildMangaApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           generate-job-summary: true
           arguments: mangaworld:assembleRelease
 
@@ -79,7 +78,6 @@ jobs:
         id: buildAnimeApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           generate-job-summary: true
           arguments: animeworld:assembleRelease
 
@@ -88,7 +86,6 @@ jobs:
         id: buildAnimeTvApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           generate-job-summary: true
           arguments: animeworldtv:assembleRelease
 
@@ -97,7 +94,6 @@ jobs:
         id: buildNovelApks
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: current
           generate-job-summary: true
           arguments: novelworld:assembleRelease
 

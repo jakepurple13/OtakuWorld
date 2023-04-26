@@ -58,6 +58,7 @@
     <string name="logIn">Log in</string>
     <string name="logOut">Log Out?</string>
     <string name="yes">Yes</string>
+    <string name="confirm">Confirm</string>
     <string name="no">No</string>
     <string name="done">Done</string>
     <string name="cancel">Cancel</string>
@@ -181,4 +182,23 @@
 
     <string name="viewTranslationModels">View Translation Models</string>
     <string name="chooseModelToDelete">Choose a Model to Delete</string>
+    <string name="add_to_list">Add to List</string>
+    <string name="added_to_list">Added to %s</string>
+    <string name="already_in_list">Already in %s</string>
+    <string name="are_you_sure_delete_list">Are you sure? There is no recovering.\nPlease type in the name of the list to delete.</string>
+    <string name="delete_list_title">Delete List</string>
+    <string name="update_list_name_title">Update List Name</string>
+    <string name="list_name">List Name</string>
+    <string name="remove_items">Remove Items</string>
+    <string name="custom_lists_title">Lists</string>
+    <string name="choose_list_title">Choose List</string>
+    <string name="create_new_list_option">Create New</string>
+    <string name="create_new_list">Create New List</string>
+    <string name="custom_list_updated_at">Updated at %s</string>
+    <string name="importing_import_list">Importing!</string>
+    <string name="import_import_list">Import</string>
+    <string name="export_list">Export</string>
+    <string name="edit_import_list">Edit</string>
+    <string name="additional_settings">Additional Settings</string>
+    <string name="notification_settings">Notification Settings</string>
 </resources>

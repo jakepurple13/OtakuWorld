@@ -100,8 +100,9 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
 
     implementation(libs.bundles.koinLibs)
+    val composeBom = platform(libs.composePlatform)
+    implementation(composeBom)
     implementation(libs.bundles.compose)
-    implementation(libs.composePager)
     implementation(libs.coilGif)
     implementation(libs.bundles.datastoreLibs)
 

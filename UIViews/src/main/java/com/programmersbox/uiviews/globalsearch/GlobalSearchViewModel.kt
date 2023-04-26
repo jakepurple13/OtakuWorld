@@ -58,17 +58,18 @@ class GlobalSearchViewModel(
                 // this populates after it all finishes
                 /*combine(
                 info.searchList()
-                    .apmap { a ->
-                        a
-                            .searchSourceList(searchText, list = emptyList())
-                            .dispatchIoAndCatchList()
-                            .map { SearchModel(a.serviceName, it) }
-                    }
-            ) { it.toList().filter { s -> s.data.isNotEmpty() } }
-                .onStart { isRefreshing = true }
-                .onCompletion { isRefreshing = false }
-                .onEach { searchListPublisher = it }
-                .collect()*/
+                        .apmap { a ->
+                            a
+                                .searchSourceList(searchText, list = emptyList())
+                                .dispatchIoAndCatchList()
+                                .map { SearchModel(a.serviceName, it) }
+                        }
+                ) { it.toList().filter { s -> s.data.isNotEmpty() } }
+                    .onStart { isRefreshing = true }
+                    .onCompletion { isRefreshing = false }
+                    .onEach { searchListPublisher = it }
+                    .collect()
+                */
             }.await()
             isSearching = false
         }

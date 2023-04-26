@@ -109,6 +109,8 @@ dependencies {
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
     implementation(libs.bundles.koinLibs)
+    val composeBom = platform(libs.composePlatform)
+    implementation(composeBom)
     implementation(libs.bundles.compose)
     implementation(libs.composeViewBinding)
     implementation(libs.bundles.datastoreLibs)

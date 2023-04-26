@@ -82,9 +82,9 @@ dependencies {
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-
+    val composeBom = platform(libs.composePlatform)
+    implementation(composeBom)
     implementation(libs.bundles.compose)
-    implementation(libs.composePager)
 
     implementation("androidx.window:window:1.0.0")
 

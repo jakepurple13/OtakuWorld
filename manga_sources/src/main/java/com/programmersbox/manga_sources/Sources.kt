@@ -1,6 +1,15 @@
 package com.programmersbox.manga_sources
 
-import com.programmersbox.manga_sources.manga.*
+import com.programmersbox.manga_sources.manga.AsuraScans
+import com.programmersbox.manga_sources.manga.MangaFourLife
+import com.programmersbox.manga_sources.manga.MangaHere
+import com.programmersbox.manga_sources.manga.MangaPark
+import com.programmersbox.manga_sources.manga.MangaRead
+import com.programmersbox.manga_sources.manga.MangaReadCo
+import com.programmersbox.manga_sources.manga.MangaTown
+import com.programmersbox.manga_sources.manga.Mangamutiny
+import com.programmersbox.manga_sources.manga.NineAnime
+import com.programmersbox.manga_sources.manga.Tsumino
 import com.programmersbox.models.ApiService
 
 enum class Sources(
@@ -17,6 +26,8 @@ enum class Sources(
 
     MANGA_4_LIFE(domain = "manga4life", source = MangaFourLife),
     MANGA_PARK(domain = "mangapark", source = MangaPark),
+    MANGA_READ(domain = "mangaread", source = MangaRead),
+    MANGA_READ_CO(domain = "mangareadco", source = MangaReadCo),
     NINE_ANIME(domain = "nineanime", source = NineAnime),
 
     //MANGAKAKALOT(domain = "mangakakalot", source = Mangakakalot),
@@ -27,9 +38,7 @@ enum class Sources(
     //MANGA_DOG(domain = "mangadog", source = MangaDog),
     //INKR(domain = "mangarock", source = com.programmersbox.manga_sources.mangasources.manga.INKR),
     TSUMINO(domain = "tsumino", isAdult = true, source = Tsumino),
-    MANGA_READ(domain = "mangaread", source = MangaRead),
-    MANGATOWN(domain = "mangatown", source = MangaTown)
-    ;
+    MANGATOWN(domain = "mangatown", source = MangaTown);
 
     override val serviceName: String get() = this.name
 

@@ -13,18 +13,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +39,6 @@ import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.mangaworld.useNewReaderFlow
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.PermissionRequest
 import com.programmersbox.uiviews.utils.components.animatedItems
@@ -64,7 +57,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
     ExperimentalPermissionsApi::class,
     ExperimentalFoundationApi::class,
     ExperimentalAnimationApi::class,
-    ExperimentalMaterialApi::class
 )
 @Composable
 fun DownloadScreen() {
@@ -101,7 +93,6 @@ fun DownloadScreen() {
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @Composable
 private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
     val fileList = viewModel.fileList
@@ -127,18 +118,17 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
 @Composable
 private fun EmptyState(p1: PaddingValues) {
     val navController = LocalNavController.current
-    val activity = LocalActivity.current
     Box(
         modifier = Modifier
             .padding(p1)
             .fillMaxSize()
     ) {
         Surface(
-            shape = MaterialTheme.shapes.medium,
+            shape = M3MaterialTheme.shapes.medium,
             tonalElevation = 4.dp,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp)
+                .padding(4.dp)
         ) {
             Column(modifier = Modifier) {
 
@@ -155,13 +145,10 @@ private fun EmptyState(p1: PaddingValues) {
                 )
 
                 Button(
-                    onClick = {
-                        navController.popBackStack()
-                        (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
-                    },
+                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 5.dp)
+                        .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(id = R.string.go_download)) }
             }
         }
@@ -169,7 +156,6 @@ private fun EmptyState(p1: PaddingValues) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>) {
     val context = LocalContext.current
@@ -181,7 +167,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Surface(
-            shape = MaterialTheme.shapes.medium,
+            shape = M3MaterialTheme.shapes.medium,
             tonalElevation = 4.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -191,9 +177,9 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                 ) { expanded = !expanded }
         ) {
             ListItem(
-                modifier = Modifier.padding(5.dp),
-                headlineText = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
-                supportingText = { Text(stringResource(R.string.chapter_count, file.value.size)) },
+                modifier = Modifier.padding(4.dp),
+                headlineContent = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
+                supportingContent = { Text(stringResource(R.string.chapter_count, file.value.size)) },
                 trailingContent = {
                     Icon(
                         Icons.Default.ArrowDropDown,
@@ -252,7 +238,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                 }
 
                 val dismissState = rememberDismissState(
-                    confirmStateChange = {
+                    confirmValueChange = {
                         if (it == DismissValue.DismissedToStart) {
                             //delete
                             showPopup = true
@@ -289,51 +275,52 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                                 modifier = Modifier.scale(scale)
                             )
                         }
-                    }
-                ) {
-                    val navController = LocalNavController.current
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        tonalElevation = 4.dp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                indication = rememberRipple(),
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                if (runBlocking { context.useNewReaderFlow.first() }) {
-                                    ReadViewModel.navigateToMangaReader(
-                                        navController,
-                                        filePath = c?.chapterFolder,
-                                        downloaded = true
-                                    )
-                                    /*findNavController()
-                                        .navigate(
-                                            ReadActivityComposeFragment::class.java.hashCode(),
-                                            Bundle().apply {
-                                                putBoolean("downloaded", true)
-                                                putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                            },
-                                            SettingsDsl.customAnimationOptions
-                                        )*/
-                                } else {
-                                    context.startActivity(
-                                        Intent(context, ReadActivity::class.java).apply {
-                                            putExtra("downloaded", true)
-                                            putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                        }
-                                    )
+                    },
+                    dismissContent = {
+                        val navController = LocalNavController.current
+                        Surface(
+                            shape = M3MaterialTheme.shapes.medium,
+                            tonalElevation = 4.dp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = rememberRipple(),
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    if (runBlocking { context.useNewReaderFlow.first() }) {
+                                        ReadViewModel.navigateToMangaReader(
+                                            navController,
+                                            filePath = c?.chapterFolder,
+                                            downloaded = true
+                                        )
+                                        /*findNavController()
+                                            .navigate(
+                                                ReadActivityComposeFragment::class.java.hashCode(),
+                                                Bundle().apply {
+                                                    putBoolean("downloaded", true)
+                                                    putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                                },
+                                                SettingsDsl.customAnimationOptions
+                                            )*/
+                                    } else {
+                                        context.startActivity(
+                                            Intent(context, ReadActivity::class.java).apply {
+                                                putExtra("downloaded", true)
+                                                putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
+                                            }
+                                        )
+                                    }
                                 }
-                            }
-                    ) {
-                        ListItem(
-                            modifier = Modifier.padding(5.dp),
-                            headlineText = { Text(c?.chapterName.orEmpty()) },
-                            supportingText = { Text(stringResource(R.string.page_count, chapter.size)) },
-                            trailingContent = { Icon(Icons.Default.ChevronRight, null) }
-                        )
+                        ) {
+                            ListItem(
+                                modifier = Modifier.padding(4.dp),
+                                headlineContent = { Text(c?.chapterName.orEmpty()) },
+                                supportingContent = { Text(stringResource(R.string.page_count, chapter.size)) },
+                                trailingContent = { Icon(Icons.Default.ChevronRight, null) }
+                            )
+                        }
                     }
-                }
+                )
             }
         }
     }

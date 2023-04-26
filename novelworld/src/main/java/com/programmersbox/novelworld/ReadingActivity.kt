@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -47,6 +46,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.text.HtmlCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -174,13 +174,14 @@ class ReadViewModel(
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
-    ExperimentalComposeUiApi::class,
-    ExperimentalAnimationApi::class,
-    ExperimentalFoundationApi::class
+    ExperimentalAnimationApi::class
 )
 @Composable
-fun NovelReader() {
-
+fun NovelReader(
+    activity: FragmentActivity = LocalActivity.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
+) {
     LifecycleHandle(
         onStop = { BaseMainActivity.showNavBar = true },
         onDestroy = { BaseMainActivity.showNavBar = true },
@@ -189,10 +190,7 @@ fun NovelReader() {
         onResume = { BaseMainActivity.showNavBar = false }
     )
 
-    val genericInfo = LocalGenericInfo.current
-    val activity = LocalActivity.current
     val context = LocalContext.current
-    val readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
 
     DisposableEffect(context) {
         val batteryInfo = context.battery {
@@ -231,7 +229,7 @@ fun NovelReader() {
             title = { Text(stringResource(R.string.settings)) },
             text = {
                 Column(
-                    modifier = Modifier.padding(5.dp)
+                    modifier = Modifier.padding(4.dp)
                 ) {
                     SliderSetting(
                         scope = scope,
@@ -327,19 +325,19 @@ fun NovelReader() {
                                 }
 
                                 Surface(
-                                    modifier = Modifier.padding(horizontal = 5.dp),
+                                    modifier = Modifier.padding(horizontal = 4.dp),
                                     border = BorderStroke(
                                         1.dp,
                                         animateColorAsState(
                                             if (readVm.currentChapter == i) M3MaterialTheme.colorScheme.onSurface
-                                            else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                            else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), label = ""
                                         ).value
                                     ),
                                     shape = MaterialTheme.shapes.medium,
-                                    tonalElevation = 5.dp
+                                    tonalElevation = 4.dp
                                 ) {
                                     ListItem(
-                                        headlineText = { Text(c.name) },
+                                        headlineContent = { Text(c.name) },
                                         leadingContent = if (readVm.currentChapter == i) {
                                             { Icon(Icons.Default.ArrowRight, null) }
                                         } else null,
@@ -439,10 +437,10 @@ fun NovelReader() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun TopBar(
-    modifier: Modifier = Modifier,
     showItems: Boolean,
     contentScrollBehavior: TopAppBarScrollBehavior,
-    readVm: ReadViewModel
+    readVm: ReadViewModel,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     AnimatedVisibility(
@@ -463,7 +461,7 @@ fun TopBar(
                         contentDescription = null,
                         tint = animateColorAsState(
                             if (readVm.batteryColor == androidx.compose.ui.graphics.Color.White) M3MaterialTheme.colorScheme.onSurface
-                            else readVm.batteryColor
+                            else readVm.batteryColor, label = ""
                         ).value
                     )
                     AnimatedContent(
@@ -477,7 +475,7 @@ fun TopBar(
                                         slideOutVertically { height -> height } + fadeOut()
                             }
                                 .using(SizeTransform(clip = false))
-                        }
+                        }, label = ""
                     ) { targetBattery ->
                         Text(
                             "$targetBattery%",
@@ -500,7 +498,7 @@ fun TopBar(
                         (slideInVertically { height -> height } + fadeIn() with
                                 slideOutVertically { height -> -height } + fadeOut())
                             .using(SizeTransform(clip = false))
-                    }
+                    }, label = ""
                 ) { targetTime ->
                     Text(
                         DateFormat.getTimeFormat(LocalContext.current).format(targetTime).toString(),
@@ -517,11 +515,11 @@ fun TopBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomBar(
-    modifier: Modifier = Modifier,
     showItems: Boolean,
     readVm: ReadViewModel,
     showToast: () -> Unit,
-    settingsPopup: (Boolean) -> Unit
+    settingsPopup: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     AnimatedVisibility(
         visible = showItems,
@@ -563,7 +561,7 @@ fun BottomBar(
                                 prevShown && nextShown -> 8f / 3f
                                 prevShown || nextShown -> 4f
                                 else -> 8f
-                            }
+                            }, label = ""
                         ).value
                     )
             )
@@ -617,7 +615,7 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
                             slideOutVertically { height -> height } + fadeOut()
                 }
                     .using(SizeTransform(clip = false))
-            }
+            }, label = ""
         ) { targetPage ->
             Text(
                 "$targetPage",

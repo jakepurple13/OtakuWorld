@@ -133,19 +133,20 @@ dependencies {
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
+    val composeBom = platform(libs.composePlatform)
+    implementation(composeBom)
     implementation(libs.bundles.compose)
     implementation(libs.toolbarCompose)
     implementation(libs.lazyColumnScrollbar)
     implementation(libs.pagingCompose)
     implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
-    implementation(libs.composePager)
 
     implementation(libs.bundles.protobuf)
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.21.1" }
+    protoc { artifact = "com.google.protobuf:protoc:3.21.12" }
     generateProtoTasks {
         all().forEach { task ->
             task.plugins {

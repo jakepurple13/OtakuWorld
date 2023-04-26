@@ -4,35 +4,63 @@ import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -43,7 +71,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
@@ -52,42 +79,50 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
-import com.programmersbox.favoritesdatabase.HistoryDatabase
+import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
-import com.programmersbox.uiviews.utils.components.AutoCompleteBox
-import com.programmersbox.uiviews.utils.components.asAutoCompleteEntities
+import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalHistoryDao
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.PlaceHolderCoverCard
+import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalAnimationApi::class
+    ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class,
 )
 @Composable
 fun GlobalSearchView(
     mainLogo: MainLogo,
-    notificationLogo: NotificationLogo
-) {
-    val navController = LocalNavController.current
-    val info = LocalGenericInfo.current
-    val context = LocalContext.current
-
-    val dao = remember { HistoryDatabase.getInstance(context).historyDao() }
-
-    val viewModel: GlobalSearchViewModel = viewModel {
+    notificationLogo: NotificationLogo,
+    info: GenericInfo = LocalGenericInfo.current,
+    dao: HistoryDao = LocalHistoryDao.current,
+    viewModel: GlobalSearchViewModel = viewModel {
         GlobalSearchViewModel(
             info = info,
             initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
             dao = dao,
         )
     }
+) {
+    val navController = LocalNavController.current
+    val context = LocalContext.current
 
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
@@ -111,10 +146,10 @@ fun GlobalSearchView(
         val bottomScaffold = rememberBottomSheetScaffoldState()
         var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
-        BackHandler(bottomScaffold.bottomSheetState.isExpanded) {
+        BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
             scope.launch {
                 try {
-                    bottomScaffold.bottomSheetState.collapse()
+                    bottomScaffold.bottomSheetState.partialExpand()
                 } catch (e: Exception) {
                     navController.popBackStack()
                 }
@@ -124,8 +159,6 @@ fun GlobalSearchView(
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
         BottomSheetScaffold(
-            backgroundColor = M3MaterialTheme.colorScheme.background,
-            contentColor = m3ContentColorFor(M3MaterialTheme.colorScheme.background),
             scaffoldState = bottomScaffold,
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
@@ -135,69 +168,72 @@ fun GlobalSearchView(
                         title = { Text(stringResource(R.string.global_search)) },
                         scrollBehavior = scrollBehavior
                     )
-                    AutoCompleteBox(
-                        items = history.asAutoCompleteEntities { _, _ -> true },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { scope.launch { dao.deleteHistory(it.value) } },
-                                modifier = Modifier.weight(.1f)
-                            ) { Icon(Icons.Default.Cancel, null) }
-                        },
-                        itemContent = {
-                            Text(
-                                text = it.value.searchText,
-                                style = M3MaterialTheme.typography.titleSmall,
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .weight(.9f)
-                            )
-                        },
-                        content = {
+                    var active by rememberSaveable { mutableStateOf(false) }
 
-                            boxWidthPercentage = 1f
-                            boxBorderStroke = BorderStroke(2.dp, Color.Transparent)
-
-                            onItemSelected {
-                                viewModel.searchText = it.value.searchText
-                                filter(viewModel.searchText)
-                                focusManager.clearFocus()
-                                viewModel.searchForItems()
+                    fun closeSearchBar() {
+                        focusManager.clearFocus()
+                        active = false
+                    }
+                    SearchBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        windowInsets = WindowInsets(0.dp),
+                        query = viewModel.searchText,
+                        onQueryChange = { viewModel.searchText = it },
+                        onSearch = {
+                            closeSearchBar()
+                            if (viewModel.searchText.isNotEmpty()) {
+                                scope.launch(Dispatchers.IO) {
+                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                }
                             }
-
-                            androidx.compose.material3.OutlinedTextField(
-                                value = viewModel.searchText,
-                                onValueChange = {
-                                    viewModel.searchText = it
-                                    filter(it)
-                                },
-                                label = { Text(stringResource(id = R.string.search)) },
-                                trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            viewModel.searchText = ""
-                                            filter("")
-                                            viewModel.searchListPublisher = emptyList()
+                            viewModel.searchForItems()
+                        },
+                        active = active,
+                        onActiveChange = {
+                            active = it
+                            if (!active) focusManager.clearFocus()
+                        },
+                        placeholder = { Text(stringResource(id = R.string.search)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            IconButton(onClick = { viewModel.searchText = "" }) {
+                                Icon(Icons.Default.Cancel, null)
+                            }
+                        },
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            itemsIndexed(history) { index, historyModel ->
+                                ListItem(
+                                    headlineContent = { Text(historyModel.searchText) },
+                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                    trailingContent = {
+                                        IconButton(
+                                            onClick = { scope.launch { dao.deleteHistory(historyModel) } },
+                                            modifier = Modifier.weight(.1f)
+                                        ) { Icon(Icons.Default.Cancel, null) }
+                                    },
+                                    modifier = Modifier.clickable {
+                                        viewModel.searchText = historyModel.searchText
+                                        closeSearchBar()
+                                        if (viewModel.searchText.isNotEmpty()) {
+                                            scope.launch(Dispatchers.IO) {
+                                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                            }
                                         }
-                                    ) { Icon(Icons.Default.Cancel, null) }
-                                },
-                                modifier = Modifier
-                                    .padding(5.dp)
-                                    .fillMaxWidth()
-                                    .onFocusChanged { isSearching = it.isFocused },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                keyboardActions = KeyboardActions(onSearch = {
-                                    focusManager.clearFocus()
-                                    if (viewModel.searchText.isNotEmpty()) {
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
-                                        }
+                                        viewModel.searchForItems()
                                     }
-                                    viewModel.searchForItems()
-                                })
-                            )
+                                )
+                                if (index != history.lastIndex) {
+                                    Divider()
+                                }
+                            }
                         }
-                    )
+                    }
                 }
             },
             sheetContent = searchModelBottom?.let { s ->
@@ -209,7 +245,8 @@ fun GlobalSearchView(
                             TopAppBar(
                                 scrollBehavior = sheetScrollBehavior,
                                 title = { Text(s.apiName) },
-                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) }
+                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) },
+                                windowInsets = WindowInsets(0.dp)
                             )
                         }
                     ) { p ->
@@ -217,7 +254,7 @@ fun GlobalSearchView(
                             columns = adaptiveGridCell(),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            contentPadding = p
+                            contentPadding = p,
                         ) {
                             items(s.data) { m ->
                                 SearchCoverCard(
@@ -234,21 +271,21 @@ fun GlobalSearchView(
                 }
             } ?: {},
             sheetPeekHeight = 0.dp,
-        ) {
-            Crossfade(targetState = networkState) { network ->
+        ) { padding ->
+            Crossfade(targetState = networkState, label = "") { network ->
                 when (network) {
                     false -> {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(it),
+                                .padding(padding),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Image(
                                 Icons.Default.CloudOff,
                                 null,
-                                modifier = Modifier.size(50.dp, 50.dp),
+                                modifier = Modifier.size(50.dp),
                                 colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                             )
                             Text(
@@ -258,14 +295,17 @@ fun GlobalSearchView(
                             )
                         }
                     }
+
                     true -> {
                         Box(
                             modifier = Modifier.pullRefresh(pullRefreshState, false)
                         ) {
                             LazyColumn(
                                 state = listState,
+                                contentPadding = padding,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(top = 8.dp)
                             ) {
                                 if (viewModel.isRefreshing) {
                                     items(3) {
@@ -275,7 +315,7 @@ fun GlobalSearchView(
                                                 .compositeOver(M3MaterialTheme.colorScheme.surface)
                                         Surface(
                                             modifier = Modifier.placeholder(true, color = placeholderColor),
-                                            tonalElevation = 5.dp,
+                                            tonalElevation = 4.dp,
                                             shape = androidx.compose.material3.MaterialTheme.shapes.medium
                                         ) {
                                             Column {
@@ -284,7 +324,7 @@ fun GlobalSearchView(
                                                         "Otaku",
                                                         modifier = Modifier
                                                             .align(Alignment.CenterStart)
-                                                            .padding(start = 5.dp)
+                                                            .padding(start = 4.dp)
                                                     )
                                                     IconButton(
                                                         onClick = {},
@@ -302,8 +342,8 @@ fun GlobalSearchView(
                                                 searchModelBottom = i
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
                                             },
-                                            tonalElevation = 5.dp,
-                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
+                                            tonalElevation = 4.dp,
+                                            shape = M3MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(
@@ -318,7 +358,7 @@ fun GlobalSearchView(
                                                         i.apiName,
                                                         modifier = Modifier
                                                             .align(Alignment.CenterStart)
-                                                            .padding(start = 5.dp)
+                                                            .padding(start = 4.dp)
                                                     )
                                                     IconButton(
                                                         onClick = {
@@ -377,11 +417,11 @@ fun GlobalSearchView(
 
 @Composable
 fun SearchCoverCard(
-    modifier: Modifier = Modifier,
     model: ItemModel,
     placeHolder: Drawable?,
-    error: Drawable? = placeHolder,
     onLongPress: (ComponentState) -> Unit,
+    modifier: Modifier = Modifier,
+    error: Drawable? = placeHolder,
     onClick: () -> Unit = {}
 ) {
     ElevatedCard(

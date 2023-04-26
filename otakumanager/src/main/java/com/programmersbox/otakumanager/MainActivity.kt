@@ -231,7 +231,7 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             topBar = {
                 Column(
-                    modifier = Modifier.padding(5.dp)
+                    modifier = Modifier.padding(4.dp)
                 ) {
 
                     OutlinedTextField(
@@ -240,7 +240,7 @@ class MainActivity : ComponentActivity() {
                         label = { Text(resources.getQuantityString(R.plurals.numFavorites, showing.size, showing.size)) },
                         trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Cancel, null) } },
                         modifier = Modifier
-                            .padding(5.dp)
+                            .padding(4.dp)
                             .fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -248,7 +248,7 @@ class MainActivity : ComponentActivity() {
                     )
 
                     Row(
-                        modifier = Modifier.padding(top = 5.dp)
+                        modifier = Modifier.padding(top = 4.dp)
                     ) {
 
                         LazyRow {
@@ -373,9 +373,9 @@ class MainActivity : ComponentActivity() {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(5.dp),
-                elevation = 5.dp,
-                shape = RoundedCornerShape(5.dp)
+                    .padding(4.dp),
+                elevation = 4.dp,
+                shape = RoundedCornerShape(4.dp)
             ) {
 
                 Column(modifier = Modifier) {
@@ -396,7 +396,7 @@ class MainActivity : ComponentActivity() {
                         onClick = onClick,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
-                            .padding(vertical = 5.dp)
+                            .padding(vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(buttonText),

@@ -19,6 +19,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun BannerBox(
+    banner: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
     bannerEnter: EnterTransition = slideInVertically(
@@ -33,7 +34,6 @@ fun BannerBox(
             easing = LinearOutSlowInEasing
         )
     ) { -it },
-    banner: @Composable BoxScope.() -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(Modifier.fillMaxSize()) {
@@ -49,10 +49,10 @@ fun BannerBox(
 
 @Composable
 fun BannerBox2(
-    modifier: Modifier = Modifier,
-    showBanner: Boolean = false,
     bannerSize: Dp,
     banner: @Composable BoxScope.() -> Unit,
+    modifier: Modifier = Modifier,
+    showBanner: Boolean = false,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(

@@ -113,11 +113,11 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun ComposeShimmerItem() {
         LazyColumn {
             items(10) {
-                androidx.compose.material3.Surface(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(5.dp),
-                    tonalElevation = 5.dp,
+                        .padding(4.dp),
+                    tonalElevation = 4.dp,
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Text(
@@ -130,7 +130,7 @@ class GenericNovel(val context: Context) : GenericInfo {
                                     .copy(0.1f)
                                     .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
                             )
-                            .padding(5.dp)
+                            .padding(4.dp)
                     )
                 }
             }
@@ -160,12 +160,12 @@ class GenericNovel(val context: Context) : GenericInfo {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 5.dp)
+                        .padding(horizontal = 4.dp)
                         .combineClickableWithIndication(
                             onLongPress = { c -> onLongPress(it, c) },
                             onClick = { onClick(it) }
                         ),
-                    tonalElevation = 5.dp,
+                    tonalElevation = 4.dp,
                     shape = MaterialTheme.shapes.medium
                 ) {
                     ListItem(
@@ -175,10 +175,10 @@ class GenericNovel(val context: Context) : GenericInfo {
                                 contentDescription = null,
                             )
                         },
-                        headlineText = { androidx.compose.material3.Text(it.title) },
-                        overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
-                        supportingText = if (it.description.isNotEmpty()) {
-                            { androidx.compose.material3.Text(it.description) }
+                        headlineContent = { Text(it.title) },
+                        overlineContent = { Text(it.source.serviceName) },
+                        supportingContent = if (it.description.isNotEmpty()) {
+                            { Text(it.description) }
                         } else null
                     )
                 }

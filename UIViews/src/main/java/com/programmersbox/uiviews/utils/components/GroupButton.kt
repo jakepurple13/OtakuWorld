@@ -17,9 +17,9 @@ class GroupButtonModel<T>(val item: T, val iconContent: @Composable () -> Unit)
 
 @Composable
 fun <T> GroupButton(
-    modifier: Modifier = Modifier,
     selected: T,
     options: List<GroupButtonModel<T>>,
+    modifier: Modifier = Modifier,
     selectedColor: Color = MaterialTheme.colorScheme.inversePrimary,
     unselectedColor: Color = MaterialTheme.colorScheme.surface,
     onClick: (T) -> Unit

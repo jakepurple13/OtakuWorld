@@ -1,5 +1,6 @@
 package com.programmersbox.animeworld.downloads
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -9,15 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,13 +32,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.tonyodev.fetch2.Status
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 interface ActionListener {
     fun onPauseDownload(id: Int)
@@ -55,9 +49,10 @@ interface ActionListener {
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
-fun DownloaderUi() {
-    val context = LocalContext.current
-    val viewModel = viewModel { DownloaderViewModel(context) }
+fun DownloaderUi(
+    context: Context = LocalContext.current,
+    viewModel: DownloaderViewModel = viewModel { DownloaderViewModel(context) }
+) {
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
 
@@ -65,22 +60,22 @@ fun DownloaderUi() {
         onResume = viewModel::onResume
     )
 
-    LaunchedEffect(state.bottomSheetState.isExpanded) {
-        if (state.bottomSheetState.isExpanded) {
+    LaunchedEffect(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        if (state.bottomSheetState.currentValue == SheetValue.Expanded) {
             viewModel.fetch.pauseAll()
         } else {
             viewModel.fetch.resumeAll()
         }
     }
 
-    BackHandler(state.bottomSheetState.isExpanded) {
-        scope.launch { state.bottomSheetState.collapse() }
+    BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch { state.bottomSheetState.partialExpand() }
     }
 
     var itemToDelete by remember { mutableStateOf<DownloadData?>(null) }
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    itemToDelete?.download?.let { SlideToDeleteDialog(showDialog = showDialog, download = it) }
+    itemToDelete?.download?.let { SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, download = it) }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -91,11 +86,11 @@ fun DownloaderUi() {
         multipleTitle = stringResource(id = R.string.delete),
         onRemove = { download ->
             itemToDelete = download
-            showDialog.value = true
+            showDialog = true
         },
         customSingleRemoveDialog = { download ->
             itemToDelete = download
-            showDialog.value = true
+            showDialog = true
             false
         },
         onMultipleRemove = { downloadItems -> viewModel.fetch.delete(downloadItems.fastMap { it.id }) },
@@ -107,20 +102,20 @@ fun DownloaderUi() {
                 title = {
                     Text(
                         stringResource(id = R.string.in_progress_downloads),
-                        style = M3MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge
                     )
                 }
             )
         },
         itemUi = { download ->
             ListItem(
-                modifier = Modifier.padding(5.dp),
-                headlineText = { Text(download.download.url.toUri().lastPathSegment.orEmpty()) },
-                overlineText = {
+                modifier = Modifier.padding(4.dp),
+                headlineContent = { Text(download.download.url.toUri().lastPathSegment.orEmpty()) },
+                overlineContent = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val progress = download.download.progress.coerceAtLeast(0)
                         Text(stringResource(R.string.percent_progress, progress))
-                        androidx.compose.material3.LinearProgressIndicator(
+                        LinearProgressIndicator(
                             progress = animateFloatAsState(targetValue = progress.toFloat() / 100f).value,
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)
@@ -135,7 +130,7 @@ fun DownloaderUi() {
             EmptyState(p)
         } else {
             LazyColumn(
-                modifier = Modifier.padding(top = 5.dp),
+                modifier = Modifier.padding(top = 4.dp),
                 contentPadding = p,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) { items(items) { d -> DownloadItem(d, viewModel) } }
@@ -155,49 +150,47 @@ private fun EmptyState(paddingValues: PaddingValues) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp),
-            tonalElevation = 5.dp,
-            shape = RoundedCornerShape(5.dp)
+                .padding(4.dp),
+            tonalElevation = 4.dp,
+            shape = RoundedCornerShape(4.dp)
         ) {
             Column(modifier = Modifier) {
                 Text(
                     text = stringResource(id = R.string.get_started),
-                    style = M3MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
                 Text(
                     text = stringResource(id = R.string.download_a_video),
-                    style = M3MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
                 Button(
-                    onClick = {
-                        navController.popBackStack()
-                        (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
-                    },
+                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 5.dp)
+                        .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(id = R.string.go_download)) }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
 private fun DownloadItem(download: DownloadData, actionListener: ActionListener) {
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    SlideToDeleteDialog(showDialog = showDialog, download = download.download)
+    SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, download = download.download)
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
-                showDialog.value = true
+                showDialog = true
             }
             false
         }
@@ -231,140 +224,141 @@ private fun DownloadItem(download: DownloadData, actionListener: ActionListener)
                     Icons.Default.Delete,
                     contentDescription = null,
                     modifier = Modifier.scale(scale),
-                    tint = M3MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
-        }
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp),
-            tonalElevation = 5.dp,
-            shape = MaterialTheme.shapes.medium
-        ) {
+        },
+        dismissContent = {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                tonalElevation = 4.dp,
+                shape = MaterialTheme.shapes.medium
+            ) {
 
-            ConstraintLayout {
+                ConstraintLayout {
 
-                val (
-                    title, progress,
-                    action, progressText,
-                    speed, remaining,
-                    status
-                ) = createRefs()
+                    val (
+                        title, progress,
+                        action, progressText,
+                        speed, remaining,
+                        status
+                    ) = createRefs()
 
-                Text(
-                    download.download.url.toUri().lastPathSegment.orEmpty(),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier
-                        .constrainAs(title) {
-                            start.linkTo(parent.start)
-                            top.linkTo(parent.top)
-                        }
-                        .padding(horizontal = 8.dp)
-                        .padding(top = 8.dp)
-                )
-
-                val prog = download.download.progress.coerceAtLeast(0)
-
-                androidx.compose.material3.LinearProgressIndicator(
-                    progress = animateFloatAsState(targetValue = prog.toFloat() / 100f).value,
-                    modifier = Modifier
-                        .constrainAs(progress) {
-                            start.linkTo(parent.start)
-                            bottom.linkTo(action.bottom)
-                            end.linkTo(action.start)
-                            top.linkTo(action.top)
-                        }
-                        .padding(8.dp)
-                )
-
-                OutlinedButton(
-                    onClick = {
-                        when (download.download.status) {
-                            Status.FAILED -> actionListener.onRetryDownload(download.download.id)
-                            Status.PAUSED -> actionListener.onResumeDownload(download.download.id)
-                            Status.DOWNLOADING, Status.QUEUED -> actionListener.onPauseDownload(download.download.id)
-                            Status.ADDED -> actionListener.onResumeDownload(download.download.id)
-                            else -> {
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .constrainAs(action) {
-                            end.linkTo(parent.end)
-                            top.linkTo(title.bottom)
-                        }
-                        .padding(top = 8.dp, end = 8.dp)
-                ) {
                     Text(
-                        stringResource(
-                            id = when (download.download.status) {
-                                Status.COMPLETED -> R.string.view
-                                Status.FAILED -> R.string.retry
-                                Status.PAUSED -> R.string.resume
-                                Status.DOWNLOADING, Status.QUEUED -> R.string.pause
-                                Status.ADDED -> R.string.download
-                                else -> R.string.error_text
+                        download.download.url.toUri().lastPathSegment.orEmpty(),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .constrainAs(title) {
+                                start.linkTo(parent.start)
+                                top.linkTo(parent.top)
                             }
-                        )
+                            .padding(horizontal = 8.dp)
+                            .padding(top = 8.dp)
                     )
+
+                    val prog = download.download.progress.coerceAtLeast(0)
+
+                    LinearProgressIndicator(
+                        progress = animateFloatAsState(targetValue = prog.toFloat() / 100f).value,
+                        modifier = Modifier
+                            .constrainAs(progress) {
+                                start.linkTo(parent.start)
+                                bottom.linkTo(action.bottom)
+                                end.linkTo(action.start)
+                                top.linkTo(action.top)
+                            }
+                            .padding(8.dp)
+                    )
+
+                    OutlinedButton(
+                        onClick = {
+                            when (download.download.status) {
+                                Status.FAILED -> actionListener.onRetryDownload(download.download.id)
+                                Status.PAUSED -> actionListener.onResumeDownload(download.download.id)
+                                Status.DOWNLOADING, Status.QUEUED -> actionListener.onPauseDownload(download.download.id)
+                                Status.ADDED -> actionListener.onResumeDownload(download.download.id)
+                                else -> {
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .constrainAs(action) {
+                                end.linkTo(parent.end)
+                                top.linkTo(title.bottom)
+                            }
+                            .padding(top = 8.dp, end = 8.dp)
+                    ) {
+                        Text(
+                            stringResource(
+                                id = when (download.download.status) {
+                                    Status.COMPLETED -> R.string.view
+                                    Status.FAILED -> R.string.retry
+                                    Status.PAUSED -> R.string.resume
+                                    Status.DOWNLOADING, Status.QUEUED -> R.string.pause
+                                    Status.ADDED -> R.string.download
+                                    else -> R.string.error_text
+                                }
+                            )
+                        )
+                    }
+
+                    Text(
+                        stringResource(R.string.percent_progress, prog),
+                        modifier = Modifier
+                            .constrainAs(progressText) {
+                                top.linkTo(progress.bottom)
+                                start.linkTo(progress.start)
+                            }
+                            .padding(horizontal = 8.dp)
+                    )
+
+                    Text(
+                        if (download.downloadedBytesPerSecond == 0L) "" else getDownloadSpeedString(download.downloadedBytesPerSecond),
+                        modifier = Modifier
+                            .constrainAs(speed) {
+                                top.linkTo(progress.bottom)
+                                end.linkTo(progress.end)
+                            }
+                            .padding(horizontal = 8.dp)
+                            .padding(bottom = 8.dp)
+                    )
+
+                    Text(
+                        if (download.eta == -1L) "" else getETAString(download.eta, true),
+                        modifier = Modifier
+                            .constrainAs(remaining) {
+                                bottom.linkTo(parent.bottom)
+                                baseline.linkTo(parent.baseline)
+                                top.linkTo(progressText.bottom)
+                                start.linkTo(parent.start)
+                            }
+                            .padding(8.dp)
+                    )
+
+                    Text(
+                        stringResource(id = getStatusString(download.download.status)),
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .constrainAs(status) {
+                                bottom.linkTo(parent.bottom)
+                                baseline.linkTo(parent.baseline)
+                                top.linkTo(remaining.top)
+                                start.linkTo(remaining.end)
+                                end.linkTo(parent.end)
+                            }
+                            .padding(8.dp)
+                    )
+
                 }
 
-                Text(
-                    stringResource(R.string.percent_progress, prog),
-                    modifier = Modifier
-                        .constrainAs(progressText) {
-                            top.linkTo(progress.bottom)
-                            start.linkTo(progress.start)
-                        }
-                        .padding(horizontal = 8.dp)
-                )
-
-                Text(
-                    if (download.downloadedBytesPerSecond == 0L) "" else getDownloadSpeedString(download.downloadedBytesPerSecond),
-                    modifier = Modifier
-                        .constrainAs(speed) {
-                            top.linkTo(progress.bottom)
-                            end.linkTo(progress.end)
-                        }
-                        .padding(horizontal = 8.dp)
-                        .padding(bottom = 8.dp)
-                )
-
-                Text(
-                    if (download.eta == -1L) "" else getETAString(download.eta, true),
-                    modifier = Modifier
-                        .constrainAs(remaining) {
-                            bottom.linkTo(parent.bottom)
-                            baseline.linkTo(parent.baseline)
-                            top.linkTo(progressText.bottom)
-                            start.linkTo(parent.start)
-                        }
-                        .padding(8.dp)
-                )
-
-                Text(
-                    stringResource(id = getStatusString(download.download.status)),
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .constrainAs(status) {
-                            bottom.linkTo(parent.bottom)
-                            baseline.linkTo(parent.baseline)
-                            top.linkTo(remaining.top)
-                            start.linkTo(remaining.end)
-                            end.linkTo(parent.end)
-                        }
-                        .padding(8.dp)
-                )
-
             }
-
         }
-    }
+    )
 }
 
 private fun getStatusString(status: Status): Int = when (status) {

@@ -299,7 +299,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(5.dp)
+                        .padding(4.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -323,7 +323,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                             "",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(5.dp)
+                                .padding(4.dp)
                         )
                     }
                 }
@@ -353,7 +353,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 5.dp)
+                        .padding(horizontal = 4.dp)
                         .combineClickableWithIndication(
                             onLongPress = { c -> onLongPress(it, c) },
                             onClick = { onClick(it) }
@@ -366,9 +366,9 @@ class GenericAnime(val context: Context) : GenericInfo {
                                 contentDescription = null,
                             )
                         },
-                        headlineText = { androidx.compose.material3.Text(it.title) },
-                        overlineText = { androidx.compose.material3.Text(it.source.serviceName) },
-                        supportingText = if (it.description.isNotEmpty()) {
+                        headlineContent = { androidx.compose.material3.Text(it.title) },
+                        overlineContent = { androidx.compose.material3.Text(it.source.serviceName) },
+                        supportingContent = if (it.description.isNotEmpty()) {
                             { androidx.compose.material3.Text(it.description) }
                         } else null
                     )
@@ -518,22 +518,22 @@ class GenericAnime(val context: Context) : GenericInfo {
 
         composable(
             ViewVideoViewModel.VideoViewerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
 
         composable(
             DownloaderViewModel.DownloadViewerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
         ) { DownloaderUi() }
 
         composable(
             VideoViewModel.VideoPlayerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) { VideoPlayerUi() }
 
         bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }

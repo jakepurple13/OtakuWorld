@@ -57,6 +57,7 @@ import androidx.media3.ui.PlayerView
 import com.programmersbox.animeworld.ignoreSsl
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AirBar
 import kotlinx.coroutines.*
@@ -70,11 +71,14 @@ import javax.net.ssl.SSLSession
 import kotlin.math.abs
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VideoPlayerUi() {
-
-    val context = LocalContext.current
+fun VideoPlayerUi(
+    context: Context = LocalContext.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo, context) }
+) {
     val activity = LocalActivity.current
 
     val audioManager = remember { context.audioManager }
@@ -107,9 +111,6 @@ fun VideoPlayerUi() {
             BaseMainActivity.showNavBar = false
         }
     )
-
-    val genericInfo = LocalGenericInfo.current
-    val viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo, context) }
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
 
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying
@@ -170,11 +171,12 @@ fun VideoPlayerUi() {
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun VideoPlayer(
-    modifier: Modifier = Modifier,
     viewModel: VideoViewModel,
     source: MediaSource,
+    modifier: Modifier = Modifier,
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -264,7 +266,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
                     )
                 }
             },
-            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .5f))
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .5f))
         )
     }
 }
@@ -392,7 +394,6 @@ fun BottomBarPreview() {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun MediaControlGestures(
-    modifier: Modifier = Modifier,
     visible: Boolean,
     enabled: Boolean,
     gesturesEnabled: Boolean,
@@ -400,7 +401,8 @@ fun MediaControlGestures(
     onQuickSeekDirectionChange: (QuickSeekAction) -> Unit,
     draggingProgress: DraggingProgress?,
     onDraggingProgressChange: (DraggingProgress?) -> Unit,
-    viewModel: VideoViewModel
+    viewModel: VideoViewModel,
+    modifier: Modifier = Modifier
 ) {
     if (enabled && visible && gesturesEnabled) {
         Box(
@@ -522,7 +524,6 @@ fun MediaControlGestures(
 
 @Composable
 fun GestureBox(
-    modifier: Modifier = Modifier,
     doubleTapStart: () -> Unit,
     doubleTapEnd: () -> Unit,
     doubleTap: () -> Unit,
@@ -535,7 +536,8 @@ fun GestureBox(
     onVerticalDragLeft: (Int) -> Unit,
     onVerticalDragRight: (Int) -> Unit,
     onSeek: (Long) -> Unit,
-    viewModel: VideoViewModel
+    viewModel: VideoViewModel,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current

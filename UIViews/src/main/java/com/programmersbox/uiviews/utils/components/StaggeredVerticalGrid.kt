@@ -9,8 +9,8 @@ import kotlin.math.ceil
 
 @Composable
 fun StaggeredVerticalGrid(
-    modifier: Modifier = Modifier,
     maxColumnWidth: Dp,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     Layout(
@@ -50,8 +50,8 @@ fun StaggeredVerticalGrid(
 
 @Composable
 fun StaggeredVerticalGrid(
-    modifier: Modifier = Modifier,
     columns: Int,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     Layout(

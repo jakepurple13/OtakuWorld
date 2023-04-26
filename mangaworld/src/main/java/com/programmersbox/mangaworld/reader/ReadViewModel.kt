@@ -158,18 +158,14 @@ class ReadViewModel(
     }
 
     private fun loadPages(modelPath: Flow<List<String>>?) {
-        viewModelScope.launch {
-            modelPath
-                ?.onStart {
-                    isLoadingPages = true
-                    pageList.clear()
-                }
-                ?.onEach {
-                    pageList.addAll(it)
-                    isLoadingPages = false
-                }
-                ?.collect()
-        }
+        modelPath
+            ?.onStart {
+                isLoadingPages = true
+                pageList.clear()
+            }
+            ?.onEach { pageList.addAll(it) }
+            ?.onCompletion { isLoadingPages = false }
+            ?.launchIn(viewModelScope)
     }
 
     fun refresh() {

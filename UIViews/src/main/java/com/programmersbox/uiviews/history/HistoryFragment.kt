@@ -58,9 +58,9 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalMaterialApi
 @Composable
 fun HistoryUi(
-    dao: HistoryDao,
+    logo: MainLogo,
+    dao: HistoryDao = LocalHistoryDao.current,
     hm: HistoryViewModel = viewModel { HistoryViewModel(dao) },
-    logo: MainLogo
 ) {
 
     val recentItems = hm.historyItems.collectAsLazyPagingItems()
@@ -215,7 +215,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
         val navController = LocalNavController.current
 
         Surface(
-            tonalElevation = 5.dp,
+            tonalElevation = 4.dp,
             shape = MaterialTheme.shapes.medium,
             onClick = {
                 scope.launch {
@@ -236,9 +236,9 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
             }
         ) {
             ListItem(
-                headlineText = { Text(item.title) },
-                overlineText = { Text(item.source) },
-                supportingText = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
+                headlineContent = { Text(item.title) },
+                overlineContent = { Text(item.source) },
+                supportingContent = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
                 leadingContent = {
                     Surface(shape = MaterialTheme.shapes.medium) {
                         AsyncImage(
@@ -294,15 +294,15 @@ private fun HistoryItemPlaceholder() {
         .compositeOver(M3MaterialTheme.colorScheme.surface)
 
     Surface(
-        tonalElevation = 5.dp,
+        tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier.placeholder(true, color = placeholderColor)
     ) {
         ListItem(
             modifier = Modifier.placeholder(true, color = placeholderColor),
-            headlineText = { Text("Otaku") },
-            overlineText = { Text("Otaku") },
-            supportingText = { Text("Otaku") },
+            headlineContent = { Text("Otaku") },
+            overlineContent = { Text("Otaku") },
+            supportingContent = { Text("Otaku") },
             leadingContent = {
                 Surface(shape = MaterialTheme.shapes.medium) {
                     Icon(

@@ -5,25 +5,20 @@ import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ClearAll
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -32,7 +27,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.work.Data
@@ -42,11 +36,7 @@ import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
-import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -54,10 +44,8 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.NotifySingleWorker
+import com.programmersbox.uiviews.*
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SavedNotifications
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
@@ -78,20 +66,20 @@ private fun NotificationManager.cancelNotification(item: NotificationItem) {
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
+    ExperimentalFoundationApi::class,
 )
 @Composable
 fun NotificationsScreen(
-    navController: NavController,
-    genericInfo: GenericInfo,
-    db: ItemDao,
     notificationManager: NotificationManager,
     logo: MainLogo,
     notificationLogo: NotificationLogo,
-    fragmentManager: FragmentManager,
-    vm: NotificationScreenViewModel = viewModel()
+    navController: NavController = LocalNavController.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    db: ItemDao = LocalItemDao.current,
+    settingsHandling: SettingsHandling = LocalSettingsHandling.current,
+    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, genericInfo) }
 ) {
-    val items by db.getAllNotificationsFlow().collectAsState(initial = emptyList())
+    val items = vm.items
 
     LaunchedEffect(Unit) {
         db.getAllNotificationCount()
@@ -107,8 +95,8 @@ fun NotificationsScreen(
     val context = LocalContext.current
     val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
-    BackHandler(state.bottomSheetState.isExpanded) {
-        scope.launch { state.bottomSheetState.collapse() }
+    BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch { state.bottomSheetState.partialExpand() }
     }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -156,7 +144,10 @@ fun NotificationsScreen(
                 title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
                 actions = {
                     IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
-                    IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                    IconToggleButton(
+                        checked = vm.sortedBy == NotificationSortBy.Grouped,
+                        onCheckedChange = { vm.toggleSort() }
+                    ) { Icon(Icons.Default.Sort, null) }
                 },
                 navigationIcon = { BackButton() }
             )
@@ -179,7 +170,7 @@ fun NotificationsScreen(
         deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
         itemUi = { item ->
             ListItem(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier.padding(4.dp),
                 leadingContent = {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -195,9 +186,9 @@ fun NotificationsScreen(
                         modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     )
                 },
-                overlineText = { Text(item.source) },
-                headlineText = { Text(item.notiTitle) },
-                supportingText = { Text(item.summaryText) },
+                overlineContent = { Text(item.source) },
+                headlineContent = { Text(item.notiTitle) },
+                supportingContent = { Text(item.summaryText) },
                 trailingContent = {
                     var showDropDown by remember { mutableStateOf(false) }
 
@@ -229,8 +220,90 @@ fun NotificationsScreen(
             )
         }
     ) { p, itemList ->
+        Crossfade(targetState = vm.sortedBy) { target ->
+            when (target) {
+                NotificationSortBy.Date -> {
+                    AnimatedLazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        items = itemList.fastMap {
+                            AnimatedLazyListItem(key = it.url, value = it) {
+                                NotificationItem(
+                                    item = it,
+                                    navController = navController,
+                                    vm = vm,
+                                    notificationManager = notificationManager,
+                                    db = db,
+                                    genericInfo = genericInfo,
+                                    logo = logo,
+                                    notificationLogo = notificationLogo
+                                )
+                            }
+                        }
+                    )
+                }
+                NotificationSortBy.Grouped -> {
+                    LazyColumn(
+                        contentPadding = p,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    ) {
 
-        AnimatedLazyColumn(
+                        vm.groupedList.toList().forEach { item ->
+                            val expanded = vm.groupedListState[item.first]?.value == true
+
+                            stickyHeader {
+                                Surface(
+                                    shape = M3MaterialTheme.shapes.medium,
+                                    tonalElevation = 4.dp,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = { vm.toggleGroupedState(item.first) }
+                                ) {
+                                    ListItem(
+                                        modifier = Modifier.padding(4.dp),
+                                        headlineContent = { Text(item.first) },
+                                        leadingContent = { Text(item.second.size.toString()) },
+                                        trailingContent = {
+                                            Icon(
+                                                Icons.Default.ArrowDropDown,
+                                                null,
+                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+
+                            item {
+                                Column(
+                                    modifier = Modifier.animateContentSize(),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    if (expanded) {
+                                        item.second.forEach {
+                                            NotificationItem(
+                                                item = it,
+                                                navController = navController,
+                                                vm = vm,
+                                                notificationManager = notificationManager,
+                                                db = db,
+                                                genericInfo = genericInfo,
+                                                logo = logo,
+                                                notificationLogo = notificationLogo
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                NotificationSortBy.UNRECOGNIZED -> {}
+            }
+        }
+
+        /*AnimatedLazyColumn(
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(vertical = 4.dp),
@@ -249,7 +322,7 @@ fun NotificationsScreen(
                     )
                 }
             }
-        )
+        )*/
 
         /*LazyColumn(
             contentPadding = p,
@@ -260,7 +333,6 @@ fun NotificationsScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun NotificationItem(
     item: NotificationItem,
@@ -268,7 +340,6 @@ private fun NotificationItem(
     vm: NotificationScreenViewModel,
     notificationManager: NotificationManager,
     db: ItemDao,
-    parentFragmentManager: FragmentManager,
     genericInfo: GenericInfo,
     logo: MainLogo,
     notificationLogo: NotificationLogo,
@@ -305,7 +376,7 @@ private fun NotificationItem(
     )
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
                 showPopup = true
             }
@@ -348,11 +419,10 @@ private fun NotificationItem(
                     tint = M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                 )
             }
-        }
-    ) {
-        ElevatedCard(
-            onClick = {
-                scope.launch {
+        },
+        dismissContent = {
+            ElevatedCard(
+                onClick = {
                     genericInfo
                         .toSource(item.source)
                         ?.let { source ->
@@ -372,142 +442,165 @@ private fun NotificationItem(
                             showLoadingDialog = false
                             navController.navigateToDetails(it)
                         }
-                        ?.collect()
-                }
-            },
-            modifier = Modifier.padding(horizontal = 5.dp)
-        ) {
-            Row {
-                val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(item.imageUrl)
-                        .lifecycle(LocalLifecycleOwner.current)
-                        .crossfade(true)
-                        .build(),
-                    placeholder = rememberDrawablePainter(logoDrawable),
-                    error = rememberDrawablePainter(logoDrawable),
-                    contentScale = ContentScale.Crop,
-                    contentDescription = item.notiTitle,
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                )
+                        ?.launchIn(scope)
+                },
+                modifier = Modifier.padding(horizontal = 4.dp)
+            ) {
+                Row {
+                    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.imageUrl)
+                            .lifecycle(LocalLifecycleOwner.current)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = rememberDrawablePainter(logoDrawable),
+                        error = rememberDrawablePainter(logoDrawable),
+                        contentScale = ContentScale.Crop,
+                        contentDescription = item.notiTitle,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp, top = 4.dp)
-                ) {
-                    Text(item.source, style = M3MaterialTheme.typography.labelMedium)
-                    Text(item.notiTitle, style = M3MaterialTheme.typography.titleSmall)
-                    Text(item.summaryText, style = M3MaterialTheme.typography.bodyMedium)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Top)
-                        .padding(horizontal = 2.dp)
-                ) {
-
-                    var showDropDown by remember { mutableStateOf(false) }
-
-                    val dropDownDismiss = { showDropDown = false }
-
-                    DropdownMenu(
-                        expanded = showDropDown,
-                        onDismissRequest = dropDownDismiss
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp, top = 4.dp)
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.notify)) },
-                            onClick = {
-                                dropDownDismiss()
-                                scope.launch(Dispatchers.IO) {
-                                    SavedNotifications.viewNotificationFromDb(context, item, notificationLogo, genericInfo)
-                                }
-                            }
-                        )
-
-                        Divider()
-
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.notifyAtTime)) },
-                            onClick = {
-                                dropDownDismiss()
-                                val datePicker = MaterialDatePicker.Builder.datePicker()
-                                    .setTitleText(R.string.selectDate)
-                                    .setCalendarConstraints(
-                                        CalendarConstraints.Builder()
-                                            .setOpenAt(System.currentTimeMillis())
-                                            .setValidator(DateValidatorPointForward.now())
-                                            .build()
-                                    )
-                                    .setSelection(System.currentTimeMillis())
-                                    .build()
-
-                                datePicker.addOnPositiveButtonClickListener {
-                                    val c = Calendar.getInstance()
-                                    val timePicker = MaterialTimePicker.Builder()
-                                        .setTitleText(R.string.selectTime)
-                                        .setPositiveButtonText(R.string.ok)
-                                        .setTimeFormat(
-                                            if (DateFormat.is24HourFormat(context)) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
-                                        )
-                                        .setHour(c[Calendar.HOUR_OF_DAY])
-                                        .setMinute(c[Calendar.MINUTE])
-                                        .build()
-
-                                    timePicker.addOnPositiveButtonClickListener { _ ->
-                                        c.timeInMillis = it
-                                        c.add(Calendar.DAY_OF_YEAR, 1)
-                                        c[Calendar.HOUR_OF_DAY] = timePicker.hour
-                                        c[Calendar.MINUTE] = timePicker.minute
-
-                                        WorkManager.getInstance(context)
-                                            .enqueueUniqueWork(
-                                                item.notiTitle,
-                                                ExistingWorkPolicy.REPLACE,
-                                                OneTimeWorkRequestBuilder<NotifySingleWorker>()
-                                                    .setInputData(
-                                                        Data.Builder()
-                                                            .putString("notiData", item.toJson())
-                                                            .build()
-                                                    )
-                                                    .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                                                    .build()
-                                            )
-
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(
-                                                R.string.willNotifyAt,
-                                                context.getSystemDateTimeFormat().format(c.timeInMillis)
-                                            ),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-
-                                    timePicker.show(parentFragmentManager, "timePicker")
-                                }
-
-                                datePicker.show(parentFragmentManager, "datePicker")
-                            }
-                        )
-
-                        Divider()
-
-                        DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                showPopup = true
-                            },
-                            text = { Text(stringResource(R.string.remove)) }
-                        )
+                        Text(item.source, style = M3MaterialTheme.typography.labelMedium)
+                        Text(item.notiTitle, style = M3MaterialTheme.typography.titleSmall)
+                        Text(item.summaryText, style = M3MaterialTheme.typography.bodyMedium)
                     }
 
-                    IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Top)
+                            .padding(horizontal = 2.dp)
+                    ) {
+
+                        var showDropDown by remember { mutableStateOf(false) }
+
+                        val dropDownDismiss = { showDropDown = false }
+
+                        var showDatePicker by remember { mutableStateOf(false) }
+                        var showTimePicker by remember { mutableStateOf(false) }
+
+                        val dateState = rememberDatePickerState(
+                            initialSelectedDateMillis = System.currentTimeMillis()
+                        )
+                        val calendar = remember { Calendar.getInstance() }
+                        val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
+                        val timeState = rememberTimePickerState(
+                            initialHour = calendar[Calendar.HOUR_OF_DAY],
+                            initialMinute = calendar[Calendar.MINUTE],
+                            is24Hour = is24HourFormat
+                        )
+
+                        //TODO: make all this code into a function
+                        if (showTimePicker) {
+                            AlertDialog(
+                                onDismissRequest = { showTimePicker = false },
+                                title = { Text(stringResource(id = R.string.selectTime)) },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showTimePicker = false
+                                            val c = Calendar.getInstance()
+                                            c.timeInMillis = dateState.selectedDateMillis ?: 0L
+                                            c[Calendar.HOUR_OF_DAY] = timeState.hour
+                                            c[Calendar.MINUTE] = timeState.minute
+
+                                            WorkManager.getInstance(context)
+                                                .enqueueUniqueWork(
+                                                    item.notiTitle,
+                                                    ExistingWorkPolicy.REPLACE,
+                                                    OneTimeWorkRequestBuilder<NotifySingleWorker>()
+                                                        .setInputData(
+                                                            Data.Builder()
+                                                                .putString("notiData", item.toJson())
+                                                                .build()
+                                                        )
+                                                        .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                                                        .build()
+                                                )
+
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(
+                                                    R.string.willNotifyAt,
+                                                    context.getSystemDateTimeFormat().format(c.timeInMillis)
+                                                ),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    ) { Text(stringResource(R.string.ok)) }
+                                },
+                                dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
+                                text = { TimePicker(state = timeState) }
+                            )
+                        }
+
+                        if (showDatePicker) {
+                            DatePickerDialog(
+                                onDismissRequest = { showDatePicker = false },
+                                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showDatePicker = false
+                                            showTimePicker = true
+                                        }
+                                    ) { Text(stringResource(R.string.ok)) }
+                                }
+                            ) {
+                                DatePicker(
+                                    state = dateState,
+                                    dateValidator = { DateValidatorPointForward.now().isValid(it) },
+                                    title = { Text(stringResource(R.string.selectDate)) }
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.notify)) },
+                                onClick = {
+                                    dropDownDismiss()
+                                    scope.launch(Dispatchers.IO) {
+                                        SavedNotifications.viewNotificationFromDb(context, item, notificationLogo, genericInfo)
+                                    }
+                                }
+                            )
+
+                            Divider()
+
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.notifyAtTime)) },
+                                onClick = {
+                                    dropDownDismiss()
+                                    showDatePicker = true
+                                }
+                            )
+
+                            Divider()
+
+                            DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    showPopup = true
+                                },
+                                text = { Text(stringResource(R.string.remove)) }
+                            )
+                        }
+
+                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                    }
                 }
             }
         }
-    }
+    )
 }

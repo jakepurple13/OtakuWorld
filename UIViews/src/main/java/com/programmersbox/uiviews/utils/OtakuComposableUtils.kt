@@ -50,10 +50,10 @@ object ComposableUtils {
 @ExperimentalMaterialApi
 @Composable
 fun CoverCard(
-    modifier: Modifier = Modifier,
     imageUrl: String,
     name: String,
     placeHolder: Int,
+    modifier: Modifier = Modifier,
     error: Int = placeHolder,
     onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
@@ -151,7 +151,7 @@ fun CoverCard(
 fun PlaceHolderCoverCard(placeHolder: Int) {
     Card(
         modifier = Modifier
-            .padding(5.dp)
+            .padding(4.dp)
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
@@ -210,8 +210,8 @@ fun PlaceHolderCoverCard(placeHolder: Int) {
 @ExperimentalMaterialApi
 @Composable
 fun OtakuBannerBox(
-    showBanner: Boolean = false,
     placeholder: Int,
+    showBanner: Boolean = false,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val context = LocalContext.current
@@ -249,9 +249,9 @@ fun OtakuBannerBox(
                             }
                         )
                     },
-                    overlineText = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    headlineText = { Text(itemInfo.value?.title.orEmpty()) },
-                    supportingText = {
+                    overlineContent = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
+                    headlineContent = { Text(itemInfo.value?.title.orEmpty()) },
+                    supportingContent = {
                         Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,
@@ -268,10 +268,10 @@ fun OtakuBannerBox(
 @ExperimentalMaterialApi
 @Composable
 fun M3CoverCard(
-    modifier: Modifier = Modifier,
     imageUrl: String,
     name: String,
     placeHolder: Int,
+    modifier: Modifier = Modifier,
     error: Int = placeHolder,
     headers: Map<String, Any> = emptyMap(),
     onLongPress: (ComponentState) -> Unit = {},
@@ -354,7 +354,7 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             ),
-        tonalElevation = 5.dp,
+        tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium
     ) {
 
@@ -409,9 +409,9 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun M3OtakuBannerBox(
+    placeholder: Int,
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    placeholder: Int,
     content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
 ) {
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
@@ -423,7 +423,7 @@ fun M3OtakuBannerBox(
             androidx.compose.material3.Surface(
                 modifier = Modifier.align(Alignment.TopCenter),
                 shape = MaterialTheme.shapes.medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp)),
-                tonalElevation = 5.dp,
+                tonalElevation = 4.dp,
                 shadowElevation = 10.dp
             ) {
                 ListItem(
@@ -444,9 +444,9 @@ fun M3OtakuBannerBox(
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
                     },
-                    overlineText = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    headlineText = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
-                    supportingText = {
+                    overlineContent = { androidx.compose.material3.Text(itemInfo.value?.source?.serviceName.orEmpty()) },
+                    headlineContent = { androidx.compose.material3.Text(itemInfo.value?.title.orEmpty()) },
+                    supportingContent = {
                         androidx.compose.material3.Text(
                             itemInfo.value?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,

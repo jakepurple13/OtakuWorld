@@ -354,7 +354,7 @@ fun SlideTo(
                 tonalElevation = elevation
             ) {
                 Box(
-                    modifier = Modifier.padding(5.dp),
+                    modifier = Modifier.padding(4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(

@@ -2,22 +2,50 @@ package com.programmersbox.uiviews.favorite
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.ReadMore
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -25,38 +53,50 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalItemDao
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.M3CoverCard
+import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.GroupButton
 import com.programmersbox.uiviews.utils.components.GroupButtonModel
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.utils.navigateToDetails
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @Composable
-fun FavoriteUi(logo: MainLogo) {
+fun FavoriteUi(
+    logo: MainLogo,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    dao: ItemDao = LocalItemDao.current,
+    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
+) {
 
-    val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val activity = LocalActivity.current
     val context = LocalContext.current
-    val dao = remember { ItemDatabase.getInstance(context).itemDao() }
-
-    val viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
 
     val favoriteItems: List<DbModel> = viewModel.favoriteList
     val allSources: List<ApiService> = genericInfo.sourceList()
@@ -139,10 +179,24 @@ fun FavoriteUi(logo: MainLogo) {
                             }
                         )
 
-                        OutlinedTextField(
-                            value = searchText,
-                            onValueChange = { searchText = it },
-                            label = {
+                        var active by rememberSaveable { mutableStateOf(false) }
+
+                        fun closeSearchBar() {
+                            focusManager.clearFocus()
+                            active = false
+                        }
+                        SearchBar(
+                            modifier = Modifier.fillMaxWidth(),
+                            windowInsets = WindowInsets(0.dp),
+                            query = searchText,
+                            onQueryChange = { searchText = it },
+                            onSearch = { closeSearchBar() },
+                            active = active,
+                            onActiveChange = {
+                                active = it
+                                if (!active) focusManager.clearFocus()
+                            },
+                            placeholder = {
                                 Text(
                                     context.resources.getQuantityString(
                                         R.plurals.numFavorites,
@@ -151,22 +205,39 @@ fun FavoriteUi(logo: MainLogo) {
                                     )
                                 )
                             },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             trailingIcon = {
                                 IconButton(onClick = { searchText = "" }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 5.dp),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-                        )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                showing.take(4).forEachIndexed { index, dbModel ->
+                                    ListItem(
+                                        headlineContent = { Text(dbModel.title) },
+                                        supportingContent = { Text(dbModel.source) },
+                                        leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
+                                        modifier = Modifier.clickable {
+                                            searchText = dbModel.title
+                                            closeSearchBar()
+                                        }
+                                    )
+                                    if (index != 3) {
+                                        Divider()
+                                    }
+                                }
+                            }
+                        }
 
                         LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
                         ) {
                             item {
                                 FilterChip(
@@ -212,9 +283,9 @@ fun FavoriteUi(logo: MainLogo) {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(5.dp),
-                        tonalElevation = 5.dp,
-                        shape = RoundedCornerShape(5.dp)
+                            .padding(4.dp),
+                        tonalElevation = 4.dp,
+                        shape = RoundedCornerShape(4.dp)
                     ) {
 
                         Column(modifier = Modifier) {
@@ -232,10 +303,10 @@ fun FavoriteUi(logo: MainLogo) {
                             )
 
                             Button(
-                                onClick = { (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT) },
+                                onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
-                                    .padding(vertical = 5.dp)
+                                    .padding(vertical = 4.dp)
                             ) { Text(text = stringResource(R.string.add_a_favorite)) }
 
                         }
@@ -263,7 +334,7 @@ fun FavoriteUi(logo: MainLogo) {
                                 } else null
                                 showBanner = c == ComponentState.Pressed
                             },
-                            imageUrl = info.value.randomOrNull()?.imageUrl.orEmpty(),
+                            imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                             name = info.key,
                             placeHolder = logo.logoId,
                             favoriteIcon = {
@@ -305,8 +376,7 @@ fun FavoriteUi(logo: MainLogo) {
 }
 
 @Composable
-fun FavoriteChoiceScreen() {
-    val vm = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }
+fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }) {
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     ListBottomScreen(

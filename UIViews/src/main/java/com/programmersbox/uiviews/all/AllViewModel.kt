@@ -1,10 +1,7 @@
 package com.programmersbox.uiviews.all
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +15,6 @@ import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
@@ -34,30 +30,28 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<ItemModel>()
-    var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
+    var favoriteList = mutableStateListOf<DbModel>()
 
     var count = 1
 
     private val itemListener = FirebaseDb.FirebaseListener()
 
     init {
-        viewModelScope.launch {
-            combine(
-                itemListener.getAllShowsFlow(),
-                dao.getAllFavorites()
-            ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-                .collect { favoriteList = it }
-        }
-        viewModelScope.launch {
-            sourceFlow
-                .filterNotNull()
-                .onEach {
-                    count = 1
-                    sourceList.clear()
-                    sourceLoadCompose(context, it)
-                }
-                .collect()
-        }
+        combine(
+            itemListener.getAllShowsFlow(),
+            dao.getAllFavorites()
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+            .onEach { favoriteList = it.toMutableStateList() }
+            .launchIn(viewModelScope)
+
+        sourceFlow
+            .filterNotNull()
+            .onEach {
+                count = 1
+                sourceList.clear()
+                sourceLoadCompose(context, it)
+            }
+            .launchIn(viewModelScope)
     }
 
     fun reset(context: Context?, sources: ApiService) {
@@ -72,30 +66,26 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
     }
 
     private fun sourceLoadCompose(context: Context?, sources: ApiService) {
-        viewModelScope.launch {
-            sources
-                .getListFlow(count)
-                .dispatchIoAndCatchList { context?.showErrorToast() }
-                .onStart { isRefreshing = true }
-                .onEach { sourceList.addAll(it) }
-                .onCompletion { isRefreshing = false }
-                .collect()
-        }
+        sources
+            .getListFlow(count)
+            .dispatchIoAndCatchList { context?.showErrorToast() }
+            .onStart { isRefreshing = true }
+            .onEach { sourceList.addAll(it) }
+            .onCompletion { isRefreshing = false }
+            .launchIn(viewModelScope)
     }
 
     fun search() {
-        viewModelScope.launch {
-            sourceFlow
-                .filterNotNull()
-                .flatMapMerge { it.searchSourceList(searchText, 1, sourceList) }
-                .onStart { isSearching = true }
-                .onEach {
-                    searchList = it
-                    isSearching = false
-                }
-                .onCompletion { isSearching = false }
-                .collect()
-        }
+        sourceFlow
+            .filterNotNull()
+            .flatMapMerge { it.searchSourceList(searchText, 1, sourceList) }
+            .onStart { isSearching = true }
+            .onEach {
+                searchList = it
+                isSearching = false
+            }
+            .onCompletion { isSearching = false }
+            .launchIn(viewModelScope)
     }
 
     override fun onCleared() {

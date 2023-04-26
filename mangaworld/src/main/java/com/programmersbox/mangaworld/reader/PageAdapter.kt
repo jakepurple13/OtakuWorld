@@ -100,6 +100,7 @@ class PageAdapter(
     //override fun getPreloadItems(position: Int): List<String> = Collections.singletonList(dataList[position].let(itemToModel))
 
     override fun getPreloadItems(position: Int): List<String> = Collections.singletonList(dataList.getOrNull(position)?.let(itemToModel).orEmpty())
+    override fun getPreloadRequestBuilder(item: String): RequestBuilder<Drawable?> = fullRequest.thumbnail(thumbRequest.load(item)).load(item)
 
 }
 

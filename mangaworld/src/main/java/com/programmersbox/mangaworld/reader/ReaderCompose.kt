@@ -10,14 +10,15 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +33,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,7 +55,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -66,15 +68,10 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.github.piasy.biv.BigImageViewer
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.PagerState
-import com.google.accompanist.pager.VerticalPager
-import com.google.accompanist.pager.rememberPagerState
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -83,6 +80,7 @@ import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.*
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -93,15 +91,23 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-@OptIn(ExperimentalPagerApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
 @Composable
-fun ReadView() {
-
+fun ReadView(
+    context: Context = LocalContext.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    readVm: ReadViewModel = viewModel {
+        ReadViewModel(
+            handle = createSavedStateHandle(),
+            context = context,
+            genericInfo = genericInfo
+        )
+    }
+) {
     LifecycleHandle(
         onStop = { BaseMainActivity.showNavBar = true },
         onDestroy = { BaseMainActivity.showNavBar = true },
@@ -109,17 +115,6 @@ fun ReadView() {
         onStart = { BaseMainActivity.showNavBar = false },
         onResume = { BaseMainActivity.showNavBar = false }
     )
-
-    val context = LocalContext.current
-    val genericInfo = LocalGenericInfo.current
-
-    val readVm: ReadViewModel = viewModel {
-        ReadViewModel(
-            handle = createSavedStateHandle(),
-            context = context,
-            genericInfo = genericInfo
-        )
-    }
 
     DisposableEffect(LocalContext.current) {
         val batteryInfo = context.battery {
@@ -318,11 +313,11 @@ fun DrawerView(
             LargeTopAppBar(
                 scrollBehavior = drawerScrollBehavior,
                 title = { Text(readVm.title) },
-                actions = { PageIndicator(Modifier, readVm.list.size - readVm.currentChapter, readVm.list.size) }
+                actions = { PageIndicator(currentPage = readVm.list.size - readVm.currentChapter, pageCount = readVm.list.size) }
             )
         },
         bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release") {
+            if (BuildConfig.BUILD_TYPE == "release" && false) {
                 AndroidView(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -382,7 +377,7 @@ fun DrawerView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalAnimationApi::class, ExperimentalPagerApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SheetView(
     readVm: ReadViewModel,
@@ -401,7 +396,7 @@ fun SheetView(
             TopAppBar(
                 scrollBehavior = sheetScrollBehavior,
                 title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
-                actions = { PageIndicator(Modifier, currentPage + 1, pages.size) },
+                actions = { PageIndicator(currentPage + 1, pages.size) },
                 navigationIcon = {
                     IconButton(onClick = { scope.launch { sheetState.hide() } }) {
                         Icon(Icons.Default.Close, null)
@@ -410,7 +405,7 @@ fun SheetView(
             )
         },
         bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release") {
+            if (BuildConfig.BUILD_TYPE == "release" && false) {
                 AndroidView(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -426,7 +421,7 @@ fun SheetView(
             }
         }
     ) { p ->
-        Crossfade(targetState = sheetState.isVisible) { target ->
+        Crossfade(targetState = sheetState.isVisible, label = "") { target ->
             if (target) {
                 LazyVerticalGrid(
                     columns = adaptiveGridCell(),
@@ -440,7 +435,7 @@ fun SheetView(
                                 .fillMaxSize()
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 .border(
-                                    animateDpAsState(if (currentPage == i) 5.dp else 0.dp).value,
+                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp).value,
                                     color = animateColorAsState(
                                         if (currentPage == i) MaterialTheme.colorScheme.primary
                                         else Color.Transparent
@@ -514,27 +509,37 @@ fun ListView(
     ) { reader(pages, readVm, onClick) }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PagerView(pagerState: PagerState, contentPadding: PaddingValues, pages: List<String>, vm: ReadViewModel, itemSpacing: Dp, onClick: () -> Unit) {
+fun PagerView(
+    pagerState: PagerState,
+    contentPadding: PaddingValues,
+    pages: List<String>,
+    vm: ReadViewModel,
+    itemSpacing: Dp,
+    onClick: () -> Unit
+) {
     VerticalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        count = pages.size + 1,
-        itemSpacing = itemSpacing,
+        pageCount = pages.size + 1,
+        pageSpacing = itemSpacing,
         contentPadding = contentPadding,
         key = { it }
     ) { page ->
         pages.getOrNull(page)?.let {
             ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit)
-        } ?: LastPageReached(
-            isLoading = vm.isLoadingPages,
-            currentChapter = vm.currentChapter,
-            chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
-            nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
-            previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-            adRequest = vm.ad
-        )
+        } ?: Box(modifier = Modifier.fillMaxSize()) {
+            LastPageReached(
+                isLoading = vm.isLoadingPages,
+                currentChapter = vm.currentChapter,
+                chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+                nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+                previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+                adRequest = vm.ad,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 
@@ -545,6 +550,7 @@ private fun LastPageReached(
     chapterName: String,
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
+    modifier: Modifier = Modifier,
     adRequest: AdRequest = remember { AdRequest.Builder().build() }
 ) {
     val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f)
@@ -553,9 +559,59 @@ private fun LastPageReached(
         nextChapter = nextChapter,
         previousChapter = previousChapter,
         isLoading = isLoading,
-        currentChapter = currentChapter
+        currentChapter = currentChapter,
+        modifier = modifier
     ) {
-        ConstraintLayout(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    chapterName,
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.graphicsLayer { this.alpha = alpha }
+                ) {
+                    Text(
+                        stringResource(id = R.string.lastPage),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    )
+                    if (currentChapter <= 0) {
+                        Text(
+                            stringResource(id = R.string.reachedLastChapter),
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
+                        )
+                    }
+                }
+
+                Text(
+                    stringResource(id = R.string.swipeChapter),
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        /*ConstraintLayout(Modifier.fillMaxSize()) {
 
             val (loading, name, lastInfo, swipeInfo, ad) = createRefs()
 
@@ -625,7 +681,7 @@ private fun LastPageReached(
                     }
             )
 
-            if (BuildConfig.BUILD_TYPE == "release") {
+            if (BuildConfig.BUILD_TYPE == "release" && false) {
                 val context = LocalContext.current
                 AndroidView(
                     modifier = Modifier
@@ -653,26 +709,28 @@ private fun LastPageReached(
                 )
             }
 
-        }
+        }*/
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeChapterSwipe(
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
     currentChapter: Int,
     isLoading: Boolean,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     BoxWithConstraints(
-        modifier = Modifier
+        contentAlignment = Alignment.Center,
+        modifier = modifier
             .heightIn(min = 100.dp)
             .wrapContentHeight()
     ) {
         val dismissState = rememberDismissState(
-            confirmStateChange = {
+            confirmValueChange = {
                 when (it) {
                     DismissValue.DismissedToEnd -> nextChapter()
                     DismissValue.DismissedToStart -> previousChapter()
@@ -718,14 +776,15 @@ fun ChangeChapterSwipe(
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                     )
                 }
+            },
+            dismissContent = {
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(this@BoxWithConstraints.maxHeight / 2)
+                ) { content() }
             }
-        ) {
-            OutlinedCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(this@BoxWithConstraints.maxHeight / 2)
-            ) { content() }
-        }
+        )
     }
 }
 
@@ -770,11 +829,11 @@ private fun ChapterPage(
 
 @Composable
 private fun ZoomableImage(
-    modifier: Modifier = Modifier,
     painter: String,
     isDownloaded: Boolean,
-    contentScale: ContentScale = ContentScale.Fit,
     headers: Map<String, String>,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
     onClick: () -> Unit = {}
 ) {
     var centerPoint by remember { mutableStateOf(Offset.Zero) }
@@ -796,7 +855,7 @@ private fun ZoomableImage(
         offset = clampOffset(centerPoint, offset, scale)
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
@@ -804,8 +863,14 @@ private fun ZoomableImage(
                 val size = coordinates.size.toSize() / 2.0f
                 centerPoint = Offset(size.width, size.height)
             }
-            .transformable(state)
-            .pointerInput(Unit) {
+            .clickable(
+                indication = null,
+                onClick = onClick,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+        //TODO: In compose 1.4.0-rc01, these seem to be consuming drags
+        //.transformable(state)
+        /*.pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { onClick() },
                     onDoubleTap = {
@@ -813,6 +878,7 @@ private fun ZoomableImage(
                             scale > 2f -> {
                                 scale = 1f
                             }
+
                             else -> {
                                 scale = 3f
 
@@ -820,10 +886,9 @@ private fun ZoomableImage(
                                 offset = clampOffset(centerPoint, offset, scale)
                             }
                         }
-
                     }
                 )
-            }
+            }*/
     ) {
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }
@@ -878,11 +943,11 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
 @ExperimentalAnimationApi
 @Composable
 private fun TopBar(
-    modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior,
     pages: List<String>,
     currentPage: Int,
-    vm: ReadViewModel
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
         windowInsets = WindowInsets(0.dp),
@@ -925,11 +990,11 @@ private fun TopBar(
         },
         actions = {
             PageIndicator(
-                Modifier
+                currentPage = currentPage + 1,
+                pageCount = pages.size,
+                modifier = Modifier
                     .padding(4.dp)
-                    .align(Alignment.CenterVertically),
-                currentPage + 1,
-                pages.size
+                    .align(Alignment.CenterVertically)
             )
         }
     )
@@ -937,11 +1002,11 @@ private fun TopBar(
 
 @Composable
 private fun BottomBar(
-    modifier: Modifier = Modifier,
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    chapterChange: () -> Unit
+    chapterChange: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     BottomAppBar(
         modifier = modifier,
@@ -1067,7 +1132,11 @@ private fun WrapHeightNavigationDrawerItem(
 
 @ExperimentalAnimationApi
 @Composable
-private fun PageIndicator(modifier: Modifier = Modifier, currentPage: Int, pageCount: Int) {
+private fun PageIndicator(
+    currentPage: Int,
+    pageCount: Int,
+    modifier: Modifier = Modifier
+) {
     Text(
         "$currentPage/$pageCount",
         style = MaterialTheme.typography.bodyLarge,
@@ -1091,7 +1160,11 @@ private fun GoBackButton(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NextButton(modifier: Modifier = Modifier, vm: ReadViewModel, nextChapter: () -> Unit) {
+private fun NextButton(
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier,
+    nextChapter: () -> Unit
+) {
     Button(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
         modifier = modifier
@@ -1099,7 +1172,11 @@ private fun NextButton(modifier: Modifier = Modifier, vm: ReadViewModel, nextCha
 }
 
 @Composable
-private fun PreviousButton(modifier: Modifier = Modifier, vm: ReadViewModel, previousChapter: () -> Unit) {
+private fun PreviousButton(
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier,
+    previousChapter: () -> Unit
+) {
     TextButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
         modifier = modifier

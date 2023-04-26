@@ -7,8 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Environment
-import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,20 +22,32 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ChromeReaderMode
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FormatLineSpacing
+import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Pages
+import androidx.compose.material.icons.filled.TextFormat
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
@@ -60,7 +74,19 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.ChapterModelDeserializer
+import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.M3CoverCard
+import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.PreferenceSetting
+import com.programmersbox.uiviews.utils.ShowWhen
+import com.programmersbox.uiviews.utils.SliderSetting
+import com.programmersbox.uiviews.utils.SwitchSetting
+import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -246,7 +272,7 @@ class GenericManga(val context: Context) : GenericInfo {
                     headers = it.extras,
                     placeHolder = R.drawable.manga_world_round_logo,
                     favoriteIcon = {
-                        if (favorites.fastAny { f -> f.url == it.url }) {
+                        if (favorites.any { f -> f.url == it.url }) {
                             Icon(
                                 Icons.Default.Favorite,
                                 contentDescription = null,
@@ -450,13 +476,15 @@ class GenericManga(val context: Context) : GenericInfo {
                 navArgument("mangaInfoUrl") { nullable = true },
                 navArgument("downloaded") {},
                 navArgument("filePath") { nullable = true }
-            )
+            ),
+            enterTransition = { fadeIn() },
+            exitTransition = { fadeOut() },
         ) { ReadView() }
 
         composable(
             DownloadViewModel.DownloadRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) },
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) { DownloadScreen() }
     }
 

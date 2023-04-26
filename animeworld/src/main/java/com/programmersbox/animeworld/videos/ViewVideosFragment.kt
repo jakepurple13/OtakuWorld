@@ -16,17 +16,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +45,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.animeworld.*
 import com.programmersbox.animeworld.R
 import com.programmersbox.helpfulutils.stringForTime
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
@@ -84,6 +79,7 @@ fun ViewVideoScreen() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
@@ -97,14 +93,14 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
 
-    BackHandler(state.bottomSheetState.isExpanded) {
-        scope.launch { state.bottomSheetState.collapse() }
+    BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch { state.bottomSheetState.partialExpand() }
     }
 
     var itemToDelete by remember { mutableStateOf<VideoContent?>(null) }
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, video = it) }
+    itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = it) }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -134,11 +130,11 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
         deleteTitle = { it.videoName.orEmpty() },
         onRemove = {
             itemToDelete = it
-            showDialog.value = true
+            showDialog = true
         },
         customSingleRemoveDialog = {
             itemToDelete = it
-            showDialog.value = true
+            showDialog = true
             false
         },
         onMultipleRemove = { downloadedItems ->
@@ -163,7 +159,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
         },
         itemUi = { item ->
             ListItem(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier.padding(4.dp),
                 leadingContent = {
                     Box {
                         /*convert millis to appropriate time*/
@@ -215,16 +211,16 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .background(Color(0x99000000))
-                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(5.dp))
+                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(4.dp))
                         )
 
                     }
                 },
-                overlineText = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
+                overlineContent = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
                     { Text(context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()) }
                 } else null,
-                headlineText = { Text(item.videoName.orEmpty()) },
-                supportingText = { Text(item.path.orEmpty()) }
+                headlineContent = { Text(item.videoName.orEmpty()) },
+                supportingContent = { Text(item.path.orEmpty()) }
             )
         }
     ) { p, itemList ->
@@ -247,7 +243,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 contentPadding = p1,
                 state = rememberLazyListState(),
-                modifier = Modifier.padding(5.dp)
+                modifier = Modifier.padding(4.dp)
             ) {
                 animatedItems(
                     videos,
@@ -261,7 +257,6 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
 @Composable
 private fun EmptyState(paddingValues: PaddingValues) {
-
     Box(
         modifier = Modifier
             .padding(paddingValues)
@@ -271,9 +266,9 @@ private fun EmptyState(paddingValues: PaddingValues) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(5.dp),
-            tonalElevation = 5.dp,
-            shape = RoundedCornerShape(5.dp)
+                .padding(4.dp),
+            tonalElevation = 4.dp,
+            shape = RoundedCornerShape(4.dp)
         ) {
 
             Column(modifier = Modifier) {
@@ -291,16 +286,12 @@ private fun EmptyState(paddingValues: PaddingValues) {
                 )
 
                 val navController = LocalNavController.current
-                val activity = LocalActivity.current
 
                 Button(
-                    onClick = {
-                        navController.popBackStack()
-                        (activity as? BaseMainActivity)?.goToScreen(BaseMainActivity.Screen.RECENT)
-                    },
+                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 5.dp)
+                        .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(id = R.string.go_download)) }
 
             }
@@ -310,19 +301,20 @@ private fun EmptyState(paddingValues: PaddingValues) {
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
 private fun VideoContentView(item: VideoContent) {
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    SlideToDeleteDialog(showDialog = showDialog, video = item)
+    SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = item)
 
     val navController = LocalNavController.current
     val context = LocalContext.current
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd) {
                 if (MainActivity.cast.isCastActive()) {
                     MainActivity.cast.loadMedia(
@@ -340,7 +332,7 @@ private fun VideoContentView(item: VideoContent) {
                     )
                 }
             } else if (it == DismissValue.DismissedToStart) {
-                showDialog.value = true
+                showDialog = true
             }
             false
         }
@@ -380,118 +372,119 @@ private fun VideoContentView(item: VideoContent) {
                     modifier = Modifier.scale(scale)
                 )
             }
-        }
-    ) {
-        ElevatedCard(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
-                ) {
-                    if (MainActivity.cast.isCastActive()) {
-                        MainActivity.cast.loadMedia(
-                            File(item.path!!),
-                            context
-                                .getSharedPreferences("videos", Context.MODE_PRIVATE)
-                                .getLong(item.assetFileStringUri, 0),
-                            null, null
-                        )
-                    } else {
-                        context.navigateToVideoPlayer(
-                            navController,
-                            item.assetFileStringUri,
-                            item.videoName,
-                            true,
-                            ""
-                        )
-                    }
-                }
-        ) {
-            Row {
-                Box {
-                    /*convert millis to appropriate time*/
-                    val runTimeString = remember {
-                        val duration = item.videoDuration
-                        if (duration > TimeUnit.HOURS.toMillis(1)) {
-                            String.format(
-                                "%02d:%02d:%02d",
-                                TimeUnit.MILLISECONDS.toHours(duration),
-                                TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
-                                TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+        },
+        dismissContent = {
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        indication = rememberRipple(),
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        if (MainActivity.cast.isCastActive()) {
+                            MainActivity.cast.loadMedia(
+                                File(item.path!!),
+                                context
+                                    .getSharedPreferences("videos", Context.MODE_PRIVATE)
+                                    .getLong(item.assetFileStringUri, 0),
+                                null, null
                             )
                         } else {
-                            String.format(
-                                "%02d:%02d",
-                                TimeUnit.MILLISECONDS.toMinutes(duration),
-                                TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+                            context.navigateToVideoPlayer(
+                                navController,
+                                item.assetFileStringUri,
+                                item.videoName,
+                                true,
+                                ""
                             )
                         }
                     }
+            ) {
+                Row {
+                    Box {
+                        /*convert millis to appropriate time*/
+                        val runTimeString = remember {
+                            val duration = item.videoDuration
+                            if (duration > TimeUnit.HOURS.toMillis(1)) {
+                                String.format(
+                                    "%02d:%02d:%02d",
+                                    TimeUnit.MILLISECONDS.toHours(duration),
+                                    TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
+                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+                                )
+                            } else {
+                                String.format(
+                                    "%02d:%02d",
+                                    TimeUnit.MILLISECONDS.toMinutes(duration),
+                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
+                                )
+                            }
+                        }
 
-                    GlideImage(
-                        imageModel = { item.assetFileStringUri.orEmpty() },
-                        imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                        requestBuilder = {
-                            Glide.with(LocalView.current)
-                                .asDrawable()
-                                .thumbnail(0.5f)
-                        },
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH),
-                        failure = { Text(text = "image request failed.") }
-                    )
-
-                    Text(
-                        runTimeString,
-                        color = Color.White,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .background(Color(0x99000000))
-                            .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 5.dp))
-                    )
-
-                }
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp, top = 4.dp)
-                ) {
-                    val shared = context.getSharedPreferences("videos", Context.MODE_PRIVATE)
-                    if (shared.contains(item.assetFileStringUri))
-                        Text(shared.getLong(item.assetFileStringUri, 0).stringForTime(), style = M3MaterialTheme.typography.labelMedium)
-                    Text(item.videoName.orEmpty(), style = M3MaterialTheme.typography.titleSmall)
-                    Text(item.path.orEmpty(), style = M3MaterialTheme.typography.bodyMedium, fontSize = 10.sp)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Top)
-                        .padding(horizontal = 2.dp)
-                ) {
-
-                    var showDropDown by remember { mutableStateOf(false) }
-
-                    val dropDownDismiss = { showDropDown = false }
-
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = showDropDown,
-                        onDismissRequest = dropDownDismiss
-                    ) {
-                        androidx.compose.material3.DropdownMenuItem(
-                            onClick = {
-                                dropDownDismiss()
-                                showDialog.value = true
+                        GlideImage(
+                            imageModel = { item.assetFileStringUri.orEmpty() },
+                            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
+                            requestBuilder = {
+                                Glide.with(LocalView.current)
+                                    .asDrawable()
+                                    .thumbnail(0.5f)
                             },
-                            text = { Text(stringResource(R.string.remove)) }
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH),
+                            failure = { Text(text = "image request failed.") }
                         )
+
+                        Text(
+                            runTimeString,
+                            color = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .background(Color(0x99000000))
+                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 4.dp))
+                        )
+
                     }
 
-                    IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp, top = 4.dp)
+                    ) {
+                        val shared = context.getSharedPreferences("videos", Context.MODE_PRIVATE)
+                        if (shared.contains(item.assetFileStringUri))
+                            Text(shared.getLong(item.assetFileStringUri, 0).stringForTime(), style = M3MaterialTheme.typography.labelMedium)
+                        Text(item.videoName.orEmpty(), style = M3MaterialTheme.typography.titleSmall)
+                        Text(item.path.orEmpty(), style = M3MaterialTheme.typography.bodyMedium, fontSize = 10.sp)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Top)
+                            .padding(horizontal = 2.dp)
+                    ) {
+
+                        var showDropDown by remember { mutableStateOf(false) }
+
+                        val dropDownDismiss = { showDropDown = false }
+
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss
+                        ) {
+                            androidx.compose.material3.DropdownMenuItem(
+                                onClick = {
+                                    dropDownDismiss()
+                                    showDialog = true
+                                },
+                                text = { Text(stringResource(R.string.remove)) }
+                            )
+                        }
+
+                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                    }
                 }
             }
         }
-    }
+    )
 }
