@@ -68,7 +68,7 @@ jobs:
       - if: github.event.inputs.build_mangaworld == 'true'
         name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           generate-job-summary: true
           arguments: mangaworld:assembleRelease
@@ -76,7 +76,7 @@ jobs:
       - if: github.event.inputs.build_animeworld == 'true'
         name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           generate-job-summary: true
           arguments: animeworld:assembleRelease
@@ -84,7 +84,7 @@ jobs:
       - if: github.event.inputs.build_animeworldtv == 'true'
         name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           generate-job-summary: true
           arguments: animeworldtv:assembleRelease
@@ -92,7 +92,7 @@ jobs:
       - if: github.event.inputs.build_novelworld == 'true'
         name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           generate-job-summary: true
           arguments: novelworld:assembleRelease

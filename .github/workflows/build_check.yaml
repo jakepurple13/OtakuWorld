@@ -75,7 +75,7 @@ jobs:
       - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
         name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -85,7 +85,7 @@ jobs:
       - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
         name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -95,7 +95,7 @@ jobs:
       - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
         name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -105,7 +105,7 @@ jobs:
       - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
         name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
