@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -97,7 +99,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @OptIn(
         ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
-        ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
+        ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
+        ExperimentalMaterial3WindowSizeClassApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -331,7 +334,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             ) {
                                 DetailsScreen(
                                     logo = notificationLogo,
-                                    windowSize = rememberWindowSizeClass()
+                                    windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
                                 )
                             }
 

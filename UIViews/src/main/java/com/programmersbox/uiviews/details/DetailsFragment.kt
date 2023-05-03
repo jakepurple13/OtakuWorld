@@ -19,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -72,7 +74,7 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 @Composable
 fun DetailsScreen(
     logo: NotificationLogo,
-    windowSize: WindowSize,
+    windowSize: WindowSizeClass,
     localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
@@ -147,8 +149,7 @@ fun DetailsScreen(
                     Lifecycle.Event.ON_CREATE -> statusBarColor?.value ?: statusBar
                     Lifecycle.Event.ON_START -> statusBarColor?.value ?: statusBar
                     Lifecycle.Event.ON_RESUME -> statusBarColor?.value ?: statusBar
-                    Lifecycle.Event.ON_PAUSE -> statusBarColor?.value ?: statusBar
-                    Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
+                    Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
                     Lifecycle.Event.ON_ANY -> statusBarColor?.value ?: statusBar
                 }
             }
@@ -167,8 +168,7 @@ fun DetailsScreen(
             LocalSwatchChange provides rememberUpdatedState(newValue = { it: SwatchInfo? -> swatchInfo = it }).value
         ) {
             if (
-                windowSize == WindowSize.Medium ||
-                windowSize == WindowSize.Expanded ||
+                windowSize.heightSizeClass == WindowHeightSizeClass.Compact &&
                 orientation == Configuration.ORIENTATION_LANDSCAPE
             ) {
                 DetailsViewLandscape(
