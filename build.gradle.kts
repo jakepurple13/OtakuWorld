@@ -1,5 +1,3 @@
-import com.android.build.gradle.api.AndroidBasePlugin
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -8,8 +6,6 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath(libs.gradle)
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
         classpath(libs.google.services)
         classpath(libs.firebase.crashlytics.gradle)
         classpath("com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${libs.versions.latestAboutLibsRelease.get()}")
@@ -33,15 +29,35 @@ allprojects {
 
 subprojects {
     afterEvaluate {
-        if (plugins.findPlugin(AndroidBasePlugin::class) != null) {
-            configureAndroidBasePlugin()
+        configureKotlinCompile()
+        when {
+            plugins.hasPlugin("otaku-library") -> {
+                println("Otaku Library")
+            }
+
+            plugins.hasPlugin("otaku-application") -> configureAndroidBasePlugin()
         }
     }
 }
 
 fun Project.configureAndroidBasePlugin() {
     extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+        compileOptions {
+            isCoreLibraryDesugaringEnabled = true
+        }
 
+        dependencies {
+            val coreLibraryDesugaring by configurations
+            coreLibraryDesugaring(libs.coreLibraryDesugaring)
+        }
+    }
+}
+
+fun Project.configureKotlinCompile() {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
     }
 }
 

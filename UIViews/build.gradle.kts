@@ -1,42 +1,18 @@
-import com.google.protobuf.gradle.*
+import com.google.protobuf.gradle.generateProtoTasks
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.plugins
+import com.google.protobuf.gradle.protobuf
+import com.google.protobuf.gradle.protoc
 
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
-    kotlin("kapt")
     id("kotlinx-serialization")
     id("com.google.protobuf") version "0.8.17"
+    alias(libs.plugins.ksp)
 }
 
 android {
-    compileSdk = AppInfo.compileVersion
-    buildToolsVersion = AppInfo.buildVersion
-
-    defaultConfig {
-        minSdk = AppInfo.minimumSdk
-        targetSdk = AppInfo.targetSdk
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-proguard-rules.pro")
-    }
-
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
     buildFeatures {
         dataBinding = true
         viewBinding = true
@@ -112,7 +88,7 @@ dependencies {
     implementation(libs.aboutLibrariesCompose)
 
     implementation(libs.glide)
-    kapt(libs.glideCompiler)
+    ksp(libs.glideCompiler)
 
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }

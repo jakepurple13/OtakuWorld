@@ -637,7 +637,7 @@ internal fun DetailsHeader(
                                 ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
-                        Crossfade(targetState = isFavorite) { target ->
+                        Crossfade(targetState = isFavorite, label = "") { target ->
                             Text(
                                 stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
                                 style = M3MaterialTheme.typography.headlineSmall,
