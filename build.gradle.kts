@@ -1,4 +1,4 @@
-import com.android.build.gradle.api.AndroidBasePlugin
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
@@ -33,15 +33,134 @@ allprojects {
 
 subprojects {
     afterEvaluate {
-        if (plugins.findPlugin(AndroidBasePlugin::class) != null) {
-            configureAndroidBasePlugin()
+        configureKotlinCompile()
+        when {
+            plugins.hasPlugin("otaku-library") -> configureAndroidLibraryPlugin()
+            plugins.hasPlugin("otaku-application") -> configureAndroidBasePlugin()
+        }
+
+        afterEvaluate {
+            useGoogleType()
+        }
+    }
+}
+
+fun Project.useGoogleType() {
+    extensions.findByType<BaseAppModuleExtension>()?.apply {
+        applicationVariants.forEach { variant ->
+            println(variant.name)
+            val googleTask = tasks.findByName("process${variant.name.capitalize()}GoogleServices")
+            googleTask?.enabled = "noFirebase" != variant.flavorName
         }
     }
 }
 
 fun Project.configureAndroidBasePlugin() {
     extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+        compileSdkVersion(AppInfo.compileVersion)
+        buildToolsVersion(AppInfo.buildVersion)
 
+        defaultConfig {
+            minSdk = AppInfo.minimumSdk
+            targetSdk = AppInfo.targetSdk
+            versionCode = 1
+            versionName = AppInfo.otakuVersionName
+
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+
+        compileOptions {
+            isCoreLibraryDesugaringEnabled = true
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+
+        buildFeatures.compose = true
+
+        composeOptions {
+            useLiveLiterals = true
+            kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
+        }
+
+        packagingOptions {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}:"
+            }
+        }
+
+        buildTypes {
+            getByName("release") {
+                isMinifyEnabled = false
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                )
+            }
+            getByName("debug") {
+                extra["enableCrashlytics"] = false
+            }
+            create("beta") {
+                initWith(getByName("debug"))
+                matchingFallbacks.addAll(listOf("debug", "release"))
+                isDebuggable = false
+            }
+        }
+
+        flavorDimensions("version")
+        productFlavors {
+            create("noFirebase") {
+                dimension("version")
+                versionNameSuffix("-noFirebase")
+                applicationIdSuffix(".noFirebase")
+            }
+            create("full") {
+                dimension("version")
+            }
+        }
+
+        dependencies {
+            val coreLibraryDesugaring by configurations
+            coreLibraryDesugaring(libs.coreLibraryDesugaring)
+        }
+    }
+}
+
+fun Project.configureKotlinCompile() {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+}
+
+fun Project.configureAndroidLibraryPlugin() {
+    extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+        compileSdkVersion(AppInfo.compileVersion)
+        buildToolsVersion(AppInfo.buildVersion)
+
+        defaultConfig {
+            minSdk = AppInfo.minimumSdk
+            targetSdk = AppInfo.targetSdk
+            versionCode = 1
+            versionName = AppInfo.otakuVersionName
+
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+
+        packagingOptions {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}:"
+            }
+        }
+
+        dependencies {
+
+        }
     }
 }
 
