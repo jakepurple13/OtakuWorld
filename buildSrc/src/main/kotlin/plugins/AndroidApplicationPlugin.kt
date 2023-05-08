@@ -4,9 +4,11 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.kotlin
 import org.gradle.kotlin.dsl.provideDelegate
@@ -28,6 +30,8 @@ class AndroidApplicationPlugin : Plugin<Project> {
             }
         }
     }
+
+    private val Project.libs get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
     fun Project.configureAndroidBasePlugin() {
         extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
@@ -52,6 +56,7 @@ class AndroidApplicationPlugin : Plugin<Project> {
 
             composeOptions {
                 useLiveLiterals = true
+                kotlinCompilerExtensionVersion = libs.findVersion("jetpackCompiler").get().requiredVersion
             }
 
             packagingOptions {

@@ -46,10 +46,6 @@ fun Project.configureAndroidBasePlugin() {
             isCoreLibraryDesugaringEnabled = true
         }
 
-        composeOptions {
-            kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
-        }
-
         dependencies {
             val coreLibraryDesugaring by configurations
             coreLibraryDesugaring(libs.coreLibraryDesugaring)
