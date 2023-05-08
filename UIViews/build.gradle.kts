@@ -7,9 +7,9 @@ import com.google.protobuf.gradle.protoc
 plugins {
     id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
-    kotlin("kapt")
     id("kotlinx-serialization")
     id("com.google.protobuf") version "0.8.17"
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -88,7 +88,7 @@ dependencies {
     implementation(libs.aboutLibrariesCompose)
 
     implementation(libs.glide)
-    kapt(libs.glideCompiler)
+    ksp(libs.glideCompiler)
 
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
