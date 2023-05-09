@@ -49,7 +49,7 @@ android {
     namespace = "com.programmersbox.animeworldtv"
 
     configurations.all {
-        resolutionStrategy.force("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+        resolutionStrategy.force(libs.lifecycleViewModel)
     }
 }
 
