@@ -8,11 +8,14 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.findByType
+import kotlin.reflect.KClass
 
-abstract class AndroidPluginBase : Plugin<Project> {
+abstract class AndroidPluginBase<T: BaseExtension>(
+    private val clazz: KClass<T>
+) : Plugin<Project> {
 
     abstract fun Project.projectSetup()
-    abstract fun BaseExtension.androidConfig(project: Project)
+    abstract fun T.androidConfig(project: Project)
 
     override fun apply(target: Project) {
         target.projectSetup()
@@ -32,7 +35,7 @@ abstract class AndroidPluginBase : Plugin<Project> {
     }
 
     fun Project.configureAndroidBase() {
-        extensions.findByType<BaseExtension>()?.apply {
+        extensions.findByType(clazz)?.apply {
             androidConfig(this@configureAndroidBase)
             compileSdkVersion(AppInfo.compileVersion)
             buildToolsVersion(AppInfo.buildVersion)

@@ -1,15 +1,16 @@
 package plugins
 
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Project
 
-class AndroidApplicationPlugin : AndroidPluginBase() {
+class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppModuleExtension::class) {
 
     override fun Project.projectSetup() {
         pluginManager.apply("com.android.application")
     }
 
-    override fun BaseExtension.androidConfig(project: Project) {
+    override fun BaseAppModuleExtension.androidConfig(project: Project) {
         buildFeatures.compose = true
 
         composeOptions {
@@ -28,11 +29,11 @@ class AndroidApplicationPlugin : AndroidPluginBase() {
             ApplicationBuildTypes.Beta.setup(this)
         }
 
-        flavorDimensions(ProductFlavorTypes.dimension)
+        flavorDimensions.add(ProductFlavorTypes.dimension)
         productFlavors {
             ProductFlavorTypes.NoFirebase(this) {
-                versionNameSuffix("-noFirebase")
-                applicationIdSuffix(".noFirebase")
+                versionNameSuffix = "-noFirebase"
+                applicationIdSuffix = ".noFirebase"
             }
             ProductFlavorTypes.Full(this)
         }

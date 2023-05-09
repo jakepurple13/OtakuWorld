@@ -2,7 +2,7 @@ package plugins
 
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.LibraryProductFlavor
-import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.api.dsl.ProductFlavor
 import org.gradle.api.NamedDomainObjectContainer
 
 enum class ProductFlavorTypes(
@@ -11,25 +11,7 @@ enum class ProductFlavorTypes(
     NoFirebase("noFirebase"),
     Full("full");
 
-    operator fun invoke(receiver: NamedDomainObjectContainer<ProductFlavor>, block: ProductFlavor.() -> Unit = {}) {
-        with(receiver) {
-            create(nameType) {
-                dimension = "version"
-                block()
-            }
-        }
-    }
-
-    fun librarySetup(receiver: NamedDomainObjectContainer<LibraryProductFlavor>, block: LibraryProductFlavor.() -> Unit = {}) {
-        with(receiver) {
-            create(nameType) {
-                dimension = "version"
-                block()
-            }
-        }
-    }
-
-    fun applicationSetup(receiver: NamedDomainObjectContainer<ApplicationProductFlavor>, block: ApplicationProductFlavor.() -> Unit = {}) {
+    operator fun <T: ProductFlavor> invoke(receiver: NamedDomainObjectContainer<T>, block: T.() -> Unit = {}) {
         with(receiver) {
             create(nameType) {
                 dimension = "version"

@@ -8,8 +8,8 @@ plugins {
 android {
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
-        ProductFlavorTypes.NoFirebase.librarySetup(this)
-        ProductFlavorTypes.Full.librarySetup(this)
+        ProductFlavorTypes.NoFirebase(this)
+        ProductFlavorTypes.Full(this)
     }
 
     sourceSets {

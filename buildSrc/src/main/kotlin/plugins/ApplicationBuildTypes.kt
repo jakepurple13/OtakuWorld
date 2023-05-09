@@ -1,6 +1,7 @@
 package plugins
 
-import com.android.build.gradle.internal.dsl.BuildType
+import com.android.build.api.dsl.ApplicationBuildType
+import com.android.build.api.dsl.BuildType
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.kotlin.dsl.extra
 
@@ -9,7 +10,7 @@ enum class ApplicationBuildTypes(
 ) {
 
     Release("release") {
-        override fun NamedDomainObjectContainer<BuildType>.setupBuildType(block: BuildType.() -> Unit) {
+        override fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit) {
             getByName(buildTypeName) {
                 isMinifyEnabled = false
                 block()
@@ -17,7 +18,7 @@ enum class ApplicationBuildTypes(
         }
     },
     Debug("debug") {
-        override fun NamedDomainObjectContainer<BuildType>.setupBuildType(block: BuildType.() -> Unit) {
+        override fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit) {
             getByName(buildTypeName) {
                 extra["enableCrashlytics"] = false
                 block()
@@ -25,16 +26,18 @@ enum class ApplicationBuildTypes(
         }
     },
     Beta("beta") {
-        override fun NamedDomainObjectContainer<BuildType>.setupBuildType(block: BuildType.() -> Unit) {
+        override fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit) {
             create(buildTypeName) {
                 initWith(getByName(Debug.buildTypeName))
                 matchingFallbacks.addAll(values().filter { it != Beta }.map(ApplicationBuildTypes::buildTypeName))
-                isDebuggable = false
+                if(this is ApplicationBuildType) {
+                    isDebuggable = false
+                }
                 block()
             }
         }
     };
 
-    protected abstract fun NamedDomainObjectContainer<BuildType>.setupBuildType(block: BuildType.() -> Unit)
-    fun setup(container: NamedDomainObjectContainer<BuildType>, block: BuildType.() -> Unit = {}) = container.setupBuildType(block)
+    protected abstract fun <T: BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit)
+    fun <T: BuildType> setup(container: NamedDomainObjectContainer<T>, block: T.() -> Unit = {}) = container.setupBuildType(block)
 }

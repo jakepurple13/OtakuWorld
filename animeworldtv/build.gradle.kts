@@ -43,8 +43,8 @@ android {
 
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
-        ProductFlavorTypes.NoFirebase.applicationSetup(this)
-        ProductFlavorTypes.Full.applicationSetup(this)
+        ProductFlavorTypes.NoFirebase(this)
+        ProductFlavorTypes.Full(this)
     }
     namespace = "com.programmersbox.animeworldtv"
 
