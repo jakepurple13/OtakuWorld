@@ -36,7 +36,7 @@ media3Version = "1.0.1"
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.8.20-1.0.11" }
+ksp = { id = "com.google.devtools.ksp", version = "1.8.21-1.0.11" }
 
 [libraries]
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
