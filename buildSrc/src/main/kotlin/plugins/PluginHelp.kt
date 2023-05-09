@@ -50,16 +50,3 @@ enum class ProductFlavorTypes(
         val dimension = "version"
     }
 }
-
-
-/*
-setFlavorDimensions(listOf("version"))
-    productFlavors {
-        create("noFirebase") {
-            dimension = "version"
-        }
-        create("full") {
-            dimension = "version"
-        }
-    }
- */
