@@ -41,7 +41,7 @@ android {
         jvmTarget = "1.8"
     }
 
-    setFlavorDimensions(listOf("version"))
+    setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
         ProductFlavorTypes.NoFirebase.applicationSetup(this)
         ProductFlavorTypes.Full.applicationSetup(this)

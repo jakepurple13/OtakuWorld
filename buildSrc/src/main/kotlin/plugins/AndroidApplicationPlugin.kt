@@ -46,7 +46,7 @@ class AndroidApplicationPlugin : AndroidPluginBase() {
             }
         }
 
-        flavorDimensions("version")
+        flavorDimensions(ProductFlavorTypes.dimension)
         productFlavors {
             ProductFlavorTypes.NoFirebase(this) {
                 versionNameSuffix("-noFirebase")

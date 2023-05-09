@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    setFlavorDimensions(listOf("version"))
+    setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
         ProductFlavorTypes.NoFirebase.librarySetup(this)
         ProductFlavorTypes.Full.librarySetup(this)
