@@ -102,7 +102,7 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
 lottieCompose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
 
 koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
-koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.0" }
+koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.4" }
 
 roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
