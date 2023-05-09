@@ -10,7 +10,6 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -842,18 +841,17 @@ private fun ZoomableImage(
     var offset by remember { mutableStateOf(Offset.Zero) }
 
     val scaleAnim by animateFloatAsState(
-        targetValue = scale
-    ) {
-        if (scale == 1f) offset = Offset.Zero
-    }
+        targetValue = scale,
+        label = ""
+    ) { if (scale == 1f) offset = Offset.Zero }
 
-    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+    /*val state = rememberTransformableState { zoomChange, offsetChange, _ ->
         scale *= zoomChange
         scale = scale.coerceIn(1f, 5f)
 
         offset += offsetChange
         offset = clampOffset(centerPoint, offset, scale)
-    }
+    }*/
 
     BoxWithConstraints(
         modifier = modifier
@@ -869,26 +867,29 @@ private fun ZoomableImage(
                 interactionSource = remember { MutableInteractionSource() }
             )
         //TODO: In compose 1.4.0-rc01, these seem to be consuming drags
-        //.transformable(state)
-        /*.pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onClick() },
-                    onDoubleTap = {
-                        when {
-                            scale > 2f -> {
-                                scale = 1f
-                            }
+        /*.transformable(
+            state = state,
+            enabled = transform
+        )
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onTap = { onClick() },
+                onDoubleTap = {
+                    when {
+                        scale > 2f -> {
+                            scale = 1f
+                        }
 
-                            else -> {
-                                scale = 3f
+                        else -> {
+                            scale = 3f
 
-                                offset = (centerPoint - it) * (scale - 1)
-                                offset = clampOffset(centerPoint, offset, scale)
-                            }
+                            offset = (centerPoint - it) * (scale - 1)
+                            offset = clampOffset(centerPoint, offset, scale)
                         }
                     }
-                )
-            }*/
+                }
+            )
+        }*/
     ) {
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }

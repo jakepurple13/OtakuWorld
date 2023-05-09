@@ -6,6 +6,9 @@ import app.cash.zipline.QuickJs
 import com.programmersbox.manga_sources.Sources
 import com.programmersbox.manga_sources.utilities.*
 import com.programmersbox.models.*
+import com.programmersbox.source_utilities.NetworkHelper
+import com.programmersbox.source_utilities.asJsoup
+import com.programmersbox.source_utilities.cloudflare
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive

@@ -25,6 +25,7 @@
             <option value="$PROJECT_DIR$/novel_sources" />
             <option value="$PROJECT_DIR$/novelworld" />
             <option value="$PROJECT_DIR$/sharedutils" />
+            <option value="$PROJECT_DIR$/source_utilities" />
           </set>
         </option>
       </GradleProjectSettings>

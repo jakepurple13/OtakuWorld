@@ -7,11 +7,11 @@ import androidx.core.os.LocaleListCompat
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.putObject
 import com.programmersbox.manga_sources.Sources
-import com.programmersbox.manga_sources.utilities.AndroidCookieJar
 import com.programmersbox.manga_sources.utilities.GET
-import com.programmersbox.manga_sources.utilities.NetworkHelper
-import com.programmersbox.manga_sources.utilities.cloudflare
 import com.programmersbox.models.*
+import com.programmersbox.source_utilities.AndroidCookieJar
+import com.programmersbox.source_utilities.NetworkHelper
+import com.programmersbox.source_utilities.cloudflare
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers

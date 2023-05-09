@@ -23,7 +23,7 @@ workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.12"
 protobufVersion = "3.21.12"
-composeBomVersion = "2023.04.00-alpha01"
+composeBomVersion = "2023.04.00-alpha03"
 
 ### MangaWorld
 piasy = "1.8.1"

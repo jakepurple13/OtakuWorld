@@ -14,6 +14,7 @@ include(
     ":novel_sources",
     ":animeworldtv",
     ":sharedutils",
+    ":source_utilities",
     //":otakumanager",
 )
 

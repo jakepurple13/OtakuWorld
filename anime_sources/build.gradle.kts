@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.retrofitGson)
 
     implementation(projects.models)
+    api(projects.sourceUtilities)
 
     implementation(libs.bundles.koinLibs)
 
