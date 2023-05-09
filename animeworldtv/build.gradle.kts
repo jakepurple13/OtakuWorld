@@ -1,3 +1,5 @@
+import plugins.ProductFlavorTypes
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -41,12 +43,8 @@ android {
 
     setFlavorDimensions(listOf("version"))
     productFlavors {
-        create("noFirebase") {
-            dimension = "version"
-        }
-        create("full") {
-            dimension = "version"
-        }
+        ProductFlavorTypes.NoFirebase.applicationSetup(this)
+        ProductFlavorTypes.Full.applicationSetup(this)
     }
     namespace = "com.programmersbox.animeworldtv"
 
@@ -56,9 +54,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.kotlinStLib)
-    implementation(libs.androidCore)
-    implementation(libs.appCompat)
     implementation(libs.bundles.leanbackLibs)
     implementation(libs.glide)
     kapt(libs.glideCompiler)

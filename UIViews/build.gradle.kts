@@ -3,6 +3,7 @@ import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
+import plugins.ProductFlavorTypes
 
 plugins {
     id("otaku-library")
@@ -24,20 +25,13 @@ android {
 
     setFlavorDimensions(listOf("version"))
     productFlavors {
-        create("noFirebase") {
-            dimension = "version"
-        }
-        create("full") {
-            dimension = "version"
-        }
+        ProductFlavorTypes.NoFirebase.librarySetup(this)
+        ProductFlavorTypes.Full.librarySetup(this)
     }
     namespace = "com.programmersbox.uiviews"
 }
 
 dependencies {
-    implementation(libs.kotlinStLib)
-    implementation(libs.androidCore)
-    implementation(libs.appCompat)
     implementation(libs.material)
     implementation(libs.androidxLegacySupport)
     implementation(libs.preference)

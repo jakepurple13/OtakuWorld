@@ -15,9 +15,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.kotlinStLib)
-    implementation(libs.androidCore)
-    implementation(libs.appCompat)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)

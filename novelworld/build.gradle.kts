@@ -22,9 +22,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.kotlinStLib)
-    implementation(libs.androidCore)
-    implementation(libs.appCompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
     implementation(libs.recyclerview)

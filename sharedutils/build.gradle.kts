@@ -1,3 +1,5 @@
+import plugins.ProductFlavorTypes
+
 plugins {
     id("otaku-library")
     kotlin("kapt")
@@ -6,12 +8,8 @@ plugins {
 android {
     setFlavorDimensions(listOf("version"))
     productFlavors {
-        create("noFirebase") {
-            dimension = "version"
-        }
-        create("full") {
-            dimension = "version"
-        }
+        ProductFlavorTypes.NoFirebase.librarySetup(this)
+        ProductFlavorTypes.Full.librarySetup(this)
     }
 
     sourceSets {
@@ -29,9 +27,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.kotlinStLib)
-    implementation(libs.androidCore)
-    implementation(libs.appCompat)
     implementation(libs.material)
     testImplementation(TestDeps.junit)
     testImplementation("com.jakewharton.picnic:picnic:0.6.0")
