@@ -154,7 +154,7 @@ fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.5.1"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.6.3"
 
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
