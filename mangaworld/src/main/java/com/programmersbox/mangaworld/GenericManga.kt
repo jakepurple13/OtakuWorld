@@ -269,7 +269,11 @@ class GenericManga(val context: Context) : GenericInfo {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            itemsIndexed(list, key = { i, it -> "${it.url}$i" }) { _, it ->
+            itemsIndexed(
+                list,
+                key = { i, it -> "${it.url}$i" },
+                contentType = { _, i -> i }
+            ) { _, it ->
                 M3CoverCard(
                     onLongPress = { c -> onLongPress(it, c) },
                     imageUrl = it.imageUrl,
