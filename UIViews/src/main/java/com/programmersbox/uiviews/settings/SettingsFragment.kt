@@ -126,6 +126,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.compose.koinInject
 import java.io.File
 import java.util.Locale
 
@@ -199,6 +200,7 @@ fun SettingScreen(
 private fun SettingsScreen(
     dao: ItemDao = LocalItemDao.current,
     vm: SettingsViewModel = viewModel { SettingsViewModel(dao) },
+    logo: MainLogo = koinInject(),
     notificationClick: () -> Unit,
     composeSettingsDsl: ComposeSettingsDsl,
     debugMenuClick: () -> Unit,
@@ -207,6 +209,7 @@ private fun SettingsScreen(
     globalSearchClick: () -> Unit,
     listClick: () -> Unit,
 ) {
+    val context = LocalContext.current
     val navController = LocalNavController.current
     val source by sourceFlow.collectAsState(initial = null)
 
@@ -355,6 +358,17 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(R.string.more_info_category)) },
         settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.click { navController.navigate(Screen.MoreInfoSettings.route) }
+    )
+
+    PreferenceSetting(
+        settingIcon = {
+            Image(
+                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                null,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+        settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
     )
 
 }
