@@ -43,5 +43,6 @@ dependencies {
     implementation(libs.koinAndroid)
     implementation(libs.bundles.roomLibs)
 
+    implementation(platform(libs.composePlatform))
     implementation(libs.bundles.compose)
 }
