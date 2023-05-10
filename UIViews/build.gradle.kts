@@ -9,7 +9,7 @@ plugins {
     id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
-    id("com.google.protobuf") version "0.8.17"
+    id("com.google.protobuf") version "0.9.3"
     alias(libs.plugins.ksp)
 }
 
