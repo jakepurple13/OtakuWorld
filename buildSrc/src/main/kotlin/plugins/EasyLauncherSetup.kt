@@ -1,13 +1,11 @@
 package plugins
 
-import com.android.build.api.variant.AndroidComponentsExtension
 import com.project.starter.easylauncher.filter.ChromeLikeFilter
 import com.project.starter.easylauncher.plugin.EasyLauncherExtension
 import com.project.starter.easylauncher.plugin.EasyLauncherTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.findByType
-import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
 
 class EasyLauncherSetup : Plugin<Project> {
