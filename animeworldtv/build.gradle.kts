@@ -42,4 +42,6 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
     implementation(libs.koinAndroid)
     implementation(libs.bundles.roomLibs)
+
+    implementation(libs.bundles.compose)
 }
