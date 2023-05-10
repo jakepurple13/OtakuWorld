@@ -5,7 +5,7 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
-    id("com.starter.easylauncher") version "5.1.2"
+    id("otaku-easylauncher")
     alias(libs.plugins.ksp)
 }
 
@@ -72,7 +72,4 @@ dependencies {
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.glideCompose)
-
 }
-
-apply(from = "$rootDir/buildtypes.gradle")
