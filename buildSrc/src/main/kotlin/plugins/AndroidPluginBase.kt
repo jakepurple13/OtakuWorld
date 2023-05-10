@@ -8,6 +8,9 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.findByType
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Locale
 import kotlin.reflect.KClass
 
 abstract class AndroidPluginBase<T: BaseExtension>(
@@ -20,6 +23,7 @@ abstract class AndroidPluginBase<T: BaseExtension>(
     override fun apply(target: Project) {
         target.projectSetup()
         target.pluginManager.apply("kotlin-android")
+        target.tasks.withType<KotlinCompile> { kotlinOptions { jvmTarget = "1.8" } }
         target.configureAndroidBase()
         target.afterEvaluate { useGoogleType() }
     }
@@ -28,8 +32,10 @@ abstract class AndroidPluginBase<T: BaseExtension>(
         extensions.findByType<BaseAppModuleExtension>()?.apply {
             applicationVariants.forEach { variant ->
                 println(variant.name)
-                val googleTask = tasks.findByName("process${variant.name.capitalize()}GoogleServices")
-                googleTask?.enabled = "noFirebase" != variant.flavorName
+                val variantName = variant.name
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                val googleTask = tasks.findByName("process${variantName}GoogleServices")
+                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
             }
         }
     }
@@ -38,7 +44,6 @@ abstract class AndroidPluginBase<T: BaseExtension>(
         extensions.findByType(clazz)?.apply {
             androidConfig(this@configureAndroidBase)
             compileSdkVersion(AppInfo.compileVersion)
-            buildToolsVersion(AppInfo.buildVersion)
 
             defaultConfig {
                 minSdk = AppInfo.minimumSdk

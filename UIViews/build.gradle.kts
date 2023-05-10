@@ -1,15 +1,11 @@
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
 import plugins.ProductFlavorTypes
 
 plugins {
     id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
-    id("com.google.protobuf") version "0.8.17"
+    id("com.google.protobuf") version "0.9.3"
     alias(libs.plugins.ksp)
 }
 
@@ -117,11 +113,15 @@ dependencies {
 
 protobuf {
     protoc { artifact = "com.google.protobuf:protoc:3.23.0" }
+    plugins {
+        id("javalite") { artifact = libs.protobufJava.get().toString() }
+        id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }
+    }
     generateProtoTasks {
         all().forEach { task ->
-            task.plugins {
-                id("java") { option("lite") }
-                id("kotlin") { option("lite") }
+            task.builtins {
+                create("java") { option("lite") }
+                create("kotlin") { option("lite") }
             }
         }
     }

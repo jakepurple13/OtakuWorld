@@ -1,3 +1,4 @@
+import plugins.ApplicationBuildTypes
 import plugins.ProductFlavorTypes
 
 plugins {
@@ -6,12 +7,11 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
-    id("com.starter.easylauncher") version "5.1.2"
+    id("otaku-easylauncher")
 }
 
 android {
     compileSdk = AppInfo.compileVersion
-    buildToolsVersion = AppInfo.buildVersion
 
     defaultConfig {
         applicationId = "com.programmersbox.animeworldtv"
@@ -22,16 +22,13 @@ android {
     }
 
     buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
+        ApplicationBuildTypes.Release.setup(this) {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
         }
-        getByName("debug") {
-            extra["enableCrashlytics"] = false
-        }
+        ApplicationBuildTypes.Debug.setup(this)
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -78,5 +75,3 @@ dependencies {
     implementation(libs.koinAndroid)
     implementation(libs.bundles.roomLibs)
 }
-
-apply(from = "$rootDir/buildtypes.gradle")
