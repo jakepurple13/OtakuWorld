@@ -1,9 +1,5 @@
-import plugins.ApplicationBuildTypes
-import plugins.ProductFlavorTypes
-
 plugins {
-    id("com.android.application")
-    kotlin("android")
+    id("otaku-application")
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -11,38 +7,10 @@ plugins {
 }
 
 android {
-    compileSdk = AppInfo.compileVersion
-
     defaultConfig {
         applicationId = "com.programmersbox.animeworldtv"
-        minSdk = AppInfo.minimumSdk
-        targetSdk = AppInfo.targetSdk
-        versionCode = 1
-        versionName = AppInfo.otakuVersionName
     }
 
-    buildTypes {
-        ApplicationBuildTypes.Release.setup(this) {
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
-        }
-        ApplicationBuildTypes.Debug.setup(this)
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-
-    setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
-    productFlavors {
-        ProductFlavorTypes.NoFirebase(this)
-        ProductFlavorTypes.Full(this)
-    }
     namespace = "com.programmersbox.animeworldtv"
 
     configurations.all {
