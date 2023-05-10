@@ -1,5 +1,6 @@
 package plugins
 
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.project.starter.easylauncher.filter.ChromeLikeFilter
 import com.project.starter.easylauncher.plugin.EasyLauncherExtension
 import com.project.starter.easylauncher.plugin.EasyLauncherTask
@@ -18,22 +19,25 @@ class EasyLauncherSetup : Plugin<Project> {
             }
         }
 
-        /*target.afterEvaluate {
-            extensions.findByType<EasyLauncherExtension>()?.apply {
-                defaultFlavorNaming(true)
-                productFlavors.register(ProductFlavorTypes.NoFirebase.nameType) {
-                    filters(chromeLike())
-                }
+        //target.afterEvaluate { extensionSetup() }
+        //target.extensionSetup()
+    }
 
-                buildTypes.apply {
-                    register(ApplicationBuildTypes.Debug.buildTypeName) {
-                        filters(chromeLike(gravity = ChromeLikeFilter.Gravity.TOP))
-                    }
-                    register(ApplicationBuildTypes.Beta.buildTypeName) {
-                        filters(chromeLike(gravity = ChromeLikeFilter.Gravity.TOP))
-                    }
+    private fun Project.extensionSetup() {
+        extensions.findByType<EasyLauncherExtension>()?.apply {
+            defaultFlavorNaming(true)
+            productFlavors.getByName(ProductFlavorTypes.NoFirebase.nameType) {
+                filters(chromeLike())
+            }
+
+            buildTypes.apply {
+                getByName(ApplicationBuildTypes.Debug.buildTypeName) {
+                    filters(chromeLike(gravity = ChromeLikeFilter.Gravity.TOP))
+                }
+                getByName(ApplicationBuildTypes.Beta.buildTypeName) {
+                    filters(chromeLike(gravity = ChromeLikeFilter.Gravity.TOP))
                 }
             }
-        }*/
+        }
     }
 }
