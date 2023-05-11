@@ -33,7 +33,6 @@ import androidx.tv.material3.darkColorScheme
 import androidx.tv.material3.lightColorScheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
-
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun OtakuMaterialTheme(

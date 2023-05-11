@@ -270,6 +270,18 @@ compose = [
     "materialYou", "materialWindow",
     "navCompose", "navMaterial", "navAnimation", "systemUiController"
 ]
+composeTv = [
+    "composeUi", "composeUiTooling",
+    "composeMaterialIconsCore", "composeMaterialIconsExtended",
+    "composeAnimation",
+    "composeActivity", "composeLifecycle", "composeLifecycleRuntime",
+    "composeRuntimeLivedata",
+    "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
+    "coilCompose",
+    "composeConstraintLayout", "permissions",
+    "materialPlaceholder", "drawablePainter", "uiUtil",
+    "navCompose", "navMaterial", "navAnimation", "systemUiController"
+]
 media3 = [
     "exoplayer",
     "exoplayerDash", "exoplayerHls", "exoplayerRtsp", "exoplayerIma",
