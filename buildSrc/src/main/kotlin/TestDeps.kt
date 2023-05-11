@@ -1,5 +1,5 @@
 object TestDeps {
-    const val mockito = "4.6.1"
+    const val mockito = "4.11.0"
 
     const val mockitoCore = "org.mockito:mockito-core:$mockito"
     const val mockitoAndroid = "org.mockito:mockito-android:$mockito"
