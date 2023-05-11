@@ -42,7 +42,11 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
     implementation(libs.koinAndroid)
     implementation(libs.bundles.roomLibs)
+    implementation(libs.gson)
 
     implementation(platform(libs.composePlatform))
     implementation(libs.bundles.compose)
+    implementation(libs.coilGif)
+    implementation("androidx.tv:tv-foundation:1.0.0-alpha06")
+    implementation("androidx.tv:tv-material:1.0.0-alpha06")
 }
