@@ -132,7 +132,7 @@ fun DetailsScreen(
         val statusBarColor = swatchInfo?.rgb?.toComposeColor()?.animate()
 
         var c by remember { mutableStateOf(statusBar) }
-        val ac by animateColorAsState(c)
+        val ac by animateColorAsState(c, label = "")
 
         LaunchedEffect(ac) { systemUiController.setStatusBarColor(Color.Transparent, darkIcons = ac.luminance() > 0.5f) }
 
@@ -329,7 +329,7 @@ fun ChapterItem(
                 interactionSource = interactionSource,
             ) { markAs(c, !read.fastAny { it.url == c.url }) },
         colors = CardDefaults.elevatedCardColors(
-            containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface).value,
+            containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface, label = "").value,
         )
     ) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {

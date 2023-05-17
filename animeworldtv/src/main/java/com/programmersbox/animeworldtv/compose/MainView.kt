@@ -551,7 +551,6 @@ private fun MoviesRowItemText(
 class MainViewModel : ViewModel() {
 
     val randomShows = mutableStateListOf<ItemModel>()
-
     val shows = mutableStateMapOf<Char?, List<ItemModel>>()
 
     init {
