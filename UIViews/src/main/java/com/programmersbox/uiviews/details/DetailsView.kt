@@ -89,10 +89,12 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.lists.ListChoiceScreen
+import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -385,12 +387,16 @@ fun DetailsView(
                     exit = slideOutHorizontally { it / 2 } + fadeOut(),
                     label = ""
                 ) {
+                    val notificationManager = LocalContext.current.notificationManager
                     ExtendedFloatingActionButton(
                         onClick = {
                             scope.launch(Dispatchers.IO) {
                                 dao.getNotificationItemFlow(info.url)
                                     .firstOrNull()
-                                    ?.let { dao.deleteNotification(it) }
+                                    ?.let {
+                                        dao.deleteNotification(it)
+                                        notificationManager.cancelNotification(it)
+                                    }
                             }
                         },
                         text = { Text("Remove from Saved") },

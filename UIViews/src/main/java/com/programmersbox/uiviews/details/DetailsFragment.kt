@@ -42,6 +42,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
@@ -122,7 +123,7 @@ fun DetailsScreen(
 
         val handling = LocalSettingsHandling.current
 
-        val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsState(initial = false)
+        val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsStateWithLifecycle(false)
 
         val shareChapter by handling.shareChapter.collectAsState(initial = true)
         var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }

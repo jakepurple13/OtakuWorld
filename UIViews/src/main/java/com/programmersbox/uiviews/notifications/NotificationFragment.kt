@@ -58,7 +58,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
-private fun NotificationManager.cancelNotification(item: NotificationItem) {
+fun NotificationManager.cancelNotification(item: NotificationItem) {
     cancel(item.id)
     val g = activeNotifications.map { it.notification }.filter { it.group == "otakuGroup" }
     if (g.size == 1) cancel(42)
