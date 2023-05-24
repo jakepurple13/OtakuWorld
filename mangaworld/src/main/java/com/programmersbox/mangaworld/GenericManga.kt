@@ -54,8 +54,8 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.composable
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson

@@ -268,7 +268,7 @@ fun NotificationsScreen(
                                             Icon(
                                                 Icons.Default.ArrowDropDown,
                                                 null,
-                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
+                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
                                             )
                                         }
                                     )
@@ -393,7 +393,7 @@ private fun NotificationItem(
                     DismissValue.Default -> Color.Transparent
                     DismissValue.DismissedToEnd -> Color.Red
                     DismissValue.DismissedToStart -> Color.Red
-                }
+                }, label = ""
             )
             val alignment = when (direction) {
                 DismissDirection.StartToEnd -> Alignment.CenterStart
@@ -403,7 +403,7 @@ private fun NotificationItem(
                 DismissDirection.StartToEnd -> Icons.Default.Delete
                 DismissDirection.EndToStart -> Icons.Default.Delete
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -487,7 +487,14 @@ private fun NotificationItem(
                         var showTimePicker by remember { mutableStateOf(false) }
 
                         val dateState = rememberDatePickerState(
-                            initialSelectedDateMillis = System.currentTimeMillis()
+                            initialSelectedDateMillis = System.currentTimeMillis(),
+                            selectableDates = remember {
+                                object : SelectableDates {
+                                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                        return DateValidatorPointForward.now().isValid(utcTimeMillis)
+                                    }
+                                }
+                            }
                         )
                         val calendar = remember { Calendar.getInstance() }
                         val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
@@ -556,7 +563,6 @@ private fun NotificationItem(
                             ) {
                                 DatePicker(
                                     state = dateState,
-                                    dateValidator = { DateValidatorPointForward.now().isValid(it) },
                                     title = { Text(stringResource(R.string.selectDate)) }
                                 )
                             }

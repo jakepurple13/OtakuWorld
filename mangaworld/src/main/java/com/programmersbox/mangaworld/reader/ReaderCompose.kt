@@ -140,7 +140,12 @@ fun ReadView(
 
     val listOrPager by context.listOrPager.collectAsState(initial = true)
 
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) {
+        pages.size + 1
+    }
     val listState = rememberLazyListState()
     val currentPage by remember { derivedStateOf { if (listOrPager) listState.firstVisibleItemIndex else pagerState.currentPage } }
 
@@ -441,10 +446,10 @@ fun SheetView(
                                 .fillMaxSize()
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 .border(
-                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp).value,
+                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp, label = "").value,
                                     color = animateColorAsState(
                                         if (currentPage == i) MaterialTheme.colorScheme.primary
-                                        else Color.Transparent
+                                        else Color.Transparent, label = ""
                                     ).value
                                 )
                                 .clickable {
@@ -528,7 +533,6 @@ fun PagerView(
     VerticalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        pageCount = pages.size + 1,
         pageSpacing = itemSpacing,
         contentPadding = contentPadding,
         key = { it }
@@ -559,7 +563,7 @@ private fun LastPageReached(
     modifier: Modifier = Modifier,
     adRequest: AdRequest = remember { AdRequest.Builder().build() }
 ) {
-    val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f)
+    val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f, label = "")
 
     ChangeChapterSwipe(
         nextChapter = nextChapter,
@@ -757,7 +761,7 @@ fun ChangeChapterSwipe(
                 ),
             background = {
                 val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
-                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
                 val alignment = when (direction) {
                     DismissDirection.StartToEnd -> Alignment.CenterStart
@@ -847,7 +851,7 @@ private fun ZoomableImage(
 ) {
     var centerPoint by remember { mutableStateOf(Offset.Zero) }
 
-    var scale by remember { mutableStateOf(1f) }
+    var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
     val scaleAnim by animateFloatAsState(
@@ -959,9 +963,7 @@ private fun ZoomableImage(
                             }
                         }
                     },
-                    loading = {
-                        CircularProgressIndicator(modifier = Modifier.align(alignment))
-                    },
+                    loading = { CircularProgressIndicator(modifier = Modifier.align(alignment)) },
                     error = {
                         Text(
                             stringResource(R.string.pressToRefresh),
@@ -978,10 +980,10 @@ private fun ZoomableImage(
                     },
                     contentDescription = null,
                     contentScale = contentScale,
+                    alignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxSize()
                         .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .align(Alignment.Center)
                         .clipToBounds()
                 )
             }
@@ -1022,7 +1024,7 @@ private fun TopBar(
                     contentDescription = null,
                     tint = animateColorAsState(
                         if (vm.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                        else vm.batteryColor
+                        else vm.batteryColor, label = ""
                     ).value
                 )
                 Text(
@@ -1032,7 +1034,7 @@ private fun TopBar(
             }
         },
         title = {
-            var time by remember { mutableStateOf(System.currentTimeMillis()) }
+            var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
             val activity = LocalActivity.current
 
@@ -1102,7 +1104,7 @@ private fun BottomBar(
                             prevShown && nextShown -> 8f / 3f
                             prevShown || nextShown -> 4f
                             else -> 8f
-                        }
+                        }, label = ""
                     ).value
                 )
         )
@@ -1252,7 +1254,7 @@ private fun SliderSetting(
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>
 ) {
-    var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
+    var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 
     SliderSetting(
         sliderValue = sliderValue,

@@ -301,9 +301,12 @@ fun CheckView(closeClick: () -> Unit) {
 fun PagerView(closeClick: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val scope = rememberCoroutineScope()
-    val state = rememberPagerState()
-    val currentPage by remember { derivedStateOf { state.currentPage } }
     val pageCount = 5
+    val state = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) { pageCount }
+    val currentPage by remember { derivedStateOf { state.currentPage } }
     //TODO: Look at this for a number picker setting
     // https://github.com/ChargeMap/Compose-NumberPicker/blob/master/lib/src/main/kotlin/com/chargemap/compose/numberpicker/NumberPicker.kt
     Scaffold(
@@ -338,7 +341,6 @@ fun PagerView(closeClick: () -> Unit) {
             }
             HorizontalPager(
                 state = state,
-                pageCount = pageCount,
                 verticalAlignment = Alignment.Top
             ) { page ->
 

@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.core.net.toUri
 import androidx.navigation.*
-import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import java.net.URLEncoder
 
@@ -27,13 +26,13 @@ import java.net.URLEncoder
 fun rememberBottomSheetNavigator(
     animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
     skipHalfExpanded: Boolean = false,
-): BottomSheetNavigator {
+): BottomSheetNavigatorCustom {
     val sheetState = rememberModalBottomSheetState(
         ModalBottomSheetValue.Hidden,
         animationSpec,
         skipHalfExpanded = skipHalfExpanded,
     )
-    return remember(sheetState) { BottomSheetNavigator(sheetState = sheetState) }
+    return remember(sheetState) { BottomSheetNavigatorCustom(sheetState = sheetState) }
 }
 
 

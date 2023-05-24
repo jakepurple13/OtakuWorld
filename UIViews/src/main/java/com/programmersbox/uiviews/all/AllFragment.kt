@@ -63,7 +63,10 @@ fun AllView(
     val state = rememberLazyGridState()
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
     val scrollBehaviorTop = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) { 2 }
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
@@ -115,7 +118,7 @@ fun AllView(
             placeholder = logo.logoId,
             modifier = Modifier.padding(p1)
         ) { itemInfo ->
-            Crossfade(targetState = isConnected) { connected ->
+            Crossfade(targetState = isConnected, label = "") { connected ->
                 when (connected) {
                     false -> {
                         Column(
@@ -136,7 +139,6 @@ fun AllView(
                     }
                     true -> {
                         HorizontalPager(
-                            pageCount = 2,
                             state = pagerState,
                             contentPadding = p1
                         ) { page ->

@@ -103,7 +103,10 @@ fun RecentView(
 
     val sourceList = remember { info.sourceList() }
     val initSource = remember(source) { sourceList.indexOf(source) }
-    val pagerState = rememberPagerState(initSource.coerceAtLeast(0))
+    val pagerState = rememberPagerState(
+        initialPage = initSource.coerceAtLeast(0),
+        initialPageOffsetFraction = 0f
+    ) { info.sourceList().size }
     LaunchedEffect(initSource) {
         if (initSource != -1) pagerState.scrollToPage(initSource)
     }
@@ -138,7 +141,6 @@ fun RecentView(
                 },
                 actions = {
                     VerticalPager(
-                        pageCount = info.sourceList().size,
                         state = pagerState
                     ) {
                         Box(Modifier.fillMaxHeight()) {

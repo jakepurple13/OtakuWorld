@@ -34,15 +34,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -129,7 +128,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
-            navController = rememberAnimatedNavController(
+            navController = rememberNavController(
                 bottomSheetNavigator,
                 remember { ChromeCustomTabsNavigator(this) }
             )
@@ -150,8 +149,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                 val showAllItem by settingsHandling.showAll.collectAsState(false)
 
-                com.google.accompanist.navigation.material.ModalBottomSheetLayout(
-                    bottomSheetNavigator,
+                ModalBottomSheetLayout(
+                    bottomSheetNavigator = bottomSheetNavigator,
                     sheetBackgroundColor = MaterialTheme.colorScheme.surface,
                     sheetContentColor = MaterialTheme.colorScheme.onSurface,
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
@@ -219,7 +218,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        AnimatedNavHost(
+                        NavHost(
                             navController = navController,
                             startDestination = Screen.RecentScreen.route,
                             modifier = Modifier.padding(innerPadding)
@@ -393,5 +392,4 @@ abstract class BaseMainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         if (isNavInitialized()) navController.handleDeepLink(intent)
     }
-
 }
