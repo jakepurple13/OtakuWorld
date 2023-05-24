@@ -2,6 +2,7 @@ package com.programmersbox.mangaworld.reader
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -70,6 +71,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
+import com.github.panpf.sketch.compose.SubcomposeAsyncImage
+import com.github.panpf.sketch.decode.GifAnimatedDrawableDecoder
+import com.github.panpf.sketch.decode.GifDrawableDrawableDecoder
+import com.github.panpf.sketch.decode.HeifAnimatedDrawableDecoder
+import com.github.panpf.sketch.decode.WebpAnimatedDrawableDecoder
+import com.github.panpf.sketch.request.DisplayRequest
 import com.github.piasy.biv.BigImageViewer
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -527,7 +534,7 @@ fun PagerView(
         key = { it }
     ) { page ->
         pages.getOrNull(page)?.let {
-            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit)
+            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit, true)
         } ?: Box(modifier = Modifier.fillMaxSize()) {
             LastPageReached(
                 isLoading = vm.isLoadingPages,
@@ -788,7 +795,7 @@ fun ChangeChapterSwipe(
 }
 
 private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
-    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth) }
+    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth, false) }
     item {
         LastPageReached(
             isLoading = vm.isLoadingPages,
@@ -807,7 +814,8 @@ private fun ChapterPage(
     isDownloaded: Boolean,
     openCloseOverlay: () -> Unit,
     headers: Map<String, String>,
-    contentScale: ContentScale
+    contentScale: ContentScale,
+    isPagerView: Boolean,
 ) {
     Box(
         modifier = Modifier
@@ -821,7 +829,8 @@ private fun ChapterPage(
             onClick = openCloseOverlay,
             headers = headers,
             contentScale = contentScale,
-            isDownloaded = isDownloaded
+            isDownloaded = isDownloaded,
+            isPagerView = isPagerView
         )
     }
 }
@@ -833,6 +842,7 @@ private fun ZoomableImage(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    isPagerView: Boolean,
     onClick: () -> Unit = {}
 ) {
     var centerPoint by remember { mutableStateOf(Offset.Zero) }
@@ -895,38 +905,86 @@ private fun ZoomableImage(
         var showTheThing by remember { mutableStateOf(true) }
 
         if (showTheThing) {
-            val url = remember(painter) { GlideUrl(painter) { headers } }
-            GlideImage(
-                imageModel = { if (isDownloaded) painter else url },
-                imageOptions = ImageOptions(contentScale = contentScale),
-                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                failure = {
-                    Text(
-                        stringResource(R.string.pressToRefresh),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .clickable {
-                                scope.launch {
-                                    showTheThing = false
-                                    delay(1000)
-                                    showTheThing = true
+            if (isDownloaded || !isPagerView) {
+                val url = remember(painter) { GlideUrl(painter) { headers } }
+                GlideImage(
+                    imageModel = { if (isDownloaded) painter else url },
+                    imageOptions = ImageOptions(contentScale = contentScale),
+                    loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                    failure = {
+                        Text(
+                            stringResource(R.string.pressToRefresh),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .clickable {
+                                    scope.launch {
+                                        showTheThing = false
+                                        delay(1000)
+                                        showTheThing = true
+                                    }
                                 }
-                            }
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                    .align(Alignment.Center)
-                    .clipToBounds()
-                    .graphicsLayer {
-                        translationX = offset.x
-                        translationY = offset.y
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                        .graphicsLayer {
+                            translationX = offset.x
+                            translationY = offset.y
 
-                        scaleX = scaleAnim
-                        scaleY = scaleAnim
-                    }
-            )
+                            scaleX = scaleAnim
+                            scaleY = scaleAnim
+                        }
+                )
+            } else {
+                SubcomposeAsyncImage(
+                    request = DisplayRequest(LocalContext.current, painter) {
+                        crossfade()
+                        // There is a lot more...
+                        headers.forEach { (t, u) -> addHttpHeader(t, u) }
+                        components {
+                            addDrawableDecoder(
+                                when {
+                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> GifAnimatedDrawableDecoder.Factory()
+                                    else -> GifDrawableDrawableDecoder.Factory()
+                                }
+                            )
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                addDrawableDecoder(WebpAnimatedDrawableDecoder.Factory())
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                addDrawableDecoder(HeifAnimatedDrawableDecoder.Factory())
+                            }
+                        }
+                    },
+                    loading = {
+                        CircularProgressIndicator(modifier = Modifier.align(alignment))
+                    },
+                    error = {
+                        Text(
+                            stringResource(R.string.pressToRefresh),
+                            modifier = Modifier
+                                .align(alignment)
+                                .clickable {
+                                    scope.launch {
+                                        showTheThing = false
+                                        delay(1000)
+                                        showTheThing = true
+                                    }
+                                }
+                        )
+                    },
+                    contentDescription = null,
+                    contentScale = contentScale,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                )
+            }
         }
     }
 }

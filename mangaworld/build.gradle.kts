@@ -72,4 +72,6 @@ dependencies {
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.glideCompose)
+
+    implementation(libs.bundles.sketch)
 }

@@ -15,13 +15,14 @@ coil = "2.3.0"
 lifecycle = "2.6.1"
 jetpack = "1.5.0-alpha04"
 jetpackCompiler = "1.4.7"
-accompanist = "0.31.0-alpha"
+accompanist = "0.31.2-alpha"
 okhttpVersion = "4.10.0"
 ktorVersion = "2.3.0"
 workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.12"
 protobufVersion = "3.23.0"
+sketchVersion = "3.2.1-beta02"
 composeBomVersion = "2023.04.00-alpha03"
 
 ### MangaWorld
@@ -256,6 +257,11 @@ firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
 protobufKotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufVersion" }
 
+sketch-compose = { module = "io.github.panpf.sketch3:sketch-compose", version.ref = "sketchVersion" }
+sketch-zoom = { module = "io.github.panpf.sketch3:sketch-zoom", version.ref = "sketchVersion" }
+sketch-extensions = { module = "io.github.panpf.sketch3:sketch-extensions", version.ref = "sketchVersion" }
+sketch-gif = { module = "io.github.panpf.sketch3:sketch-gif-koral", version.ref = "sketchVersion" }
+
 [bundles]
 compose = [
     "composeUi", "composeUiTooling", "composeFoundation", "composeMaterial",
@@ -324,3 +330,5 @@ roomLibs = ["roomRuntime", "roomKtx"]
 pagingLibs = ["pagingRuntime", "roomPaging"]
 
 protobuf = ["protobufJava", "protobufKotlin"]
+
+sketch = ["sketch-compose", "sketch-extensions", "sketch-gif", "sketch-zoom"]
