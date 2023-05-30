@@ -138,7 +138,7 @@ iconicsCore = "com.mikepenz:iconics-core:5.4.0"
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
 firebaseAuth = "com.google.firebase:firebase-auth:22.0.0"
-googlePlayAds = "com.google.android.gms:play-services-ads:22.0.0"
+googlePlayAds = "com.google.android.gms:play-services-ads:22.1.0"
 
 pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha19"
 
