@@ -74,4 +74,6 @@ dependencies {
     implementation(libs.glideCompose)
 
     implementation(libs.bundles.sketch)
+
+    implementation(projects.imageloader)
 }

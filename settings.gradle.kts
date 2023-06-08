@@ -14,6 +14,7 @@ include(
     ":animeworldtv",
     ":sharedutils",
     ":source_utilities",
+    ":imageloader"
     //":otakumanager",
 )
 

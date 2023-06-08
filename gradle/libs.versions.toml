@@ -2,6 +2,7 @@
 firebaseCrashlyticsGradle = "2.9.5"
 googleServices = "4.3.15"
 gradle = "8.1.0-beta04"
+kamelImage = "0.5.1"
 kotlin = "1.8.21"
 latestAboutLibsRelease = "10.6.3"
 coroutinesVersion = "1.7.1"
@@ -23,8 +24,8 @@ workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.2.1"
 protobufVersion = "3.23.0"
-sketchVersion = "3.2.1-beta02"
-composeBomVersion = "2023.04.00-beta01.1"
+sketchVersion = "3.2.1-rc02"
+composeBomVersion = "2023.04.00-beta02"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -43,6 +44,7 @@ ksp = { id = "com.google.devtools.ksp", version = "1.8.21-1.0.11" }
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
+kamel-image = { module = "media.kamel:kamel-image", version.ref = "kamelImage" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
 palette = "androidx.palette:palette-ktx:1.0.0"
