@@ -289,7 +289,7 @@ fun ReadView(
                         .pullRefresh(pullRefreshState)
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
-                    Crossfade(targetState = listOrPager) {
+                    Crossfade(targetState = listOrPager, label = "") {
                         if (it) ListView(listState, PaddingValues(top = 64.dp, bottom = 80.dp), pages, readVm, spacing) {
                             readVm.showInfo = !readVm.showInfo
                         }
@@ -908,7 +908,7 @@ private fun ZoomableImage(
         var showTheThing by remember { mutableStateOf(true) }
 
         if (showTheThing) {
-            if (isDownloaded || !isPagerView) {
+            if (isDownloaded/* || !isPagerView*/) {
                 val url = remember(painter) { GlideUrl(painter) { headers } }
                 GlideImage(
                     imageModel = { if (isDownloaded) painter else url },
