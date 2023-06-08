@@ -173,6 +173,7 @@ fun DetailsView(
             onDismissRequest = { showLists = false },
         ) {
             ListChoiceScreen(
+                url = info.url,
                 onClick = { item ->
                     scope.launch {
                         showLists = false
