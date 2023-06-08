@@ -496,6 +496,7 @@ fun PagerView(
         modifier = Modifier.fillMaxSize(),
         pageSpacing = itemSpacing,
         contentPadding = contentPadding,
+        beyondBoundsPageCount = 1,
         key = { it }
     ) { page ->
         pages.getOrNull(page)?.let {

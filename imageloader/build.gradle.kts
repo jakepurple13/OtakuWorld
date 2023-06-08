@@ -39,7 +39,7 @@ kotlin {
 }
 
 compose {
-    kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:1.4.7")
+    kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:${libs.versions.jetpackCompiler.get()}")
 }
 
 android {
