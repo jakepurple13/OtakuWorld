@@ -20,6 +20,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/favoritesdatabase" />
+            <option value="$PROJECT_DIR$/imageloader" />
             <option value="$PROJECT_DIR$/manga_sources" />
             <option value="$PROJECT_DIR$/mangaworld" />
             <option value="$PROJECT_DIR$/novel_sources" />

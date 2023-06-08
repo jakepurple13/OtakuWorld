@@ -1,8 +1,8 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.mangaworld.reader
 
 import android.content.Context
-import android.net.Uri
-import android.os.Build
 import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -65,22 +65,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
-import com.github.panpf.sketch.compose.SubcomposeAsyncImage
-import com.github.panpf.sketch.decode.GifAnimatedDrawableDecoder
-import com.github.panpf.sketch.decode.GifDrawableDrawableDecoder
-import com.github.panpf.sketch.decode.HeifAnimatedDrawableDecoder
-import com.github.panpf.sketch.decode.WebpAnimatedDrawableDecoder
-import com.github.panpf.sketch.request.DisplayRequest
-import com.github.piasy.biv.BigImageViewer
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.*
@@ -90,6 +78,9 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
+import io.ktor.client.request.header
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -135,8 +126,6 @@ fun ReadView(
     val pullRefreshState = rememberPullRefreshState(refreshing = readVm.isLoadingPages, onRefresh = readVm::refresh)
 
     val pages = readVm.pageList
-
-    LaunchedEffect(readVm.pageList) { BigImageViewer.prefetch(*readVm.pageList.fastMap(Uri::parse).toTypedArray()) }
 
     val listOrPager by context.listOrPager.collectAsState(initial = true)
 
@@ -325,26 +314,15 @@ fun DrawerView(
                 title = { Text(readVm.title) },
                 actions = { PageIndicator(currentPage = readVm.list.size - readVm.currentChapter, pageCount = readVm.list.size) }
             )
-        },
-        bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release" && false) {
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    factory = {
-                        AdView(it).apply {
-                            setAdSize(AdSize.BANNER)
-                            adUnitId = context.getString(R.string.ad_unit_id)
-                            loadAd(readVm.ad)
-                        }
-                    }
-                )
-            }
         }
     ) { p ->
         LazyColumn(
-            state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
+            state = rememberLazyListState(
+                readVm.currentChapter.coerceIn(
+                    0,
+                    readVm.list.lastIndex.coerceIn(minimumValue = 0, maximumValue = Int.MAX_VALUE)
+                )
+            ),
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -413,22 +391,6 @@ fun SheetView(
                     }
                 }
             )
-        },
-        bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release" && false) {
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    factory = {
-                        AdView(it).apply {
-                            setAdSize(AdSize.BANNER)
-                            adUnitId = context.getString(R.string.ad_unit_id)
-                            loadAd(readVm.ad)
-                        }
-                    }
-                )
-            }
         }
     ) { p ->
         Crossfade(targetState = sheetState.isVisible, label = "") { target ->
@@ -537,7 +499,7 @@ fun PagerView(
         key = { it }
     ) { page ->
         pages.getOrNull(page)?.let {
-            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit, true)
+            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit)
         } ?: Box(modifier = Modifier.fillMaxSize()) {
             LastPageReached(
                 isLoading = vm.isLoadingPages,
@@ -545,7 +507,6 @@ fun PagerView(
                 chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
                 nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
                 previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-                adRequest = vm.ad,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
@@ -560,7 +521,6 @@ private fun LastPageReached(
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
     modifier: Modifier = Modifier,
-    adRequest: AdRequest = remember { AdRequest.Builder().build() }
 ) {
     val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f, label = "")
 
@@ -798,7 +758,7 @@ fun ChangeChapterSwipe(
 }
 
 private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
-    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth, false) }
+    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth) }
     item {
         LastPageReached(
             isLoading = vm.isLoadingPages,
@@ -806,7 +766,6 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
             chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
             nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
             previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-            adRequest = vm.ad
         )
     }
 }
@@ -818,7 +777,6 @@ private fun ChapterPage(
     openCloseOverlay: () -> Unit,
     headers: Map<String, String>,
     contentScale: ContentScale,
-    isPagerView: Boolean,
 ) {
     Box(
         modifier = Modifier
@@ -827,13 +785,12 @@ private fun ChapterPage(
         contentAlignment = Alignment.Center
     ) {
         ZoomableImage(
-            modifier = Modifier.fillMaxWidth(),
             painter = chapterLink,
-            onClick = openCloseOverlay,
-            headers = headers,
-            contentScale = contentScale,
             isDownloaded = isDownloaded,
-            isPagerView = isPagerView
+            headers = headers,
+            modifier = Modifier.fillMaxWidth(),
+            contentScale = contentScale,
+            onClick = openCloseOverlay
         )
     }
 }
@@ -845,7 +802,6 @@ private fun ZoomableImage(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    isPagerView: Boolean,
     onClick: () -> Unit = {}
 ) {
     var centerPoint by remember { mutableStateOf(Offset.Zero) }
@@ -908,7 +864,7 @@ private fun ZoomableImage(
         var showTheThing by remember { mutableStateOf(true) }
 
         if (showTheThing) {
-            if (isDownloaded/* || !isPagerView*/) {
+            if (isDownloaded) {
                 val url = remember(painter) { GlideUrl(painter) { headers } }
                 GlideImage(
                     imageModel = { if (isDownloaded) painter else url },
@@ -942,7 +898,34 @@ private fun ZoomableImage(
                         }
                 )
             } else {
-                SubcomposeAsyncImage(
+                KamelImage(
+                    resource = asyncPainterResource(painter) {
+                        requestBuilder {
+                            headers.forEach { (t, u) -> header(t, u) }
+                        }
+                    },
+                    onLoading = { CircularProgressIndicator(progress = it) },
+                    onFailure = {
+                        Text(
+                            stringResource(R.string.pressToRefresh),
+                            modifier = Modifier
+                                .clickable {
+                                    scope.launch {
+                                        showTheThing = false
+                                        delay(1000)
+                                        showTheThing = true
+                                    }
+                                }
+                        )
+                    },
+                    contentDescription = null,
+                    contentScale = contentScale,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .clipToBounds()
+                )
+                /*SubcomposeAsyncImage(
                     request = DisplayRequest(LocalContext.current, painter) {
                         crossfade()
                         // There is a lot more...
@@ -984,7 +967,7 @@ private fun ZoomableImage(
                         .fillMaxSize()
                         .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                         .clipToBounds()
-                )
+                )*/
             }
         }
     }
