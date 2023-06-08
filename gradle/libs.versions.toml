@@ -1,29 +1,30 @@
 [versions]
 firebaseCrashlyticsGradle = "2.9.5"
 googleServices = "4.3.15"
-gradle = "8.1.0-beta03"
+gradle = "8.1.0-beta04"
 kotlin = "1.8.21"
 latestAboutLibsRelease = "10.6.3"
 coroutinesVersion = "1.7.1"
 glideVersion = "4.15.1"
+navigationSafeArgsGradlePlugin = "2.6.0"
 pagingVersion = "3.1.1"
 roomVersion = "2.5.1"
-navVersion = "2.7.0-alpha01"
+navVersion = "2.7.0-beta01"
 koinVersion = "3.4.0"
 lottieVersion = "6.0.0"
 coil = "2.3.0"
 lifecycle = "2.6.1"
-jetpack = "1.5.0-beta01"
+jetpack = "1.5.0-beta02"
 jetpackCompiler = "1.4.7"
 accompanist = "0.31.2-alpha"
-okhttpVersion = "4.10.0"
-ktorVersion = "2.3.0"
+okhttpVersion = "4.11.0"
+ktorVersion = "2.3.1"
 workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
-landscapist = "2.1.12"
+landscapist = "2.2.1"
 protobufVersion = "3.23.0"
 sketchVersion = "3.2.1-beta02"
-composeBomVersion = "2023.04.00-beta01"
+composeBomVersion = "2023.04.00-beta01.1"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -43,6 +44,7 @@ firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlyti
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.10.1"
 
@@ -60,7 +62,7 @@ uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
-composeActivity = "androidx.activity:activity-compose:1.7.1"
+composeActivity = "androidx.activity:activity-compose:1.7.2"
 composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.1"
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
@@ -130,7 +132,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.5.7"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.6.0"
 stetho = "com.facebook.stetho:stetho:1.6.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.4.0"
@@ -138,14 +140,14 @@ iconicsCore = "com.mikepenz:iconics-core:5.4.0"
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
 firebaseAuth = "com.google.firebase:firebase-auth:22.0.0"
-googlePlayAds = "com.google.android.gms:play-services-ads:22.0.0"
+googlePlayAds = "com.google.android.gms:play-services-ads:22.1.0"
 
-pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha19"
+pagingCompose = "androidx.paging:paging-compose:3.2.0-beta01"
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 storage = "com.anggrayudi:storage:1.5.2"
 
-androidxWindow = "androidx.window:window:1.1.0-rc01"
+androidxWindow = "androidx.window:window:1.2.0-alpha02"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
 androidxBrowser = "androidx.browser:browser:1.5.0"
 
@@ -161,7 +163,7 @@ datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 jsoup = "org.jsoup:jsoup:1.16.1"
 
 crashlytics = "com.google.firebase:firebase-crashlytics:18.3.7"
-analytics = "com.google.firebase:firebase-analytics:21.2.2"
+analytics = "com.google.firebase:firebase-analytics:21.3.0"
 playServices = "com.google.android.gms:play-services-auth:20.5.0"
 
 preference = "androidx.preference:preference-ktx:1.2.0"
@@ -244,13 +246,13 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
-androidxWebkit = "androidx.webkit:webkit:1.6.1"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1"
+androidxWebkit = "androidx.webkit:webkit:1.7.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
-firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.2.1"
-firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.6.0"
+firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.2.2"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.6.1"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }

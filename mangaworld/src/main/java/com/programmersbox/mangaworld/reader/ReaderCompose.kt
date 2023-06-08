@@ -143,9 +143,8 @@ fun ReadView(
     val pagerState = rememberPagerState(
         initialPage = 0,
         initialPageOffsetFraction = 0f
-    ) {
-        pages.size + 1
-    }
+    ) { pages.size + 1 }
+
     val listState = rememberLazyListState()
     val currentPage by remember { derivedStateOf { if (listOrPager) listState.firstVisibleItemIndex else pagerState.currentPage } }
 

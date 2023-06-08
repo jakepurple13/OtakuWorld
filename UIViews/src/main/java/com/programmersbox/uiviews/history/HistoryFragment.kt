@@ -35,7 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
@@ -119,7 +120,12 @@ fun HistoryUi(
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(recentItems) { item ->
+            items(
+                count = recentItems.itemCount,
+                key = recentItems.itemKey { it.url },
+                contentType = recentItems.itemContentType { it }
+            ) {
+                val item = recentItems[it]
                 if (item != null) {
                     HistoryItem(item, dao, logo, scope)
                 } else {

@@ -26,7 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.items
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -224,13 +225,13 @@ private fun <T> DeleteItemView(
                     DismissValue.Default -> Color.Transparent
                     DismissValue.DismissedToEnd -> Color.Red
                     DismissValue.DismissedToStart -> Color.Red
-                }
+                }, label = ""
             )
             val alignment = when (direction) {
                 DismissDirection.StartToEnd -> Alignment.CenterStart
                 DismissDirection.EndToStart -> Alignment.CenterEnd
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -251,8 +252,8 @@ private fun <T> DeleteItemView(
                 onClick = { onAddOrRemove(item) },
                 modifier = Modifier.fillMaxSize(),
                 border = BorderStroke(
-                    animateDpAsState(targetValue = if (item in deleteItemList) 4.dp else 1.dp).value,
-                    animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline).value
+                    animateDpAsState(targetValue = if (item in deleteItemList) 4.dp else 1.dp, label = "").value,
+                    animateColorAsState(if (item in deleteItemList) Color(0xfff44336) else MaterialTheme.colorScheme.outline, label = "").value
                 )
             ) { itemUi(item) }
         }
@@ -382,8 +383,12 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
                     contentPadding = it,
                     modifier = Modifier.padding(4.dp)
                 ) {
-                    items(listOfItems, key = { i -> i.hashCode().toString() }) { i ->
-                        i?.let { d ->
+                    items(
+                        count = listOfItems.itemCount,
+                        key = listOfItems.itemKey { i -> i.hashCode().toString() },
+                        contentType = listOfItems.itemContentType { i -> i }
+                    ) { i ->
+                        listOfItems[i]?.let { d ->
                             DeleteItemView(
                                 item = d,
                                 selectedForDeletion = d in itemsToDelete,
@@ -454,13 +459,13 @@ private fun <T : Any> DeleteItemView(
                     DismissValue.Default -> Color.Transparent
                     DismissValue.DismissedToEnd -> Color.Red
                     DismissValue.DismissedToStart -> Color.Red
-                }
+                }, label = ""
             )
             val alignment = when (direction) {
                 DismissDirection.StartToEnd -> Alignment.CenterStart
                 DismissDirection.EndToStart -> Alignment.CenterEnd
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -483,8 +488,8 @@ private fun <T : Any> DeleteItemView(
                 modifier = Modifier.fillMaxSize(),
                 shape = MaterialTheme.shapes.medium,
                 border = BorderStroke(
-                    animateDpAsState(targetValue = if (selectedForDeletion) 4.dp else 1.dp).value,
-                    animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent).value
+                    animateDpAsState(targetValue = if (selectedForDeletion) 4.dp else 1.dp, label = "").value,
+                    animateColorAsState(if (selectedForDeletion) Color(0xfff44336) else Color.Transparent, label = "").value
                 )
             ) { itemUi(item) }
         }
