@@ -1,51 +1,18 @@
 plugins {
-    kotlin("multiplatform")
-    id("com.android.library")
-    id("org.jetbrains.compose")
+    id("otaku-multiplatform")
 }
 
-@OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
-kotlin {
-    targetHierarchy.default()
-
-    android {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "1.8"
-            }
-        }
+otakuDependencies {
+    commonDependencies {
+        implementation(compose.dependencies.runtime)
+        api(libs.kamel.image)
     }
 
-    sourceSets {
-        val commonMain by getting {
-            dependencies {
-                //put your multiplatform dependencies here
-                implementation(compose.runtime)
-                api(libs.kamel.image)
-            }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
-
-        val androidMain by getting {
-            dependencies {
-                api(libs.ktorAndroid)
-            }
-        }
+    androidDependencies {
+        api(libs.ktorAndroid)
     }
 }
 
 compose {
     kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:${libs.versions.jetpackCompiler.get()}")
-}
-
-android {
-    namespace = "com.programmersbox.imageloader"
-    compileSdk = 33
-    defaultConfig {
-        minSdk = 23
-    }
 }

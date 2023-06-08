@@ -26,6 +26,11 @@ gradlePlugin {
             id = "otaku-easylauncher"
             implementationClass = "plugins.EasyLauncherSetup"
         }
+
+        register("otaku-multiplatform") {
+            id = "otaku-multiplatform"
+            implementationClass = "plugins.MultiplatformLibraryPlugin"
+        }
     }
 }
 

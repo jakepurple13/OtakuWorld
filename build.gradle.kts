@@ -36,6 +36,10 @@ subprojects {
             }
 
             plugins.hasPlugin("otaku-application") -> configureAndroidBasePlugin()
+
+            plugins.hasPlugin("otaku-multiplatform") -> {
+                println("Otaku Multiplatform Library")
+            }
         }
     }
 }
