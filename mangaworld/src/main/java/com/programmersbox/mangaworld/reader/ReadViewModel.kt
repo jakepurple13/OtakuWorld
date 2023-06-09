@@ -3,6 +3,8 @@ package com.programmersbox.mangaworld.reader
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -114,11 +116,11 @@ class ReadViewModel(
 
     private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
 
-    var currentChapter: Int by mutableStateOf(0)
+    var currentChapter: Int by mutableIntStateOf(0)
 
     var batteryColor by mutableStateOf(Color.White)
     var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
-    var batteryPercent by mutableStateOf(0f)
+    var batteryPercent by mutableFloatStateOf(0f)
 
     val batteryInformation by lazy { BatteryInformation(context) }
 

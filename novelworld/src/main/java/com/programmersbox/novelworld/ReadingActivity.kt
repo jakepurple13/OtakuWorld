@@ -111,11 +111,11 @@ class ReadViewModel(
     private val novelUrl by lazy { handle.get<String>("novelInfoUrl") ?: "" }
     val title by lazy { handle.get<String>("novelTitle") ?: "" }
 
-    var currentChapter: Int by mutableStateOf(0)
+    var currentChapter: Int by mutableIntStateOf(0)
 
     var batteryColor by mutableStateOf(androidx.compose.ui.graphics.Color.White)
     var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
-    var batteryPercent by mutableStateOf(0f)
+    var batteryPercent by mutableFloatStateOf(0f)
 
     val batteryInformation by lazy { BatteryInformation(activity) }
 
@@ -485,7 +485,7 @@ fun TopBar(
                 }
             },
             title = {
-                var time by remember { mutableStateOf(System.currentTimeMillis()) }
+                var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
                 DisposableEffect(context) {
                     val timeReceiver = context.timeTick { _, _ -> time = System.currentTimeMillis() }
@@ -717,7 +717,7 @@ private fun SliderSetting(
             }
         )
 
-        var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
+        var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 
         androidx.compose.material3.Slider(
             value = sliderValue,
