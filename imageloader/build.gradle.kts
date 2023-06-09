@@ -16,3 +16,7 @@ otakuDependencies {
 compose {
     kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:${libs.versions.jetpackCompiler.get()}")
 }
+
+android {
+    namespace = "com.programmersbox.imageloader"
+}

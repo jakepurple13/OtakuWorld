@@ -30,7 +30,6 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
         )
 
         target.extensions.findByType(LibraryExtension::class.java)?.apply {
-            namespace = "com.programmersbox.imageloader"
             compileSdk = 33
             defaultConfig {
                 minSdk = 23
