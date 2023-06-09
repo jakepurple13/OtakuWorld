@@ -23,7 +23,6 @@ import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.showErrorToast
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -87,13 +86,13 @@ class DetailsViewModel(
     }
 
     private fun setup(info: InfoModel) {
-        viewModelScope.launch(Dispatchers.IO) {
-            combine(
-                itemListener.findItemByUrlFlow(info.url),
-                dao.containsItem(info.url)
-            ) { f, d -> f || d }
-                .collect { favoriteListener = it }
-        }
+        combine(
+            itemListener.findItemByUrlFlow(info.url),
+            dao.containsItem(info.url)
+        ) { f, d -> f || d }
+            .dispatchIo()
+            .onEach { favoriteListener = it }
+            .launchIn(viewModelScope)
 
         combine(
             chapterListener.getAllEpisodesByShowFlow(info.url),
