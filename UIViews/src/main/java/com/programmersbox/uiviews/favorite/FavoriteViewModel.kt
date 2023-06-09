@@ -17,7 +17,8 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.Screen
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : ViewModel() {
 
@@ -26,13 +27,12 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
         private set
 
     init {
-        viewModelScope.launch {
-            combine(
-                fireListener.getAllShowsFlow(),
-                dao.getAllFavorites()
-            ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-                .collect { favoriteList = it }
-        }
+        combine(
+            fireListener.getAllShowsFlow(),
+            dao.getAllFavorites()
+        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+            .onEach { favoriteList = it }
+            .launchIn(viewModelScope)
     }
 
     override fun onCleared() {

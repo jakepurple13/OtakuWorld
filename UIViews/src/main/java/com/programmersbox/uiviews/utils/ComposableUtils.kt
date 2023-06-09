@@ -55,7 +55,7 @@ class CoordinatorModel(
     val content: @Composable BoxScope.(Float, CoordinatorModel) -> Unit
 ) {
     var heightPx by Delegates.notNull<Float>()
-    val offsetHeightPx = mutableStateOf(0f)
+    val offsetHeightPx = mutableFloatStateOf(0f)
 
     @Composable
     internal fun Setup() {
@@ -400,8 +400,8 @@ fun Color.animate(label: String = "") = animateColorAsState(this, label = label)
 
 @Composable
 fun LazyListState.isScrollingUp(): Boolean {
-    var previousIndex by remember(this) { mutableStateOf(firstVisibleItemIndex) }
-    var previousScrollOffset by remember(this) { mutableStateOf(firstVisibleItemScrollOffset) }
+    var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
+    var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
     return remember(this) {
         derivedStateOf {
             if (previousIndex != firstVisibleItemIndex) {

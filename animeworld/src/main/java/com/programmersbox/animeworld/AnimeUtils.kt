@@ -327,14 +327,14 @@ fun SlideTo(
     val contentAlpha by animateFloatAsState(
         targetValue = if (swipeableState.offset.value != 0f && swipeableState.offset.value > 0f)
             (1 - swipeableState.progress.fraction)
-        else 1f
+        else 1f, label = ""
     )
 
-    val iconSizeAnimation by animateDpAsState(targetValue = flag, tween(250))
+    val iconSizeAnimation by animateDpAsState(targetValue = flag, tween(250), label = "")
 
     val width by animateDpAsState(
         targetValue = if (iconSizeAnimation == 0.dp) slideHeight else slideWidth,
-        tween(widthAnimationMillis)
+        tween(widthAnimationMillis), label = ""
     )
 
     AnimatedVisibility(

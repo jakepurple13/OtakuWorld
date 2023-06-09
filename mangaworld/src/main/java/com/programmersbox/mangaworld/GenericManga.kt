@@ -235,8 +235,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalMaterialApi::class
     )
     @Composable
     override fun ComposeShimmerItem() {
@@ -301,7 +300,7 @@ class GenericManga(val context: Context) : GenericInfo {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class, com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
+    @OptIn(com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
     override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {

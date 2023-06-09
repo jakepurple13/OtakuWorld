@@ -89,7 +89,7 @@ fun AllView(
                     selectedTabIndex = pagerState.currentPage,
                     // Override the indicator, using the provided pagerTabIndicatorOffset modifier
                     indicator = { tabPositions ->
-                        TabRowDefaults.Indicator(
+                        TabRowDefaults.SecondaryIndicator(
                             Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
                         )
                     }

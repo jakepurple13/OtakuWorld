@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -32,8 +32,8 @@ fun CollapsingScrollScaffold(
     bottomBar: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val toolbarHeightPx = remember { mutableStateOf(0f) }
-    val topPanelOffset = remember { mutableStateOf(0f) }
+    val toolbarHeightPx = remember { mutableFloatStateOf(0f) }
+    val topPanelOffset = remember { mutableFloatStateOf(0f) }
 
     Scaffold(
         modifier = modifier,
@@ -83,8 +83,8 @@ internal fun CoordinatedScroll(
     collapsingAreaHeightPx: Float = 0f,
     content: @Composable (Float, NestedScrollConnection) -> Unit
 ) {
-    val currentOffsetPx = remember { mutableStateOf(0f) }
-    val currentAbsoluteOffsetPx = remember { mutableStateOf(0f) }
+    val currentOffsetPx = remember { mutableFloatStateOf(0f) }
+    val currentAbsoluteOffsetPx = remember { mutableFloatStateOf(0f) }
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {

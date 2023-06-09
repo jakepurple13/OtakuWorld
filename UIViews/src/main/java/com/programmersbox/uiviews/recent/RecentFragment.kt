@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -75,8 +74,7 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalAnimationApi::class
+    ExperimentalMaterialApi::class
 )
 @Composable
 fun RecentView(

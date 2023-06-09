@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -69,7 +70,7 @@ class MoreInfoViewModel : ViewModel() {
 
 class NotificationViewModel(dao: ItemDao, context: Context) : ViewModel() {
 
-    var savedNotifications by mutableStateOf(0)
+    var savedNotifications by mutableIntStateOf(0)
         private set
 
     var canCheck by mutableStateOf(false)
@@ -112,7 +113,7 @@ class TranslationViewModel : ViewModel() {
 }
 
 class SettingsViewModel(dao: ItemDao) : ViewModel() {
-    var savedNotifications by mutableStateOf(0)
+    var savedNotifications by mutableIntStateOf(0)
         private set
 
     init {

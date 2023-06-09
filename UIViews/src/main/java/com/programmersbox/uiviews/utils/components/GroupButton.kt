@@ -39,7 +39,7 @@ fun <T> GroupButton(
                     bottomEnd = if (i == options.size - 1) smallShape.bottomEnd else noCorner
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = animateColorAsState(if (selected == option.item) selectedColor else unselectedColor).value
+                    containerColor = animateColorAsState(if (selected == option.item) selectedColor else unselectedColor, label = "").value
                 )
             ) { option.iconContent() }
         }

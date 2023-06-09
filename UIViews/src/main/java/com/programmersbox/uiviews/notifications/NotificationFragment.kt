@@ -110,9 +110,7 @@ fun NotificationsScreen(
             var showPopup by remember { mutableStateOf(false) }
 
             if (showPopup) {
-
                 val onDismiss = { showPopup = false }
-
                 AlertDialog(
                     onDismissRequest = onDismiss,
                     title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
@@ -136,7 +134,6 @@ fun NotificationsScreen(
                     },
                     dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
                 )
-
             }
 
             InsetSmallTopAppBar(
@@ -220,7 +217,7 @@ fun NotificationsScreen(
             )
         }
     ) { p, itemList ->
-        Crossfade(targetState = vm.sortedBy) { target ->
+        Crossfade(targetState = vm.sortedBy, label = "") { target ->
             when (target) {
                 NotificationSortBy.Date -> {
                     AnimatedLazyColumn(

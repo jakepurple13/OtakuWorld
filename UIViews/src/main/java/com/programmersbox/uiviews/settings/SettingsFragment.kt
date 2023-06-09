@@ -56,6 +56,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -669,7 +670,7 @@ fun GeneralSettings(
             updateValue = { scope.launch { handling.setShowAll(it) } }
         )
 
-        var sliderValue by remember { mutableStateOf(runBlocking { context.historySave.first().toFloat() }) }
+        var sliderValue by remember { mutableFloatStateOf(runBlocking { context.historySave.first().toFloat() }) }
 
         SliderSetting(
             sliderValue = sliderValue,
@@ -693,7 +694,7 @@ fun PlaySettings(customSettings: (@Composable () -> Unit)?) {
         val scope = rememberCoroutineScope()
         val settingsHandling = LocalSettingsHandling.current
         val slider by settingsHandling.batteryPercentage.collectAsState(runBlocking { settingsHandling.batteryPercentage.first() })
-        var sliderValue by remember(slider) { mutableStateOf(slider.toFloat()) }
+        var sliderValue by remember(slider) { mutableFloatStateOf(slider.toFloat()) }
 
         SliderSetting(
             sliderValue = sliderValue,

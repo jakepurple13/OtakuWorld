@@ -213,7 +213,6 @@ private fun LibrariesContainer(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun OutlinedLibrary(
     library: Library,

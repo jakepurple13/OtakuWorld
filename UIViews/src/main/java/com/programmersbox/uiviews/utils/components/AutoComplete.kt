@@ -50,7 +50,7 @@ class AutoCompleteState<T : AutoCompleteEntity>(private val startItems: List<T>)
 
     private var filteredItems by mutableStateOf(startItems)
     override var isSearching by mutableStateOf(false)
-    override var boxWidthPercentage by mutableStateOf(.9f)
+    override var boxWidthPercentage by mutableFloatStateOf(.9f)
     override var shouldWrapContentHeight by mutableStateOf(false)
 
     @OptIn(ExperimentalMaterial3Api::class)

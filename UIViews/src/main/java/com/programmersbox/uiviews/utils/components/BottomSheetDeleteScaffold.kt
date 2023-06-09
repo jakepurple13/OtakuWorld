@@ -54,8 +54,7 @@ fun <T> BottomSheetDeleteScaffold(
 
     BottomSheetScaffold(
         scaffoldState = state,
-        modifier = modifier
-            .nestedScroll(bottomScrollBehavior.nestedScrollConnection),//.statusBarsPadding(),
+        modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
         topBar = topBar,
         sheetContent = {
 
@@ -187,7 +186,6 @@ private fun <T> DeleteItemView(
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
-
         val onDismiss = { showPopup = false }
         AlertDialog(
             onDismissRequest = onDismiss,
@@ -202,7 +200,6 @@ private fun <T> DeleteItemView(
             },
             dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
         )
-
     }
 
     val dismissState = rememberDismissState(
@@ -281,9 +278,7 @@ fun <T : Any> BottomSheetDeleteScaffoldPaging(
 
     BottomSheetScaffold(
         scaffoldState = state,
-        modifier = Modifier
-            .nestedScroll(bottomScrollBehavior.nestedScrollConnection)
-            .then(modifier),
+        modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
         topBar = topBar,
         sheetShape = MaterialTheme.shapes.medium.copy(CornerSize(4.dp), CornerSize(4.dp), CornerSize(0.dp), CornerSize(0.dp)),
         sheetPeekHeight = ButtonDefaults.MinHeight + 4.dp,
@@ -421,7 +416,6 @@ private fun <T : Any> DeleteItemView(
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
-
         val onDismiss = { showPopup = false }
         AlertDialog(
             onDismissRequest = onDismiss,
@@ -436,7 +430,6 @@ private fun <T : Any> DeleteItemView(
             },
             dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
         )
-
     }
 
     val dismissState = rememberDismissState(

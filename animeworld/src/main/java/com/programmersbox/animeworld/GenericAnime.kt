@@ -51,7 +51,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -332,7 +331,6 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     @OptIn(
         ExperimentalFoundationApi::class,
-        ExperimentalMaterial3Api::class,
     )
     @Composable
     override fun ItemListView(
@@ -387,7 +385,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
     override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {
@@ -510,8 +507,7 @@ class GenericAnime(val context: Context) : GenericInfo {
     @OptIn(
         ExperimentalAnimationApi::class,
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalMaterialNavigationApi::class
+        ExperimentalMaterialApi::class
     )
     override fun NavGraphBuilder.navSetup() {
 
