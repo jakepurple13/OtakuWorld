@@ -28,8 +28,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -63,14 +65,13 @@ class DetailsViewModel(
                 it.printStackTrace()
                 context.showErrorToast()
             }
-            ?.onEach {
-                if (it.isSuccess) {
-                    val item = it.getOrThrow()
-                    info = item
-                    description = item.description
-                    setup(item)
-                    Cached.cache[item.url] = item
-                }
+            ?.filter { it.isSuccess }
+            ?.map { it.getOrThrow() }
+            ?.onEach { item ->
+                info = item
+                description = item.description
+                setup(item)
+                Cached.cache[item.url] = item
             }
             ?.launchIn(viewModelScope)
     }
