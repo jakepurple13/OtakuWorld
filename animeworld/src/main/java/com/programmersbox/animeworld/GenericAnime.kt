@@ -504,13 +504,22 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     }
 
+    override fun NavGraphBuilder.globalNavSetup() {
+        composable(
+            VideoViewModel.VideoPlayerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
+        ) { VideoPlayerUi() }
+
+        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
+    }
+
     @OptIn(
-        ExperimentalAnimationApi::class,
         ExperimentalMaterial3Api::class,
+        ExperimentalAnimationApi::class,
         ExperimentalMaterialApi::class
     )
-    override fun NavGraphBuilder.navSetup() {
-
+    override fun NavGraphBuilder.settingsNavSetup() {
         composable(
             ViewVideoViewModel.VideoViewerRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
@@ -524,14 +533,6 @@ class GenericAnime(val context: Context) : GenericInfo {
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
         ) { DownloaderUi() }
-
-        composable(
-            VideoViewModel.VideoPlayerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) { VideoPlayerUi() }
-
-        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

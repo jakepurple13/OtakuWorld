@@ -38,7 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -416,7 +416,7 @@ class GenericManga(val context: Context) : GenericInfo {
             val scope = rememberCoroutineScope()
             val context = LocalContext.current
 
-            var padding by remember { mutableStateOf(runBlocking { context.pagePadding.first().toFloat() }) }
+            var padding by remember { mutableFloatStateOf(runBlocking { context.pagePadding.first().toFloat() }) }
 
             SliderSetting(
                 sliderValue = padding,
@@ -461,7 +461,7 @@ class GenericManga(val context: Context) : GenericInfo {
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
-    override fun NavGraphBuilder.navSetup() {
+    override fun NavGraphBuilder.globalNavSetup() {
         composable(
             ReadViewModel.MangaReaderRoute,
             arguments = listOf(
@@ -476,7 +476,9 @@ class GenericManga(val context: Context) : GenericInfo {
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
         ) { ReadView() }
+    }
 
+    override fun NavGraphBuilder.settingsNavSetup() {
         composable(
             DownloadViewModel.DownloadRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },

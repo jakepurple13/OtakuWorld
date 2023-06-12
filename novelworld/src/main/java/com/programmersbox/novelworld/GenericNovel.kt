@@ -187,7 +187,7 @@ class GenericNovel(val context: Context) : GenericInfo {
     }
 
     @OptIn(ExperimentalAnimationApi::class)
-    override fun NavGraphBuilder.navSetup() {
+    override fun NavGraphBuilder.globalNavSetup() {
         composable(
             ReadViewModel.NovelReaderRoute,
             arguments = listOf(
