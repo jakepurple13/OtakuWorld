@@ -143,18 +143,6 @@ class GenericManga(val context: Context) : GenericInfo {
     ) {
         ChapterList(context, this@GenericManga).set(allChapters)
         if (runBlocking { context.useNewReaderFlow.first() }) {
-            /*navController
-                .navigate(
-                    ReadActivityComposeFragment::class.java.hashCode(),
-                    Bundle().apply {
-                        putString("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                        putString("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                        putString("mangaTitle", infoModel.title)
-                        putString("mangaUrl", model.url)
-                        putString("mangaInfoUrl", model.sourceUrl)
-                    },
-                    SettingsDsl.customAnimationOptions
-                )*/
             ReadViewModel.navigateToMangaReader(navController, model, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(
