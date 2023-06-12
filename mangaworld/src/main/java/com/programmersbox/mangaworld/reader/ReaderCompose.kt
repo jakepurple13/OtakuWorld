@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -64,7 +63,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -87,6 +85,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
@@ -805,61 +805,20 @@ private fun ZoomableImage(
     contentScale: ContentScale = ContentScale.Fit,
     onClick: () -> Unit = {}
 ) {
-    var centerPoint by remember { mutableStateOf(Offset.Zero) }
-
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-
-    val scaleAnim by animateFloatAsState(
-        targetValue = scale,
-        label = ""
-    ) { if (scale == 1f) offset = Offset.Zero }
-
-    /*val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-        scale *= zoomChange
-        scale = scale.coerceIn(1f, 5f)
-
-        offset += offsetChange
-        offset = clampOffset(centerPoint, offset, scale)
-    }*/
-
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
-            .onGloballyPositioned { coordinates ->
-                val size = coordinates.size.toSize() / 2.0f
-                centerPoint = Offset(size.width, size.height)
-            }
-            .clickable(
+            /*.clickable(
                 indication = null,
                 onClick = onClick,
                 interactionSource = remember { MutableInteractionSource() }
+            )*/
+            .zoomable(
+                rememberZoomState(),
+                enableOneFingerZoom = false,
+                onTap = onClick
             )
-        //TODO: In compose 1.4.0-rc01, these seem to be consuming drags
-        /*.transformable(
-            state = state,
-            enabled = transform
-        )
-        .pointerInput(Unit) {
-            detectTapGestures(
-                onTap = { onClick() },
-                onDoubleTap = {
-                    when {
-                        scale > 2f -> {
-                            scale = 1f
-                        }
-
-                        else -> {
-                            scale = 3f
-
-                            offset = (centerPoint - it) * (scale - 1)
-                            offset = clampOffset(centerPoint, offset, scale)
-                        }
-                    }
-                }
-            )
-        }*/
     ) {
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }
@@ -890,13 +849,6 @@ private fun ZoomableImage(
                         .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                         .align(Alignment.Center)
                         .clipToBounds()
-                        .graphicsLayer {
-                            translationX = offset.x
-                            translationY = offset.y
-
-                            scaleX = scaleAnim
-                            scaleY = scaleAnim
-                        }
                 )
             } else {
                 KamelImage(
@@ -926,49 +878,6 @@ private fun ZoomableImage(
                         .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                         .clipToBounds()
                 )
-                /*SubcomposeAsyncImage(
-                    request = DisplayRequest(LocalContext.current, painter) {
-                        crossfade()
-                        // There is a lot more...
-                        headers.forEach { (t, u) -> addHttpHeader(t, u) }
-                        components {
-                            addDrawableDecoder(
-                                when {
-                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> GifAnimatedDrawableDecoder.Factory()
-                                    else -> GifDrawableDrawableDecoder.Factory()
-                                }
-                            )
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                addDrawableDecoder(WebpAnimatedDrawableDecoder.Factory())
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                addDrawableDecoder(HeifAnimatedDrawableDecoder.Factory())
-                            }
-                        }
-                    },
-                    loading = { CircularProgressIndicator(modifier = Modifier.align(alignment)) },
-                    error = {
-                        Text(
-                            stringResource(R.string.pressToRefresh),
-                            modifier = Modifier
-                                .align(alignment)
-                                .clickable {
-                                    scope.launch {
-                                        showTheThing = false
-                                        delay(1000)
-                                        showTheThing = true
-                                    }
-                                }
-                        )
-                    },
-                    contentDescription = null,
-                    contentScale = contentScale,
-                    alignment = Alignment.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .clipToBounds()
-                )*/
             }
         }
     }

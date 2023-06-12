@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.favoritesdatabase)
     implementation(projects.mangaSources)
     implementation(projects.sharedutils)
+    implementation(projects.imageloader)
 
     implementation(libs.glide)
     ksp(libs.glideCompiler)
@@ -65,15 +66,12 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
 
     implementation(libs.bundles.koinLibs)
-    val composeBom = platform(libs.composePlatform)
-    implementation(composeBom)
+    implementation(platform(libs.composePlatform))
     implementation(libs.bundles.compose)
     implementation(libs.coilGif)
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.glideCompose)
 
-    implementation(libs.bundles.sketch)
-
-    implementation(projects.imageloader)
+    implementation(libs.zoomableModifier)
 }
