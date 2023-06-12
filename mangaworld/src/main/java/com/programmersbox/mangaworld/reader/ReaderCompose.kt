@@ -420,17 +420,15 @@ fun SheetView(
                                     }
                                 }
                         ) {
-                            GlideImage(
-                                imageModel = { it },
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                loading = {
-                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                },
+                            KamelImage(
+                                resource = asyncPainterResource(it),
+                                onLoading = { CircularProgressIndicator(progress = it) },
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .align(Alignment.Center)
                             )
-
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -441,7 +439,8 @@ fun SheetView(
                                                 Color.Black
                                             ),
                                             startY = 50f
-                                        )
+                                        ),
+                                        alpha = .5f
                                     )
                             ) {
                                 Text(
