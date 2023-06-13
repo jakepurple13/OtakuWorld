@@ -93,8 +93,8 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
@@ -331,7 +331,7 @@ fun GlobalSearchView(
                                                         modifier = Modifier.align(Alignment.CenterEnd)
                                                     ) { Icon(Icons.Default.ChevronRight, null) }
                                                 }
-                                                LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
+                                                LazyRow { items(3) { M3PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
                                             }
                                         }
                                     }
