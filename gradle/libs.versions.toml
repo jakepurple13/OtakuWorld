@@ -11,7 +11,7 @@ navigationSafeArgsGradlePlugin = "2.6.0"
 pagingVersion = "3.1.1"
 roomVersion = "2.5.1"
 navVersion = "2.7.0-beta01"
-koinVersion = "3.4.0"
+koinVersion = "3.4.2"
 lottieVersion = "6.0.0"
 coil = "2.3.0"
 lifecycle = "2.6.1"
@@ -105,7 +105,7 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
 lottieCompose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
 
 koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
-koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.4" }
+koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.5" }
 
 roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }

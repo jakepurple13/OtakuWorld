@@ -1,10 +1,13 @@
 package com.programmersbox.animeworldtv.compose
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -26,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -118,7 +122,7 @@ fun MainView() {
 
 
 @OptIn(
-    ExperimentalTvMaterial3Api::class
+    ExperimentalTvMaterial3Api::class, ExperimentalAnimationApi::class
 )
 @Composable
 fun FeaturedMoviesCarousel(
@@ -126,7 +130,7 @@ fun FeaturedMoviesCarousel(
     goToVideoPlayer: () -> Unit
 ) {
     val carouselHeight = LocalConfiguration.current.screenHeightDp.dp.times(0.60f)
-    var carouselCurrentIndex by rememberSaveable { mutableStateOf(0) }
+    var carouselCurrentIndex by rememberSaveable { mutableIntStateOf(0) }
     val carouselState = remember { CarouselState(initialActiveItemIndex = carouselCurrentIndex) }
     var isCarouselFocused by remember { mutableStateOf(false) }
 
@@ -188,67 +192,67 @@ fun FeaturedMoviesCarousel(
                 .togetherWith(fadeOut(tween(durationMillis = 1000))),
             content = { index ->
                 val movie = remember(index) { moviesState[index] }
-                CarouselItem(
-                    background = {
-                        Box {
-                            AsyncImage(
-                                model = movie.imageUrl,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                Color.Black.copy(alpha = 0.5f)
-                                            )
-                                        )
-                                    )
-                            )
-                        }
-                    }
-                ) {
-                    Box(
+                Box {
+                    AsyncImage(
+                        model = movie.imageUrl,
+                        contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.BottomStart
+                        contentScale = ContentScale.Crop
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.5f)
+                                    )
+                                )
+                            )
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .animateEnterExit(
+                            enter = slideInHorizontally(animationSpec = tween(1000)) { it / 2 },
+                            exit = slideOutHorizontally(animationSpec = tween(1000))
+                        ),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        verticalArrangement = Arrangement.Bottom
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(32.dp),
-                            verticalArrangement = Arrangement.Bottom
-                        ) {
-                            Text(
-                                text = movie.title,
-                                style = MaterialTheme.typography.displayMedium.copy(
-                                    shadow = Shadow(
-                                        color = Color.Black.copy(alpha = 0.5f),
-                                        offset = Offset(x = 2f, y = 4f),
-                                        blurRadius = 2f
-                                    )
+                        Text(
+                            text = movie.title,
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                shadow = Shadow(
+                                    color = Color.Black.copy(alpha = 0.5f),
+                                    offset = Offset(x = 2f, y = 4f),
+                                    blurRadius = 2f
+                                )
+                            ),
+                            maxLines = 1
+                        )
+                        Text(
+                            text = movie.description,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.65f
                                 ),
-                                maxLines = 1
-                            )
-                            Text(
-                                text = movie.description,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.65f
-                                    ),
-                                    shadow = Shadow(
-                                        color = Color.Black.copy(alpha = 0.5f),
-                                        offset = Offset(x = 2f, y = 4f),
-                                        blurRadius = 2f
-                                    )
-                                ),
-                                maxLines = 1,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
+                                shadow = Shadow(
+                                    color = Color.Black.copy(alpha = 0.5f),
+                                    offset = Offset(x = 2f, y = 4f),
+                                    blurRadius = 2f
+                                )
+                            ),
+                            maxLines = 1,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
                 }
             }
