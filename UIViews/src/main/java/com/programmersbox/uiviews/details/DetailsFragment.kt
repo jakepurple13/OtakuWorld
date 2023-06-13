@@ -19,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -40,6 +42,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
@@ -72,7 +75,7 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 @Composable
 fun DetailsScreen(
     logo: NotificationLogo,
-    windowSize: WindowSize,
+    windowSize: WindowSizeClass,
     localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
@@ -120,7 +123,7 @@ fun DetailsScreen(
 
         val handling = LocalSettingsHandling.current
 
-        val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsState(initial = false)
+        val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsStateWithLifecycle(false)
 
         val shareChapter by handling.shareChapter.collectAsState(initial = true)
         var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
@@ -130,7 +133,7 @@ fun DetailsScreen(
         val statusBarColor = swatchInfo?.rgb?.toComposeColor()?.animate()
 
         var c by remember { mutableStateOf(statusBar) }
-        val ac by animateColorAsState(c)
+        val ac by animateColorAsState(c, label = "")
 
         LaunchedEffect(ac) { systemUiController.setStatusBarColor(Color.Transparent, darkIcons = ac.luminance() > 0.5f) }
 
@@ -147,8 +150,7 @@ fun DetailsScreen(
                     Lifecycle.Event.ON_CREATE -> statusBarColor?.value ?: statusBar
                     Lifecycle.Event.ON_START -> statusBarColor?.value ?: statusBar
                     Lifecycle.Event.ON_RESUME -> statusBarColor?.value ?: statusBar
-                    Lifecycle.Event.ON_PAUSE -> statusBarColor?.value ?: statusBar
-                    Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
+                    Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
                     Lifecycle.Event.ON_ANY -> statusBarColor?.value ?: statusBar
                 }
             }
@@ -167,8 +169,7 @@ fun DetailsScreen(
             LocalSwatchChange provides rememberUpdatedState(newValue = { it: SwatchInfo? -> swatchInfo = it }).value
         ) {
             if (
-                windowSize == WindowSize.Medium ||
-                windowSize == WindowSize.Expanded ||
+                windowSize.heightSizeClass == WindowHeightSizeClass.Compact &&
                 orientation == Configuration.ORIENTATION_LANDSCAPE
             ) {
                 DetailsViewLandscape(
@@ -329,7 +330,7 @@ fun ChapterItem(
                 interactionSource = interactionSource,
             ) { markAs(c, !read.fastAny { it.url == c.url }) },
         colors = CardDefaults.elevatedCardColors(
-            containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface).value,
+            containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface, label = "").value,
         )
     ) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
@@ -637,7 +638,7 @@ internal fun DetailsHeader(
                                 ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
-                        Crossfade(targetState = isFavorite) { target ->
+                        Crossfade(targetState = isFavorite, label = "") { target ->
                             Text(
                                 stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
                                 style = M3MaterialTheme.typography.headlineSmall,

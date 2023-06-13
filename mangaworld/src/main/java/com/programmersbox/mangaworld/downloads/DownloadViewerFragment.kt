@@ -293,15 +293,6 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                                             filePath = c?.chapterFolder,
                                             downloaded = true
                                         )
-                                        /*findNavController()
-                                            .navigate(
-                                                ReadActivityComposeFragment::class.java.hashCode(),
-                                                Bundle().apply {
-                                                    putBoolean("downloaded", true)
-                                                    putSerializable("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                                },
-                                                SettingsDsl.customAnimationOptions
-                                            )*/
                                     } else {
                                         context.startActivity(
                                             Intent(context, ReadActivity::class.java).apply {

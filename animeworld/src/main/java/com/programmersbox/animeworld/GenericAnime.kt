@@ -18,17 +18,17 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,10 +49,8 @@ import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.material.shimmer
@@ -333,7 +331,6 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     @OptIn(
         ExperimentalFoundationApi::class,
-        ExperimentalMaterial3Api::class,
     )
     @Composable
     override fun ItemListView(
@@ -361,15 +358,15 @@ class GenericAnime(val context: Context) : GenericInfo {
                 ) {
                     ListItem(
                         leadingContent = {
-                            androidx.compose.material3.Icon(
+                            Icon(
                                 if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = null,
                             )
                         },
-                        headlineContent = { androidx.compose.material3.Text(it.title) },
-                        overlineContent = { androidx.compose.material3.Text(it.source.serviceName) },
+                        headlineContent = { Text(it.title) },
+                        overlineContent = { Text(it.source.serviceName) },
                         supportingContent = if (it.description.isNotEmpty()) {
-                            { androidx.compose.material3.Text(it.description) }
+                            { Text(it.description) }
                         } else null
                     )
                 }
@@ -388,15 +385,14 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
     override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {
             val context = LocalContext.current
 
             PreferenceSetting(
-                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.video_menu_title)) },
-                settingIcon = { androidx.compose.material3.Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
+                settingTitle = { Text(stringResource(R.string.video_menu_title)) },
+                settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
@@ -408,9 +404,9 @@ class GenericAnime(val context: Context) : GenericInfo {
 
             ShowWhen(castingViewModel.connection) {
                 PreferenceSetting(
-                    settingTitle = { androidx.compose.material3.Text(stringResource(R.string.cast_menu_title)) },
+                    settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
                     settingIcon = {
-                        androidx.compose.material3.Icon(
+                        Icon(
                             if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
                             null,
                             modifier = Modifier.fillMaxSize()
@@ -434,8 +430,8 @@ class GenericAnime(val context: Context) : GenericInfo {
             }
 
             PreferenceSetting(
-                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.downloads_menu_title)) },
-                settingIcon = { androidx.compose.material3.Icon(Icons.Default.Download, null, modifier = Modifier.fillMaxSize()) },
+                settingTitle = { Text(stringResource(R.string.downloads_menu_title)) },
+                settingIcon = { Icon(Icons.Default.Download, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
@@ -449,9 +445,9 @@ class GenericAnime(val context: Context) : GenericInfo {
             val activity = LocalActivity.current
 
             PreferenceSetting(
-                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.folder_location)) },
-                summaryValue = { androidx.compose.material3.Text(folderLocation) },
-                settingIcon = { androidx.compose.material3.Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
+                settingTitle = { Text(stringResource(R.string.folder_location)) },
+                summaryValue = { Text(folderLocation) },
+                settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
@@ -489,9 +485,9 @@ class GenericAnime(val context: Context) : GenericInfo {
             val player by context.useNewPlayerFlow.collectAsState(true)
 
             SwitchSetting(
-                settingTitle = { androidx.compose.material3.Text(stringResource(R.string.use_new_player)) },
-                summaryValue = { androidx.compose.material3.Text(stringResource(R.string.use_new_player_description)) },
-                settingIcon = { androidx.compose.material3.Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
+                settingTitle = { Text(stringResource(R.string.use_new_player)) },
+                summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
+                settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
                 value = player,
                 updateValue = { scope.launch { context.updatePref(USER_NEW_PLAYER, it) } }
             )
@@ -499,8 +495,8 @@ class GenericAnime(val context: Context) : GenericInfo {
             val ignoreSsl by context.ignoreSsl.collectAsState(initial = true)
 
             SwitchSetting(
-                settingTitle = { androidx.compose.material3.Text(stringResource(id = R.string.ignore_ssl)) },
-                settingIcon = { androidx.compose.material3.Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
+                settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },
+                settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
                 value = ignoreSsl
             ) { scope.launch { context.updatePref(IGNORE_SSL, it) } }
 
@@ -508,14 +504,22 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     }
 
-    @OptIn(
-        ExperimentalAnimationApi::class,
-        ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalMaterialNavigationApi::class
-    )
-    override fun NavGraphBuilder.navSetup() {
+    override fun NavGraphBuilder.globalNavSetup() {
+        composable(
+            VideoViewModel.VideoPlayerRoute,
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
+        ) { VideoPlayerUi() }
 
+        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
+    }
+
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalMaterialApi::class
+    )
+    override fun NavGraphBuilder.settingsNavSetup() {
         composable(
             ViewVideoViewModel.VideoViewerRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
@@ -529,14 +533,6 @@ class GenericAnime(val context: Context) : GenericInfo {
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
         ) { DownloaderUi() }
-
-        composable(
-            VideoViewModel.VideoPlayerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) { VideoPlayerUi() }
-
-        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

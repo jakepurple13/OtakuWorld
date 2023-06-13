@@ -58,7 +58,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
-private fun NotificationManager.cancelNotification(item: NotificationItem) {
+fun NotificationManager.cancelNotification(item: NotificationItem) {
     cancel(item.id)
     val g = activeNotifications.map { it.notification }.filter { it.group == "otakuGroup" }
     if (g.size == 1) cancel(42)
@@ -110,9 +110,7 @@ fun NotificationsScreen(
             var showPopup by remember { mutableStateOf(false) }
 
             if (showPopup) {
-
                 val onDismiss = { showPopup = false }
-
                 AlertDialog(
                     onDismissRequest = onDismiss,
                     title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
@@ -136,7 +134,6 @@ fun NotificationsScreen(
                     },
                     dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
                 )
-
             }
 
             InsetSmallTopAppBar(
@@ -220,7 +217,7 @@ fun NotificationsScreen(
             )
         }
     ) { p, itemList ->
-        Crossfade(targetState = vm.sortedBy) { target ->
+        Crossfade(targetState = vm.sortedBy, label = "") { target ->
             when (target) {
                 NotificationSortBy.Date -> {
                     AnimatedLazyColumn(
@@ -268,7 +265,7 @@ fun NotificationsScreen(
                                             Icon(
                                                 Icons.Default.ArrowDropDown,
                                                 null,
-                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
+                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
                                             )
                                         }
                                     )
@@ -393,7 +390,7 @@ private fun NotificationItem(
                     DismissValue.Default -> Color.Transparent
                     DismissValue.DismissedToEnd -> Color.Red
                     DismissValue.DismissedToStart -> Color.Red
-                }
+                }, label = ""
             )
             val alignment = when (direction) {
                 DismissDirection.StartToEnd -> Alignment.CenterStart
@@ -403,7 +400,7 @@ private fun NotificationItem(
                 DismissDirection.StartToEnd -> Icons.Default.Delete
                 DismissDirection.EndToStart -> Icons.Default.Delete
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -487,7 +484,14 @@ private fun NotificationItem(
                         var showTimePicker by remember { mutableStateOf(false) }
 
                         val dateState = rememberDatePickerState(
-                            initialSelectedDateMillis = System.currentTimeMillis()
+                            initialSelectedDateMillis = System.currentTimeMillis(),
+                            selectableDates = remember {
+                                object : SelectableDates {
+                                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                        return DateValidatorPointForward.now().isValid(utcTimeMillis)
+                                    }
+                                }
+                            }
                         )
                         val calendar = remember { Calendar.getInstance() }
                         val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
@@ -556,7 +560,6 @@ private fun NotificationItem(
                             ) {
                                 DatePicker(
                                     state = dateState,
-                                    dateValidator = { DateValidatorPointForward.now().isValid(it) },
                                     title = { Text(stringResource(R.string.selectDate)) }
                                 )
                             }

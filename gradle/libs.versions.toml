@@ -1,48 +1,52 @@
 [versions]
 firebaseCrashlyticsGradle = "2.9.5"
 googleServices = "4.3.15"
-gradle = "7.4.2"
-kotlin = "1.8.20"
-latestAboutLibsRelease = "10.5.2"
-jakepurple13 = "10.6.5"
-coroutinesVersion = "1.6.4"
+gradle = "8.1.0-beta05"
+kamelImage = "0.5.1"
+kotlin = "1.8.21"
+latestAboutLibsRelease = "10.6.3"
+coroutinesVersion = "1.7.1"
 glideVersion = "4.15.1"
+navigationSafeArgsGradlePlugin = "2.6.0"
 pagingVersion = "3.1.1"
 roomVersion = "2.5.1"
-navVersion = "2.6.0-beta01"
-koinVersion = "3.3.0"
-lottieVersion = "5.2.0"
-coil = "2.2.2"
+navVersion = "2.7.0-beta01"
+koinVersion = "3.4.2"
+lottieVersion = "6.0.0"
+coil = "2.3.0"
 lifecycle = "2.6.1"
-jetpack = "1.5.0-alpha03"
-jetpackCompiler = "1.4.6"
-accompanist = "0.31.0-alpha"
-okhttpVersion = "4.10.0"
-ktorVersion = "2.3.0"
+jetpack = "1.5.0-beta02"
+jetpackCompiler = "1.4.7"
+accompanist = "0.31.2-alpha"
+okhttpVersion = "4.11.0"
+ktorVersion = "2.3.1"
 workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
-landscapist = "2.1.9"
-protobufVersion = "3.21.12"
-composeBomVersion = "2023.04.00-alpha01"
+landscapist = "2.1.12"
+protobufVersion = "3.23.0"
+sketchVersion = "3.2.1-rc02"
+composeBomVersion = "2023.04.00-beta02"
 
 ### MangaWorld
 piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.0.1"
+media3Version = "1.0.2"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.8.20-1.0.11" }
+ksp = { id = "com.google.devtools.ksp", version = "1.8.21-1.0.11" }
 
 [libraries]
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
+kamel-image = { module = "media.kamel:kamel-image", version.ref = "kamelImage" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.10.1"
 
@@ -53,13 +57,14 @@ composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
 composeMaterial = { group = "androidx.compose.material", name = "material" }
 materialYou = { group = "androidx.compose.material3", name = "material3" }
+materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
-composeActivity = "androidx.activity:activity-compose:1.7.1"
+composeActivity = "androidx.activity:activity-compose:1.7.2"
 composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.1"
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
@@ -72,7 +77,6 @@ materialPlaceholder = { module = "com.google.accompanist:accompanist-placeholder
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 navMaterial = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
-navAnimation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
 systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
 okhttpLib = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
 okhttpDns = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpVersion" }
@@ -82,13 +86,15 @@ coroutinesAndroid = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android
 coroutinesPlayServices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesVersion" }
 
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
-glideCompiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
+glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideVersion" }
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.1"
 
-androidCore = "androidx.core:core-ktx:1.10.0"
+androidCore = "androidx.core:core-ktx:1.10.1"
 appCompat = "androidx.appcompat:appcompat:1.6.1"
-material = "com.google.android.material:material:1.8.0"
+material = "com.google.android.material:material:1.9.0"
+
+coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.3" }
 
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
 lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -99,7 +105,7 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
 lottieCompose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
 
 koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
-koinCompose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinVersion" }
+koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.5" }
 
 roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
@@ -128,22 +134,22 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.5.7"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.6.0"
 stetho = "com.facebook.stetho:stetho:1.6.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.4.0"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:21.3.0"
-googlePlayAds = "com.google.android.gms:play-services-ads:22.0.0"
+firebaseAuth = "com.google.firebase:firebase-auth:22.0.0"
+googlePlayAds = "com.google.android.gms:play-services-ads:22.1.0"
 
-pagingCompose = "androidx.paging:paging-compose:1.0.0-alpha18"
+pagingCompose = "androidx.paging:paging-compose:3.2.0-beta01"
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 storage = "com.anggrayudi:storage:1.5.2"
 
-androidxWindow = "androidx.window:window:1.1.0-beta02"
+androidxWindow = "androidx.window:window:1.2.0-alpha02"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.4.0"
 androidxBrowser = "androidx.browser:browser:1.5.0"
 
@@ -151,15 +157,15 @@ fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.5.1"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.6.3"
 
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
-jsoup = "org.jsoup:jsoup:1.15.3"
+jsoup = "org.jsoup:jsoup:1.16.1"
 
-crashlytics = "com.google.firebase:firebase-crashlytics:18.3.6"
-analytics = "com.google.firebase:firebase-analytics:21.2.2"
+crashlytics = "com.google.firebase:firebase-crashlytics:18.3.7"
+analytics = "com.google.firebase:firebase-analytics:21.3.0"
 playServices = "com.google.android.gms:play-services-auth:20.5.0"
 
 preference = "androidx.preference:preference-ktx:1.2.0"
@@ -167,6 +173,8 @@ preference = "androidx.preference:preference-ktx:1.2.0"
 recyclerview = "androidx.recyclerview:recyclerview:1.3.0"
 constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
 swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+
+zoomableModifier = "net.engawapg.lib:zoomable:1.4.3"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
@@ -178,7 +186,7 @@ progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", versi
 
 ### AnimeWorld
 slideToAct = "com.ncorti:slidetoact:0.10.0"
-mediaRouter = "androidx.mediarouter:mediarouter:1.3.1"
+mediaRouter = "androidx.mediarouter:mediarouter:1.4.0"
 fetch = "androidx.tonyodev.fetch2:xfetch2:3.1.6"
 fetchOkHttp = "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
@@ -242,17 +250,22 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0"
-androidxWebkit = "androidx.webkit:webkit:1.6.1"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1"
+androidxWebkit = "androidx.webkit:webkit:1.7.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
-firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.2.0"
-firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.5.0"
+firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.2.2"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.6.1"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
 protobufKotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufVersion" }
+
+sketch-compose = { module = "io.github.panpf.sketch3:sketch-compose", version.ref = "sketchVersion" }
+sketch-zoom = { module = "io.github.panpf.sketch3:sketch-zoom", version.ref = "sketchVersion" }
+sketch-extensions = { module = "io.github.panpf.sketch3:sketch-extensions", version.ref = "sketchVersion" }
+sketch-gif = { module = "io.github.panpf.sketch3:sketch-gif-koral", version.ref = "sketchVersion" }
 
 [bundles]
 compose = [
@@ -265,8 +278,20 @@ compose = [
     "coilCompose",
     "composeConstraintLayout", "permissions",
     "materialPlaceholder", "drawablePainter", "uiUtil",
-    "materialYou",
-    "navCompose", "navMaterial", "navAnimation", "systemUiController"
+    "materialYou", "materialWindow",
+    "navCompose", "navMaterial", "systemUiController"
+]
+composeTv = [
+    "composeUi", "composeUiTooling",
+    "composeMaterialIconsCore", "composeMaterialIconsExtended",
+    "composeAnimation",
+    "composeActivity", "composeLifecycle", "composeLifecycleRuntime",
+    "composeRuntimeLivedata",
+    "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
+    "coilCompose",
+    "composeConstraintLayout", "permissions",
+    "materialPlaceholder", "drawablePainter", "uiUtil",
+    "navCompose", "navMaterial", "systemUiController"
 ]
 media3 = [
     "exoplayer",
@@ -310,3 +335,5 @@ roomLibs = ["roomRuntime", "roomKtx"]
 pagingLibs = ["pagingRuntime", "roomPaging"]
 
 protobuf = ["protobufJava", "protobufKotlin"]
+
+sketch = ["sketch-compose", "sketch-extensions", "sketch-gif", "sketch-zoom"]

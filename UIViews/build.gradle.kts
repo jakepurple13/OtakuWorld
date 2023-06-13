@@ -1,42 +1,15 @@
-import com.google.protobuf.gradle.*
+import com.google.protobuf.gradle.id
+import plugins.ProductFlavorTypes
 
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
-    kotlin("kapt")
     id("kotlinx-serialization")
-    id("com.google.protobuf") version "0.8.17"
+    id("com.google.protobuf") version "0.9.3"
+    alias(libs.plugins.ksp)
 }
 
 android {
-    compileSdk = AppInfo.compileVersion
-    buildToolsVersion = AppInfo.buildVersion
-
-    defaultConfig {
-        minSdk = AppInfo.minimumSdk
-        targetSdk = AppInfo.targetSdk
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-proguard-rules.pro")
-    }
-
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
     buildFeatures {
         dataBinding = true
         viewBinding = true
@@ -46,22 +19,15 @@ android {
         kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
     }
 
-    setFlavorDimensions(listOf("version"))
+    setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
-        create("noFirebase") {
-            dimension = "version"
-        }
-        create("full") {
-            dimension = "version"
-        }
+        ProductFlavorTypes.NoFirebase(this)
+        ProductFlavorTypes.Full(this)
     }
     namespace = "com.programmersbox.uiviews"
 }
 
 dependencies {
-    implementation(libs.kotlinStLib)
-    implementation(libs.androidCore)
-    implementation(libs.appCompat)
     implementation(libs.material)
     implementation(libs.androidxLegacySupport)
     implementation(libs.preference)
@@ -112,7 +78,7 @@ dependencies {
     implementation(libs.aboutLibrariesCompose)
 
     implementation(libs.glide)
-    kapt(libs.glideCompiler)
+    ksp(libs.glideCompiler)
 
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
@@ -146,12 +112,16 @@ dependencies {
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.21.12" }
+    protoc { artifact = "com.google.protobuf:protoc:3.23.0" }
+    plugins {
+        id("javalite") { artifact = libs.protobufJava.get().toString() }
+        id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }
+    }
     generateProtoTasks {
         all().forEach { task ->
-            task.plugins {
-                id("java") { option("lite") }
-                id("kotlin") { option("lite") }
+            task.builtins {
+                create("java") { option("lite") }
+                create("kotlin") { option("lite") }
             }
         }
     }

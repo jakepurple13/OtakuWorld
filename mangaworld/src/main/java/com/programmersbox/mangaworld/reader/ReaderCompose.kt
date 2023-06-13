@@ -1,7 +1,8 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.mangaworld.reader
 
 import android.content.Context
-import android.net.Uri
 import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -10,7 +11,6 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -64,17 +63,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
-import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
-import com.github.piasy.biv.BigImageViewer
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.*
@@ -84,12 +76,17 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.*
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
+import io.ktor.client.request.header
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
@@ -130,11 +127,13 @@ fun ReadView(
 
     val pages = readVm.pageList
 
-    LaunchedEffect(readVm.pageList) { BigImageViewer.prefetch(*readVm.pageList.fastMap(Uri::parse).toTypedArray()) }
-
     val listOrPager by context.listOrPager.collectAsState(initial = true)
 
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) { pages.size + 1 }
+
     val listState = rememberLazyListState()
     val currentPage by remember { derivedStateOf { if (listOrPager) listState.firstVisibleItemIndex else pagerState.currentPage } }
 
@@ -279,7 +278,7 @@ fun ReadView(
                         .pullRefresh(pullRefreshState)
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
-                    Crossfade(targetState = listOrPager) {
+                    Crossfade(targetState = listOrPager, label = "") {
                         if (it) ListView(listState, PaddingValues(top = 64.dp, bottom = 80.dp), pages, readVm, spacing) {
                             readVm.showInfo = !readVm.showInfo
                         }
@@ -315,26 +314,15 @@ fun DrawerView(
                 title = { Text(readVm.title) },
                 actions = { PageIndicator(currentPage = readVm.list.size - readVm.currentChapter, pageCount = readVm.list.size) }
             )
-        },
-        bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release" && false) {
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    factory = {
-                        AdView(it).apply {
-                            setAdSize(AdSize.BANNER)
-                            adUnitId = context.getString(R.string.ad_unit_id)
-                            loadAd(readVm.ad)
-                        }
-                    }
-                )
-            }
         }
     ) { p ->
         LazyColumn(
-            state = rememberLazyListState(readVm.currentChapter.coerceIn(0, readVm.list.lastIndex)),
+            state = rememberLazyListState(
+                readVm.currentChapter.coerceIn(
+                    0,
+                    readVm.list.lastIndex.coerceIn(minimumValue = 0, maximumValue = Int.MAX_VALUE)
+                )
+            ),
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -403,22 +391,6 @@ fun SheetView(
                     }
                 }
             )
-        },
-        bottomBar = {
-            if (BuildConfig.BUILD_TYPE == "release" && false) {
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    factory = {
-                        AdView(it).apply {
-                            setAdSize(AdSize.BANNER)
-                            adUnitId = context.getString(R.string.ad_unit_id)
-                            loadAd(readVm.ad)
-                        }
-                    }
-                )
-            }
         }
     ) { p ->
         Crossfade(targetState = sheetState.isVisible, label = "") { target ->
@@ -435,10 +407,10 @@ fun SheetView(
                                 .fillMaxSize()
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 .border(
-                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp).value,
+                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp, label = "").value,
                                     color = animateColorAsState(
                                         if (currentPage == i) MaterialTheme.colorScheme.primary
-                                        else Color.Transparent
+                                        else Color.Transparent, label = ""
                                     ).value
                                 )
                                 .clickable {
@@ -448,17 +420,15 @@ fun SheetView(
                                     }
                                 }
                         ) {
-                            GlideImage(
-                                imageModel = { it },
-                                imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                                loading = {
-                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                                },
+                            KamelImage(
+                                resource = asyncPainterResource(it),
+                                onLoading = { CircularProgressIndicator(progress = it) },
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .align(Alignment.Center)
                             )
-
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -469,7 +439,8 @@ fun SheetView(
                                                 Color.Black
                                             ),
                                             startY = 50f
-                                        )
+                                        ),
+                                        alpha = .5f
                                     )
                             ) {
                                 Text(
@@ -522,9 +493,9 @@ fun PagerView(
     VerticalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
-        pageCount = pages.size + 1,
         pageSpacing = itemSpacing,
         contentPadding = contentPadding,
+        beyondBoundsPageCount = 1,
         key = { it }
     ) { page ->
         pages.getOrNull(page)?.let {
@@ -536,7 +507,6 @@ fun PagerView(
                 chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
                 nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
                 previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-                adRequest = vm.ad,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
@@ -551,9 +521,8 @@ private fun LastPageReached(
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
     modifier: Modifier = Modifier,
-    adRequest: AdRequest = remember { AdRequest.Builder().build() }
 ) {
-    val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f)
+    val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f, label = "")
 
     ChangeChapterSwipe(
         nextChapter = nextChapter,
@@ -751,7 +720,7 @@ fun ChangeChapterSwipe(
                 ),
             background = {
                 val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
-                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
                 val alignment = when (direction) {
                     DismissDirection.StartToEnd -> Alignment.CenterStart
@@ -797,7 +766,6 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
             chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
             nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
             previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-            adRequest = vm.ad
         )
     }
 }
@@ -808,7 +776,7 @@ private fun ChapterPage(
     isDownloaded: Boolean,
     openCloseOverlay: () -> Unit,
     headers: Map<String, String>,
-    contentScale: ContentScale
+    contentScale: ContentScale,
 ) {
     Box(
         modifier = Modifier
@@ -817,12 +785,12 @@ private fun ChapterPage(
         contentAlignment = Alignment.Center
     ) {
         ZoomableImage(
-            modifier = Modifier.fillMaxWidth(),
             painter = chapterLink,
-            onClick = openCloseOverlay,
+            isDownloaded = isDownloaded,
             headers = headers,
+            modifier = Modifier.fillMaxWidth(),
             contentScale = contentScale,
-            isDownloaded = isDownloaded
+            onClick = openCloseOverlay
         )
     }
 }
@@ -836,96 +804,80 @@ private fun ZoomableImage(
     contentScale: ContentScale = ContentScale.Fit,
     onClick: () -> Unit = {}
 ) {
-    var centerPoint by remember { mutableStateOf(Offset.Zero) }
-
-    var scale by remember { mutableStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-
-    val scaleAnim by animateFloatAsState(
-        targetValue = scale
-    ) {
-        if (scale == 1f) offset = Offset.Zero
-    }
-
-    val state = rememberTransformableState { zoomChange, offsetChange, _ ->
-        scale *= zoomChange
-        scale = scale.coerceIn(1f, 5f)
-
-        offset += offsetChange
-        offset = clampOffset(centerPoint, offset, scale)
-    }
-
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
-            .onGloballyPositioned { coordinates ->
-                val size = coordinates.size.toSize() / 2.0f
-                centerPoint = Offset(size.width, size.height)
-            }
-            .clickable(
+            /*.clickable(
                 indication = null,
                 onClick = onClick,
                 interactionSource = remember { MutableInteractionSource() }
+            )*/
+            .zoomable(
+                rememberZoomState(),
+                enableOneFingerZoom = false,
+                onTap = onClick
             )
-        //TODO: In compose 1.4.0-rc01, these seem to be consuming drags
-        //.transformable(state)
-        /*.pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { onClick() },
-                    onDoubleTap = {
-                        when {
-                            scale > 2f -> {
-                                scale = 1f
-                            }
-
-                            else -> {
-                                scale = 3f
-
-                                offset = (centerPoint - it) * (scale - 1)
-                                offset = clampOffset(centerPoint, offset, scale)
-                            }
-                        }
-                    }
-                )
-            }*/
     ) {
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }
 
         if (showTheThing) {
-            val url = remember(painter) { GlideUrl(painter) { headers } }
-            GlideImage(
-                imageModel = { if (isDownloaded) painter else url },
-                imageOptions = ImageOptions(contentScale = contentScale),
-                loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                failure = {
-                    Text(
-                        stringResource(R.string.pressToRefresh),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .clickable {
-                                scope.launch {
-                                    showTheThing = false
-                                    delay(1000)
-                                    showTheThing = true
+            if (isDownloaded) {
+                val url = remember(painter) { GlideUrl(painter) { headers } }
+                GlideImage(
+                    imageModel = { if (isDownloaded) painter else url },
+                    imageOptions = ImageOptions(contentScale = contentScale),
+                    loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
+                    failure = {
+                        Text(
+                            stringResource(R.string.pressToRefresh),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .clickable {
+                                    scope.launch {
+                                        showTheThing = false
+                                        delay(1000)
+                                        showTheThing = true
+                                    }
                                 }
-                            }
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                    .align(Alignment.Center)
-                    .clipToBounds()
-                    .graphicsLayer {
-                        translationX = offset.x
-                        translationY = offset.y
-
-                        scaleX = scaleAnim
-                        scaleY = scaleAnim
-                    }
-            )
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .align(Alignment.Center)
+                        .clipToBounds()
+                )
+            } else {
+                KamelImage(
+                    resource = asyncPainterResource(painter) {
+                        requestBuilder {
+                            headers.forEach { (t, u) -> header(t, u) }
+                        }
+                    },
+                    onLoading = { CircularProgressIndicator(progress = it) },
+                    onFailure = {
+                        Text(
+                            stringResource(R.string.pressToRefresh),
+                            modifier = Modifier
+                                .clickable {
+                                    scope.launch {
+                                        showTheThing = false
+                                        delay(1000)
+                                        showTheThing = true
+                                    }
+                                }
+                        )
+                    },
+                    contentDescription = null,
+                    contentScale = contentScale,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+                        .clipToBounds()
+                )
+            }
         }
     }
 }
@@ -963,7 +915,7 @@ private fun TopBar(
                     contentDescription = null,
                     tint = animateColorAsState(
                         if (vm.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                        else vm.batteryColor
+                        else vm.batteryColor, label = ""
                     ).value
                 )
                 Text(
@@ -973,7 +925,7 @@ private fun TopBar(
             }
         },
         title = {
-            var time by remember { mutableStateOf(System.currentTimeMillis()) }
+            var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
             val activity = LocalActivity.current
 
@@ -1043,7 +995,7 @@ private fun BottomBar(
                             prevShown && nextShown -> 8f / 3f
                             prevShown || nextShown -> 4f
                             else -> 8f
-                        }
+                        }, label = ""
                     ).value
                 )
         )
@@ -1193,7 +1145,7 @@ private fun SliderSetting(
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>
 ) {
-    var sliderValue by remember { mutableStateOf(initialValue.toFloat()) }
+    var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 
     SliderSetting(
         sliderValue = sliderValue,

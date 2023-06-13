@@ -1,64 +1,24 @@
 plugins {
-    id("com.android.application")
-    kotlin("android")
+    id("otaku-application")
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
-    id("com.starter.easylauncher") version "5.1.2"
+    id("otaku-easylauncher")
 }
 
 android {
-    compileSdk = AppInfo.compileVersion
-    buildToolsVersion = AppInfo.buildVersion
-
     defaultConfig {
         applicationId = "com.programmersbox.animeworldtv"
-        minSdk = AppInfo.minimumSdk
-        targetSdk = AppInfo.targetSdk
-        versionCode = 1
-        versionName = AppInfo.otakuVersionName
     }
 
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
-        }
-        getByName("debug") {
-            extra["enableCrashlytics"] = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-
-    setFlavorDimensions(listOf("version"))
-    productFlavors {
-        create("noFirebase") {
-            dimension = "version"
-        }
-        create("full") {
-            dimension = "version"
-        }
-    }
     namespace = "com.programmersbox.animeworldtv"
 
     configurations.all {
-        resolutionStrategy.force("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+        resolutionStrategy.force(libs.lifecycleViewModel)
     }
 }
 
 dependencies {
-    implementation(libs.kotlinStLib)
-    implementation(libs.androidCore)
-    implementation(libs.appCompat)
     implementation(libs.bundles.leanbackLibs)
     implementation(libs.glide)
     kapt(libs.glideCompiler)
@@ -82,6 +42,11 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
     implementation(libs.koinAndroid)
     implementation(libs.bundles.roomLibs)
-}
+    implementation(libs.gson)
 
-apply(from = "$rootDir/buildtypes.gradle")
+    implementation(platform(libs.composePlatform))
+    implementation(libs.bundles.composeTv)
+    implementation(libs.coilGif)
+    implementation("androidx.tv:tv-foundation:1.0.0-alpha07")
+    implementation("androidx.tv:tv-material:1.0.0-alpha07")
+}

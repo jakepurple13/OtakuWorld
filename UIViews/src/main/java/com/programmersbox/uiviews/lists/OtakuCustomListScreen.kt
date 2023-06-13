@@ -86,6 +86,7 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -403,9 +404,9 @@ private fun CustomItem(
                     DismissValue.Default -> Color.Transparent
                     DismissValue.DismissedToStart -> Color.Red
                     DismissValue.DismissedToEnd -> Color.Red
-                }
+                }, label = ""
             )
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -476,6 +477,41 @@ private fun CustomItem(
                         Text(item.source, style = MaterialTheme.typography.labelMedium)
                         Text(item.title, style = MaterialTheme.typography.titleSmall)
                         Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Top)
+                            .padding(horizontal = 2.dp)
+                    ) {
+                        var showDropDown by remember { mutableStateOf(false) }
+
+                        val dropDownDismiss = { showDropDown = false }
+
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = dropDownDismiss
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.global_search_by_name)) },
+                                onClick = {
+                                    dropDownDismiss()
+                                    Screen.GlobalSearchScreen.navigate(navController, item.title)
+                                }
+                            )
+
+                            Divider()
+
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.remove)) },
+                                onClick = {
+                                    dropDownDismiss()
+                                    showPopup = true
+                                }
+                            )
+                        }
+
+                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                     }
                 }
             }

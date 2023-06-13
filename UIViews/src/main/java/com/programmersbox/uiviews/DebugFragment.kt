@@ -2,7 +2,6 @@ package com.programmersbox.uiviews
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.excludeFromSystemGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,9 +51,7 @@ fun DebugView() {
 
                 Surface(
                     color = Color.Blue,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .excludeFromSystemGesture()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Here!")
                 }

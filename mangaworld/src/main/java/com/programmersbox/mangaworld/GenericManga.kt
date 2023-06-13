@@ -38,7 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -54,8 +54,8 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.composable
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
@@ -63,15 +63,20 @@ import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.manga_sources.Sources
-import com.programmersbox.manga_sources.utilities.NetworkHelper
 import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadView
 import com.programmersbox.mangaworld.reader.ReadViewModel
-import com.programmersbox.models.*
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
+import com.programmersbox.models.ItemModel
+import com.programmersbox.models.Storage
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
@@ -138,18 +143,6 @@ class GenericManga(val context: Context) : GenericInfo {
     ) {
         ChapterList(context, this@GenericManga).set(allChapters)
         if (runBlocking { context.useNewReaderFlow.first() }) {
-            /*navController
-                .navigate(
-                    ReadActivityComposeFragment::class.java.hashCode(),
-                    Bundle().apply {
-                        putString("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                        putString("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                        putString("mangaTitle", infoModel.title)
-                        putString("mangaUrl", model.url)
-                        putString("mangaInfoUrl", model.sourceUrl)
-                    },
-                    SettingsDsl.customAnimationOptions
-                )*/
             ReadViewModel.navigateToMangaReader(navController, model, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(
@@ -230,8 +223,7 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalMaterialApi::class
     )
     @Composable
     override fun ComposeShimmerItem() {
@@ -264,7 +256,11 @@ class GenericManga(val context: Context) : GenericInfo {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            itemsIndexed(list, key = { i, it -> "${it.url}$i" }) { _, it ->
+            itemsIndexed(
+                list,
+                key = { i, it -> "${it.url}$i" },
+                contentType = { _, i -> i }
+            ) { _, it ->
                 M3CoverCard(
                     onLongPress = { c -> onLongPress(it, c) },
                     imageUrl = it.imageUrl,
@@ -292,7 +288,7 @@ class GenericManga(val context: Context) : GenericInfo {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class, com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
+    @OptIn(com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
     override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {
@@ -420,7 +416,7 @@ class GenericManga(val context: Context) : GenericInfo {
             val scope = rememberCoroutineScope()
             val context = LocalContext.current
 
-            var padding by remember { mutableStateOf(runBlocking { context.pagePadding.first().toFloat() }) }
+            var padding by remember { mutableFloatStateOf(runBlocking { context.pagePadding.first().toFloat() }) }
 
             SliderSetting(
                 sliderValue = padding,
@@ -465,7 +461,7 @@ class GenericManga(val context: Context) : GenericInfo {
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
-    override fun NavGraphBuilder.navSetup() {
+    override fun NavGraphBuilder.globalNavSetup() {
         composable(
             ReadViewModel.MangaReaderRoute,
             arguments = listOf(
@@ -480,7 +476,9 @@ class GenericManga(val context: Context) : GenericInfo {
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
         ) { ReadView() }
+    }
 
+    override fun NavGraphBuilder.settingsNavSetup() {
         composable(
             DownloadViewModel.DownloadRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },

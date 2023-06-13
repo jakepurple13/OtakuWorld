@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.all
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -33,6 +34,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
@@ -48,10 +51,11 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalFoundationApi
 @Composable
 fun AllView(
-    allVm: AllViewModel,
     logo: MainLogo,
+    context: Context = LocalContext.current,
+    dao: ItemDao = LocalItemDao.current,
+    allVm: AllViewModel = viewModel { AllViewModel(dao, context) },
 ) {
-    val context = LocalContext.current
     val isConnected by allVm.observeNetwork.collectAsState(initial = true)
     val source by sourceFlow.collectAsState(initial = null)
 
@@ -63,7 +67,10 @@ fun AllView(
     val state = rememberLazyGridState()
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
     val scrollBehaviorTop = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) { 2 }
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehaviorTop.nestedScrollConnection),
@@ -86,7 +93,7 @@ fun AllView(
                     selectedTabIndex = pagerState.currentPage,
                     // Override the indicator, using the provided pagerTabIndicatorOffset modifier
                     indicator = { tabPositions ->
-                        TabRowDefaults.Indicator(
+                        TabRowDefaults.SecondaryIndicator(
                             Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
                         )
                     }
@@ -115,7 +122,7 @@ fun AllView(
             placeholder = logo.logoId,
             modifier = Modifier.padding(p1)
         ) { itemInfo ->
-            Crossfade(targetState = isConnected) { connected ->
+            Crossfade(targetState = isConnected, label = "") { connected ->
                 when (connected) {
                     false -> {
                         Column(
@@ -136,7 +143,6 @@ fun AllView(
                     }
                     true -> {
                         HorizontalPager(
-                            pageCount = 2,
                             state = pagerState,
                             contentPadding = p1
                         ) { page ->

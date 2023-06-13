@@ -2,13 +2,11 @@ package com.programmersbox.uiviews
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.Uri
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
@@ -21,11 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.DialogProperties
@@ -34,7 +30,6 @@ import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.entity.Library
 import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
 import com.mikepenz.aboutlibraries.ui.compose.LibraryPadding
-import com.mikepenz.aboutlibraries.ui.compose.data.fakeData
 import com.mikepenz.aboutlibraries.ui.compose.util.author
 import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.sharedutils.MainLogo
@@ -44,7 +39,7 @@ import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.appVersion
 
 @Composable
-fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
+private fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
     val libraries = remember { mutableStateOf<Libs?>(null) }
 
     val context = LocalContext.current
@@ -55,7 +50,7 @@ fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
 @Composable
-fun AboutLibrariesScreen(mainLogo: MainLogo) {
+internal fun AboutLibrariesScreen(mainLogo: MainLogo) {
     val libraries by libraryList()
     val context = LocalContext.current
 
@@ -138,7 +133,7 @@ fun AboutLibrariesScreen(mainLogo: MainLogo) {
 }
 
 @Composable
-fun OutlinedLibrariesContainer(
+private fun OutlinedLibrariesContainer(
     libraries: Libs?,
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
@@ -180,7 +175,7 @@ fun OutlinedLibrariesContainer(
 }
 
 @Composable
-fun LibrariesContainer(
+private fun LibrariesContainer(
     libraries: Libs?,
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
@@ -218,7 +213,6 @@ fun LibrariesContainer(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun OutlinedLibrary(
     library: Library,
@@ -320,7 +314,7 @@ data class Sites(
 )
 
 @Composable
-fun DefaultHeader(
+private fun DefaultHeader(
     logo: (@Composable () -> Unit)? = null,
     appName: String? = stringResource(id = R.string.app_name),
     version: String? = null,
@@ -361,43 +355,6 @@ fun DefaultHeader(
             description?.let {
                 Divider(modifier = Modifier.padding(horizontal = 4.dp))
                 Text(it, textAlign = TextAlign.Center)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-@Composable
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-fun DefaultHeaderPreview() {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
-        Surface {
-            Scaffold {
-                OutlinedLibrariesContainer(
-                    libraries = fakeData,
-                    contentPadding = it,
-                    modifier = Modifier.fillMaxSize(),
-                    header = {
-                        stickyHeader {
-                            DefaultHeader(
-                                logo = { Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null) },
-                                version = "1.2.3",
-                                description = "This is a massive description thasd;" +
-                                        "lfjkasd;lkfja;lksdfj;alskdjf;laskdjf;alksjdf;laksdjf;lksjfda",
-                                linkSites = listOf(
-                                    Sites(
-                                        name = "Play Store",
-                                        url = "asdf",
-                                    ),
-                                    Sites(
-                                        name = "GitHub",
-                                        url = "asdf",
-                                    )
-                                )
-                            )
-                        }
-                    }
-                )
             }
         }
     }

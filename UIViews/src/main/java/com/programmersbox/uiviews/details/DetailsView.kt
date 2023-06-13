@@ -2,9 +2,14 @@ package com.programmersbox.uiviews.details
 
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -24,6 +29,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
@@ -40,6 +46,8 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +60,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -80,10 +89,12 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.lists.ListChoiceScreen
+import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -93,6 +104,7 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
+import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.Dispatchers
@@ -129,6 +141,8 @@ fun DetailsView(
 
     val hostState = remember { SnackbarHostState() }
 
+    val listState = rememberLazyListState()
+
     val listDao = LocalCustomListDao.current
 
     val scope = rememberCoroutineScope()
@@ -150,7 +164,7 @@ fun DetailsView(
         }
     }
 
-    val topBarColor by animateColorAsState(swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface)
+    val topBarColor by animateColorAsState(swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface, label = "")
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -159,6 +173,7 @@ fun DetailsView(
             onDismissRequest = { showLists = false },
         ) {
             ListChoiceScreen(
+                url = info.url,
                 onClick = { item ->
                     scope.launch {
                         showLists = false
@@ -210,7 +225,7 @@ fun DetailsView(
         }
     ) {
         val b = MaterialTheme.colorScheme.background
-        val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b)
+        val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
 
         OtakuScaffold(
             containerColor = Color.Transparent,
@@ -366,6 +381,33 @@ fun DetailsView(
                     )
                 }
             },
+            floatingActionButton = {
+                AnimatedVisibility(
+                    visible = isSaved,
+                    enter = fadeIn() + slideInHorizontally { it / 2 },
+                    exit = slideOutHorizontally { it / 2 } + fadeOut(),
+                    label = ""
+                ) {
+                    val notificationManager = LocalContext.current.notificationManager
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                dao.getNotificationItemFlow(info.url)
+                                    .firstOrNull()
+                                    ?.let {
+                                        dao.deleteNotification(it)
+                                        notificationManager.cancelNotification(it)
+                                    }
+                            }
+                        },
+                        text = { Text("Remove from Saved") },
+                        icon = { Icon(Icons.Default.BookmarkRemove, null) },
+                        containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
+                        contentColor = swatchInfo?.titleColor?.toComposeColor() ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
+                        expanded = listState.isScrollingUp()
+                    )
+                }
+            },
             modifier = Modifier
                 .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -388,8 +430,6 @@ fun DetailsView(
                 scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
                 toolbar = { header() }
             ) {
-                val listState = rememberLazyListState()
-
                 LazyColumnScrollbar(
                     enabled = true,
                     thickness = 8.dp,

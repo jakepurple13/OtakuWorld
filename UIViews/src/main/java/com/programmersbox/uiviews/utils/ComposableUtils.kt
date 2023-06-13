@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.utils
 
-import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -11,6 +10,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,15 +23,12 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toComposeRect
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -39,7 +36,6 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.window.layout.WindowMetricsCalculator
 import com.programmersbox.uiviews.R
 import kotlin.properties.Delegates
 
@@ -59,7 +55,7 @@ class CoordinatorModel(
     val content: @Composable BoxScope.(Float, CoordinatorModel) -> Unit
 ) {
     var heightPx by Delegates.notNull<Float>()
-    val offsetHeightPx = mutableStateOf(0f)
+    val offsetHeightPx = mutableFloatStateOf(0f)
 
     @Composable
     internal fun Setup() {
@@ -148,55 +144,6 @@ val currentColorScheme: ColorScheme
             )
         }
     }
-
-/**
- * Opinionated set of viewport breakpoints
- *     - Compact: Most phones in portrait mode
- *     - Medium: Most foldables and tablets in portrait mode
- *     - Expanded: Most tablets in landscape mode
- *
- * More info: https://material.io/archive/guidelines/layout/responsive-ui.html
- */
-enum class WindowSize { Compact, Medium, Expanded }
-
-/**
- * Remembers the [WindowSize] class for the window corresponding to the current window metrics.
- */
-@Composable
-fun Activity.rememberWindowSizeClass(): WindowSize {
-    // Get the size (in pixels) of the window
-    val windowSize = rememberWindowSize()
-
-    // Convert the window size to [Dp]
-    val windowDpSize = with(LocalDensity.current) {
-        windowSize.toDpSize()
-    }
-
-    // Calculate the window size class
-    return getWindowSizeClass(windowDpSize)
-}
-
-/**
- * Remembers the [Size] in pixels of the window corresponding to the current window metrics.
- */
-@Composable
-private fun Activity.rememberWindowSize(): Size {
-    val configuration = LocalConfiguration.current
-    // WindowMetricsCalculator implicitly depends on the configuration through the activity,
-    // so re-calculate it upon changes.
-    val windowMetrics = remember(configuration) { WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(this) }
-    return windowMetrics.bounds.toComposeRect().size
-}
-
-/**
- * Partitions a [DpSize] into a enumerated [WindowSize] class.
- */
-fun getWindowSizeClass(windowDpSize: DpSize): WindowSize = when {
-    windowDpSize.width < 0.dp -> throw IllegalArgumentException("Dp value cannot be negative")
-    windowDpSize.width < 600.dp -> WindowSize.Compact
-    windowDpSize.width < 840.dp -> WindowSize.Medium
-    else -> WindowSize.Expanded
-}
 
 fun Color.contrastAgainst(background: Color): Float {
     val fg = if (alpha < 1f) compositeOver(background) else this
@@ -449,4 +396,22 @@ val Sunflower = Color(0xFFf1c40f)
 val Alizarin = Color(0xFFe74c3c)
 
 @Composable
-fun Color.animate() = animateColorAsState(this)
+fun Color.animate(label: String = "") = animateColorAsState(this, label = label)
+
+@Composable
+fun LazyListState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
+    var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
+}

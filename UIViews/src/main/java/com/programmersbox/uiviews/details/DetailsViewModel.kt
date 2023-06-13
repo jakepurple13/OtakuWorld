@@ -23,9 +23,15 @@ import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.showErrorToast
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class DetailsViewModel(
@@ -58,13 +64,13 @@ class DetailsViewModel(
                 it.printStackTrace()
                 context.showErrorToast()
             }
-            ?.onEach {
-                if (it.isSuccess) {
-                    info = it.getOrThrow()
-                    description = it.getOrThrow().description
-                    setup(it.getOrThrow())
-                    Cached.cache[it.getOrThrow().url] = it.getOrThrow()
-                }
+            ?.filter { it.isSuccess }
+            ?.map { it.getOrThrow() }
+            ?.onEach { item ->
+                info = item
+                description = item.description
+                setup(item)
+                Cached.cache[item.url] = item
             }
             ?.launchIn(viewModelScope)
     }
@@ -80,13 +86,13 @@ class DetailsViewModel(
     }
 
     private fun setup(info: InfoModel) {
-        viewModelScope.launch(Dispatchers.IO) {
-            combine(
-                itemListener.findItemByUrlFlow(info.url),
-                dao.containsItem(info.url)
-            ) { f, d -> f || d }
-                .collect { favoriteListener = it }
-        }
+        combine(
+            itemListener.findItemByUrlFlow(info.url),
+            dao.containsItem(info.url)
+        ) { f, d -> f || d }
+            .dispatchIo()
+            .onEach { favoriteListener = it }
+            .launchIn(viewModelScope)
 
         combine(
             chapterListener.getAllEpisodesByShowFlow(info.url),

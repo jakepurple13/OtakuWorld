@@ -56,6 +56,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -126,6 +127,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.compose.koinInject
 import java.io.File
 import java.util.Locale
 
@@ -199,6 +201,7 @@ fun SettingScreen(
 private fun SettingsScreen(
     dao: ItemDao = LocalItemDao.current,
     vm: SettingsViewModel = viewModel { SettingsViewModel(dao) },
+    logo: MainLogo = koinInject(),
     notificationClick: () -> Unit,
     composeSettingsDsl: ComposeSettingsDsl,
     debugMenuClick: () -> Unit,
@@ -207,6 +210,7 @@ private fun SettingsScreen(
     globalSearchClick: () -> Unit,
     listClick: () -> Unit,
 ) {
+    val context = LocalContext.current
     val navController = LocalNavController.current
     val source by sourceFlow.collectAsState(initial = null)
 
@@ -355,6 +359,17 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(R.string.more_info_category)) },
         settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.click { navController.navigate(Screen.MoreInfoSettings.route) }
+    )
+
+    PreferenceSetting(
+        settingIcon = {
+            Image(
+                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                null,
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+        settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
     )
 
 }
@@ -655,7 +670,7 @@ fun GeneralSettings(
             updateValue = { scope.launch { handling.setShowAll(it) } }
         )
 
-        var sliderValue by remember { mutableStateOf(runBlocking { context.historySave.first().toFloat() }) }
+        var sliderValue by remember { mutableFloatStateOf(runBlocking { context.historySave.first().toFloat() }) }
 
         SliderSetting(
             sliderValue = sliderValue,
@@ -679,7 +694,7 @@ fun PlaySettings(customSettings: (@Composable () -> Unit)?) {
         val scope = rememberCoroutineScope()
         val settingsHandling = LocalSettingsHandling.current
         val slider by settingsHandling.batteryPercentage.collectAsState(runBlocking { settingsHandling.batteryPercentage.first() })
-        var sliderValue by remember(slider) { mutableStateOf(slider.toFloat()) }
+        var sliderValue by remember(slider) { mutableFloatStateOf(slider.toFloat()) }
 
         SliderSetting(
             sliderValue = sliderValue,

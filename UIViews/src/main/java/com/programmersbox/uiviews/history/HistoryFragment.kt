@@ -35,7 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
@@ -70,7 +71,6 @@ fun HistoryUi(
     var clearAllDialog by remember { mutableStateOf(false) }
 
     if (clearAllDialog) {
-
         val onDismissRequest = { clearAllDialog = false }
 
         AlertDialog(
@@ -86,7 +86,6 @@ fun HistoryUi(
             },
             dismissButton = { TextButton(onClick = { onDismissRequest() }) { Text(stringResource(R.string.no)) } }
         )
-
     }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -119,7 +118,12 @@ fun HistoryUi(
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(recentItems) { item ->
+            items(
+                count = recentItems.itemCount,
+                key = recentItems.itemKey { it.url },
+                contentType = recentItems.itemContentType { it }
+            ) {
+                val item = recentItems[it]
                 if (item != null) {
                     HistoryItem(item, dao, logo, scope)
                 } else {
@@ -173,7 +177,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                     DismissValue.Default -> Color.Transparent
                     DismissValue.DismissedToEnd -> Color.Red
                     DismissValue.DismissedToStart -> Color.Red
-                }
+                }, label = ""
             )
             val alignment = when (direction) {
                 DismissDirection.StartToEnd -> Alignment.CenterStart
@@ -183,7 +187,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                 DismissDirection.StartToEnd -> Icons.Default.Delete
                 DismissDirection.EndToStart -> Icons.Default.Delete
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
             Box(
                 Modifier

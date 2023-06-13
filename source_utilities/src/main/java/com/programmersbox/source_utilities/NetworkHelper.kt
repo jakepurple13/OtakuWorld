@@ -1,4 +1,4 @@
-package com.programmersbox.manga_sources.utilities
+package com.programmersbox.source_utilities
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -28,7 +28,7 @@ fun Connection.headers(vararg pair: Pair<String, String>) = apply { headers(pair
 
 fun Response.asJsoup(html: String? = null): Document = Jsoup.parse(html ?: body!!.string(), request.url.toString())
 
-internal fun cloudflare(networkHelper: NetworkHelper, url: String, vararg headers: Pair<String, String>) = networkHelper
+fun cloudflare(networkHelper: NetworkHelper, url: String, vararg headers: Pair<String, String>) = networkHelper
     .cloudflareClient.newCall(
         Request.Builder()
             .url(url)
@@ -37,7 +37,7 @@ internal fun cloudflare(networkHelper: NetworkHelper, url: String, vararg header
             .build()
     )
 
-internal fun OkHttpClient.cloudflare(url: String, vararg headers: Pair<String, String>) = newCall(
+fun OkHttpClient.cloudflare(url: String, vararg headers: Pair<String, String>) = newCall(
     Request.Builder()
         .url(url)
         .header(*headers)

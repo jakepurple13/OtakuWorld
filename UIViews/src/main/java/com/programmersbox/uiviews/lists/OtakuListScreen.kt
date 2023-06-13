@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
@@ -151,6 +152,7 @@ fun OtakuListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListChoiceScreen(
+    url: String? = null,
     onClick: (CustomList) -> Unit
 ) {
     val dao = LocalCustomListDao.current
@@ -204,7 +206,8 @@ fun ListChoiceScreen(
         itemContent = {
             ListBottomSheetItemModel(
                 primaryText = it.item.name,
-                trailingText = "(${it.list.size})"
+                trailingText = "(${it.list.size})",
+                icon = it.list.find { l -> l.url == url }?.let { Icons.Default.Check }
             )
         }
     )

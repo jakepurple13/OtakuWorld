@@ -4,13 +4,12 @@ import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.with
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -75,8 +74,7 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalAnimationApi::class
+    ExperimentalMaterialApi::class
 )
 @Composable
 fun RecentView(
@@ -103,7 +101,10 @@ fun RecentView(
 
     val sourceList = remember { info.sourceList() }
     val initSource = remember(source) { sourceList.indexOf(source) }
-    val pagerState = rememberPagerState(initSource.coerceAtLeast(0))
+    val pagerState = rememberPagerState(
+        initialPage = initSource.coerceAtLeast(0),
+        initialPageOffsetFraction = 0f
+    ) { info.sourceList().size }
     LaunchedEffect(initSource) {
         if (initSource != -1) pagerState.scrollToPage(initSource)
     }
@@ -124,10 +125,10 @@ fun RecentView(
                         targetState = pagerState.targetPage,
                         transitionSpec = {
                             if (targetState > initialState) {
-                                slideInVertically { height -> height } + fadeIn() with
+                                slideInVertically { height -> height } + fadeIn() togetherWith
                                         slideOutVertically { height -> -height } + fadeOut()
                             } else {
-                                slideInVertically { height -> -height } + fadeIn() with
+                                slideInVertically { height -> -height } + fadeIn() togetherWith
                                         slideOutVertically { height -> height } + fadeOut()
                             }.using(SizeTransform(clip = false))
                         },
@@ -138,7 +139,6 @@ fun RecentView(
                 },
                 actions = {
                     VerticalPager(
-                        pageCount = info.sourceList().size,
                         state = pagerState
                     ) {
                         Box(Modifier.fillMaxHeight()) {

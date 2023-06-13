@@ -98,5 +98,7 @@ interface GenericInfo {
 
     fun debugMenuItem(context: Context): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
-    fun NavGraphBuilder.navSetup() = Unit
+    fun NavGraphBuilder.globalNavSetup() = Unit
+
+    fun NavGraphBuilder.settingsNavSetup(): Unit = Unit
 }

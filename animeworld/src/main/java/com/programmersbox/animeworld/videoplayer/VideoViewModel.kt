@@ -13,7 +13,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
-import androidx.media3.datasource.DefaultDataSourceFactory
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.dash.DashMediaSource
@@ -100,7 +100,7 @@ class VideoViewModel(
 
     var batteryColor by mutableStateOf(Color.White)
     var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
-    var batteryPercent by mutableStateOf(0f)
+    var batteryPercent by mutableFloatStateOf(0f)
     val batteryInformation by lazy { BatteryInformation(context) }
 
     init {
@@ -205,6 +205,7 @@ class SSLTrustManager : X509TrustManager {
     }
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun Context.getMediaSource(
     url: Uri,
     preview: Boolean,
@@ -236,17 +237,18 @@ fun Context.getMediaSource(
         else -> DefaultMediaSourceFactory(getHttpDataSourceFactory(preview, bandwidthMeter, header))
     }.createMediaSource(MediaItem.fromUri(url))
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 private fun Context.getDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
     header: String
 ): DataSource.Factory =
-    DefaultDataSourceFactory(
+    DefaultDataSource.Factory(
         this,
-        null,//if (preview) null else bandwidthMeter,
         getHttpDataSourceFactory(preview, bandwidthMeter, header)
     )
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 private fun Context.getHttpDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,

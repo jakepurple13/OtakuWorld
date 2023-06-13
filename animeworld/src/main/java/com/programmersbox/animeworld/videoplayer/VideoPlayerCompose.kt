@@ -195,38 +195,37 @@ fun VideoPlayer(
             .also { viewModel.exoPlayer = it }
     }
 
-    DisposableEffect(
-        AndroidView(
-            modifier = modifier,
-            factory = {
-                exoPlayer.setMediaSource(source)
-                exoPlayer.prepare()
+    AndroidView(
+        modifier = modifier,
+        factory = {
+            exoPlayer.setMediaSource(source)
+            exoPlayer.prepare()
 
-                exoPlayer.addListener(
-                    object : Player.Listener {
-                        override fun onPlayerError(error: PlaybackException) {
-                            super.onPlayerError(error)
-                            Toast.makeText(context, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
-                        }
+            exoPlayer.addListener(
+                object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                        super.onPlayerError(error)
+                        Toast.makeText(context, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
                     }
-                )
-
-                val pos = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(viewModel.showPath, 0)
-                exoPlayer.seekTo(pos)
-                PlayerView(context).apply {
-                    hideController()
-                    useController = false
-                    setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
-
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-
-                    player = exoPlayer
-                    layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
                 }
+            )
+
+            val pos = context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(viewModel.showPath, 0)
+            exoPlayer.seekTo(pos)
+            PlayerView(context).apply {
+                hideController()
+                useController = false
+                setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
+
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+
+                player = exoPlayer
+                layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
             }
-        )
-    ) {
+        }
+    )
+    DisposableEffect(Unit) {
         onDispose {
             exoPlayer.currentPosition.also {
                 viewModel.showPath.let { path -> context.getSharedPreferences("videos", Context.MODE_PRIVATE).edit().putLong(path, it).apply() }
@@ -257,7 +256,7 @@ fun VideoTopBar(viewModel: VideoViewModel, visible: Boolean) {
                         contentDescription = null,
                         tint = animateColorAsState(
                             if (viewModel.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                            else viewModel.batteryColor
+                            else viewModel.batteryColor, label = ""
                         ).value
                     )
                     Text(
@@ -308,7 +307,7 @@ fun VideoBottomBar(
                     var isSeeking by remember { mutableStateOf(false) }
 
                     var seekChange by remember(isSeeking, if (isSeeking) Unit else currentPosition) {
-                        mutableStateOf(currentPosition.toFloat())
+                        mutableFloatStateOf(currentPosition.toFloat())
                     }
 
                     Slider(
@@ -414,10 +413,10 @@ fun MediaControlGestures(
 
             var job: Job? = remember { null }
             var showVolume by remember { mutableStateOf(false) }
-            var volumeLevel by remember { mutableStateOf(0) }
+            var volumeLevel by remember { mutableIntStateOf(0) }
 
             var showBrightness by remember { mutableStateOf(false) }
-            var brightnessLevel by remember { mutableStateOf(0) }
+            var brightnessLevel by remember { mutableIntStateOf(0) }
 
             var visibilityJob: Job? = remember { null }
 

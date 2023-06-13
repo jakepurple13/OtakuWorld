@@ -27,7 +27,7 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
-import org.koin.androidx.compose.get
+import org.koin.compose.koinInject
 import java.util.UUID
 
 sealed class Screen(val route: String) {
@@ -124,7 +124,7 @@ fun OtakuMaterialTheme(
                 LocalActivity provides remember { context.findActivity() },
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides get(),
+                LocalSettingsHandling provides koinInject(),
                 LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },

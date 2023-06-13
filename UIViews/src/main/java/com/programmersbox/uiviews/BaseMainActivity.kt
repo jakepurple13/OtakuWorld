@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -28,19 +30,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.bottomSheet
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -50,7 +52,6 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.all.AllView
-import com.programmersbox.uiviews.all.AllViewModel
 import com.programmersbox.uiviews.details.DetailsScreen
 import com.programmersbox.uiviews.favorite.FavoriteChoiceScreen
 import com.programmersbox.uiviews.favorite.FavoriteUi
@@ -97,7 +98,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @OptIn(
         ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
-        ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
+        ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
+        ExperimentalMaterial3WindowSizeClassApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,7 +128,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
-            navController = rememberAnimatedNavController(
+            navController = rememberNavController(
                 bottomSheetNavigator,
                 remember { ChromeCustomTabsNavigator(this) }
             )
@@ -147,8 +149,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                 val showAllItem by settingsHandling.showAll.collectAsState(false)
 
-                com.google.accompanist.navigation.material.ModalBottomSheetLayout(
-                    bottomSheetNavigator,
+                ModalBottomSheetLayout(
+                    bottomSheetNavigator = bottomSheetNavigator,
                     sheetBackgroundColor = MaterialTheme.colorScheme.surface,
                     sheetContentColor = MaterialTheme.colorScheme.onSurface,
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
@@ -200,7 +202,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                             }
                                                         )
                                                     },
-                                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                                    selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
                                                     onClick = {
                                                         navController.navigate(screen.route) {
                                                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -216,108 +218,14 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        AnimatedNavHost(
+                        NavHost(
                             navController = navController,
                             startDestination = Screen.RecentScreen.route,
                             modifier = Modifier.padding(innerPadding)
                         ) {
                             composable(Screen.RecentScreen.route) { RecentView(logo = logo) }
-
-                            composable(
-                                Screen.AllScreen.route
-                            ) {
-                                val context = LocalContext.current
-                                val dao = LocalItemDao.current
-                                AllView(
-                                    allVm = viewModel { AllViewModel(dao, context) },
-                                    logo = logo
-                                )
-                            }
-
-                            navigation(Screen.SettingsScreen.route, Screen.Settings.route) {
-                                composable(
-                                    Screen.SettingsScreen.route,
-                                    deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.SettingsScreen.route }),
-                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
-                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-                                ) {
-                                    SettingScreen(
-                                        composeSettingsDsl = customPreferences,
-                                        notificationClick = { navController.navigate(Screen.NotificationScreen.route) { launchSingleTop = true } },
-                                        favoritesClick = { navController.navigate(Screen.FavoriteScreen.route) { launchSingleTop = true } },
-                                        historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
-                                        globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
-                                        listClick = { navController.navigate(Screen.CustomListScreen.route) { launchSingleTop = true } }
-                                    )
-                                }
-
-                                composable(
-                                    Screen.NotificationsSettings.route,
-                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
-                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-                                ) { NotificationSettings() }
-
-                                composable(
-                                    Screen.GeneralSettings.route,
-                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
-                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-                                ) { GeneralSettings(customPreferences.generalSettings) }
-
-                                composable(
-                                    Screen.MoreInfoSettings.route,
-                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
-                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-                                ) {
-                                    InfoSettings(
-                                        logo = logo,
-                                        usedLibraryClick = { navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true } }
-                                    )
-                                }
-
-                                composable(
-                                    Screen.OtherSettings.route,
-                                    enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
-                                    exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-                                ) { PlaySettings(customPreferences.playerSettings) }
-                            }
-
-                            composable(
-                                Screen.NotificationScreen.route,
-                                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
-                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-                            ) {
-                                NotificationsScreen(
-                                    notificationManager = LocalContext.current.notificationManager,
-                                    logo = logo,
-                                    notificationLogo = notificationLogo
-                                )
-                            }
-
-                            composable(
-                                Screen.GlobalSearchScreen.route + "?searchFor={searchFor}",
-                                arguments = listOf(navArgument("searchFor") { nullable = true }),
-                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-                            ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
-
-                            composable(
-                                Screen.FavoriteScreen.route,
-                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-                            ) { FavoriteUi(logo) }
-
-                            composable(
-                                Screen.HistoryScreen.route,
-                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-                            ) { HistoryUi(logo = logo) }
-
-                            composable(
-                                Screen.AboutScreen.route,
-                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-                            ) { AboutLibrariesScreen(logo) }
+                            composable(Screen.AllScreen.route) { AllView(logo = logo) }
+                            settings(customPreferences) { with(genericInfo) { settingsNavSetup() } }
 
                             composable(
                                 Screen.DetailsScreen.route + "/{model}",
@@ -331,18 +239,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             ) {
                                 DetailsScreen(
                                     logo = notificationLogo,
-                                    windowSize = rememberWindowSizeClass()
+                                    windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
                                 )
                             }
-
-                            composable(Screen.CustomListScreen.route) { OtakuListScreen() }
-                            composable(
-                                Screen.CustomListItemScreen.route + "/{uuid}"
-                            ) { OtakuCustomListScreen(logo) }
-
-                            composable(
-                                Screen.ImportListScreen.route + "?uri={uri}"
-                            ) { ImportListScreen(logo) }
 
                             bottomSheet(Screen.TranslationScreen.route) { TranslationScreen() }
 
@@ -354,9 +253,126 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                             chromeCustomTabs()
 
-                            with(genericInfo) { navSetup() }
+                            with(genericInfo) { globalNavSetup() }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalMaterialApi::class,
+        ExperimentalFoundationApi::class
+    )
+    private fun NavGraphBuilder.settings(
+        customPreferences: ComposeSettingsDsl,
+        additionalSettings: NavGraphBuilder.() -> Unit
+    ) {
+        navigation(
+            route = Screen.Settings.route,
+            startDestination = Screen.SettingsScreen.route,
+        ) {
+            composable(
+                Screen.SettingsScreen.route,
+                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.SettingsScreen.route }),
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) {
+                SettingScreen(
+                    composeSettingsDsl = customPreferences,
+                    notificationClick = { navController.navigate(Screen.NotificationScreen.route) { launchSingleTop = true } },
+                    favoritesClick = { navController.navigate(Screen.FavoriteScreen.route) { launchSingleTop = true } },
+                    historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
+                    globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
+                    listClick = { navController.navigate(Screen.CustomListScreen.route) { launchSingleTop = true } },
+                    debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } }
+                )
+            }
+
+            composable(
+                Screen.NotificationsSettings.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) { NotificationSettings() }
+
+            composable(
+                Screen.GeneralSettings.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) { GeneralSettings(customPreferences.generalSettings) }
+
+            composable(
+                Screen.MoreInfoSettings.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) {
+                InfoSettings(
+                    logo = logo,
+                    usedLibraryClick = { navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true } }
+                )
+            }
+
+            composable(
+                Screen.OtherSettings.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) { PlaySettings(customPreferences.playerSettings) }
+
+            composable(
+                Screen.HistoryScreen.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+            ) { HistoryUi(logo = logo) }
+
+            composable(
+                Screen.FavoriteScreen.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+            ) { FavoriteUi(logo) }
+
+            composable(
+                Screen.AboutScreen.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+            ) { AboutLibrariesScreen(logo) }
+
+            composable(
+                Screen.GlobalSearchScreen.route + "?searchFor={searchFor}",
+                arguments = listOf(navArgument("searchFor") { nullable = true }),
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+            ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
+
+            composable(Screen.CustomListScreen.route) { OtakuListScreen() }
+            composable(
+                Screen.CustomListItemScreen.route + "/{uuid}"
+            ) { OtakuCustomListScreen(logo) }
+
+            composable(
+                Screen.ImportListScreen.route + "?uri={uri}"
+            ) { ImportListScreen(logo) }
+
+            composable(
+                Screen.NotificationScreen.route,
+                deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+            ) {
+                NotificationsScreen(
+                    notificationManager = LocalContext.current.notificationManager,
+                    logo = logo,
+                    notificationLogo = notificationLogo
+                )
+            }
+
+            additionalSettings()
+
+            if (BuildConfig.DEBUG) {
+                composable(Screen.DebugScreen.route) {
+                    DebugView()
                 }
             }
         }
@@ -381,6 +397,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
         )
     }
 
+    private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: Screen) = this?.hierarchy?.any {
+        it.route?.contains(destination.route, true) ?: false
+    } ?: false
+
+
     override fun onProvideAssistContent(outContent: AssistContent?) {
         super.onProvideAssistContent(outContent)
         outContent?.webUri = Uri.parse(currentDetailsUrl)
@@ -390,5 +411,4 @@ abstract class BaseMainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         if (isNavInitialized()) navController.handleDeepLink(intent)
     }
-
 }

@@ -29,8 +29,8 @@ import androidx.core.app.TaskStackBuilder
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
@@ -187,7 +187,7 @@ class GenericNovel(val context: Context) : GenericInfo {
     }
 
     @OptIn(ExperimentalAnimationApi::class)
-    override fun NavGraphBuilder.navSetup() {
+    override fun NavGraphBuilder.globalNavSetup() {
         composable(
             ReadViewModel.NovelReaderRoute,
             arguments = listOf(
