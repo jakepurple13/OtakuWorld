@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -42,7 +43,6 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.*
 import com.programmersbox.uiviews.R
@@ -70,30 +70,32 @@ fun NotificationManager.cancelNotification(item: NotificationItem) {
 )
 @Composable
 fun NotificationsScreen(
-    notificationManager: NotificationManager,
     logo: MainLogo,
     notificationLogo: NotificationLogo,
     navController: NavController = LocalNavController.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     db: ItemDao = LocalItemDao.current,
     settingsHandling: SettingsHandling = LocalSettingsHandling.current,
-    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, genericInfo) }
+    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, genericInfo) },
+    cancelNotificationById: (Int) -> Unit,
+    cancelNotification: (NotificationItem) -> Unit,
 ) {
     val items = vm.items
+
+    val context = LocalContext.current
+    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
     LaunchedEffect(Unit) {
         db.getAllNotificationCount()
             .filter { it == 0 }
             .collect {
-                notificationManager.cancel(42)
+                cancelNotificationById(42)
                 navController.popBackStack()
             }
     }
 
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
     BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
         scope.launch { state.bottomSheetState.partialExpand() }
@@ -126,7 +128,7 @@ fun NotificationsScreen(
                                             context.getString(R.string.deleted_notifications, number),
                                             Toast.LENGTH_SHORT
                                         ).show()
-                                        context.notificationManager.cancel(42)
+                                        cancelNotificationById(42)
                                     }
                                 }
                             }
@@ -151,13 +153,13 @@ fun NotificationsScreen(
         },
         onRemove = { item ->
             vm.deleteNotification(db, item)
-            notificationManager.cancelNotification(item)
+            cancelNotification(item)
         },
         onMultipleRemove = { d ->
             scope.launch {
                 withContext(Dispatchers.Default) {
                     d.forEach {
-                        notificationManager.cancelNotification(it)
+                        cancelNotification(it)
                         db.deleteNotification(it)
                     }
                 }
@@ -201,7 +203,7 @@ fun NotificationsScreen(
                                         items
                                             .filter { it.notiTitle == item.notiTitle }
                                             .forEach {
-                                                notificationManager.cancelNotification(it)
+                                                cancelNotification(it)
                                                 db.deleteNotification(it)
                                             }
                                     }
@@ -229,8 +231,8 @@ fun NotificationsScreen(
                                 NotificationItem(
                                     item = it,
                                     navController = navController,
-                                    vm = vm,
-                                    notificationManager = notificationManager,
+                                    deleteNotification = vm::deleteNotification,
+                                    cancelNotification = cancelNotification,
                                     db = db,
                                     genericInfo = genericInfo,
                                     logo = logo,
@@ -282,8 +284,8 @@ fun NotificationsScreen(
                                             NotificationItem(
                                                 item = it,
                                                 navController = navController,
-                                                vm = vm,
-                                                notificationManager = notificationManager,
+                                                deleteNotification = vm::deleteNotification,
+                                                cancelNotification = cancelNotification,
                                                 db = db,
                                                 genericInfo = genericInfo,
                                                 logo = logo,
@@ -334,8 +336,8 @@ fun NotificationsScreen(
 private fun NotificationItem(
     item: NotificationItem,
     navController: NavController,
-    vm: NotificationScreenViewModel,
-    notificationManager: NotificationManager,
+    deleteNotification: (db: ItemDao, item: NotificationItem, block: () -> Unit) -> Unit,
+    cancelNotification: (NotificationItem) -> Unit,
     db: ItemDao,
     genericInfo: GenericInfo,
     logo: MainLogo,
@@ -356,8 +358,8 @@ private fun NotificationItem(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        vm.deleteNotification(db, item, onDismiss)
-                        notificationManager.cancelNotification(item)
+                        deleteNotification(db, item, onDismiss)
+                        cancelNotification(item)
                     }
                 ) { Text(stringResource(R.string.yes)) }
             },
@@ -606,4 +608,34 @@ private fun NotificationItem(
             }
         }
     )
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun NotificationPreview() {
+    PreviewTheme {
+        NotificationsScreen(
+            logo = MockAppIcon,
+            notificationLogo = NotificationLogo(R.drawable.github_icon),
+            cancelNotification = {},
+            cancelNotificationById = {}
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun NotificationItemPreview() {
+    PreviewTheme {
+        NotificationItem(
+            item = NotificationItem(1, "", "world", "hello", null, "MANGA_READ", "Title"),
+            navController = rememberNavController(),
+            deleteNotification = { _, _, _ -> },
+            db = LocalItemDao.current,
+            genericInfo = MockInfo,
+            cancelNotification = {},
+            logo = MockAppIcon,
+            notificationLogo = NotificationLogo(R.drawable.github_icon)
+        )
+    }
 }

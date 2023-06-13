@@ -35,7 +35,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
@@ -141,6 +143,7 @@ fun AllView(
                             Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                         }
                     }
+
                     true -> {
                         HorizontalPager(
                             state = pagerState,
@@ -148,15 +151,25 @@ fun AllView(
                         ) { page ->
                             when (page) {
                                 0 -> AllScreen(
-                                    allVm = allVm,
                                     itemInfoChange = { itemInfo.value = it },
                                     state = state,
-                                    showBanner = { showBanner = it }
+                                    showBanner = { showBanner = it },
+                                    isRefreshing = allVm.isRefreshing,
+                                    sourceList = allVm.sourceList,
+                                    favoriteList = allVm.favoriteList,
+                                    onLoadMore = allVm::loadMore,
+                                    onReset = allVm::reset
                                 )
+
                                 1 -> SearchScreen(
-                                    allVm = allVm,
                                     itemInfoChange = { itemInfo.value = it },
-                                    showBanner = { showBanner = it }
+                                    showBanner = { showBanner = it },
+                                    searchList = allVm.searchList,
+                                    searchText = allVm.searchText,
+                                    onSearchChange = { allVm.searchText = it },
+                                    isSearching = allVm.isSearching,
+                                    search = allVm::search,
+                                    favoriteList = allVm.favoriteList
                                 )
                             }
                         }
@@ -170,7 +183,11 @@ fun AllView(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun AllScreen(
-    allVm: AllViewModel,
+    isRefreshing: Boolean,
+    sourceList: List<ItemModel>,
+    favoriteList: List<DbModel>,
+    onLoadMore: (Context?, ApiService) -> Unit,
+    onReset: (Context?, ApiService) -> Unit,
     itemInfoChange: (ItemModel?) -> Unit,
     state: LazyGridState,
     showBanner: (Boolean) -> Unit
@@ -179,20 +196,20 @@ fun AllScreen(
     val source by sourceFlow.collectAsState(initial = null)
     val navController = LocalNavController.current
     val context = LocalContext.current
-    val pullRefreshState = rememberPullRefreshState(allVm.isRefreshing, onRefresh = { source?.let { allVm.reset(context, it) } })
+    val pullRefreshState = rememberPullRefreshState(isRefreshing, onRefresh = { source?.let { onReset(context, it) } })
     OtakuScaffold { p ->
         Box(
             modifier = Modifier
                 .padding(p)
                 .pullRefresh(pullRefreshState)
         ) {
-            if (allVm.sourceList.isEmpty()) {
+            if (sourceList.isEmpty()) {
                 info.ComposeShimmerItem()
             } else {
                 info.AllListView(
-                    list = allVm.sourceList,
+                    list = sourceList,
                     listState = state,
-                    favorites = allVm.favoriteList,
+                    favorites = favoriteList,
                     onLongPress = { item, c ->
                         itemInfoChange(if (c == ComponentState.Pressed) item else null)
                         showBanner(c == ComponentState.Pressed)
@@ -200,7 +217,7 @@ fun AllScreen(
                 ) { navController.navigateToDetails(it) }
             }
             PullRefreshIndicator(
-                refreshing = allVm.isRefreshing,
+                refreshing = isRefreshing,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
                 backgroundColor = M3MaterialTheme.colorScheme.background,
@@ -209,9 +226,9 @@ fun AllScreen(
             )
         }
 
-        if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
+        if (source?.canScrollAll == true && sourceList.isNotEmpty()) {
             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                source?.let { allVm.loadMore(context, it) }
+                source?.let { onLoadMore(context, it) }
             }
         }
     }
@@ -220,14 +237,17 @@ fun AllScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SearchScreen(
-    allVm: AllViewModel,
     itemInfoChange: (ItemModel?) -> Unit,
-    showBanner: (Boolean) -> Unit
+    showBanner: (Boolean) -> Unit,
+    searchList: List<ItemModel>,
+    searchText: String,
+    onSearchChange: (String) -> Unit,
+    isSearching: Boolean,
+    favoriteList: List<DbModel>,
+    search: () -> Unit
 ) {
-
     val info = LocalGenericInfo.current
     val focusManager = LocalFocusManager.current
-    val searchList = allVm.searchList
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val source by sourceFlow.collectAsState(initial = null)
     val navController = LocalNavController.current
@@ -236,8 +256,8 @@ fun SearchScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             OutlinedTextField(
-                value = allVm.searchText,
-                onValueChange = { allVm.searchText = it },
+                value = searchText,
+                onValueChange = onSearchChange,
                 label = {
                     Text(
                         stringResource(
@@ -249,7 +269,7 @@ fun SearchScreen(
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(searchList.size.toString())
-                        IconButton(onClick = { allVm.searchText = "" }) {
+                        IconButton(onClick = { onSearchChange("") }) {
                             Icon(Icons.Default.Cancel, null)
                         }
                     }
@@ -261,12 +281,12 @@ fun SearchScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = {
                     focusManager.clearFocus()
-                    allVm.search()
+                    search()
                 })
             )
         }
     ) { p ->
-        val pullRefreshState = rememberPullRefreshState(allVm.isSearching, onRefresh = {})
+        val pullRefreshState = rememberPullRefreshState(isSearching, onRefresh = {})
         Box(
             modifier = Modifier
                 .pullRefresh(pullRefreshState, false)
@@ -275,7 +295,7 @@ fun SearchScreen(
             info.SearchListView(
                 list = searchList,
                 listState = rememberLazyGridState(),
-                favorites = allVm.favoriteList,
+                favorites = favoriteList,
                 onLongPress = { item, c ->
                     itemInfoChange(if (c == ComponentState.Pressed) item else null)
                     showBanner(c == ComponentState.Pressed)
@@ -283,7 +303,7 @@ fun SearchScreen(
             ) { navController.navigateToDetails(it) }
 
             PullRefreshIndicator(
-                refreshing = allVm.isSearching,
+                refreshing = isSearching,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
                 backgroundColor = M3MaterialTheme.colorScheme.background,
@@ -338,5 +358,39 @@ fun Modifier.pagerTabIndicatorOffset(
                 maxOf(constraints.minHeight - placeable.height, 0)
             )
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun AllScreenPreview() {
+    PreviewTheme {
+        AllScreen(
+            itemInfoChange = {},
+            state = rememberLazyGridState(),
+            showBanner = {},
+            isRefreshing = true,
+            sourceList = emptyList(),
+            favoriteList = emptyList(),
+            onLoadMore = { _, _ -> },
+            onReset = { _, _ -> }
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun SearchPreview() {
+    PreviewTheme {
+        SearchScreen(
+            itemInfoChange = {},
+            showBanner = {},
+            searchList = emptyList(),
+            searchText = "",
+            onSearchChange = {},
+            isSearching = true,
+            search = {},
+            favoriteList = emptyList()
+        )
     }
 }

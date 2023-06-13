@@ -1,0 +1,52 @@
+package com.programmersbox.uiviews.settings
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.SliderSetting
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+
+@Composable
+fun PlaySettings(customSettings: (@Composable () -> Unit)?) {
+    SettingsScaffold(stringResource(R.string.playSettings)) {
+        val scope = rememberCoroutineScope()
+        val settingsHandling = LocalSettingsHandling.current
+        val slider by settingsHandling.batteryPercentage.collectAsState(runBlocking { settingsHandling.batteryPercentage.first() })
+        var sliderValue by remember(slider) { mutableFloatStateOf(slider.toFloat()) }
+
+        SliderSetting(
+            sliderValue = sliderValue,
+            settingTitle = { Text(stringResource(R.string.battery_alert_percentage)) },
+            settingSummary = { Text(stringResource(R.string.battery_default)) },
+            settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
+            range = 1f..100f,
+            updateValue = { sliderValue = it },
+            onValueChangedFinished = { scope.launch { settingsHandling.setBatteryPercentage(sliderValue.toInt()) } }
+        )
+
+        customSettings?.invoke()
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun PlaySettingsPreview() {
+    PreviewTheme {
+        PlaySettings(null)
+    }
+}

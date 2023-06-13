@@ -25,7 +25,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -61,6 +60,7 @@ import com.programmersbox.uiviews.lists.ImportListScreen
 import com.programmersbox.uiviews.lists.OtakuCustomListScreen
 import com.programmersbox.uiviews.lists.OtakuListScreen
 import com.programmersbox.uiviews.notifications.NotificationsScreen
+import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.recent.RecentView
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.settings.GeneralSettings
@@ -361,10 +361,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
+                val notificationManager = remember { this@BaseMainActivity.notificationManager }
                 NotificationsScreen(
-                    notificationManager = LocalContext.current.notificationManager,
                     logo = logo,
-                    notificationLogo = notificationLogo
+                    notificationLogo = notificationLogo,
+                    cancelNotificationById = notificationManager::cancel,
+                    cancelNotification = notificationManager::cancelNotification
                 )
             }
 

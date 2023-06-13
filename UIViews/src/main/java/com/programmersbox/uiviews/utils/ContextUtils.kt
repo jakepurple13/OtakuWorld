@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
@@ -592,8 +593,12 @@ val Context.appVersion: String
 
 @Composable
 fun appVersion(): String {
-    val context = LocalContext.current
-    return remember(context) { context.appVersion }
+    return if (LocalInspectionMode.current) {
+        "1.0.0"
+    } else {
+        val context = LocalContext.current
+        remember(context) { context.appVersion }
+    }
 }
 
 internal inline fun <T> SavedStateHandle.state(

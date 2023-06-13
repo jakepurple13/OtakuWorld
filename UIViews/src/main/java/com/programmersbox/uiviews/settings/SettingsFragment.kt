@@ -1,12 +1,6 @@
 package com.programmersbox.uiviews.settings
 
-import android.Manifest
-import android.content.Context
-import android.os.Environment
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,27 +14,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.BatteryAlert
-import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SettingsBrightness
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
@@ -54,9 +40,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -65,70 +49,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.models.sourceFlow
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.BuildConfig
-import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SystemThemeMode
-import com.programmersbox.uiviews.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.CategorySetting
-import com.programmersbox.uiviews.utils.DownloadUpdate
-import com.programmersbox.uiviews.utils.HISTORY_SAVE
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
-import com.programmersbox.uiviews.utils.ListSetting
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreferenceSetting
-import com.programmersbox.uiviews.utils.SHOULD_CHECK
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.ShowWhen
-import com.programmersbox.uiviews.utils.SliderSetting
-import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.currentService
-import com.programmersbox.uiviews.utils.historySave
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
-import com.programmersbox.uiviews.utils.updatePref
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.compose.koinInject
-import java.io.File
 import java.util.Locale
 
 class ComposeSettingsDsl {
@@ -297,12 +257,11 @@ private fun SettingsScreen(
         ) { navController.navigate(Screen.SourceChooserScreen.route) }
     )
 
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
-        settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier
-            .alpha(animateFloatAsState(targetValue = if (source != null) 1f else 0f, label = "").value)
-            .clickable(
+    ShowWhen(visibility = source != null) {
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
+            settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
+            modifier = Modifier.clickable(
                 enabled = source != null,
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
@@ -321,7 +280,8 @@ private fun SettingsScreen(
                     )
                 }
             }
-    )
+        )
+    }
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
@@ -371,7 +331,25 @@ private fun SettingsScreen(
         },
         settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
     )
+}
 
+@LightAndDarkPreviews
+@Composable
+private fun SettingsPreview() {
+    PreviewTheme {
+        SettingsScaffold(title = "Settings") {
+            SettingsScreen(
+                composeSettingsDsl = ComposeSettingsDsl(),
+                notificationClick = {},
+                debugMenuClick = {},
+                favoritesClick = {},
+                historyClick = {},
+                globalSearchClick = {},
+                listClick = {},
+                logo = MockAppIcon
+            )
+        }
+    }
 }
 
 @Composable
@@ -471,372 +449,11 @@ fun SourceChooserScreen() {
     }
 }
 
+@LightAndDarkPreviews
 @Composable
-fun NotificationSettings(
-    dao: ItemDao = LocalItemDao.current,
-    context: Context = LocalContext.current,
-    notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao, context) }
-) {
-    SettingsScaffold(stringResource(R.string.notification_settings)) {
-        val scope = rememberCoroutineScope()
-        ShowWhen(notiViewModel.savedNotifications > 0) {
-            var showDialog by remember { mutableStateOf(false) }
-
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                scope.launch {
-                                    val number = dao.deleteAllNotifications()
-                                    launch(Dispatchers.Main) {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.deleted_notifications, number),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        context.notificationManager.cancel(42)
-                                    }
-                                }
-                                showDialog = false
-                            }
-                        ) { Text(stringResource(R.string.yes)) }
-                    },
-                    dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.no)) } }
-                )
-            }
-
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.delete_saved_notifications_title)) },
-                summaryValue = { Text(stringResource(R.string.delete_notifications_summary)) },
-                modifier = Modifier
-                    .clickable(
-                        indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) { showDialog = true }
-                    .padding(bottom = 16.dp, top = 8.dp)
-            )
-        }
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
-            summaryValue = { Text(notiViewModel.time) },
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) {
-                WorkManager.getInstance(context)
-                    .enqueueUniqueWork(
-                        "oneTimeUpdate",
-                        ExistingWorkPolicy.KEEP,
-                        OneTimeWorkRequestBuilder<UpdateFlowWorker>()
-                            .setConstraints(
-                                Constraints.Builder()
-                                    .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
-                                    .setRequiresBatteryNotLow(false)
-                                    .setRequiresCharging(false)
-                                    .setRequiresDeviceIdle(false)
-                                    .setRequiresStorageNotLow(false)
-                                    .build()
-                            )
-                            .build()
-                    )
-            }
-        )
-
-        var showDialog by remember { mutableStateOf(false) }
-
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text(stringResource(R.string.are_you_sure_stop_checking)) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            scope.launch {
-                                context.updatePref(SHOULD_CHECK, false)
-                                OtakuApp.updateSetupNow(context, false)
-                            }
-                            showDialog = false
-                        }
-                    ) { Text(stringResource(R.string.yes)) }
-                },
-                dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.no)) } }
-            )
-        }
-
-        SwitchSetting(
-            settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
-            value = notiViewModel.canCheck,
-            updateValue = {
-                if (!it) {
-                    showDialog = true
-                } else {
-                    scope.launch {
-                        context.updatePref(SHOULD_CHECK, it)
-                        OtakuApp.updateSetupNow(context, it)
-                    }
-                }
-            }
-        )
-
-        ShowWhen(notiViewModel.canCheck) {
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.clear_update_queue)) },
-                summaryValue = { Text(stringResource(R.string.clear_update_queue_summary)) },
-                modifier = Modifier
-                    .alpha(if (notiViewModel.canCheck) 1f else .38f)
-                    .clickable(
-                        enabled = notiViewModel.canCheck,
-                        indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        val work = WorkManager.getInstance(context)
-                        work.cancelUniqueWork("updateFlowChecks")
-                        work.pruneWork()
-                        OtakuApp.updateSetup(context)
-                        Toast
-                            .makeText(context, R.string.cleared, Toast.LENGTH_SHORT)
-                            .show()
-                    }
-            )
-        }
-    }
-}
-
-@ExperimentalMaterial3Api
-@ExperimentalComposeUiApi
-@Composable
-fun GeneralSettings(
-    customSettings: (@Composable () -> Unit)?,
-) {
-    SettingsScaffold(stringResource(R.string.general_menu_title)) {
-        val scope = rememberCoroutineScope()
-        val context = LocalContext.current
-
-        val handling = LocalSettingsHandling.current
-
-        val themeSetting by handling.systemThemeMode.collectAsState(initial = SystemThemeMode.FollowSystem)
-
-        val themeText by remember {
-            derivedStateOf {
-                when (themeSetting) {
-                    SystemThemeMode.FollowSystem -> "System"
-                    SystemThemeMode.Day -> "Light"
-                    SystemThemeMode.Night -> "Dark"
-                    else -> "None"
-                }
-            }
-        }
-
-        ListSetting(
-            settingTitle = { Text(stringResource(R.string.theme_choice_title)) },
-            dialogIcon = { Icon(Icons.Default.SettingsBrightness, null) },
-            settingIcon = { Icon(Icons.Default.SettingsBrightness, null, modifier = Modifier.fillMaxSize()) },
-            dialogTitle = { Text(stringResource(R.string.choose_a_theme)) },
-            summaryValue = { Text(themeText) },
-            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
-            value = themeSetting,
-            options = listOf(SystemThemeMode.FollowSystem, SystemThemeMode.Day, SystemThemeMode.Night),
-            updateValue = { it, d ->
-                d.value = false
-                scope.launch { handling.setSystemThemeMode(it) }
-                when (it) {
-                    SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                    SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
-                    SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
-                    else -> null
-                }?.let(AppCompatDelegate::setDefaultNightMode)
-            }
-        )
-
-        val shareChapter by handling.shareChapter.collectAsState(initial = true)
-
-        SwitchSetting(
-            settingTitle = { Text(stringResource(R.string.share_chapters)) },
-            settingIcon = { Icon(Icons.Default.Share, null, modifier = Modifier.fillMaxSize()) },
-            value = shareChapter,
-            updateValue = { scope.launch { handling.setShareChapter(it) } }
-        )
-
-        val showAllScreen by handling.showAll.collectAsState(initial = true)
-
-        SwitchSetting(
-            settingTitle = { Text(stringResource(R.string.show_all_screen)) },
-            settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
-            value = showAllScreen,
-            updateValue = { scope.launch { handling.setShowAll(it) } }
-        )
-
-        var sliderValue by remember { mutableFloatStateOf(runBlocking { context.historySave.first().toFloat() }) }
-
-        SliderSetting(
-            sliderValue = sliderValue,
-            settingTitle = { Text(stringResource(R.string.history_save_title)) },
-            settingSummary = { Text(stringResource(R.string.history_save_summary)) },
-            settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
-            range = -1f..100f,
-            updateValue = {
-                sliderValue = it
-                scope.launch { context.updatePref(HISTORY_SAVE, sliderValue.toInt()) }
-            }
-        )
-
-        customSettings?.invoke()
-    }
-}
-
-@Composable
-fun PlaySettings(customSettings: (@Composable () -> Unit)?) {
-    SettingsScaffold(stringResource(R.string.playSettings)) {
-        val scope = rememberCoroutineScope()
-        val settingsHandling = LocalSettingsHandling.current
-        val slider by settingsHandling.batteryPercentage.collectAsState(runBlocking { settingsHandling.batteryPercentage.first() })
-        var sliderValue by remember(slider) { mutableFloatStateOf(slider.toFloat()) }
-
-        SliderSetting(
-            sliderValue = sliderValue,
-            settingTitle = { Text(stringResource(R.string.battery_alert_percentage)) },
-            settingSummary = { Text(stringResource(R.string.battery_default)) },
-            settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
-            range = 1f..100f,
-            updateValue = { sliderValue = it },
-            onValueChangedFinished = { scope.launch { settingsHandling.setBatteryPercentage(sliderValue.toInt()) } }
-        )
-
-        customSettings?.invoke()
-    }
-}
-
-@Composable
-fun InfoSettings(
-    infoViewModel: MoreInfoViewModel = viewModel(),
-    logo: MainLogo,
-    usedLibraryClick: () -> Unit,
-) {
-    val activity = LocalActivity.current
-    val genericInfo = LocalGenericInfo.current
-    val navController = LocalNavController.current
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-
-    SettingsScaffold(stringResource(R.string.more_info_category)) {
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.view_libraries_used)) },
-            settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = usedLibraryClick
-            )
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.view_on_github)) },
-            settingIcon = { Icon(painterResource(R.drawable.github_icon), null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.join_discord)) },
-            settingIcon = { Icon(painterResource(R.drawable.ic_baseline_discord_24), null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { navController.navigateChromeCustomTabs("https://discord.gg/MhhHMWqryg") }
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.support)) },
-            summaryValue = { Text(stringResource(R.string.support_summary)) },
-            settingIcon = { Icon(Icons.Default.AttachMoney, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() }
-            ) { navController.navigateChromeCustomTabs("https://ko-fi.com/V7V3D3JI") }
-        )
-
-        val appUpdate by updateAppCheck.collectAsState(null)
-
-        PreferenceSetting(
-            settingIcon = {
-                Image(
-                    bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
-                    null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            },
-            settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
-            modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
-        )
-
-        ShowWhen(
-            visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
-        ) {
-            var showDialog by remember { mutableStateOf(false) }
-
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
-                    text = { Text(stringResource(R.string.please_update_for_latest_features)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                activity.requestPermissions(
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                    Manifest.permission.READ_EXTERNAL_STORAGE
-                                ) {
-                                    if (it.isGranted) {
-                                        updateAppCheck.value
-                                            ?.let { a ->
-                                                val isApkAlreadyThere = File(
-                                                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
-                                                    a.let(genericInfo.apkString).toString()
-                                                )
-                                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                                DownloadUpdate(context, context.packageName).downloadUpdate(a)
-                                            }
-                                    }
-                                }
-                                showDialog = false
-                            }
-                        ) { Text(stringResource(R.string.update)) }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
-                        TextButton(
-                            onClick = {
-                                navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                                showDialog = false
-                            }
-                        ) { Text(stringResource(R.string.gotoBrowser)) }
-                    }
-                )
-            }
-
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.update_available)) },
-                summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
-                modifier = Modifier.clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
-                ) { showDialog = true },
-                settingIcon = {
-                    Icon(
-                        Icons.Default.SystemUpdateAlt,
-                        null,
-                        tint = Color(0xFF00E676),
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            )
-        }
+private fun SourceChooserPreview() {
+    PreviewTheme {
+        SourceChooserScreen()
     }
 }
 
@@ -873,7 +490,7 @@ private fun Modifier.click(action: () -> Unit): Modifier = composed {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsScaffold(
+internal fun SettingsScaffold(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {

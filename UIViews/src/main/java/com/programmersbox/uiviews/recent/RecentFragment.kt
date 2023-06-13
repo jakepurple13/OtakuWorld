@@ -33,6 +33,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -59,17 +60,19 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.launch
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -182,9 +185,9 @@ fun RecentView(
                                 Icons.Default.CloudOff,
                                 null,
                                 modifier = Modifier.size(50.dp),
-                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
                             )
-                            Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
+                            Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.titleLarge)
                         }
                     }
 
@@ -210,8 +213,8 @@ fun RecentView(
                                 refreshing = recentVm.isRefreshing,
                                 state = pull,
                                 modifier = Modifier.align(Alignment.TopCenter),
-                                backgroundColor = M3MaterialTheme.colorScheme.background,
-                                contentColor = M3MaterialTheme.colorScheme.onBackground,
+                                backgroundColor = MaterialTheme.colorScheme.background,
+                                contentColor = MaterialTheme.colorScheme.onBackground,
                                 scale = true
                             )
                         }
@@ -225,5 +228,13 @@ fun RecentView(
                 }
             }
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun RecentPreview() {
+    PreviewTheme {
+        RecentView(logo = MockAppIcon)
     }
 }
