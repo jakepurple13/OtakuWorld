@@ -67,13 +67,15 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.GroupButton
@@ -95,7 +97,6 @@ fun FavoriteUi(
 ) {
 
     val navController = LocalNavController.current
-    val activity = LocalActivity.current
     val context = LocalContext.current
 
     val favoriteItems: List<DbModel> = viewModel.favoriteList
@@ -147,7 +148,7 @@ fun FavoriteUi(
                             actions = {
 
                                 val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                                    animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
+                                    animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f, label = "").value
                                 }
 
                                 GroupButton(
@@ -393,5 +394,16 @@ fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoic
             primaryText = it.title,
             overlineText = it.source
         )
+    }
+}
+
+@ExperimentalMaterial3Api
+@ExperimentalMaterialApi
+@ExperimentalFoundationApi
+@LightAndDarkPreviews
+@Composable
+private fun FavoriteScreenPreview() {
+    PreviewTheme {
+        FavoriteUi(logo = MockAppIcon)
     }
 }

@@ -145,6 +145,10 @@ val MockInfo = object : GenericInfo {
     }
 }
 
+val MockApiService = object : ApiService {
+    override val baseUrl: String = ""
+}
+
 @Composable
 fun PreviewTheme(
     navController: NavHostController = rememberNavController(),

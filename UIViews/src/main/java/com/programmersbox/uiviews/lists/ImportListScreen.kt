@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -57,10 +58,14 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -209,5 +214,39 @@ private fun CustomItem(
                 Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
             }
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ImportScreenPreview() {
+    PreviewTheme {
+        val listDao: ListDao = LocalCustomListDao.current
+        val context: Context = LocalContext.current
+        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, SavedStateHandle(), context) }
+        ImportListScreen(
+            logo = MockAppIcon,
+            listDao = listDao,
+            context = context,
+            vm = vm
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ImportItemPreview() {
+    PreviewTheme {
+        CustomItem(
+            item = CustomListInfo(
+                uuid = UUID.randomUUID(),
+                title = "Title",
+                description = "description",
+                url = "",
+                imageUrl = "",
+                source = "MANGA_READ"
+            ),
+            logo = MockAppIcon
+        )
     }
 }

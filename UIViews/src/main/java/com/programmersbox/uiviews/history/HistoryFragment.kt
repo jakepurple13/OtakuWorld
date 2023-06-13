@@ -6,20 +6,25 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,10 +58,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @Composable
 fun HistoryUi(
     logo: MainLogo,
@@ -136,7 +139,6 @@ fun HistoryUi(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope) {
     var showPopup by remember { mutableStateOf(false) }
@@ -160,7 +162,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
     }
 
     val dismissState = rememberDismissState(
-        confirmStateChange = {
+        confirmValueChange = {
             if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
                 showPopup = true
             }
@@ -202,100 +204,99 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                     modifier = Modifier.scale(scale)
                 )
             }
-        }
-    ) {
+        },
+        dismissContent = {
+            var showLoadingDialog by remember { mutableStateOf(false) }
 
-        var showLoadingDialog by remember { mutableStateOf(false) }
-
-        LoadingDialog(
-            showLoadingDialog = showLoadingDialog,
-            onDismissRequest = { showLoadingDialog = false }
-        )
-
-        val context = LocalContext.current
-        val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
-
-        val info = LocalGenericInfo.current
-        val navController = LocalNavController.current
-
-        Surface(
-            tonalElevation = 4.dp,
-            shape = MaterialTheme.shapes.medium,
-            onClick = {
-                scope.launch {
-                    info.toSource(item.source)
-                        ?.getSourceByUrlFlow(item.url)
-                        ?.dispatchIo()
-                        ?.onStart { showLoadingDialog = true }
-                        ?.catch {
-                            showLoadingDialog = false
-                            context.showErrorToast()
-                        }
-                        ?.onEach { m ->
-                            showLoadingDialog = false
-                            navController.navigateToDetails(m)
-                        }
-                        ?.collect()
-                }
-            }
-        ) {
-            ListItem(
-                headlineContent = { Text(item.title) },
-                overlineContent = { Text(item.source) },
-                supportingContent = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
-                leadingContent = {
-                    Surface(shape = MaterialTheme.shapes.medium) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(item.imageUrl)
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .crossfade(true)
-                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                                .build(),
-                            placeholder = rememberDrawablePainter(logoDrawable),
-                            error = rememberDrawablePainter(logoDrawable),
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = item.title,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    }
-                },
-                trailingContent = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { showPopup = true }) { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    info.toSource(item.source)
-                                        ?.getSourceByUrlFlow(item.url)
-                                        ?.dispatchIo()
-                                        ?.onStart { showLoadingDialog = true }
-                                        ?.catch {
-                                            showLoadingDialog = false
-                                            context.showErrorToast()
-                                        }
-                                        ?.onEach { m ->
-                                            showLoadingDialog = false
-                                            navController.navigateToDetails(m)
-                                        }
-                                        ?.collect()
-                                }
-                            }
-                        ) { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }
-                    }
-                }
+            LoadingDialog(
+                showLoadingDialog = showLoadingDialog,
+                onDismissRequest = { showLoadingDialog = false }
             )
+
+            val context = LocalContext.current
+            val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+
+            val info = LocalGenericInfo.current
+            val navController = LocalNavController.current
+
+            Surface(
+                tonalElevation = 4.dp,
+                shape = MaterialTheme.shapes.medium,
+                onClick = {
+                    scope.launch {
+                        info.toSource(item.source)
+                            ?.getSourceByUrlFlow(item.url)
+                            ?.dispatchIo()
+                            ?.onStart { showLoadingDialog = true }
+                            ?.catch {
+                                showLoadingDialog = false
+                                context.showErrorToast()
+                            }
+                            ?.onEach { m ->
+                                showLoadingDialog = false
+                                navController.navigateToDetails(m)
+                            }
+                            ?.collect()
+                    }
+                }
+            ) {
+                ListItem(
+                    headlineContent = { Text(item.title) },
+                    overlineContent = { Text(item.source) },
+                    supportingContent = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
+                    leadingContent = {
+                        Surface(shape = MaterialTheme.shapes.medium) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(item.imageUrl)
+                                    .lifecycle(LocalLifecycleOwner.current)
+                                    .crossfade(true)
+                                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                    .build(),
+                                placeholder = rememberDrawablePainter(logoDrawable),
+                                error = rememberDrawablePainter(logoDrawable),
+                                contentScale = ContentScale.FillBounds,
+                                contentDescription = item.title,
+                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            )
+                        }
+                    },
+                    trailingContent = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { showPopup = true }) { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        info.toSource(item.source)
+                                            ?.getSourceByUrlFlow(item.url)
+                                            ?.dispatchIo()
+                                            ?.onStart { showLoadingDialog = true }
+                                            ?.catch {
+                                                showLoadingDialog = false
+                                                context.showErrorToast()
+                                            }
+                                            ?.onEach { m ->
+                                                showLoadingDialog = false
+                                                navController.navigateToDetails(m)
+                                            }
+                                            ?.collect()
+                                    }
+                                }
+                            ) { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }
+                        }
+                    }
+                )
+            }
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@ExperimentalMaterialApi
 @Composable
 private fun HistoryItemPlaceholder() {
-    val placeholderColor = androidx.compose.material3.contentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
+    val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
         .copy(0.1f)
-        .compositeOver(M3MaterialTheme.colorScheme.surface)
+        .compositeOver(MaterialTheme.colorScheme.surface)
 
     Surface(
         tonalElevation = 4.dp,
@@ -323,5 +324,41 @@ private fun HistoryItemPlaceholder() {
                 }
             }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@LightAndDarkPreviews
+@Composable
+private fun HistoryScreenPreview() {
+    PreviewTheme {
+        HistoryUi(logo = MockAppIcon)
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun HistoryItemPreview() {
+    PreviewTheme {
+        HistoryItem(
+            item = RecentModel(
+                title = "Title",
+                description = "Description",
+                url = "url",
+                imageUrl = "imageUrl",
+                source = "MANGA_READ"
+            ),
+            dao = LocalHistoryDao.current,
+            logo = MockAppIcon,
+            scope = rememberCoroutineScope()
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun HistoryPlaceholderItemPreview() {
+    PreviewTheme {
+        HistoryItemPlaceholder()
     }
 }

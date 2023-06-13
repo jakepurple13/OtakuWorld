@@ -89,12 +89,17 @@ import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
+import com.programmersbox.uiviews.utils.MockApiService
+import com.programmersbox.uiviews.utils.MockAppIcon
+import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
@@ -175,7 +180,6 @@ fun GlobalSearchView(
                         active = false
                     }
                     SearchBar(
-                        modifier = Modifier.fillMaxWidth(),
                         windowInsets = WindowInsets(0.dp),
                         query = viewModel.searchText,
                         onQueryChange = { viewModel.searchText = it },
@@ -200,6 +204,7 @@ fun GlobalSearchView(
                                 Icon(Icons.Default.Cancel, null)
                             }
                         },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         LazyColumn(
                             modifier = Modifier
@@ -305,7 +310,9 @@ fun GlobalSearchView(
                                 contentPadding = padding,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(top = 8.dp)
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(top = 8.dp)
                             ) {
                                 if (viewModel.isRefreshing) {
                                     items(3) {
@@ -477,5 +484,43 @@ fun SearchCoverCard(
                 )
             }
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun GlobalScreenPreview() {
+    PreviewTheme {
+        val dao = LocalHistoryDao.current
+        GlobalSearchView(
+            mainLogo = MockAppIcon,
+            notificationLogo = NotificationLogo(R.drawable.github_icon),
+            dao = dao,
+            viewModel = viewModel {
+                GlobalSearchViewModel(
+                    info = MockInfo,
+                    initialSearch = "",
+                    dao = dao,
+                )
+            }
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun GlobalSearchCoverPreview() {
+    PreviewTheme {
+        SearchCoverCard(
+            model = ItemModel(
+                title = "Title",
+                description = "Description",
+                url = "url",
+                imageUrl = "imageUrl",
+                source = MockApiService
+            ),
+            placeHolder = null,
+            onLongPress = {}
+        )
     }
 }

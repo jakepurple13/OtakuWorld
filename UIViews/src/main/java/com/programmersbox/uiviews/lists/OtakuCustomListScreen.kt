@@ -67,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -82,10 +83,13 @@ import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.MockAppIcon
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.dispatchIo
@@ -98,6 +102,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -517,4 +522,40 @@ private fun CustomItem(
             }
         }
     )
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun CustomListScreenPreview() {
+    PreviewTheme {
+        val listDao: ListDao = LocalCustomListDao.current
+        val vm: OtakuCustomListViewModel = viewModel {
+            OtakuCustomListViewModel(listDao, SavedStateHandle())
+        }
+        OtakuCustomListScreen(
+            logo = MockAppIcon,
+            listDao = listDao,
+            vm = vm
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun CustomItemPreview() {
+    PreviewTheme {
+        CustomItem(
+            item = CustomListInfo(
+                uuid = UUID.randomUUID(),
+                title = "Title",
+                description = "description",
+                url = "",
+                imageUrl = "",
+                source = "MANGA_READ"
+            ),
+            logo = MockAppIcon,
+            onDelete = {},
+            showLoadingDialog = {}
+        )
+    }
 }

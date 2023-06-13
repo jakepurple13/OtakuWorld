@@ -45,9 +45,11 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
@@ -211,4 +213,23 @@ fun ListChoiceScreen(
             )
         }
     )
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ListScreenPreview() {
+    PreviewTheme {
+        OtakuListScreen()
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ListChoiceScreenPreview() {
+    PreviewTheme {
+        ListChoiceScreen(
+            url = "",
+            onClick = {}
+        )
+    }
 }
