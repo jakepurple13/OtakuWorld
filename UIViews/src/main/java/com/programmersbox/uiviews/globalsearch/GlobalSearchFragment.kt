@@ -425,13 +425,12 @@ fun SearchCoverCard(
     onClick: () -> Unit = {}
 ) {
     ElevatedCard(
-        modifier = Modifier
+        modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
             .combineClickableWithIndication(onLongPress, onClick)
-            .then(modifier)
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
