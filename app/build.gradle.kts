@@ -46,6 +46,6 @@ dependencies {
     implementation(composeBom)
     implementation(libs.bundles.compose)
 
-    implementation("androidx.window:window:1.0.0")
+    implementation("androidx.window:window:1.1.0")
 
 }
