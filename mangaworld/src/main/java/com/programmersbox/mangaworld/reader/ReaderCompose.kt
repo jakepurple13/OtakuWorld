@@ -279,10 +279,8 @@ fun ReadView(
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
                     Crossfade(targetState = listOrPager, label = "") {
-                        if (it) ListView(listState, PaddingValues(top = 64.dp, bottom = 80.dp), pages, readVm, spacing) {
-                            readVm.showInfo = !readVm.showInfo
-                        }
-                        else PagerView(pagerState, PaddingValues(0.dp), pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        if (it) ListView(listState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                        else PagerView(pagerState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
                     }
 
                     PullRefreshIndicator(
@@ -466,7 +464,6 @@ fun SheetView(
 @Composable
 fun ListView(
     listState: LazyListState,
-    contentPadding: PaddingValues,
     pages: List<String>,
     readVm: ReadViewModel,
     itemSpacing: Dp,
@@ -476,7 +473,6 @@ fun ListView(
         modifier = Modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
-        contentPadding = contentPadding
     ) { reader(pages, readVm, onClick) }
 }
 
@@ -484,7 +480,6 @@ fun ListView(
 @Composable
 fun PagerView(
     pagerState: PagerState,
-    contentPadding: PaddingValues,
     pages: List<String>,
     vm: ReadViewModel,
     itemSpacing: Dp,
@@ -494,7 +489,6 @@ fun PagerView(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
         pageSpacing = itemSpacing,
-        contentPadding = contentPadding,
         beyondBoundsPageCount = 1,
         key = { it }
     ) { page ->
