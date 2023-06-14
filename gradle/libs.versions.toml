@@ -1,4 +1,5 @@
 [versions]
+easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.5"
 googleServices = "4.3.15"
 gradle = "8.1.0-beta05"
@@ -13,7 +14,7 @@ roomVersion = "2.5.1"
 navVersion = "2.7.0-beta01"
 koinVersion = "3.4.2"
 lottieVersion = "6.0.0"
-coil = "2.3.0"
+coil = "2.4.0"
 lifecycle = "2.6.1"
 jetpack = "1.5.0-beta02"
 jetpackCompiler = "1.4.7"
@@ -24,7 +25,7 @@ workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.12"
 protobufVersion = "3.23.0"
-sketchVersion = "3.2.1-rc02"
+sketchVersion = "3.2.1-rc03"
 composeBomVersion = "2023.04.00-beta02"
 
 ### MangaWorld
@@ -41,6 +42,7 @@ navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plug
 ksp = { id = "com.google.devtools.ksp", version = "1.8.21-1.0.11" }
 
 [libraries]
+easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }

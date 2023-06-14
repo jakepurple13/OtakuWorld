@@ -22,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.PreviewTheme
 
 class ListBottomSheetItemModel(
     val primaryText: String,
@@ -69,5 +71,20 @@ fun <T> ListBottomScreen(
             )
             if (index < list.size - 1) Divider()
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ListBottomSheetPreview() {
+    PreviewTheme {
+        ListBottomScreen(
+            title = "Example",
+            list = listOf(1, 2, 3, 4, 5),
+            onClick = {},
+            itemContent = {
+                ListBottomSheetItemModel(primaryText = it.toString())
+            }
+        )
     }
 }

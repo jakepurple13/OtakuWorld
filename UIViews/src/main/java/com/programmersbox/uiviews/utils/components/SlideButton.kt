@@ -21,11 +21,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlin.math.roundToInt
 
 enum class SwipeState { Swiped, Unswiped }
@@ -102,10 +103,10 @@ fun SwipeButton(
 }
 
 @OptIn(ExperimentalMaterialApi::class)
-@Preview
+@LightAndDarkPreviews
 @Composable
 fun SwipeButtonPreview() {
-    MaterialTheme {
+    PreviewTheme {
         Surface {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 SwipeButton(
