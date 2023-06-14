@@ -218,4 +218,4 @@ val MockAppIcon = MainLogo(R.drawable.github_icon)
 
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, group = "themes")
 @Preview(showBackground = true, group = "themes")
-internal annotation class LightAndDarkPreviews
+annotation class LightAndDarkPreviews

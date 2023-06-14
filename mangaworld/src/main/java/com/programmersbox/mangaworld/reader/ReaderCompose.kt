@@ -60,7 +60,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -1154,14 +1153,16 @@ private fun SliderSetting(
     )
 }
 
-@Preview
+@LightAndDarkPreviews
 @Composable
 fun LastPagePreview() {
-    LastPageReached(
-        isLoading = true,
-        currentChapter = 3,
-        chapterName = "Name".repeat(100),
-        nextChapter = {},
-        previousChapter = {}
-    )
+    PreviewTheme {
+        LastPageReached(
+            isLoading = true,
+            currentChapter = 3,
+            chapterName = "Name".repeat(100),
+            nextChapter = {},
+            previousChapter = {}
+        )
+    }
 }

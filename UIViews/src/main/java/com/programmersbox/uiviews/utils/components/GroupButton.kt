@@ -7,11 +7,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.PreviewTheme
 
 class GroupButtonModel<T>(val item: T, val iconContent: @Composable () -> Unit)
 
@@ -43,5 +46,18 @@ fun <T> GroupButton(
                 )
             ) { option.iconContent() }
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun GroupButtonPreview() {
+    PreviewTheme {
+        val f = listOf(1, 2, 3, 4, 5)
+        GroupButton(
+            selected = f[0],
+            options = f.map { GroupButtonModel(it) { Text(it.toString()) } },
+            onClick = {}
+        )
     }
 }

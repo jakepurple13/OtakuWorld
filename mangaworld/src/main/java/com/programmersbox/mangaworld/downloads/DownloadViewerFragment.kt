@@ -184,7 +184,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     Icon(
                         Icons.Default.ArrowDropDown,
                         null,
-                        modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f).value)
+                        modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
                     )
                 }
             )
@@ -257,10 +257,10 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                                 DismissValue.Default -> Color.Transparent
                                 DismissValue.DismissedToEnd -> Color.Transparent
                                 DismissValue.DismissedToStart -> Color.Red
-                            }
+                            }, label = ""
                         )
 
-                        val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+                        val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
                         Box(
                             Modifier
