@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.details
 
+import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -17,8 +18,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +27,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkRemove
@@ -42,6 +45,7 @@ import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -87,15 +91,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
+import androidx.navigation.NavHostController
+import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
+import com.google.accompanist.adaptive.TwoPane
+import com.google.accompanist.adaptive.calculateDisplayFeatures
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.lists.ListChoiceScreen
 import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
@@ -107,6 +119,7 @@ import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.toComposeColor
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -147,7 +160,6 @@ fun DetailsView(
 
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)
-    var showLists by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -167,40 +179,6 @@ fun DetailsView(
     val topBarColor by animateColorAsState(swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface, label = "")
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    if (showLists) {
-        ModalBottomSheet(
-            onDismissRequest = { showLists = false },
-        ) {
-            ListChoiceScreen(
-                url = info.url,
-                onClick = { item ->
-                    scope.launch {
-                        showLists = false
-                        val result = listDao.addToList(
-                            item.item.uuid,
-                            info.title,
-                            info.description,
-                            info.url,
-                            info.imageUrl,
-                            info.source.serviceName
-                        )
-                        hostState.showSnackbar(
-                            context.getString(
-                                if (result) {
-                                    R.string.added_to_list
-                                } else {
-                                    R.string.already_in_list
-                                },
-                                item.item.name
-                            ),
-                            withDismissAction = true
-                        )
-                    }
-                }
-            )
-        }
-    }
 
     ModalNavigationDrawer(
         drawerState = scaffoldState,
@@ -256,117 +234,20 @@ fun DetailsView(
                         }
                     },
                     actions = {
-                        var showDropDown by remember { mutableStateOf(false) }
-
-                        val dropDownDismiss = { showDropDown = false }
-
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss,
-                        ) {
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    scope.launch { scaffoldState.open() }
-                                },
-                                text = { Text(stringResource(id = R.string.markAs)) },
-                                leadingIcon = { Icon(Icons.Default.Check, null) }
-                            )
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    navController.navigateChromeCustomTabs(info.url)
-                                },
-                                text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
-                                leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
-                            )
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    showLists = true
-                                },
-                                text = { Text(stringResource(R.string.add_to_list)) },
-                                leadingIcon = { Icon(Icons.Default.SaveAs, null) }
-                            )
-
-                            if (!isSaved) {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.insertNotification(
-                                                NotificationItem(
-                                                    id = info.hashCode(),
-                                                    url = info.url,
-                                                    summaryText = context
-                                                        .getString(
-                                                            R.string.hadAnUpdate,
-                                                            info.title,
-                                                            info.chapters.firstOrNull()?.name.orEmpty()
-                                                        ),
-                                                    notiTitle = info.title,
-                                                    imageUrl = info.imageUrl,
-                                                    source = info.source.serviceName,
-                                                    contentTitle = info.title
-                                                )
-                                            )
-                                        }
-                                    },
-                                    text = { Text(stringResource(id = R.string.save_for_later)) },
-                                    leadingIcon = { Icon(Icons.Default.Save, null) }
-                                )
-                            } else {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.getNotificationItemFlow(info.url)
-                                                .firstOrNull()
-                                                ?.let { dao.deleteNotification(it) }
-                                        }
-                                    },
-                                    text = { Text(stringResource(R.string.removeNotification)) },
-                                    leadingIcon = { Icon(Icons.Default.Delete, null) }
-                                )
-                            }
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    Screen.GlobalSearchScreen.navigate(navController, info.title)
-                                },
-                                text = { Text(stringResource(id = R.string.global_search_by_name)) },
-                                leadingIcon = { Icon(Icons.Default.Search, null) }
-                            )
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    reverseChapters = !reverseChapters
-                                },
-                                text = { Text(stringResource(id = R.string.reverseOrder)) },
-                                leadingIcon = { Icon(Icons.Default.Sort, null) }
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, info.url)
-                                    putExtra(Intent.EXTRA_TITLE, info.title)
-                                }, context.getString(R.string.share_item, info.title)))
-                            }
-                        ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
-
-                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
-
-                        IconButton(onClick = { showDropDown = true }) {
-                            Icon(Icons.Default.MoreVert, null, tint = topBarColor)
-                        }
+                        DetailActions(
+                            genericInfo = genericInfo,
+                            scaffoldState = scaffoldState,
+                            navController = navController,
+                            scope = scope,
+                            context = context,
+                            info = info,
+                            listDao = listDao,
+                            hostState = hostState,
+                            topBarColor = topBarColor,
+                            isSaved = isSaved,
+                            dao = dao,
+                            onReverseChaptersClick = { reverseChapters = !reverseChapters }
+                        )
                     }
                 )
             },
@@ -514,6 +395,7 @@ fun DetailsViewLandscape(
     onTranslateDescription: (MutableState<Boolean>) -> Unit
 ) {
     val dao = LocalItemDao.current
+    val listDao = LocalCustomListDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
@@ -577,108 +459,20 @@ fun DetailsViewLandscape(
                         }
                     },
                     actions = {
-                        var showDropDown by remember { mutableStateOf(false) }
-
-                        val dropDownDismiss = { showDropDown = false }
-
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss,
-                        ) {
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    scope.launch { scaffoldState.open() }
-                                },
-                                text = { Text(stringResource(id = R.string.markAs)) },
-                                leadingIcon = { Icon(Icons.Default.Check, null) }
-                            )
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    navController.navigateChromeCustomTabs(info.url)
-                                },
-                                text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
-                                leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
-                            )
-
-                            if (!isSaved) {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.insertNotification(
-                                                NotificationItem(
-                                                    id = info.hashCode(),
-                                                    url = info.url,
-                                                    summaryText = context
-                                                        .getString(
-                                                            R.string.hadAnUpdate,
-                                                            info.title,
-                                                            info.chapters.firstOrNull()?.name.orEmpty()
-                                                        ),
-                                                    notiTitle = info.title,
-                                                    imageUrl = info.imageUrl,
-                                                    source = info.source.serviceName,
-                                                    contentTitle = info.title
-                                                )
-                                            )
-                                        }
-                                    },
-                                    text = { Text(stringResource(id = R.string.save_for_later)) },
-                                    leadingIcon = { Icon(Icons.Default.Save, null) }
-                                )
-                            } else {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        dropDownDismiss()
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.getNotificationItemFlow(info.url)
-                                                .firstOrNull()
-                                                ?.let { dao.deleteNotification(it) }
-                                        }
-                                    },
-                                    text = { Text(stringResource(R.string.removeNotification)) },
-                                    leadingIcon = { Icon(Icons.Default.Delete, null) }
-                                )
-                            }
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    Screen.GlobalSearchScreen.navigate(navController, info.title)
-                                },
-                                text = { Text(stringResource(id = R.string.global_search_by_name)) },
-                                leadingIcon = { Icon(Icons.Default.Search, null) }
-                            )
-
-                            DropdownMenuItem(
-                                onClick = {
-                                    dropDownDismiss()
-                                    reverseChapters = !reverseChapters
-                                },
-                                text = { Text(stringResource(id = R.string.reverseOrder)) },
-                                leadingIcon = { Icon(Icons.Default.Sort, null) }
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, info.url)
-                                    putExtra(Intent.EXTRA_TITLE, info.title)
-                                }, context.getString(R.string.share_item, info.title)))
-                            }
-                        ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
-
-                        genericInfo.DetailActions(infoModel = info, tint = topBarColor)
-
-                        IconButton(onClick = { showDropDown = true }) {
-                            Icon(Icons.Default.MoreVert, null, tint = topBarColor)
-                        }
+                        DetailActions(
+                            genericInfo = genericInfo,
+                            scaffoldState = scaffoldState,
+                            navController = navController,
+                            scope = scope,
+                            context = context,
+                            info = info,
+                            listDao = listDao,
+                            hostState = hostState,
+                            topBarColor = topBarColor,
+                            isSaved = isSaved,
+                            dao = dao,
+                            onReverseChaptersClick = { reverseChapters = !reverseChapters }
+                        )
                     }
                 )
             },
@@ -738,73 +532,74 @@ private fun DetailsLandscapeContent(
     logo: NotificationLogo,
     reverseChapters: Boolean
 ) {
-    Row(
-        modifier = Modifier.padding(p)
-    ) {
-        DetailsHeader(
-            modifier = Modifier.weight(1f),
-            model = info,
-            logo = painterResource(id = logo.notificationId),
-            isFavorite = isFavorite,
-            favoriteClick = onFavoriteClick
-        )
+    TwoPane(
+        modifier = Modifier.padding(p),
+        first = {
+            Column {
+                DetailsHeader(
+                    model = info,
+                    logo = painterResource(id = logo.notificationId),
+                    isFavorite = isFavorite,
+                    favoriteClick = onFavoriteClick,
+                    possibleDescription = {
+                        if (info.description.isNotEmpty()) {
+                            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                                var descriptionVisibility by remember { mutableStateOf(false) }
+                                Box {
+                                    val progress = remember { mutableStateOf(false) }
 
-        val listState = rememberLazyListState()
+                                    Text(
+                                        description,
+                                        modifier = Modifier
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = rememberRipple(),
+                                                onClick = { descriptionVisibility = !descriptionVisibility },
+                                                onLongClick = { onTranslateDescription(progress) }
+                                            )
+                                            .padding(horizontal = 4.dp)
+                                            .fillMaxWidth()
+                                            .animateContentSize(),
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
 
-        var descriptionVisibility by remember { mutableStateOf(false) }
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
-                .padding(vertical = 4.dp),
-            state = listState
-        ) {
-
-            if (info.description.isNotEmpty()) {
-                item {
-                    Box {
-                        val progress = remember { mutableStateOf(false) }
-
-                        Text(
-                            description,
-                            modifier = Modifier
-                                .combinedClickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple(),
-                                    onClick = { descriptionVisibility = !descriptionVisibility },
-                                    onLongClick = { onTranslateDescription(progress) }
-                                )
-                                .padding(horizontal = 4.dp)
-                                .fillMaxWidth()
-                                .animateContentSize(),
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        if (progress.value) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.align(Alignment.Center)
-                            )
+                                    if (progress.value) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-            }
-
-            items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
-                ChapterItem(
-                    infoModel = info,
-                    c = c,
-                    read = chapters,
-                    chapters = info.chapters,
-                    shareChapter = shareChapter,
-                    markAs = markAs
                 )
             }
-        }
-    }
+        },
+        second = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 4.dp),
+                state = rememberLazyListState()
+            ) {
+                items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                    ChapterItem(
+                        infoModel = info,
+                        c = c,
+                        read = chapters,
+                        chapters = info.chapters,
+                        shareChapter = shareChapter,
+                        markAs = markAs
+                    )
+                }
+            }
+        },
+        displayFeatures = calculateDisplayFeatures(activity = LocalActivity.current),
+        strategy = HorizontalTwoPaneStrategy(splitFraction = 0.5f)
+    )
 }
 
 /**
@@ -842,4 +637,169 @@ internal fun Color.surfaceColorAtElevation(
     if (elevation == 0.dp) return surface
     val alpha = ((4.5f * ln(elevation.value + 1)) + 2f) / 100f
     return copy(alpha = alpha).compositeOver(surface)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DetailActions(
+    genericInfo: GenericInfo,
+    scaffoldState: DrawerState,
+    navController: NavHostController,
+    scope: CoroutineScope,
+    context: Context,
+    info: InfoModel,
+    listDao: ListDao,
+    hostState: SnackbarHostState,
+    topBarColor: Color,
+    isSaved: Boolean,
+    dao: ItemDao,
+    onReverseChaptersClick: () -> Unit
+) {
+    var showLists by remember { mutableStateOf(false) }
+
+    if (showLists) {
+        ModalBottomSheet(
+            onDismissRequest = { showLists = false },
+        ) {
+            ListChoiceScreen(
+                url = info.url,
+                onClick = { item ->
+                    scope.launch {
+                        showLists = false
+                        val result = listDao.addToList(
+                            item.item.uuid,
+                            info.title,
+                            info.description,
+                            info.url,
+                            info.imageUrl,
+                            info.source.serviceName
+                        )
+                        hostState.showSnackbar(
+                            context.getString(
+                                if (result) {
+                                    R.string.added_to_list
+                                } else {
+                                    R.string.already_in_list
+                                },
+                                item.item.name
+                            ),
+                            withDismissAction = true
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    var showDropDown by remember { mutableStateOf(false) }
+
+    val dropDownDismiss = { showDropDown = false }
+
+    DropdownMenu(
+        expanded = showDropDown,
+        onDismissRequest = dropDownDismiss,
+    ) {
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                scope.launch { scaffoldState.open() }
+            },
+            text = { Text(stringResource(id = R.string.markAs)) },
+            leadingIcon = { Icon(Icons.Default.Check, null) }
+        )
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                navController.navigateChromeCustomTabs(info.url)
+            },
+            text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
+            leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+        )
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                showLists = true
+            },
+            text = { Text(stringResource(R.string.add_to_list)) },
+            leadingIcon = { Icon(Icons.Default.SaveAs, null) }
+        )
+
+        if (!isSaved) {
+            DropdownMenuItem(
+                onClick = {
+                    dropDownDismiss()
+                    scope.launch(Dispatchers.IO) {
+                        dao.insertNotification(
+                            NotificationItem(
+                                id = info.hashCode(),
+                                url = info.url,
+                                summaryText = context
+                                    .getString(
+                                        R.string.hadAnUpdate,
+                                        info.title,
+                                        info.chapters.firstOrNull()?.name.orEmpty()
+                                    ),
+                                notiTitle = info.title,
+                                imageUrl = info.imageUrl,
+                                source = info.source.serviceName,
+                                contentTitle = info.title
+                            )
+                        )
+                    }
+                },
+                text = { Text(stringResource(id = R.string.save_for_later)) },
+                leadingIcon = { Icon(Icons.Default.Save, null) }
+            )
+        } else {
+            DropdownMenuItem(
+                onClick = {
+                    dropDownDismiss()
+                    scope.launch(Dispatchers.IO) {
+                        dao.getNotificationItemFlow(info.url)
+                            .firstOrNull()
+                            ?.let { dao.deleteNotification(it) }
+                    }
+                },
+                text = { Text(stringResource(R.string.removeNotification)) },
+                leadingIcon = { Icon(Icons.Default.Delete, null) }
+            )
+        }
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                Screen.GlobalSearchScreen.navigate(navController, info.title)
+            },
+            text = { Text(stringResource(id = R.string.global_search_by_name)) },
+            leadingIcon = { Icon(Icons.Default.Search, null) }
+        )
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                onReverseChaptersClick()
+            },
+            text = { Text(stringResource(id = R.string.reverseOrder)) },
+            leadingIcon = { Icon(Icons.Default.Sort, null) }
+        )
+    }
+
+    IconButton(
+        onClick = {
+            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, info.url)
+                putExtra(Intent.EXTRA_TITLE, info.title)
+            }, context.getString(R.string.share_item, info.title)))
+        }
+    ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+
+    genericInfo.DetailActions(infoModel = info, tint = topBarColor)
+
+    IconButton(onClick = { showDropDown = true }) {
+        Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+    }
 }

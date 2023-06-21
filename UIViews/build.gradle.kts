@@ -104,6 +104,7 @@ dependencies {
     implementation(libs.bundles.compose)
     implementation(libs.toolbarCompose)
     implementation(libs.lazyColumnScrollbar)
+    implementation(libs.adaptive)
     implementation(libs.pagingCompose)
     implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
