@@ -147,7 +147,7 @@ androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 firebaseAuth = "com.google.firebase:firebase-auth:22.0.0"
 googlePlayAds = "com.google.android.gms:play-services-ads:22.1.0"
 
-pagingCompose = "androidx.paging:paging-compose:3.2.0-beta01"
+pagingCompose = "androidx.paging:paging-compose:3.2.0-rc01"
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 storage = "com.anggrayudi:storage:1.5.2"
