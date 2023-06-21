@@ -174,8 +174,6 @@ private fun SettingsScreen(
     val navController = LocalNavController.current
     val source by sourceFlow.collectAsState(initial = null)
 
-    CategorySetting { Text(stringResource(R.string.view_menu_category_title)) }
-
     if (BuildConfig.DEBUG) {
         PreferenceSetting(
             settingTitle = { Text("Debug Menu") },

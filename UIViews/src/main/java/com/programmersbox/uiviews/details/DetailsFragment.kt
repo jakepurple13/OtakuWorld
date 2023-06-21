@@ -57,6 +57,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -89,7 +90,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -107,7 +107,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
-import com.google.accompanist.placeholder.material.placeholder
+import com.google.accompanist.placeholder.PlaceholderHighlight
+import com.google.accompanist.placeholder.placeholder
+import com.google.accompanist.placeholder.shimmer
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -143,7 +145,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
@@ -242,8 +243,6 @@ fun DetailsScreen(
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
         }
 
-        val orientation = LocalConfiguration.current.orientation
-
         CompositionLocalProvider(
             LocalSwatchInfo provides remember(swatchInfo) { SwatchInfoColors(swatchInfo) },
             LocalSwatchChange provides rememberUpdatedState(newValue = { it: SwatchInfo? -> swatchInfo = it }).value
@@ -297,11 +296,11 @@ fun MarkAsScreen(
             InsetSmallTopAppBar(
                 title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface,
+                    containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value?.let {
-                        M3MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
-                    } ?: M3MaterialTheme.colorScheme.applyTonalElevation(
-                        backgroundColor = M3MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
+                    } ?: MaterialTheme.colorScheme.applyTonalElevation(
+                        backgroundColor = MaterialTheme.colorScheme.surface,
                         elevation = 1.dp
                     )
                 ),
@@ -330,15 +329,15 @@ fun MarkAsScreen(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple()
                         ) { markAs(c, !chapters.fastAny { it.url == c.url }) },
-                    color = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                    color = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
                 ) {
                     ListItem(
                         modifier = Modifier.padding(horizontal = 4.dp),
                         colors = ListItemDefaults.colors(
                             headlineColor = swatchInfo?.bodyColor
                                 ?.toComposeColor()
-                                ?.animate()?.value ?: M3MaterialTheme.colorScheme.onSurface,
-                            containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                                ?.animate()?.value ?: MaterialTheme.colorScheme.onSurface,
+                            containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
                         ),
                         headlineContent = { Text(c.name) },
                         leadingContent = {
@@ -347,11 +346,11 @@ fun MarkAsScreen(
                                 onCheckedChange = { b -> markAs(c, b) },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: M3MaterialTheme.colorScheme.secondary,
+                                        ?: MaterialTheme.colorScheme.secondary,
                                     uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                     checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value
-                                        ?: M3MaterialTheme.colorScheme.surface
+                                        ?: MaterialTheme.colorScheme.surface
                                 )
                             )
                         }
@@ -407,7 +406,7 @@ fun ChapterItem(
                 interactionSource = interactionSource,
             ) { markAs(c, !read.fastAny { it.url == c.url }) },
         colors = CardDefaults.elevatedCardColors(
-            containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.surface, label = "").value,
+            containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface, label = "").value,
         )
     ) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
@@ -419,17 +418,17 @@ fun ChapterItem(
                             onCheckedChange = { b -> markAs(c, b) },
                             colors = CheckboxDefaults.colors(
                                 checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: M3MaterialTheme.colorScheme.secondary,
+                                    ?: MaterialTheme.colorScheme.secondary,
                                 uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                                    ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
                             )
                         )
                     },
                     headlineContent = {
                         Text(
                             c.name,
-                            style = M3MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge
                                 .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                         )
                     },
@@ -464,16 +463,16 @@ fun ChapterItem(
                         onCheckedChange = { b -> markAs(c, b) },
                         colors = CheckboxDefaults.colors(
                             checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                ?: M3MaterialTheme.colorScheme.secondary,
+                                ?: MaterialTheme.colorScheme.secondary,
                             uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: M3MaterialTheme.colorScheme.surface
+                                ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
                         )
                     )
 
                     Text(
                         c.name,
-                        style = M3MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge
                             .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                         modifier = Modifier.padding(start = 4.dp)
                     )
@@ -482,7 +481,7 @@ fun ChapterItem(
 
             Text(
                 c.uploaded,
-                style = M3MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleSmall
                     .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                 modifier = Modifier
                     .align(Alignment.End)
@@ -514,11 +513,11 @@ fun ChapterItem(
                                 "Play",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 tint = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                                    ?: MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                             )
                             Text(
                                 stringResource(R.string.read),
-                                style = M3MaterialTheme.typography.labelLarge
+                                style = MaterialTheme.typography.labelLarge
                                     .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
@@ -545,11 +544,11 @@ fun ChapterItem(
                                 "Download",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 tint = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                                    ?: MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
                             )
                             Text(
                                 stringResource(R.string.download_chapter),
-                                style = M3MaterialTheme.typography.labelLarge
+                                style = MaterialTheme.typography.labelLarge
                                     .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
@@ -575,7 +574,7 @@ internal fun DetailsHeader(
 ) {
     val swatchChange = LocalSwatchChange.current
     val swatchInfo = LocalSwatchInfo.current.colors
-    val surface = M3MaterialTheme.colorScheme.surface
+    val surface = MaterialTheme.colorScheme.surface
     val imageUrl = remember {
         try {
             GlideUrl(model.imageUrl) { model.extras.map { it.key to it.value.toString() }.toMap() }
@@ -628,7 +627,7 @@ internal fun DetailsHeader(
                     ColorUtils
                         .setAlphaComponent(
                             ColorUtils.blendARGB(
-                                M3MaterialTheme.colorScheme.surface.toArgb(),
+                                MaterialTheme.colorScheme.surface.toArgb(),
                                 swatchInfo?.rgb ?: Color.Transparent.toArgb(),
                                 0.25f
                             ),
@@ -646,7 +645,7 @@ internal fun DetailsHeader(
         ) {
             Row {
                 Surface(
-                    shape = M3MaterialTheme.shapes.medium,
+                    shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.padding(4.dp)
                 ) {
                     val latestSwatch by rememberUpdatedState(newValue = swatchInfo)
@@ -679,15 +678,15 @@ internal fun DetailsHeader(
 
                     Text(
                         model.source.serviceName,
-                        style = M3MaterialTheme.typography.labelSmall,
-                        color = M3MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
 
                     Text(
                         model.title,
-                        style = M3MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -696,7 +695,7 @@ internal fun DetailsHeader(
                             .fillMaxWidth(),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                        color = M3MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Row(
@@ -713,24 +712,24 @@ internal fun DetailsHeader(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
                             tint = swatchInfo?.rgb?.toComposeColor()?.animate()?.value
-                                ?: M3MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
+                                ?: MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Crossfade(targetState = isFavorite, label = "") { target ->
                             Text(
                                 stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
-                                style = M3MaterialTheme.typography.headlineSmall,
+                                style = MaterialTheme.typography.headlineSmall,
                                 fontSize = 20.sp,
                                 modifier = Modifier.align(Alignment.CenterVertically),
-                                color = M3MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
 
                     Text(
                         stringResource(R.string.chapter_count, model.chapters.size),
-                        style = M3MaterialTheme.typography.bodyMedium,
-                        color = M3MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     /*if(model.alternativeNames.isNotEmpty()) {
@@ -769,9 +768,9 @@ internal fun DetailsHeader(
                         onClick = {},
                         modifier = Modifier.fadeInAnimation(),
                         colors = AssistChipDefaults.assistChipColors(
-                            containerColor = (swatchInfo?.rgb?.toComposeColor() ?: M3MaterialTheme.colorScheme.onSurface)
+                            containerColor = (swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface)
                                 .animate().value,
-                            labelColor = (swatchInfo?.bodyColor?.toComposeColor()?.copy(1f) ?: M3MaterialTheme.colorScheme.surface)
+                            labelColor = (swatchInfo?.bodyColor?.toComposeColor()?.copy(1f) ?: MaterialTheme.colorScheme.surface)
                                 .animate().value
                         ),
                         label = { Text(it) }
@@ -787,9 +786,13 @@ internal fun DetailsHeader(
 @Composable
 private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
-    val placeholderColor = m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
-        .copy(0.1f)
-        .compositeOver(M3MaterialTheme.colorScheme.surface)
+    val placeholderModifier = Modifier.placeholder(
+        true,
+        color = m3ContentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
+            .copy(0.1f)
+            .compositeOver(MaterialTheme.colorScheme.surface),
+        highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+    )
 
     Box(
         modifier = Modifier
@@ -808,7 +811,7 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
                     contentDescription = null,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .placeholder(true, color = placeholderColor)
+                        .then(placeholderModifier)
                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                 )
             }
@@ -820,14 +823,14 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
                 Row(
                     modifier = Modifier
                         .padding(vertical = 4.dp)
-                        .placeholder(true, color = placeholderColor)
+                        .then(placeholderModifier)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) { Text("") }
 
                 Row(
                     modifier = Modifier
-                        .placeholder(true, color = placeholderColor)
+                        .then(placeholderModifier)
                         .semantics(true) {}
                         .padding(vertical = 4.dp)
                         .fillMaxWidth()
@@ -840,7 +843,7 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
                     )
                     Text(
                         stringResource(R.string.addToFavorites),
-                        style = M3MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                 }
@@ -850,7 +853,7 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .fillMaxWidth()
-                        .placeholder(true, color = placeholderColor),
+                        .then(placeholderModifier),
                     maxLines = 2
                 )
             }

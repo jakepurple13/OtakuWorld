@@ -9,9 +9,25 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.animation.*
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -19,13 +35,32 @@ import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
@@ -70,8 +105,25 @@ import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
-import com.programmersbox.uiviews.utils.*
-import kotlinx.coroutines.flow.*
+import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
+import com.programmersbox.uiviews.utils.ModalBottomSheetLayout
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.OtakuMaterialTheme
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.SettingsHandling
+import com.programmersbox.uiviews.utils.appVersion
+import com.programmersbox.uiviews.utils.bottomSheet
+import com.programmersbox.uiviews.utils.chromeCustomTabs
+import com.programmersbox.uiviews.utils.currentDetailsUrl
+import com.programmersbox.uiviews.utils.currentService
+import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.rememberBottomSheetNavigator
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
@@ -155,110 +207,189 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     sheetContentColor = MaterialTheme.colorScheme.onSurface,
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
                 ) {
-                    OtakuScaffold(
-                        bottomBar = {
-                            Column {
-                                BottomBarAdditions()
-                                AnimatedVisibility(
-                                    visible = showNavBar,
-                                    enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
-                                    exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
-                                ) {
-                                    NavigationBar {
-                                        val navBackStackEntry by navController.currentBackStackEntryAsState()
-                                        val currentDestination = navBackStackEntry?.destination
-                                        Screen.bottomItems.forEach { screen ->
-                                            if (screen !is Screen.AllScreen || showAllItem) {
-                                                NavigationBarItem(
-                                                    icon = {
-                                                        BadgedBox(
-                                                            badge = {
-                                                                if (screen is Screen.Settings) {
-                                                                    val updateAvailable = updateCheck()
-                                                                    if (updateAvailable) {
-                                                                        Badge { Text("") }
-                                                                    }
-                                                                }
+                    val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
+                    val navType = when (windowSize.widthSizeClass) {
+                        WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
+                        else -> NavigationBarType.Bottom
+                    }
+
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
+
+                    Row(Modifier.fillMaxSize()) {
+                        AnimatedVisibility(
+                            visible = showNavBar && navType == NavigationBarType.Rail,
+                            enter = slideInHorizontally { it / 2 } + expandHorizontally() + fadeIn(),
+                            exit = slideOutHorizontally { it / 2 } + shrinkHorizontally() + fadeOut(),
+                        ) {
+                            NavigationRail(
+                                header = {
+                                    Image(
+                                        AppCompatResources.getDrawable(this@BaseMainActivity, logo.logoId)!!.toBitmap().asImageBitmap(),
+                                        null,
+                                    )
+                                }
+                            ) {
+                                Screen.bottomItems.forEach { screen ->
+                                    if (screen !is Screen.AllScreen || showAllItem) {
+                                        NavigationRailItem(
+                                            icon = {
+                                                BadgedBox(
+                                                    badge = {
+                                                        if (screen is Screen.Settings) {
+                                                            val updateAvailable = updateCheck()
+                                                            if (updateAvailable) {
+                                                                Badge { Text("") }
                                                             }
-                                                        ) {
-                                                            Icon(
-                                                                when (screen) {
-                                                                    Screen.RecentScreen -> Icons.Default.History
-                                                                    Screen.AllScreen -> Icons.Default.BrowseGallery
-                                                                    Screen.Settings -> Icons.Default.Settings
-                                                                    else -> Icons.Default.BrokenImage
-                                                                },
-                                                                null
-                                                            )
-                                                        }
-                                                    },
-                                                    label = {
-                                                        Text(
-                                                            when (screen) {
-                                                                Screen.AllScreen -> stringResource(R.string.all)
-                                                                Screen.RecentScreen -> stringResource(R.string.recent)
-                                                                Screen.Settings -> stringResource(R.string.settings)
-                                                                else -> ""
-                                                            }
-                                                        )
-                                                    },
-                                                    selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
-                                                    onClick = {
-                                                        navController.navigate(screen.route) {
-                                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                                            launchSingleTop = true
-                                                            restoreState = true
                                                         }
                                                     }
+                                                ) {
+                                                    Icon(
+                                                        when (screen) {
+                                                            Screen.RecentScreen -> Icons.Default.History
+                                                            Screen.AllScreen -> Icons.Default.BrowseGallery
+                                                            Screen.Settings -> Icons.Default.Settings
+                                                            else -> Icons.Default.BrokenImage
+                                                        },
+                                                        null
+                                                    )
+                                                }
+                                            },
+                                            label = {
+                                                Text(
+                                                    when (screen) {
+                                                        Screen.AllScreen -> stringResource(R.string.all)
+                                                        Screen.RecentScreen -> stringResource(R.string.recent)
+                                                        Screen.Settings -> stringResource(R.string.settings)
+                                                        else -> ""
+                                                    }
                                                 )
+                                            },
+                                            selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+                                            onClick = {
+                                                navController.navigate(screen.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        OtakuScaffold(
+                            bottomBar = {
+                                Column {
+                                    BottomBarAdditions()
+                                    AnimatedVisibility(
+                                        visible = showNavBar && navType == NavigationBarType.Bottom,
+                                        enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
+                                        exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
+                                    ) {
+                                        NavigationBar {
+                                            Screen.bottomItems.forEach { screen ->
+                                                if (screen !is Screen.AllScreen || showAllItem) {
+                                                    NavigationBarItem(
+                                                        icon = {
+                                                            BadgedBox(
+                                                                badge = {
+                                                                    if (screen is Screen.Settings) {
+                                                                        val updateAvailable = updateCheck()
+                                                                        if (updateAvailable) {
+                                                                            Badge { Text("") }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ) {
+                                                                Icon(
+                                                                    when (screen) {
+                                                                        Screen.RecentScreen -> Icons.Default.History
+                                                                        Screen.AllScreen -> Icons.Default.BrowseGallery
+                                                                        Screen.Settings -> Icons.Default.Settings
+                                                                        else -> Icons.Default.BrokenImage
+                                                                    },
+                                                                    null
+                                                                )
+                                                            }
+                                                        },
+                                                        label = {
+                                                            Text(
+                                                                when (screen) {
+                                                                    Screen.AllScreen -> stringResource(R.string.all)
+                                                                    Screen.RecentScreen -> stringResource(R.string.recent)
+                                                                    Screen.Settings -> stringResource(R.string.settings)
+                                                                    else -> ""
+                                                                }
+                                                            )
+                                                        },
+                                                        selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+                                                        onClick = {
+                                                            navController.navigate(screen.route) {
+                                                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                                launchSingleTop = true
+                                                                restoreState = true
+                                                            }
+                                                        }
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                    ) { innerPadding ->
-                        NavHost(
-                            navController = navController,
-                            startDestination = Screen.RecentScreen.route,
-                            modifier = Modifier.padding(innerPadding)
-                        ) {
-                            composable(Screen.RecentScreen.route) { RecentView(logo = logo) }
-                            composable(Screen.AllScreen.route) { AllView(logo = logo) }
-                            settings(customPreferences) { with(genericInfo) { settingsNavSetup() } }
-
-                            composable(
-                                Screen.DetailsScreen.route + "/{model}",
-                                deepLinks = listOf(
-                                    navDeepLink {
-                                        uriPattern = genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}"
-                                    }
-                                ),
-                                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-                                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-                            ) {
-                                DetailsScreen(
-                                    logo = notificationLogo,
-                                    windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
-                                )
-                            }
-
-                            bottomSheet(Screen.TranslationScreen.route) { TranslationScreen() }
-
-                            bottomSheet(
-                                Screen.FavoriteChoiceScreen.route + "/{${Screen.FavoriteChoiceScreen.dbitemsArgument}}",
-                            ) { FavoriteChoiceScreen() }
-
-                            bottomSheet(Screen.SourceChooserScreen.route) { SourceChooserScreen() }
-
-                            chromeCustomTabs()
-
-                            with(genericInfo) { globalNavSetup() }
+                        ) { innerPadding ->
+                            NavHost(
+                                navController = navController,
+                                startDestination = Screen.RecentScreen.route,
+                                modifier = Modifier.padding(innerPadding)
+                            ) { navGraph(customPreferences, windowSize) }
                         }
                     }
                 }
             }
         }
+    }
+
+    @OptIn(
+        ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
+        ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
+    )
+    private fun NavGraphBuilder.navGraph(
+        customPreferences: ComposeSettingsDsl,
+        windowSize: WindowSizeClass
+    ) {
+        composable(Screen.RecentScreen.route) { RecentView(logo = logo) }
+        composable(Screen.AllScreen.route) { AllView(logo = logo) }
+        settings(customPreferences) { with(genericInfo) { settingsNavSetup() } }
+
+        composable(
+            Screen.DetailsScreen.route + "/{model}",
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}"
+                }
+            ),
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+        ) {
+            DetailsScreen(
+                logo = notificationLogo,
+                windowSize = windowSize
+            )
+        }
+
+        bottomSheet(Screen.TranslationScreen.route) { TranslationScreen() }
+
+        bottomSheet(
+            Screen.FavoriteChoiceScreen.route + "/{${Screen.FavoriteChoiceScreen.dbitemsArgument}}",
+        ) { FavoriteChoiceScreen() }
+
+        bottomSheet(Screen.SourceChooserScreen.route) { SourceChooserScreen() }
+
+        chromeCustomTabs()
+
+        with(genericInfo) { globalNavSetup() }
     }
 
     @OptIn(
@@ -413,4 +544,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         if (isNavInitialized()) navController.handleDeepLink(intent)
     }
+
+    enum class NavigationBarType { Rail, Bottom }
 }

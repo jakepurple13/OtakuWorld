@@ -21,9 +21,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -535,7 +538,9 @@ private fun DetailsLandscapeContent(
     TwoPane(
         modifier = Modifier.padding(p),
         first = {
-            Column {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 DetailsHeader(
                     model = info,
                     logo = painterResource(id = logo.notificationId),
@@ -543,33 +548,31 @@ private fun DetailsLandscapeContent(
                     favoriteClick = onFavoriteClick,
                     possibleDescription = {
                         if (info.description.isNotEmpty()) {
-                            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                                var descriptionVisibility by remember { mutableStateOf(false) }
-                                Box {
-                                    val progress = remember { mutableStateOf(false) }
+                            var descriptionVisibility by remember { mutableStateOf(false) }
+                            Box {
+                                val progress = remember { mutableStateOf(false) }
 
-                                    Text(
-                                        description,
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = rememberRipple(),
-                                                onClick = { descriptionVisibility = !descriptionVisibility },
-                                                onLongClick = { onTranslateDescription(progress) }
-                                            )
-                                            .padding(horizontal = 4.dp)
-                                            .fillMaxWidth()
-                                            .animateContentSize(),
-                                        overflow = TextOverflow.Ellipsis,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-
-                                    if (progress.value) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.align(Alignment.Center)
+                                Text(
+                                    description,
+                                    modifier = Modifier
+                                        .combinedClickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = rememberRipple(),
+                                            onClick = { descriptionVisibility = !descriptionVisibility },
+                                            onLongClick = { onTranslateDescription(progress) }
                                         )
-                                    }
+                                        .padding(horizontal = 4.dp)
+                                        .fillMaxWidth()
+                                        .animateContentSize(),
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+
+                                if (progress.value) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
                                 }
                             }
                         }
@@ -660,6 +663,7 @@ private fun DetailActions(
     if (showLists) {
         ModalBottomSheet(
             onDismissRequest = { showLists = false },
+            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
         ) {
             ListChoiceScreen(
                 url = info.url,
