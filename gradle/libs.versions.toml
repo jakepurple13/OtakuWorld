@@ -21,6 +21,7 @@ jetpackCompiler = "1.4.7"
 accompanist = "0.31.3-beta"
 okhttpVersion = "4.11.0"
 ktorVersion = "2.3.1"
+tvCompose = "1.0.0-alpha07"
 workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.12"
@@ -62,6 +63,8 @@ materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
+tv-material = { module = "androidx.tv:tv-material", version.ref = "tvCompose" }
+tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvCompose" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
@@ -190,8 +193,6 @@ progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", versi
 ### AnimeWorld
 slideToAct = "com.ncorti:slidetoact:0.10.0"
 mediaRouter = "androidx.mediarouter:mediarouter:1.4.0"
-fetch = "androidx.tonyodev.fetch2:xfetch2:3.1.6"
-fetchOkHttp = "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
 castFramework = "com.google.android.gms:play-services-cast-framework:21.3.0"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"

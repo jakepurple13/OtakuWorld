@@ -1,6 +1,7 @@
 package com.programmersbox.animeworld
 
 import android.Manifest
+import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -8,28 +9,49 @@ import android.net.Uri
 import android.os.Build
 import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.CastConnected
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.PersonalVideo
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.TaskStackBuilder
+import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
@@ -60,8 +83,6 @@ import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.anime_sources.ShowApi
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
-import com.programmersbox.animeworld.downloads.DownloaderUi
-import com.programmersbox.animeworld.downloads.DownloaderViewModel
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceViewModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
@@ -69,19 +90,34 @@ import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
-import com.programmersbox.models.*
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.InfoModel
+import com.programmersbox.models.ItemModel
+import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.*
-import com.tonyodev.fetch2.*
-import kotlinx.coroutines.flow.*
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.PreferenceSetting
+import com.programmersbox.uiviews.utils.ShowWhen
+import com.programmersbox.uiviews.utils.SwitchSetting
+import com.programmersbox.uiviews.utils.bottomSheet
+import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.updatePref
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
-import kotlin.collections.set
 
 val appModule = module {
     single<GenericInfo> { GenericAnime(get()) }
@@ -135,8 +171,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         }
     }
 
-    private val fetch = Fetch.getDefaultInstance()
-
     override fun downloadChapter(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
@@ -172,43 +206,11 @@ class GenericAnime(val context: Context) : GenericInfo {
                     { !it.link.orEmpty().endsWith(".m3u8") },
                     navController,
                     false
-                ) { fetchIt(it, model, activity) }
+                ) {
+                    //fetchIt(it, model, activity)
+                    downloadVideo(activity, model, it)
+                }
             }
-        }
-    }
-
-    fun fetchIt(i: Storage, ep: ChapterModel, activity: FragmentActivity) {
-        try {
-            fetch.setGlobalNetworkType(NetworkType.ALL)
-
-            fun getNameFromUrl(url: String): String {
-                return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { ep.name } } ?: ep.name
-            }
-
-            val requestList = arrayListOf<Request>()
-
-            val filePath = activity.folderLocation + getNameFromUrl(i.link!!) + "${ep.name}.mp4"
-            val request = Request(i.link!!, filePath)
-            request.priority = Priority.HIGH
-            request.networkType = NetworkType.ALL
-            request.enqueueAction = EnqueueAction.REPLACE_EXISTING
-            request.extras.map.toProperties()["URL_INTENT"] = ep.url
-            request.extras.map.toProperties()["NAME_INTENT"] = ep.name
-
-            request.addHeader("Accept-Language", "en-US,en;q=0.5")
-            request.addHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
-            request.addHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-            request.addHeader("Access-Control-Allow-Origin", "*")
-            request.addHeader("Referer", i.headers["referer"] ?: "http://thewebsite.com")
-            request.addHeader("Connection", "keep-alive")
-
-            i.headers.entries.forEach { request.headers[it.key] = it.value }
-
-            requestList.add(request)
-
-            fetch.enqueue(requestList) {}
-        } catch (e: Exception) {
-            activity.runOnUiThread { Toast.makeText(activity, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
         }
     }
 
@@ -248,15 +250,44 @@ class GenericAnime(val context: Context) : GenericInfo {
                                 else -> c.firstOrNull()?.let { onAction(it) }
                             }
                         }
+
                         c.isNotEmpty() -> {
                             navController.navigate(VideoSourceViewModel.createNavigationRoute(c, infoModel, isStreaming, model))
                         }
+
                         else -> {
                             Toast.makeText(context, context.getString(errorId, model.source.serviceName), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
         }
+    }
+
+    fun downloadVideo(context: Context, model: ChapterModel, storage: Storage) {
+        fun getNameFromUrl(url: String): String {
+            return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { model.name } } ?: model.name
+        }
+
+        val d = DownloadManager.Request(storage.link!!.toUri())
+            .setDestinationUri((context.folderLocation + getNameFromUrl(storage.link!!) + "${model.name}.mp4").toUri())
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setAllowedOverRoaming(true)
+            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+            .setMimeType("image/*")
+            .setTitle(model.name)
+            .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
+            .addRequestHeader("User-Agent", "\"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0\"")
+            .addRequestHeader("Accept", "text/html,video/mp4,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            .addRequestHeader("Access-Control-Allow-Origin", "*")
+            .addRequestHeader("Referer", storage.headers["referer"] ?: "http://thewebsite.com")
+            .addRequestHeader("Connection", "keep-alive")
+            .apply {
+                storage.headers.forEach { (t, u) ->
+                    addRequestHeader(t, u)
+                }
+            }
+
+        context.downloadManager.enqueue(d)
     }
 
     override fun sourceList(): List<ApiService> = Sources.values().filterNot(Sources::notWorking).toList()
@@ -428,15 +459,6 @@ class GenericAnime(val context: Context) : GenericInfo {
                     }
                 )
             }
-
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.downloads_menu_title)) },
-                settingIcon = { Icon(Icons.Default.Download, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
-                ) { navController.navigate(DownloaderViewModel.DownloadViewerRoute) { launchSingleTop = true } }
-            )
         }
 
         generalSettings {
@@ -514,11 +536,6 @@ class GenericAnime(val context: Context) : GenericInfo {
         bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
     }
 
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalMaterialApi::class
-    )
     override fun NavGraphBuilder.settingsNavSetup() {
         composable(
             ViewVideoViewModel.VideoViewerRoute,
@@ -526,13 +543,6 @@ class GenericAnime(val context: Context) : GenericInfo {
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
-
-        composable(
-            DownloaderViewModel.DownloadViewerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${DownloaderViewModel.DownloadViewerRoute}" })
-        ) { DownloaderUi() }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

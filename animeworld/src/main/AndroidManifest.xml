@@ -96,40 +96,6 @@
 
             </intent-filter>
         </activity>
-
-        <receiver
-            android:name=".CancelReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.programmersbox.animeworld.CANCEL_DOWNLOAD" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".PauseReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.programmersbox.animeworld.PAUSE_DOWNLOAD" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".ResumeReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.programmersbox.animeworld.RESUME_DOWNLOAD" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".RetryReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.programmersbox.animeworld.RETRY_DOWNLOAD" />
-            </intent-filter>
-        </receiver>
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

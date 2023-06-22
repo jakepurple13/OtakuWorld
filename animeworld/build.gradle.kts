@@ -37,8 +37,6 @@ dependencies {
     implementation(libs.slideToAct)
 
     implementation(libs.mediaRouter)
-    implementation(libs.fetch)
-    implementation(libs.fetchOkHttp)
 
     implementation(libs.torrentStream)
 

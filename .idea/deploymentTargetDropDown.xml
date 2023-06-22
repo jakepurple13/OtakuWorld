@@ -2,21 +2,14 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
+      <entry key="SwipeButtonPreview">
+        <State />
+      </entry>
+      <entry key="animeworld">
+        <State />
+      </entry>
       <entry key="mangaworld">
-        <State>
-          <runningDeviceTargetSelectedWithDropDown>
-            <Target>
-              <type value="RUNNING_DEVICE_TARGET" />
-              <deviceKey>
-                <Key>
-                  <type value="SERIAL_NUMBER" />
-                  <value value="adb-3512105H803TV8-Ux9i1D._adb-tls-connect._tcp." />
-                </Key>
-              </deviceKey>
-            </Target>
-          </runningDeviceTargetSelectedWithDropDown>
-          <timeTargetWasSelectedWithDropDown value="2023-06-21T13:17:38.202537Z" />
-        </State>
+        <State />
       </entry>
       <entry key="novelworld">
         <State />

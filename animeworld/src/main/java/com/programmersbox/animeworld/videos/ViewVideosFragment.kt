@@ -14,7 +14,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -22,8 +30,28 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -42,10 +70,18 @@ import androidx.mediarouter.app.MediaRouteButton
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.programmersbox.animeworld.*
+import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
+import com.programmersbox.animeworld.SlideToDeleteDialog
+import com.programmersbox.animeworld.VideoContent
+import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.helpfulutils.stringForTime
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
@@ -347,7 +383,7 @@ private fun VideoContentView(item: VideoContent) {
                     DismissValue.Default -> Color.Transparent
                     DismissValue.DismissedToEnd -> Color.Green
                     DismissValue.DismissedToStart -> Color.Red
-                }
+                }, label = ""
             )
             val alignment = when (direction) {
                 DismissDirection.StartToEnd -> Alignment.CenterStart
@@ -357,7 +393,7 @@ private fun VideoContentView(item: VideoContent) {
                 DismissDirection.StartToEnd -> Icons.Default.PlayArrow
                 DismissDirection.EndToStart -> Icons.Default.Delete
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f)
+            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
             Box(
                 Modifier

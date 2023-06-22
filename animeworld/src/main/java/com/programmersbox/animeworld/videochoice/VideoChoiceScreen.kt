@@ -2,7 +2,13 @@ package com.programmersbox.animeworld.videochoice
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.DeviceUnknown
+import androidx.compose.material.icons.filled._10mp
+import androidx.compose.material.icons.filled._1k
+import androidx.compose.material.icons.filled._360
+import androidx.compose.material.icons.filled._4k
+import androidx.compose.material.icons.filled._4mp
+import androidx.compose.material.icons.filled._7mp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -52,7 +58,7 @@ fun VideoChoiceScreen(
                 )
             }
         } else {
-            (genericInfo as GenericAnime).fetchIt(it, vm.model!!, activity)
+            (genericInfo as GenericAnime).downloadVideo(activity, vm.model!!, it)
         }
     }
 
