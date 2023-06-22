@@ -1,6 +1,6 @@
 [versions]
 easylauncher = "6.2.0"
-firebaseCrashlyticsGradle = "2.9.5"
+firebaseCrashlyticsGradle = "2.9.6"
 googleServices = "4.3.15"
 gradle = "8.1.0-beta05"
 kamelImage = "0.5.1"
@@ -10,7 +10,7 @@ coroutinesVersion = "1.7.1"
 glideVersion = "4.15.1"
 navigationSafeArgsGradlePlugin = "2.6.0"
 pagingVersion = "3.1.1"
-roomVersion = "2.5.1"
+roomVersion = "2.5.2"
 navVersion = "2.7.0-beta01"
 koinVersion = "3.4.2"
 lottieVersion = "6.0.0"
@@ -25,8 +25,8 @@ workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.12"
 protobufVersion = "3.23.0"
-sketchVersion = "3.2.1-rc03"
-composeBomVersion = "2023.04.00-beta02"
+sketchVersion = "3.2.3"
+composeBomVersion = "2023.06.00-alpha01"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -128,7 +128,7 @@ ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.0.0"
 workRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "workVersion" }
 
 pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
-roomPaging = "androidx.room:room-paging:2.5.1"
+roomPaging = { module = "androidx.room:room-paging", version.ref = "roomVersion" }
 
 aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref = "latestAboutLibsRelease" }
 aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose", version.ref = "latestAboutLibsRelease" }
@@ -147,12 +147,12 @@ androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 firebaseAuth = "com.google.firebase:firebase-auth:22.0.0"
 googlePlayAds = "com.google.android.gms:play-services-ads:22.1.0"
 
-pagingCompose = "androidx.paging:paging-compose:3.2.0-beta01"
+pagingCompose = "androidx.paging:paging-compose:3.2.0-rc01"
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 storage = "com.anggrayudi:storage:1.5.2"
 
-androidxWindow = "androidx.window:window:1.2.0-alpha02"
+androidxWindow = "androidx.window:window:1.2.0-alpha03"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
 androidxBrowser = "androidx.browser:browser:1.5.0"
 

@@ -1,15 +1,18 @@
+@file:Suppress("DeprecatedCallableAddReplaceWith")
+
 package com.programmersbox.uiviews.utils
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetDefaults
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.SwipeProgress
-import androidx.compose.material.SwipeableDefaults
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -98,11 +101,12 @@ class BottomSheetNavigatorSheetState(internal val sheetState: ModalBottomSheetSt
     /**
      * @see ModalBottomSheetState.progress
      */
+    @OptIn(ExperimentalFoundationApi::class)
     @Deprecated(
         message = "BottomSheetNavigatorSheetState#progress has been removed",
         level = DeprecationLevel.ERROR
     )
-    val progress: SwipeProgress<ModalBottomSheetValue>
+    val progress: AnchoredDraggableState<ModalBottomSheetValue>
         get() = error("BottomSheetNavigatorSheetState#progress has been removed")
 }
 
@@ -112,7 +116,7 @@ class BottomSheetNavigatorSheetState(internal val sheetState: ModalBottomSheetSt
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun rememberBottomSheetNavigator(
-    animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec
+    animationSpec: AnimationSpec<Float> = spring()
 ): BottomSheetNavigatorCustom {
     val sheetState = rememberModalBottomSheetState(
         ModalBottomSheetValue.Hidden,
