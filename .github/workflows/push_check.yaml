@@ -252,8 +252,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_novelworld == 'true'
-        uses: r0adkll/sign-android-release@v1
+      - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: novel_sign_no_firebase
         with:
