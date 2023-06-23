@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.ExperimentalMaterialApi
@@ -46,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -72,6 +72,7 @@ import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -88,15 +89,15 @@ fun RecentView(
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
-    val state = rememberLazyGridState()
+    val state = recentVm.gridState
     val scope = rememberCoroutineScope()
-    val source by sourceFlow.collectAsState(initial = null)
-    val pull = rememberPullRefreshState(refreshing = recentVm.isRefreshing, onRefresh = { source?.let { recentVm.reset(context, it) } })
+    val source = recentVm.currentSource
+    val pull = rememberPullRefreshState(refreshing = recentVm.isRefreshing, onRefresh = { recentVm.reset(context) })
 
     val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
 
     LaunchedEffect(isConnected) {
-        if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context, source!!)
+        if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context)
     }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -118,6 +119,12 @@ fun RecentView(
                 context.currentService = service.serviceName
             }
         }
+    }
+
+    LaunchedEffect(state) {
+        snapshotFlow { state.firstVisibleItemScrollOffset }
+            .filter { it == 0 }
+            .collect { scrollBehavior.state.contentOffset = 0f }
     }
 
     OtakuScaffold(
@@ -221,7 +228,7 @@ fun RecentView(
 
                         if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
                             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                source?.let { recentVm.loadMore(context, it) }
+                                recentVm.loadMore(context)
                             }
                         }
                     }

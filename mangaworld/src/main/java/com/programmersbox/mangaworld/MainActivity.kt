@@ -24,8 +24,8 @@ class MainActivity : BaseMainActivity() {
 
         lifecycleScope.launch {
             if (currentService == null) {
-                sourceFlow.emit(Sources.NINE_ANIME)
-                currentService = Sources.NINE_ANIME.serviceName
+                sourceFlow.emit(Sources.MANGA_READ)
+                currentService = Sources.MANGA_READ.serviceName
             }
         }
 
