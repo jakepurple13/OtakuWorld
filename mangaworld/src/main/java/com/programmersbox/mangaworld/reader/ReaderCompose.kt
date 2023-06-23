@@ -962,7 +962,7 @@ private fun ZoomableImage(
                             headers.forEach { (t, u) -> header(t, u) }
                         }
                     },
-                    onLoading = { CircularProgressIndicator(progress = it) },
+                    onLoading = { CircularProgressIndicator(progress = animateFloatAsState(targetValue = it, label = "").value) },
                     onFailure = {
                         Text(
                             stringResource(R.string.pressToRefresh),
