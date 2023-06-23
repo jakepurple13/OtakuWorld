@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +45,8 @@ import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.appVersion
+import com.programmersbox.uiviews.utils.components.icons.Discord
+import com.programmersbox.uiviews.utils.components.icons.Github
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -76,7 +77,7 @@ fun InfoSettings(
 
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.view_on_github)) },
-            settingIcon = { Icon(painterResource(R.drawable.github_icon), null, modifier = Modifier.fillMaxSize()) },
+            settingIcon = { Icon(Icons.Github, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
@@ -85,7 +86,7 @@ fun InfoSettings(
 
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.join_discord)) },
-            settingIcon = { Icon(painterResource(R.drawable.ic_baseline_discord_24), null, modifier = Modifier.fillMaxSize()) },
+            settingIcon = { Icon(Icons.Discord, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }

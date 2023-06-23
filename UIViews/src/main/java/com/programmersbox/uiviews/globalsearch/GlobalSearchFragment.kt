@@ -494,7 +494,7 @@ private fun GlobalScreenPreview() {
         val dao = LocalHistoryDao.current
         GlobalSearchView(
             mainLogo = MockAppIcon,
-            notificationLogo = NotificationLogo(R.drawable.github_icon),
+            notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             dao = dao,
             viewModel = viewModel {
                 GlobalSearchViewModel(

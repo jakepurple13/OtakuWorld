@@ -693,7 +693,7 @@ private fun NotificationPreview() {
     PreviewTheme {
         NotificationsScreen(
             logo = MockAppIcon,
-            notificationLogo = NotificationLogo(R.drawable.github_icon),
+            notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             cancelNotification = {},
             cancelNotificationById = {}
         )
@@ -712,7 +712,7 @@ private fun NotificationItemPreview() {
             genericInfo = MockInfo,
             cancelNotification = {},
             logo = MockAppIcon,
-            notificationLogo = NotificationLogo(R.drawable.github_icon)
+            notificationLogo = NotificationLogo(R.drawable.ic_site_settings)
         )
     }
 }

@@ -93,7 +93,7 @@ val MockInfo = object : GenericInfo {
                 .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.github_icon) } }
+        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.ic_site_settings) } }
     }
 
     @ExperimentalFoundationApi
@@ -122,7 +122,7 @@ val MockInfo = object : GenericInfo {
                     imageUrl = it.imageUrl,
                     name = it.title,
                     headers = it.extras,
-                    placeHolder = R.drawable.github_icon,
+                    placeHolder = R.drawable.ic_site_settings,
                     favoriteIcon = {
                         if (favorites.any { f -> f.url == it.url }) {
                             Icon(
@@ -214,7 +214,7 @@ fun PreviewTheme(
     }
 }
 
-val MockAppIcon = MainLogo(R.drawable.github_icon)
+val MockAppIcon = MainLogo(R.drawable.ic_site_settings)
 
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, group = "themes")
 @Preview(showBackground = true, group = "themes")
