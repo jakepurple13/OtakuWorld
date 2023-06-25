@@ -26,7 +26,7 @@ workVersion = "2.8.1"
 ziplineVersion = "0.9.12"
 landscapist = "2.1.12"
 protobufVersion = "3.23.0"
-sketchVersion = "3.2.3"
+sketchVersion = "3.2.4"
 composeBomVersion = "2023.06.00-alpha01"
 
 ### MangaWorld
