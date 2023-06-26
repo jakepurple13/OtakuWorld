@@ -180,7 +180,8 @@ fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .placeholder(
-                            true, color = placeholderColor,
+                            true,
+                            color = placeholderColor,
                             highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
                         )
                         .align(Alignment.BottomCenter)
