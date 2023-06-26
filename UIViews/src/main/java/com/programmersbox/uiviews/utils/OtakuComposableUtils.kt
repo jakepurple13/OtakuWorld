@@ -35,7 +35,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
+import com.google.accompanist.placeholder.shimmer
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.components.BannerBox
 
@@ -140,7 +142,11 @@ fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .placeholder(true, color = placeholderColor)
+                    .placeholder(
+                        true,
+                        color = placeholderColor,
+                        highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+                    )
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
             )
 
@@ -173,7 +179,10 @@ fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
                     maxLines = 2,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .placeholder(true, color = placeholderColor)
+                        .placeholder(
+                            true, color = placeholderColor,
+                            highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+                        )
                         .align(Alignment.BottomCenter)
                 )
             }

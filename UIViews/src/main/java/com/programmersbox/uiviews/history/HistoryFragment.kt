@@ -4,7 +4,12 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -26,7 +31,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -50,7 +61,21 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.InsetMediumTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LoadingDialog
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalHistoryDao
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.MockAppIcon
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
+import com.programmersbox.uiviews.utils.navigateToDetails
+import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -66,7 +91,6 @@ fun HistoryUi(
     dao: HistoryDao = LocalHistoryDao.current,
     hm: HistoryViewModel = viewModel { HistoryViewModel(dao) },
 ) {
-
     val recentItems = hm.historyItems.collectAsLazyPagingItems()
     val recentSize by hm.historyCount.collectAsState(initial = 0)
     val scope = rememberCoroutineScope()
@@ -135,7 +159,6 @@ fun HistoryUi(
             }
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -291,7 +314,6 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HistoryItemPlaceholder() {
     val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
