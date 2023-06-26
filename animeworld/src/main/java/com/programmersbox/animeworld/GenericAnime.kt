@@ -417,7 +417,6 @@ class GenericAnime(val context: Context) : GenericInfo {
     }
 
     override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
-
         viewSettings {
             val context = LocalContext.current
 
@@ -496,11 +495,9 @@ class GenericAnime(val context: Context) : GenericInfo {
                     }
                 }
             )
-
         }
 
         playerSettings {
-
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
 
@@ -521,9 +518,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                 settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
                 value = ignoreSsl
             ) { scope.launch { context.updatePref(IGNORE_SSL, it) } }
-
         }
-
     }
 
     override fun NavGraphBuilder.globalNavSetup() {

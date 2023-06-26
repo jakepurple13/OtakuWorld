@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -72,7 +73,6 @@ import kotlin.math.abs
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoPlayerUi(
     context: Context = LocalContext.current,
@@ -366,7 +366,6 @@ fun VideoPlayerPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(device = Devices.AUTOMOTIVE_1024p, widthDp = 720, heightDp = 360)
 fun BottomBarPreview() {
@@ -432,8 +431,6 @@ fun MediaControlGestures(
 
             GestureBox(
                 doubleTap = viewModel::playPause,
-                doubleTapStart = viewModel::rewind,
-                doubleTapEnd = viewModel::fastForward,
                 draggingProgress = onDraggingProgressChange,
                 onTap = { viewModel.visibility = !viewModel.visibility },
                 onHorizontalDragStart = { viewModel.exoPlayer?.pause() },
@@ -523,8 +520,6 @@ fun MediaControlGestures(
 
 @Composable
 fun GestureBox(
-    doubleTapStart: () -> Unit,
-    doubleTapEnd: () -> Unit,
     doubleTap: () -> Unit,
     draggingProgress: (DraggingProgress?) -> Unit,
     onTap: () -> Unit,
@@ -674,7 +669,6 @@ fun GestureBox(
 
                     seekJob = coroutineScope.launch {
                         delay(200)
-                        //controller.seekTo(finalTime.toLong())
                         onSeek(finalTime.toLong())
                     }
                 }
@@ -707,7 +701,6 @@ private fun getScreenBrightness(context: Context): Int {
     return nowBrightnessValue
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 suspend fun PointerInputScope.detectMediaPlayerGesture(
     onTap: (Offset) -> Unit,
     onDoubleTap: (Offset) -> Unit,
@@ -754,9 +747,9 @@ fun Modifier.quickSeekAnimation(
     quickSeekDirection: QuickSeekDirection,
     onAnimationEnd: () -> Unit
 ) = composed {
-    val alphaRewind = remember { androidx.compose.animation.core.Animatable(0f) }
-    val alphaForward = remember { androidx.compose.animation.core.Animatable(0f) }
-    val alphaPlayPause = remember { androidx.compose.animation.core.Animatable(0f) }
+    val alphaRewind = remember { Animatable(0f) }
+    val alphaForward = remember { Animatable(0f) }
+    val alphaPlayPause = remember { Animatable(0f) }
 
     LaunchedEffect(quickSeekDirection) {
         when (quickSeekDirection) {
@@ -864,13 +857,12 @@ data class DraggingProgress(
     val diffTime: Float
 ) {
     val progressText: String
-        get() = "${getDurationString(finalTime.toLong(), false)} " +
-                "[${if (diffTime < 0) "-" else "+"}${
-                    getDurationString(
-                        abs(diffTime.toLong()),
-                        false
-                    )
-                }]"
+        get() {
+            val duration = getDurationString(finalTime.toLong(), false)
+            val type = if (diffTime < 0) "-" else "+"
+            val total = getDurationString(abs(diffTime.toLong()), false)
+            return "$duration [$type$total]"
+        }
 }
 
 fun getDurationString(durationMs: Long, negativePrefix: Boolean): String {
@@ -879,14 +871,14 @@ fun getDurationString(durationMs: Long, negativePrefix: Boolean): String {
     val seconds = TimeUnit.MILLISECONDS.toSeconds(durationMs)
 
     return if (hours > 0) {
-        java.lang.String.format(
+        String.format(
             Locale.getDefault(), "%s%02d:%02d:%02d",
             if (negativePrefix) "-" else "",
             hours,
             minutes - TimeUnit.HOURS.toMinutes(hours),
             seconds - TimeUnit.MINUTES.toSeconds(minutes)
         )
-    } else java.lang.String.format(
+    } else String.format(
         Locale.getDefault(), "%s%02d:%02d",
         if (negativePrefix) "-" else "",
         minutes,

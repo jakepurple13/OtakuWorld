@@ -15,9 +15,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -57,14 +59,13 @@ fun M3CoverCard(
     onClick: () -> Unit = {}
 ) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
             .bounceClick(.9f)
-            .combineClickableWithIndication(onLongPress, onClick)
-            .then(modifier),
+            .combineClickableWithIndication(onLongPress, onClick),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium
     ) {
@@ -120,21 +121,19 @@ fun M3CoverCard(
 }
 
 @Composable
-fun M3PlaceHolderCoverCard(placeHolder: Int) {
+fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
     val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
         .copy(0.1f)
         .compositeOver(MaterialTheme.colorScheme.surface)
 
     Surface(
-        modifier = Modifier
-            .size(
-                ComposableUtils.IMAGE_WIDTH,
-                ComposableUtils.IMAGE_HEIGHT
-            ),
+        modifier = modifier.size(
+            ComposableUtils.IMAGE_WIDTH,
+            ComposableUtils.IMAGE_HEIGHT
+        ),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium
     ) {
-
         Box {
             Image(
                 painter = painterResource(placeHolder),
@@ -179,18 +178,28 @@ fun M3PlaceHolderCoverCard(placeHolder: Int) {
                 )
             }
         }
-
     }
 }
 
 @Composable
-fun M3OtakuBannerBox(
+fun OtakuBannerBox(
     placeholder: Int,
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    content: @Composable BoxScope.(itemInfo: MutableState<ItemModel?>) -> Unit
+    content: @Composable BannerScope.() -> Unit
 ) {
-    val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
+    var itemInfo by remember { mutableStateOf<ItemModel?>(null) }
+
+    var bannerScope by remember { mutableStateOf<BannerScope?>(null) }
+
+    DisposableEffect(Unit) {
+        bannerScope = object : BannerScope {
+            override fun onNewItem(itemModel: ItemModel?) {
+                itemInfo = itemModel
+            }
+        }
+        onDispose { bannerScope = null }
+    }
 
     BannerBox(
         modifier = modifier,
@@ -206,25 +215,25 @@ fun M3OtakuBannerBox(
                     leadingContent = {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(itemInfo.value?.imageUrl.orEmpty())
+                                .data(itemInfo?.imageUrl.orEmpty())
                                 .lifecycle(LocalLifecycleOwner.current)
                                 .crossfade(true)
                                 .placeholder(placeholder)
                                 .error(placeholder)
                                 .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                                 .build(),
-                            contentDescription = itemInfo.value?.title,
+                            contentDescription = itemInfo?.title,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
                     },
-                    overlineContent = { Text(itemInfo.value?.source?.serviceName.orEmpty()) },
-                    headlineContent = { Text(itemInfo.value?.title.orEmpty()) },
+                    overlineContent = { Text(itemInfo?.source?.serviceName.orEmpty()) },
+                    headlineContent = { Text(itemInfo?.title.orEmpty()) },
                     supportingContent = {
                         Text(
-                            itemInfo.value?.description.orEmpty(),
+                            itemInfo?.description.orEmpty(),
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 5
                         )
@@ -232,6 +241,10 @@ fun M3OtakuBannerBox(
                 )
             }
         },
-        content = { content(itemInfo) }
+        content = { bannerScope?.content() }
     )
+}
+
+interface BannerScope {
+    fun onNewItem(itemModel: ItemModel?)
 }

@@ -298,7 +298,6 @@ private fun EmptyState(paddingValues: PaddingValues) {
             .padding(paddingValues)
             .fillMaxSize()
     ) {
-
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -306,9 +305,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
             tonalElevation = 4.dp,
             shape = RoundedCornerShape(4.dp)
         ) {
-
             Column(modifier = Modifier) {
-
                 Text(
                     text = stringResource(id = R.string.get_started),
                     style = M3MaterialTheme.typography.headlineSmall,
@@ -329,9 +326,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)
                 ) { Text(text = stringResource(id = R.string.go_download)) }
-
             }
-
         }
     }
 

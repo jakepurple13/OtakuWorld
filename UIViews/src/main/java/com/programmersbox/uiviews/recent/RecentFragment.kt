@@ -64,8 +64,8 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.MockAppIcon
+import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
@@ -169,11 +169,11 @@ fun RecentView(
         }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
-        M3OtakuBannerBox(
+        OtakuBannerBox(
             showBanner = showBanner,
             placeholder = logo.logoId,
             modifier = Modifier.padding(p)
-        ) { itemInfo ->
+        ) {
             Crossfade(
                 targetState = isConnected,
                 modifier = Modifier
@@ -210,7 +210,7 @@ fun RecentView(
                                         listState = state,
                                         favorites = recentVm.favoriteList,
                                         onLongPress = { item, c ->
-                                            itemInfo.value = if (c == ComponentState.Pressed) item else null
+                                            onNewItem(if (c == ComponentState.Pressed) item else null)
                                             showBanner = c == ComponentState.Pressed
                                         }
                                     ) { navController.navigateToDetails(it) }

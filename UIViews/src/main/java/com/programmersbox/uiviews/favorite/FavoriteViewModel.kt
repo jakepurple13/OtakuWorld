@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.favorite
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,10 +41,38 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
         fireListener.unregister()
     }
 
+    var searchText by mutableStateOf("")
+
     var sortedBy by mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE)
     var reverse by mutableStateOf(false)
 
     val selectedSources = mutableStateListOf(*genericInfo.sourceList().fastMap(ApiService::serviceName).toTypedArray())
+
+    val listSources by derivedStateOf {
+        favoriteList.filter { it.title.contains(searchText, true) && it.source in selectedSources }
+    }
+
+    val groupedSources by derivedStateOf {
+        listSources
+            .groupBy(DbModel::title)
+            .entries
+            .let {
+                when (val s = sortedBy) {
+                    is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
+                    is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
+                    is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
+                }
+            }
+            .let { if (reverse) it.reversed() else it }
+            .toTypedArray()
+    }
+
+    val allSources by derivedStateOf {
+        (genericInfo.sourceList().fastMap(ApiService::serviceName) + listSources.fastMap(DbModel::source))
+            .groupBy { it }
+            .toList()
+            .sortedBy { it.first }
+    }
 
     fun newSource(item: String) {
         if (item in selectedSources) selectedSources.remove(item) else selectedSources.add(item)

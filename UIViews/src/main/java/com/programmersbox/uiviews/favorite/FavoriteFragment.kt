@@ -54,13 +54,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
-import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -72,8 +69,8 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3CoverCard
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.MockAppIcon
+import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
@@ -95,45 +92,20 @@ fun FavoriteUi(
     dao: ItemDao = LocalItemDao.current,
     viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
 ) {
-
     val navController = LocalNavController.current
     val context = LocalContext.current
 
-    val favoriteItems: List<DbModel> = viewModel.favoriteList
-    val allSources: List<ApiService> = genericInfo.sourceList()
-
     val focusManager = LocalFocusManager.current
-
-    var searchText by rememberSaveable { mutableStateOf("") }
-
-    val showing = remember(favoriteItems, searchText, viewModel.selectedSources) {
-        favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
-    }
-
-    val showingList = remember(viewModel.sortedBy, viewModel.reverse, showing) {
-        showing
-            .groupBy(DbModel::title)
-            .entries
-            .let {
-                when (val s = viewModel.sortedBy) {
-                    is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
-                    is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
-                    is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
-                }
-            }
-            .let { if (viewModel.reverse) it.reversed() else it }
-            .toTypedArray()
-    }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     var showBanner by remember { mutableStateOf(false) }
 
-    M3OtakuBannerBox(
+    OtakuBannerBox(
         showBanner = showBanner,
         placeholder = logo.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-    ) { itemInfo ->
+    ) {
         OtakuScaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
@@ -189,8 +161,8 @@ fun FavoriteUi(
                         SearchBar(
                             modifier = Modifier.fillMaxWidth(),
                             windowInsets = WindowInsets(0.dp),
-                            query = searchText,
-                            onQueryChange = { searchText = it },
+                            query = viewModel.searchText,
+                            onQueryChange = { viewModel.searchText = it },
                             onSearch = { closeSearchBar() },
                             active = active,
                             onActiveChange = {
@@ -201,14 +173,14 @@ fun FavoriteUi(
                                 Text(
                                     context.resources.getQuantityString(
                                         R.plurals.numFavorites,
-                                        showing.size,
-                                        showing.size
+                                        viewModel.listSources.size,
+                                        viewModel.listSources.size
                                     )
                                 )
                             },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             trailingIcon = {
-                                IconButton(onClick = { searchText = "" }) {
+                                IconButton(onClick = { viewModel.searchText = "" }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             },
@@ -219,13 +191,13 @@ fun FavoriteUi(
                                     .fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                showing.take(4).forEachIndexed { index, dbModel ->
+                                viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
                                     ListItem(
                                         headlineContent = { Text(dbModel.title) },
                                         supportingContent = { Text(dbModel.source) },
                                         leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
                                         modifier = Modifier.clickable {
-                                            searchText = dbModel.title
+                                            viewModel.searchText = dbModel.title
                                             closeSearchBar()
                                         }
                                     )
@@ -252,12 +224,7 @@ fun FavoriteUi(
                                 )
                             }
 
-                            items(
-                                (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                    .groupBy { it }
-                                    .toList()
-                                    .sortedBy { it.first }
-                            ) {
+                            items(viewModel.allSources) {
                                 FilterChip(
                                     selected = it.first in viewModel.selectedSources,
                                     onClick = { viewModel.newSource(it.first) },
@@ -274,7 +241,7 @@ fun FavoriteUi(
                 }
             }
         ) { p ->
-            if (showing.isEmpty()) {
+            if (viewModel.listSources.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -324,15 +291,17 @@ fun FavoriteUi(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(
-                        showingList,
+                        viewModel.groupedSources,
                         key = { it.key }
                     ) { info ->
                         M3CoverCard(
                             onLongPress = { c ->
-                                itemInfo.value = if (c == ComponentState.Pressed) {
-                                    info.value.randomOrNull()
-                                        ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                } else null
+                                onNewItem(
+                                    if (c == ComponentState.Pressed) {
+                                        info.value.randomOrNull()
+                                            ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                    } else null
+                                )
                                 showBanner = c == ComponentState.Pressed
                             },
                             imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },

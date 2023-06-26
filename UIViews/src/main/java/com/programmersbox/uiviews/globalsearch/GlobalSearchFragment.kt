@@ -93,12 +93,12 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -143,11 +143,11 @@ fun GlobalSearchView(
 
     var showBanner by remember { mutableStateOf(false) }
 
-    M3OtakuBannerBox(
+    OtakuBannerBox(
         showBanner = showBanner,
         placeholder = mainLogo.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-    ) { itemInfo ->
+    ) {
         val bottomScaffold = rememberBottomSheetScaffoldState()
         var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
@@ -207,10 +207,8 @@ fun GlobalSearchView(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         LazyColumn(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             itemsIndexed(history) { index, historyModel ->
                                 ListItem(
@@ -219,19 +217,20 @@ fun GlobalSearchView(
                                     trailingContent = {
                                         IconButton(
                                             onClick = { scope.launch { dao.deleteHistory(historyModel) } },
-                                            modifier = Modifier.weight(.1f)
                                         ) { Icon(Icons.Default.Cancel, null) }
                                     },
-                                    modifier = Modifier.clickable {
-                                        viewModel.searchText = historyModel.searchText
-                                        closeSearchBar()
-                                        if (viewModel.searchText.isNotEmpty()) {
-                                            scope.launch(Dispatchers.IO) {
-                                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.searchText = historyModel.searchText
+                                            closeSearchBar()
+                                            if (viewModel.searchText.isNotEmpty()) {
+                                                scope.launch(Dispatchers.IO) {
+                                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                                }
                                             }
+                                            viewModel.searchForItems()
                                         }
-                                        viewModel.searchForItems()
-                                    }
                                 )
                                 if (index != history.lastIndex) {
                                     Divider()
@@ -266,7 +265,7 @@ fun GlobalSearchView(
                                     model = m,
                                     placeHolder = mainLogoDrawable,
                                     onLongPress = { c ->
-                                        itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                        onNewItem(if (c == ComponentState.Pressed) m else null)
                                         showBanner = c == ComponentState.Pressed
                                     }
                                 ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
@@ -391,7 +390,7 @@ fun GlobalSearchView(
                                                             model = m,
                                                             placeHolder = mainLogoDrawable,
                                                             onLongPress = { c ->
-                                                                itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                                onNewItem(if (c == ComponentState.Pressed) m else null)
                                                                 showBanner = c == ComponentState.Pressed
                                                             }
                                                         ) { navController.navigateToDetails(m) }

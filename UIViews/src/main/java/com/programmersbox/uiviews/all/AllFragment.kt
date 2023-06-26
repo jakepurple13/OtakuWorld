@@ -6,7 +6,14 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -16,12 +23,34 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.BrowseGallery
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LeadingIconTab
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TabPosition
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -42,8 +71,17 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalItemDao
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.OtakuBannerBox
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
+import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -119,11 +157,11 @@ fun AllView(
         }
     ) { p1 ->
         var showBanner by remember { mutableStateOf(false) }
-        M3OtakuBannerBox(
+        OtakuBannerBox(
             showBanner = showBanner,
             placeholder = logo.logoId,
             modifier = Modifier.padding(p1)
-        ) { itemInfo ->
+        ) {
             Crossfade(targetState = isConnected, label = "") { connected ->
                 when (connected) {
                     false -> {
@@ -151,7 +189,7 @@ fun AllView(
                         ) { page ->
                             when (page) {
                                 0 -> AllScreen(
-                                    itemInfoChange = { itemInfo.value = it },
+                                    itemInfoChange = this@OtakuBannerBox::onNewItem,
                                     state = state,
                                     showBanner = { showBanner = it },
                                     isRefreshing = allVm.isRefreshing,
@@ -162,7 +200,7 @@ fun AllView(
                                 )
 
                                 1 -> SearchScreen(
-                                    itemInfoChange = { itemInfo.value = it },
+                                    itemInfoChange = this@OtakuBannerBox::onNewItem,
                                     showBanner = { showBanner = it },
                                     searchList = allVm.searchList,
                                     searchText = allVm.searchText,

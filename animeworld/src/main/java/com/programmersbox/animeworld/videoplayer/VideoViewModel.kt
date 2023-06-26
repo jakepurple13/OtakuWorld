@@ -72,12 +72,12 @@ class VideoViewModel(
     var exoPlayer: ExoPlayer? by mutableStateOf(null)
 
     fun playPause() {
-        if (exoPlayer?.isPlaying == true) {
+        quickSeekAction = if (exoPlayer?.isPlaying == true) {
             exoPlayer?.pause()
-            quickSeekAction = QuickSeekAction.pause()
+            QuickSeekAction.pause()
         } else {
             exoPlayer?.play()
-            quickSeekAction = QuickSeekAction.play()
+            QuickSeekAction.play()
         }
     }
 
