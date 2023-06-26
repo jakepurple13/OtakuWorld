@@ -102,7 +102,7 @@ fun View.toolTipText(text: CharSequence) {
 
 fun View.toolTipText(@StringRes stringId: Int) = toolTipText(context.getString(stringId))
 
-fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap? {
+fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap {
     val margin = 24
     val halfMargin = margin / 2f
     val alpha = extractAlpha()
@@ -298,32 +298,44 @@ class DownloadUpdate(private val context: Context, private val packageName: Stri
         } catch (e: Exception) {
             -1
         }
-        if (id == -1L) return true
-        context.registerReceiver(
-            object : BroadcastReceiver() {
-                @SuppressLint("Range")
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    try {
-                        val downloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, id) ?: id
+        if (id == -1L) return false
 
-                        val query = DownloadManager.Query()
-                        query.setFilterById(downloadId)
-                        val c = downloadManager.query(query)
+        val receiver = object : BroadcastReceiver() {
+            @SuppressLint("Range")
+            override fun onReceive(context: Context?, intent: Intent?) {
+                try {
+                    val downloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, id) ?: id
 
-                        if (c.moveToFirst()) {
-                            val columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                            if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
-                                c.getColumnIndex(DownloadManager.COLUMN_MEDIAPROVIDER_URI)
-                                val uri = Uri.parse(c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
-                                openApk(this@DownloadUpdate.context, uri)
-                            }
+                    val query = DownloadManager.Query()
+                    query.setFilterById(downloadId)
+                    val c = downloadManager.query(query)
+
+                    if (c.moveToFirst()) {
+                        val columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                        if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
+                            c.getColumnIndex(DownloadManager.COLUMN_MEDIAPROVIDER_URI)
+                            val uri = Uri.parse(c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
+                            openApk(this@DownloadUpdate.context, uri)
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            }, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        )
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(
+                receiver,
+                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            context.registerReceiver(
+                receiver,
+                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+            )
+        }
         return true
     }
 
