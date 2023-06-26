@@ -210,7 +210,7 @@ fun RecentView(
                                         listState = state,
                                         favorites = recentVm.favoriteList,
                                         onLongPress = { item, c ->
-                                            onNewItem(if (c == ComponentState.Pressed) item else null)
+                                            newItemModel(if (c == ComponentState.Pressed) item else null)
                                             showBanner = c == ComponentState.Pressed
                                         }
                                     ) { navController.navigateToDetails(it) }

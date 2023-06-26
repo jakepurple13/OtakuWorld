@@ -265,7 +265,7 @@ fun GlobalSearchView(
                                     model = m,
                                     placeHolder = mainLogoDrawable,
                                     onLongPress = { c ->
-                                        onNewItem(if (c == ComponentState.Pressed) m else null)
+                                        newItemModel(if (c == ComponentState.Pressed) m else null)
                                         showBanner = c == ComponentState.Pressed
                                     }
                                 ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
@@ -390,7 +390,7 @@ fun GlobalSearchView(
                                                             model = m,
                                                             placeHolder = mainLogoDrawable,
                                                             onLongPress = { c ->
-                                                                onNewItem(if (c == ComponentState.Pressed) m else null)
+                                                                newItemModel(if (c == ComponentState.Pressed) m else null)
                                                                 showBanner = c == ComponentState.Pressed
                                                             }
                                                         ) { navController.navigateToDetails(m) }

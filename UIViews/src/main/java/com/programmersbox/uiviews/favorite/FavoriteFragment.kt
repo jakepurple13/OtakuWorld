@@ -296,7 +296,7 @@ fun FavoriteUi(
                     ) { info ->
                         M3CoverCard(
                             onLongPress = { c ->
-                                onNewItem(
+                                newItemModel(
                                     if (c == ComponentState.Pressed) {
                                         info.value.randomOrNull()
                                             ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }

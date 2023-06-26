@@ -189,7 +189,7 @@ fun AllView(
                         ) { page ->
                             when (page) {
                                 0 -> AllScreen(
-                                    itemInfoChange = this@OtakuBannerBox::onNewItem,
+                                    itemInfoChange = this@OtakuBannerBox::newItemModel,
                                     state = state,
                                     showBanner = { showBanner = it },
                                     isRefreshing = allVm.isRefreshing,
@@ -200,7 +200,7 @@ fun AllView(
                                 )
 
                                 1 -> SearchScreen(
-                                    itemInfoChange = this@OtakuBannerBox::onNewItem,
+                                    itemInfoChange = this@OtakuBannerBox::newItemModel,
                                     showBanner = { showBanner = it },
                                     searchList = allVm.searchList,
                                     searchText = allVm.searchText,

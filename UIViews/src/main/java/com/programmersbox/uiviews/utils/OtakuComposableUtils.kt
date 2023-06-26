@@ -204,7 +204,7 @@ fun OtakuBannerBox(
 
     DisposableEffect(Unit) {
         bannerScope = object : BannerScope {
-            override fun onNewItem(itemModel: ItemModel?) {
+            override fun newItemModel(itemModel: ItemModel?) {
                 itemInfo = itemModel
             }
         }
@@ -256,5 +256,5 @@ fun OtakuBannerBox(
 }
 
 interface BannerScope {
-    fun onNewItem(itemModel: ItemModel?)
+    fun newItemModel(itemModel: ItemModel?)
 }

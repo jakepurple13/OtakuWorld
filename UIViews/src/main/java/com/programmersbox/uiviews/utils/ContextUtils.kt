@@ -524,15 +524,10 @@ val LocalSettingsHandling = staticCompositionLocalOf<SettingsHandling> { error("
 
 val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
 
-fun Context.findActivity(): FragmentActivity {
-    var currentContext = this
-    while (currentContext is ContextWrapper) {
-        if (currentContext is FragmentActivity) {
-            return currentContext
-        }
-        currentContext = currentContext.baseContext
-    }
-    error("Context is not an Activity.")
+tailrec fun Context.findActivity(): FragmentActivity = when (this) {
+    is FragmentActivity -> this
+    is ContextWrapper -> this.baseContext.findActivity()
+    else -> error("Could not find activity in Context chain.")
 }
 
 @Composable
