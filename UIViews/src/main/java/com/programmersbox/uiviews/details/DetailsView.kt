@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -407,6 +408,7 @@ fun DetailsViewLandscape(
     var reverseChapters by remember { mutableStateOf(false) }
 
     val hostState = remember { SnackbarHostState() }
+    val listState = rememberLazyListState()
 
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)
@@ -490,6 +492,33 @@ fun DetailsViewLandscape(
                     )
                 }
             },
+            floatingActionButton = {
+                AnimatedVisibility(
+                    visible = isSaved,
+                    enter = fadeIn() + slideInHorizontally { it / 2 },
+                    exit = slideOutHorizontally { it / 2 } + fadeOut(),
+                    label = ""
+                ) {
+                    val notificationManager = LocalContext.current.notificationManager
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                dao.getNotificationItemFlow(info.url)
+                                    .firstOrNull()
+                                    ?.let {
+                                        dao.deleteNotification(it)
+                                        notificationManager.cancelNotification(it)
+                                    }
+                            }
+                        },
+                        text = { Text("Remove from Saved") },
+                        icon = { Icon(Icons.Default.BookmarkRemove, null) },
+                        containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
+                        contentColor = swatchInfo?.titleColor?.toComposeColor() ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
+                        expanded = listState.isScrollingUp()
+                    )
+                }
+            },
             modifier = Modifier
                 .background(
                     Brush.verticalGradient(
@@ -514,7 +543,8 @@ fun DetailsViewLandscape(
                 chapters = chapters,
                 markAs = markAs,
                 isFavorite = isFavorite,
-                onFavoriteClick = onFavoriteClick
+                onFavoriteClick = onFavoriteClick,
+                listState = listState
             )
         }
     }
@@ -533,7 +563,8 @@ private fun DetailsLandscapeContent(
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     chapters: List<ChapterWatched>,
     logo: NotificationLogo,
-    reverseChapters: Boolean
+    reverseChapters: Boolean,
+    listState: LazyListState
 ) {
     TwoPane(
         modifier = Modifier.padding(p),
@@ -586,7 +617,7 @@ private fun DetailsLandscapeContent(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(vertical = 4.dp),
-                state = rememberLazyListState()
+                state = listState
             ) {
                 items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
                     ChapterItem(
