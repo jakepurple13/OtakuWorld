@@ -63,7 +63,7 @@ tasks.register("clean").configure {
 
 plugins {
     id("io.github.jakepurple13.ProjectInfo") version "1.1.1"
-    id("org.jetbrains.compose") version "1.4.0" apply false
+    id("org.jetbrains.compose") version libs.versions.jetbrainsCompiler apply false
 }
 
 projectInfo {
