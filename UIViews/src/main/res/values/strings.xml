@@ -201,4 +201,5 @@
     <string name="edit_import_list">Edit</string>
     <string name="additional_settings">Additional Settings</string>
     <string name="notification_settings">Notification Settings</string>
+    <string name="notifications">Notifications</string>
 </resources>
