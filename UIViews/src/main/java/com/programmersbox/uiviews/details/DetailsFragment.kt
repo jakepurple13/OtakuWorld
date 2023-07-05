@@ -560,7 +560,7 @@ fun ChapterItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @Composable
@@ -608,10 +608,9 @@ internal fun DetailsHeader(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .animateContentSize()
-            .then(modifier)
     ) {
         GlideImage(
             imageModel = { imageUrl },

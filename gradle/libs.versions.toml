@@ -19,7 +19,7 @@ lifecycle = "2.6.1"
 jetpack = "1.6.0-alpha01"
 jetpackCompiler = "1.4.8"
 jetbrainsCompiler = "1.4.1"
-accompanist = "0.31.3-beta"
+accompanist = "0.31.4-beta"
 okhttpVersion = "4.11.0"
 ktorVersion = "2.3.2"
 tvCompose = "1.0.0-alpha07"
@@ -35,7 +35,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.0.2"
+media3Version = "1.1.0"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }

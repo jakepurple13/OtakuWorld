@@ -156,8 +156,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
     }
 
     @OptIn(
-        ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class, ExperimentalFoundationApi::class,
+        ExperimentalMaterialNavigationApi::class,
+        ExperimentalMaterial3Api::class,
         ExperimentalMaterial3WindowSizeClassApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {

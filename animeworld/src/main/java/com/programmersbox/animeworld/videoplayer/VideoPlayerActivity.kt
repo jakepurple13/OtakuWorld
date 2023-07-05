@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSourceFactory
@@ -62,6 +63,7 @@ import javax.net.ssl.X509TrustManager
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+@UnstableApi
 class VideoPlayerActivity : AppCompatActivity() {
 
     private var currentVolume: Int = 0
@@ -162,6 +164,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private lateinit var videoBinding: ActivityVideoPlayerBinding
     private lateinit var exoBinding: ExoControlsBinding
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         videoBinding = ActivityVideoPlayerBinding.inflate(layoutInflater)
