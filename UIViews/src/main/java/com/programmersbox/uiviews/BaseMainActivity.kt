@@ -69,6 +69,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -127,7 +128,6 @@ import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.rememberBottomSheetNavigator
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -165,34 +165,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        lifecycleScope.launch {
-            genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
-        }
-
-        when (runBlocking { settingsHandling.systemThemeMode.firstOrNull() }) {
-            SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
-            SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
-            else -> null
-        }?.let(AppCompatDelegate::setDefaultNightMode)
-
+        setup()
         onCreate()
-
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        lifecycleScope.launch {
-            flow { emit(AppUpdate.getUpdate()) }
-                .catch { emit(null) }
-                .dispatchIo()
-                .onEach(updateAppCheck::emit)
-                .collect()
-        }
-
-        ItemDatabase.getInstance(this)
-            .itemDao()
-            .getAllNotificationCount()
-            .onEach { notificationCount = it }
-            .launchIn(lifecycleScope)
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
@@ -215,7 +190,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             OtakuMaterialTheme(navController, genericInfo) {
                 AskForNotificationPermissions()
 
-                val showAllItem by settingsHandling.showAll.collectAsState(false)
+                val showAllItem by settingsHandling.showAll.collectAsStateWithLifecycle(false)
 
                 ModalBottomSheetLayout(
                     bottomSheetNavigator = bottomSheetNavigator,
@@ -661,6 +636,31 @@ abstract class BaseMainActivity : AppCompatActivity() {
             appVersion(),
             appUpdate?.update_real_version.orEmpty()
         )
+    }
+
+    private fun setup() {
+        lifecycleScope.launch {
+            genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
+        }
+
+        when (runBlocking { settingsHandling.systemThemeMode.firstOrNull() }) {
+            SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
+            SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> null
+        }?.let(AppCompatDelegate::setDefaultNightMode)
+
+        flow { emit(AppUpdate.getUpdate()) }
+            .catch { emit(null) }
+            .dispatchIo()
+            .onEach(updateAppCheck::emit)
+            .launchIn(lifecycleScope)
+
+        ItemDatabase.getInstance(this)
+            .itemDao()
+            .getAllNotificationCount()
+            .onEach { notificationCount = it }
+            .launchIn(lifecycleScope)
     }
 
     private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: Screen) = this?.hierarchy?.any {
