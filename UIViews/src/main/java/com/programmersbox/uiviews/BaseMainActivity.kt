@@ -57,6 +57,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,7 +69,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -86,6 +86,7 @@ import com.google.accompanist.navigation.material.ExperimentalMaterialNavigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
@@ -112,7 +113,6 @@ import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
-import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.ModalBottomSheetLayout
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuMaterialTheme
@@ -130,6 +130,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -154,6 +155,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
     companion object {
         var showNavBar by mutableStateOf(true)
     }
+
+    private var notificationCount by mutableIntStateOf(0)
 
     @OptIn(
         ExperimentalMaterialNavigationApi::class,
@@ -184,6 +187,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 .onEach(updateAppCheck::emit)
                 .collect()
         }
+
+        ItemDatabase.getInstance(this)
+            .itemDao()
+            .getAllNotificationCount()
+            .onEach { notificationCount = it }
+            .launchIn(lifecycleScope)
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
@@ -361,10 +370,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         navController = navController
                     )
                 }
-
-                val notificationCount by LocalItemDao.current
-                    .getAllNotificationCount()
-                    .collectAsStateWithLifecycle(initialValue = 0)
 
                 AnimatedVisibility(visible = notificationCount > 0) {
                     NavigationRailItem(

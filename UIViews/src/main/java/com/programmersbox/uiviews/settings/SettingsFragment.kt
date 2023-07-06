@@ -186,16 +186,18 @@ private fun SettingsScreen(
         )
     }
 
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
-        settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-        summaryValue = { Text(stringResource(R.string.pending_saved_notifications, vm.savedNotifications)) },
-        modifier = Modifier.clickable(
-            indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() },
-            onClick = notificationClick
+    ShowWhen(vm.savedNotifications > 0) {
+        PreferenceSetting(
+            settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
+            settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
+            summaryValue = { Text(stringResource(R.string.pending_saved_notifications, vm.savedNotifications)) },
+            modifier = Modifier.clickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = notificationClick
+            )
         )
-    )
+    }
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewFavoritesMenu)) },
@@ -208,7 +210,7 @@ private fun SettingsScreen(
     )
 
     PreferenceSetting(
-        settingTitle = { Text("Lists") },
+        settingTitle = { Text(stringResource(id = R.string.custom_lists_title)) },
         settingIcon = { Icon(Icons.Default.List, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
