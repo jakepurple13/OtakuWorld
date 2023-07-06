@@ -25,13 +25,13 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.List
@@ -255,52 +255,46 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
             ) {
                 NavigationBar {
-                    Screen.bottomItems.forEach { screen ->
-                        if (screen !is Screen.AllScreen || showAllItem) {
-                            NavigationBarItem(
-                                icon = {
-                                    BadgedBox(
-                                        badge = {
-                                            if (screen is Screen.Settings) {
-                                                val updateAvailable = updateCheck()
-                                                if (updateAvailable) {
-                                                    Badge { Text("") }
-                                                }
-                                            }
-                                        }
-                                    ) {
-                                        Icon(
-                                            when (screen) {
-                                                Screen.RecentScreen -> Icons.Default.History
-                                                Screen.AllScreen -> Icons.Default.BrowseGallery
-                                                Screen.Settings -> Icons.Default.Settings
-                                                else -> Icons.Default.BrokenImage
-                                            },
-                                            null
-                                        )
-                                    }
-                                },
-                                label = {
-                                    Text(
-                                        when (screen) {
-                                            Screen.AllScreen -> stringResource(R.string.all)
-                                            Screen.RecentScreen -> stringResource(R.string.recent)
-                                            Screen.Settings -> stringResource(R.string.settings)
-                                            else -> ""
-                                        }
-                                    )
-                                },
-                                selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
-                                onClick = {
-                                    navController.navigate(screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
+
+                    @Composable
+                    fun ScreenBottomItem(
+                        screen: Screen,
+                        icon: ImageVector,
+                        label: Int,
+                        badge: @Composable BoxScope.() -> Unit = {},
+                    ) {
+                        NavigationBarItem(
+                            icon = { BadgedBox(badge = badge) { Icon(icon, null) } },
+                            label = { Text(stringResource(label)) },
+                            selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                            )
-                        }
+                            }
+                        )
                     }
+
+                    ScreenBottomItem(
+                        screen = Screen.RecentScreen,
+                        icon = Icons.Default.History,
+                        label = R.string.recent
+                    )
+                    if (showAllItem) {
+                        ScreenBottomItem(
+                            screen = Screen.AllScreen,
+                            icon = Icons.Default.BrowseGallery,
+                            label = R.string.all
+                        )
+                    }
+                    ScreenBottomItem(
+                        screen = Screen.Settings,
+                        icon = Icons.Default.Settings,
+                        label = R.string.settings,
+                        badge = { if (updateCheck()) Badge { Text("") } }
+                    )
                 }
             }
         }
@@ -631,7 +625,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     @Composable
     fun updateCheck(): Boolean {
         val appUpdate by updateAppCheck.collectAsState(null)
-
         return AppUpdate.checkForUpdate(
             appVersion(),
             appUpdate?.update_real_version.orEmpty()

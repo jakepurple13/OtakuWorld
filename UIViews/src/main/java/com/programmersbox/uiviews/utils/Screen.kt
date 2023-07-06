@@ -74,11 +74,6 @@ sealed class Screen(val route: String) {
     }
 
     object SourceChooserScreen : Screen("source_chooser")
-
-    companion object {
-        val bottomItems = listOf(RecentScreen, AllScreen, Settings)
-    }
-
 }
 
 fun NavController.navigateToDetails(model: ItemModel) = navigate(
