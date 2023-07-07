@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.notifications
 
 import android.app.NotificationManager
+import android.graphics.drawable.Drawable
 import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -16,7 +17,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -69,7 +69,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -82,7 +81,6 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -107,6 +105,7 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -115,8 +114,9 @@ import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.components.GradientImage
+import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
@@ -240,53 +240,21 @@ fun NotificationsScreen(
         },
         deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
         itemUi = { item ->
-            ListItem(
-                modifier = Modifier.padding(4.dp),
-                leadingContent = {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item.imageUrl)
-                            .lifecycle(LocalLifecycleOwner.current)
-                            .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = rememberDrawablePainter(logoDrawable),
-                        error = rememberDrawablePainter(logoDrawable),
-                        contentScale = ContentScale.FillBounds,
-                        contentDescription = item.notiTitle,
-                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                    )
-                },
-                overlineContent = { Text(item.source) },
-                headlineContent = { Text(item.notiTitle) },
-                supportingContent = { Text(item.summaryText) },
-                trailingContent = {
-                    var showDropDown by remember { mutableStateOf(false) }
-
-                    DropdownMenu(
-                        expanded = showDropDown,
-                        onDismissRequest = { showDropDown = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(id = R.string.remove_same_name)) },
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.Default) {
-                                        items
-                                            .filter { it.notiTitle == item.notiTitle }
-                                            .forEach {
-                                                cancelNotification(it)
-                                                db.deleteNotification(it)
-                                            }
-                                    }
-                                    showDropDown = false
-                                    Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
+            NotificationDeleteItem(
+                item = item,
+                logoDrawable = logoDrawable,
+                onRemoveAllWithSameName = {
+                    scope.launch {
+                        withContext(Dispatchers.Default) {
+                            items
+                                .filter { it.notiTitle == item.notiTitle }
+                                .forEach {
+                                    cancelNotification(it)
+                                    db.deleteNotification(it)
                                 }
-                            }
-                        )
+                        }
+                        Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
                     }
-
-                    IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                 }
             )
         }
@@ -522,127 +490,28 @@ private fun NotificationItem(
                 },
                 modifier = Modifier.padding(horizontal = 4.dp)
             ) {
-                Row {
-                    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item.imageUrl)
-                            .lifecycle(LocalLifecycleOwner.current)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = rememberDrawablePainter(logoDrawable),
-                        error = rememberDrawablePainter(logoDrawable),
-                        contentScale = ContentScale.Crop,
-                        contentDescription = item.notiTitle,
-                        modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 16.dp, top = 4.dp)
-                    ) {
-                        Text(item.source, style = M3MaterialTheme.typography.labelMedium)
-                        Text(item.notiTitle, style = M3MaterialTheme.typography.titleSmall)
-                        Text(item.summaryText, style = M3MaterialTheme.typography.bodyMedium)
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Top)
-                            .padding(horizontal = 2.dp)
-                    ) {
-
+                ImageFlushListItem(
+                    leadingContent = {
+                        val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+                        GradientImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(item.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = rememberDrawablePainter(logoDrawable),
+                            error = rememberDrawablePainter(logoDrawable),
+                            contentDescription = item.notiTitle,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    },
+                    overlineContent = { Text(item.source) },
+                    headlineContent = { Text(item.notiTitle) },
+                    supportingContent = { Text(item.summaryText) },
+                    trailingContent = {
                         var showDropDown by remember { mutableStateOf(false) }
 
                         val dropDownDismiss = { showDropDown = false }
-
-                        var showDatePicker by remember { mutableStateOf(false) }
-                        var showTimePicker by remember { mutableStateOf(false) }
-
-                        val dateState = rememberDatePickerState(
-                            initialSelectedDateMillis = System.currentTimeMillis(),
-                            selectableDates = remember {
-                                object : SelectableDates {
-                                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                                        return DateValidatorPointForward.now().isValid(utcTimeMillis)
-                                    }
-                                }
-                            }
-                        )
-                        val calendar = remember { Calendar.getInstance() }
-                        val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
-                        val timeState = rememberTimePickerState(
-                            initialHour = calendar[Calendar.HOUR_OF_DAY],
-                            initialMinute = calendar[Calendar.MINUTE],
-                            is24Hour = is24HourFormat
-                        )
-
-                        //TODO: make all this code into a function
-                        if (showTimePicker) {
-                            AlertDialog(
-                                onDismissRequest = { showTimePicker = false },
-                                title = { Text(stringResource(id = R.string.selectTime)) },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            showTimePicker = false
-                                            val c = Calendar.getInstance()
-                                            c.timeInMillis = dateState.selectedDateMillis ?: 0L
-                                            c[Calendar.HOUR_OF_DAY] = timeState.hour
-                                            c[Calendar.MINUTE] = timeState.minute
-
-                                            WorkManager.getInstance(context)
-                                                .enqueueUniqueWork(
-                                                    item.notiTitle,
-                                                    ExistingWorkPolicy.REPLACE,
-                                                    OneTimeWorkRequestBuilder<NotifySingleWorker>()
-                                                        .setInputData(
-                                                            Data.Builder()
-                                                                .putString("notiData", item.toJson())
-                                                                .build()
-                                                        )
-                                                        .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                                                        .build()
-                                                )
-
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(
-                                                    R.string.willNotifyAt,
-                                                    context.getSystemDateTimeFormat().format(c.timeInMillis)
-                                                ),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    ) { Text(stringResource(R.string.ok)) }
-                                },
-                                dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
-                                text = { TimePicker(state = timeState) }
-                            )
-                        }
-
-                        if (showDatePicker) {
-                            DatePickerDialog(
-                                onDismissRequest = { showDatePicker = false },
-                                dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            showDatePicker = false
-                                            showTimePicker = true
-                                        }
-                                    ) { Text(stringResource(R.string.ok)) }
-                                }
-                            ) {
-                                DatePicker(
-                                    state = dateState,
-                                    title = { Text(stringResource(R.string.selectDate)) }
-                                )
-                            }
-                        }
 
                         DropdownMenu(
                             expanded = showDropDown,
@@ -660,12 +529,9 @@ private fun NotificationItem(
 
                             Divider()
 
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.notifyAtTime)) },
-                                onClick = {
-                                    dropDownDismiss()
-                                    showDatePicker = true
-                                }
+                            NotifyAt(
+                                item = item,
+                                onDropDownDismiss = dropDownDismiss
                             )
 
                             Divider()
@@ -681,8 +547,154 @@ private fun NotificationItem(
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                     }
+                )
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotifyAt(
+    item: NotificationItem,
+    onDropDownDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val dateState = rememberDatePickerState(
+        initialSelectedDateMillis = System.currentTimeMillis(),
+        selectableDates = remember {
+            object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return DateValidatorPointForward.now().isValid(utcTimeMillis)
                 }
             }
+        }
+    )
+    val calendar = remember { Calendar.getInstance() }
+    val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
+    val timeState = rememberTimePickerState(
+        initialHour = calendar[Calendar.HOUR_OF_DAY],
+        initialMinute = calendar[Calendar.MINUTE],
+        is24Hour = is24HourFormat
+    )
+
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text(stringResource(id = R.string.selectTime)) },
+            confirmButton = {
+                val dateTimeFormatter = LocalSystemDateTimeFormat.current
+                TextButton(
+                    onClick = {
+                        showTimePicker = false
+                        val c = Calendar.getInstance()
+                        c.timeInMillis = dateState.selectedDateMillis ?: 0L
+                        c[Calendar.HOUR_OF_DAY] = timeState.hour
+                        c[Calendar.MINUTE] = timeState.minute
+
+                        WorkManager.getInstance(context)
+                            .enqueueUniqueWork(
+                                item.notiTitle,
+                                ExistingWorkPolicy.REPLACE,
+                                OneTimeWorkRequestBuilder<NotifySingleWorker>()
+                                    .setInputData(
+                                        Data.Builder()
+                                            .putString("notiData", item.toJson())
+                                            .build()
+                                    )
+                                    .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                                    .build()
+                            )
+
+                        Toast.makeText(
+                            context,
+                            context.getString(
+                                R.string.willNotifyAt,
+                                dateTimeFormatter.format(c.timeInMillis)
+                            ),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                ) { Text(stringResource(R.string.ok)) }
+            },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
+            text = { TimePicker(state = timeState) }
+        )
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                        showTimePicker = true
+                    }
+                ) { Text(stringResource(R.string.ok)) }
+            }
+        ) {
+            DatePicker(
+                state = dateState,
+                title = { Text(stringResource(R.string.selectDate)) }
+            )
+        }
+    }
+
+    DropdownMenuItem(
+        text = { Text(stringResource(R.string.notifyAtTime)) },
+        onClick = {
+            onDropDownDismiss()
+            showDatePicker = true
+        }
+    )
+}
+
+@Composable
+private fun NotificationDeleteItem(
+    item: NotificationItem,
+    logoDrawable: Drawable?,
+    onRemoveAllWithSameName: () -> Unit
+) {
+    ImageFlushListItem(
+        leadingContent = {
+            GradientImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(item.imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                    .crossfade(true)
+                    .build(),
+                placeholder = rememberDrawablePainter(logoDrawable),
+                error = rememberDrawablePainter(logoDrawable),
+                contentDescription = item.notiTitle,
+                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+            )
+        },
+        overlineContent = { Text(item.source) },
+        headlineContent = { Text(item.notiTitle) },
+        supportingContent = { Text(item.summaryText) },
+        trailingContent = {
+            var showDropDown by remember { mutableStateOf(false) }
+
+            DropdownMenu(
+                expanded = showDropDown,
+                onDismissRequest = { showDropDown = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(id = R.string.remove_same_name)) },
+                    onClick = {
+                        showDropDown = false
+                        onRemoveAllWithSameName()
+                    }
+                )
+            }
+
+            IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
         }
     )
 }
@@ -714,5 +726,19 @@ private fun NotificationItemPreview() {
             logo = MockAppIcon,
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings)
         )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun NotificationDeleteItemPreview() {
+    PreviewTheme {
+        Column {
+            NotificationDeleteItem(
+                item = NotificationItem(1, "", "world", "hello", "", "MANGA_READ", "Title"),
+                logoDrawable = null,
+                onRemoveAllWithSameName = {}
+            )
+        }
     }
 }

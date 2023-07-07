@@ -40,11 +40,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -53,7 +53,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
@@ -69,11 +68,12 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope
@@ -266,23 +266,22 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                 ListItem(
                     headlineContent = { Text(item.title) },
                     overlineContent = { Text(item.source) },
-                    supportingContent = { Text(context.getSystemDateTimeFormat().format(item.timestamp)) },
+                    supportingContent = { Text(LocalSystemDateTimeFormat.current.format(item.timestamp)) },
                     leadingContent = {
-                        Surface(shape = MaterialTheme.shapes.medium) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(item.imageUrl)
-                                    .lifecycle(LocalLifecycleOwner.current)
-                                    .crossfade(true)
-                                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                                    .build(),
-                                placeholder = rememberDrawablePainter(logoDrawable),
-                                error = rememberDrawablePainter(logoDrawable),
-                                contentScale = ContentScale.FillBounds,
-                                contentDescription = item.title,
-                                modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            )
-                        }
+                        GradientImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(item.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
+                                .build(),
+                            placeholder = rememberDrawablePainter(logoDrawable),
+                            error = rememberDrawablePainter(logoDrawable),
+                            contentDescription = item.title,
+                            modifier = Modifier
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                .clip(MaterialTheme.shapes.medium)
+                        )
                     },
                     trailingContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {

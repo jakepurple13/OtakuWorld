@@ -306,9 +306,10 @@ fun VideoBottomBar(
 
                     var isSeeking by remember { mutableStateOf(false) }
 
-                    var seekChange by remember(isSeeking, if (isSeeking) Unit else currentPosition) {
-                        mutableFloatStateOf(currentPosition.toFloat())
-                    }
+                    var seekChange by remember(
+                        isSeeking,
+                        if (isSeeking) Unit else currentPosition
+                    ) { mutableFloatStateOf(currentPosition.toFloat()) }
 
                     Slider(
                         value = seekChange,

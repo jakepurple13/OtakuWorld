@@ -247,7 +247,6 @@ fun FavoriteUi(
                         .fillMaxSize()
                         .padding(p)
                 ) {
-
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -255,9 +254,7 @@ fun FavoriteUi(
                         tonalElevation = 4.dp,
                         shape = RoundedCornerShape(4.dp)
                     ) {
-
                         Column(modifier = Modifier) {
-
                             Text(
                                 text = stringResource(id = R.string.get_started),
                                 style = M3MaterialTheme.typography.headlineSmall,
@@ -276,9 +273,7 @@ fun FavoriteUi(
                                     .align(Alignment.CenterHorizontally)
                                     .padding(vertical = 4.dp)
                             ) { Text(text = stringResource(R.string.add_a_favorite)) }
-
                         }
-
                     }
                 }
             } else {
@@ -327,7 +322,8 @@ fun FavoriteUi(
                                         )
                                     }
                                 }
-                            }
+                            },
+                            modifier = Modifier.animateItemPlacement()
                         ) {
                             if (info.value.size == 1) {
                                 info.value

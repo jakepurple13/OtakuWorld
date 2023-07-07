@@ -35,7 +35,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,12 +47,12 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,9 +64,9 @@ fun OtakuListScreen(
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
+    val dateTimeFormatter = LocalSystemDateTimeFormat.current
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -131,7 +130,7 @@ fun OtakuListScreen(
                     onClick = { Screen.CustomListItemScreen.navigate(navController, it.item.uuid) },
                     modifier = Modifier.padding(horizontal = 4.dp)
                 ) {
-                    val time = remember { context.getSystemDateTimeFormat().format(it.item.time) }
+                    val time = remember { dateTimeFormatter.format(it.item.time) }
                     ListItem(
                         overlineContent = { Text(stringResource(id = R.string.custom_list_updated_at, time)) },
                         trailingContent = { Text("(${it.list.size})") },

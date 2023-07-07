@@ -12,7 +12,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,11 +65,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
@@ -92,6 +91,8 @@ import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.components.GradientImage
+import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
@@ -310,33 +311,32 @@ fun OtakuCustomListScreen(
             }
         },
         itemUi = { item ->
-            Row {
-                val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(item.imageUrl)
-                        .lifecycle(LocalLifecycleOwner.current)
-                        .crossfade(true)
-                        .build(),
-                    placeholder = rememberDrawablePainter(logoDrawable),
-                    error = rememberDrawablePainter(logoDrawable),
-                    contentScale = ContentScale.Crop,
-                    contentDescription = item.title,
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                )
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp, top = 4.dp)
-                ) {
-                    Text(item.source, style = MaterialTheme.typography.labelMedium)
-                    Text(item.title, style = MaterialTheme.typography.titleSmall)
-                    Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
-                }
-            }
+            ImageFlushListItem(
+                leadingContent = {
+                    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+                    GradientImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.imageUrl)
+                            .lifecycle(LocalLifecycleOwner.current)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = rememberDrawablePainter(logoDrawable),
+                        error = rememberDrawablePainter(logoDrawable),
+                        contentScale = ContentScale.FillBounds,
+                        contentDescription = item.title,
+                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    )
+                },
+                overlineContent = { Text(item.source) },
+                headlineContent = { Text(item.title) },
+                supportingContent = {
+                    Text(
+                        item.description,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 3
+                    )
+                },
+            )
         }
     ) { padding, ts ->
         LazyColumn(
@@ -457,38 +457,32 @@ private fun CustomItem(
                     .height(ComposableUtils.IMAGE_HEIGHT)
                     .padding(horizontal = 4.dp)
             ) {
-                Row {
-                    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item.imageUrl)
-                            .lifecycle(LocalLifecycleOwner.current)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = rememberDrawablePainter(logoDrawable),
-                        error = rememberDrawablePainter(logoDrawable),
-                        contentScale = ContentScale.Crop,
-                        contentDescription = item.title,
-                        modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 16.dp, top = 4.dp)
-                    ) {
-                        Text(item.source, style = MaterialTheme.typography.labelMedium)
-                        Text(item.title, style = MaterialTheme.typography.titleSmall)
-                        Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Top)
-                            .padding(horizontal = 2.dp)
-                    ) {
+                ImageFlushListItem(
+                    leadingContent = {
+                        val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+                        GradientImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(item.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = rememberDrawablePainter(logoDrawable),
+                            error = rememberDrawablePainter(logoDrawable),
+                            contentScale = ContentScale.FillBounds,
+                            contentDescription = item.title,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    },
+                    overlineContent = { Text(item.source) },
+                    headlineContent = { Text(item.title) },
+                    supportingContent = {
+                        Text(
+                            item.description,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 3
+                        )
+                    },
+                    trailingContent = {
                         var showDropDown by remember { mutableStateOf(false) }
 
                         val dropDownDismiss = { showDropDown = false }
@@ -518,7 +512,7 @@ private fun CustomItem(
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                     }
-                }
+                )
             }
         }
     )

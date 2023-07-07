@@ -123,6 +123,7 @@ fun OtakuMaterialTheme(
                 LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
+                LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() }
             ) { content() }
         }
     }

@@ -110,6 +110,9 @@ dependencies {
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.bundles.protobuf)
+
+    //Multiplatform
+    implementation(projects.imageloader)
 }
 
 protobuf {

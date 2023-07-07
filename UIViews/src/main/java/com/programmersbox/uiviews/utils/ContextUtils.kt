@@ -267,6 +267,8 @@ fun Context.getSystemDateTimeFormat() = SimpleDateFormat(
     Locale.getDefault()
 )
 
+val LocalSystemDateTimeFormat = staticCompositionLocalOf<SimpleDateFormat> { error("Nothing here!") }
+
 inline fun <reified V : ViewModel> factoryCreate(crossinline build: () -> V) = object : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(V::class.java)) {

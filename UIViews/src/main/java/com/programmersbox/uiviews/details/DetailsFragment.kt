@@ -650,7 +650,7 @@ internal fun DetailsHeader(
                     val latestSwatch by rememberUpdatedState(newValue = swatchInfo)
                     GlideImage(
                         imageModel = { imageUrl },
-                        imageOptions = ImageOptions(contentScale = ContentScale.Fit),
+                        imageOptions = ImageOptions(contentScale = ContentScale.FillBounds),
                         component = rememberImageComponent {
                             +PalettePlugin { p ->
                                 if (latestSwatch == null) {
