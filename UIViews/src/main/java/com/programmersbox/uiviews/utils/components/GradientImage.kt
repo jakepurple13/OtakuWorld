@@ -36,15 +36,6 @@ fun GradientImage(
 ) {
     Box {
         when (val painter = asyncPainterResource(data = model)) {
-            is Resource.Failure -> {
-                Image(
-                    painter = error,
-                    contentScale = contentScale,
-                    contentDescription = contentDescription,
-                    modifier = modifier
-                )
-            }
-
             is Resource.Success -> {
                 KamelImage(
                     resource = painter,
@@ -66,7 +57,7 @@ fun GradientImage(
                 )
             }
 
-            is Resource.Loading -> {
+            else -> {
                 Image(
                     painter = error,
                     contentScale = contentScale,
