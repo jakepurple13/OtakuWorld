@@ -46,14 +46,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.HistoryDao
@@ -269,12 +267,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                     supportingContent = { Text(LocalSystemDateTimeFormat.current.format(item.timestamp)) },
                     leadingContent = {
                         GradientImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(item.imageUrl)
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .crossfade(true)
-                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                                .build(),
+                            model = item.imageUrl,
                             placeholder = rememberDrawablePainter(logoDrawable),
                             error = rememberDrawablePainter(logoDrawable),
                             contentDescription = item.title,

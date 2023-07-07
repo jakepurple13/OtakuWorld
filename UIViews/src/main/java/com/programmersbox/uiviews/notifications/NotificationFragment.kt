@@ -70,7 +70,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
@@ -81,7 +80,6 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -275,7 +273,7 @@ fun NotificationsScreen(
                                     cancelNotification = cancelNotification,
                                     db = db,
                                     genericInfo = genericInfo,
-                                    logo = logo,
+                                    logoDrawable = logoDrawable,
                                     notificationLogo = notificationLogo
                                 )
                             }
@@ -332,7 +330,7 @@ fun NotificationsScreen(
                                                 cancelNotification = cancelNotification,
                                                 db = db,
                                                 genericInfo = genericInfo,
-                                                logo = logo,
+                                                logoDrawable = logoDrawable,
                                                 notificationLogo = notificationLogo
                                             )
                                         }
@@ -385,7 +383,7 @@ private fun NotificationItem(
     cancelNotification: (NotificationItem) -> Unit,
     db: ItemDao,
     genericInfo: GenericInfo,
-    logo: MainLogo,
+    logoDrawable: Drawable?,
     notificationLogo: NotificationLogo,
 ) {
 
@@ -492,13 +490,8 @@ private fun NotificationItem(
             ) {
                 ImageFlushListItem(
                     leadingContent = {
-                        val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
                         GradientImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(item.imageUrl)
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .crossfade(true)
-                                .build(),
+                            model = item.imageUrl.orEmpty(),
                             placeholder = rememberDrawablePainter(logoDrawable),
                             error = rememberDrawablePainter(logoDrawable),
                             contentDescription = item.notiTitle,
@@ -663,12 +656,7 @@ private fun NotificationDeleteItem(
     ImageFlushListItem(
         leadingContent = {
             GradientImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                    .crossfade(true)
-                    .build(),
+                model = item.imageUrl.orEmpty(),
                 placeholder = rememberDrawablePainter(logoDrawable),
                 error = rememberDrawablePainter(logoDrawable),
                 contentDescription = item.notiTitle,
@@ -723,7 +711,7 @@ private fun NotificationItemPreview() {
             db = LocalItemDao.current,
             genericInfo = MockInfo,
             cancelNotification = {},
-            logo = MockAppIcon,
+            logoDrawable = null,
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings)
         )
     }

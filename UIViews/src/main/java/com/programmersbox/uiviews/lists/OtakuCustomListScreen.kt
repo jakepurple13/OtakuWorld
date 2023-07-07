@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.lists
 
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
@@ -63,14 +64,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -117,6 +116,8 @@ fun OtakuCustomListScreen(
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val customItem = vm.customItem
+
+    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -313,13 +314,8 @@ fun OtakuCustomListScreen(
         itemUi = { item ->
             ImageFlushListItem(
                 leadingContent = {
-                    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
                     GradientImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(item.imageUrl)
-                            .lifecycle(LocalLifecycleOwner.current)
-                            .crossfade(true)
-                            .build(),
+                        model = item.imageUrl,
                         placeholder = rememberDrawablePainter(logoDrawable),
                         error = rememberDrawablePainter(logoDrawable),
                         contentScale = ContentScale.FillBounds,
@@ -347,7 +343,7 @@ fun OtakuCustomListScreen(
             items(ts) { item ->
                 CustomItem(
                     item = item,
-                    logo = logo,
+                    logo = logoDrawable,
                     showLoadingDialog = { showLoadingDialog = it },
                     onDelete = { vm.removeItem(it) },
                     modifier = Modifier.animateItemPlacement()
@@ -361,7 +357,7 @@ fun OtakuCustomListScreen(
 @Composable
 private fun CustomItem(
     item: CustomListInfo,
-    logo: MainLogo,
+    logo: Drawable?,
     onDelete: (CustomListInfo) -> Unit,
     showLoadingDialog: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -369,7 +365,6 @@ private fun CustomItem(
     val scope = rememberCoroutineScope()
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
-    val context = LocalContext.current
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -459,15 +454,10 @@ private fun CustomItem(
             ) {
                 ImageFlushListItem(
                     leadingContent = {
-                        val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
                         GradientImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(item.imageUrl)
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .crossfade(true)
-                                .build(),
-                            placeholder = rememberDrawablePainter(logoDrawable),
-                            error = rememberDrawablePainter(logoDrawable),
+                            model = item.imageUrl,
+                            placeholder = rememberDrawablePainter(logo),
+                            error = rememberDrawablePainter(logo),
                             contentScale = ContentScale.FillBounds,
                             contentDescription = item.title,
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -547,7 +537,7 @@ private fun CustomItemPreview() {
                 imageUrl = "",
                 source = "MANGA_READ"
             ),
-            logo = MockAppIcon,
+            logo = null,
             onDelete = {},
             showLoadingDialog = {}
         )
