@@ -22,10 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -34,12 +34,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.shimmer
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.components.BannerBox
+import com.programmersbox.uiviews.utils.components.CoilGradientImage
 
 object ComposableUtils {
     const val IMAGE_WIDTH_PX = 360
@@ -223,20 +225,20 @@ fun OtakuBannerBox(
             ) {
                 ListItem(
                     leadingContent = {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(itemInfo?.imageUrl.orEmpty())
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .crossfade(true)
-                                .placeholder(placeholder)
-                                .error(placeholder)
-                                .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
-                                .build(),
-                            contentDescription = itemInfo?.title,
-                            contentScale = ContentScale.Fit,
+                        CoilGradientImage(
+                            model = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(itemInfo?.imageUrl.orEmpty())
+                                    .lifecycle(LocalLifecycleOwner.current)
+                                    .crossfade(true)
+                                    .placeholder(placeholder)
+                                    .error(placeholder)
+                                    .build()
+                            ),
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                .clip(MaterialTheme.shapes.small)
                         )
                     },
                     overlineContent = { Text(itemInfo?.source?.serviceName.orEmpty()) },

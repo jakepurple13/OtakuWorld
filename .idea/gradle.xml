@@ -38,6 +38,7 @@
             <option value="$PROJECT_DIR$/source_utilities" />
           </set>
         </option>
+        <option name="resolveExternalAnnotations" value="false" />
       </GradleProjectSettings>
     </option>
   </component>

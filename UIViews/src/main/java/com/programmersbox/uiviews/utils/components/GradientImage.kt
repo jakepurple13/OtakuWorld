@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImagePainter
 import io.kamel.core.Resource
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -66,5 +67,41 @@ fun GradientImage(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun CoilGradientImage(
+    model: AsyncImagePainter,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    contentScale: ContentScale = ContentScale.FillBounds,
+    blur: Dp = 70.dp,
+    alpha: Float = .5f,
+    saturation: Float = 3f,
+    scaleX: Float = 1.5f,
+    scaleY: Float = 1.5f
+) {
+    Box {
+        if (model.state is AsyncImagePainter.State.Success) {
+            Image(
+                painter = model,
+                contentDescription = contentDescription,
+                contentScale = contentScale,
+                colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) }),
+                modifier = Modifier
+                    .scale(scaleX, scaleY)
+                    .blur(blur, BlurredEdgeTreatment.Unbounded)
+                    .alpha(alpha)
+                    .then(modifier)
+            )
+        }
+
+        Image(
+            painter = model,
+            contentDescription = contentDescription,
+            contentScale = contentScale,
+            modifier = modifier
+        )
     }
 }

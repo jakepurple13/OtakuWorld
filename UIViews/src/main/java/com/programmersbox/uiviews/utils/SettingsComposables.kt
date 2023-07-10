@@ -583,7 +583,6 @@ fun <T> DynamicListSetting(
     val dialogPopup = remember { mutableStateOf(false) }
 
     if (dialogPopup.value) {
-
         AlertDialog(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { dialogPopup.value = false },

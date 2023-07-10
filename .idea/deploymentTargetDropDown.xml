@@ -9,7 +9,20 @@
         <State />
       </entry>
       <entry key="mangaworld">
-        <State />
+        <State>
+          <runningDeviceTargetSelectedWithDropDown>
+            <Target>
+              <type value="RUNNING_DEVICE_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="SERIAL_NUMBER" />
+                  <value value="1A011FDEE0091A" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </runningDeviceTargetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2023-07-07T14:30:39.615653Z" />
+        </State>
       </entry>
       <entry key="novelworld">
         <State />
