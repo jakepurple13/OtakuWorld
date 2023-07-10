@@ -274,7 +274,8 @@ fun NotificationsScreen(
                                     db = db,
                                     genericInfo = genericInfo,
                                     logoDrawable = logoDrawable,
-                                    notificationLogo = notificationLogo
+                                    notificationLogo = notificationLogo,
+                                    modifier = Modifier.animateItemPlacement(),
                                 )
                             }
                         }
@@ -287,7 +288,6 @@ fun NotificationsScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(vertical = 4.dp),
                     ) {
-
                         vm.groupedList.toList().forEach { item ->
                             val expanded = vm.groupedListState[item.first]?.value == true
 
@@ -385,6 +385,7 @@ private fun NotificationItem(
     genericInfo: GenericInfo,
     logoDrawable: Drawable?,
     notificationLogo: NotificationLogo,
+    modifier: Modifier = Modifier,
 ) {
 
     val context = LocalContext.current
@@ -542,7 +543,8 @@ private fun NotificationItem(
                     }
                 )
             }
-        }
+        },
+        modifier = modifier
     )
 }
 

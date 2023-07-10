@@ -44,9 +44,7 @@ fun GradientImage(
                     contentScale = contentScale,
                     colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) }),
                     modifier = Modifier
-                        .scale(scaleX, scaleY)
-                        .blur(blur, BlurredEdgeTreatment.Unbounded)
-                        .alpha(alpha)
+                        .blurGradient(blur, alpha, scaleX, scaleY)
                         .then(modifier)
                 )
 
@@ -90,9 +88,7 @@ fun CoilGradientImage(
                 contentScale = contentScale,
                 colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) }),
                 modifier = Modifier
-                    .scale(scaleX, scaleY)
-                    .blur(blur, BlurredEdgeTreatment.Unbounded)
-                    .alpha(alpha)
+                    .blurGradient(blur, alpha, scaleX, scaleY)
                     .then(modifier)
             )
         }
@@ -105,3 +101,20 @@ fun CoilGradientImage(
         )
     }
 }
+
+fun Modifier.blurGradient(
+    blur: Dp = 70.dp,
+    alpha: Float = .5f,
+    scaleX: Float = 1.5f,
+    scaleY: Float = 1.5f
+) = scale(scaleX, scaleY)
+    .blur(blur, BlurredEdgeTreatment.Unbounded)
+    .alpha(alpha)
+
+fun Modifier.blurGradient(
+    blur: Dp = 70.dp,
+    alpha: Float = .5f,
+    scale: Float = 1.5f
+) = scale(scale)
+    .blur(blur, BlurredEdgeTreatment.Unbounded)
+    .alpha(alpha)
