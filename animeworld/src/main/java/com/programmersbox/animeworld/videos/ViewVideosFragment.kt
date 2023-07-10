@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,7 +36,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
@@ -58,17 +56,19 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import coil.ImageLoader
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.VideoFrameDecoder
+import coil.request.ImageRequest
+import coil.request.videoFramePercent
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
@@ -85,9 +85,9 @@ import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.components.CoilGradientImage
+import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.components.PermissionRequest
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -123,6 +123,14 @@ fun ViewVideoScreen() {
 private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
     val context = LocalContext.current
+
+    val coilImageLoader = remember {
+        ImageLoader(context).newBuilder()
+            .components {
+                add(VideoFrameDecoder.Factory())
+            }
+            .build()
+    }
 
     val items = viewModel.videos
 
@@ -194,8 +202,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
             downloadedItems.clear()
         },
         itemUi = { item ->
-            ListItem(
-                modifier = Modifier.padding(4.dp),
+            ImageFlushListItem(
                 leadingContent = {
                     Box {
                         /*convert millis to appropriate time*/
@@ -223,22 +230,21 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                             }
                         }
 
-                        GlideImage(
-                            imageModel = { item.assetFileStringUri.orEmpty() },
-                            imageOptions = ImageOptions(
-                                contentDescription = item.videoName,
-                                contentScale = ContentScale.Crop,
+                        CoilGradientImage(
+                            model = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(item.assetFileStringUri.orEmpty())
+                                    .lifecycle(LocalLifecycleOwner.current)
+                                    .crossfade(true)
+                                    .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
+                                    .videoFramePercent(.1)
+                                    .build(),
+                                imageLoader = coilImageLoader
                             ),
-                            requestBuilder = {
-                                Glide.with(LocalView.current)
-                                    .asDrawable()
-                                    .override(360, 480)
-                                    .thumbnail(0.5f)
-                                    .transform(RoundedCorners(15))
-                            },
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH)
                         )
 
                         Text(
@@ -249,7 +255,6 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                                 .background(Color(0x99000000))
                                 .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(4.dp))
                         )
-
                     }
                 },
                 overlineContent = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
@@ -270,7 +275,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                 AnimatedLazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = p1,
-                    items = itemList.fastMap { AnimatedLazyListItem(it.videoId.toString(), it) { VideoContentView(it) } }
+                    items = itemList.fastMap { AnimatedLazyListItem(it.videoId.toString(), it) { VideoContentView(it, coilImageLoader) } }
                 )
             }
             //val videos by updateAnimatedItemsState(newList = itemList)
@@ -336,7 +341,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
-private fun VideoContentView(item: VideoContent) {
+private fun VideoContentView(item: VideoContent, imageLoader: ImageLoader) {
     var showDialog by remember { mutableStateOf(false) }
 
     SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = item)
@@ -431,70 +436,75 @@ private fun VideoContentView(item: VideoContent) {
                         }
                     }
             ) {
-                Row {
-                    Box {
-                        /*convert millis to appropriate time*/
-                        val runTimeString = remember {
-                            val duration = item.videoDuration
-                            if (duration > TimeUnit.HOURS.toMillis(1)) {
-                                String.format(
-                                    "%02d:%02d:%02d",
-                                    TimeUnit.MILLISECONDS.toHours(duration),
-                                    TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
-                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
-                                )
-                            } else {
-                                String.format(
-                                    "%02d:%02d",
-                                    TimeUnit.MILLISECONDS.toMinutes(duration),
-                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
-                                )
+                ImageFlushListItem(
+                    leadingContent = {
+                        Box {
+                            /*convert millis to appropriate time*/
+                            val runTimeString = remember {
+                                val duration = item.videoDuration
+                                if (duration > TimeUnit.HOURS.toMillis(1)) {
+                                    String.format(
+                                        "%02d:%02d:%02d",
+                                        TimeUnit.MILLISECONDS.toHours(duration),
+                                        TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
+                                        TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                            TimeUnit.MILLISECONDS.toMinutes(
+                                                duration
+                                            )
+                                        )
+                                    )
+                                } else {
+                                    String.format(
+                                        "%02d:%02d",
+                                        TimeUnit.MILLISECONDS.toMinutes(duration),
+                                        TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                            TimeUnit.MILLISECONDS.toMinutes(
+                                                duration
+                                            )
+                                        )
+                                    )
+                                }
                             }
+
+                            CoilGradientImage(
+                                model = rememberAsyncImagePainter(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(item.assetFileStringUri.orEmpty())
+                                        .lifecycle(LocalLifecycleOwner.current)
+                                        .crossfade(true)
+                                        .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
+                                        .videoFramePercent(.1)
+                                        .build(),
+                                    imageLoader = imageLoader
+                                ),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH)
+                            )
+
+                            Text(
+                                runTimeString,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .background(Color(0x99000000))
+                                    .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 4.dp))
+                            )
                         }
-
-                        GlideImage(
-                            imageModel = { item.assetFileStringUri.orEmpty() },
-                            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-                            requestBuilder = {
-                                Glide.with(LocalView.current)
-                                    .asDrawable()
-                                    .thumbnail(0.5f)
-                            },
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH),
-                            failure = { Text(text = "image request failed.") }
-                        )
-
-                        Text(
-                            runTimeString,
-                            color = Color.White,
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .background(Color(0x99000000))
-                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(bottomEnd = 4.dp))
-                        )
-
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 16.dp, top = 4.dp)
-                    ) {
-                        val shared = context.getSharedPreferences("videos", Context.MODE_PRIVATE)
+                    },
+                    overlineContent = {
+                        val shared = remember { context.getSharedPreferences("videos", Context.MODE_PRIVATE) }
                         if (shared.contains(item.assetFileStringUri))
-                            Text(shared.getLong(item.assetFileStringUri, 0).stringForTime(), style = M3MaterialTheme.typography.labelMedium)
-                        Text(item.videoName.orEmpty(), style = M3MaterialTheme.typography.titleSmall)
-                        Text(item.path.orEmpty(), style = M3MaterialTheme.typography.bodyMedium, fontSize = 10.sp)
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Top)
-                            .padding(horizontal = 2.dp)
-                    ) {
-
+                            Text(shared.getLong(item.assetFileStringUri, 0).stringForTime())
+                    },
+                    headlineContent = {
+                        Text(item.videoName.orEmpty())
+                    },
+                    supportingContent = {
+                        Text(item.path.orEmpty())
+                    },
+                    trailingContent = {
                         var showDropDown by remember { mutableStateOf(false) }
 
                         val dropDownDismiss = { showDropDown = false }
@@ -514,7 +524,7 @@ private fun VideoContentView(item: VideoContent) {
 
                         IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
                     }
-                }
+                )
             }
         }
     )

@@ -77,6 +77,7 @@ landscapistPalette = { module = "com.github.skydoves:landscapist-palette", versi
 landscapistPlaceholder = { module = "com.github.skydoves:landscapist-placeholder", version.ref = "landscapist" }
 composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
 coilCompose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+coilVideo = { module = "io.coil-kt:coil-video", version.ref = "coil" }
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 #Accompanist
 materialPlaceholder = { module = "com.google.accompanist:accompanist-placeholder-material", version.ref = "accompanist" }
