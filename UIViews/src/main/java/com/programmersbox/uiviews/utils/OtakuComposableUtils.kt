@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -85,8 +86,8 @@ fun M3CoverCard(
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)
-                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                     .build(),
+                contentScale = ContentScale.FillBounds,
                 contentDescription = name,
                 modifier = Modifier.matchParentSize()
             )

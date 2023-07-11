@@ -447,7 +447,6 @@ fun SearchCoverCard(
                     .data(model.imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
                     .crossfade(true)
-                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                     .build(),
                 contentDescription = model.title,
                 placeholder = rememberDrawablePainter(placeHolder),
