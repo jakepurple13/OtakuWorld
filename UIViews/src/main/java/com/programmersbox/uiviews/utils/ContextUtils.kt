@@ -53,6 +53,7 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.extensions.SourceRepository
 import kotlinx.coroutines.flow.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -153,9 +154,11 @@ class ApiServiceSerializer : JsonSerializer<ApiService> {
     }
 }
 
-class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService> {
+class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService>, KoinComponent {
+    private val sourceRepository: SourceRepository by inject()
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ApiService? {
-        return genericInfo.toSource(json.asString)
+        return sourceRepository.list.find { json.asString == it.apiService.serviceName }
+            ?.apiService ?: genericInfo.toSource(json.asString)
     }
 }
 

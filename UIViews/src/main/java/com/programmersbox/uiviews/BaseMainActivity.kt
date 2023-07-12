@@ -126,7 +126,9 @@ import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.extensions.SourceLoader
 import com.programmersbox.uiviews.utils.rememberBottomSheetNavigator
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -147,6 +149,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     private val settingsHandling: SettingsHandling by inject()
 
+    private val source: SourceLoader by inject()
+
     protected abstract fun onCreate()
 
     @Composable
@@ -165,6 +169,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycleScope.launch(Dispatchers.IO) {
+            source.load()
+        }
         setup()
         onCreate()
         WindowCompat.setDecorFitsSystemWindows(window, false)

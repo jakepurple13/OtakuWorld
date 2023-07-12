@@ -19,3 +19,4 @@ include(
 )
 
 rootProject.name = "OtakuWorld"
+include(":novel_sources:novelupdates")

@@ -30,6 +30,8 @@ interface GenericInfo {
     val scrollBuffer: Int get() = 2
     val deepLinkUri: String
 
+    val sourceType: String get() = ""
+
     fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
     fun deepLinkSettings(context: Context): PendingIntent?
 

@@ -1,8 +1,11 @@
 package com.programmersbox.uiviews
 
 import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.content.pm.PackageInstaller
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -10,6 +13,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Deck
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,7 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.programmersbox.models.sourceFlow
 import com.programmersbox.uiviews.utils.*
+
 
 @SuppressLint("ComposeContentEmitterReturningValues")
 @ExperimentalComposeUiApi
@@ -27,10 +35,14 @@ import com.programmersbox.uiviews.utils.*
 @Composable
 fun DebugView() {
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val sourceRepo = LocalSourcesRepository.current
+
+    val sources by sourceRepo.sources.collectAsStateWithLifecycle(initialValue = emptyList())
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -46,16 +58,60 @@ fun DebugView() {
     ) { p ->
         val moreSettings = remember { genericInfo.debugMenuItem(context) }
         LazyColumn(contentPadding = p) {
+            item {
+                sources.forEach {
+                    PreferenceSetting(
+                        settingTitle = { Text(it.name) },
+                        settingIcon = { Icon(rememberDrawablePainter(drawable = it.icon), null, modifier = Modifier.fillMaxSize()) },
+                        endIcon = {
+                            IconButton(
+                                onClick = {
+                                    val s = object : PackageInstaller.SessionCallback() {
+                                        override fun onCreated(p0: Int) {
+                                            TODO("Not yet implemented")
+                                        }
+
+                                        override fun onBadgingChanged(p0: Int) {
+                                            TODO("Not yet implemented")
+                                        }
+
+                                        override fun onActiveChanged(p0: Int, p1: Boolean) {
+                                            TODO("Not yet implemented")
+                                        }
+
+                                        override fun onProgressChanged(p0: Int, p1: Float) {
+                                            TODO("Not yet implemented")
+                                        }
+
+                                        override fun onFinished(p0: Int, p1: Boolean) {
+                                            println("$p0 | $p1")
+                                        }
+                                    }
+                                    context.packageManager.packageInstaller.registerSessionCallback(s)
+                                    context.packageManager.packageInstaller.uninstall(
+                                        it.packageName,
+                                        PendingIntent.getActivity(context, 0, activity.intent, PendingIntent.FLAG_IMMUTABLE).intentSender
+                                    )
+                                    context.packageManager.packageInstaller.unregisterSessionCallback(s)
+                                    /*val uri = Uri.fromParts("package", it.packageName, null)
+                                    val uninstall = Intent(Intent.ACTION_DELETE, uri)
+                                    context.startActivity(uninstall)*/
+                                }
+                            ) { Icon(Icons.Default.Delete, null) }
+                        },
+                        modifier = Modifier.clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { sourceFlow.tryEmit(it.apiService) }
+                    )
+                }
+            }
 
             item {
-
                 Surface(
                     color = Color.Blue,
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Here!")
-                }
-
+                ) { Text("Here!") }
             }
 
             item {

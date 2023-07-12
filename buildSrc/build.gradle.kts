@@ -22,6 +22,11 @@ gradlePlugin {
             implementationClass = "plugins.AndroidLibraryPlugin"
         }
 
+        register("otaku-source-application") {
+            id = "otaku-source-application"
+            implementationClass = "plugins.AndroidSourcePlugin"
+        }
+
         register("otaku-easylauncher") {
             id = "otaku-easylauncher"
             implementationClass = "plugins.EasyLauncherSetup"

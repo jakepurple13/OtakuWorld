@@ -19,7 +19,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
@@ -44,7 +49,11 @@ import com.programmersbox.novel_sources.Sources
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.ChapterModelDeserializer
+import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import org.koin.dsl.module
 
 val appModule = module {
@@ -69,6 +78,8 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
 class GenericNovel(val context: Context) : GenericInfo {
 
     override val deepLinkUri: String get() = "novelworld://"
+
+    override val sourceType: String get() = "novel"
 
     override fun chapterOnClick(
         model: ChapterModel,
@@ -140,7 +151,8 @@ class GenericNovel(val context: Context) : GenericInfo {
     @OptIn(
         ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class
+        ExperimentalFoundationApi::class,
+        ExperimentalMaterial3Api::class
     )
     @Composable
     override fun ItemListView(

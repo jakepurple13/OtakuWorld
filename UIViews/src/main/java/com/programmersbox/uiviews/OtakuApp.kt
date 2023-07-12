@@ -6,7 +6,12 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
 import com.programmersbox.helpfulutils.NotificationChannelImportance
@@ -15,6 +20,8 @@ import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.utils.SettingsHandling
+import com.programmersbox.uiviews.utils.extensions.SourceLoader
+import com.programmersbox.uiviews.utils.extensions.SourceRepository
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -57,6 +64,13 @@ abstract class OtakuApp : Application() {
         }
 
         onCreated()
+
+        loadKoinModules(
+            module {
+                single { SourceRepository() }
+                single { SourceLoader(get(), get(), get()) }
+            }
+        )
 
         val work = WorkManager.getInstance(this)
 
@@ -141,5 +155,4 @@ abstract class OtakuApp : Application() {
             }
         }
     }
-
 }
