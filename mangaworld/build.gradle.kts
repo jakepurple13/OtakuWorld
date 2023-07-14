@@ -40,8 +40,8 @@ dependencies {
     implementation(projects.uiViews)
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
-    implementation(projects.mangaSources)
     implementation(projects.sharedutils)
+    implementation(projects.sourceUtilities)
     implementation(projects.imageloader)
 
     implementation(libs.glide)

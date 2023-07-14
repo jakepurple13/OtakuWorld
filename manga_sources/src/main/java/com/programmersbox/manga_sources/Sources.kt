@@ -7,7 +7,6 @@ import com.programmersbox.manga_sources.manga.MangaPark
 import com.programmersbox.manga_sources.manga.MangaRead
 import com.programmersbox.manga_sources.manga.MangaReadCo
 import com.programmersbox.manga_sources.manga.MangaTown
-import com.programmersbox.manga_sources.manga.Mangamutiny
 import com.programmersbox.manga_sources.manga.NineAnime
 import com.programmersbox.manga_sources.manga.Tsumino
 import com.programmersbox.models.ApiService
@@ -31,10 +30,6 @@ enum class Sources(
     NINE_ANIME(domain = "nineanime", source = NineAnime),
 
     //MANGAKAKALOT(domain = "mangakakalot", source = Mangakakalot),
-    MANGAMUTINY(domain = "mangamutiny", source = Mangamutiny, filterOutOfUpdate = true) {
-        override val notWorking: Boolean get() = true
-    },
-
     //MANGA_DOG(domain = "mangadog", source = MangaDog),
     //INKR(domain = "mangarock", source = com.programmersbox.manga_sources.mangasources.manga.INKR),
     TSUMINO(domain = "tsumino", isAdult = true, source = Tsumino),

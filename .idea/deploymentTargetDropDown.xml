@@ -5,7 +5,13 @@
       <entry key="SwipeButtonPreview">
         <State />
       </entry>
+      <entry key="anime_sources.defaultanimesources">
+        <State />
+      </entry>
       <entry key="animeworld">
+        <State />
+      </entry>
+      <entry key="manga_sources.defaultmangasources">
         <State />
       </entry>
       <entry key="mangaworld">

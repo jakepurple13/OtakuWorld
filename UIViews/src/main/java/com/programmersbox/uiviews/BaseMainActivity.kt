@@ -648,7 +648,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 sourceFlow.emit(s)
                 currentService = s?.serviceName
             } else {
-                sourceRepository.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it.apiService) }
+                sourceRepository.toSourceByApiServiceName(currentService.orEmpty())?.let { sourceFlow.emit(it.apiService) }
             }
         }
 

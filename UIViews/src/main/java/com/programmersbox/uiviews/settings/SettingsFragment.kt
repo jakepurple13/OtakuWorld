@@ -448,14 +448,14 @@ fun SourceChooserScreen() {
             scope.launch {
                 service.let {
                     sourceFlow.emit(it.apiService)
-                    context.currentService = it.name
+                    context.currentService = it.apiService.serviceName
                 }
             }
         }
     ) {
         ListBottomSheetItemModel(
-            primaryText = it.name,
-            icon = if (it.name == context.currentService) Icons.Default.Check else null
+            primaryText = it.apiService.serviceName,
+            icon = if (it.apiService.serviceName == context.currentService) Icons.Default.Check else null
         )
     }
 }

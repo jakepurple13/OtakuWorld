@@ -62,6 +62,7 @@ val Context.ignoreSsl get() = dataStore.data.map { it[IGNORE_SSL] ?: true }
 val USER_NEW_PLAYER = booleanPreferencesKey("useNewPlayer")
 val Context.useNewPlayerFlow get() = dataStore.data.map { it[USER_NEW_PLAYER] ?: true }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun Context.navigateToVideoPlayer(
     navController: NavController,
     assetFileStringUri: String?,
@@ -403,5 +404,29 @@ fun SlideTo(
                 }
             }
         }
+    }
+}
+
+enum class Qualities(var value: Int) {
+    Unknown(0),
+    P360(-2), // 360p
+    P480(-1), // 480p
+    P720(1), // 720p
+    P1080(2), // 1080p
+    P1440(3), // 1440p
+    P2160(4) // 4k or 2160p
+}
+
+fun getQualityFromName(qualityName: String): Qualities {
+    return when (qualityName.replace("p", "").replace("P", "")) {
+        "360" -> Qualities.P360
+        "480" -> Qualities.P480
+        "720" -> Qualities.P720
+        "1080" -> Qualities.P1080
+        "1440" -> Qualities.P1440
+        "2160" -> Qualities.P2160
+        "4k" -> Qualities.P2160
+        "4K" -> Qualities.P2160
+        else -> Qualities.Unknown
     }
 }

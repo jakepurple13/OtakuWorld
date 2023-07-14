@@ -24,6 +24,7 @@
             <option value="$PROJECT_DIR$/Models" />
             <option value="$PROJECT_DIR$/UIViews" />
             <option value="$PROJECT_DIR$/anime_sources" />
+            <option value="$PROJECT_DIR$/anime_sources/defaultanimesources" />
             <option value="$PROJECT_DIR$/animeworld" />
             <option value="$PROJECT_DIR$/animeworldtv" />
             <option value="$PROJECT_DIR$/app" />
@@ -31,6 +32,7 @@
             <option value="$PROJECT_DIR$/favoritesdatabase" />
             <option value="$PROJECT_DIR$/imageloader" />
             <option value="$PROJECT_DIR$/manga_sources" />
+            <option value="$PROJECT_DIR$/manga_sources/defaultmangasources" />
             <option value="$PROJECT_DIR$/mangaworld" />
             <option value="$PROJECT_DIR$/novel_sources" />
             <option value="$PROJECT_DIR$/novel_sources/bestlightnovel" />

@@ -14,11 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.anime_sources.utilities.Qualities
-import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.GenericAnime
 import com.programmersbox.animeworld.MainActivity
+import com.programmersbox.animeworld.Qualities
 import com.programmersbox.animeworld.R
+import com.programmersbox.animeworld.getQualityFromName
 import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo

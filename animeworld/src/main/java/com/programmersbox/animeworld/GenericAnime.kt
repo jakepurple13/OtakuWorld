@@ -81,8 +81,6 @@ import com.google.accompanist.placeholder.shimmer
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
-import com.programmersbox.anime_sources.ShowApi
-import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceViewModel
@@ -131,6 +129,8 @@ class GenericAnime(val context: Context) : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") anime_no_firebase_file else anime_file }
     override val deepLinkUri: String get() = "animeworld://"
 
+    override val sourceType: String get() = "anime"
+
     override fun chapterOnClick(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
@@ -139,10 +139,10 @@ class GenericAnime(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
-        if ((model.source as? ShowApi)?.canPlay == false) {
+        /*if ((model.source as? ShowApi)?.canPlay == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
             return
-        }
+        }*/
         getEpisodes(
             R.string.source_no_stream,
             model,
@@ -180,14 +180,14 @@ class GenericAnime(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
-        if ((model.source as? ShowApi)?.canDownload == false) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.source_no_download, model.source.serviceName),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+        /* if ((model.source as? ShowApi)?.canDownload == false) {
+             Toast.makeText(
+                 context,
+                 context.getString(R.string.source_no_download, model.source.serviceName),
+                 Toast.LENGTH_SHORT
+             ).show()
+             return
+         }*/
         activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33)
                 arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
@@ -291,15 +291,11 @@ class GenericAnime(val context: Context) : GenericInfo {
         context.downloadManager.enqueue(d)
     }
 
-    override fun sourceList(): List<ApiService> = Sources.values().filterNot(Sources::notWorking).toList()
+    override fun sourceList(): List<ApiService> = emptyList()
 
-    override fun searchList(): List<ApiService> = Sources.searchSources
+    override fun searchList(): List<ApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = try {
-        Sources.valueOf(s)
-    } catch (e: IllegalArgumentException) {
-        null
-    }
+    override fun toSource(s: String): ApiService? = null
 
     @Composable
     override fun DetailActions(infoModel: InfoModel, tint: Color) {

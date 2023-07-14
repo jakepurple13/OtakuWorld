@@ -119,7 +119,7 @@ fun RecentView(
         if (initSource != -1) {
             sourceList.getOrNull(pagerState.currentPage)?.let { service ->
                 sourceFlow.emit(service.apiService)
-                context.currentService = service.name
+                context.currentService = service.apiService.serviceName
             }
         }
     }
@@ -147,7 +147,7 @@ fun RecentView(
                         },
                         label = ""
                     ) { targetState ->
-                        Text(stringResource(R.string.currentSource, sourceList.getOrNull(targetState)?.name.orEmpty()))
+                        Text(stringResource(R.string.currentSource, sourceList.getOrNull(targetState)?.apiService?.serviceName.orEmpty()))
                     }
                 },
                 actions = {

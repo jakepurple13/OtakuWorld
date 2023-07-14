@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Pages
-import androidx.compose.material.icons.filled.TextFormat
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -62,7 +61,6 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.manga_sources.Sources
 import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.reader.ReadActivity
@@ -73,7 +71,6 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.source_utilities.NetworkHelper
@@ -82,7 +79,6 @@ import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -128,6 +124,8 @@ class ChapterList(private val context: Context) {
 }
 
 class GenericManga(val context: Context) : GenericInfo {
+
+    override val sourceType: String get() = "manga"
 
     override val deepLinkUri: String get() = "mangaworld://"
 
@@ -209,23 +207,10 @@ class GenericManga(val context: Context) : GenericInfo {
         ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }
     }
 
-    override fun sourceList(): List<ApiService> =
-        if (runBlocking { context.showAdultFlow.first() }) {
-            Sources.values().toList()
-        } else {
-            Sources.values().filterNot(Sources::isAdult).toList()
-        }
-            .filterNot(ApiService::notWorking)
+    override fun sourceList(): List<ApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = try {
-        Sources.valueOf(s)
-    } catch (e: IllegalArgumentException) {
-        null
-    }
+    override fun toSource(s: String): ApiService? = null
 
-    @OptIn(
-        ExperimentalMaterialApi::class
-    )
     @Composable
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
@@ -304,23 +289,6 @@ class GenericManga(val context: Context) : GenericInfo {
         }
 
         generalSettings {
-            val scope = rememberCoroutineScope()
-            val context = LocalContext.current
-            val showAdult by context.showAdultFlow.collectAsState(false)
-            val sourceRepository = LocalSourcesRepository.current
-
-            SwitchSetting(
-                settingTitle = { Text(stringResource(R.string.showAdultSources)) },
-                value = showAdult,
-                settingIcon = { Icon(Icons.Default.TextFormat, null, modifier = Modifier.fillMaxSize()) },
-                updateValue = {
-                    scope.launch { context.updatePref(SHOW_ADULT, it) }
-                    if (!it && (sourceFlow.value as? Sources)?.isAdult == true) {
-                        sourceFlow.tryEmit(sourceRepository.list.randomOrNull()?.apiService)
-                    }
-                }
-            )
-
             /*if (BuildConfig.DEBUG) {
 
                 val folderLocation by context.folderLocationFlow.collectAsState(initial = DOWNLOAD_FILE_PATH)

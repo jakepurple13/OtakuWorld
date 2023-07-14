@@ -1,7 +1,12 @@
 package com.programmersbox.models
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import java.io.Serializable
 
 interface ApiService : Serializable {
@@ -76,6 +81,11 @@ interface ApiService : Serializable {
         }
 
     fun <T> Flow<T>.dispatchIo() = this.flowOn(Dispatchers.IO)
+}
+
+interface ApiServicesCatalog {
+    fun createSources(): List<ApiService>
+    val name: String
 }
 
 val sourceFlow = MutableStateFlow<ApiService?>(null)
