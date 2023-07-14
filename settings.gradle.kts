@@ -19,4 +19,8 @@ include(
 )
 
 rootProject.name = "OtakuWorld"
-include(":novel_sources:novelupdates")
+include(
+    ":novel_sources:novelupdates",
+    ":novel_sources:bestlightnovel"
+)
+include(":sharedutils:extensionloader")

@@ -63,9 +63,9 @@ import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetMediumTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
@@ -237,7 +237,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
             val context = LocalContext.current
             val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
-            val info = LocalGenericInfo.current
+            val info = LocalSourcesRepository.current
             val navController = LocalNavController.current
 
             Surface(
@@ -245,7 +245,8 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                 shape = MaterialTheme.shapes.medium,
                 onClick = {
                     scope.launch {
-                        info.toSource(item.source)
+                        info.toSourceByApiServiceName(item.source)
+                            ?.apiService
                             ?.getSourceByUrlFlow(item.url)
                             ?.dispatchIo()
                             ?.onStart { showLoadingDialog = true }
@@ -282,7 +283,8 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                             IconButton(
                                 onClick = {
                                     scope.launch {
-                                        info.toSource(item.source)
+                                        info.toSourceByApiServiceName(item.source)
+                                            ?.apiService
                                             ?.getSourceByUrlFlow(item.url)
                                             ?.dispatchIo()
                                             ?.onStart { showLoadingDialog = true }

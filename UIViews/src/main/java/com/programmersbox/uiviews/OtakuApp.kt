@@ -14,17 +14,18 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
+import com.programmersbox.extensionloader.SourceLoader
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.utils.SettingsHandling
-import com.programmersbox.uiviews.utils.extensions.SourceLoader
-import com.programmersbox.uiviews.utils.extensions.SourceRepository
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
@@ -68,9 +69,11 @@ abstract class OtakuApp : Application() {
         loadKoinModules(
             module {
                 single { SourceRepository() }
-                single { SourceLoader(get(), get(), get()) }
+                single { SourceLoader(get(), get<GenericInfo>().sourceType, get()) }
             }
         )
+
+        get<SourceLoader>().load()
 
         val work = WorkManager.getInstance(this)
 

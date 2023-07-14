@@ -37,7 +37,6 @@ dependencies {
     implementation(projects.uiViews)
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
-    implementation(projects.novelSources)
     implementation(projects.sharedutils)
 
     implementation(libs.bundles.roomLibs)

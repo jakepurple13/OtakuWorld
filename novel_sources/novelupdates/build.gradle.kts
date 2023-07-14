@@ -15,7 +15,7 @@ android {
 
 otakuSourceInformation {
     name = "NovelUpdates"
-    classInfo = ".NovelUpdates1"
+    classInfo = ".NovelUpdates"
     sourceType = SourceType.Novel
 }
 
@@ -34,8 +34,6 @@ dependencies {
 
     implementation(libs.jsoup)
 
-    implementation(projects.models)
-    api(projects.sourceUtilities)
     implementation(libs.bundles.ktorLibs)
 
     implementation(libs.bundles.koinLibs)

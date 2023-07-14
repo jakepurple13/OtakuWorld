@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
@@ -64,6 +65,7 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.OtakuScaffold
@@ -85,7 +87,8 @@ fun RecentView(
     logo: MainLogo,
     dao: ItemDao = LocalItemDao.current,
     context: Context = LocalContext.current,
-    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, context) },
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
+    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, context, sourceRepository) },
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
@@ -103,20 +106,20 @@ fun RecentView(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
-    val sourceList = remember { info.sourceList() }
-    val initSource = remember(source) { sourceList.indexOf(source) }
+    val sourceList = recentVm.sources
+    val initSource = remember(source) { sourceList.indexOfFirst { it.apiService == source } }
     val pagerState = rememberPagerState(
         initialPage = initSource.coerceAtLeast(0),
         initialPageOffsetFraction = 0f
-    ) { info.sourceList().size }
+    ) { sourceList.size }
     LaunchedEffect(initSource) {
         if (initSource != -1) pagerState.scrollToPage(initSource)
     }
     LaunchedEffect(pagerState.currentPage, initSource) {
         if (initSource != -1) {
             sourceList.getOrNull(pagerState.currentPage)?.let { service ->
-                sourceFlow.emit(service)
-                context.currentService = service.serviceName
+                sourceFlow.emit(service.apiService)
+                context.currentService = service.name
             }
         }
     }
@@ -144,7 +147,7 @@ fun RecentView(
                         },
                         label = ""
                     ) { targetState ->
-                        Text(stringResource(R.string.currentSource, sourceList.getOrNull(targetState)?.serviceName.orEmpty()))
+                        Text(stringResource(R.string.currentSource, sourceList.getOrNull(targetState)?.name.orEmpty()))
                     }
                 },
                 actions = {

@@ -49,7 +49,7 @@ class ReadViewModel(
     val headers: MutableMap<String, String> = mutableMapOf(),
     model: Flow<List<String>>? = handle
         .get<String>("currentChapter")
-        ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+        ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
         ?.getChapterInfo()
         ?.map {
             headers.putAll(it.flatMap { h -> h.headers.toList() })
@@ -111,7 +111,7 @@ class ReadViewModel(
 
     private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 
-    private val chapterList by lazy { ChapterList(context, genericInfo) }
+    private val chapterList by lazy { ChapterList(context) }
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }

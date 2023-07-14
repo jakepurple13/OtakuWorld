@@ -87,6 +87,7 @@ import com.google.accompanist.navigation.material.ExperimentalMaterialNavigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.sourceFlow
@@ -106,6 +107,7 @@ import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.recent.RecentView
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.settings.ExtensionList
 import com.programmersbox.uiviews.settings.GeneralSettings
 import com.programmersbox.uiviews.settings.InfoSettings
 import com.programmersbox.uiviews.settings.NotificationSettings
@@ -126,9 +128,7 @@ import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.extensions.SourceLoader
 import com.programmersbox.uiviews.utils.rememberBottomSheetNavigator
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -149,7 +149,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     private val settingsHandling: SettingsHandling by inject()
 
-    private val source: SourceLoader by inject()
+    private val sourceRepository by inject<SourceRepository>()
 
     protected abstract fun onCreate()
 
@@ -169,9 +169,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        lifecycleScope.launch(Dispatchers.IO) {
-            source.load()
-        }
         setup()
         onCreate()
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -579,6 +576,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
             }
 
+            composable(
+                Screen.ExtensionListScreen.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) { ExtensionList() }
+
             additionalSettings()
 
             if (BuildConfig.DEBUG) {
@@ -640,7 +643,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     private fun setup() {
         lifecycleScope.launch {
-            genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
+            if (currentService == null) {
+                val s = sourceRepository.list.randomOrNull()?.apiService
+                sourceFlow.emit(s)
+                currentService = s?.serviceName
+            } else {
+                sourceRepository.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it.apiService) }
+            }
         }
 
         when (runBlocking { settingsHandling.systemThemeMode.firstOrNull() }) {

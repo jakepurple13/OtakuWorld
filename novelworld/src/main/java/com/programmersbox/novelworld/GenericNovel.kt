@@ -36,7 +36,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
+import com.google.accompanist.placeholder.shimmer
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
@@ -45,7 +47,6 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
-import com.programmersbox.novel_sources.Sources
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
@@ -71,7 +72,7 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
     fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
         "chapterList",
         null,
-        ChapterModel::class.java to ChapterModelDeserializer(genericInfo)
+        ChapterModel::class.java to ChapterModelDeserializer()
     )
 }
 
@@ -99,13 +100,9 @@ class GenericNovel(val context: Context) : GenericInfo {
         )
     }
 
-    override fun sourceList(): List<ApiService> = Sources.values().toList()
+    override fun sourceList(): List<ApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = try {
-        Sources.valueOf(s)
-    } catch (e: IllegalArgumentException) {
-        null
-    }
+    override fun toSource(s: String): ApiService? = null
 
     override fun downloadChapter(
         model: ChapterModel,
@@ -122,6 +119,10 @@ class GenericNovel(val context: Context) : GenericInfo {
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
+        val placeholderColor = contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
+            .copy(0.1f)
+            .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+
         LazyColumn {
             items(10) {
                 Surface(
@@ -137,9 +138,8 @@ class GenericNovel(val context: Context) : GenericInfo {
                             .fillMaxWidth()
                             .placeholder(
                                 true,
-                                color = contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
-                                    .copy(0.1f)
-                                    .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                                color = placeholderColor,
+                                highlight = PlaceholderHighlight.shimmer(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = .75f))
                             )
                             .padding(4.dp)
                     )

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
@@ -37,6 +38,7 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -72,10 +74,10 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreferenceSetting
@@ -257,6 +259,15 @@ private fun SettingsScreen(
         ) { navController.navigate(Screen.SourceChooserScreen.route) }
     )
 
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.view_extensions)) },
+        settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = rememberRipple(),
+            interactionSource = remember { MutableInteractionSource() }
+        ) { navController.navigate(Screen.ExtensionListScreen.route) }
+    )
+
     ShowWhen(visibility = source != null) {
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
@@ -333,6 +344,7 @@ private fun SettingsScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @LightAndDarkPreviews
 @Composable
 private fun SettingsPreview() {
@@ -422,29 +434,28 @@ private fun AccountSettings(
 
 @Composable
 fun SourceChooserScreen() {
-    val source by sourceFlow.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val navController = LocalNavController.current
-    val genericInfo = LocalGenericInfo.current
+    val sourceRepository = LocalSourcesRepository.current
 
     ListBottomScreen(
         includeInsetPadding = true,
         title = stringResource(R.string.chooseASource),
-        list = genericInfo.sourceList(),
+        list = sourceRepository.list,
         onClick = { service ->
             navController.popBackStack()
             scope.launch {
                 service.let {
-                    sourceFlow.emit(it)
-                    context.currentService = it.serviceName
+                    sourceFlow.emit(it.apiService)
+                    context.currentService = it.name
                 }
             }
         }
     ) {
         ListBottomSheetItemModel(
-            primaryText = it.serviceName,
-            icon = if (it == source) Icons.Default.Check else null
+            primaryText = it.name,
+            icon = if (it.name == context.currentService) Icons.Default.Check else null
         )
     }
 }
@@ -492,27 +503,27 @@ private fun Modifier.click(action: () -> Unit): Modifier = composed {
 @Composable
 internal fun SettingsScaffold(
     title: String,
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
+    topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {
+        InsetSmallTopAppBar(
+            title = { Text(title) },
+            navigationIcon = { BackButton() },
+            scrollBehavior = it,
+        )
+    },
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            InsetSmallTopAppBar(
-                title = { Text(title) },
-                navigationIcon = { BackButton() },
-                scrollBehavior = scrollBehavior,
-            )
-        },
+        topBar = { topBar(scrollBehavior) },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets
     ) { p ->
         Column(
+            content = content,
             modifier = Modifier
                 .padding(p)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
-            content = content
         )
     }
 }

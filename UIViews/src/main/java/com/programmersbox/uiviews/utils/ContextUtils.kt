@@ -45,6 +45,7 @@ import com.google.gson.*
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.helpfulutils.*
 import com.programmersbox.models.ApiService
@@ -53,7 +54,6 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.extensions.SourceRepository
 import kotlinx.coroutines.flow.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -132,18 +132,21 @@ class ChapterModelSerializer : JsonSerializer<ChapterModel> {
     }
 }
 
-class ChapterModelDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ChapterModel> {
+class ChapterModelDeserializer : JsonDeserializer<ChapterModel>, KoinComponent {
+    private val sourceRepository: SourceRepository by inject<SourceRepository>()
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterModel? {
         return json.asJsonObject.let {
-            genericInfo.toSource(it["source"].asString)?.let { it1 ->
-                ChapterModel(
-                    name = it["name"].asString,
-                    uploaded = it["uploaded"].asString,
-                    source = it1,
-                    sourceUrl = it["sourceUrl"].asString,
-                    url = it["url"].asString
-                )
-            }
+            sourceRepository.toSourceByApiServiceName(it["source"].asString)
+                ?.apiService
+                ?.let { it1 ->
+                    ChapterModel(
+                        name = it["name"].asString,
+                        uploaded = it["uploaded"].asString,
+                        source = it1,
+                        sourceUrl = it["sourceUrl"].asString,
+                        url = it["url"].asString
+                    )
+                }
         }
     }
 }
@@ -157,8 +160,7 @@ class ApiServiceSerializer : JsonSerializer<ApiService> {
 class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService>, KoinComponent {
     private val sourceRepository: SourceRepository by inject()
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ApiService? {
-        return sourceRepository.list.find { json.asString == it.apiService.serviceName }
-            ?.apiService ?: genericInfo.toSource(json.asString)
+        return sourceRepository.toSourceByApiServiceName(json.asString)?.apiService ?: genericInfo.toSource(json.asString)
     }
 }
 

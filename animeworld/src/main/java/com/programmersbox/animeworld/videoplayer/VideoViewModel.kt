@@ -63,7 +63,7 @@ class VideoViewModel(
     }
 
     val chapterModel: ChapterModel? = handle.get<String>("chapterModel")
-        ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+        ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer())
     val showPath = handle.get<String>("showPath").orEmpty()
     val showName = handle.get<String>("showName")
     val downloadOrStream = handle.get<String>("downloadOrStream")?.toBoolean() ?: true

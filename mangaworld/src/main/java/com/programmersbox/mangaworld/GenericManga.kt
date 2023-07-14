@@ -82,6 +82,7 @@ import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -109,7 +110,7 @@ val appModule = module {
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
 }
 
-class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
+class ChapterList(private val context: Context) {
     fun set(item: List<ChapterModel>?) {
         val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
         context.defaultSharedPref.edit().putString("chapterList", i).commit()
@@ -118,7 +119,7 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
     fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
         "chapterList",
         null,
-        ChapterModel::class.java to ChapterModelDeserializer(genericInfo)
+        ChapterModel::class.java to ChapterModelDeserializer()
     )
 
     fun clear() {
@@ -141,7 +142,7 @@ class GenericManga(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
-        ChapterList(context, this@GenericManga).set(allChapters)
+        ChapterList(context).set(allChapters)
         if (runBlocking { context.useNewReaderFlow.first() }) {
             ReadViewModel.navigateToMangaReader(navController, model, infoModel.title, model.url, model.sourceUrl)
         } else {
@@ -306,6 +307,7 @@ class GenericManga(val context: Context) : GenericInfo {
             val scope = rememberCoroutineScope()
             val context = LocalContext.current
             val showAdult by context.showAdultFlow.collectAsState(false)
+            val sourceRepository = LocalSourcesRepository.current
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.showAdultSources)) },
@@ -314,7 +316,7 @@ class GenericManga(val context: Context) : GenericInfo {
                 updateValue = {
                     scope.launch { context.updatePref(SHOW_ADULT, it) }
                     if (!it && (sourceFlow.value as? Sources)?.isAdult == true) {
-                        sourceFlow.tryEmit(sourceList().random())
+                        sourceFlow.tryEmit(sourceRepository.list.randomOrNull()?.apiService)
                     }
                 }
             )

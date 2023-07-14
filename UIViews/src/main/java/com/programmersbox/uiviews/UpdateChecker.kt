@@ -15,15 +15,30 @@ import androidx.compose.ui.util.fastMaxBy
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.programmersbox.favoritesdatabase.*
+import com.programmersbox.extensionloader.SourceLoader
+import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.helpfulutils.*
+import com.programmersbox.helpfulutils.GroupBehavior
+import com.programmersbox.helpfulutils.NotificationDslBuilder
+import com.programmersbox.helpfulutils.SemanticActions
+import com.programmersbox.helpfulutils.intersect
+import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.loggingutils.fd
 import com.programmersbox.models.InfoModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.UPDATE_CHECKING_END
+import com.programmersbox.uiviews.utils.UPDATE_CHECKING_START
+import com.programmersbox.uiviews.utils.appVersion
+import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -75,6 +90,8 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
     private val dao by lazy { ItemDatabase.getInstance(this@UpdateFlowWorker.applicationContext).itemDao() }
 
     private val genericInfo: GenericInfo by inject()
+    private val sourceRepository: SourceRepository by inject()
+    private val sourceLoader: SourceLoader by inject()
 
     override suspend fun doWork(): Result {
         return try {
@@ -88,9 +105,13 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
                 FirebaseDb.getAllShows().requireNoNulls()
             ).flatten().groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! }
 
+            if (sourceRepository.list.isEmpty()) {
+                sourceLoader.blockingLoad()
+            }
+
             // Getting all recent updates
             val newList = list.intersect(
-                genericInfo.sourceList()
+                sourceRepository.apiServiceList
                     .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
                     .mapNotNull { m ->
                         try {
@@ -112,7 +133,8 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
             val items = newList.mapIndexedNotNull { index, model ->
                 update.sendRunningNotification(newList.size, index, model.title)
                 try {
-                    val newData = genericInfo.toSource(model.source)
+                    val newData = sourceRepository.toSourceByApiServiceName(model.source)
+                        ?.apiService
                         ?.let {
                             withTimeoutOrNull(10000) {
                                 model.toItemModel(it).toInfoModel()
@@ -121,9 +143,9 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
                             }
                         }
                     println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
-                    // To test notifications, comment these out but leave the Pair
-                    if (model.numChapters >= (newData?.chapters?.size ?: -1)) null
-                    else Pair(newData, model)
+                    // To test notifications, comment the takeUnless out
+                    Pair(newData, model)
+                        .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
                 } catch (e: Exception) {
                     e.printStackTrace()
                     null
@@ -306,10 +328,11 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
 
     private val logo: NotificationLogo by inject()
     private val info: GenericInfo by inject()
+    private val sourceRepository: SourceRepository by inject()
 
     override fun onReceive(context: Context?, intent: Intent?) {
         Loged.d("BootReceived")
-        context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info) }
+        context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info, sourceRepository) }
     }
 }
 
@@ -317,18 +340,25 @@ class NotifySingleWorker(context: Context, workerParams: WorkerParameters) : Cor
 
     private val logo: NotificationLogo by inject()
     private val genericInfo: GenericInfo by inject()
+    private val sourceRepository: SourceRepository by inject()
 
     override suspend fun doWork(): Result {
         inputData.getString("notiData")
             ?.fromJson<NotificationItem>()
-            ?.let { d -> SavedNotifications.viewNotificationFromDb(applicationContext, d, logo, genericInfo) }
+            ?.let { d -> SavedNotifications.viewNotificationFromDb(applicationContext, d, logo, genericInfo, sourceRepository) }
         return Result.success()
     }
 }
 
 object SavedNotifications {
 
-    fun viewNotificationFromDb(context: Context, n: NotificationItem, notificationLogo: NotificationLogo, info: GenericInfo) {
+    fun viewNotificationFromDb(
+        context: Context,
+        n: NotificationItem,
+        notificationLogo: NotificationLogo,
+        info: GenericInfo,
+        sourceRepository: SourceRepository
+    ) {
         val icon = notificationLogo.notificationId
         val update = UpdateNotification(context)
         (n.id to NotificationDslBuilder.builder(
@@ -372,7 +402,8 @@ object SavedNotifications {
             }*/
             pendingIntent { context ->
                 runBlocking {
-                    val itemModel = info.toSource(n.source)
+                    val itemModel = sourceRepository.toSourceByApiServiceName(n.source)
+                        ?.apiService
                         ?.getSourceByUrlFlow(n.url)
                         ?.firstOrNull()
 
@@ -383,7 +414,12 @@ object SavedNotifications {
             .let { update.onEnd(listOf(it), info = info) }
     }
 
-    fun viewNotificationsFromDb(context: Context, logo: NotificationLogo, info: GenericInfo) {
+    fun viewNotificationsFromDb(
+        context: Context,
+        logo: NotificationLogo,
+        info: GenericInfo,
+        sourceRepository: SourceRepository
+    ) {
         val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
         val icon = logo.notificationId
         val update = UpdateNotification(context)
@@ -432,7 +468,8 @@ object SavedNotifications {
                         }*/
                         pendingIntent { context ->
                             runBlocking {
-                                val itemModel = info.toSource(n.source)//UpdateWorker.sourceFromString(n.source)
+                                val itemModel = sourceRepository.toSourceByApiServiceName(n.source)//UpdateWorker.sourceFromString(n.source)
+                                    ?.apiService
                                     ?.getSourceByUrlFlow(n.url)
                                     ?.firstOrNull()
 

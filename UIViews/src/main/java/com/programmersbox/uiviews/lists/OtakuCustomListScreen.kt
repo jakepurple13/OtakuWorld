@@ -84,8 +84,8 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
@@ -363,7 +363,7 @@ private fun CustomItem(
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
-    val genericInfo = LocalGenericInfo.current
+    val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
     var showPopup by remember { mutableStateOf(false) }
 
@@ -426,8 +426,9 @@ private fun CustomItem(
         dismissContent = {
             ElevatedCard(
                 onClick = {
-                    genericInfo
-                        .toSource(item.source)
+                    sourceRepository
+                        .toSourceByApiServiceName(item.source)
+                        ?.apiService
                         ?.let { source ->
                             Cached.cache[item.url]?.let {
                                 flow {

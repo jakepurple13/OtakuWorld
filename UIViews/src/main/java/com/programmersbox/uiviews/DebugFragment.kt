@@ -1,8 +1,8 @@
 package com.programmersbox.uiviews
 
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.content.pm.PackageInstaller
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
@@ -66,36 +66,13 @@ fun DebugView() {
                         endIcon = {
                             IconButton(
                                 onClick = {
-                                    val s = object : PackageInstaller.SessionCallback() {
-                                        override fun onCreated(p0: Int) {
-                                            TODO("Not yet implemented")
-                                        }
-
-                                        override fun onBadgingChanged(p0: Int) {
-                                            TODO("Not yet implemented")
-                                        }
-
-                                        override fun onActiveChanged(p0: Int, p1: Boolean) {
-                                            TODO("Not yet implemented")
-                                        }
-
-                                        override fun onProgressChanged(p0: Int, p1: Float) {
-                                            TODO("Not yet implemented")
-                                        }
-
-                                        override fun onFinished(p0: Int, p1: Boolean) {
-                                            println("$p0 | $p1")
-                                        }
-                                    }
-                                    context.packageManager.packageInstaller.registerSessionCallback(s)
-                                    context.packageManager.packageInstaller.uninstall(
+                                    /*context.packageManager.packageInstaller.uninstall(
                                         it.packageName,
                                         PendingIntent.getActivity(context, 0, activity.intent, PendingIntent.FLAG_IMMUTABLE).intentSender
-                                    )
-                                    context.packageManager.packageInstaller.unregisterSessionCallback(s)
-                                    /*val uri = Uri.fromParts("package", it.packageName, null)
+                                    )*/
+                                    val uri = Uri.fromParts("package", it.packageName, null)
                                     val uninstall = Intent(Intent.ACTION_DELETE, uri)
-                                    context.startActivity(uninstall)*/
+                                    context.startActivity(uninstall)
                                 }
                             ) { Icon(Icons.Default.Delete, null) }
                         },

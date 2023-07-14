@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -27,7 +28,6 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.extensions.SourceRepository
 import org.koin.compose.koinInject
 import java.util.UUID
 
@@ -75,6 +75,7 @@ sealed class Screen(val route: String) {
     }
 
     object SourceChooserScreen : Screen("source_chooser")
+    object ExtensionListScreen : Screen("extension_list")
 }
 
 fun NavController.navigateToDetails(model: ItemModel) = navigate(

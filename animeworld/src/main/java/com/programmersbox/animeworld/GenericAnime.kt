@@ -45,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,7 +77,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.placeholder.material.shimmer
+import com.google.accompanist.placeholder.shimmer
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
@@ -323,6 +324,10 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     @Composable
     override fun ComposeShimmerItem() {
+        val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
+            .copy(0.1f)
+            .compositeOver(MaterialTheme.colorScheme.surface)
+
         LazyColumn {
             items(10) {
                 Card(
@@ -335,11 +340,8 @@ class GenericAnime(val context: Context) : GenericInfo {
                             .fillMaxWidth()
                             .placeholder(
                                 true,
-                                highlight = PlaceholderHighlight.shimmer(),
-                                color = androidx.compose.material3
-                                    .contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-                                    .copy(0.1f)
-                                    .compositeOver(MaterialTheme.colorScheme.surface)
+                                color = placeholderColor,
+                                highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
                             )
                     ) {
                         Icon(

@@ -45,6 +45,7 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
@@ -82,11 +83,13 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.NotificationSortBy
@@ -103,6 +106,7 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.MockInfo
@@ -144,9 +148,10 @@ fun NotificationsScreen(
     notificationLogo: NotificationLogo,
     navController: NavController = LocalNavController.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
     db: ItemDao = LocalItemDao.current,
     settingsHandling: SettingsHandling = LocalSettingsHandling.current,
-    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, genericInfo) },
+    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, sourceRepository) },
     cancelNotificationById: (Int) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
 ) {
@@ -275,6 +280,17 @@ fun NotificationsScreen(
                                     genericInfo = genericInfo,
                                     logoDrawable = logoDrawable,
                                     notificationLogo = notificationLogo,
+                                    toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                                    sourceRepository = sourceRepository,
+                                    onError = {
+                                        scope.launch {
+                                            state.snackbarHostState.currentSnackbarData?.dismiss()
+                                            state.snackbarHostState.showSnackbar(
+                                                "Something went wrong. Source might not be installed",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    },
                                     modifier = Modifier.animateItemPlacement(),
                                 )
                             }
@@ -331,7 +347,18 @@ fun NotificationsScreen(
                                                 db = db,
                                                 genericInfo = genericInfo,
                                                 logoDrawable = logoDrawable,
-                                                notificationLogo = notificationLogo
+                                                notificationLogo = notificationLogo,
+                                                toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                                                sourceRepository = sourceRepository,
+                                                onError = {
+                                                    scope.launch {
+                                                        state.snackbarHostState.currentSnackbarData?.dismiss()
+                                                        state.snackbarHostState.showSnackbar(
+                                                            "Something went wrong. Source might not be installed",
+                                                            duration = SnackbarDuration.Short
+                                                        )
+                                                    }
+                                                }
                                             )
                                         }
                                     }
@@ -383,8 +410,11 @@ private fun NotificationItem(
     cancelNotification: (NotificationItem) -> Unit,
     db: ItemDao,
     genericInfo: GenericInfo,
+    toSource: (String) -> ApiService?,
     logoDrawable: Drawable?,
     notificationLogo: NotificationLogo,
+    onError: () -> Unit,
+    sourceRepository: SourceRepository,
     modifier: Modifier = Modifier,
 ) {
 
@@ -466,8 +496,7 @@ private fun NotificationItem(
         dismissContent = {
             ElevatedCard(
                 onClick = {
-                    genericInfo
-                        .toSource(item.source)
+                    toSource(item.source)
                         ?.let { source ->
                             Cached.cache[item.url]?.let {
                                 flow {
@@ -485,7 +514,7 @@ private fun NotificationItem(
                             showLoadingDialog = false
                             navController.navigateToDetails(it)
                         }
-                        ?.launchIn(scope)
+                        ?.launchIn(scope) ?: onError()
                 },
                 modifier = Modifier.padding(horizontal = 4.dp)
             ) {
@@ -516,7 +545,13 @@ private fun NotificationItem(
                                 onClick = {
                                     dropDownDismiss()
                                     scope.launch(Dispatchers.IO) {
-                                        SavedNotifications.viewNotificationFromDb(context, item, notificationLogo, genericInfo)
+                                        SavedNotifications.viewNotificationFromDb(
+                                            context = context,
+                                            n = item,
+                                            notificationLogo = notificationLogo,
+                                            info = genericInfo,
+                                            sourceRepository = sourceRepository
+                                        )
                                     }
                                 }
                             )
@@ -714,7 +749,10 @@ private fun NotificationItemPreview() {
             genericInfo = MockInfo,
             cancelNotification = {},
             logoDrawable = null,
-            notificationLogo = NotificationLogo(R.drawable.ic_site_settings)
+            notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
+            toSource = { null },
+            onError = {},
+            sourceRepository = SourceRepository()
         )
     }
 }

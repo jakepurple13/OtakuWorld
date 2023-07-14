@@ -79,24 +79,23 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
 import com.programmersbox.uiviews.utils.MockAppIcon
-import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -116,11 +115,11 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 fun GlobalSearchView(
     mainLogo: MainLogo,
     notificationLogo: NotificationLogo,
-    info: GenericInfo = LocalGenericInfo.current,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
     dao: HistoryDao = LocalHistoryDao.current,
     viewModel: GlobalSearchViewModel = viewModel {
         GlobalSearchViewModel(
-            info = info,
+            sourceRepository = sourceRepository,
             initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
             dao = dao,
         )
@@ -322,7 +321,7 @@ fun GlobalSearchView(
                                         Surface(
                                             modifier = Modifier.placeholder(true, color = placeholderColor),
                                             tonalElevation = 4.dp,
-                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
+                                            shape = M3MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -496,7 +495,7 @@ private fun GlobalScreenPreview() {
             dao = dao,
             viewModel = viewModel {
                 GlobalSearchViewModel(
-                    info = MockInfo,
+                    sourceRepository = SourceRepository(),
                     initialSearch = "",
                     dao = dao,
                 )

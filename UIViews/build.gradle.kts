@@ -113,6 +113,9 @@ dependencies {
 
     //Multiplatform
     implementation(projects.imageloader)
+
+    //Extension Loader
+    api(projects.sharedutils.extensionloader)
 }
 
 protobuf {

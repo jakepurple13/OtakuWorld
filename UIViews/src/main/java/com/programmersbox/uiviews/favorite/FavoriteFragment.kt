@@ -56,18 +56,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuBannerBox
@@ -88,9 +88,9 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @Composable
 fun FavoriteUi(
     logo: MainLogo,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
     dao: ItemDao = LocalItemDao.current,
-    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
+    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) }
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -293,8 +293,12 @@ fun FavoriteUi(
                             onLongPress = { c ->
                                 newItemModel(
                                     if (c == ComponentState.Pressed) {
-                                        info.value.randomOrNull()
-                                            ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                        info.value.randomOrNull()?.let {
+                                            sourceRepository
+                                                .toSourceByApiServiceName(it.source)
+                                                ?.apiService
+                                                ?.let { it1 -> it.toItemModel(it1) }
+                                        }
                                     } else null
                                 )
                                 showBanner = c == ComponentState.Pressed
@@ -328,7 +332,12 @@ fun FavoriteUi(
                             if (info.value.size == 1) {
                                 info.value
                                     .firstOrNull()
-                                    ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                                    ?.let {
+                                        sourceRepository
+                                            .toSourceByApiServiceName(it.source)
+                                            ?.apiService
+                                            ?.let { it1 -> it.toItemModel(it1) }
+                                    }
                                     ?.let { navController.navigateToDetails(it) }
                             } else {
                                 Screen.FavoriteChoiceScreen.navigate(navController, info.value)
@@ -343,7 +352,7 @@ fun FavoriteUi(
 
 @Composable
 fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }) {
-    val genericInfo = LocalGenericInfo.current
+    val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
     ListBottomScreen(
         includeInsetPadding = false,
@@ -351,7 +360,12 @@ fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoic
         list = vm.items,
         onClick = { item ->
             item
-                .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
+                .let {
+                    sourceRepository
+                        .toSourceByApiServiceName(it.source)
+                        ?.apiService
+                        ?.let { it1 -> it.toItemModel(it1) }
+                }
                 ?.let { navController.navigateToDetails(it) }
         }
     ) {

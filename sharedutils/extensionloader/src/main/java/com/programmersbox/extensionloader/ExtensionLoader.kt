@@ -1,5 +1,6 @@
-package com.programmersbox.uiviews.utils.extensions
+package com.programmersbox.extensionloader
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -42,23 +43,41 @@ class ExtensionLoader<T, R>(
     private val metadataClass: String,
     private val mapping: (T, ApplicationInfo, PackageInfo) -> R
 ) {
-    suspend fun loadExtensions(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> {
+    @SuppressLint("QueryPermissionsNeeded")
+    fun loadExtensions(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> {
         val packageManager = context.packageManager
         val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
         } else {
             packageManager.getInstalledPackages(PACKAGE_FLAGS)
         }
-            .filter { it.reqFeatures.orEmpty().any { it.name == extensionFeature } }
+            .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
 
         return runBlocking {
             packages
-                .map { async { loadOne(it, mapped) } }
+                .map { async { loadExtension(it, mapped) } }
                 .flatMap { it.await() }
         }
     }
 
-    private fun loadOne(packageInfo: PackageInfo, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> {
+    @SuppressLint("QueryPermissionsNeeded")
+    suspend fun loadExtensionsBlocking(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> {
+        val packageManager = context.packageManager
+        val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
+        } else {
+            packageManager.getInstalledPackages(PACKAGE_FLAGS)
+        }
+            .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
+
+        return runBlocking {
+            packages
+                .map { async { loadExtension(it, mapped) } }
+                .flatMap { it.await() }
+        }
+    }
+
+    private fun loadExtension(packageInfo: PackageInfo, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> {
         val appInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.packageManager.getApplicationInfo(
                 packageInfo.packageName,
@@ -90,7 +109,9 @@ class ExtensionLoader<T, R>(
                     Class.forName(it, false, classLoader)
                         .getDeclaredConstructor()
                         .newInstance() as? T
-                }.getOrNull()
+                }
+                    .onFailure { it.printStackTrace() }
+                    .getOrNull()
             }
             .map { mapped(it, appInfo, packageInfo) }
     }
