@@ -1,5 +1,6 @@
 package com.programmersbox.extensionloader
 
+import com.programmersbox.models.SourceInformation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

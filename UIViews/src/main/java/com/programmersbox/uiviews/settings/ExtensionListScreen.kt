@@ -29,7 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,9 +39,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.programmersbox.extensionloader.SourceInformation
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.models.RemoteSources
+import com.programmersbox.models.SourceInformation
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.all.pagerTabIndicatorOffset
@@ -178,24 +180,23 @@ private fun InstalledExtensionItems(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun RemoteExtensionItems(
-    remoteSources: List<SourceInformation>
+    remoteSources: Map<String, List<RemoteSources>>
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        items(remoteSources) {
-            ExtensionItem(
-                sourceInformation = it,
-                onClick = {},
-                trailingIcon = {
-                    TextButton(onClick = {}) {
-                        Text("Install")
-                    }
-                }
-            )
+        remoteSources.forEach { (t, u) ->
+            stickyHeader { TopAppBar(title = { Text(t) }) }
+            items(u) {
+                RemoteItem(
+                    remoteSource = it,
+                    onClick = {}
+                )
+            }
         }
     }
 }
@@ -214,6 +215,22 @@ private fun ExtensionItem(
             headlineContent = { Text(sourceInformation.apiService.serviceName) },
             leadingContent = { Icon(rememberDrawablePainter(drawable = sourceInformation.icon), null) },
             trailingContent = trailingIcon
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RemoteItem(
+    remoteSource: RemoteSources,
+    onClick: () -> Unit,
+) {
+    OutlinedCard(
+        onClick = onClick
+    ) {
+        ListItem(
+            headlineContent = { Text(remoteSource.name) },
+            leadingContent = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
         )
     }
 }

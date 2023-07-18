@@ -129,7 +129,6 @@ class MainActivity : AppCompatActivity() {
 
     private val sourceList = mutableStateListOf<ItemModel>()
     private val favorites = mutableStateListOf<DbModel>()
-
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalMaterialApi::class,
@@ -172,6 +171,8 @@ class MainActivity : AppCompatActivity() {
             val scope = rememberCoroutineScope()
 
             androidx.compose.material3.MaterialTheme(colorScheme = currentScheme) {
+
+                OtherStuffTrying()
 
                 /*var list by remember { mutableStateOf(listOf("A", "B", "C")) }
                 LazyColumn {

@@ -1,5 +1,7 @@
 package com.programmersbox.models
 
+import android.app.Application
+import android.graphics.drawable.Drawable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,5 +89,35 @@ interface ApiServicesCatalog {
     fun createSources(): List<ApiService>
     val name: String
 }
+
+interface ExternalApiServicesCatalog : ApiServicesCatalog {
+    suspend fun initialize(app: Application)
+
+    fun getSources(): List<SourceInformation>
+    override fun createSources(): List<ApiService> = getSources().map { it.apiService }
+
+    val hasRemoteSources: Boolean
+    suspend fun getRemoteSources(): List<RemoteSources> = emptyList()
+}
+
+data class RemoteSources(
+    val name: String,
+    val iconUrl: String,
+    val downloadLink: String,
+    val sources: List<Sources>
+)
+
+data class Sources(
+    val name: String,
+    val baseUrl: String,
+)
+
+data class SourceInformation(
+    val apiService: ApiService,
+    val name: String,
+    val icon: Drawable?,
+    val packageName: String,
+    val catalog: ApiServicesCatalog? = null
+)
 
 val sourceFlow = MutableStateFlow<ApiService?>(null)

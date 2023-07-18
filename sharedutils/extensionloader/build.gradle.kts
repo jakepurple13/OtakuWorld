@@ -11,5 +11,4 @@ dependencies {
     implementation(projects.models)
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-    implementation("io.reactivex:rxjava:1.3.8")
 }

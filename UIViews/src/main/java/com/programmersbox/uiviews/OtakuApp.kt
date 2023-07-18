@@ -69,7 +69,7 @@ abstract class OtakuApp : Application() {
         loadKoinModules(
             module {
                 single { SourceRepository() }
-                single { SourceLoader(get(), get<GenericInfo>().sourceType, get()) }
+                single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
             }
         )
 

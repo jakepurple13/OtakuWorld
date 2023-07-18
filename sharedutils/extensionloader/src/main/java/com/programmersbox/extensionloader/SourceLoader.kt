@@ -1,11 +1,15 @@
 package com.programmersbox.extensionloader
 
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
+import com.programmersbox.models.ExternalApiServicesCatalog
+import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.runBlocking
 
 
 private const val METADATA_NAME = "programmersbox.otaku.name"
@@ -13,6 +17,7 @@ private const val METADATA_CLASS = "programmersbox.otaku.class"
 private const val EXTENSION_FEATURE = "programmersbox.otaku.extension"
 
 class SourceLoader(
+    application: Application,
     private val context: Context,
     sourceType: String,
     private val sourceRepository: SourceRepository
@@ -31,6 +36,11 @@ class SourceLoader(
                     packageName = p.packageName,
                 )
             )
+
+            is ExternalApiServicesCatalog -> {
+                runBlocking { t.initialize(application) }
+                t.getSources().map { it.copy(catalog = t) }
+            }
 
             is ApiServicesCatalog -> t.createSources().map {
                 SourceInformation(

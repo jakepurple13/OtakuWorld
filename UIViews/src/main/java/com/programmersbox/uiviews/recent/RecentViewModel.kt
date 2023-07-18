@@ -11,12 +11,12 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.extensionloader.SourceInformation
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
+import com.programmersbox.models.SourceInformation
 import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
@@ -55,7 +55,7 @@ class RecentViewModel(
 
     val gridState = LazyGridState(0, 0)
 
-    var sources = mutableStateListOf<SourceInformation>()
+    val sources = mutableStateListOf<SourceInformation>()
 
     init {
         sourceRepository.sources

@@ -2,6 +2,7 @@ plugins {
     id("otaku-application")
     kotlin("android")
     id("com.mikepenz.aboutlibraries.plugin")
+    id("kotlinx-serialization")
     alias(libs.plugins.ksp)
 }
 
@@ -19,11 +20,18 @@ android {
     }
 
     namespace = "com.programmersbox.otakuworld"
+
+    configurations.all {
+        resolutionStrategy {
+            force(libs.preference)
+        }
+    }
 }
 
 dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation(libs.androidxWebkit)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -40,6 +48,13 @@ dependencies {
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)
 
+    implementation(libs.kotlinxSerialization)
+    implementation(libs.jsoup)
+    implementation(libs.preference) {
+        isTransitive = true
+    }
+    implementation(libs.bundles.koinLibs)
+
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
     val composeBom = platform(libs.composePlatform)
@@ -47,5 +62,4 @@ dependencies {
     implementation(libs.bundles.compose)
 
     implementation(libs.androidxWindow)
-
 }
