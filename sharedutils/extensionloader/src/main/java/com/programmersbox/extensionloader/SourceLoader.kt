@@ -59,14 +59,10 @@ class SourceLoader(
     init {
         val uninstallApplication: BroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent) {
-                val packageName = intent.data?.encodedSchemeSpecificPart
                 when (intent.action) {
                     Intent.ACTION_PACKAGE_REPLACED -> load()
                     Intent.ACTION_PACKAGE_ADDED -> load()
-                    Intent.ACTION_PACKAGE_REMOVED -> {
-                        sourceRepository.list.filter { it.packageName == packageName }
-                            .forEach { sourceRepository.removeSource(it) }
-                    }
+                    Intent.ACTION_PACKAGE_REMOVED -> load()
                 }
             }
         }

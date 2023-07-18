@@ -154,6 +154,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
+import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.mangaworld.LIST_OR_PAGER
 import com.programmersbox.mangaworld.PAGE_PADDING
 import com.programmersbox.mangaworld.R
@@ -188,6 +189,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
 @ExperimentalMaterialApi
@@ -198,11 +200,13 @@ import net.engawapg.lib.zoomable.zoomable
 fun ReadView(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
+    ch: ChapterHolder = koinInject(),
     readVm: ReadViewModel = viewModel {
         ReadViewModel(
             handle = createSavedStateHandle(),
             context = context,
-            genericInfo = genericInfo
+            genericInfo = genericInfo,
+            chapterHolder = ch
         )
     }
 ) {

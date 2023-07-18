@@ -110,6 +110,7 @@ data class RemoteSources(
 data class Sources(
     val name: String,
     val baseUrl: String,
+    val version: String
 )
 
 data class SourceInformation(

@@ -144,7 +144,12 @@ fun InfoSettings(
                                                     a.let(genericInfo.apkString).toString()
                                                 )
                                                 if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                                DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                                val url = a.downloadUrl(genericInfo.apkString)
+                                                DownloadUpdate(context, context.packageName)
+                                                    .downloadUpdate(
+                                                        downloadUrl = url,
+                                                        destinationPath = url.split("/").lastOrNull() ?: "update_apk"
+                                                    )
                                             }
                                     }
                                 }

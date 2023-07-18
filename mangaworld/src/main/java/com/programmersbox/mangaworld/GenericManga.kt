@@ -56,9 +56,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.mangaworld.downloads.DownloadScreen
@@ -76,7 +74,6 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.M3CoverCard
@@ -100,30 +97,22 @@ import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> { GenericManga(get()) }
+    single<GenericInfo> { GenericManga(get(), get()) }
     single { NetworkHelper(get()) }
     single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
+    single { ChapterHolder() }
 }
 
-class ChapterList(private val context: Context) {
-    fun set(item: List<ChapterModel>?) {
-        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
-        context.defaultSharedPref.edit().putString("chapterList", i).commit()
-    }
-
-    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
-        "chapterList",
-        null,
-        ChapterModel::class.java to ChapterModelDeserializer()
-    )
-
-    fun clear() {
-        context.defaultSharedPref.edit().remove("chapterList").apply()
-    }
+class ChapterHolder {
+    var chapterModel: ChapterModel? = null
+    var chapters: List<ChapterModel>? = null
 }
 
-class GenericManga(val context: Context) : GenericInfo {
+class GenericManga(
+    val context: Context,
+    val chapterHolder: ChapterHolder
+) : GenericInfo {
 
     override val sourceType: String get() = "manga"
 
@@ -140,8 +129,9 @@ class GenericManga(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
-        ChapterList(context).set(allChapters)
+        chapterHolder.chapters = allChapters
         if (runBlocking { context.useNewReaderFlow.first() }) {
+            chapterHolder.chapterModel = model
             ReadViewModel.navigateToMangaReader(navController, model, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(

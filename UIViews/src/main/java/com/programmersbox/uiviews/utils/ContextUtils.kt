@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
@@ -51,7 +52,6 @@ import com.programmersbox.helpfulutils.*
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.*
@@ -283,19 +283,17 @@ inline fun <reified V : ViewModel> factoryCreate(crossinline build: () -> V) = o
     }
 }
 
-class DownloadUpdate(private val context: Context, private val packageName: String) : KoinComponent {
+class DownloadUpdate(private val context: Context, private val packageName: String) {
 
-    val genericInfo: GenericInfo by inject()
-
-    fun downloadUpdate(update: AppUpdate.AppUpdates): Boolean {
+    fun downloadUpdate(
+        downloadUrl: String,
+        destinationPath: String
+    ): Boolean {
         val downloadManager = context.downloadManager
-        val request = DownloadManager.Request(Uri.parse(update.downloadUrl(genericInfo.apkString)))
+        val request = DownloadManager.Request(downloadUrl.toUri())
             .setMimeType("application/vnd.android.package-archive")
             .setTitle(context.getString(R.string.app_name))
-            .setDestinationInExternalPublicDir(
-                Environment.DIRECTORY_DOWNLOADS,
-                update.downloadUrl(genericInfo.apkString).split("/").lastOrNull() ?: "update_apk"
-            )
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, destinationPath)
             .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
             .setAllowedOverRoaming(true)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
