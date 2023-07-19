@@ -442,7 +442,7 @@ fun SourceChooserScreen() {
     ListBottomScreen(
         includeInsetPadding = true,
         title = stringResource(R.string.chooseASource),
-        list = sourceRepository.list,
+        list = sourceRepository.list.filterNot { it.apiService.notWorking },
         onClick = { service ->
             navController.popBackStack()
             scope.launch {
