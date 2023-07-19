@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrowseGallery
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
@@ -391,6 +392,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
 
                 NavigationRailItem(
+                    imageVector = Icons.Default.Extension,
+                    label = stringResource(R.string.extensions),
+                    screen = Screen.ExtensionListScreen,
+                    currentDestination = currentDestination,
+                    navController = navController,
+                    customRoute = "_home"
+                )
+
+                NavigationRailItem(
                     icon = {
                         BadgedBox(
                             badge = { if (updateCheck()) Badge { Text("") } }
@@ -629,6 +639,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) { FavoriteUi(logo) }
+
+        composable(
+            Screen.ExtensionListScreen.route + "_home",
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+        ) { ExtensionList() }
     }
 
     @OptIn(ExperimentalPermissionsApi::class)

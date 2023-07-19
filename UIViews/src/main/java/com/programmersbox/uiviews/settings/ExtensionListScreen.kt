@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -145,47 +146,55 @@ private fun InstalledExtensionItems(
         val uninstall = Intent(Intent.ACTION_DELETE, uri)
         context.startActivity(uninstall)
     }
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        installedSources.forEach { (t, u) ->
-            stickyHeader {
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    tonalElevation = 4.dp,
-                    onClick = { u.showItems = !u.showItems },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    ListItem(
-                        modifier = Modifier.padding(4.dp),
-                        headlineContent = {
-                            Text(t?.name ?: u.sourceInformation.firstOrNull()?.name?.takeIf { t != null } ?: "Single Source")
-                        },
-                        leadingContent = { Text("(${u.sourceInformation.size})") },
-                        trailingContent = t?.let {
-                            {
+    Column {
+        ListItem(
+            headlineContent = {
+                val source by sourceFlow.collectAsState(initial = null)
+                Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty()))
+            }
+        )
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            installedSources.forEach { (t, u) ->
+                stickyHeader {
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        tonalElevation = 4.dp,
+                        onClick = { u.showItems = !u.showItems },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        ListItem(
+                            modifier = Modifier.padding(4.dp),
+                            headlineContent = {
+                                Text(t?.name ?: u.sourceInformation.firstOrNull()?.name?.takeIf { t != null } ?: "Single Source")
+                            },
+                            leadingContent = { Text("(${u.sourceInformation.size})") },
+                            trailingContent = t?.let {
+                                {
+                                    IconButton(
+                                        onClick = { uninstall(u.sourceInformation.random().packageName) }
+                                    ) { Icon(Icons.Default.Delete, null) }
+                                }
+                            }
+                        )
+                    }
+                }
+
+                if (u.showItems)
+                    items(u.sourceInformation) {
+                        ExtensionItem(
+                            sourceInformation = it,
+                            onClick = { sourceFlow.tryEmit(it.apiService) },
+                            trailingIcon = {
                                 IconButton(
-                                    onClick = { uninstall(u.sourceInformation.random().packageName) }
+                                    onClick = { uninstall(it.packageName) }
                                 ) { Icon(Icons.Default.Delete, null) }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
             }
-
-            if (u.showItems)
-                items(u.sourceInformation) {
-                    ExtensionItem(
-                        sourceInformation = it,
-                        onClick = { sourceFlow.tryEmit(it.apiService) },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { uninstall(it.packageName) }
-                            ) { Icon(Icons.Default.Delete, null) }
-                        }
-                    )
-                }
         }
     }
 }
