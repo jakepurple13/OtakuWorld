@@ -90,7 +90,7 @@ class ExtensionLoader<T, R>(
             )
         }
 
-        val classLoader = PathClassLoader(appInfo.sourceDir, null, context.classLoader)
+        val classLoader = PathClassLoader(appInfo.sourceDir, null, this::class.java.classLoader)
 
         return appInfo.metaData.getString(metadataClass)
             .orEmpty()
