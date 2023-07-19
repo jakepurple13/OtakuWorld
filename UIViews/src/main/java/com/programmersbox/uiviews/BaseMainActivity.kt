@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -60,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -165,7 +167,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
     @OptIn(
         ExperimentalMaterialNavigationApi::class,
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterial3WindowSizeClassApi::class
+        ExperimentalMaterial3WindowSizeClassApi::class,
+        ExperimentalMaterialApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -179,6 +182,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 bottomSheetNavigator,
                 remember { ChromeCustomTabsNavigator(this) }
             )
+
+            val scope = rememberCoroutineScope()
+            BackHandler(bottomSheetNavigator.sheetState.isVisible) {
+                scope.launch { bottomSheetNavigator.sheetState.hide() }
+            }
 
             val systemUiController = rememberSystemUiController()
             val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
