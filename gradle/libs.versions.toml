@@ -1,11 +1,11 @@
 [versions]
 easylauncher = "6.2.0"
-firebaseCrashlyticsGradle = "2.9.6"
+firebaseCrashlyticsGradle = "2.9.7"
 googleServices = "4.3.15"
 gradle = "8.1.0-beta05"
 kamelImage = "0.6.1"
-kotlin = "1.8.22"
-latestAboutLibsRelease = "10.8.0"
+kotlin = "1.9.0"
+latestAboutLibsRelease = "10.8.3"
 coroutinesVersion = "1.7.2"
 glideVersion = "4.15.1"
 navigationSafeArgsGradlePlugin = "2.6.0"
@@ -17,7 +17,7 @@ lottieVersion = "6.0.0"
 coil = "2.4.0"
 lifecycle = "2.6.1"
 jetpack = "1.6.0-alpha01"
-jetpackCompiler = "1.4.8"
+jetpackCompiler = "1.5.0"
 jetbrainsCompiler = "1.4.1"
 accompanist = "0.31.4-beta"
 okhttpVersion = "4.11.0"
@@ -41,7 +41,7 @@ media3Version = "1.1.0"
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.8.22-1.0.11" }
+ksp = { id = "com.google.devtools.ksp", version = "1.9.0-1.0.11" }
 
 [libraries]
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
@@ -145,12 +145,12 @@ reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
 fragmentKtx = "androidx.fragment:fragment-ktx:1.6.0"
 stetho = "com.facebook.stetho:stetho:1.6.0"
 
-iconicsCore = "com.mikepenz:iconics-core:5.4.0"
+iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:22.0.0"
-googlePlayAds = "com.google.android.gms:play-services-ads:22.1.0"
+firebaseAuth = "com.google.firebase:firebase-auth:22.1.0"
+googlePlayAds = "com.google.android.gms:play-services-ads:22.2.0"
 
 pagingCompose = "androidx.paging:paging-compose:3.2.0-rc01"
 
@@ -165,16 +165,16 @@ fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.6.3"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.7.2"
 
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
 jsoup = "org.jsoup:jsoup:1.16.1"
 
-crashlytics = "com.google.firebase:firebase-crashlytics:18.3.7"
+crashlytics = "com.google.firebase:firebase-crashlytics:18.4.0"
 analytics = "com.google.firebase:firebase-analytics:21.3.0"
-playServices = "com.google.android.gms:play-services-auth:20.5.0"
+playServices = "com.google.android.gms:play-services-auth:20.6.0"
 
 preference = "androidx.preference:preference-ktx:1.2.0"
 
@@ -262,7 +262,7 @@ androidxWebkit = "androidx.webkit:webkit:1.7.0"
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
 firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.2.2"
-firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.6.1"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.7.0"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }

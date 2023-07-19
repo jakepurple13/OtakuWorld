@@ -5,7 +5,7 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
 
 object AnimeSources : ApiServicesCatalog {
-    override fun createSources(): List<ApiService> = Sources.values().filterNot { it.notWorking }.toList()
+    override fun createSources(): List<ApiService> = Sources.entries.filterNot { it.notWorking }.toList()
 
     override val name: String get() = "Default Anime Sources"
 }
