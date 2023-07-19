@@ -31,6 +31,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrowseGallery
@@ -333,7 +335,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         AppCompatResources.getDrawable(this@BaseMainActivity, logo.logoId)!!.toBitmap().asImageBitmap(),
                         null,
                     )
-                }
+                },
+                modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
                 NavigationRailItem(
                     imageVector = Icons.Default.History,
