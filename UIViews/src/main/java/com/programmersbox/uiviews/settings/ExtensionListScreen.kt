@@ -6,6 +6,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -125,13 +126,18 @@ fun ExtensionList(
         Crossfade(
             targetState = viewModel.installed.isEmpty(),
             label = "",
-            modifier = Modifier.padding(paddingValues),
         ) { target ->
             when (target) {
                 true -> {
-                    RemoteExtensionItems(
-                        remoteSources = viewModel.remoteSources,
-                    )
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    ) {
+                        RemoteExtensionItems(
+                            remoteSources = viewModel.remoteSources,
+                        )
+                    }
                 }
 
                 false -> {
@@ -245,10 +251,7 @@ private fun RemoteExtensionItems(
                     InsetSmallTopAppBar(
                         title = { Text(t) },
                         insetPadding = WindowInsets(0.dp),
-                        navigationIcon = {
-
-                            Text("(${u.sources.size})")
-                        },
+                        navigationIcon = { Text("(${u.sources.size})") },
                         actions = {
                             IconButton(
                                 onClick = { u.showItems = !u.showItems }
