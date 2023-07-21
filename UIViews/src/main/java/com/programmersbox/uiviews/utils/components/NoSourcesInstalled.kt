@@ -33,7 +33,12 @@ fun NoSourcesInstalled(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(120.dp)
             )
             Button(
-                onClick = { navController.navigate(Screen.ExtensionListScreen.route) }
+                onClick = {
+                    navController.navigate(Screen.ExtensionListScreen.route) {
+                        popUpTo(Screen.SettingsScreen.route)
+                        launchSingleTop = true
+                    }
+                }
             ) {
                 Text("Cannot find any extensions. Please install some!")
             }

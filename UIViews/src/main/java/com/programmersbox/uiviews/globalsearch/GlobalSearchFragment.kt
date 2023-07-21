@@ -99,7 +99,6 @@ import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -267,7 +266,7 @@ fun GlobalSearchView(
                                         newItemModel(if (c == ComponentState.Pressed) m else null)
                                         showBanner = c == ComponentState.Pressed
                                     }
-                                ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
+                                ) { navController.navigateToDetails(m) }
                             }
                         }
                     }
