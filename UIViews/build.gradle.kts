@@ -111,6 +111,8 @@ dependencies {
 
     implementation(libs.bundles.protobuf)
 
+    implementation(libs.bundles.ktorLibs)
+
     //Multiplatform
     implementation(projects.imageloader)
 

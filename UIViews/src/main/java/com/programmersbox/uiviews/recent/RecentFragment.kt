@@ -72,6 +72,7 @@ import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
+import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.flow.filter
@@ -206,6 +207,7 @@ fun RecentView(
                             modifier = Modifier.pullRefresh(pull)
                         ) {
                             when {
+                                sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
                                 recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
                                 else -> {
                                     info.ItemListView(

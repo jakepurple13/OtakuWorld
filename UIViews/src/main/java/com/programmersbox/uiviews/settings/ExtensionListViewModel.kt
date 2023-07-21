@@ -12,11 +12,13 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
+import com.programmersbox.uiviews.OtakuWorldCatalog
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class ExtensionListViewModel(
-    sourceRepository: SourceRepository
+    sourceRepository: SourceRepository,
+    otakuWorldCatalog: OtakuWorldCatalog
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<SourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteViewState>()
@@ -35,6 +37,7 @@ class ExtensionListViewModel(
             }
             .onEach { sources ->
                 remoteSources.clear()
+                remoteSources["${otakuWorldCatalog.name}World"] = RemoteViewState(otakuWorldCatalog.getRemoteSources())
                 remoteSources.putAll(
                     sources.asSequence()
                         .map { it.catalog }

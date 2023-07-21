@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.settings
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +58,7 @@ import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.models.sourceFlow
+import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.all.pagerTabIndicatorOffset
 import com.programmersbox.uiviews.utils.BackButton
@@ -67,12 +69,14 @@ import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ExtensionList(
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
-    viewModel: ExtensionListViewModel = viewModel { ExtensionListViewModel(sourceRepository) }
+    otakuWorldCatalog: OtakuWorldCatalog = koinInject(),
+    viewModel: ExtensionListViewModel = viewModel { ExtensionListViewModel(sourceRepository, otakuWorldCatalog) }
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
@@ -118,20 +122,37 @@ fun ExtensionList(
             }
         },
     ) { paddingValues ->
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = paddingValues,
-        ) { page ->
-            when (page) {
-                0 -> InstalledExtensionItems(
-                    installedSources = viewModel.installed,
-                )
+        Crossfade(
+            targetState = viewModel.installed.isEmpty(),
+            label = "",
+            modifier = Modifier.padding(paddingValues),
+        ) { target ->
+            when (target) {
+                true -> {
+                    RemoteExtensionItems(
+                        remoteSources = viewModel.remoteSources,
+                    )
+                }
 
-                1 -> RemoteExtensionItems(
-                    remoteSources = viewModel.remoteSources,
-                )
+                false -> {
+                    HorizontalPager(
+                        state = pagerState,
+                        contentPadding = paddingValues,
+                    ) { page ->
+                        when (page) {
+                            0 -> InstalledExtensionItems(
+                                installedSources = viewModel.installed,
+                            )
+
+                            1 -> RemoteExtensionItems(
+                                remoteSources = viewModel.remoteSources,
+                            )
+                        }
+                    }
+                }
             }
         }
+
     }
 }
 
@@ -279,7 +300,7 @@ private fun RemoteItem(
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = { Text("Download and Install ${remoteSource.name}?") },
-            icon = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
+            //icon = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
             text = { Text("Are you sure?") },
             confirmButton = {
                 TextButton(

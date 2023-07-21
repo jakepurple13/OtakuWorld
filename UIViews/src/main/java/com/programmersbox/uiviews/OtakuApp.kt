@@ -31,6 +31,7 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application() {
@@ -70,6 +71,12 @@ abstract class OtakuApp : Application() {
             module {
                 single { SourceRepository() }
                 single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
+                single {
+                    OtakuWorldCatalog(
+                        get<GenericInfo>().sourceType
+                            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                    )
+                }
             }
         )
 
