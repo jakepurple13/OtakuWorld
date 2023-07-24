@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +54,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -246,10 +249,13 @@ private fun InstalledExtensionItems(
                         }
                         ExtensionItem(
                             sourceInformation = source,
+                            version = version,
                             onClick = { sourceFlow.tryEmit(source.apiService) },
                             trailingIcon = {
                                 Row {
-                                    val r = sourcesList.find { it.sources.any { it.baseUrl == source.apiService.baseUrl } }
+                                    val r = sourcesList.find {
+                                        it.sources.any { s -> s.baseUrl == source.apiService.baseUrl }
+                                    }
                                     val s = r?.sources?.find { it.baseUrl == source.apiService.baseUrl }
                                     s?.let {
                                         if (AppUpdate.checkForUpdate(version, it.version)) {
@@ -305,7 +311,13 @@ private fun RemoteExtensionItems(
                         actions = {
                             IconButton(
                                 onClick = { u.showItems = !u.showItems }
-                            ) { Icon(Icons.Default.ArrowDropDown, null) }
+                            ) {
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    null,
+                                    modifier = Modifier.rotateWithBoolean(u.showItems)
+                                )
+                            }
                         }
                     )
                 }
@@ -329,6 +341,7 @@ private fun RemoteExtensionItems(
 @Composable
 private fun ExtensionItem(
     sourceInformation: SourceInformation,
+    version: String,
     onClick: () -> Unit,
     trailingIcon: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
@@ -338,6 +351,7 @@ private fun ExtensionItem(
         modifier = modifier
     ) {
         ListItem(
+            overlineContent = { Text("Version: $version") },
             headlineContent = { Text(sourceInformation.apiService.serviceName) },
             leadingContent = { Image(rememberDrawablePainter(drawable = sourceInformation.icon), null) },
             trailingContent = trailingIcon
@@ -377,19 +391,20 @@ private fun RemoteItem(
     }
     var showSources by remember { mutableStateOf(false) }
     OutlinedCard(
-        onClick = { if (remoteSource.sources.size > 1) showSources = !showSources },
+        onClick = { showSources = !showSources },
         modifier = modifier.animateContentSize()
     ) {
         ListItem(
             headlineContent = { Text(remoteSource.name) },
             leadingContent = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
-            overlineContent = { Text("${remoteSource.sources.size} source(s)") },
+            overlineContent = { Text("Versions: ${remoteSource.sources.map { it.version }.distinct().joinToString(", ")}") },
             supportingContent = {
                 AnimatedVisibility(visible = showSources) {
                     Column {
                         remoteSource.sources.forEach {
                             ListItem(
                                 headlineContent = { Text(it.name) },
+                                overlineContent = { Text("Version: ${it.version}") }
                             )
                             Divider()
                         }
@@ -397,13 +412,23 @@ private fun RemoteItem(
                 }
             },
             trailingContent = {
-                IconButton(
-                    onClick = { showDialog = true }
-                ) { Icon(Icons.Default.InstallMobile, null) }
+                Row {
+                    IconButton(
+                        onClick = { showSources = !showSources }
+                    ) { Icon(Icons.Default.ArrowDropDown, null, modifier = Modifier.rotateWithBoolean(showSources)) }
+
+                    IconButton(
+                        onClick = { showDialog = true }
+                    ) { Icon(Icons.Default.InstallMobile, null) }
+                }
             },
             modifier = Modifier.animateContentSize()
         )
     }
+}
+
+private fun Modifier.rotateWithBoolean(shouldRotate: Boolean) = composed {
+    rotate(animateFloatAsState(targetValue = if (shouldRotate) 180f else 0f, label = "").value)
 }
 
 @LightAndDarkPreviews
