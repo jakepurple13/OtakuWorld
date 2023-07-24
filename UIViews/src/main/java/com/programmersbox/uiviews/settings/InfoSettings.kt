@@ -36,7 +36,7 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.DownloadUpdate
+import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -119,6 +119,8 @@ fun InfoSettings(
             modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
         )
 
+        val downloadInstaller = remember { DownloadAndInstaller(context) }
+
         ShowWhen(
             visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
         ) {
@@ -145,11 +147,10 @@ fun InfoSettings(
                                                 )
                                                 if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
                                                 val url = a.downloadUrl(genericInfo.apkString)
-                                                DownloadUpdate(context, context.packageName)
-                                                    .downloadUpdate(
-                                                        downloadUrl = url,
-                                                        destinationPath = url.split("/").lastOrNull() ?: "update_apk"
-                                                    )
+                                                downloadInstaller.downloadAndInstall(
+                                                    url = url,
+                                                    destinationPath = url.split("/").lastOrNull() ?: "update_apk"
+                                                )
                                             }
                                     }
                                 }

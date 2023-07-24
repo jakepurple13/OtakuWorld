@@ -63,7 +63,7 @@ import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.all.pagerTabIndicatorOffset
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.DownloadUpdate
+import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
@@ -231,6 +231,8 @@ private fun InstalledExtensionItems(
 private fun RemoteExtensionItems(
     remoteSources: Map<String, RemoteViewState>,
 ) {
+    val context = LocalContext.current
+    val downloadAndInstall = remember { DownloadAndInstaller(context) }
     Column {
         var search by remember { mutableStateOf("") }
         OutlinedTextField(
@@ -264,6 +266,12 @@ private fun RemoteExtensionItems(
                     items(u.sources.filter { it.name.contains(search, true) }) {
                         RemoteItem(
                             remoteSource = it,
+                            onDownloadAndInstall = {
+                                downloadAndInstall.downloadAndInstall(
+                                    it.downloadLink,
+                                    it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk"
+                                )
+                            },
                             modifier = Modifier.animateItemPlacement()
                         )
                     }
@@ -295,9 +303,9 @@ private fun ExtensionItem(
 @Composable
 private fun RemoteItem(
     remoteSource: RemoteSources,
+    onDownloadAndInstall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     if (showDialog) {
         AlertDialog(
@@ -309,12 +317,7 @@ private fun RemoteItem(
                 TextButton(
                     onClick = {
                         println(remoteSource.downloadLink)
-                        //Get installing working!
-                        DownloadUpdate(context, context.packageName)
-                            .downloadUpdate(
-                                remoteSource.downloadLink,
-                                remoteSource.downloadLink.toUri().lastPathSegment ?: "${remoteSource.name}.apk"
-                            )
+                        onDownloadAndInstall()
                         showDialog = false
                     }
                 ) { Text("Yes") }
