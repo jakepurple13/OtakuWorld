@@ -29,6 +29,10 @@ class ExtensionListViewModel(
             .mapValues { InstalledViewState(it.value) }
     }
 
+    val remoteSourcesVersions by derivedStateOf {
+        remoteSources.values.flatMap { it.sources }
+    }
+
     init {
         sourceRepository.sources
             .onEach {

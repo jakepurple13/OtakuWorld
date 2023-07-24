@@ -1,13 +1,18 @@
 package com.programmersbox.uiviews.settings
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +28,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.SendTimeExtension
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,6 +66,7 @@ import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.models.sourceFlow
+import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.all.pagerTabIndicatorOffset
@@ -77,7 +85,7 @@ import org.koin.compose.koinInject
 fun ExtensionList(
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     otakuWorldCatalog: OtakuWorldCatalog = koinInject(),
-    viewModel: ExtensionListViewModel = viewModel { ExtensionListViewModel(sourceRepository, otakuWorldCatalog) }
+    viewModel: ExtensionListViewModel = viewModel { ExtensionListViewModel(sourceRepository, otakuWorldCatalog) },
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
@@ -85,6 +93,9 @@ fun ExtensionList(
         initialPage = 0,
         initialPageOffsetFraction = 0f
     ) { 2 }
+
+    val context = LocalContext.current
+    val downloadAndInstall = remember { DownloadAndInstaller(context) }
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -136,6 +147,9 @@ fun ExtensionList(
                     ) {
                         RemoteExtensionItems(
                             remoteSources = viewModel.remoteSources,
+                            onDownloadAndInstall = { downloadLink, destinationPath ->
+                                downloadAndInstall.downloadAndInstall(downloadLink, destinationPath)
+                            }
                         )
                     }
                 }
@@ -148,10 +162,17 @@ fun ExtensionList(
                         when (page) {
                             0 -> InstalledExtensionItems(
                                 installedSources = viewModel.installed,
+                                sourcesList = viewModel.remoteSourcesVersions,
+                                onDownloadAndInstall = { downloadLink, destinationPath ->
+                                    downloadAndInstall.downloadAndInstall(downloadLink, destinationPath)
+                                }
                             )
 
                             1 -> RemoteExtensionItems(
                                 remoteSources = viewModel.remoteSources,
+                                onDownloadAndInstall = { downloadLink, destinationPath ->
+                                    downloadAndInstall.downloadAndInstall(downloadLink, destinationPath)
+                                }
                             )
                         }
                     }
@@ -166,6 +187,8 @@ fun ExtensionList(
 @Composable
 private fun InstalledExtensionItems(
     installedSources: Map<ApiServicesCatalog?, InstalledViewState>,
+    sourcesList: List<RemoteSources>,
+    onDownloadAndInstall: (String, String) -> Unit,
 ) {
     val context = LocalContext.current
     fun uninstall(packageName: String) {
@@ -210,14 +233,40 @@ private fun InstalledExtensionItems(
                 }
 
                 if (u.showItems)
-                    items(u.sourceInformation) {
+                    items(u.sourceInformation) { source ->
+                        val version = remember(context) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                context.packageManager.getPackageInfo(
+                                    source.packageName,
+                                    PackageManager.PackageInfoFlags.of(0L)
+                                ).versionName
+                            } else {
+                                context.packageManager.getPackageInfo(source.packageName, 0)?.versionName
+                            }.orEmpty()
+                        }
                         ExtensionItem(
-                            sourceInformation = it,
-                            onClick = { sourceFlow.tryEmit(it.apiService) },
+                            sourceInformation = source,
+                            onClick = { sourceFlow.tryEmit(source.apiService) },
                             trailingIcon = {
-                                IconButton(
-                                    onClick = { uninstall(it.packageName) }
-                                ) { Icon(Icons.Default.Delete, null) }
+                                Row {
+                                    val r = sourcesList.find { it.sources.any { it.baseUrl == source.apiService.baseUrl } }
+                                    val s = r?.sources?.find { it.baseUrl == source.apiService.baseUrl }
+                                    s?.let {
+                                        if (AppUpdate.checkForUpdate(version, it.version)) {
+                                            IconButton(
+                                                onClick = {
+                                                    onDownloadAndInstall(
+                                                        r.downloadLink,
+                                                        r.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk"
+                                                    )
+                                                }
+                                            ) { Icon(Icons.Default.Update, null) }
+                                        }
+                                    }
+                                    IconButton(
+                                        onClick = { uninstall(source.packageName) }
+                                    ) { Icon(Icons.Default.Delete, null) }
+                                }
                             }
                         )
                     }
@@ -230,9 +279,8 @@ private fun InstalledExtensionItems(
 @Composable
 private fun RemoteExtensionItems(
     remoteSources: Map<String, RemoteViewState>,
+    onDownloadAndInstall: (String, String) -> Unit,
 ) {
-    val context = LocalContext.current
-    val downloadAndInstall = remember { DownloadAndInstaller(context) }
     Column {
         var search by remember { mutableStateOf("") }
         OutlinedTextField(
@@ -267,10 +315,7 @@ private fun RemoteExtensionItems(
                         RemoteItem(
                             remoteSource = it,
                             onDownloadAndInstall = {
-                                downloadAndInstall.downloadAndInstall(
-                                    it.downloadLink,
-                                    it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk"
-                                )
+                                onDownloadAndInstall(it.downloadLink, it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk")
                             },
                             modifier = Modifier.animateItemPlacement()
                         )
@@ -286,7 +331,7 @@ private fun ExtensionItem(
     sourceInformation: SourceInformation,
     onClick: () -> Unit,
     trailingIcon: (@Composable () -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
         onClick = onClick,
@@ -300,11 +345,12 @@ private fun ExtensionItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RemoteItem(
     remoteSource: RemoteSources,
     onDownloadAndInstall: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showDialog by remember { mutableStateOf(false) }
     if (showDialog) {
@@ -329,17 +375,33 @@ private fun RemoteItem(
             }
         )
     }
+    var showSources by remember { mutableStateOf(false) }
     OutlinedCard(
-        modifier = modifier
+        onClick = { if (remoteSource.sources.size > 1) showSources = !showSources },
+        modifier = modifier.animateContentSize()
     ) {
         ListItem(
             headlineContent = { Text(remoteSource.name) },
             leadingContent = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
+            overlineContent = { Text("${remoteSource.sources.size} source(s)") },
+            supportingContent = {
+                AnimatedVisibility(visible = showSources) {
+                    Column {
+                        remoteSource.sources.forEach {
+                            ListItem(
+                                headlineContent = { Text(it.name) },
+                            )
+                            Divider()
+                        }
+                    }
+                }
+            },
             trailingContent = {
                 IconButton(
                     onClick = { showDialog = true }
                 ) { Icon(Icons.Default.InstallMobile, null) }
-            }
+            },
+            modifier = Modifier.animateContentSize()
         )
     }
 }
