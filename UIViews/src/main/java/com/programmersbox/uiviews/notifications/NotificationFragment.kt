@@ -311,8 +311,8 @@ fun NotificationsScreen(
                                 Surface(
                                     shape = M3MaterialTheme.shapes.medium,
                                     tonalElevation = 4.dp,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = { vm.toggleGroupedState(item.first) }
+                                    onClick = { vm.toggleGroupedState(item.first) },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
                                     ListItem(
                                         modifier = Modifier.padding(4.dp),
@@ -336,7 +336,7 @@ fun NotificationsScreen(
                                     exit = shrinkVertically()
                                 ) {
                                     Column(
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
                                     ) {
                                         item.second.forEach {
                                             NotificationItem(
@@ -587,7 +587,7 @@ private fun NotificationItem(
 @Composable
 private fun NotifyAt(
     item: NotificationItem,
-    onDropDownDismiss: () -> Unit
+    onDropDownDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     var showDatePicker by remember { mutableStateOf(false) }
@@ -688,7 +688,7 @@ private fun NotifyAt(
 private fun NotificationDeleteItem(
     item: NotificationItem,
     logoDrawable: Drawable?,
-    onRemoveAllWithSameName: () -> Unit
+    onRemoveAllWithSameName: () -> Unit,
 ) {
     ImageFlushListItem(
         leadingContent = {

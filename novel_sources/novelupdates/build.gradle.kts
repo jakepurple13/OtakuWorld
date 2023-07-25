@@ -37,4 +37,5 @@ dependencies {
     implementation(libs.bundles.ktorLibs)
 
     implementation(libs.bundles.koinLibs)
+    implementation(projects.models)
 }

@@ -42,6 +42,13 @@ class NotificationScreenViewModel(
             .onEach {
                 items.clear()
                 items.addAll(it)
+                val l = groupedListState.toMap()
+                groupedListState.clear()
+                groupedListState.putAll(
+                    it
+                        .groupBy { n -> n.source }
+                        .mapValues { n -> l[n.key] ?: mutableStateOf(false) }
+                )
             }
             .launchIn(viewModelScope)
 
