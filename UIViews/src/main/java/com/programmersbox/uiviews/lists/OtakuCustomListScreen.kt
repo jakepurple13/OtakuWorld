@@ -44,12 +44,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -116,6 +118,7 @@ fun OtakuCustomListScreen(
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val customItem = vm.customItem
+    val state = rememberBottomSheetScaffoldState()
 
     val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
@@ -208,6 +211,7 @@ fun OtakuCustomListScreen(
         onRemove = { vm.removeItem(it) },
         onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
         bottomScrollBehavior = scrollBehavior,
+        state = state,
         topBar = {
             Surface {
                 Column {
@@ -346,6 +350,15 @@ fun OtakuCustomListScreen(
                     logo = logoDrawable,
                     showLoadingDialog = { showLoadingDialog = it },
                     onDelete = { vm.removeItem(it) },
+                    onError = {
+                        scope.launch {
+                            state.snackbarHostState.currentSnackbarData?.dismiss()
+                            state.snackbarHostState.showSnackbar(
+                                "Something went wrong. Source might not be installed",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    },
                     modifier = Modifier.animateItemPlacement()
                 )
             }
@@ -360,7 +373,8 @@ private fun CustomItem(
     logo: Drawable?,
     onDelete: (CustomListInfo) -> Unit,
     showLoadingDialog: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    onError: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val sourceRepository = LocalSourcesRepository.current
@@ -447,7 +461,7 @@ private fun CustomItem(
                             navController.navigateToDetails(it)
                         }
                         ?.onCompletion { showLoadingDialog(false) }
-                        ?.launchIn(scope)
+                        ?.launchIn(scope) ?: onError()
                 },
                 modifier = Modifier
                     .height(ComposableUtils.IMAGE_HEIGHT)
@@ -540,7 +554,8 @@ private fun CustomItemPreview() {
             ),
             logo = null,
             onDelete = {},
-            showLoadingDialog = {}
+            showLoadingDialog = {},
+            onError = {}
         )
     }
 }

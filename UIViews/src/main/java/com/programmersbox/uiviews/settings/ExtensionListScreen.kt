@@ -236,17 +236,23 @@ private fun InstalledExtensionItems(
                     }
                 }
 
-                if (u.showItems)
-                    items(u.sourceInformation) { source ->
+                if (u.showItems) {
+                    items(
+                        u.sourceInformation,
+                        key = { it.apiService.serviceName },
+                        contentType = { it }
+                    ) { source ->
                         val version = remember(context) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 context.packageManager.getPackageInfo(
                                     source.packageName,
                                     PackageManager.PackageInfoFlags.of(0L)
-                                ).versionName
+                                )
                             } else {
-                                context.packageManager.getPackageInfo(source.packageName, 0)?.versionName
-                            }.orEmpty()
+                                context.packageManager.getPackageInfo(source.packageName, 0)
+                            }
+                                ?.versionName
+                                .orEmpty()
                         }
                         ExtensionItem(
                             sourceInformation = source,
@@ -277,6 +283,7 @@ private fun InstalledExtensionItems(
                             }
                         )
                     }
+                }
             }
         }
     }
