@@ -95,7 +95,6 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
@@ -155,6 +154,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private val settingsHandling: SettingsHandling by inject()
 
     private val sourceRepository by inject<SourceRepository>()
+    private val currentSourceRepository by inject<CurrentSourceRepository>()
 
     protected abstract fun onCreate()
 
@@ -672,10 +672,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             if (currentService == null) {
                 val s = sourceRepository.list.randomOrNull()?.apiService
-                sourceFlow.emit(s)
+                currentSourceRepository.emit(s)
                 currentService = s?.serviceName
             } else {
-                sourceRepository.toSourceByApiServiceName(currentService.orEmpty())?.let { sourceFlow.emit(it.apiService) }
+                sourceRepository.toSourceByApiServiceName(currentService.orEmpty())?.let { currentSourceRepository.emit(it.apiService) }
             }
         }
 

@@ -4,7 +4,6 @@ import android.app.Application
 import android.graphics.drawable.Drawable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -120,5 +119,3 @@ data class SourceInformation(
     val packageName: String,
     val catalog: ApiServicesCatalog? = null
 )
-
-val sourceFlow = MutableStateFlow<ApiService?>(null)

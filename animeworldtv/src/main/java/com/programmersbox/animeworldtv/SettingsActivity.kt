@@ -12,7 +12,6 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.CustomFirebaseUser
 import com.programmersbox.sharedutils.FirebaseAuthentication
@@ -156,7 +155,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                             list.map { it.serviceName }.toTypedArray(),
                             list.indexOfFirst { it.serviceName == service }
                         ) { d, i ->
-                            sourceFlow.tryEmit(list[i])
+                            //sourceFlow.tryEmit(list[i])
                             requireContext().currentService = list[i].serviceName
                             d.dismiss()
                         }
@@ -165,11 +164,11 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                     true
                 }
                 lifecycleScope.launch {
-                    sourceFlow
+                    /*sourceFlow
                         .filterNotNull()
                         .flowOn(Dispatchers.Main)
                         .onEach { p.title = getString(R.string.currentSource, it.serviceName) }
-                        .collect()
+                        .collect()*/
                 }
             }
         }

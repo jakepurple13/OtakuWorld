@@ -56,12 +56,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -89,7 +90,8 @@ fun RecentView(
     dao: ItemDao = LocalItemDao.current,
     context: Context = LocalContext.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
-    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, context, sourceRepository) },
+    currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
+    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, context, sourceRepository, currentSourceRepository) },
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
@@ -119,7 +121,7 @@ fun RecentView(
     LaunchedEffect(pagerState.currentPage, initSource) {
         if (initSource != -1) {
             sourceList.getOrNull(pagerState.currentPage)?.let { service ->
-                sourceFlow.emit(service.apiService)
+                currentSourceRepository.emit(service.apiService)
                 context.currentService = service.apiService.serviceName
             }
         }

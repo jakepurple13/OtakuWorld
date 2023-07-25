@@ -17,8 +17,8 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SourceInformation
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +36,8 @@ import ru.beryukhov.reactivenetwork.ReactiveNetwork
 class RecentViewModel(
     dao: ItemDao,
     context: Context? = null,
-    sourceRepository: SourceRepository
+    sourceRepository: SourceRepository,
+    currentSourceRepository: CurrentSourceRepository,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -72,7 +73,7 @@ class RecentViewModel(
             .onEach { favoriteList = it.toMutableStateList() }
             .launchIn(viewModelScope)
 
-        sourceFlow
+        currentSourceRepository.asFlow()
             .filterNotNull()
             .onEach {
                 currentSource = it

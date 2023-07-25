@@ -64,7 +64,6 @@ import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
@@ -74,6 +73,7 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -174,7 +174,7 @@ private fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val navController = LocalNavController.current
-    val source by sourceFlow.collectAsState(initial = null)
+    val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
 
     if (BuildConfig.DEBUG) {
         PreferenceSetting(
@@ -438,6 +438,7 @@ fun SourceChooserScreen() {
     val context = LocalContext.current
     val navController = LocalNavController.current
     val sourceRepository = LocalSourcesRepository.current
+    val currentSourceRepository = LocalCurrentSource.current
 
     ListBottomScreen(
         includeInsetPadding = true,
@@ -447,7 +448,7 @@ fun SourceChooserScreen() {
             navController.popBackStack()
             scope.launch {
                 service.let {
-                    sourceFlow.emit(it.apiService)
+                    currentSourceRepository.emit(it.apiService)
                     context.currentService = it.apiService.serviceName
                 }
             }

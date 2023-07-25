@@ -59,12 +59,13 @@ fun OtakuMaterialTheme(
         CompositionLocalProvider(
             LocalActivity provides remember { context.findActivity() },
             LocalNavController provides navController,
+            LocalCurrentSource provides remember { CurrentSourceRepository() }
         ) { content() }
     }
 }
 
 val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
-
+val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }
 val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
 
 fun Context.findActivity(): FragmentActivity {

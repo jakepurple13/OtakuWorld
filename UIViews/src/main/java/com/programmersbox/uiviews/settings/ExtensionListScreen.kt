@@ -68,7 +68,6 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
@@ -77,6 +76,7 @@ import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -193,6 +193,7 @@ private fun InstalledExtensionItems(
     sourcesList: List<RemoteSources>,
     onDownloadAndInstall: (String, String) -> Unit,
 ) {
+    val currentSourceRepository = LocalCurrentSource.current
     val context = LocalContext.current
     fun uninstall(packageName: String) {
         val uri = Uri.fromParts("package", packageName, null)
@@ -202,7 +203,7 @@ private fun InstalledExtensionItems(
     Column {
         ListItem(
             headlineContent = {
-                val source by sourceFlow.collectAsState(initial = null)
+                val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
                 Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty()))
             }
         )
@@ -250,7 +251,7 @@ private fun InstalledExtensionItems(
                         ExtensionItem(
                             sourceInformation = source,
                             version = version,
-                            onClick = { sourceFlow.tryEmit(source.apiService) },
+                            onClick = { currentSourceRepository.tryEmit(source.apiService) },
                             trailingIcon = {
                                 Row {
                                     val r = sourcesList.find {

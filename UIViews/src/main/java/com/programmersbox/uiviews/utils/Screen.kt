@@ -27,6 +27,7 @@ import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import org.koin.compose.koinInject
 import java.util.UUID
@@ -126,7 +127,8 @@ fun OtakuMaterialTheme(
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
                 LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
-                LocalSourcesRepository provides koinInject()
+                LocalSourcesRepository provides koinInject(),
+                LocalCurrentSource provides koinInject()
             ) { content() }
         }
     }
@@ -136,3 +138,4 @@ val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
 val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
+val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }

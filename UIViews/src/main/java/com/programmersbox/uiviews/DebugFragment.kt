@@ -24,7 +24,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.uiviews.utils.*
 
 
@@ -37,6 +36,7 @@ fun DebugView() {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
+    val currentSourceRepository = LocalCurrentSource.current
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -79,7 +79,7 @@ fun DebugView() {
                         modifier = Modifier.clickable(
                             indication = rememberRipple(),
                             interactionSource = remember { MutableInteractionSource() }
-                        ) { sourceFlow.tryEmit(it.apiService) }
+                        ) { currentSourceRepository.tryEmit(it.apiService) }
                     )
                 }
             }

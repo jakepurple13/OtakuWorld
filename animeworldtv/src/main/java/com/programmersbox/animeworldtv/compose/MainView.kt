@@ -82,9 +82,11 @@ import androidx.tv.material3.StandardCardLayout
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourceFlow
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOn
@@ -95,7 +97,8 @@ import kotlinx.coroutines.flow.onEach
 @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalTvFoundationApi::class)
 @Composable
 fun MainView() {
-    val vm = viewModel<MainViewModel>()
+    val currentSourceRepository = LocalCurrentSource.current
+    val vm = viewModel { MainViewModel(currentSourceRepository) }
     val navController = LocalNavController.current
 
     TvLazyColumn {
@@ -552,13 +555,15 @@ private fun MoviesRowItemText(
     }
 }
 
-class MainViewModel : ViewModel() {
+class MainViewModel(
+    currentSourceRepository: CurrentSourceRepository,
+) : ViewModel() {
 
     val randomShows = mutableStateListOf<ItemModel>()
     val shows = mutableStateMapOf<Char?, List<ItemModel>>()
 
     init {
-        sourceFlow
+        currentSourceRepository.asFlow()
             .filterNotNull()
             .flowOn(Dispatchers.IO)
             .flatMapMerge { it.getListFlow() }
@@ -577,3 +582,18 @@ class MainViewModel : ViewModel() {
 }
 
 fun <T> Collection<T>.randomN(n: Int): List<T> = buildList { repeat(n) { add(this@randomN.random()) } }
+
+class CurrentSourceRepository {
+    private val sourceFlow = MutableStateFlow<ApiService?>(null)
+
+    suspend fun emit(apiService: ApiService?) {
+        sourceFlow.emit(apiService)
+    }
+
+    fun tryEmit(apiService: ApiService?) {
+        sourceFlow.tryEmit(apiService)
+    }
+
+    fun asFlow() = sourceFlow.asStateFlow()
+
+}
