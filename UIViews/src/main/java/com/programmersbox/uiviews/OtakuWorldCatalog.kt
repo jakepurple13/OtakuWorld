@@ -13,10 +13,14 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class OtakuWorldCatalog(
-    override val name: String
-) : ExternalApiServicesCatalog {
+    override val name: String,
+) : ExternalApiServicesCatalog, KoinComponent {
+
+    val genericInfo: GenericInfo by inject()
 
     private val json = Json {
         isLenient = true
@@ -52,22 +56,24 @@ class OtakuWorldCatalog(
         )
     )
 
-    override suspend fun getRemoteSources(): List<RemoteSources> = remoteSources().map {
-        RemoteSources(
-            name = it.name,
-            iconUrl = "${REPO_URL_PREFIX}icon/${it.pkg}.png",
-            downloadLink = "${REPO_URL_PREFIX}apk/${it.apk}",
-            sources = it.sources
-                ?.map { j ->
-                    Sources(
-                        name = j.name,
-                        baseUrl = j.baseUrl,
-                        version = it.version
-                    )
-                }
-                .orEmpty()
-        )
-    }
+    override suspend fun getRemoteSources(): List<RemoteSources> = remoteSources()
+        .filter { genericInfo.sourceType == it.feature }
+        .map {
+            RemoteSources(
+                name = it.name,
+                iconUrl = "${REPO_URL_PREFIX}icon/${it.pkg}.png",
+                downloadLink = "${REPO_URL_PREFIX}apk/${it.apk}",
+                sources = it.sources
+                    ?.map { j ->
+                        Sources(
+                            name = j.name,
+                            baseUrl = j.baseUrl,
+                            version = it.version
+                        )
+                    }
+                    .orEmpty()
+            )
+        }
 
     override val hasRemoteSources: Boolean = true
 }
@@ -86,6 +92,7 @@ private data class ExtensionJsonObject(
     val lang: String,
     val code: Long,
     val version: String,
+    val feature: String,
     val sources: List<ExtensionSourceJsonObject>?,
 )
 
