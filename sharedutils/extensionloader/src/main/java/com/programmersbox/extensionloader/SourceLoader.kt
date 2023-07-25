@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.os.Build
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
@@ -56,9 +58,30 @@ class SourceLoader(
         }
     }
 
+    private val PACKAGE_FLAGS =
+        PackageManager.GET_CONFIGURATIONS or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            PackageManager.GET_SIGNING_CERTIFICATES
+        } else {
+            @Suppress("DEPRECATION")
+            PackageManager.GET_SIGNATURES
+        }
+
+    private val extensionType = "$EXTENSION_FEATURE.$sourceType"
+
     init {
         val uninstallApplication: BroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent) {
+                if (intent.dataString == null) return
+
+                val packageString = intent.dataString.orEmpty().removePrefix("package:")
+                val isNotOtakuExtension = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context?.packageManager?.getPackageInfo(packageString, PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
+                } else {
+                    context?.packageManager?.getPackageInfo(packageString, PACKAGE_FLAGS)
+                }?.reqFeatures?.any { it.name == extensionType } == false
+
+                if (isNotOtakuExtension) return
+
                 when (intent.action) {
                     Intent.ACTION_PACKAGE_REPLACED -> load()
                     Intent.ACTION_PACKAGE_ADDED -> load()
