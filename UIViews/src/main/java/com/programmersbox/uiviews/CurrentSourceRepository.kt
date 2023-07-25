@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.asStateFlow
 class CurrentSourceRepository {
     private val sourceFlow = MutableStateFlow<ApiService?>(null)
 
+    fun asFlow() = sourceFlow.asStateFlow()
+
     suspend fun emit(apiService: ApiService?) {
         sourceFlow.emit(apiService)
     }
@@ -14,7 +16,4 @@ class CurrentSourceRepository {
     fun tryEmit(apiService: ApiService?) {
         sourceFlow.tryEmit(apiService)
     }
-
-    fun asFlow() = sourceFlow.asStateFlow()
-
 }

@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.favorite
 
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -36,6 +37,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -44,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -80,6 +85,7 @@ import com.programmersbox.uiviews.utils.components.GroupButtonModel
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.navigateToDetails
+import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
@@ -90,7 +96,7 @@ fun FavoriteUi(
     logo: MainLogo,
     dao: ItemDao = LocalItemDao.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
-    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) }
+    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) },
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -100,6 +106,9 @@ fun FavoriteUi(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     var showBanner by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     OtakuBannerBox(
         showBanner = showBanner,
@@ -108,6 +117,7 @@ fun FavoriteUi(
     ) {
         OtakuScaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 Surface {
                     Column(
@@ -338,7 +348,13 @@ fun FavoriteUi(
                                             ?.apiService
                                             ?.let { it1 -> it.toItemModel(it1) }
                                     }
-                                    ?.let { navController.navigateToDetails(it) }
+                                    ?.let(navController::navigateToDetails) ?: scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    snackbarHostState.showSnackbar(
+                                        "Something went wrong. Source might not be installed",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
                             } else {
                                 Screen.FavoriteChoiceScreen.navigate(navController, info.value)
                             }
@@ -354,6 +370,7 @@ fun FavoriteUi(
 fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }) {
     val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
+    val context = LocalContext.current
     ListBottomScreen(
         includeInsetPadding = false,
         title = stringResource(R.string.chooseASource),
@@ -366,7 +383,11 @@ fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoic
                         ?.apiService
                         ?.let { it1 -> it.toItemModel(it1) }
                 }
-                ?.let { navController.navigateToDetails(it) }
+                ?.let(navController::navigateToDetails) ?: Toast.makeText(
+                context,
+                "Something went wrong. Source might not be installed",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     ) {
         ListBottomSheetItemModel(

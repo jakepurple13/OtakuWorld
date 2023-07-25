@@ -23,6 +23,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
@@ -92,6 +95,7 @@ fun HistoryUi(
     val recentItems = hm.historyItems.collectAsLazyPagingItems()
     val recentSize by hm.historyCount.collectAsState(initial = 0)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var clearAllDialog by remember { mutableStateOf(false) }
 
@@ -117,6 +121,7 @@ fun HistoryUi(
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             InsetMediumTopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -150,7 +155,21 @@ fun HistoryUi(
             ) {
                 val item = recentItems[it]
                 if (item != null) {
-                    HistoryItem(item, dao, logo, scope)
+                    HistoryItem(
+                        item = item,
+                        dao = dao,
+                        logo = logo,
+                        scope = scope,
+                        onError = {
+                            scope.launch {
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
+                    )
                 } else {
                     HistoryItemPlaceholder()
                 }
@@ -161,7 +180,7 @@ fun HistoryUi(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope) {
+private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope, onError: () -> Unit) {
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -258,7 +277,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                                 showLoadingDialog = false
                                 navController.navigateToDetails(m)
                             }
-                            ?.collect()
+                            ?.collect() ?: onError()
                     }
                 }
             ) {
@@ -296,7 +315,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                                                 showLoadingDialog = false
                                                 navController.navigateToDetails(m)
                                             }
-                                            ?.collect()
+                                            ?.collect() ?: onError()
                                     }
                                 }
                             ) { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }
@@ -366,7 +385,8 @@ private fun HistoryItemPreview() {
             ),
             dao = LocalHistoryDao.current,
             logo = MockAppIcon,
-            scope = rememberCoroutineScope()
+            scope = rememberCoroutineScope(),
+            onError = {}
         )
     }
 }
