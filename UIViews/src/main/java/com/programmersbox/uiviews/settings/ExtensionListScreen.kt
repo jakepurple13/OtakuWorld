@@ -286,22 +286,21 @@ private fun InstalledExtensionItems(
                             onClick = { currentSourceRepository.tryEmit(source.apiService) },
                             trailingIcon = {
                                 Row {
-                                    val r = sourcesList.find {
+                                    sourcesList.find {
                                         it.sources.any { s -> s.baseUrl == source.apiService.baseUrl }
                                     }
-                                    val s = r?.sources?.find { it.baseUrl == source.apiService.baseUrl }
-                                    s?.let {
-                                        if (AppUpdate.checkForUpdate(version, it.version)) {
-                                            IconButton(
-                                                onClick = {
-                                                    onDownloadAndInstall(
-                                                        r.downloadLink,
-                                                        r.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk"
-                                                    )
-                                                }
-                                            ) { Icon(Icons.Default.Update, null) }
+                                        ?.let { r ->
+                                            if (AppUpdate.checkForUpdate(version, r.version)) {
+                                                IconButton(
+                                                    onClick = {
+                                                        onDownloadAndInstall(
+                                                            r.downloadLink,
+                                                            r.downloadLink.toUri().lastPathSegment ?: "${r.name}.apk"
+                                                        )
+                                                    }
+                                                ) { Icon(Icons.Default.Update, null) }
+                                            }
                                         }
-                                    }
                                     IconButton(
                                         onClick = { uninstall(source.packageName) }
                                     ) { Icon(Icons.Default.Delete, null) }
@@ -432,7 +431,7 @@ private fun RemoteItem(
         ListItem(
             headlineContent = { Text(remoteSource.name) },
             leadingContent = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
-            overlineContent = { Text("Versions: ${remoteSource.sources.map { it.version }.distinct().joinToString(", ")}") },
+            overlineContent = { Text("Version: ${remoteSource.version}") },
             supportingContent = {
                 AnimatedVisibility(visible = showSources) {
                     Column {
