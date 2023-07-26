@@ -68,7 +68,7 @@ class SourceUpdateChecker(context: Context, workerParams: WorkerParameters) : Co
 
             if (updateList.isNotEmpty()) {
                 notificationManager.notify(
-                    13,
+                    15,
                     NotificationDslBuilder.builder(
                         applicationContext,
                         "sourceUpdate",
