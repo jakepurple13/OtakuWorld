@@ -74,11 +74,13 @@ class SourceLoader(
                 if (intent.dataString == null) return
 
                 val packageString = intent.dataString.orEmpty().removePrefix("package:")
-                val isNotOtakuExtension = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    context?.packageManager?.getPackageInfo(packageString, PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
-                } else {
-                    context?.packageManager?.getPackageInfo(packageString, PACKAGE_FLAGS)
-                }?.reqFeatures?.any { it.name == extensionType } == false
+                val isNotOtakuExtension = runCatching {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        context?.packageManager?.getPackageInfo(packageString, PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
+                    } else {
+                        context?.packageManager?.getPackageInfo(packageString, PACKAGE_FLAGS)
+                    }?.reqFeatures?.any { it.name == extensionType } == false
+                }.getOrDefault(false)
 
                 if (isNotOtakuExtension) return
 
