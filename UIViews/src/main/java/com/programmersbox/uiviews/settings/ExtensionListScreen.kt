@@ -410,7 +410,6 @@ private fun RemoteItem(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        println(remoteSource.downloadLink)
                         onDownloadAndInstall()
                         showDialog = false
                     }

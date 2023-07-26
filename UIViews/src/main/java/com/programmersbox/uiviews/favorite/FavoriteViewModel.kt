@@ -105,9 +105,6 @@ class FavoriteViewModel(
     }
 
     fun allClick() {
-        allSources.forEach {
-            println("${it.first} - ${it.second}")
-        }
         if (selectedSources.size == fullSourceList.size) {
             clearAllSources()
         } else {
