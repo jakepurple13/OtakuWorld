@@ -62,6 +62,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.extensionloader.SourceRepository
@@ -72,6 +77,7 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.all.pagerTabIndicatorOffset
+import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
@@ -100,6 +106,25 @@ fun ExtensionList(
     val context = LocalContext.current
     val downloadAndInstall = remember { DownloadAndInstaller(context) }
 
+    fun updateCheck() {
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(
+                "sourceCheck",
+                ExistingWorkPolicy.KEEP,
+                OneTimeWorkRequestBuilder<SourceUpdateChecker>()
+                    .setConstraints(
+                        Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .setRequiresBatteryNotLow(false)
+                            .setRequiresCharging(false)
+                            .setRequiresDeviceIdle(false)
+                            .setRequiresStorageNotLow(false)
+                            .build()
+                    )
+                    .build()
+            )
+    }
+
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -107,6 +132,7 @@ fun ExtensionList(
                 InsetSmallTopAppBar(
                     title = { Text(stringResource(R.string.extensions)) },
                     navigationIcon = { BackButton() },
+                    actions = { IconButton(onClick = ::updateCheck) { Icon(Icons.Default.Update, null) } },
                     scrollBehavior = scrollBehavior,
                 )
                 TabRow(
@@ -330,7 +356,7 @@ private fun RemoteExtensionItems(
                     )
                 }
 
-                if (u.showItems)
+                if (u.showItems) {
                     items(u.sources.filter { it.name.contains(search, true) }) {
                         RemoteItem(
                             remoteSource = it,
@@ -340,6 +366,7 @@ private fun RemoteExtensionItems(
                             modifier = Modifier.animateItemPlacement()
                         )
                     }
+                }
             }
         }
     }

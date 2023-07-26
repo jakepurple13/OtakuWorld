@@ -26,13 +26,13 @@
         </activity>
 
         <receiver
-            android:name="com.programmersbox.uiviews.DeleteNotificationReceiver"
+            android:name="com.programmersbox.uiviews.checkers.DeleteNotificationReceiver"
             android:enabled="true"
             android:exported="true" />
 
         <receiver
             android:exported="true"
-            android:name="com.programmersbox.uiviews.BootReceived">
+            android:name="com.programmersbox.uiviews.checkers.BootReceived">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.PACKAGE_FIRST_LAUNCH" />

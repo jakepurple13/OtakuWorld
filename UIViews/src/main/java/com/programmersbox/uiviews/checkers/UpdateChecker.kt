@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.checkers
 
 import android.app.Notification
 import android.app.PendingIntent
@@ -12,7 +12,6 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
-import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.extensionloader.SourceLoader
@@ -33,8 +32,9 @@ import com.programmersbox.loggingutils.fd
 import com.programmersbox.models.InfoModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.UPDATE_CHECKING_END
 import com.programmersbox.uiviews.utils.UPDATE_CHECKING_START
 import com.programmersbox.uiviews.utils.appVersion
@@ -69,11 +69,6 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : Corouti
                 ) {
                     title = applicationContext.getString(R.string.theresAnUpdate)
                     subText = applicationContext.getString(R.string.versionAvailable, f)
-                    pendingIntent { context ->
-                        NavDeepLinkBuilder(context)
-                            .setDestination(Screen.SettingsScreen.route)
-                            .createPendingIntent()
-                    }
                 }
                 applicationContext.notificationManager.notify(12, n)
             }

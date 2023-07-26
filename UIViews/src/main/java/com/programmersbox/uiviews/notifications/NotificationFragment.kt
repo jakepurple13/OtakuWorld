@@ -93,9 +93,9 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.NotificationSortBy
-import com.programmersbox.uiviews.NotifySingleWorker
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SavedNotifications
+import com.programmersbox.uiviews.checkers.NotifySingleWorker
+import com.programmersbox.uiviews.checkers.SavedNotifications
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils

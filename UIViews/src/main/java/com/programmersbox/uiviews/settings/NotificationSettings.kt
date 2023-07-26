@@ -31,7 +31,7 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.UpdateFlowWorker
+import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.PreferenceSetting
