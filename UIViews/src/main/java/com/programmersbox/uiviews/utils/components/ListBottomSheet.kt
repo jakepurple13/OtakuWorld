@@ -11,8 +11,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -56,7 +56,7 @@ fun <T> ListBottomScreen(
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) } },
                 actions = { if (list.isNotEmpty()) Text("(${list.size})") }
             )
-            Divider()
+            HorizontalDivider()
         }
         lazyListContent()
         itemsIndexed(list) { index, it ->
@@ -69,7 +69,7 @@ fun <T> ListBottomScreen(
                 overlineContent = c.overlineText?.let { i -> { Text(i) } },
                 trailingContent = c.trailingText?.let { i -> { Text(i) } }
             )
-            if (index < list.size - 1) Divider()
+            if (index < list.size - 1) HorizontalDivider()
         }
     }
 }

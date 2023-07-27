@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
@@ -30,9 +29,9 @@ import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -89,7 +88,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @Composable
 fun FavoriteUi(
@@ -212,7 +210,7 @@ fun FavoriteUi(
                                         }
                                     )
                                     if (index != 3) {
-                                        Divider()
+                                        HorizontalDivider()
                                     }
                                 }
                             }
@@ -398,7 +396,6 @@ fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoic
 }
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @LightAndDarkPreviews
 @Composable

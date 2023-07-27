@@ -113,7 +113,7 @@ fun DebugView() {
                     ) { println("Hello") }
                 )
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -146,7 +146,7 @@ fun DebugView() {
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -174,7 +174,7 @@ fun DebugView() {
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -203,7 +203,7 @@ fun DebugView() {
                     updateValue = { value = it }
                 )
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -233,12 +233,12 @@ fun DebugView() {
                     updateValue = { value = it }
                 )
 
-                Divider()
+                HorizontalDivider()
             }
 
             itemsIndexed(moreSettings) { index, build ->
                 build()
-                if (index < moreSettings.size - 1) Divider()
+                if (index < moreSettings.size - 1) HorizontalDivider()
             }
         }
     }
