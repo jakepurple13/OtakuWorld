@@ -72,17 +72,21 @@ class SourceLoader(
         val uninstallApplication: BroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent) {
                 if (intent.dataString == null) return
-
                 val packageString = intent.dataString.orEmpty().removePrefix("package:")
-                val isNotOtakuExtension = runCatching {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val isOtakuExtension = runCatching {
+                    val p = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         context?.packageManager?.getPackageInfo(packageString, PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
                     } else {
                         context?.packageManager?.getPackageInfo(packageString, PACKAGE_FLAGS)
-                    }?.reqFeatures?.any { it.name == extensionType } == false
+                    }
+                    checkNotNull(p)
+                    val s = sourceRepository.list
+                        .filter { it.catalog is ExternalApiServicesCatalog }
+                        .any { (it.catalog as ExternalApiServicesCatalog).shouldReload(packageString, p) }
+                    p.reqFeatures?.any { it.name == extensionType } == true || s
                 }.getOrDefault(false)
 
-                if (isNotOtakuExtension) return
+                if (!isOtakuExtension) return
 
                 when (intent.action) {
                     Intent.ACTION_PACKAGE_REPLACED -> load()

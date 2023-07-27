@@ -1,6 +1,7 @@
 package com.programmersbox.models
 
 import android.app.Application
+import android.content.pm.PackageInfo
 import android.graphics.drawable.Drawable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -97,6 +98,8 @@ interface ExternalApiServicesCatalog : ApiServicesCatalog {
 
     val hasRemoteSources: Boolean
     suspend fun getRemoteSources(): List<RemoteSources> = emptyList()
+
+    fun shouldReload(packageName: String, packageInfo: PackageInfo): Boolean = false
 }
 
 data class RemoteSources(
