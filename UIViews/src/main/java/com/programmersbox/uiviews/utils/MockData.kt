@@ -53,6 +53,8 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import java.text.SimpleDateFormat
+import java.util.Locale
 import androidx.compose.material.MaterialTheme as M2MaterialTheme
 
 val MockInfo = object : GenericInfo {
@@ -211,7 +213,8 @@ fun PreviewTheme(
                 LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
-                LocalSourcesRepository provides SourceRepository()
+                LocalSourcesRepository provides SourceRepository(),
+                LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) }
             ) { Surface { content() } }
         }
     }

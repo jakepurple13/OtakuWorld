@@ -342,22 +342,15 @@ fun GlobalSearchView(
                                 } else if (viewModel.searchListPublisher.isNotEmpty()) {
                                     items(viewModel.searchListPublisher) { i ->
                                         Surface(
-                                            modifier = Modifier.clickable {
+                                            tonalElevation = 4.dp,
+                                            shape = M3MaterialTheme.shapes.medium,
+                                            onClick = {
                                                 searchModelBottom = i
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                            },
-                                            tonalElevation = 4.dp,
-                                            shape = M3MaterialTheme.shapes.medium
+                                            }
                                         ) {
                                             Column {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clickable {
-                                                            searchModelBottom = i
-                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                        }
-                                                ) {
+                                                Box(modifier = Modifier.fillMaxWidth()) {
                                                     Text(
                                                         i.apiName,
                                                         modifier = Modifier

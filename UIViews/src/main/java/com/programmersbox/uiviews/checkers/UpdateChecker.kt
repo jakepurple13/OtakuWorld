@@ -1,3 +1,5 @@
+@file:OptIn(DelicateCoroutinesApi::class)
+
 package com.programmersbox.uiviews.checkers
 
 import android.app.Notification
@@ -39,6 +41,7 @@ import com.programmersbox.uiviews.utils.UPDATE_CHECKING_END
 import com.programmersbox.uiviews.utils.UPDATE_CHECKING_START
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.updatePref
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -48,7 +51,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -88,80 +90,75 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
     private val sourceRepository: SourceRepository by inject()
     private val sourceLoader: SourceLoader by inject()
 
-    override suspend fun doWork(): Result {
-        return try {
-            update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
-            Loged.fd("Starting check here")
-            applicationContext.updatePref(UPDATE_CHECKING_START, System.currentTimeMillis())
+    override suspend fun doWork(): Result = try {
+        update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
+        Loged.fd("Starting check here")
+        applicationContext.updatePref(UPDATE_CHECKING_START, System.currentTimeMillis())
 
-            Loged.fd("Start")
-            val list = listOf(
-                dao.getAllFavoritesSync(),
-                FirebaseDb.getAllShows().requireNoNulls()
-            ).flatten().groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! }
+        Loged.fd("Start")
 
-            if (sourceRepository.list.isEmpty()) {
-                sourceLoader.blockingLoad()
-            }
+        //Getting all favorites
+        val list = listOf(
+            dao.getAllFavoritesSync(),
+            FirebaseDb.getAllShows().requireNoNulls()
+        ).flatten().groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! }
 
-            // Getting all recent updates
-            val newList = list.intersect(
-                sourceRepository.apiServiceList
-                    .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
-                    .mapNotNull { m ->
-                        try {
-                            withTimeoutOrNull(10000) {
-                                m.getRecentFlow()
-                                    .catch { emit(emptyList()) }
-                                    .firstOrNull()
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            null
-                        }
-                    }.flatten()
-            ) { o, n -> o.url == n.url }
-                .distinctBy { it.url }
-
-            // Checking if any have updates
-            Loged.fd("Checking for updates")
-            val items = newList.mapIndexedNotNull { index, model ->
-                update.sendRunningNotification(newList.size, index, model.title)
-                try {
-                    val newData = sourceRepository.toSourceByApiServiceName(model.source)
-                        ?.apiService
-                        ?.let {
-                            withTimeoutOrNull(10000) {
-                                model.toItemModel(it).toInfoModel()
-                                    .firstOrNull()
-                                    ?.getOrNull()
-                            }
-                        }
-                    println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
-                    // To test notifications, comment the takeUnless out
-                    Pair(newData, model)
-                        .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    null
-                }
-            }.also {
-                try {
-                } catch (ignored: Exception) {
-                }
-            }
-
-            // Saving updates
-            update.updateManga(dao, items)
-            update.onEnd(update.mapDbModel(dao, items, genericInfo), info = genericInfo)
-            Loged.fd("Finished!")
-
-            Result.success()
-        } finally {
-            applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
-            update.sendFinishedNotification()
-            Result.success()
+        //Making sure we have our sources
+        if (sourceRepository.list.isEmpty()) {
+            sourceLoader.blockingLoad()
         }
+
+        // Getting all recent updates
+        val newList = list.intersect(
+            sourceRepository.apiServiceList
+                .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
+                .mapNotNull { m ->
+                    runCatching {
+                        withTimeoutOrNull(10000) {
+                            m.getRecentFlow()
+                                .catch { emit(emptyList()) }
+                                .firstOrNull()
+                        }
+                    }
+                        .onFailure { it.printStackTrace() }
+                        .getOrNull()
+                }.flatten()
+        ) { o, n -> o.url == n.url }
+            .distinctBy { it.url }
+
+        // Checking if any have updates
+        println("Checking for updates")
+        val items = newList.mapIndexedNotNull { index, model ->
+            update.sendRunningNotification(newList.size, index, model.title)
+            runCatching {
+                val newData = sourceRepository.toSourceByApiServiceName(model.source)
+                    ?.apiService
+                    ?.let {
+                        withTimeoutOrNull(10000) {
+                            model.toItemModel(it).toInfoModel()
+                                .firstOrNull()
+                                ?.getOrNull()
+                        }
+                    }
+                println("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
+                // To test notifications, comment the takeUnless out
+                Pair(newData, model)
+                    .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
+            }
+                .onFailure { it.printStackTrace() }
+                .getOrNull()
+        }
+
+        // Saving updates
+        update.updateManga(dao, items)
+        update.onEnd(update.mapDbModel(dao, items, genericInfo), info = genericInfo)
+        Loged.fd("Finished!")
+
+        Result.success()
+    } finally {
+        applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
+        update.sendFinishedNotification()
+        Result.success()
     }
 }
 
@@ -262,19 +259,6 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         )
     }
 
-    private fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? = try {
-        val url = URL(strURL)
-        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-        headers.forEach { connection.setRequestProperty(it.key, it.value.toString()) }
-        connection.doInput = true
-        connection.connect()
-        BitmapFactory.decodeStream(connection.inputStream)
-    } catch (e: IOException) {
-        //e.printStackTrace()
-        Loged.e(e.localizedMessage, showPretty = false)
-        null
-    }
-
     fun sendRunningNotification(max: Int, progress: Int, contextText: CharSequence = "") {
         val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon.notificationId) {
             onlyAlertOnce = true
@@ -327,6 +311,7 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         Loged.d("BootReceived")
+        println(intent?.action)
         context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info, sourceRepository) }
     }
 }
@@ -352,7 +337,7 @@ object SavedNotifications {
         n: NotificationItem,
         notificationLogo: NotificationLogo,
         info: GenericInfo,
-        sourceRepository: SourceRepository
+        sourceRepository: SourceRepository,
     ) {
         val icon = notificationLogo.notificationId
         val update = UpdateNotification(context)
@@ -413,7 +398,7 @@ object SavedNotifications {
         context: Context,
         logo: NotificationLogo,
         info: GenericInfo,
-        sourceRepository: SourceRepository
+        sourceRepository: SourceRepository,
     ) {
         val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
         val icon = logo.notificationId
@@ -476,15 +461,15 @@ object SavedNotifications {
                 .let { update.onEnd(it, info = info) }
         }
     }
-
-    private fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? = try {
-        val url = URL(strURL)
-        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-        headers.forEach { connection.setRequestProperty(it.key, it.value.toString()) }
-        connection.doInput = true
-        connection.connect()
-        BitmapFactory.decodeStream(connection.inputStream)
-    } catch (e: IOException) {
-        null
-    }
 }
+
+private fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? = runCatching {
+    val url = URL(strURL)
+    val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+    headers.forEach { connection.setRequestProperty(it.key, it.value.toString()) }
+    connection.doInput = true
+    connection.connect()
+    BitmapFactory.decodeStream(connection.inputStream)
+}
+    .onFailure { it.printStackTrace() }
+    .getOrNull()

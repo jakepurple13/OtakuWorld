@@ -119,5 +119,4 @@ class RecentViewModel(
         super.onCleared()
         itemListener.unregister()
     }
-
 }

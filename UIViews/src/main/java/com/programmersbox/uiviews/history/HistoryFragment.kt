@@ -134,16 +134,6 @@ fun HistoryUi(
             )
         }
     ) { p ->
-
-        /*AnimatedLazyColumn(
-            contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
-            items = recentItems.itemSnapshotList.fastMap { item ->
-                AnimatedLazyListItem(key = item!!.url, value = item) { HistoryItem(item, scope) }
-            }
-        )*/
-
         LazyColumn(
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp)
