@@ -1,6 +1,23 @@
 package com.programmersbox.anime_sources
 
-import com.programmersbox.anime_sources.anime.*
+import com.programmersbox.anime_sources.anime.AllAnime
+import com.programmersbox.anime_sources.anime.AnimeFlick
+import com.programmersbox.anime_sources.anime.AnimeKisaDubbed
+import com.programmersbox.anime_sources.anime.AnimeKisaMovies
+import com.programmersbox.anime_sources.anime.AnimeKisaSubbed
+import com.programmersbox.anime_sources.anime.CrunchyRoll
+import com.programmersbox.anime_sources.anime.Dopebox
+import com.programmersbox.anime_sources.anime.GogoAnimeVC
+import com.programmersbox.anime_sources.anime.Hdm
+import com.programmersbox.anime_sources.anime.PutlockerAnime
+import com.programmersbox.anime_sources.anime.PutlockerCartoons
+import com.programmersbox.anime_sources.anime.PutlockerMovies
+import com.programmersbox.anime_sources.anime.PutlockerTV
+import com.programmersbox.anime_sources.anime.SflixS
+import com.programmersbox.anime_sources.anime.VidEmbed
+import com.programmersbox.anime_sources.anime.Vidstreaming
+import com.programmersbox.anime_sources.anime.WcoStream
+import com.programmersbox.anime_sources.anime.WcoStreamCC
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import org.jsoup.Jsoup
@@ -11,7 +28,6 @@ enum class Sources(private val api: ApiService, override val notWorking: Boolean
     ALLANIME(AllAnime),
 
     GOGOANIME_VC(GogoAnimeVC),
-    KAWAIIFU(Kawaiifu),
     HDM(Hdm, true),
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
@@ -48,7 +64,6 @@ enum class Sources(private val api: ApiService, override val notWorking: Boolean
                 SFLIX,
                 WCOSTREAM,
                 GOGOANIME_VC,
-                KAWAIIFU,
                 ANIMEFLICK,
                 ANIMEKISA_SUBBED,
                 //HDM,

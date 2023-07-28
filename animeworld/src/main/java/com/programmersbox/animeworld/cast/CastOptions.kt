@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
-import android.net.wifi.WifiManager
 import android.os.Environment
 import android.util.Log
 import android.view.Menu
@@ -25,6 +24,7 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.images.WebImage
 import com.programmersbox.animeworld.R
+import com.programmersbox.helpfulutils.connectivityManager
 import io.github.dkbai.tinyhttpd.nanohttpd.webserver.SimpleWebServer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -34,9 +34,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.lang.ref.WeakReference
-import java.net.InetAddress
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 typealias SessionCallback = (Int) -> Unit
 typealias SimpleCallback = () -> Unit
@@ -381,18 +378,9 @@ class CastHelper {
 class Utils {
     companion object {
         fun findIPAddress(context: Context): String? {
-            val wifiManager =
-                context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val wifiManager = context.connectivityManager
             try {
-                return if (wifiManager.connectionInfo != null) {
-                    val wifiInfo = wifiManager.connectionInfo
-                    InetAddress.getByAddress(
-                        ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
-                            .putInt(wifiInfo.ipAddress)
-                            .array()
-                    ).hostAddress
-                } else
-                    null
+                return wifiManager.getLinkProperties(wifiManager.activeNetwork)?.linkAddresses?.get(1)?.address?.hostAddress
             } catch (e: Exception) {
                 Log.e(Utils::class.java.name, "Error finding IpAddress: ${e.message}", e)
             }

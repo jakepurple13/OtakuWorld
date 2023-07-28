@@ -17,16 +17,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
-import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -49,11 +45,7 @@ class ReadViewModel(
     val genericInfo: GenericInfo,
     private val chapterHolder: ChapterHolder,
     val headers: MutableMap<String, String> = mutableMapOf(),
-    model: Flow<List<String>>? = (
-            chapterHolder.chapterModel ?: handle
-                .get<String>("currentChapter")
-                ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
-            )
+    model: Flow<List<String>>? = chapterHolder.chapterModel
         ?.getChapterInfo()
         ?.map {
             headers.putAll(it.flatMap { h -> h.headers.toList() })
@@ -82,21 +74,18 @@ class ReadViewModel(
 
     companion object {
         const val MangaReaderRoute =
-            "mangareader?currentChapter={currentChapter}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
+            "mangareader?mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
 
         fun navigateToMangaReader(
             navController: NavController,
-            currentChapter: ChapterModel? = null,
             mangaTitle: String? = null,
             mangaUrl: String? = null,
             mangaInfoUrl: String? = null,
             downloaded: Boolean = false,
             filePath: String? = null
         ) {
-            val current = Uri.encode(currentChapter?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-
             navController.navigate(
-                "mangareader?currentChapter=$current&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
+                "mangareader?mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
             ) { launchSingleTop = true }
         }
     }

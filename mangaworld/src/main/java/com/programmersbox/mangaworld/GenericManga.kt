@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChromeReaderMode
 import androidx.compose.material.icons.filled.Favorite
@@ -132,7 +131,7 @@ class GenericManga(
         chapterHolder.chapters = allChapters
         if (runBlocking { context.useNewReaderFlow.first() }) {
             chapterHolder.chapterModel = model
-            ReadViewModel.navigateToMangaReader(navController, model, infoModel.title, model.url, model.sourceUrl)
+            ReadViewModel.navigateToMangaReader(navController, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
@@ -214,7 +213,6 @@ class GenericManga(
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
         ExperimentalFoundationApi::class
     )
     @Composable
@@ -415,8 +413,6 @@ class GenericManga(
 
     @OptIn(
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalMaterialApi::class,
         ExperimentalComposeUiApi::class,
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
@@ -425,8 +421,6 @@ class GenericManga(
         composable(
             ReadViewModel.MangaReaderRoute,
             arguments = listOf(
-                navArgument("currentChapter") { nullable = true },
-                navArgument("allChapters") { nullable = true },
                 navArgument("mangaTitle") { nullable = true },
                 navArgument("mangaUrl") { nullable = true },
                 navArgument("mangaInfoUrl") { nullable = true },

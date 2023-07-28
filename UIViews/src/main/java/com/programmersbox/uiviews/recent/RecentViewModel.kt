@@ -106,6 +106,7 @@ class RecentViewModel(
             ?.getRecentFlow(count)
             ?.dispatchIoAndCatchList()
             ?.catch {
+                it.printStackTrace()
                 context?.showErrorToast()
                 emit(emptyList())
             }

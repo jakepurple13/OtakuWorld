@@ -4,8 +4,6 @@ import android.content.Context
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.getJsonApi
-import com.programmersbox.manga_sources.manga.MangaFourLife
-import com.programmersbox.manga_sources.manga.MangaPark
 import com.programmersbox.manga_sources.manga.MangaRead
 import com.programmersbox.manga_sources.manga.NineAnime
 import com.programmersbox.manga_sources.utilities.toJsoup

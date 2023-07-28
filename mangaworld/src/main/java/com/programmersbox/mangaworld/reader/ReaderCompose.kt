@@ -1,4 +1,5 @@
 @file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+@file:OptIn(ExperimentalMaterialApi::class)
 
 package com.programmersbox.mangaworld.reader
 
@@ -192,7 +193,6 @@ import net.engawapg.lib.zoomable.zoomable
 import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
@@ -914,7 +914,7 @@ private fun ZoomableImage(
     contentScale: ContentScale = ContentScale.Fit,
     onClick: () -> Unit = {}
 ) {
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)

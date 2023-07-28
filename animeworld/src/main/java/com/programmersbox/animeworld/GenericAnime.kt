@@ -119,12 +119,20 @@ import kotlinx.coroutines.launch
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericAnime(get()) }
+    single<GenericInfo> { GenericAnime(get(), get()) }
     single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
+    single { StorageHolder() }
 }
 
-class GenericAnime(val context: Context) : GenericInfo {
+class StorageHolder {
+    var storageModel: Storage? = null
+}
+
+class GenericAnime(
+    val context: Context,
+    val storageHolder: StorageHolder,
+) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") anime_no_firebase_file else anime_file }
     override val deepLinkUri: String get() = "animeworld://"
@@ -137,7 +145,7 @@ class GenericAnime(val context: Context) : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
         /*if ((model.source as? ShowApi)?.canPlay == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
@@ -161,6 +169,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     it.headers
                 )
             } else {
+                storageHolder.storageModel = it
                 context.navigateToVideoPlayer(
                     navController,
                     it.link,
@@ -288,7 +297,12 @@ class GenericAnime(val context: Context) : GenericInfo {
                 }
             }
 
-        context.downloadManager.enqueue(d)
+        runCatching { context.downloadManager.enqueue(d) }
+            .onSuccess { Toast.makeText(context, "Downloading...", Toast.LENGTH_SHORT).show() }
+            .onFailure {
+                it.printStackTrace()
+                Toast.makeText(context, "Something went wrong...", Toast.LENGTH_SHORT).show()
+            }
     }
 
     override fun sourceList(): List<ApiService> = emptyList()
