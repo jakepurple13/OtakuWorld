@@ -269,14 +269,17 @@ private fun InstalledExtensionItems(
                         contentType = { it }
                     ) { source ->
                         val version = remember(context) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                context.packageManager.getPackageInfo(
-                                    source.packageName,
-                                    PackageManager.PackageInfoFlags.of(0L)
-                                )
-                            } else {
-                                context.packageManager.getPackageInfo(source.packageName, 0)
+                            runCatching {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    context.packageManager.getPackageInfo(
+                                        source.packageName,
+                                        PackageManager.PackageInfoFlags.of(0L)
+                                    )
+                                } else {
+                                    context.packageManager.getPackageInfo(source.packageName, 0)
+                                }
                             }
+                                .getOrNull()
                                 ?.versionName
                                 .orEmpty()
                         }
