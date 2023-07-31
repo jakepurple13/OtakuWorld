@@ -1,18 +1,20 @@
 package com.programmersbox.uiviews.utils
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Dialog
-import android.app.DownloadManager
-import android.content.*
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BlurMaskFilter
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.text.format.DateFormat
 import android.view.View
 import android.widget.FrameLayout
@@ -22,14 +24,27 @@ import androidx.annotation.RequiresPermission
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.BatteryFull
+import androidx.compose.material.icons.filled.BatteryStd
+import androidx.compose.material.icons.filled.BatteryUnknown
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.core.content.FileProvider
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
@@ -41,25 +56,38 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.gson.*
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.gsonutils.sharedPrefObjectDelegate
-import com.programmersbox.helpfulutils.*
+import com.programmersbox.helpfulutils.Battery
+import com.programmersbox.helpfulutils.BatteryHealth
+import com.programmersbox.helpfulutils.connectivityManager
+import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.File
 import java.lang.reflect.Type
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 import kotlin.properties.Delegates
@@ -131,18 +159,21 @@ class ChapterModelSerializer : JsonSerializer<ChapterModel> {
     }
 }
 
-class ChapterModelDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ChapterModel> {
+class ChapterModelDeserializer : JsonDeserializer<ChapterModel>, KoinComponent {
+    private val sourceRepository: SourceRepository by inject<SourceRepository>()
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterModel? {
         return json.asJsonObject.let {
-            genericInfo.toSource(it["source"].asString)?.let { it1 ->
-                ChapterModel(
-                    name = it["name"].asString,
-                    uploaded = it["uploaded"].asString,
-                    source = it1,
-                    sourceUrl = it["sourceUrl"].asString,
-                    url = it["url"].asString
-                )
-            }
+            sourceRepository.toSourceByApiServiceName(it["source"].asString)
+                ?.apiService
+                ?.let { it1 ->
+                    ChapterModel(
+                        name = it["name"].asString,
+                        uploaded = it["uploaded"].asString,
+                        source = it1,
+                        sourceUrl = it["sourceUrl"].asString,
+                        url = it["url"].asString
+                    )
+                }
         }
     }
 }
@@ -153,9 +184,10 @@ class ApiServiceSerializer : JsonSerializer<ApiService> {
     }
 }
 
-class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService> {
+class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService>, KoinComponent {
+    private val sourceRepository: SourceRepository by inject()
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ApiService? {
-        return genericInfo.toSource(json.asString)
+        return sourceRepository.toSourceByApiServiceName(json.asString)?.apiService ?: genericInfo.toSource(json.asString)
     }
 }
 
@@ -275,87 +307,6 @@ inline fun <reified V : ViewModel> factoryCreate(crossinline build: () -> V) = o
             return build() as T
         }
         throw IllegalArgumentException("Unknown class name")
-    }
-}
-
-class DownloadUpdate(private val context: Context, private val packageName: String) : KoinComponent {
-
-    val genericInfo: GenericInfo by inject()
-
-    fun downloadUpdate(update: AppUpdate.AppUpdates): Boolean {
-        val downloadManager = context.downloadManager
-        val request = DownloadManager.Request(Uri.parse(update.downloadUrl(genericInfo.apkString)))
-            .setMimeType("application/vnd.android.package-archive")
-            .setTitle(context.getString(R.string.app_name))
-            .setDestinationInExternalPublicDir(
-                Environment.DIRECTORY_DOWNLOADS,
-                update.downloadUrl(genericInfo.apkString).split("/").lastOrNull() ?: "update_apk"
-            )
-            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-            .setAllowedOverRoaming(true)
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-
-        val id = try {
-            downloadManager.enqueue(request)
-        } catch (e: Exception) {
-            -1
-        }
-        if (id == -1L) return false
-
-        val receiver = object : BroadcastReceiver() {
-            @SuppressLint("Range")
-            override fun onReceive(context: Context?, intent: Intent?) {
-                try {
-                    val downloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, id) ?: id
-
-                    val query = DownloadManager.Query()
-                    query.setFilterById(downloadId)
-                    val c = downloadManager.query(query)
-
-                    if (c.moveToFirst()) {
-                        val columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                        if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
-                            c.getColumnIndex(DownloadManager.COLUMN_MEDIAPROVIDER_URI)
-                            val uri = Uri.parse(c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
-                            openApk(this@DownloadUpdate.context, uri)
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(
-                receiver,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                Context.RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            context.registerReceiver(
-                receiver,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-            )
-        }
-        return true
-    }
-
-    private fun openApk(context: Context, uri: Uri) {
-        uri.path?.let {
-            val contentUri = FileProvider.getUriForFile(
-                context,
-                "$packageName.provider",
-                File(it)
-            )
-            val installIntent = Intent(Intent.ACTION_VIEW).apply {
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
-                data = contentUri
-            }
-            context.startActivity(installIntent)
-        }
     }
 }
 

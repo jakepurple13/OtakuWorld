@@ -95,7 +95,7 @@ class ReadActivity : AppCompatActivity() {
     private val adapter2: PageAdapter by lazy {
         loader.let {
             val list = intent.getStringExtra("allChapters")
-                ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+                ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer())
                 .orEmpty().also(::println)
             //intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
             val url = intent.getStringExtra("mangaUrl") ?: ""
@@ -174,7 +174,7 @@ class ReadActivity : AppCompatActivity() {
 
         mangaTitle = intent.getStringExtra("mangaTitle")
         model = intent.getStringExtra("currentChapter")
-            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
 
         isDownloaded = intent.getBooleanExtra("downloaded", false)
         val file = intent.getSerializableExtra("filePath") as? File

@@ -39,6 +39,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -52,6 +53,8 @@ import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import java.text.SimpleDateFormat
+import java.util.Locale
 import androidx.compose.material.MaterialTheme as M2MaterialTheme
 
 val MockInfo = object : GenericInfo {
@@ -210,6 +213,8 @@ fun PreviewTheme(
                 LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
+                LocalSourcesRepository provides SourceRepository(),
+                LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) }
             ) { Surface { content() } }
         }
     }

@@ -45,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,12 +77,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.placeholder.material.shimmer
+import com.google.accompanist.placeholder.shimmer
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
-import com.programmersbox.anime_sources.ShowApi
-import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceViewModel
@@ -120,15 +119,25 @@ import kotlinx.coroutines.launch
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericAnime(get()) }
+    single<GenericInfo> { GenericAnime(get(), get()) }
     single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
+    single { StorageHolder() }
 }
 
-class GenericAnime(val context: Context) : GenericInfo {
+class StorageHolder {
+    var storageModel: Storage? = null
+}
+
+class GenericAnime(
+    val context: Context,
+    val storageHolder: StorageHolder,
+) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") anime_no_firebase_file else anime_file }
     override val deepLinkUri: String get() = "animeworld://"
+
+    override val sourceType: String get() = "anime"
 
     override fun chapterOnClick(
         model: ChapterModel,
@@ -136,12 +145,12 @@ class GenericAnime(val context: Context) : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
-        if ((model.source as? ShowApi)?.canPlay == false) {
+        /*if ((model.source as? ShowApi)?.canPlay == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
             return
-        }
+        }*/
         getEpisodes(
             R.string.source_no_stream,
             model,
@@ -160,6 +169,7 @@ class GenericAnime(val context: Context) : GenericInfo {
                     it.headers
                 )
             } else {
+                storageHolder.storageModel = it
                 context.navigateToVideoPlayer(
                     navController,
                     it.link,
@@ -179,14 +189,14 @@ class GenericAnime(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
-        if ((model.source as? ShowApi)?.canDownload == false) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.source_no_download, model.source.serviceName),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+        /* if ((model.source as? ShowApi)?.canDownload == false) {
+             Toast.makeText(
+                 context,
+                 context.getString(R.string.source_no_download, model.source.serviceName),
+                 Toast.LENGTH_SHORT
+             ).show()
+             return
+         }*/
         activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33)
                 arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
@@ -287,18 +297,19 @@ class GenericAnime(val context: Context) : GenericInfo {
                 }
             }
 
-        context.downloadManager.enqueue(d)
+        runCatching { context.downloadManager.enqueue(d) }
+            .onSuccess { Toast.makeText(context, "Downloading...", Toast.LENGTH_SHORT).show() }
+            .onFailure {
+                it.printStackTrace()
+                Toast.makeText(context, "Something went wrong...", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    override fun sourceList(): List<ApiService> = Sources.values().filterNot(Sources::notWorking).toList()
+    override fun sourceList(): List<ApiService> = emptyList()
 
-    override fun searchList(): List<ApiService> = Sources.searchSources
+    override fun searchList(): List<ApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = try {
-        Sources.valueOf(s)
-    } catch (e: IllegalArgumentException) {
-        null
-    }
+    override fun toSource(s: String): ApiService? = null
 
     @Composable
     override fun DetailActions(infoModel: InfoModel, tint: Color) {
@@ -323,6 +334,10 @@ class GenericAnime(val context: Context) : GenericInfo {
 
     @Composable
     override fun ComposeShimmerItem() {
+        val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
+            .copy(0.1f)
+            .compositeOver(MaterialTheme.colorScheme.surface)
+
         LazyColumn {
             items(10) {
                 Card(
@@ -335,11 +350,8 @@ class GenericAnime(val context: Context) : GenericInfo {
                             .fillMaxWidth()
                             .placeholder(
                                 true,
-                                highlight = PlaceholderHighlight.shimmer(),
-                                color = androidx.compose.material3
-                                    .contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-                                    .copy(0.1f)
-                                    .compositeOver(MaterialTheme.colorScheme.surface)
+                                color = placeholderColor,
+                                highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
                             )
                     ) {
                         Icon(

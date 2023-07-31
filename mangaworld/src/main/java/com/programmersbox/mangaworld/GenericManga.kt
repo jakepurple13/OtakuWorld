@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChromeReaderMode
 import androidx.compose.material.icons.filled.Favorite
@@ -29,7 +28,6 @@ import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Pages
-import androidx.compose.material.icons.filled.TextFormat
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,12 +55,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.manga_sources.Sources
 import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.reader.ReadActivity
@@ -73,13 +68,11 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.M3CoverCard
@@ -103,30 +96,24 @@ import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> { GenericManga(get()) }
+    single<GenericInfo> { GenericManga(get(), get()) }
     single { NetworkHelper(get()) }
     single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
+    single { ChapterHolder() }
 }
 
-class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
-    fun set(item: List<ChapterModel>?) {
-        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
-        context.defaultSharedPref.edit().putString("chapterList", i).commit()
-    }
-
-    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
-        "chapterList",
-        null,
-        ChapterModel::class.java to ChapterModelDeserializer(genericInfo)
-    )
-
-    fun clear() {
-        context.defaultSharedPref.edit().remove("chapterList").apply()
-    }
+class ChapterHolder {
+    var chapterModel: ChapterModel? = null
+    var chapters: List<ChapterModel>? = null
 }
 
-class GenericManga(val context: Context) : GenericInfo {
+class GenericManga(
+    val context: Context,
+    val chapterHolder: ChapterHolder
+) : GenericInfo {
+
+    override val sourceType: String get() = "manga"
 
     override val deepLinkUri: String get() = "mangaworld://"
 
@@ -141,9 +128,10 @@ class GenericManga(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController
     ) {
-        ChapterList(context, this@GenericManga).set(allChapters)
+        chapterHolder.chapters = allChapters
         if (runBlocking { context.useNewReaderFlow.first() }) {
-            ReadViewModel.navigateToMangaReader(navController, model, infoModel.title, model.url, model.sourceUrl)
+            chapterHolder.chapterModel = model
+            ReadViewModel.navigateToMangaReader(navController, infoModel.title, model.url, model.sourceUrl)
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
@@ -208,23 +196,10 @@ class GenericManga(val context: Context) : GenericInfo {
         ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }
     }
 
-    override fun sourceList(): List<ApiService> =
-        if (runBlocking { context.showAdultFlow.first() }) {
-            Sources.values().toList()
-        } else {
-            Sources.values().filterNot(Sources::isAdult).toList()
-        }
-            .filterNot(ApiService::notWorking)
+    override fun sourceList(): List<ApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = try {
-        Sources.valueOf(s)
-    } catch (e: IllegalArgumentException) {
-        null
-    }
+    override fun toSource(s: String): ApiService? = null
 
-    @OptIn(
-        ExperimentalMaterialApi::class
-    )
     @Composable
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
@@ -238,7 +213,6 @@ class GenericManga(val context: Context) : GenericInfo {
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
         ExperimentalFoundationApi::class
     )
     @Composable
@@ -303,22 +277,6 @@ class GenericManga(val context: Context) : GenericInfo {
         }
 
         generalSettings {
-            val scope = rememberCoroutineScope()
-            val context = LocalContext.current
-            val showAdult by context.showAdultFlow.collectAsState(false)
-
-            SwitchSetting(
-                settingTitle = { Text(stringResource(R.string.showAdultSources)) },
-                value = showAdult,
-                settingIcon = { Icon(Icons.Default.TextFormat, null, modifier = Modifier.fillMaxSize()) },
-                updateValue = {
-                    scope.launch { context.updatePref(SHOW_ADULT, it) }
-                    if (!it && (sourceFlow.value as? Sources)?.isAdult == true) {
-                        sourceFlow.tryEmit(sourceList().random())
-                    }
-                }
-            )
-
             /*if (BuildConfig.DEBUG) {
 
                 val folderLocation by context.folderLocationFlow.collectAsState(initial = DOWNLOAD_FILE_PATH)
@@ -455,8 +413,6 @@ class GenericManga(val context: Context) : GenericInfo {
 
     @OptIn(
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
-        ExperimentalMaterialApi::class,
         ExperimentalComposeUiApi::class,
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
@@ -465,8 +421,6 @@ class GenericManga(val context: Context) : GenericInfo {
         composable(
             ReadViewModel.MangaReaderRoute,
             arguments = listOf(
-                navArgument("currentChapter") { nullable = true },
-                navArgument("allChapters") { nullable = true },
                 navArgument("mangaTitle") { nullable = true },
                 navArgument("mangaUrl") { nullable = true },
                 navArgument("mangaInfoUrl") { nullable = true },

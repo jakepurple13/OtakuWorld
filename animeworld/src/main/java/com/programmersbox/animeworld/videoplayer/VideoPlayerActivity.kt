@@ -158,7 +158,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val chapterModel: ChapterModel? by lazy {
         intent.getStringExtra("chapterModel")
-            ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+            ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer())
     }
 
     private lateinit var videoBinding: ActivityVideoPlayerBinding

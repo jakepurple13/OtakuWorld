@@ -202,4 +202,7 @@
     <string name="additional_settings">Additional Settings</string>
     <string name="notification_settings">Notification Settings</string>
     <string name="notifications">Notifications</string>
+    <string name="extensions">Extensions</string>
+    <string name="view_extensions">View Extensions</string>
+    <string name="installed">Installed</string>
 </resources>

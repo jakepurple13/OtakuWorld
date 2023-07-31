@@ -6,7 +6,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworldtv.compose.HomeScreen
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
 import kotlinx.coroutines.Dispatchers
@@ -28,14 +27,14 @@ class MainActivity : FragmentActivity() {
         lifecycleScope.launch {
             if (currentService == null) {
                 val s = Sources.values().filterNot(Sources::notWorking).random()
-                sourceFlow.emit(s)
+                //sourceFlow.emit(s)
                 currentService = s.serviceName
             } else if (currentService != null) {
-                try {
+                /*try {
                     Sources.valueOf(currentService!!)
                 } catch (e: IllegalArgumentException) {
                     null
-                }?.let { sourceFlow.emit(it) }
+                }?.let { sourceFlow.emit(it) }*/
             }
         }
 

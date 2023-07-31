@@ -10,6 +10,7 @@ data class ItemModel(
     val source: ApiService
 ) : Serializable {
     val extras = mutableMapOf<String, Any>()
+    val otherExtras = mutableMapOf<String, Any>()
     fun toInfoModel() = source.getItemInfoFlow(this)
 }
 
@@ -36,6 +37,7 @@ data class ChapterModel(
     var uploadedTime: Long? = null
     fun getChapterInfo() = source.getChapterInfoFlow(this)
     val extras = mutableMapOf<String, Any>()
+    val otherExtras = mutableMapOf<String, Any>()
 }
 
 class NormalLink(var normal: Normal? = null)

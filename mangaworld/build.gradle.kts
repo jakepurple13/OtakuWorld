@@ -40,9 +40,11 @@ dependencies {
     implementation(projects.uiViews)
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
-    implementation(projects.mangaSources)
     implementation(projects.sharedutils)
+    implementation(projects.sourceUtilities)
     implementation(projects.imageloader)
+    implementation(libs.duktape)
+    implementation(libs.bundles.ziplineLibs)
 
     implementation(libs.glide)
     ksp(libs.glideCompiler)

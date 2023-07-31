@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,7 +36,7 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.DownloadUpdate
+import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -52,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoSettings(
     infoViewModel: MoreInfoViewModel = viewModel(),
@@ -117,6 +119,8 @@ fun InfoSettings(
             modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
         )
 
+        val downloadInstaller = remember { DownloadAndInstaller(context) }
+
         ShowWhen(
             visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
         ) {
@@ -142,7 +146,11 @@ fun InfoSettings(
                                                     a.let(genericInfo.apkString).toString()
                                                 )
                                                 if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
-                                                DownloadUpdate(context, context.packageName).downloadUpdate(a)
+                                                val url = a.downloadUrl(genericInfo.apkString)
+                                                downloadInstaller.downloadAndInstall(
+                                                    url = url,
+                                                    destinationPath = url.split("/").lastOrNull() ?: "update_apk"
+                                                )
                                             }
                                     }
                                 }

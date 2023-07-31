@@ -161,7 +161,8 @@ class CrunchyrollGeoBypasser {
 
 object CrunchyRoll : ShowApi(
     baseUrl = "http://www.crunchyroll.com",
-    recentPath = "videos/anime/updated", allPath = ""
+    recentPath = "videos/anime/updated",
+    allPath = ""
 ) {
 
     override val serviceName: String get() = "CRUNCHYROLL"

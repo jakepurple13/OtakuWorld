@@ -55,6 +55,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.animeworld.ignoreSsl
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.uiviews.BaseMainActivity
@@ -63,6 +64,7 @@ import com.programmersbox.uiviews.utils.*
 import com.programmersbox.uiviews.utils.components.AirBar
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
+import org.koin.compose.koinInject
 import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -77,7 +79,8 @@ import kotlin.math.abs
 fun VideoPlayerUi(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo, context) }
+    storageHolder: StorageHolder = koinInject(),
+    viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo, context, storageHolder) },
 ) {
     val activity = LocalActivity.current
 

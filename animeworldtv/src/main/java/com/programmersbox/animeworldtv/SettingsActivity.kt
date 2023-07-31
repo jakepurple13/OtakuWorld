@@ -1,6 +1,5 @@
 package com.programmersbox.animeworldtv
 
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
@@ -11,16 +10,18 @@ import androidx.preference.DialogPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
-import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.CustomFirebaseUser
 import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.updateAppCheck
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -85,7 +86,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
             findPreference<Preference>("user_account")?.let { p ->
 
                 fun accountChanges(user: CustomFirebaseUser?) {
-                    activity?.let {
+                    /*activity?.let {
                         Glide.with(this@PrefFragment)
                             .load(user?.photoUrl ?: R.mipmap.ic_launcher)
                             .placeholder(R.mipmap.ic_launcher)
@@ -93,7 +94,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                             .fallback(R.mipmap.ic_launcher)
                             .circleCrop()
                             .into<Drawable> { resourceReady { image, _ -> p.icon = image } }
-                    }
+                    }*/
                     p.title = user?.displayName ?: "User"
                 }
 
@@ -154,7 +155,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                             list.map { it.serviceName }.toTypedArray(),
                             list.indexOfFirst { it.serviceName == service }
                         ) { d, i ->
-                            sourceFlow.tryEmit(list[i])
+                            //sourceFlow.tryEmit(list[i])
                             requireContext().currentService = list[i].serviceName
                             d.dismiss()
                         }
@@ -163,11 +164,11 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                     true
                 }
                 lifecycleScope.launch {
-                    sourceFlow
+                    /*sourceFlow
                         .filterNotNull()
                         .flowOn(Dispatchers.Main)
                         .onEach { p.title = getString(R.string.currentSource, it.serviceName) }
-                        .collect()
+                        .collect()*/
                 }
             }
         }

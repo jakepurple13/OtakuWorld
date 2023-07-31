@@ -11,12 +11,14 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourceFlow
+import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +33,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
-class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
+class RecentViewModel(
+    dao: ItemDao,
+    context: Context? = null,
+    sourceRepository: SourceRepository,
+    currentSourceRepository: CurrentSourceRepository,
+) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<ItemModel>()
@@ -49,7 +56,16 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
 
     val gridState = LazyGridState(0, 0)
 
+    val sources = mutableStateListOf<SourceInformation>()
+
     init {
+        sourceRepository.sources
+            .onEach {
+                sources.clear()
+                sources.addAll(it)
+            }
+            .launchIn(viewModelScope)
+
         combine(
             itemListener.getAllShowsFlow(),
             dao.getAllFavorites()
@@ -57,7 +73,7 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
             .onEach { favoriteList = it.toMutableStateList() }
             .launchIn(viewModelScope)
 
-        sourceFlow
+        currentSourceRepository.asFlow()
             .filterNotNull()
             .onEach {
                 currentSource = it
@@ -90,6 +106,7 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
             ?.getRecentFlow(count)
             ?.dispatchIoAndCatchList()
             ?.catch {
+                it.printStackTrace()
                 context?.showErrorToast()
                 emit(emptyList())
             }
@@ -103,5 +120,4 @@ class RecentViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
         super.onCleared()
         itemListener.unregister()
     }
-
 }

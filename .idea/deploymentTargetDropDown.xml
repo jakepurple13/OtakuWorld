@@ -5,10 +5,28 @@
       <entry key="SwipeButtonPreview">
         <State />
       </entry>
+      <entry key="anime_sources.defaultanimesources">
+        <State />
+      </entry>
       <entry key="animeworld">
         <State />
       </entry>
+      <entry key="animeworldtv">
+        <State />
+      </entry>
+      <entry key="app">
+        <State />
+      </entry>
+      <entry key="manga_sources.defaultmangasources">
+        <State />
+      </entry>
       <entry key="mangaworld">
+        <State />
+      </entry>
+      <entry key="novel_sources.bestlightnovel">
+        <State />
+      </entry>
+      <entry key="novel_sources.novelupdates">
         <State />
       </entry>
       <entry key="novelworld">

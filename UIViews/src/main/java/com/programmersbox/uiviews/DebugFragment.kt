@@ -1,8 +1,11 @@
 package com.programmersbox.uiviews
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -10,6 +13,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Deck
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,7 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.uiviews.utils.*
+
 
 @SuppressLint("ComposeContentEmitterReturningValues")
 @ExperimentalComposeUiApi
@@ -27,10 +34,15 @@ import com.programmersbox.uiviews.utils.*
 @Composable
 fun DebugView() {
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
+    val currentSourceRepository = LocalCurrentSource.current
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val sourceRepo = LocalSourcesRepository.current
+
+    val sources by sourceRepo.sources.collectAsStateWithLifecycle(initialValue = emptyList())
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -46,16 +58,37 @@ fun DebugView() {
     ) { p ->
         val moreSettings = remember { genericInfo.debugMenuItem(context) }
         LazyColumn(contentPadding = p) {
+            item {
+                sources.forEach {
+                    PreferenceSetting(
+                        settingTitle = { Text(it.name) },
+                        settingIcon = { Icon(rememberDrawablePainter(drawable = it.icon), null, modifier = Modifier.fillMaxSize()) },
+                        endIcon = {
+                            IconButton(
+                                onClick = {
+                                    /*context.packageManager.packageInstaller.uninstall(
+                                        it.packageName,
+                                        PendingIntent.getActivity(context, 0, activity.intent, PendingIntent.FLAG_IMMUTABLE).intentSender
+                                    )*/
+                                    val uri = Uri.fromParts("package", it.packageName, null)
+                                    val uninstall = Intent(Intent.ACTION_DELETE, uri)
+                                    context.startActivity(uninstall)
+                                }
+                            ) { Icon(Icons.Default.Delete, null) }
+                        },
+                        modifier = Modifier.clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { currentSourceRepository.tryEmit(it.apiService) }
+                    )
+                }
+            }
 
             item {
-
                 Surface(
                     color = Color.Blue,
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Here!")
-                }
-
+                ) { Text("Here!") }
             }
 
             item {
@@ -80,7 +113,7 @@ fun DebugView() {
                     ) { println("Hello") }
                 )
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -113,7 +146,7 @@ fun DebugView() {
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -141,7 +174,7 @@ fun DebugView() {
                     )
                 }
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -170,7 +203,7 @@ fun DebugView() {
                     updateValue = { value = it }
                 )
 
-                Divider()
+                HorizontalDivider()
             }
 
             item {
@@ -200,12 +233,12 @@ fun DebugView() {
                     updateValue = { value = it }
                 )
 
-                Divider()
+                HorizontalDivider()
             }
 
             itemsIndexed(moreSettings) { index, build ->
                 build()
-                if (index < moreSettings.size - 1) Divider()
+                if (index < moreSettings.size - 1) HorizontalDivider()
             }
         }
     }

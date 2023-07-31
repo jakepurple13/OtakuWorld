@@ -10,35 +10,47 @@ import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.Screen
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : ViewModel() {
+class FavoriteViewModel(
+    dao: ItemDao,
+    private val sourceRepository: SourceRepository,
+) : ViewModel() {
 
     private val fireListener = FirebaseDb.FirebaseListener()
-    var favoriteList by mutableStateOf<List<DbModel>>(emptyList())
-        private set
+
+    private val favoriteList = mutableStateListOf<DbModel>()
+
+    private var sourceList = sourceRepository.list.map { it.apiService.serviceName }
+
+    private val fullSourceList get() = (sourceList + favoriteList.map { it.source }).distinct()
 
     init {
         combine(
             fireListener.getAllShowsFlow(),
             dao.getAllFavorites()
         ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-            .onEach { favoriteList = it }
+            .onEach {
+                favoriteList.clear()
+                favoriteList.addAll(it)
+                selectedSources.addAll(
+                    sourceRepository.list.map { l -> l.apiService.serviceName } +
+                            it.map { f -> f.source }
+                )
+            }
             .launchIn(viewModelScope)
-    }
 
-    override fun onCleared() {
-        super.onCleared()
-        fireListener.unregister()
+        sourceRepository.sources
+            .onEach { sourceList = it.map { s -> s.apiService.serviceName } }
+            .launchIn(viewModelScope)
     }
 
     var searchText by mutableStateOf("")
@@ -46,7 +58,7 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
     var sortedBy by mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE)
     var reverse by mutableStateOf(false)
 
-    val selectedSources = mutableStateListOf(*genericInfo.sourceList().fastMap(ApiService::serviceName).toTypedArray())
+    val selectedSources = mutableStateListOf<String>()
 
     val listSources by derivedStateOf {
         favoriteList.filter { it.title.contains(searchText, true) && it.source in selectedSources }
@@ -68,7 +80,7 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
     }
 
     val allSources by derivedStateOf {
-        (genericInfo.sourceList().fastMap(ApiService::serviceName) + listSources.fastMap(DbModel::source))
+        (fullSourceList + listSources.fastMap(DbModel::source))
             .groupBy { it }
             .toList()
             .sortedBy { it.first }
@@ -85,7 +97,7 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
 
     fun resetSources() {
         selectedSources.clear()
-        selectedSources.addAll(genericInfo.sourceList().fastMap(ApiService::serviceName))
+        selectedSources.addAll(fullSourceList)
     }
 
     private fun clearAllSources() {
@@ -93,19 +105,23 @@ class FavoriteViewModel(dao: ItemDao, private val genericInfo: GenericInfo) : Vi
     }
 
     fun allClick() {
-        if (selectedSources.size == genericInfo.sourceList().size) {
+        if (selectedSources.size == fullSourceList.size) {
             clearAllSources()
         } else {
             resetSources()
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        fireListener.unregister()
+    }
 }
 
 sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> K) {
-    object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
-    object COUNT : SortFavoritesBy<Int>({ it.value.size })
-    object CHAPTERS : SortFavoritesBy<Int>({ it.value.maxOf(DbModel::numChapters) })
+    data object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
+    data object COUNT : SortFavoritesBy<Int>({ it.value.size })
+    data object CHAPTERS : SortFavoritesBy<Int>({ it.value.maxOf(DbModel::numChapters) })
 }
 
 class FavoriteChoiceViewModel(

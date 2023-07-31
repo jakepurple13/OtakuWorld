@@ -1,11 +1,15 @@
 package com.programmersbox.anime_sources
 
 import androidx.annotation.WorkerThread
-import androidx.compose.ui.util.fastMap
-import com.programmersbox.anime_sources.anime.*
+import com.programmersbox.anime_sources.anime.AllAnime
+import com.programmersbox.anime_sources.anime.AnimeKisaSubbed
+import com.programmersbox.anime_sources.anime.AnimeSimpleSubbed
+import com.programmersbox.anime_sources.anime.AnimeToonDubbed
+import com.programmersbox.anime_sources.anime.GogoAnimeVC
+import com.programmersbox.anime_sources.anime.PutlockerTV
+import com.programmersbox.anime_sources.anime.Vidstreaming
 import com.programmersbox.gsonutils.getApi
 import com.programmersbox.gsonutils.header
-import com.programmersbox.models.ItemModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType
@@ -39,27 +43,6 @@ class ExampleUnitTest {
         println(f1)
         val f2 = f1?.chapters?.first()?.getChapterInfo()?.first()
         println(f2)
-    }
-
-    @Test
-    fun kawaiifuTest() {
-        val url = "https://kawaiifu.com"
-        val f = Jsoup.connect(url)
-            .sslSocketFactory(socketFactory())
-            .get()
-
-        val recent = f.select(".today-update .item").fastMap {
-            ItemModel(
-                title = it.selectFirst("img")?.attr("alt").orEmpty(),
-                description = it.select("div.info").select("p").text(),
-                imageUrl = it.selectFirst("img")?.attr("src").orEmpty(),
-                url = it.selectFirst("a")?.attr("href").orEmpty(),
-                source = Kawaiifu
-            )
-        }
-
-        println(recent.joinToString("\n"))
-
     }
 
     @Test

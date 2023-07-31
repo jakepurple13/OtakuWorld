@@ -40,7 +40,7 @@ abstract class AndroidPluginBase<T: BaseExtension>(
         }
     }
 
-    fun Project.configureAndroidBase() {
+    private fun Project.configureAndroidBase() {
         extensions.findByType(clazz)?.apply {
             androidConfig(this@configureAndroidBase)
             compileSdkVersion(AppInfo.compileVersion)

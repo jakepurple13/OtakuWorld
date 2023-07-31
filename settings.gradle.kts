@@ -19,3 +19,10 @@ include(
 )
 
 rootProject.name = "OtakuWorld"
+include(
+    ":novel_sources:novelupdates",
+    ":novel_sources:bestlightnovel"
+)
+include(":sharedutils:extensionloader")
+include(":manga_sources:defaultmangasources")
+include(":anime_sources:defaultanimesources")

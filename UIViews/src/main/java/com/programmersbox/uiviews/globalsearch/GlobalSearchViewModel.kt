@@ -5,19 +5,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class GlobalSearchViewModel(
-    val info: GenericInfo,
+    val sourceRepository: SourceRepository,
     val dao: HistoryDao,
     initialSearch: String
 ) : ViewModel() {
@@ -44,12 +49,13 @@ class GlobalSearchViewModel(
             isSearching = true
             searchListPublisher = emptyList()
             async {
-                info.searchList()
+                sourceRepository.list
                     .apmap { a ->
                         a
+                            .apiService
                             .searchSourceList(searchText, list = emptyList())
                             .dispatchIoAndCatchList()
-                            .map { SearchModel(a.serviceName, it) }
+                            .map { SearchModel(a.apiService.serviceName, it) }
                             .filter { it.data.isNotEmpty() }
                             .onEach { searchListPublisher = searchListPublisher + it }
                             .onCompletion { isRefreshing = false }

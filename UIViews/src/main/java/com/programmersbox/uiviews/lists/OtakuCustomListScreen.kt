@@ -32,11 +32,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissValue
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -44,12 +44,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -84,8 +86,8 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
@@ -116,6 +118,7 @@ fun OtakuCustomListScreen(
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val customItem = vm.customItem
+    val state = rememberBottomSheetScaffoldState()
 
     val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
@@ -208,6 +211,7 @@ fun OtakuCustomListScreen(
         onRemove = { vm.removeItem(it) },
         onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
         bottomScrollBehavior = scrollBehavior,
+        state = state,
         topBar = {
             Surface {
                 Column {
@@ -303,7 +307,7 @@ fun OtakuCustomListScreen(
                                     }
                                 )
                                 if (index != vm.items.lastIndex) {
-                                    Divider()
+                                    HorizontalDivider()
                                 }
                             }
                         }
@@ -346,6 +350,15 @@ fun OtakuCustomListScreen(
                     logo = logoDrawable,
                     showLoadingDialog = { showLoadingDialog = it },
                     onDelete = { vm.removeItem(it) },
+                    onError = {
+                        scope.launch {
+                            state.snackbarHostState.currentSnackbarData?.dismiss()
+                            state.snackbarHostState.showSnackbar(
+                                "Something went wrong. Source might not be installed",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    },
                     modifier = Modifier.animateItemPlacement()
                 )
             }
@@ -360,10 +373,11 @@ private fun CustomItem(
     logo: Drawable?,
     onDelete: (CustomListInfo) -> Unit,
     showLoadingDialog: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    onError: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
-    val genericInfo = LocalGenericInfo.current
+    val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
     var showPopup by remember { mutableStateOf(false) }
 
@@ -426,8 +440,9 @@ private fun CustomItem(
         dismissContent = {
             ElevatedCard(
                 onClick = {
-                    genericInfo
-                        .toSource(item.source)
+                    sourceRepository
+                        .toSourceByApiServiceName(item.source)
+                        ?.apiService
                         ?.let { source ->
                             Cached.cache[item.url]?.let {
                                 flow {
@@ -446,7 +461,7 @@ private fun CustomItem(
                             navController.navigateToDetails(it)
                         }
                         ?.onCompletion { showLoadingDialog(false) }
-                        ?.launchIn(scope)
+                        ?.launchIn(scope) ?: onError()
                 },
                 modifier = Modifier
                     .height(ComposableUtils.IMAGE_HEIGHT)
@@ -489,7 +504,7 @@ private fun CustomItem(
                                 }
                             )
 
-                            Divider()
+                            HorizontalDivider()
 
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.remove)) },
@@ -539,7 +554,8 @@ private fun CustomItemPreview() {
             ),
             logo = null,
             onDelete = {},
-            showLoadingDialog = {}
+            showLoadingDialog = {},
+            onError = {}
         )
     }
 }

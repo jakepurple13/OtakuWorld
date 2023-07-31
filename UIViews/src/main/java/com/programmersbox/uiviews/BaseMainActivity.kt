@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -30,9 +31,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrowseGallery
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
@@ -60,6 +64,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -87,9 +92,9 @@ import com.google.accompanist.navigation.material.ExperimentalMaterialNavigation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
@@ -106,6 +111,7 @@ import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.recent.RecentView
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.settings.ExtensionList
 import com.programmersbox.uiviews.settings.GeneralSettings
 import com.programmersbox.uiviews.settings.InfoSettings
 import com.programmersbox.uiviews.settings.NotificationSettings
@@ -147,6 +153,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     private val settingsHandling: SettingsHandling by inject()
 
+    private val sourceRepository by inject<SourceRepository>()
+    private val currentSourceRepository by inject<CurrentSourceRepository>()
+
     protected abstract fun onCreate()
 
     @Composable
@@ -161,7 +170,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
     @OptIn(
         ExperimentalMaterialNavigationApi::class,
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterial3WindowSizeClassApi::class
+        ExperimentalMaterial3WindowSizeClassApi::class,
+        ExperimentalMaterialApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -175,6 +185,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 bottomSheetNavigator,
                 remember { ChromeCustomTabsNavigator(this) }
             )
+
+            val scope = rememberCoroutineScope()
+            BackHandler(bottomSheetNavigator.sheetState.isVisible) {
+                scope.launch { bottomSheetNavigator.sheetState.hide() }
+            }
 
             val systemUiController = rememberSystemUiController()
             val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
@@ -320,7 +335,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         AppCompatResources.getDrawable(this@BaseMainActivity, logo.logoId)!!.toBitmap().asImageBitmap(),
                         null,
                     )
-                }
+                },
+                modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
                 NavigationRailItem(
                     imageVector = Icons.Default.History,
@@ -373,6 +389,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     imageVector = Icons.Default.Star,
                     label = stringResource(R.string.viewFavoritesMenu),
                     screen = Screen.FavoriteScreen,
+                    currentDestination = currentDestination,
+                    navController = navController,
+                    customRoute = "_home"
+                )
+
+                NavigationRailItem(
+                    imageVector = Icons.Default.Extension,
+                    label = stringResource(R.string.extensions),
+                    screen = Screen.ExtensionListScreen,
                     currentDestination = currentDestination,
                     navController = navController,
                     customRoute = "_home"
@@ -572,6 +597,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
             }
 
+            composable(
+                Screen.ExtensionListScreen.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) { ExtensionList() }
+
             additionalSettings()
 
             if (BuildConfig.DEBUG) {
@@ -611,6 +642,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) { FavoriteUi(logo) }
+
+        composable(
+            Screen.ExtensionListScreen.route + "_home",
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+        ) { ExtensionList() }
     }
 
     @OptIn(ExperimentalPermissionsApi::class)
@@ -633,7 +670,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     private fun setup() {
         lifecycleScope.launch {
-            genericInfo.toSource(currentService.orEmpty())?.let { sourceFlow.emit(it) }
+            if (currentService == null) {
+                val s = sourceRepository.list.randomOrNull()?.apiService
+                currentSourceRepository.emit(s)
+                currentService = s?.serviceName
+            } else {
+                sourceRepository.toSourceByApiServiceName(currentService.orEmpty())?.let { currentSourceRepository.emit(it.apiService) }
+            }
         }
 
         when (runBlocking { settingsHandling.systemThemeMode.firstOrNull() }) {

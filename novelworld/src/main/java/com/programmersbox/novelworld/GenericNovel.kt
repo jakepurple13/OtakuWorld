@@ -19,7 +19,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
@@ -31,7 +36,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
+import com.google.accompanist.placeholder.shimmer
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
@@ -40,11 +47,14 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
-import com.programmersbox.novel_sources.Sources
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.ChapterModelDeserializer
+import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import org.koin.dsl.module
 
 val appModule = module {
@@ -62,13 +72,15 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
     fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
         "chapterList",
         null,
-        ChapterModel::class.java to ChapterModelDeserializer(genericInfo)
+        ChapterModel::class.java to ChapterModelDeserializer()
     )
 }
 
 class GenericNovel(val context: Context) : GenericInfo {
 
     override val deepLinkUri: String get() = "novelworld://"
+
+    override val sourceType: String get() = "novel"
 
     override fun chapterOnClick(
         model: ChapterModel,
@@ -88,13 +100,9 @@ class GenericNovel(val context: Context) : GenericInfo {
         )
     }
 
-    override fun sourceList(): List<ApiService> = Sources.values().toList()
+    override fun sourceList(): List<ApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = try {
-        Sources.valueOf(s)
-    } catch (e: IllegalArgumentException) {
-        null
-    }
+    override fun toSource(s: String): ApiService? = null
 
     override fun downloadChapter(
         model: ChapterModel,
@@ -111,6 +119,10 @@ class GenericNovel(val context: Context) : GenericInfo {
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
+        val placeholderColor = contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
+            .copy(0.1f)
+            .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+
         LazyColumn {
             items(10) {
                 Surface(
@@ -126,9 +138,8 @@ class GenericNovel(val context: Context) : GenericInfo {
                             .fillMaxWidth()
                             .placeholder(
                                 true,
-                                color = contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
-                                    .copy(0.1f)
-                                    .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                                color = placeholderColor,
+                                highlight = PlaceholderHighlight.shimmer(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = .75f))
                             )
                             .padding(4.dp)
                     )
@@ -140,7 +151,8 @@ class GenericNovel(val context: Context) : GenericInfo {
     @OptIn(
         ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class
+        ExperimentalFoundationApi::class,
+        ExperimentalMaterial3Api::class
     )
     @Composable
     override fun ItemListView(

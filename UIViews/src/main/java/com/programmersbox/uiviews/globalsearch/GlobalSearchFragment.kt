@@ -36,9 +36,9 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -79,28 +79,26 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
 import com.programmersbox.uiviews.utils.MockAppIcon
-import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -116,11 +114,11 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 fun GlobalSearchView(
     mainLogo: MainLogo,
     notificationLogo: NotificationLogo,
-    info: GenericInfo = LocalGenericInfo.current,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
     dao: HistoryDao = LocalHistoryDao.current,
     viewModel: GlobalSearchViewModel = viewModel {
         GlobalSearchViewModel(
-            info = info,
+            sourceRepository = sourceRepository,
             initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
             dao = dao,
         )
@@ -233,7 +231,7 @@ fun GlobalSearchView(
                                         }
                                 )
                                 if (index != history.lastIndex) {
-                                    Divider()
+                                    HorizontalDivider()
                                 }
                             }
                         }
@@ -268,7 +266,7 @@ fun GlobalSearchView(
                                         newItemModel(if (c == ComponentState.Pressed) m else null)
                                         showBanner = c == ComponentState.Pressed
                                     }
-                                ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
+                                ) { navController.navigateToDetails(m) }
                             }
                         }
                     }
@@ -322,7 +320,7 @@ fun GlobalSearchView(
                                         Surface(
                                             modifier = Modifier.placeholder(true, color = placeholderColor),
                                             tonalElevation = 4.dp,
-                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
+                                            shape = M3MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -344,22 +342,15 @@ fun GlobalSearchView(
                                 } else if (viewModel.searchListPublisher.isNotEmpty()) {
                                     items(viewModel.searchListPublisher) { i ->
                                         Surface(
-                                            modifier = Modifier.clickable {
+                                            tonalElevation = 4.dp,
+                                            shape = M3MaterialTheme.shapes.medium,
+                                            onClick = {
                                                 searchModelBottom = i
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                            },
-                                            tonalElevation = 4.dp,
-                                            shape = M3MaterialTheme.shapes.medium
+                                            }
                                         ) {
                                             Column {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clickable {
-                                                            searchModelBottom = i
-                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                        }
-                                                ) {
+                                                Box(modifier = Modifier.fillMaxWidth()) {
                                                     Text(
                                                         i.apiName,
                                                         modifier = Modifier
@@ -496,7 +487,7 @@ private fun GlobalScreenPreview() {
             dao = dao,
             viewModel = viewModel {
                 GlobalSearchViewModel(
-                    info = MockInfo,
+                    sourceRepository = SourceRepository(),
                     initialSearch = "",
                     dao = dao,
                 )

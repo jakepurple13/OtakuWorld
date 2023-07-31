@@ -5,7 +5,7 @@ plugins {
     id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
-    id("com.google.protobuf") version "0.9.3"
+    id("com.google.protobuf") version "0.9.4"
     alias(libs.plugins.ksp)
 }
 
@@ -111,8 +111,13 @@ dependencies {
 
     implementation(libs.bundles.protobuf)
 
+    implementation(libs.bundles.ktorLibs)
+
     //Multiplatform
     implementation(projects.imageloader)
+
+    //Extension Loader
+    api(projects.sharedutils.extensionloader)
 }
 
 protobuf {

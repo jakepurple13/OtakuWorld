@@ -2,15 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
 
         <receiver
-            android:name=".DeleteNotificationReceiver"
+            android:name=".checkers.DeleteNotificationReceiver"
             android:enabled="true"
             android:exported="true" />
         <receiver
-            android:name=".BootReceived"
+            android:name=".checkers.BootReceived"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

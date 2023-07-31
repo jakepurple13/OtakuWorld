@@ -68,12 +68,13 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -94,10 +95,13 @@ fun AllView(
     logo: MainLogo,
     context: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
-    allVm: AllViewModel = viewModel { AllViewModel(dao, context) },
+    currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
+    allVm: AllViewModel = viewModel { AllViewModel(dao, context, currentSourceRepository) },
 ) {
     val isConnected by allVm.observeNetwork.collectAsState(initial = true)
-    val source by sourceFlow.collectAsState(initial = null)
+    val source by currentSourceRepository
+        .asFlow()
+        .collectAsState(initial = null)
 
     LaunchedEffect(isConnected) {
         if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(context, source!!)
@@ -231,7 +235,7 @@ fun AllScreen(
     showBanner: (Boolean) -> Unit
 ) {
     val info = LocalGenericInfo.current
-    val source by sourceFlow.collectAsState(initial = null)
+    val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
     val context = LocalContext.current
     val pullRefreshState = rememberPullRefreshState(isRefreshing, onRefresh = { source?.let { onReset(context, it) } })
@@ -287,7 +291,7 @@ fun SearchScreen(
     val info = LocalGenericInfo.current
     val focusManager = LocalFocusManager.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val source by sourceFlow.collectAsState(initial = null)
+    val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
 
     OtakuScaffold(
@@ -317,10 +321,12 @@ fun SearchScreen(
                     .fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {
-                    focusManager.clearFocus()
-                    search()
-                })
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        focusManager.clearFocus()
+                        search()
+                    }
+                )
             )
         }
     ) { p ->

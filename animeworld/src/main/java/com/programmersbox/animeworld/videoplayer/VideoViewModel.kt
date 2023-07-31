@@ -23,6 +23,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import androidx.navigation.NavController
+import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.models.ChapterModel
@@ -42,7 +43,8 @@ import javax.net.ssl.X509TrustManager
 class VideoViewModel(
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
-    context: Context
+    context: Context,
+    private val storageHolder: StorageHolder,
 ) : ViewModel() {
 
     companion object {
@@ -63,8 +65,8 @@ class VideoViewModel(
     }
 
     val chapterModel: ChapterModel? = handle.get<String>("chapterModel")
-        ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
-    val showPath = handle.get<String>("showPath").orEmpty()
+        ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer())
+    val showPath = storageHolder.storageModel?.link ?: handle.get<String>("showPath").orEmpty()
     val showName = handle.get<String>("showName")
     val downloadOrStream = handle.get<String>("downloadOrStream")?.toBoolean() ?: true
     val headers = handle.get<String>("referer") ?: chapterModel?.url ?: ""
@@ -134,6 +136,11 @@ class VideoViewModel(
         } else {
             mFormatter.format("%02d:%02d", minute, second).toString()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        storageHolder.storageModel = null
     }
 }
 

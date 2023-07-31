@@ -23,6 +23,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
@@ -63,9 +66,9 @@ import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetMediumTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
@@ -92,6 +95,7 @@ fun HistoryUi(
     val recentItems = hm.historyItems.collectAsLazyPagingItems()
     val recentSize by hm.historyCount.collectAsState(initial = 0)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var clearAllDialog by remember { mutableStateOf(false) }
 
@@ -117,6 +121,7 @@ fun HistoryUi(
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             InsetMediumTopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -129,16 +134,6 @@ fun HistoryUi(
             )
         }
     ) { p ->
-
-        /*AnimatedLazyColumn(
-            contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
-            items = recentItems.itemSnapshotList.fastMap { item ->
-                AnimatedLazyListItem(key = item!!.url, value = item) { HistoryItem(item, scope) }
-            }
-        )*/
-
         LazyColumn(
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -150,7 +145,21 @@ fun HistoryUi(
             ) {
                 val item = recentItems[it]
                 if (item != null) {
-                    HistoryItem(item, dao, logo, scope)
+                    HistoryItem(
+                        item = item,
+                        dao = dao,
+                        logo = logo,
+                        scope = scope,
+                        onError = {
+                            scope.launch {
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
+                    )
                 } else {
                     HistoryItemPlaceholder()
                 }
@@ -161,7 +170,7 @@ fun HistoryUi(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope) {
+private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope, onError: () -> Unit) {
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -237,7 +246,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
             val context = LocalContext.current
             val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
-            val info = LocalGenericInfo.current
+            val info = LocalSourcesRepository.current
             val navController = LocalNavController.current
 
             Surface(
@@ -245,7 +254,8 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                 shape = MaterialTheme.shapes.medium,
                 onClick = {
                     scope.launch {
-                        info.toSource(item.source)
+                        info.toSourceByApiServiceName(item.source)
+                            ?.apiService
                             ?.getSourceByUrlFlow(item.url)
                             ?.dispatchIo()
                             ?.onStart { showLoadingDialog = true }
@@ -257,7 +267,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                                 showLoadingDialog = false
                                 navController.navigateToDetails(m)
                             }
-                            ?.collect()
+                            ?.collect() ?: onError()
                     }
                 }
             ) {
@@ -282,7 +292,8 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                             IconButton(
                                 onClick = {
                                     scope.launch {
-                                        info.toSource(item.source)
+                                        info.toSourceByApiServiceName(item.source)
+                                            ?.apiService
                                             ?.getSourceByUrlFlow(item.url)
                                             ?.dispatchIo()
                                             ?.onStart { showLoadingDialog = true }
@@ -294,7 +305,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                                                 showLoadingDialog = false
                                                 navController.navigateToDetails(m)
                                             }
-                                            ?.collect()
+                                            ?.collect() ?: onError()
                                     }
                                 }
                             ) { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }
@@ -364,7 +375,8 @@ private fun HistoryItemPreview() {
             ),
             dao = LocalHistoryDao.current,
             logo = MockAppIcon,
-            scope = rememberCoroutineScope()
+            scope = rememberCoroutineScope(),
+            onError = {}
         )
     }
 }

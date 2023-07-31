@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,7 +31,7 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.UpdateFlowWorker
+import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.PreferenceSetting
@@ -42,6 +43,7 @@ import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettings(
     dao: ItemDao = LocalItemDao.current,

@@ -1,4 +1,5 @@
 @file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+@file:OptIn(ExperimentalMaterialApi::class)
 
 package com.programmersbox.mangaworld.reader
 
@@ -87,9 +88,9 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissValue
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -154,6 +155,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
+import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.mangaworld.LIST_OR_PAGER
 import com.programmersbox.mangaworld.PAGE_PADDING
 import com.programmersbox.mangaworld.R
@@ -188,9 +190,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
@@ -198,11 +200,13 @@ import net.engawapg.lib.zoomable.zoomable
 fun ReadView(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
+    ch: ChapterHolder = koinInject(),
     readVm: ReadViewModel = viewModel {
         ReadViewModel(
             handle = createSavedStateHandle(),
             context = context,
-            genericInfo = genericInfo
+            genericInfo = genericInfo,
+            chapterHolder = ch
         )
     }
 ) {
@@ -261,7 +265,7 @@ fun ReadView(
                         initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
                         range = 1f..100f
                     )
-                    Divider()
+                    HorizontalDivider()
                     val activity = LocalActivity.current
                     SliderSetting(
                         scope = scope,
@@ -272,7 +276,7 @@ fun ReadView(
                         initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
                         range = 0f..10f
                     )
-                    Divider()
+                    HorizontalDivider()
                     SwitchSetting(
                         settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
@@ -469,7 +473,7 @@ fun DrawerView(
                     shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
                 )
 
-                if (i < readVm.list.lastIndex) Divider()
+                if (i < readVm.list.lastIndex) HorizontalDivider()
             }
         }
     }
@@ -910,7 +914,7 @@ private fun ZoomableImage(
     contentScale: ContentScale = ContentScale.Fit,
     onClick: () -> Unit = {}
 ) {
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
