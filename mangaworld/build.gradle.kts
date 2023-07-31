@@ -35,7 +35,6 @@ dependencies {
     implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(libs.fileChooser)
-    implementation(libs.storage)
 
     implementation(projects.uiViews)
     implementation(projects.models)
