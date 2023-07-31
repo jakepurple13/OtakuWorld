@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTvMaterial3Api::class)
+
 package com.programmersbox.animeworldtv.compose
 
 import androidx.activity.compose.BackHandler
