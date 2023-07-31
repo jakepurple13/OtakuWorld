@@ -7,15 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.utils.Screen
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -76,7 +73,6 @@ class FavoriteViewModel(
                 }
             }
             .let { if (reverse) it.reversed() else it }
-            .toTypedArray()
     }
 
     val allSources by derivedStateOf {
@@ -122,12 +118,4 @@ sealed class SortFavoritesBy<K>(val sort: (Map.Entry<String, List<DbModel>>) -> 
     data object TITLE : SortFavoritesBy<String>(Map.Entry<String, List<DbModel>>::key)
     data object COUNT : SortFavoritesBy<Int>({ it.value.size })
     data object CHAPTERS : SortFavoritesBy<Int>({ it.value.maxOf(DbModel::numChapters) })
-}
-
-class FavoriteChoiceViewModel(
-    handle: SavedStateHandle,
-) : ViewModel() {
-    val items = handle.get<String>(Screen.FavoriteChoiceScreen.dbitemsArgument)
-        .fromJson<List<DbModel>>()
-        .orEmpty()
 }

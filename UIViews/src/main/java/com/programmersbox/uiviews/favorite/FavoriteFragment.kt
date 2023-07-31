@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.favorite
 
-import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -8,6 +7,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ReadMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
@@ -35,10 +36,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -58,14 +61,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.BannerScope
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -78,12 +84,14 @@ import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.GroupButton
 import com.programmersbox.uiviews.utils.components.GroupButtonModel
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.navigateToDetails
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -107,6 +115,28 @@ fun FavoriteUi(
     val scope = rememberCoroutineScope()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var showDbModel by remember { mutableStateOf<DbModel?>(null) }
+
+    SourceNotInstalledModal(
+        showItem = showDbModel?.title,
+        onShowItemDismiss = { showDbModel = null },
+        source = showDbModel?.source,
+    ) {
+        ListItem(
+            headlineContent = { Text(stringResource(id = R.string.removeFromFavorites)) },
+            leadingContent = { Icon(Icons.Default.FavoriteBorder, null) },
+            modifier = Modifier.clickable {
+                showDbModel?.let {
+                    scope.launch {
+                        dao.deleteFavorite(it)
+                        FirebaseDb.removeShowFlow(it).collect()
+                    }
+                }
+                showDbModel = null
+            }
+        )
+    }
 
     OtakuBannerBox(
         showBanner = showBanner,
@@ -285,113 +315,143 @@ fun FavoriteUi(
                     }
                 }
             } else {
-                LazyVerticalGrid(
-                    columns = adaptiveGridCell(),
-                    state = rememberLazyGridState(),
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(
-                        viewModel.groupedSources,
-                        key = { it.key }
-                    ) { info ->
-                        M3CoverCard(
-                            onLongPress = { c ->
-                                newItemModel(
-                                    if (c == ComponentState.Pressed) {
-                                        info.value.randomOrNull()?.let {
-                                            sourceRepository
-                                                .toSourceByApiServiceName(it.source)
-                                                ?.apiService
-                                                ?.let { it1 -> it.toItemModel(it1) }
-                                        }
-                                    } else null
-                                )
-                                showBanner = c == ComponentState.Pressed
-                            },
-                            imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
-                            name = info.key,
-                            placeHolder = logo.logoId,
-                            favoriteIcon = {
-                                if (info.value.size > 1) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.TopStart)
-                                            .padding(4.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Circle,
-                                            contentDescription = null,
-                                            tint = M3MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                        Text(
-                                            info.value.size.toString(),
-                                            color = M3MaterialTheme.colorScheme.onPrimary,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-                                }
-                            },
-                            modifier = Modifier.animateItemPlacement()
-                        ) {
-                            if (info.value.size == 1) {
-                                info.value
-                                    .firstOrNull()
-                                    ?.let {
-                                        sourceRepository
-                                            .toSourceByApiServiceName(it.source)
-                                            ?.apiService
-                                            ?.let { it1 -> it.toItemModel(it1) }
-                                    }
-                                    ?.let(navController::navigateToDetails) ?: scope.launch {
-                                    snackbarHostState.currentSnackbarData?.dismiss()
-                                    snackbarHostState.showSnackbar(
-                                        "Something went wrong. Source might not be installed",
-                                        duration = SnackbarDuration.Short
-                                    )
-                                }
-                            } else {
-                                Screen.FavoriteChoiceScreen.navigate(navController, info.value)
+                FavoritesGrid(
+                    paddingValues = p,
+                    groupedSources = viewModel.groupedSources,
+                    sourceRepository = sourceRepository,
+                    navController = navController,
+                    moreInfoClick = {
+                        scope.launch {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                            val result = snackbarHostState.showSnackbar(
+                                "Something went wrong. Source might not be installed",
+                                duration = SnackbarDuration.Long,
+                                actionLabel = "More Options",
+                                withDismissAction = true
+                            )
+                            showDbModel = when (result) {
+                                SnackbarResult.Dismissed -> null
+                                SnackbarResult.ActionPerformed -> it
                             }
                         }
-                    }
-                }
+                    },
+                    onShowBanner = { showBanner = it },
+                    logo = logo
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }) {
-    val sourceRepository = LocalSourcesRepository.current
-    val navController = LocalNavController.current
-    val context = LocalContext.current
-    ListBottomScreen(
-        includeInsetPadding = false,
-        title = stringResource(R.string.chooseASource),
-        list = vm.items,
-        onClick = { item ->
-            item
-                .let {
-                    sourceRepository
-                        .toSourceByApiServiceName(it.source)
-                        ?.apiService
-                        ?.let { it1 -> it.toItemModel(it1) }
-                }
-                ?.let(navController::navigateToDetails) ?: Toast.makeText(
-                context,
-                "Something went wrong. Source might not be installed",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+private fun BannerScope.FavoritesGrid(
+    paddingValues: PaddingValues,
+    groupedSources: List<Map.Entry<String, List<DbModel>>>,
+    sourceRepository: SourceRepository,
+    navController: NavController,
+    moreInfoClick: (DbModel) -> Unit,
+    onShowBanner: (Boolean) -> Unit,
+    logo: MainLogo,
+    modifier: Modifier = Modifier,
+) {
+    LazyVerticalGrid(
+        columns = adaptiveGridCell(),
+        state = rememberLazyGridState(),
+        contentPadding = paddingValues,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.fillMaxSize()
     ) {
-        ListBottomSheetItemModel(
-            primaryText = it.title,
-            overlineText = it.source
-        )
+        items(
+            groupedSources,
+            key = { it.key }
+        ) { info ->
+            var showBottomSheet by remember { mutableStateOf(false) }
+
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showBottomSheet = false }
+                ) {
+                    ListBottomScreen(
+                        includeInsetPadding = false,
+                        title = stringResource(R.string.chooseASource),
+                        list = info.value,
+                        onClick = { item ->
+                            showBottomSheet = false
+                            item
+                                .let {
+                                    sourceRepository
+                                        .toSourceByApiServiceName(it.source)
+                                        ?.apiService
+                                        ?.let { it1 -> it.toItemModel(it1) }
+                                }
+                                ?.let(navController::navigateToDetails) ?: moreInfoClick(item)
+                        }
+                    ) {
+                        ListBottomSheetItemModel(
+                            primaryText = it.title,
+                            overlineText = it.source
+                        )
+                    }
+                }
+            }
+
+            M3CoverCard(
+                onLongPress = { c ->
+                    newItemModel(
+                        if (c == ComponentState.Pressed) {
+                            info.value.randomOrNull()?.let {
+                                sourceRepository
+                                    .toSourceByApiServiceName(it.source)
+                                    ?.apiService
+                                    ?.let { it1 -> it.toItemModel(it1) }
+                            }
+                        } else null
+                    )
+                    onShowBanner(c == ComponentState.Pressed)
+                },
+                imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
+                name = info.key,
+                placeHolder = logo.logoId,
+                favoriteIcon = {
+                    if (info.value.size > 1) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Circle,
+                                contentDescription = null,
+                                tint = M3MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                            Text(
+                                info.value.size.toString(),
+                                color = M3MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
+                },
+                modifier = Modifier.animateItemPlacement()
+            ) {
+                if (info.value.size == 1) {
+                    info.value
+                        .firstOrNull()
+                        ?.let {
+                            sourceRepository
+                                .toSourceByApiServiceName(it.source)
+                                ?.apiService
+                                ?.let { it1 -> it.toItemModel(it1) }
+                                ?.let(navController::navigateToDetails) ?: moreInfoClick(it)
+                        }
+                } else {
+                    showBottomSheet = true
+                }
+            }
+        }
     }
 }
 

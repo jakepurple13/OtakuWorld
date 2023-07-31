@@ -2,15 +2,23 @@ package com.programmersbox.uiviews.utils
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
@@ -31,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,6 +50,7 @@ import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.placeholder
 import com.google.accompanist.placeholder.shimmer
 import com.programmersbox.models.ItemModel
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.components.BannerBox
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 
@@ -260,4 +270,36 @@ fun OtakuBannerBox(
 
 interface BannerScope {
     fun newItemModel(itemModel: ItemModel?)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SourceNotInstalledModal(
+    showItem: String?,
+    onShowItemDismiss: (String?) -> Unit,
+    source: String?,
+    additionOptions: @Composable ColumnScope.() -> Unit = {},
+) {
+    val navController = LocalNavController.current
+    if (showItem != null) {
+        ModalBottomSheet(
+            onDismissRequest = { onShowItemDismiss(null) }
+        ) {
+            Text(
+                source.orEmpty(),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            CenterAlignedTopAppBar(title = { Text(showItem) })
+            ListItem(
+                headlineContent = { Text(stringResource(id = R.string.global_search)) },
+                leadingContent = { Icon(Icons.Default.Search, contentDescription = null) },
+                modifier = Modifier.clickable {
+                    onShowItemDismiss(null)
+                    Screen.GlobalSearchScreen.navigate(navController, showItem)
+                }
+            )
+            additionOptions()
+        }
+    }
 }

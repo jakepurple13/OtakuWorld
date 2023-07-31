@@ -46,6 +46,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
@@ -113,6 +114,7 @@ import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SettingsHandling
+import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
 import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
@@ -177,6 +179,14 @@ fun NotificationsScreen(
     }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    var showNotificationItem by remember { mutableStateOf<NotificationItem?>(null) }
+
+    SourceNotInstalledModal(
+        showItem = showNotificationItem?.notiTitle,
+        onShowItemDismiss = { showNotificationItem = null },
+        source = showNotificationItem?.source
+    )
 
     BottomSheetDeleteScaffold(
         listOfItems = items,
@@ -285,10 +295,16 @@ fun NotificationsScreen(
                                     onError = {
                                         scope.launch {
                                             state.snackbarHostState.currentSnackbarData?.dismiss()
-                                            state.snackbarHostState.showSnackbar(
+                                            val result = state.snackbarHostState.showSnackbar(
                                                 "Something went wrong. Source might not be installed",
-                                                duration = SnackbarDuration.Short
+                                                duration = SnackbarDuration.Long,
+                                                actionLabel = "More Options",
+                                                withDismissAction = true
                                             )
+                                            showNotificationItem = when (result) {
+                                                SnackbarResult.Dismissed -> null
+                                                SnackbarResult.ActionPerformed -> it
+                                            }
                                         }
                                     },
                                     modifier = Modifier.animateItemPlacement(),
@@ -353,10 +369,16 @@ fun NotificationsScreen(
                                                 onError = {
                                                     scope.launch {
                                                         state.snackbarHostState.currentSnackbarData?.dismiss()
-                                                        state.snackbarHostState.showSnackbar(
+                                                        val result = state.snackbarHostState.showSnackbar(
                                                             "Something went wrong. Source might not be installed",
-                                                            duration = SnackbarDuration.Short
+                                                            duration = SnackbarDuration.Long,
+                                                            actionLabel = "More Options",
+                                                            withDismissAction = true
                                                         )
+                                                        showNotificationItem = when (result) {
+                                                            SnackbarResult.Dismissed -> null
+                                                            SnackbarResult.ActionPerformed -> it
+                                                        }
                                                     }
                                                 }
                                             )

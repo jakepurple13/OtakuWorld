@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
@@ -73,6 +74,7 @@ import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
@@ -119,6 +121,14 @@ fun HistoryUi(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
+    var showRecentModel by remember { mutableStateOf<RecentModel?>(null) }
+
+    SourceNotInstalledModal(
+        showItem = showRecentModel?.title,
+        onShowItemDismiss = { showRecentModel = null },
+        source = showRecentModel?.source
+    )
+
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -153,10 +163,16 @@ fun HistoryUi(
                         onError = {
                             scope.launch {
                                 snackbarHostState.currentSnackbarData?.dismiss()
-                                snackbarHostState.showSnackbar(
+                                val result = snackbarHostState.showSnackbar(
                                     "Something went wrong. Source might not be installed",
-                                    duration = SnackbarDuration.Short
+                                    duration = SnackbarDuration.Long,
+                                    actionLabel = "More Options",
+                                    withDismissAction = true
                                 )
+                                showRecentModel = when (result) {
+                                    SnackbarResult.Dismissed -> null
+                                    SnackbarResult.ActionPerformed -> item
+                                }
                             }
                         }
                     )
