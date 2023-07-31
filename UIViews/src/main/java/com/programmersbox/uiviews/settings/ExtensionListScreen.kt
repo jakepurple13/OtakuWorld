@@ -28,9 +28,13 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.InstallMobile
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SendTimeExtension
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -69,6 +73,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.RemoteSources
@@ -86,15 +91,18 @@ import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ExtensionList(
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     otakuWorldCatalog: OtakuWorldCatalog = koinInject(),
-    viewModel: ExtensionListViewModel = viewModel { ExtensionListViewModel(sourceRepository, otakuWorldCatalog) },
+    sourceLoader: SourceLoader = koinInject(),
+    viewModel: ExtensionListViewModel = viewModel { ExtensionListViewModel(sourceRepository, sourceLoader, otakuWorldCatalog) },
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
@@ -132,7 +140,39 @@ fun ExtensionList(
                 InsetSmallTopAppBar(
                     title = { Text(stringResource(R.string.extensions)) },
                     navigationIcon = { BackButton() },
-                    actions = { IconButton(onClick = ::updateCheck) { Icon(Icons.Default.Update, null) } },
+                    actions = {
+                        var showDropDown by remember { mutableStateOf(false) }
+                        var checked by remember { mutableStateOf(false) }
+                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
+                        DropdownMenu(
+                            expanded = showDropDown,
+                            onDismissRequest = { showDropDown = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Check for Source Updates") },
+                                onClick = {
+                                    showDropDown = false
+                                    if (!checked) updateCheck()
+                                    scope.launch {
+                                        checked = true
+                                        delay(10.minutes)
+                                        checked = false
+                                    }
+                                },
+                                leadingIcon = { Icon(Icons.Default.Update, null) },
+                                enabled = !checked
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Refresh Extensions") },
+                                onClick = {
+                                    showDropDown = false
+                                    viewModel.refreshExtensions()
+                                },
+                                leadingIcon = { Icon(Icons.Default.Refresh, null) }
+                            )
+                        }
+                    },
                     scrollBehavior = scrollBehavior,
                 )
                 TabRow(

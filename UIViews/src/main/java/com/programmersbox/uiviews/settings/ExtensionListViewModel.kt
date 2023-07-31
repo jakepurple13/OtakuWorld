@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.RemoteSources
@@ -18,7 +19,8 @@ import kotlinx.coroutines.flow.onEach
 
 class ExtensionListViewModel(
     sourceRepository: SourceRepository,
-    otakuWorldCatalog: OtakuWorldCatalog
+    private val sourceLoader: SourceLoader,
+    otakuWorldCatalog: OtakuWorldCatalog,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<SourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteViewState>()
@@ -53,6 +55,10 @@ class ExtensionListViewModel(
                 )
             }
             .launchIn(viewModelScope)
+    }
+
+    fun refreshExtensions() {
+        sourceLoader.load()
     }
 }
 
