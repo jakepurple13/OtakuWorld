@@ -7,18 +7,19 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +44,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -95,6 +98,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
+@OptIn(ExperimentalLayoutApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
 @Composable
@@ -246,34 +250,54 @@ fun FavoriteUi(
                             }
                         }
 
-                        LazyRow(
+                        var showFilterBySourceModal by remember { mutableStateOf(false) }
+
+                        if (showFilterBySourceModal) {
+                            ModalBottomSheet(onDismissRequest = { showFilterBySourceModal = false }) {
+                                CenterAlignedTopAppBar(title = { Text("Filter by Source") })
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                                ) {
+                                    FilterChip(
+                                        selected = true,
+                                        modifier = Modifier.combinedClickable(
+                                            onClick = { viewModel.resetSources() },
+                                            onLongClick = { viewModel.selectedSources.clear() }
+                                        ),
+                                        label = { Text("ALL") },
+                                        onClick = { viewModel.allClick() }
+                                    )
+
+                                    viewModel.allSources.forEach {
+                                        FilterChip(
+                                            selected = it.first in viewModel.selectedSources,
+                                            onClick = { viewModel.newSource(it.first) },
+                                            label = { Text(it.first) },
+                                            leadingIcon = { Text("${it.second.size - 1}") },
+                                            modifier = Modifier.combinedClickable(
+                                                onClick = { viewModel.newSource(it.first) },
+                                                onLongClick = { viewModel.singleSource(it.first) }
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
                         ) {
-                            item {
-                                FilterChip(
-                                    selected = true,
-                                    modifier = Modifier.combinedClickable(
-                                        onClick = { viewModel.resetSources() },
-                                        onLongClick = { viewModel.selectedSources.clear() }
-                                    ),
-                                    label = { Text("ALL") },
-                                    onClick = { viewModel.allClick() }
-                                )
-                            }
+                            SuggestionChip(
+                                onClick = { showFilterBySourceModal = true },
+                                label = { Text("Filter By Source") }
+                            )
 
-                            items(viewModel.allSources) {
-                                FilterChip(
-                                    selected = it.first in viewModel.selectedSources,
-                                    onClick = { viewModel.newSource(it.first) },
-                                    label = { Text(it.first) },
-                                    leadingIcon = { Text("${it.second.size - 1}") },
-                                    modifier = Modifier.combinedClickable(
-                                        onClick = { viewModel.newSource(it.first) },
-                                        onLongClick = { viewModel.singleSource(it.first) }
-                                    )
-                                )
-                            }
+                            SuggestionChip(
+                                label = { Text("ALL") },
+                                onClick = { viewModel.resetSources() }
+                            )
                         }
                     }
                 }
