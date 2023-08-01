@@ -5,6 +5,7 @@ googleServices = "4.3.15"
 gradle = "8.1.0-beta05"
 kamelImage = "0.6.1"
 kotlin = "1.9.0"
+kamelImage = "0.7.1"
 latestAboutLibsRelease = "10.8.3"
 coroutinesVersion = "1.7.3"
 glideVersion = "4.15.1"
@@ -12,7 +13,7 @@ navigationSafeArgsGradlePlugin = "2.6.0"
 pagingVersion = "3.2.0"
 roomVersion = "2.5.2"
 navVersion = "2.7.0-rc01"
-koinVersion = "3.4.2"
+koinVersion = "3.4.3"
 lottieVersion = "6.0.0"
 coil = "2.4.0"
 lifecycle = "2.6.1"
@@ -25,7 +26,7 @@ ktorVersion = "2.3.2"
 tvCompose = "1.0.0-alpha08"
 workVersion = "2.8.1"
 ziplineVersion = "1.1.0"
-landscapist = "2.2.2"
+landscapist = "2.2.3"
 protobufVersion = "3.23.4"
 sketchVersion = "3.2.3"
 composeBomVersion = "2023.07.00-alpha02"
@@ -41,7 +42,7 @@ media3Version = "1.1.0"
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.9.0-1.0.11" }
+ksp = { id = "com.google.devtools.ksp", version = "1.9.0-1.0.12" }
 
 [libraries]
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
@@ -113,7 +114,7 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
 lottieCompose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
 
 koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
-koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.5" }
+koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.6" }
 
 roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
@@ -192,7 +193,7 @@ bigImageGlideLoader = { module = "com.github.piasy:GlideImageLoader", version.re
 progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", version.ref = "piasy" }
 
 ### AnimeWorld
-slideToAct = "com.ncorti:slidetoact:0.10.0"
+slideToAct = "com.ncorti:slidetoact:0.11.0"
 mediaRouter = "androidx.mediarouter:mediarouter:1.4.0"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
 castFramework = "com.google.android.gms:play-services-cast-framework:21.3.0"
