@@ -14,7 +14,8 @@ include(
     ":animeworldtv",
     ":sharedutils",
     ":source_utilities",
-    ":imageloader"
+    ":imageloader",
+    ":sharedutils:extensionloader"
     //":otakumanager",
 )
 
@@ -23,6 +24,5 @@ include(
     ":novel_sources:novelupdates",
     ":novel_sources:bestlightnovel"
 )
-include(":sharedutils:extensionloader")
 include(":manga_sources:defaultmangasources")
 include(":anime_sources:defaultanimesources")
