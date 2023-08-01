@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.utils
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -71,7 +72,7 @@ fun M3CoverCard(
     headers: Map<String, Any> = emptyMap(),
     onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     Surface(
         modifier = modifier
@@ -209,7 +210,7 @@ fun OtakuBannerBox(
     placeholder: Int,
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    content: @Composable BannerScope.() -> Unit
+    content: @Composable BannerScope.() -> Unit,
 ) {
     var itemInfo by remember { mutableStateOf<ItemModel?>(null) }
 
@@ -281,7 +282,11 @@ fun SourceNotInstalledModal(
     additionOptions: @Composable ColumnScope.() -> Unit = {},
 ) {
     val navController = LocalNavController.current
+
+
     if (showItem != null) {
+        BackHandler { onShowItemDismiss(null) }
+
         ModalBottomSheet(
             onDismissRequest = { onShowItemDismiss(null) }
         ) {

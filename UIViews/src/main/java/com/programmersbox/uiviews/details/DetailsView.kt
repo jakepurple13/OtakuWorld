@@ -38,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
@@ -148,7 +149,7 @@ fun DetailsView(
     markAs: (ChapterModel, Boolean) -> Unit,
     logo: NotificationLogo,
     description: String,
-    onTranslateDescription: (MutableState<Boolean>) -> Unit
+    onTranslateDescription: (MutableState<Boolean>) -> Unit,
 ) {
     val dao = LocalItemDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
@@ -396,7 +397,7 @@ fun DetailsViewLandscape(
     markAs: (ChapterModel, Boolean) -> Unit,
     logo: NotificationLogo,
     description: String,
-    onTranslateDescription: (MutableState<Boolean>) -> Unit
+    onTranslateDescription: (MutableState<Boolean>) -> Unit,
 ) {
     val dao = LocalItemDao.current
     val listDao = LocalCustomListDao.current
@@ -564,7 +565,7 @@ private fun DetailsLandscapeContent(
     chapters: List<ChapterWatched>,
     logo: NotificationLogo,
     reverseChapters: Boolean,
-    listState: LazyListState
+    listState: LazyListState,
 ) {
     TwoPane(
         modifier = Modifier.padding(p),
@@ -666,7 +667,7 @@ internal fun ColorScheme.surfaceColorAtElevation(
 
 internal fun Color.surfaceColorAtElevation(
     elevation: Dp,
-    surface: Color
+    surface: Color,
 ): Color {
     if (elevation == 0.dp) return surface
     val alpha = ((4.5f * ln(elevation.value + 1)) + 2f) / 100f
@@ -687,11 +688,13 @@ private fun DetailActions(
     topBarColor: Color,
     isSaved: Boolean,
     dao: ItemDao,
-    onReverseChaptersClick: () -> Unit
+    onReverseChaptersClick: () -> Unit,
 ) {
     var showLists by remember { mutableStateOf(false) }
 
     if (showLists) {
+        BackHandler { showLists = false }
+
         ModalBottomSheet(
             onDismissRequest = { showLists = false },
             windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
@@ -721,7 +724,10 @@ private fun DetailActions(
                             withDismissAction = true
                         )
                     }
-                }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { showLists = false }) { Icon(Icons.Default.Close, null) }
+                },
             )
         }
     }

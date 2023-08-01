@@ -62,10 +62,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Close
@@ -79,7 +75,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -96,6 +91,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItemColors
@@ -208,7 +204,7 @@ fun ReadView(
             genericInfo = genericInfo,
             chapterHolder = ch
         )
-    }
+    },
 ) {
     LifecycleHandle(
         onStop = { BaseMainActivity.showNavBar = true },
@@ -312,91 +308,92 @@ fun ReadView(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    var showBottomSheet by remember { mutableStateOf(false) }
 
-    BackHandler(drawerState.isOpen || sheetState.isVisible) {
+    BackHandler(drawerState.isOpen || showBottomSheet) {
         scope.launch {
             when {
                 drawerState.isOpen -> drawerState.close()
-                sheetState.isVisible -> sheetState.hide()
+                showBottomSheet -> showBottomSheet = false
             }
         }
     }
 
-    ModalBottomSheetLayout(
-        sheetState = sheetState,
-        sheetContent = {
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+        ) {
             SheetView(
                 readVm = readVm,
-                sheetState = sheetState,
+                onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
                 pages = pages,
                 listOrPager = listOrPager,
                 pagerState = pagerState,
                 listState = listState
             )
-        },
-    ) {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                ModalDrawerSheet {
-                    DrawerView(readVm = readVm, showToast = ::showToast)
-                }
-            },
-            gesturesEnabled = readVm.list.size > 1
-        ) {
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                topBar = {
-                    AnimatedVisibility(
-                        visible = showItems,
-                        enter = slideInVertically() + fadeIn(),
-                        exit = slideOutVertically() + fadeOut()
-                    ) {
-                        TopBar(
-                            scrollBehavior = scrollBehavior,
-                            pages = pages,
-                            currentPage = currentPage,
-                            vm = readVm
-                        )
-                    }
-                },
-                bottomBar = {
-                    AnimatedVisibility(
-                        visible = showItems,
-                        enter = slideInVertically { it / 2 } + fadeIn(),
-                        exit = slideOutVertically { it / 2 } + fadeOut()
-                    ) {
-                        BottomBar(
-                            onPageSelectClick = { scope.launch { sheetState.show() } },
-                            onSettingsClick = { settingsPopup = true },
-                            chapterChange = ::showToast,
-                            vm = readVm
-                        )
-                    }
-                }
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .padding(paddingValues.animate())
-                        .pullRefresh(pullRefreshState)
-                ) {
-                    val spacing = LocalContext.current.dpToPx(paddingPage).dp
-                    Crossfade(targetState = listOrPager, label = "") {
-                        if (it) ListView(listState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-                        else PagerView(pagerState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-                    }
+        }
+    }
 
-                    PullRefreshIndicator(
-                        refreshing = readVm.isLoadingPages,
-                        state = pullRefreshState,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        backgroundColor = MaterialTheme.colorScheme.background,
-                        contentColor = MaterialTheme.colorScheme.onBackground,
-                        scale = true
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                DrawerView(readVm = readVm, showToast = ::showToast)
+            }
+        },
+        gesturesEnabled = readVm.list.size > 1
+    ) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                AnimatedVisibility(
+                    visible = showItems,
+                    enter = slideInVertically() + fadeIn(),
+                    exit = slideOutVertically() + fadeOut()
+                ) {
+                    TopBar(
+                        scrollBehavior = scrollBehavior,
+                        pages = pages,
+                        currentPage = currentPage,
+                        vm = readVm
                     )
                 }
+            },
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = showItems,
+                    enter = slideInVertically { it / 2 } + fadeIn(),
+                    exit = slideOutVertically { it / 2 } + fadeOut()
+                ) {
+                    BottomBar(
+                        onPageSelectClick = { showBottomSheet = true },
+                        onSettingsClick = { settingsPopup = true },
+                        chapterChange = ::showToast,
+                        vm = readVm
+                    )
+                }
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .padding(paddingValues.animate())
+                    .pullRefresh(pullRefreshState)
+            ) {
+                val spacing = LocalContext.current.dpToPx(paddingPage).dp
+                Crossfade(targetState = listOrPager, label = "") {
+                    if (it) ListView(listState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                    else PagerView(pagerState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                }
+
+                PullRefreshIndicator(
+                    refreshing = readVm.isLoadingPages,
+                    state = pullRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    backgroundColor = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.onBackground,
+                    scale = true
+                )
             }
         }
     }
@@ -417,7 +414,7 @@ private fun Dp.animate() = animateDpAsState(targetValue = this, label = "")
 @Composable
 fun DrawerView(
     readVm: ReadViewModel,
-    showToast: () -> Unit
+    showToast: () -> Unit,
 ) {
     val drawerScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     OtakuScaffold(
@@ -479,16 +476,16 @@ fun DrawerView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SheetView(
     readVm: ReadViewModel,
-    sheetState: ModalBottomSheetState,
+    onSheetHide: () -> Unit,
     currentPage: Int,
     pages: List<String>,
     listOrPager: Boolean,
     pagerState: PagerState,
-    listState: LazyListState
+    listState: LazyListState,
 ) {
     val scope = rememberCoroutineScope()
     val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -500,76 +497,72 @@ fun SheetView(
                 title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
                 actions = { PageIndicator(currentPage + 1, pages.size) },
                 navigationIcon = {
-                    IconButton(onClick = { scope.launch { sheetState.hide() } }) {
+                    IconButton(onClick = onSheetHide) {
                         Icon(Icons.Default.Close, null)
                     }
                 }
             )
         }
     ) { p ->
-        Crossfade(targetState = sheetState.isVisible, label = "") { target ->
-            if (target) {
-                LazyVerticalGrid(
-                    columns = adaptiveGridCell(),
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    itemsIndexed(pages) { i, it ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                .border(
-                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp, label = "").value,
-                                    color = animateColorAsState(
-                                        if (currentPage == i) MaterialTheme.colorScheme.primary
-                                        else Color.Transparent, label = ""
-                                    ).value
-                                )
-                                .clickable {
-                                    scope.launch {
-                                        if (currentPage == i) sheetState.hide()
-                                        if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
-                                    }
-                                }
-                        ) {
-                            KamelImage(
-                                resource = asyncPainterResource(it),
-                                onLoading = { CircularProgressIndicator(progress = it) },
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.Center)
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                Color.Black
-                                            ),
-                                            startY = 50f
-                                        ),
-                                        alpha = .5f
-                                    )
-                            ) {
-                                Text(
-                                    (i + 1).toString(),
-                                    style = MaterialTheme
-                                        .typography
-                                        .bodyLarge
-                                        .copy(textAlign = TextAlign.Center, color = Color.White),
-                                    maxLines = 2,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.Center)
-                                )
+        LazyVerticalGrid(
+            columns = adaptiveGridCell(),
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            itemsIndexed(pages) { i, it ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        .border(
+                            animateDpAsState(if (currentPage == i) 4.dp else 0.dp, label = "").value,
+                            color = animateColorAsState(
+                                if (currentPage == i) MaterialTheme.colorScheme.primary
+                                else Color.Transparent, label = ""
+                            ).value
+                        )
+                        .clickable {
+                            scope.launch {
+                                if (currentPage == i) onSheetHide()
+                                if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
                             }
                         }
+                ) {
+                    KamelImage(
+                        resource = asyncPainterResource(it),
+                        onLoading = { CircularProgressIndicator(progress = it) },
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.Center)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black
+                                    ),
+                                    startY = 50f
+                                ),
+                                alpha = .5f
+                            )
+                    ) {
+                        Text(
+                            (i + 1).toString(),
+                            style = MaterialTheme
+                                .typography
+                                .bodyLarge
+                                .copy(textAlign = TextAlign.Center, color = Color.White),
+                            maxLines = 2,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center)
+                        )
                     }
                 }
             }
@@ -583,7 +576,7 @@ fun ListView(
     pages: List<String>,
     readVm: ReadViewModel,
     itemSpacing: Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -599,7 +592,7 @@ fun PagerView(
     pages: List<String>,
     vm: ReadViewModel,
     itemSpacing: Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     VerticalPager(
         state = pagerState,
@@ -792,7 +785,7 @@ private fun LastPageReached(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeChapterSwipe(
     nextChapter: () -> Unit,
@@ -800,7 +793,7 @@ fun ChangeChapterSwipe(
     currentChapter: Int,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     BoxWithConstraints(
         contentAlignment = Alignment.Center,
@@ -852,7 +845,7 @@ fun ChangeChapterSwipe(
                         icon,
                         contentDescription = null,
                         modifier = Modifier.scale(scale),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -912,7 +905,7 @@ private fun ZoomableImage(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -1009,7 +1002,7 @@ private fun TopBar(
     pages: List<String>,
     currentPage: Int,
     vm: ReadViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
         windowInsets = WindowInsets(0.dp),
@@ -1068,7 +1061,7 @@ private fun BottomBar(
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     BottomAppBar(
         modifier = modifier,
@@ -1154,7 +1147,7 @@ private fun WrapHeightNavigationDrawerItem(
     badge: (@Composable () -> Unit)? = null,
     shape: Shape = CircleShape,
     colors: NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(),
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     Surface(
         shape = shape,
@@ -1197,7 +1190,7 @@ private fun WrapHeightNavigationDrawerItem(
 private fun PageIndicator(
     currentPage: Int,
     pageCount: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Text(
         "$currentPage/$pageCount",
@@ -1225,7 +1218,7 @@ private fun GoBackButton(modifier: Modifier = Modifier) {
 private fun NextButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    nextChapter: () -> Unit
+    nextChapter: () -> Unit,
 ) {
     Button(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
@@ -1237,7 +1230,7 @@ private fun NextButton(
 private fun PreviousButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    previousChapter: () -> Unit
+    previousChapter: () -> Unit,
 ) {
     TextButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
@@ -1253,7 +1246,7 @@ private fun SliderSetting(
     @StringRes settingSummary: Int,
     preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
-    range: ClosedFloatingPointRange<Float>
+    range: ClosedFloatingPointRange<Float>,
 ) {
     var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 

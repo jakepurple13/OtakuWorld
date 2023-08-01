@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
@@ -154,7 +155,11 @@ fun OtakuListScreen(
 @Composable
 fun ListChoiceScreen(
     url: String? = null,
-    onClick: (CustomList) -> Unit
+    navigationIcon: @Composable () -> Unit = {
+        val navController = LocalNavController.current
+        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
+    },
+    onClick: (CustomList) -> Unit,
 ) {
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
@@ -162,6 +167,7 @@ fun ListChoiceScreen(
     ListBottomScreen(
         title = stringResource(R.string.choose_list_title),
         list = list,
+        navigationIcon = navigationIcon,
         onClick = onClick,
         lazyListContent = {
             item {

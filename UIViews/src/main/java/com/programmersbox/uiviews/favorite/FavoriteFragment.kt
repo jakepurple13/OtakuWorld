@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.favorite
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -24,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ReadMore
 import androidx.compose.material.icons.filled.Search
@@ -253,6 +255,8 @@ fun FavoriteUi(
                         var showFilterBySourceModal by remember { mutableStateOf(false) }
 
                         if (showFilterBySourceModal) {
+                            BackHandler { showFilterBySourceModal = false }
+
                             ModalBottomSheet(onDismissRequest = { showFilterBySourceModal = false }) {
                                 CenterAlignedTopAppBar(title = { Text("Filter by Source") })
                                 FlowRow(
@@ -398,6 +402,9 @@ private fun BannerScope.FavoritesGrid(
                     onDismissRequest = { showBottomSheet = false }
                 ) {
                     ListBottomScreen(
+                        navigationIcon = {
+                            IconButton(onClick = { showBottomSheet = false }) { Icon(Icons.Default.Close, null) }
+                        },
                         includeInsetPadding = false,
                         title = stringResource(R.string.chooseASource),
                         list = info.value,

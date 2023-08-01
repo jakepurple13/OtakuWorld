@@ -41,10 +41,13 @@ fun <T> ListBottomScreen(
     list: List<T>,
     onClick: (T) -> Unit,
     includeInsetPadding: Boolean = true,
+    navigationIcon: @Composable () -> Unit = {
+        val navController = LocalNavController.current
+        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
+    },
     lazyListContent: LazyListScope.() -> Unit = {},
-    itemContent: (T) -> ListBottomSheetItemModel
+    itemContent: (T) -> ListBottomSheetItemModel,
 ) {
-    val navController = LocalNavController.current
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier.navigationBarsPadding()
@@ -53,7 +56,7 @@ fun <T> ListBottomScreen(
             InsetSmallTopAppBar(
                 insetPadding = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
                 title = { Text(title) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                navigationIcon = navigationIcon,
                 actions = { if (list.isNotEmpty()) Text("(${list.size})") }
             )
             HorizontalDivider()
