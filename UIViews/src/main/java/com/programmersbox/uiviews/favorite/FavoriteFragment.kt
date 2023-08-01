@@ -41,7 +41,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -91,6 +90,7 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GroupButton
 import com.programmersbox.uiviews.utils.components.GroupButtonModel
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
@@ -106,6 +106,7 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @Composable
 fun FavoriteUi(
     logo: MainLogo,
+    isHorizontal: Boolean = false,
     dao: ItemDao = LocalItemDao.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) },
@@ -202,9 +203,9 @@ fun FavoriteUi(
                             focusManager.clearFocus()
                             active = false
                         }
-                        SearchBar(
-                            modifier = Modifier.fillMaxWidth(),
+                        DynamicSearchBar(
                             windowInsets = WindowInsets(0.dp),
+                            isDocked = isHorizontal,
                             query = viewModel.searchText,
                             onQueryChange = { viewModel.searchText = it },
                             onSearch = { closeSearchBar() },
@@ -228,6 +229,7 @@ fun FavoriteUi(
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             },
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             Column(
                                 modifier = Modifier

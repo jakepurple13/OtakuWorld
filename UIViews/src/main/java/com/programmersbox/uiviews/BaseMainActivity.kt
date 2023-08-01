@@ -201,6 +201,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
 
+            val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
+
             OtakuMaterialTheme(navController, genericInfo) {
                 AskForNotificationPermissions()
 
@@ -212,7 +214,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     sheetContentColor = MaterialTheme.colorScheme.onSurface,
                     scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
                 ) {
-                    val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
                     val navType = when (windowSize.widthSizeClass) {
                         WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
                         else -> NavigationBarType.Bottom
@@ -259,7 +260,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         showNavBar: Boolean,
         navType: NavigationBarType,
         showAllItem: Boolean,
-        currentDestination: NavDestination?
+        currentDestination: NavDestination?,
     ) {
         Column {
             BottomBarAdditions()
@@ -321,7 +322,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         showNavBar: Boolean,
         navType: NavigationBarType,
         showAllItem: Boolean,
-        currentDestination: NavDestination?
+        currentDestination: NavDestination?,
     ) {
         AnimatedVisibility(
             visible = showNavBar && navType == NavigationBarType.Rail,
@@ -436,7 +437,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 launchSingleTop = true
                 restoreState = true
             }
-        }
+        },
     ) {
         NavigationRailItem(
             icon = { Icon(imageVector, null) },
@@ -452,11 +453,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
     )
     private fun NavGraphBuilder.navGraph(
         customPreferences: ComposeSettingsDsl,
-        windowSize: WindowSizeClass
+        windowSize: WindowSizeClass,
     ) {
         composable(Screen.RecentScreen.route) { RecentView(logo = logo) }
         composable(Screen.AllScreen.route) { AllView(logo = logo) }
-        settings(customPreferences) { with(genericInfo) { settingsNavSetup() } }
+        settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
         composable(
             Screen.DetailsScreen.route + "/{model}",
@@ -491,7 +492,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
     )
     private fun NavGraphBuilder.settings(
         customPreferences: ComposeSettingsDsl,
-        additionalSettings: NavGraphBuilder.() -> Unit
+        windowSize: WindowSizeClass,
+        additionalSettings: NavGraphBuilder.() -> Unit,
     ) {
         navigation(
             route = Screen.Settings.route,
@@ -553,7 +555,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.FavoriteScreen.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-            ) { FavoriteUi(logo) }
+            ) {
+                FavoriteUi(
+                    logo = logo,
+                    isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+                )
+            }
 
             composable(
                 Screen.AboutScreen.route,
@@ -566,12 +573,23 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 arguments = listOf(navArgument("searchFor") { nullable = true }),
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-            ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
+            ) {
+                GlobalSearchView(
+                    mainLogo = logo,
+                    notificationLogo = notificationLogo,
+                    isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+                )
+            }
 
             composable(Screen.CustomListScreen.route) { OtakuListScreen() }
             composable(
                 Screen.CustomListItemScreen.route + "/{uuid}"
-            ) { OtakuCustomListScreen(logo) }
+            ) {
+                OtakuCustomListScreen(
+                    logo = logo,
+                    isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+                )
+            }
 
             composable(
                 Screen.ImportListScreen.route + "?uri={uri}"
@@ -613,7 +631,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
             arguments = listOf(navArgument("searchFor") { nullable = true }),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-        ) { GlobalSearchView(mainLogo = logo, notificationLogo = notificationLogo) }
+        ) {
+            GlobalSearchView(
+                mainLogo = logo,
+                notificationLogo = notificationLogo,
+                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            )
+        }
 
         composable(Screen.CustomListScreen.route + "_home") { OtakuListScreen() }
 
@@ -636,7 +660,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
             Screen.FavoriteScreen.route + "_home",
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-        ) { FavoriteUi(logo) }
+        ) {
+            FavoriteUi(
+                logo = logo,
+                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            )
+        }
 
         composable(
             Screen.ExtensionListScreen.route + "_home",

@@ -43,7 +43,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
@@ -92,6 +91,7 @@ import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.dispatchIo
@@ -110,8 +110,9 @@ import java.util.UUID
 @Composable
 fun OtakuCustomListScreen(
     logo: MainLogo,
+    isHorizontal: Boolean = false,
     listDao: ListDao = LocalCustomListDao.current,
-    vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) }
+    vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) },
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -276,9 +277,10 @@ fun OtakuCustomListScreen(
                         scrollBehavior = scrollBehavior
                     )
 
-                    SearchBar(
+                    DynamicSearchBar(
                         query = vm.searchQuery,
                         onQueryChange = vm::setQuery,
+                        isDocked = isHorizontal,
                         onSearch = { vm.searchBarActive = false },
                         active = vm.searchBarActive,
                         onActiveChange = { vm.searchBarActive = it },

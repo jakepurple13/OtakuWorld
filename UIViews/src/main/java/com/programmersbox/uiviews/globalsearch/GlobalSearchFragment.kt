@@ -43,7 +43,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,6 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -101,6 +101,7 @@ import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -108,12 +109,14 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class,
 )
 @Composable
 fun GlobalSearchView(
     mainLogo: MainLogo,
     notificationLogo: NotificationLogo,
+    isHorizontal: Boolean,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     dao: HistoryDao = LocalHistoryDao.current,
     viewModel: GlobalSearchViewModel = viewModel {
@@ -122,7 +125,7 @@ fun GlobalSearchView(
             initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
             dao = dao,
         )
-    }
+    },
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -177,10 +180,11 @@ fun GlobalSearchView(
                         focusManager.clearFocus()
                         active = false
                     }
-                    SearchBar(
+                    DynamicSearchBar(
                         windowInsets = WindowInsets(0.dp),
                         query = viewModel.searchText,
                         onQueryChange = { viewModel.searchText = it },
+                        isDocked = isHorizontal,
                         onSearch = {
                             closeSearchBar()
                             if (viewModel.searchText.isNotEmpty()) {
@@ -419,7 +423,7 @@ fun SearchCoverCard(
     onLongPress: (ComponentState) -> Unit,
     modifier: Modifier = Modifier,
     error: Drawable? = placeHolder,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     ElevatedCard(
         modifier = modifier
@@ -476,6 +480,7 @@ fun SearchCoverCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @LightAndDarkPreviews
 @Composable
 private fun GlobalScreenPreview() {
@@ -485,6 +490,7 @@ private fun GlobalScreenPreview() {
             mainLogo = MockAppIcon,
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             dao = dao,
+            isHorizontal = false,
             viewModel = viewModel {
                 GlobalSearchViewModel(
                     sourceRepository = SourceRepository(),
