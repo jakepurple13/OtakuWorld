@@ -1,6 +1,6 @@
 [versions]
 easylauncher = "6.2.0"
-firebaseCrashlyticsGradle = "2.9.7"
+firebaseCrashlyticsGradle = "2.9.8"
 googleServices = "4.3.15"
 gradle = "8.1.0-beta05"
 kamelImage = "0.7.1"
@@ -21,13 +21,13 @@ jetpackCompiler = "1.5.1"
 jetbrainsCompiler = "1.4.3"
 accompanist = "0.31.4-beta"
 okhttpVersion = "4.11.0"
-ktorVersion = "2.3.2"
+ktorVersion = "2.3.3"
 tvCompose = "1.0.0-alpha08"
 workVersion = "2.8.1"
 ziplineVersion = "1.1.0"
-landscapist = "2.2.3"
+landscapist = "2.2.5"
 protobufVersion = "3.23.4"
-sketchVersion = "3.2.3"
+sketchVersion = "3.2.5"
 composeBomVersion = "2023.07.00-alpha02"
 
 ### MangaWorld
@@ -41,7 +41,7 @@ media3Version = "1.1.0"
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.9.0-1.0.12" }
+ksp = { id = "com.google.devtools.ksp", version = "1.9.0-1.0.13" }
 
 [libraries]
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
@@ -149,7 +149,7 @@ iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:22.1.0"
+firebaseAuth = "com.google.firebase:firebase-auth:22.1.1"
 googlePlayAds = "com.google.android.gms:play-services-ads:22.2.0"
 
 pagingCompose = "androidx.paging:paging-compose:3.2.0"
