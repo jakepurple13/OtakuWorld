@@ -368,7 +368,7 @@ object Manganelo : MangaBox("Manganato", "https://manganato.com") {
 
 object MangaTown : ApiService, KoinComponent {
 
-    override val notWorking: Boolean get() = true
+    override val notWorking: Boolean get() = false
 
     private val context: Context by inject()
 

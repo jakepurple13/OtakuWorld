@@ -22,6 +22,11 @@ gradlePlugin {
             implementationClass = "plugins.AndroidLibraryPlugin"
         }
 
+        register("otaku-source-application") {
+            id = "otaku-source-application"
+            implementationClass = "plugins.AndroidSourcePlugin"
+        }
+
         register("otaku-easylauncher") {
             id = "otaku-easylauncher"
             implementationClass = "plugins.EasyLauncherSetup"
@@ -36,8 +41,8 @@ gradlePlugin {
 
 dependencies {
     implementation(gradleApi())
-    implementation(kotlin("stdlib"))
+    implementation(libs.kotlinStLib)
     implementation(libs.gradle)
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
-    implementation("com.project.starter:easylauncher:6.1.0")
+    implementation(libs.easylauncher)
 }

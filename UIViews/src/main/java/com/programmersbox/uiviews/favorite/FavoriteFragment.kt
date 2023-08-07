@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.favorite
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -7,35 +8,44 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ReadMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.SearchBar
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -44,6 +54,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,87 +65,94 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
-import com.programmersbox.models.ApiService
+import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.BannerScope
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalActivity
-import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.MockAppIcon
+import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GroupButton
 import com.programmersbox.uiviews.utils.components.GroupButtonModel
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.navigateToDetails
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
+@OptIn(ExperimentalLayoutApi::class)
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @Composable
 fun FavoriteUi(
     logo: MainLogo,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
+    isHorizontal: Boolean = false,
     dao: ItemDao = LocalItemDao.current,
-    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, genericInfo) }
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
+    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) },
 ) {
-
     val navController = LocalNavController.current
-    val activity = LocalActivity.current
     val context = LocalContext.current
 
-    val favoriteItems: List<DbModel> = viewModel.favoriteList
-    val allSources: List<ApiService> = genericInfo.sourceList()
-
     val focusManager = LocalFocusManager.current
-
-    var searchText by rememberSaveable { mutableStateOf("") }
-
-    val showing = remember(favoriteItems, searchText, viewModel.selectedSources) {
-        favoriteItems.filter { it.title.contains(searchText, true) && it.source in viewModel.selectedSources }
-    }
-
-    val showingList = remember(viewModel.sortedBy, viewModel.reverse, showing) {
-        showing
-            .groupBy(DbModel::title)
-            .entries
-            .let {
-                when (val s = viewModel.sortedBy) {
-                    is SortFavoritesBy.TITLE -> it.sortedBy(s.sort)
-                    is SortFavoritesBy.COUNT -> it.sortedByDescending(s.sort)
-                    is SortFavoritesBy.CHAPTERS -> it.sortedByDescending(s.sort)
-                }
-            }
-            .let { if (viewModel.reverse) it.reversed() else it }
-            .toTypedArray()
-    }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     var showBanner by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
-    M3OtakuBannerBox(
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showDbModel by remember { mutableStateOf<DbModel?>(null) }
+
+    SourceNotInstalledModal(
+        showItem = showDbModel?.title,
+        onShowItemDismiss = { showDbModel = null },
+        source = showDbModel?.source,
+    ) {
+        ListItem(
+            headlineContent = { Text(stringResource(id = R.string.removeFromFavorites)) },
+            leadingContent = { Icon(Icons.Default.FavoriteBorder, null) },
+            modifier = Modifier.clickable {
+                showDbModel?.let {
+                    scope.launch {
+                        dao.deleteFavorite(it)
+                        FirebaseDb.removeShowFlow(it).collect()
+                    }
+                }
+                showDbModel = null
+            }
+        )
+    }
+
+    OtakuBannerBox(
         showBanner = showBanner,
         placeholder = logo.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-    ) { itemInfo ->
+    ) {
         OtakuScaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 Surface {
                     Column(
@@ -147,7 +165,7 @@ fun FavoriteUi(
                             actions = {
 
                                 val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {
-                                    animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f).value
+                                    animateFloatAsState(if (it == viewModel.sortedBy && viewModel.reverse) 180f else 0f, label = "").value
                                 }
 
                                 GroupButton(
@@ -185,11 +203,11 @@ fun FavoriteUi(
                             focusManager.clearFocus()
                             active = false
                         }
-                        SearchBar(
-                            modifier = Modifier.fillMaxWidth(),
+                        DynamicSearchBar(
                             windowInsets = WindowInsets(0.dp),
-                            query = searchText,
-                            onQueryChange = { searchText = it },
+                            isDocked = isHorizontal,
+                            query = viewModel.searchText,
+                            onQueryChange = { viewModel.searchText = it },
                             onSearch = { closeSearchBar() },
                             active = active,
                             onActiveChange = {
@@ -200,17 +218,18 @@ fun FavoriteUi(
                                 Text(
                                     context.resources.getQuantityString(
                                         R.plurals.numFavorites,
-                                        showing.size,
-                                        showing.size
+                                        viewModel.listSources.size,
+                                        viewModel.listSources.size
                                     )
                                 )
                             },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             trailingIcon = {
-                                IconButton(onClick = { searchText = "" }) {
+                                IconButton(onClick = { viewModel.searchText = "" }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             },
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             Column(
                                 modifier = Modifier
@@ -218,68 +237,84 @@ fun FavoriteUi(
                                     .fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                showing.take(4).forEachIndexed { index, dbModel ->
+                                viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
                                     ListItem(
                                         headlineContent = { Text(dbModel.title) },
                                         supportingContent = { Text(dbModel.source) },
                                         leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
                                         modifier = Modifier.clickable {
-                                            searchText = dbModel.title
+                                            viewModel.searchText = dbModel.title
                                             closeSearchBar()
                                         }
                                     )
                                     if (index != 3) {
-                                        Divider()
+                                        HorizontalDivider()
                                     }
                                 }
                             }
                         }
 
-                        LazyRow(
+                        var showFilterBySourceModal by remember { mutableStateOf(false) }
+
+                        if (showFilterBySourceModal) {
+                            BackHandler { showFilterBySourceModal = false }
+
+                            ModalBottomSheet(onDismissRequest = { showFilterBySourceModal = false }) {
+                                CenterAlignedTopAppBar(title = { Text("Filter by Source") })
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                                ) {
+                                    FilterChip(
+                                        selected = true,
+                                        modifier = Modifier.combinedClickable(
+                                            onClick = { viewModel.resetSources() },
+                                            onLongClick = { viewModel.selectedSources.clear() }
+                                        ),
+                                        label = { Text("ALL") },
+                                        onClick = { viewModel.allClick() }
+                                    )
+
+                                    viewModel.allSources.forEach {
+                                        FilterChip(
+                                            selected = it.first in viewModel.selectedSources,
+                                            onClick = { viewModel.newSource(it.first) },
+                                            label = { Text(it.first) },
+                                            leadingIcon = { Text("${it.second.size - 1}") },
+                                            modifier = Modifier.combinedClickable(
+                                                onClick = { viewModel.newSource(it.first) },
+                                                onLongClick = { viewModel.singleSource(it.first) }
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
                         ) {
-                            item {
-                                FilterChip(
-                                    selected = true,
-                                    modifier = Modifier.combinedClickable(
-                                        onClick = { viewModel.resetSources() },
-                                        onLongClick = { viewModel.selectedSources.clear() }
-                                    ),
-                                    label = { Text("ALL") },
-                                    onClick = { viewModel.allClick() }
-                                )
-                            }
+                            SuggestionChip(
+                                onClick = { showFilterBySourceModal = true },
+                                label = { Text("Filter By Source") }
+                            )
 
-                            items(
-                                (allSources.fastMap(ApiService::serviceName) + showing.fastMap(DbModel::source))
-                                    .groupBy { it }
-                                    .toList()
-                                    .sortedBy { it.first }
-                            ) {
-                                FilterChip(
-                                    selected = it.first in viewModel.selectedSources,
-                                    onClick = { viewModel.newSource(it.first) },
-                                    label = { Text(it.first) },
-                                    leadingIcon = { Text("${it.second.size - 1}") },
-                                    modifier = Modifier.combinedClickable(
-                                        onClick = { viewModel.newSource(it.first) },
-                                        onLongClick = { viewModel.singleSource(it.first) }
-                                    )
-                                )
-                            }
+                            SuggestionChip(
+                                label = { Text("ALL") },
+                                onClick = { viewModel.resetSources() }
+                            )
                         }
                     }
                 }
             }
         ) { p ->
-            if (showing.isEmpty()) {
+            if (viewModel.listSources.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(p)
                 ) {
-
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -287,9 +322,7 @@ fun FavoriteUi(
                         tonalElevation = 4.dp,
                         shape = RoundedCornerShape(4.dp)
                     ) {
-
                         Column(modifier = Modifier) {
-
                             Text(
                                 text = stringResource(id = R.string.get_started),
                                 style = M3MaterialTheme.typography.headlineSmall,
@@ -308,90 +341,159 @@ fun FavoriteUi(
                                     .align(Alignment.CenterHorizontally)
                                     .padding(vertical = 4.dp)
                             ) { Text(text = stringResource(R.string.add_a_favorite)) }
-
                         }
-
                     }
                 }
             } else {
-                LazyVerticalGrid(
-                    columns = adaptiveGridCell(),
-                    state = rememberLazyGridState(),
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(
-                        showingList,
-                        key = { it.key }
-                    ) { info ->
-                        M3CoverCard(
-                            onLongPress = { c ->
-                                itemInfo.value = if (c == ComponentState.Pressed) {
-                                    info.value.randomOrNull()
-                                        ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                } else null
-                                showBanner = c == ComponentState.Pressed
-                            },
-                            imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
-                            name = info.key,
-                            placeHolder = logo.logoId,
-                            favoriteIcon = {
-                                if (info.value.size > 1) {
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.TopStart)
-                                            .padding(4.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Circle,
-                                            contentDescription = null,
-                                            tint = M3MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                        Text(
-                                            info.value.size.toString(),
-                                            color = M3MaterialTheme.colorScheme.onPrimary,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-                                }
-                            }
-                        ) {
-                            if (info.value.size == 1) {
-                                info.value
-                                    .firstOrNull()
-                                    ?.let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                                    ?.let { navController.navigateToDetails(it) }
-                            } else {
-                                Screen.FavoriteChoiceScreen.navigate(navController, info.value)
+                FavoritesGrid(
+                    paddingValues = p,
+                    groupedSources = viewModel.groupedSources,
+                    sourceRepository = sourceRepository,
+                    navController = navController,
+                    moreInfoClick = {
+                        scope.launch {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                            val result = snackbarHostState.showSnackbar(
+                                "Something went wrong. Source might not be installed",
+                                duration = SnackbarDuration.Long,
+                                actionLabel = "More Options",
+                                withDismissAction = true
+                            )
+                            showDbModel = when (result) {
+                                SnackbarResult.Dismissed -> null
+                                SnackbarResult.ActionPerformed -> it
                             }
                         }
+                    },
+                    onShowBanner = { showBanner = it },
+                    logo = logo
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+private fun BannerScope.FavoritesGrid(
+    paddingValues: PaddingValues,
+    groupedSources: List<Map.Entry<String, List<DbModel>>>,
+    sourceRepository: SourceRepository,
+    navController: NavController,
+    moreInfoClick: (DbModel) -> Unit,
+    onShowBanner: (Boolean) -> Unit,
+    logo: MainLogo,
+    modifier: Modifier = Modifier,
+) {
+    LazyVerticalGrid(
+        columns = adaptiveGridCell(),
+        state = rememberLazyGridState(),
+        contentPadding = paddingValues,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.fillMaxSize()
+    ) {
+        items(
+            groupedSources,
+            key = { it.key }
+        ) { info ->
+            var showBottomSheet by remember { mutableStateOf(false) }
+
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showBottomSheet = false }
+                ) {
+                    ListBottomScreen(
+                        navigationIcon = {
+                            IconButton(onClick = { showBottomSheet = false }) { Icon(Icons.Default.Close, null) }
+                        },
+                        includeInsetPadding = false,
+                        title = stringResource(R.string.chooseASource),
+                        list = info.value,
+                        onClick = { item ->
+                            showBottomSheet = false
+                            item
+                                .let {
+                                    sourceRepository
+                                        .toSourceByApiServiceName(it.source)
+                                        ?.apiService
+                                        ?.let { it1 -> it.toItemModel(it1) }
+                                }
+                                ?.let(navController::navigateToDetails) ?: moreInfoClick(item)
+                        }
+                    ) {
+                        ListBottomSheetItemModel(
+                            primaryText = it.title,
+                            overlineText = it.source
+                        )
                     }
+                }
+            }
+
+            M3CoverCard(
+                onLongPress = { c ->
+                    newItemModel(
+                        if (c == ComponentState.Pressed) {
+                            info.value.randomOrNull()?.let {
+                                sourceRepository
+                                    .toSourceByApiServiceName(it.source)
+                                    ?.apiService
+                                    ?.let { it1 -> it.toItemModel(it1) }
+                            }
+                        } else null
+                    )
+                    onShowBanner(c == ComponentState.Pressed)
+                },
+                imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
+                name = info.key,
+                placeHolder = logo.logoId,
+                favoriteIcon = {
+                    if (info.value.size > 1) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Circle,
+                                contentDescription = null,
+                                tint = M3MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                            Text(
+                                info.value.size.toString(),
+                                color = M3MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
+                },
+                modifier = Modifier.animateItemPlacement()
+            ) {
+                if (info.value.size == 1) {
+                    info.value
+                        .firstOrNull()
+                        ?.let {
+                            sourceRepository
+                                .toSourceByApiServiceName(it.source)
+                                ?.apiService
+                                ?.let { it1 -> it.toItemModel(it1) }
+                                ?.let(navController::navigateToDetails) ?: moreInfoClick(it)
+                        }
+                } else {
+                    showBottomSheet = true
                 }
             }
         }
     }
 }
 
+@ExperimentalMaterial3Api
+@ExperimentalFoundationApi
+@LightAndDarkPreviews
 @Composable
-fun FavoriteChoiceScreen(vm: FavoriteChoiceViewModel = viewModel { FavoriteChoiceViewModel(createSavedStateHandle()) }) {
-    val genericInfo = LocalGenericInfo.current
-    val navController = LocalNavController.current
-    ListBottomScreen(
-        includeInsetPadding = false,
-        title = stringResource(R.string.chooseASource),
-        list = vm.items,
-        onClick = { item ->
-            item
-                .let { genericInfo.toSource(it.source)?.let { it1 -> it.toItemModel(it1) } }
-                ?.let { navController.navigateToDetails(it) }
-        }
-    ) {
-        ListBottomSheetItemModel(
-            primaryText = it.title,
-            overlineText = it.source
-        )
+private fun FavoriteScreenPreview() {
+    PreviewTheme {
+        FavoriteUi(logo = MockAppIcon)
     }
 }

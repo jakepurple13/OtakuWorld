@@ -37,8 +37,6 @@ dependencies {
     implementation(libs.slideToAct)
 
     implementation(libs.mediaRouter)
-    implementation(libs.fetch)
-    implementation(libs.fetchOkHttp)
 
     implementation(libs.torrentStream)
 
@@ -51,7 +49,6 @@ dependencies {
     implementation(projects.uiViews)
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
-    implementation(projects.animeSources)
     implementation(projects.sharedutils)
 
     implementation(libs.bundles.roomLibs)
@@ -77,6 +74,7 @@ dependencies {
     val composeBom = platform(libs.composePlatform)
     implementation(composeBom)
     implementation(libs.bundles.compose)
+    implementation(libs.coilVideo)
     implementation(libs.composeViewBinding)
     implementation(libs.bundles.datastoreLibs)
 

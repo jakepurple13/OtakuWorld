@@ -12,11 +12,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -35,7 +36,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,13 +45,15 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,9 +65,9 @@ fun OtakuListScreen(
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
+    val dateTimeFormatter = LocalSystemDateTimeFormat.current
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -129,7 +131,7 @@ fun OtakuListScreen(
                     onClick = { Screen.CustomListItemScreen.navigate(navController, it.item.uuid) },
                     modifier = Modifier.padding(horizontal = 4.dp)
                 ) {
-                    val time = remember { context.getSystemDateTimeFormat().format(it.item.time) }
+                    val time = remember { dateTimeFormatter.format(it.item.time) }
                     ListItem(
                         overlineContent = { Text(stringResource(id = R.string.custom_list_updated_at, time)) },
                         trailingContent = { Text("(${it.list.size})") },
@@ -143,7 +145,7 @@ fun OtakuListScreen(
                         }
                     )
                 }
-                Divider(Modifier.padding(top = 4.dp))
+                HorizontalDivider(Modifier.padding(top = 4.dp))
             }
         }
     }
@@ -153,7 +155,11 @@ fun OtakuListScreen(
 @Composable
 fun ListChoiceScreen(
     url: String? = null,
-    onClick: (CustomList) -> Unit
+    navigationIcon: @Composable () -> Unit = {
+        val navController = LocalNavController.current
+        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
+    },
+    onClick: (CustomList) -> Unit,
 ) {
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
@@ -161,6 +167,7 @@ fun ListChoiceScreen(
     ListBottomScreen(
         title = stringResource(R.string.choose_list_title),
         list = list,
+        navigationIcon = navigationIcon,
         onClick = onClick,
         lazyListContent = {
             item {
@@ -211,4 +218,23 @@ fun ListChoiceScreen(
             )
         }
     )
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ListScreenPreview() {
+    PreviewTheme {
+        OtakuListScreen()
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ListChoiceScreenPreview() {
+    PreviewTheme {
+        ListChoiceScreen(
+            url = "",
+            onClick = {}
+        )
+    }
 }

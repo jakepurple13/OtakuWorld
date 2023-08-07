@@ -5,7 +5,7 @@ plugins {
     id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
-    id("com.google.protobuf") version "0.9.3"
+    id("com.google.protobuf") version "0.9.4"
     alias(libs.plugins.ksp)
 }
 
@@ -104,15 +104,24 @@ dependencies {
     implementation(libs.bundles.compose)
     implementation(libs.toolbarCompose)
     implementation(libs.lazyColumnScrollbar)
+    implementation(libs.adaptive)
     implementation(libs.pagingCompose)
     implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.bundles.protobuf)
+
+    implementation(libs.bundles.ktorLibs)
+
+    //Multiplatform
+    implementation(projects.imageloader)
+
+    //Extension Loader
+    api(projects.sharedutils.extensionloader)
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.23.0" }
+    protoc { artifact = "com.google.protobuf:protoc:3.23.4" }
     plugins {
         id("javalite") { artifact = libs.protobufJava.get().toString() }
         id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }

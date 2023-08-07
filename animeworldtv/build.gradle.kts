@@ -47,6 +47,6 @@ dependencies {
     implementation(platform(libs.composePlatform))
     implementation(libs.bundles.composeTv)
     implementation(libs.coilGif)
-    implementation("androidx.tv:tv-foundation:1.0.0-alpha07")
-    implementation("androidx.tv:tv-material:1.0.0-alpha07")
+    implementation(libs.tv.foundation)
+    implementation(libs.tv.material)
 }

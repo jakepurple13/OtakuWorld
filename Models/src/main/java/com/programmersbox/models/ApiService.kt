@@ -1,7 +1,14 @@
 package com.programmersbox.models
 
+import android.app.Application
+import android.content.pm.PackageInfo
+import android.graphics.drawable.Drawable
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import java.io.Serializable
 
 interface ApiService : Serializable {
@@ -78,4 +85,42 @@ interface ApiService : Serializable {
     fun <T> Flow<T>.dispatchIo() = this.flowOn(Dispatchers.IO)
 }
 
-val sourceFlow = MutableStateFlow<ApiService?>(null)
+interface ApiServicesCatalog {
+    fun createSources(): List<ApiService>
+    val name: String
+}
+
+interface ExternalApiServicesCatalog : ApiServicesCatalog {
+    suspend fun initialize(app: Application)
+
+    fun getSources(): List<SourceInformation>
+    override fun createSources(): List<ApiService> = getSources().map { it.apiService }
+
+    val hasRemoteSources: Boolean
+    suspend fun getRemoteSources(): List<RemoteSources> = emptyList()
+
+    fun shouldReload(packageName: String, packageInfo: PackageInfo): Boolean = false
+}
+
+data class RemoteSources(
+    val name: String,
+    val packageName: String,
+    val version: String,
+    val iconUrl: String,
+    val downloadLink: String,
+    val sources: List<Sources>,
+)
+
+data class Sources(
+    val name: String,
+    val baseUrl: String,
+    val version: String
+)
+
+data class SourceInformation(
+    val apiService: ApiService,
+    val name: String,
+    val icon: Drawable?,
+    val packageName: String,
+    val catalog: ApiServicesCatalog? = null
+)

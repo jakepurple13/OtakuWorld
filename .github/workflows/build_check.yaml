@@ -34,28 +34,16 @@ on:
         default: 'true'
 
 jobs:
-  apk:
-    name: Generate APK
+  mangaworld:
+    name: Generate MangaWorld APK
     runs-on: ubuntu-latest
+    if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
-        env:
-          ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES }}
       - run: echo $MANGA_GOOGLE_SERVICES_JSON > mangaworld/google-services.json
         env:
           MANGA_GOOGLE_SERVICES_JSON: ${{ secrets.MANGA_SERVICES }}
-      - run: echo $NOVEL_GOOGLE_SERVICES_JSON > novelworld/google-services.json
-        env:
-          NOVEL_GOOGLE_SERVICES_JSON: ${{ secrets.NOVEL_SERVICES }}
-      - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
-        env:
-          ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
-      - run: echo OTAKU_MANAGER_GOOGLE_SERVICES_JSON > otakumanager/google-services.json
-        env:
-          OTAKU_MANAGER_GOOGLE_SERVICES_JSON: ${{ secrets.OTAKU_MANAGER_SERVICES }}
 
       - name: Setup JDK
         uses: actions/setup-java@v3
@@ -63,57 +51,16 @@ jobs:
           distribution: adopt
           java-version: 17
 
-      #      - name: Build all artifacts
-      #        id: buildAllApks
-      #        uses: eskatos/gradle-command-action@v1.3.3
-      #        with:
-      #          gradle-version: current
-      #          wrapper-cache-enabled: true
-      #          dependencies-cache-enabled: true
-      #          configuration-cache-enabled: true
-      #          arguments: assembleRelease
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
-        name: Build MangaWorld artifacts
+      - name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/gradle-build-action@v2.4.2
+        uses: gradle/gradle-build-action@v2.7.0
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
           arguments: mangaworld:assembleRelease
 
-      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
-        name: Build AnimeWorld artifacts
-        id: buildAnimeApks
-        uses: gradle/gradle-build-action@v2.4.2
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: animeworld:assembleRelease
-
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
-        name: Build AnimeWorldTV artifacts
-        id: buildAnimeTvApks
-        uses: gradle/gradle-build-action@v2.4.2
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: animeworldtv:assembleRelease
-
-      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
-        name: Build NovelWorld artifacts
-        id: buildNovelApks
-        uses: gradle/gradle-build-action@v2.4.2
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: novelworld:assembleRelease
-
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
+      - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: manga_sign
         with:
@@ -123,8 +70,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
+      - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: manga_sign_no_firebase
         with:
@@ -134,8 +80,49 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
+      - name: Clean up MangaWorld artifacts
+        run: |
+          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Signed Manga App
+          path: mangaworld-release.apk
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Signed Manga No Firebase App
+          path: mangaworld-no-firebase-release.apk
+
+  animeworld:
+    name: Generate AnimeWorld APK
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
+        env:
+          ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES }}
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 17
+
+      - name: Build AnimeWorld artifacts
+        id: buildAnimeApks
+        uses: gradle/gradle-build-action@v2.7.0
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: animeworld:assembleRelease
+
+      - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: anime_sign
         with:
@@ -145,8 +132,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
+      - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: anime_sign_no_firebase
         with:
@@ -156,30 +142,49 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        id: novel_sign
-        with:
-          releaseDirectory: novelworld/build/outputs/apk/full/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      - name: Clean up AnimeWorld artifacts
+        run: |
+          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
+          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
 
-      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        id: novel_sign_no_firebase
+      - uses: actions/upload-artifact@v3
         with:
-          releaseDirectory: novelworld/build/outputs/apk/noFirebase/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+          name: Signed Anime App
+          path: animeworld-release.apk
 
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Signed Anime No Firebase App
+          path: animeworld-no-firebase-release.apk
+
+  animeworldtv:
+    name: Generate AnimeWorldTv APK
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
+        env:
+          ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 17
+
+      - name: Build AnimeWorldTV artifacts
+        id: buildAnimeTvApks
+        uses: gradle/gradle-build-action@v2.7.0
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: animeworldtv:assembleRelease
+
+      - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: animetv_sign
         with:
@@ -189,8 +194,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
-        uses: r0adkll/sign-android-release@v1
+      - uses: r0adkll/sign-android-release@v1
         name: Sign app APK
         id: animetv_sign_no_firebase
         with:
@@ -200,55 +204,10 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      #      - name: Clean up build artifacts
-      #        run: |
-      #          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
-      #          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
-      #          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
-      #          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
-      #          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
-      #          cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
-      #          cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
-      #          cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
-
-      - if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
-        name: Clean up MangaWorld artifacts
-        run: |
-          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
-          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
-
-      - if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
-        name: Clean up AnimeWorld artifacts
-        run: |
-          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
-          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
-
-      - if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
-        name: Clean up AnimeWorldTV artifacts
+      - name: Clean up AnimeWorldTV artifacts
         run: |
           cp ${{ steps.animetv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
           cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
-
-      - if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
-        name: Clean up NovelWorld artifacts
-        run: |
-          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
-          cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Signed Manga App
-          path: mangaworld-release.apk
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Signed Anime App
-          path: animeworld-release.apk
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Signed Novel App
-          path: novelworld-release.apk
 
       - uses: actions/upload-artifact@v3
         with:
@@ -257,21 +216,67 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: Signed Manga No Firebase App
-          path: mangaworld-no-firebase-release.apk
+          name: Signed AnimeTV No Firebase App
+          path: animeworldtv-no-firebase-release.apk
+
+  novelworld:
+    name: Generate NovelWorld APK
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - run: echo $NOVEL_GOOGLE_SERVICES_JSON > novelworld/google-services.json
+        env:
+          NOVEL_GOOGLE_SERVICES_JSON: ${{ secrets.NOVEL_SERVICES }}
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 17
+
+      - name: Build NovelWorld artifacts
+        id: buildNovelApks
+        uses: gradle/gradle-build-action@v2.7.0
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: novelworld:assembleRelease
+
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        id: novel_sign
+        with:
+          releaseDirectory: novelworld/build/outputs/apk/full/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        id: novel_sign_no_firebase
+        with:
+          releaseDirectory: novelworld/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up NovelWorld artifacts
+        run: |
+          cp ${{ steps.novel_sign.outputs.signedReleaseFile }} novelworld-release.apk
+          cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v3
         with:
-          name: Signed Anime No Firebase App
-          path: animeworld-no-firebase-release.apk
+          name: Signed Novel App
+          path: novelworld-release.apk
 
       - uses: actions/upload-artifact@v3
         with:
           name: Signed Novel No Firebase App
           path: novelworld-no-firebase-release.apk
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Signed AnimeTV No Firebase App
-          path: animeworldtv-no-firebase-release.apk
-

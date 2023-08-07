@@ -14,8 +14,15 @@ include(
     ":animeworldtv",
     ":sharedutils",
     ":source_utilities",
-    ":imageloader"
+    ":imageloader",
+    ":sharedutils:extensionloader"
     //":otakumanager",
 )
 
 rootProject.name = "OtakuWorld"
+include(
+    ":novel_sources:novelupdates",
+    ":novel_sources:bestlightnovel"
+)
+include(":manga_sources:defaultmangasources")
+include(":anime_sources:defaultanimesources")

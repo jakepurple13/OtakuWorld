@@ -17,16 +17,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.gsonutils.toJson
-import com.programmersbox.mangaworld.ChapterList
+import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
-import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -40,16 +36,16 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
 import java.io.File
 
 class ReadViewModel(
     handle: SavedStateHandle,
     context: Context,
     val genericInfo: GenericInfo,
+    private val chapterHolder: ChapterHolder,
     val headers: MutableMap<String, String> = mutableMapOf(),
-    model: Flow<List<String>>? = handle
-        .get<String>("currentChapter")
-        ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer(genericInfo))
+    model: Flow<List<String>>? = chapterHolder.chapterModel
         ?.getChapterInfo()
         ?.map {
             headers.putAll(it.flatMap { h -> h.headers.toList() })
@@ -61,16 +57,6 @@ class ReadViewModel(
     val isDownloaded: Boolean = handle.get<String>("downloaded")?.toBoolean() ?: false,
     filePath: File? = handle.get<String>("filePath")?.let { File(it) },
     modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
-        /*Single.create<List<String>> {
-            filePath
-                .listFiles()
-                ?.sortedBy { f -> f.name.split(".").first().toInt() }
-                ?.fastMap(File::toUri)
-                ?.fastMap(Uri::toString)
-                ?.let(it::onSuccess) ?: it.onError(Throwable("Cannot find files"))
-        }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())*/
         flow {
             filePath
                 .listFiles()
@@ -84,25 +70,22 @@ class ReadViewModel(
     } else {
         model
     },
-) : ViewModel() {
+) : ViewModel(), KoinComponent {
 
     companion object {
         const val MangaReaderRoute =
-            "mangareader?currentChapter={currentChapter}&mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
+            "mangareader?mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
 
         fun navigateToMangaReader(
             navController: NavController,
-            currentChapter: ChapterModel? = null,
             mangaTitle: String? = null,
             mangaUrl: String? = null,
             mangaInfoUrl: String? = null,
             downloaded: Boolean = false,
             filePath: String? = null
         ) {
-            val current = Uri.encode(currentChapter?.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-
             navController.navigate(
-                "mangareader?currentChapter=$current&mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
+                "mangareader?mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
             ) { launchSingleTop = true }
         }
     }
@@ -111,7 +94,6 @@ class ReadViewModel(
 
     private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
 
-    private val chapterList by lazy { ChapterList(context, genericInfo) }
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
@@ -138,7 +120,7 @@ class ReadViewModel(
         }
 
         val url = handle.get<String>("mangaUrl") ?: ""
-        list = chapterList.get().orEmpty()
+        list = chapterHolder.chapters.orEmpty()
         currentChapter = list.indexOfFirst { l -> l.url == url }
 
         loadPages(modelPath)
@@ -190,6 +172,7 @@ class ReadViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        chapterList.clear()
+        chapterHolder.chapterModel = null
+        chapterHolder.chapters = null
     }
 }

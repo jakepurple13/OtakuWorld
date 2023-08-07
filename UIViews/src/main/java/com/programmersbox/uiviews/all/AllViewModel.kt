@@ -1,7 +1,11 @@
 package com.programmersbox.uiviews.all
 
 import android.content.Context
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,15 +13,26 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
-class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
+class AllViewModel(
+    dao: ItemDao,
+    context: Context? = null,
+    private val currentSourceRepository: CurrentSourceRepository,
+) : ViewModel() {
 
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
@@ -44,7 +59,7 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
             .onEach { favoriteList = it.toMutableStateList() }
             .launchIn(viewModelScope)
 
-        sourceFlow
+        currentSourceRepository.asFlow()
             .filterNotNull()
             .onEach {
                 count = 1
@@ -76,7 +91,7 @@ class AllViewModel(dao: ItemDao, context: Context? = null) : ViewModel() {
     }
 
     fun search() {
-        sourceFlow
+        currentSourceRepository.asFlow()
             .filterNotNull()
             .flatMapMerge { it.searchSourceList(searchText, 1, sourceList) }
             .onStart { isSearching = true }

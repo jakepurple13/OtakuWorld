@@ -36,14 +36,13 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,6 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -79,25 +79,29 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.placeholder.material.placeholder
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.MainLogo
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.M3OtakuBannerBox
+import com.programmersbox.uiviews.utils.LocalSourcesRepository
+import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
+import com.programmersbox.uiviews.utils.MockApiService
+import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.PlaceHolderCoverCard
-import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.OtakuBannerBox
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -105,21 +109,23 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class,
 )
 @Composable
 fun GlobalSearchView(
     mainLogo: MainLogo,
     notificationLogo: NotificationLogo,
-    info: GenericInfo = LocalGenericInfo.current,
+    isHorizontal: Boolean,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
     dao: HistoryDao = LocalHistoryDao.current,
     viewModel: GlobalSearchViewModel = viewModel {
         GlobalSearchViewModel(
-            info = info,
+            sourceRepository = sourceRepository,
             initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
             dao = dao,
         )
-    }
+    },
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -138,11 +144,11 @@ fun GlobalSearchView(
 
     var showBanner by remember { mutableStateOf(false) }
 
-    M3OtakuBannerBox(
+    OtakuBannerBox(
         showBanner = showBanner,
         placeholder = mainLogo.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-    ) { itemInfo ->
+    ) {
         val bottomScaffold = rememberBottomSheetScaffoldState()
         var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
@@ -174,11 +180,11 @@ fun GlobalSearchView(
                         focusManager.clearFocus()
                         active = false
                     }
-                    SearchBar(
-                        modifier = Modifier.fillMaxWidth(),
+                    DynamicSearchBar(
                         windowInsets = WindowInsets(0.dp),
                         query = viewModel.searchText,
                         onQueryChange = { viewModel.searchText = it },
+                        isDocked = isHorizontal,
                         onSearch = {
                             closeSearchBar()
                             if (viewModel.searchText.isNotEmpty()) {
@@ -200,12 +206,11 @@ fun GlobalSearchView(
                                 Icon(Icons.Default.Cancel, null)
                             }
                         },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         LazyColumn(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             itemsIndexed(history) { index, historyModel ->
                                 ListItem(
@@ -214,22 +219,23 @@ fun GlobalSearchView(
                                     trailingContent = {
                                         IconButton(
                                             onClick = { scope.launch { dao.deleteHistory(historyModel) } },
-                                            modifier = Modifier.weight(.1f)
                                         ) { Icon(Icons.Default.Cancel, null) }
                                     },
-                                    modifier = Modifier.clickable {
-                                        viewModel.searchText = historyModel.searchText
-                                        closeSearchBar()
-                                        if (viewModel.searchText.isNotEmpty()) {
-                                            scope.launch(Dispatchers.IO) {
-                                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.searchText = historyModel.searchText
+                                            closeSearchBar()
+                                            if (viewModel.searchText.isNotEmpty()) {
+                                                scope.launch(Dispatchers.IO) {
+                                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                                }
                                             }
+                                            viewModel.searchForItems()
                                         }
-                                        viewModel.searchForItems()
-                                    }
                                 )
                                 if (index != history.lastIndex) {
-                                    Divider()
+                                    HorizontalDivider()
                                 }
                             }
                         }
@@ -261,10 +267,10 @@ fun GlobalSearchView(
                                     model = m,
                                     placeHolder = mainLogoDrawable,
                                     onLongPress = { c ->
-                                        itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                        newItemModel(if (c == ComponentState.Pressed) m else null)
                                         showBanner = c == ComponentState.Pressed
                                     }
-                                ) { Screen.GlobalSearchScreen.navigate(navController, m.title) }
+                                ) { navController.navigateToDetails(m) }
                             }
                         }
                     }
@@ -305,7 +311,9 @@ fun GlobalSearchView(
                                 contentPadding = padding,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(top = 8.dp)
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(top = 8.dp)
                             ) {
                                 if (viewModel.isRefreshing) {
                                     items(3) {
@@ -316,7 +324,7 @@ fun GlobalSearchView(
                                         Surface(
                                             modifier = Modifier.placeholder(true, color = placeholderColor),
                                             tonalElevation = 4.dp,
-                                            shape = androidx.compose.material3.MaterialTheme.shapes.medium
+                                            shape = M3MaterialTheme.shapes.medium
                                         ) {
                                             Column {
                                                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -331,29 +339,22 @@ fun GlobalSearchView(
                                                         modifier = Modifier.align(Alignment.CenterEnd)
                                                     ) { Icon(Icons.Default.ChevronRight, null) }
                                                 }
-                                                LazyRow { items(3) { PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
+                                                LazyRow { items(3) { M3PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
                                             }
                                         }
                                     }
                                 } else if (viewModel.searchListPublisher.isNotEmpty()) {
                                     items(viewModel.searchListPublisher) { i ->
                                         Surface(
-                                            modifier = Modifier.clickable {
+                                            tonalElevation = 4.dp,
+                                            shape = M3MaterialTheme.shapes.medium,
+                                            onClick = {
                                                 searchModelBottom = i
                                                 scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                            },
-                                            tonalElevation = 4.dp,
-                                            shape = M3MaterialTheme.shapes.medium
+                                            }
                                         ) {
                                             Column {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clickable {
-                                                            searchModelBottom = i
-                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                        }
-                                                ) {
+                                                Box(modifier = Modifier.fillMaxWidth()) {
                                                     Text(
                                                         i.apiName,
                                                         modifier = Modifier
@@ -384,7 +385,7 @@ fun GlobalSearchView(
                                                             model = m,
                                                             placeHolder = mainLogoDrawable,
                                                             onLongPress = { c ->
-                                                                itemInfo.value = if (c == ComponentState.Pressed) m else null
+                                                                newItemModel(if (c == ComponentState.Pressed) m else null)
                                                                 showBanner = c == ComponentState.Pressed
                                                             }
                                                         ) { navController.navigateToDetails(m) }
@@ -422,16 +423,15 @@ fun SearchCoverCard(
     onLongPress: (ComponentState) -> Unit,
     modifier: Modifier = Modifier,
     error: Drawable? = placeHolder,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     ElevatedCard(
-        modifier = Modifier
+        modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
             .combineClickableWithIndication(onLongPress, onClick)
-            .then(modifier)
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -442,7 +442,6 @@ fun SearchCoverCard(
                     .data(model.imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
                     .crossfade(true)
-                    .size(ComposableUtils.IMAGE_WIDTH_PX, ComposableUtils.IMAGE_HEIGHT_PX)
                     .build(),
                 contentDescription = model.title,
                 placeholder = rememberDrawablePainter(placeHolder),
@@ -478,5 +477,45 @@ fun SearchCoverCard(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@LightAndDarkPreviews
+@Composable
+private fun GlobalScreenPreview() {
+    PreviewTheme {
+        val dao = LocalHistoryDao.current
+        GlobalSearchView(
+            mainLogo = MockAppIcon,
+            notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
+            dao = dao,
+            isHorizontal = false,
+            viewModel = viewModel {
+                GlobalSearchViewModel(
+                    sourceRepository = SourceRepository(),
+                    initialSearch = "",
+                    dao = dao,
+                )
+            }
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun GlobalSearchCoverPreview() {
+    PreviewTheme {
+        SearchCoverCard(
+            model = ItemModel(
+                title = "Title",
+                description = "Description",
+                url = "url",
+                imageUrl = "imageUrl",
+                source = MockApiService
+            ),
+            placeHolder = null,
+            onLongPress = {}
+        )
     }
 }

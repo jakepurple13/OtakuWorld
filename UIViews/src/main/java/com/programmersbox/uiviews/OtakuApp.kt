@@ -6,23 +6,35 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
+import com.programmersbox.extensionloader.SourceLoader
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseUIStyle
+import com.programmersbox.uiviews.checkers.AppCheckWorker
+import com.programmersbox.uiviews.checkers.SourceUpdateChecker
+import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application() {
@@ -43,6 +55,8 @@ abstract class OtakuApp : Application() {
             createNotificationGroup("otakuGroup")
             createNotificationChannel("updateCheckChannel", importance = NotificationChannelImportance.MIN)
             createNotificationChannel("appUpdate", importance = NotificationChannelImportance.HIGH)
+            createNotificationChannel("sourceUpdate", importance = NotificationChannelImportance.DEFAULT)
+            createNotificationGroup("sources")
         }
 
         startKoin {
@@ -58,12 +72,45 @@ abstract class OtakuApp : Application() {
 
         onCreated()
 
+        loadKoinModules(
+            module {
+                single { SourceRepository() }
+                single { CurrentSourceRepository() }
+                single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
+                single {
+                    OtakuWorldCatalog(
+                        get<GenericInfo>().sourceType
+                            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                    )
+                }
+            }
+        )
+
+        get<SourceLoader>().load()
+
         val work = WorkManager.getInstance(this)
 
         work.enqueueUniquePeriodicWork(
             "appChecks",
             ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequest.Builder(AppCheckWorker::class.java, 1, TimeUnit.DAYS)
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .setRequiresBatteryNotLow(false)
+                        .setRequiresCharging(false)
+                        .setRequiresDeviceIdle(false)
+                        .setRequiresStorageNotLow(false)
+                        .build()
+                )
+                .setInitialDelay(10, TimeUnit.SECONDS)
+                .build()
+        ).state.observeForever { println(it) }
+
+        work.enqueueUniquePeriodicWork(
+            "sourceChecks",
+            ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequest.Builder(SourceUpdateChecker::class.java, 1, TimeUnit.DAYS)
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -141,5 +188,4 @@ abstract class OtakuApp : Application() {
             }
         }
     }
-
 }

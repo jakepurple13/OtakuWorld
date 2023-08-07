@@ -6,7 +6,14 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -16,12 +23,34 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.BrowseGallery
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LeadingIconTab
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TabPosition
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -35,13 +64,25 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalCurrentSource
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalItemDao
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.OtakuBannerBox
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
+import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -54,10 +95,13 @@ fun AllView(
     logo: MainLogo,
     context: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
-    allVm: AllViewModel = viewModel { AllViewModel(dao, context) },
+    currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
+    allVm: AllViewModel = viewModel { AllViewModel(dao, context, currentSourceRepository) },
 ) {
     val isConnected by allVm.observeNetwork.collectAsState(initial = true)
-    val source by sourceFlow.collectAsState(initial = null)
+    val source by currentSourceRepository
+        .asFlow()
+        .collectAsState(initial = null)
 
     LaunchedEffect(isConnected) {
         if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(context, source!!)
@@ -117,11 +161,11 @@ fun AllView(
         }
     ) { p1 ->
         var showBanner by remember { mutableStateOf(false) }
-        M3OtakuBannerBox(
+        OtakuBannerBox(
             showBanner = showBanner,
             placeholder = logo.logoId,
             modifier = Modifier.padding(p1)
-        ) { itemInfo ->
+        ) {
             Crossfade(targetState = isConnected, label = "") { connected ->
                 when (connected) {
                     false -> {
@@ -141,6 +185,7 @@ fun AllView(
                             Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                         }
                     }
+
                     true -> {
                         HorizontalPager(
                             state = pagerState,
@@ -148,15 +193,25 @@ fun AllView(
                         ) { page ->
                             when (page) {
                                 0 -> AllScreen(
-                                    allVm = allVm,
-                                    itemInfoChange = { itemInfo.value = it },
+                                    itemInfoChange = this@OtakuBannerBox::newItemModel,
                                     state = state,
-                                    showBanner = { showBanner = it }
+                                    showBanner = { showBanner = it },
+                                    isRefreshing = allVm.isRefreshing,
+                                    sourceList = allVm.sourceList,
+                                    favoriteList = allVm.favoriteList,
+                                    onLoadMore = allVm::loadMore,
+                                    onReset = allVm::reset
                                 )
+
                                 1 -> SearchScreen(
-                                    allVm = allVm,
-                                    itemInfoChange = { itemInfo.value = it },
-                                    showBanner = { showBanner = it }
+                                    itemInfoChange = this@OtakuBannerBox::newItemModel,
+                                    showBanner = { showBanner = it },
+                                    searchList = allVm.searchList,
+                                    searchText = allVm.searchText,
+                                    onSearchChange = { allVm.searchText = it },
+                                    isSearching = allVm.isSearching,
+                                    search = allVm::search,
+                                    favoriteList = allVm.favoriteList
                                 )
                             }
                         }
@@ -170,29 +225,33 @@ fun AllView(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun AllScreen(
-    allVm: AllViewModel,
+    isRefreshing: Boolean,
+    sourceList: List<ItemModel>,
+    favoriteList: List<DbModel>,
+    onLoadMore: (Context?, ApiService) -> Unit,
+    onReset: (Context?, ApiService) -> Unit,
     itemInfoChange: (ItemModel?) -> Unit,
     state: LazyGridState,
     showBanner: (Boolean) -> Unit
 ) {
     val info = LocalGenericInfo.current
-    val source by sourceFlow.collectAsState(initial = null)
+    val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
     val context = LocalContext.current
-    val pullRefreshState = rememberPullRefreshState(allVm.isRefreshing, onRefresh = { source?.let { allVm.reset(context, it) } })
+    val pullRefreshState = rememberPullRefreshState(isRefreshing, onRefresh = { source?.let { onReset(context, it) } })
     OtakuScaffold { p ->
         Box(
             modifier = Modifier
                 .padding(p)
                 .pullRefresh(pullRefreshState)
         ) {
-            if (allVm.sourceList.isEmpty()) {
+            if (sourceList.isEmpty()) {
                 info.ComposeShimmerItem()
             } else {
                 info.AllListView(
-                    list = allVm.sourceList,
+                    list = sourceList,
                     listState = state,
-                    favorites = allVm.favoriteList,
+                    favorites = favoriteList,
                     onLongPress = { item, c ->
                         itemInfoChange(if (c == ComponentState.Pressed) item else null)
                         showBanner(c == ComponentState.Pressed)
@@ -200,7 +259,7 @@ fun AllScreen(
                 ) { navController.navigateToDetails(it) }
             }
             PullRefreshIndicator(
-                refreshing = allVm.isRefreshing,
+                refreshing = isRefreshing,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
                 backgroundColor = M3MaterialTheme.colorScheme.background,
@@ -209,9 +268,9 @@ fun AllScreen(
             )
         }
 
-        if (source?.canScrollAll == true && allVm.sourceList.isNotEmpty()) {
+        if (source?.canScrollAll == true && sourceList.isNotEmpty()) {
             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                source?.let { allVm.loadMore(context, it) }
+                source?.let { onLoadMore(context, it) }
             }
         }
     }
@@ -220,24 +279,27 @@ fun AllScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SearchScreen(
-    allVm: AllViewModel,
     itemInfoChange: (ItemModel?) -> Unit,
-    showBanner: (Boolean) -> Unit
+    showBanner: (Boolean) -> Unit,
+    searchList: List<ItemModel>,
+    searchText: String,
+    onSearchChange: (String) -> Unit,
+    isSearching: Boolean,
+    favoriteList: List<DbModel>,
+    search: () -> Unit
 ) {
-
     val info = LocalGenericInfo.current
     val focusManager = LocalFocusManager.current
-    val searchList = allVm.searchList
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val source by sourceFlow.collectAsState(initial = null)
+    val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             OutlinedTextField(
-                value = allVm.searchText,
-                onValueChange = { allVm.searchText = it },
+                value = searchText,
+                onValueChange = onSearchChange,
                 label = {
                     Text(
                         stringResource(
@@ -249,7 +311,7 @@ fun SearchScreen(
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(searchList.size.toString())
-                        IconButton(onClick = { allVm.searchText = "" }) {
+                        IconButton(onClick = { onSearchChange("") }) {
                             Icon(Icons.Default.Cancel, null)
                         }
                     }
@@ -259,14 +321,16 @@ fun SearchScreen(
                     .fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {
-                    focusManager.clearFocus()
-                    allVm.search()
-                })
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        focusManager.clearFocus()
+                        search()
+                    }
+                )
             )
         }
     ) { p ->
-        val pullRefreshState = rememberPullRefreshState(allVm.isSearching, onRefresh = {})
+        val pullRefreshState = rememberPullRefreshState(isSearching, onRefresh = {})
         Box(
             modifier = Modifier
                 .pullRefresh(pullRefreshState, false)
@@ -275,7 +339,7 @@ fun SearchScreen(
             info.SearchListView(
                 list = searchList,
                 listState = rememberLazyGridState(),
-                favorites = allVm.favoriteList,
+                favorites = favoriteList,
                 onLongPress = { item, c ->
                     itemInfoChange(if (c == ComponentState.Pressed) item else null)
                     showBanner(c == ComponentState.Pressed)
@@ -283,7 +347,7 @@ fun SearchScreen(
             ) { navController.navigateToDetails(it) }
 
             PullRefreshIndicator(
-                refreshing = allVm.isSearching,
+                refreshing = isSearching,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
                 backgroundColor = M3MaterialTheme.colorScheme.background,
@@ -338,5 +402,39 @@ fun Modifier.pagerTabIndicatorOffset(
                 maxOf(constraints.minHeight - placeable.height, 0)
             )
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun AllScreenPreview() {
+    PreviewTheme {
+        AllScreen(
+            itemInfoChange = {},
+            state = rememberLazyGridState(),
+            showBanner = {},
+            isRefreshing = true,
+            sourceList = emptyList(),
+            favoriteList = emptyList(),
+            onLoadMore = { _, _ -> },
+            onReset = { _, _ -> }
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun SearchPreview() {
+    PreviewTheme {
+        SearchScreen(
+            itemInfoChange = {},
+            showBanner = {},
+            searchList = emptyList(),
+            searchText = "",
+            onSearchChange = {},
+            isSearching = true,
+            search = {},
+            favoriteList = emptyList()
+        )
     }
 }

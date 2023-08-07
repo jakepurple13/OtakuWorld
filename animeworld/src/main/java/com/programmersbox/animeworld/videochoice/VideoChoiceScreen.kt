@@ -2,17 +2,23 @@ package com.programmersbox.animeworld.videochoice
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.DeviceUnknown
+import androidx.compose.material.icons.filled._10mp
+import androidx.compose.material.icons.filled._1k
+import androidx.compose.material.icons.filled._360
+import androidx.compose.material.icons.filled._4k
+import androidx.compose.material.icons.filled._4mp
+import androidx.compose.material.icons.filled._7mp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.anime_sources.utilities.Qualities
-import com.programmersbox.anime_sources.utilities.getQualityFromName
 import com.programmersbox.animeworld.GenericAnime
 import com.programmersbox.animeworld.MainActivity
+import com.programmersbox.animeworld.Qualities
 import com.programmersbox.animeworld.R
+import com.programmersbox.animeworld.getQualityFromName
 import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
@@ -52,7 +58,7 @@ fun VideoChoiceScreen(
                 )
             }
         } else {
-            (genericInfo as GenericAnime).fetchIt(it, vm.model!!, activity)
+            (genericInfo as GenericAnime).downloadVideo(activity, vm.model!!, it)
         }
     }
 

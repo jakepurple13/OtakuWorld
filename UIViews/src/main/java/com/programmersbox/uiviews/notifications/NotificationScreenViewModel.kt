@@ -1,11 +1,16 @@
 package com.programmersbox.uiviews.notifications
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.utils.SettingsHandling
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +22,7 @@ import kotlinx.coroutines.withContext
 class NotificationScreenViewModel(
     db: ItemDao,
     private val settingsHandling: SettingsHandling,
-    genericInfo: GenericInfo,
+    sourceRepository: SourceRepository,
 ) : ViewModel() {
 
     val items = mutableStateListOf<NotificationItem>()
@@ -29,7 +34,7 @@ class NotificationScreenViewModel(
     }
 
     val groupedListState = mutableStateMapOf(
-        *genericInfo.sourceList().map { it.serviceName to mutableStateOf(false) }.toTypedArray()
+        *sourceRepository.list.map { it.apiService.serviceName to mutableStateOf(false) }.toTypedArray()
     )
 
     init {
@@ -37,6 +42,13 @@ class NotificationScreenViewModel(
             .onEach {
                 items.clear()
                 items.addAll(it)
+                val l = groupedListState.toMap()
+                groupedListState.clear()
+                groupedListState.putAll(
+                    it
+                        .groupBy { n -> n.source }
+                        .mapValues { n -> l[n.key] ?: mutableStateOf(false) }
+                )
             }
             .launchIn(viewModelScope)
 

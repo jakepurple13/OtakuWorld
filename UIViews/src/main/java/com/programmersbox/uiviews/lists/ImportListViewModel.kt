@@ -54,7 +54,7 @@ class ImportListViewModel(
 }
 
 sealed class ImportListStatus {
-    object Loading : ImportListStatus()
+    data object Loading : ImportListStatus()
     class Error(val throwable: Throwable) : ImportListStatus()
     class Success(val customList: CustomList?) : ImportListStatus()
 }

@@ -68,7 +68,10 @@ class MoreInfoViewModel : ViewModel() {
     }
 }
 
-class NotificationViewModel(dao: ItemDao, context: Context) : ViewModel() {
+class NotificationViewModel(
+    dao: ItemDao,
+    context: Context
+) : ViewModel() {
 
     var savedNotifications by mutableIntStateOf(0)
         private set
@@ -76,6 +79,8 @@ class NotificationViewModel(dao: ItemDao, context: Context) : ViewModel() {
     var canCheck by mutableStateOf(false)
 
     var time by mutableStateOf("")
+
+    private val dateTimeFormatter by lazy { context.getSystemDateTimeFormat() }
 
     init {
         dao.getAllNotificationCount()
@@ -86,8 +91,8 @@ class NotificationViewModel(dao: ItemDao, context: Context) : ViewModel() {
         viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
 
         combine(
-            context.updateCheckingStart.map { "Start: ${context.getSystemDateTimeFormat().format(it)}" },
-            context.updateCheckingEnd.map { "End: ${context.getSystemDateTimeFormat().format(it)}" }
+            context.updateCheckingStart.map { "Start: ${dateTimeFormatter.format(it)}" },
+            context.updateCheckingEnd.map { "End: ${dateTimeFormatter.format(it)}" }
         ) { s, e -> s to e }
             .map { "${it.first}\n${it.second}" }
             .onEach { time = it }

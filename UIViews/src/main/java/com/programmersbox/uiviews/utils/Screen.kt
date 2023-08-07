@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -26,59 +26,49 @@ import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import org.koin.compose.koinInject
 import java.util.UUID
 
 sealed class Screen(val route: String) {
 
-    object RecentScreen : Screen("recent")
-    object AllScreen : Screen("all")
-    object Settings : Screen("settings")
-    object SettingsScreen : Screen("settings_screen")
-    object GeneralSettings : Screen("general_settings")
-    object OtherSettings : Screen("others_settings")
-    object MoreInfoSettings : Screen("more_info_settings")
-    object NotificationsSettings : Screen("notifications_settings")
-    object DetailsScreen : Screen("details")
-    object NotificationScreen : Screen("notifications")
-    object HistoryScreen : Screen("history")
-    object FavoriteScreen : Screen("favorite")
-    object AboutScreen : Screen("about")
-    object DebugScreen : Screen("debug")
-    object CustomListScreen : Screen("custom_list")
-    object CustomListItemScreen : Screen("custom_list_item") {
+    data object RecentScreen : Screen("recent")
+    data object AllScreen : Screen("all")
+    data object Settings : Screen("settings")
+    data object SettingsScreen : Screen("settings_screen")
+    data object GeneralSettings : Screen("general_settings")
+    data object OtherSettings : Screen("others_settings")
+    data object MoreInfoSettings : Screen("more_info_settings")
+    data object NotificationsSettings : Screen("notifications_settings")
+    data object DetailsScreen : Screen("details")
+    data object NotificationScreen : Screen("notifications")
+    data object HistoryScreen : Screen("history")
+    data object FavoriteScreen : Screen("favorite")
+    data object AboutScreen : Screen("about")
+    data object DebugScreen : Screen("debug")
+    data object CustomListScreen : Screen("custom_list")
+    data object CustomListItemScreen : Screen("custom_list_item") {
         fun navigate(navController: NavController, uuid: UUID) {
             navController.navigate("$route/$uuid") { launchSingleTop = true }
         }
     }
 
-    object ImportListScreen : Screen("import_list") {
+    data object ImportListScreen : Screen("import_list") {
         fun navigate(navController: NavController, uri: Uri) {
             navController.navigate("$route?uri=$uri") { launchSingleTop = true }
         }
     }
 
-    object TranslationScreen : Screen("translation_models")
-    object GlobalSearchScreen : Screen("global_search") {
+    data object TranslationScreen : Screen("translation_models")
+    data object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
             navController.navigate("$route?searchFor=$title") { launchSingleTop = true }
         }
     }
 
-    object FavoriteChoiceScreen : Screen("favorite_choice") {
-        const val dbitemsArgument = "dbitems"
-        fun navigate(navController: NavController, items: List<DbModel>) {
-            navController.navigate("$route/${Uri.encode(items.toJson())}") { launchSingleTop = true }
-        }
-    }
-
-    object SourceChooserScreen : Screen("source_chooser")
-
-    companion object {
-        val bottomItems = listOf(RecentScreen, AllScreen, Settings)
-    }
-
+    data object SourceChooserScreen : Screen("source_chooser")
+    data object ExtensionListScreen : Screen("extension_list")
 }
 
 fun NavController.navigateToDetails(model: ItemModel) = navigate(
@@ -128,6 +118,9 @@ fun OtakuMaterialTheme(
                 LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
+                LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
+                LocalSourcesRepository provides koinInject(),
+                LocalCurrentSource provides koinInject()
             ) { content() }
         }
     }
@@ -136,3 +129,5 @@ fun OtakuMaterialTheme(
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
 val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
+val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
+val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }

@@ -16,19 +16,29 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.BrowseSupportFragment
-import androidx.leanback.widget.*
+import androidx.leanback.widget.ArrayObjectAdapter
+import androidx.leanback.widget.HeaderItem
+import androidx.leanback.widget.ListRow
+import androidx.leanback.widget.ListRowPresenter
+import androidx.leanback.widget.OnItemViewClickedListener
+import androidx.leanback.widget.OnItemViewSelectedListener
+import androidx.leanback.widget.Presenter
+import androidx.leanback.widget.Row
+import androidx.leanback.widget.RowPresenter
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.programmersbox.models.ItemModel
-import com.programmersbox.models.sourceFlow
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 
 /**
  * Loads a grid of cards with movies to browse.
@@ -126,7 +136,7 @@ class MainFragment : BrowseSupportFragment() {
         val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
 
         lifecycleScope.launch {
-            sourceFlow
+            /*sourceFlow
                 .filterNotNull()
                 .flowOn(Dispatchers.IO)
                 .flatMapMerge { it.getListFlow() }
@@ -137,12 +147,12 @@ class MainFragment : BrowseSupportFragment() {
 
                     val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")
 
-                    /*val mGridPresenter = GridItemPresenter()
+                    *//*val mGridPresenter = GridItemPresenter()
                     val gridRowAdapter = ArrayObjectAdapter(mGridPresenter)
                     gridRowAdapter.add(resources.getString(R.string.favorites))
                     //gridRowAdapter.add(resources.getString(R.string.grid_view))
                     //gridRowAdapter.add(getString(R.string.error_fragment))
-                    gridRowAdapter.add(resources.getString(R.string.personal_settings))*/
+                    gridRowAdapter.add(resources.getString(R.string.personal_settings))*//*
                     rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
                     it.entries.forEach { item ->
@@ -155,7 +165,7 @@ class MainFragment : BrowseSupportFragment() {
                         rowsAdapter.add(ListRow(header, listRowAdapter))
                     }
 
-                    /*for (i in 0 until NUM_ROWS) {
+                    *//*for (i in 0 until NUM_ROWS) {
                         if (i != 0) {
                             Collections.shuffle(it)
                         }
@@ -165,9 +175,9 @@ class MainFragment : BrowseSupportFragment() {
                         }
                         val header = HeaderItem(i.toLong(), MovieList.MOVIE_CATEGORY[i])
                         rowsAdapter.add(ListRow(header, listRowAdapter))
-                    }*/
+                    }*//*
                 }
-                .collect()
+                .collect()*/
         }
 
         val gridHeader = HeaderItem(NUM_ROWS.toLong(), "PREFERENCES")

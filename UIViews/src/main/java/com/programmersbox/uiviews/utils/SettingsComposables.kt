@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -249,11 +250,27 @@ fun SwitchSetting(
     }
 }
 
+@LightAndDarkPreviews
+@Composable
+private fun SwitchSettingPreview() {
+    PreviewTheme {
+        Column {
+            SwitchSetting(
+                value = true,
+                updateValue = {},
+                settingTitle = { Text("Title") },
+                settingIcon = { Icon(Icons.Default.List, null) },
+                summaryValue = { Text("Value") }
+            )
+        }
+    }
+}
+
 @ExperimentalMaterial3Api
 @Composable
 fun CheckBoxSetting(
-    settingTitle: @Composable () -> Unit,
     value: Boolean,
+    settingTitle: @Composable () -> Unit,
     updateValue: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
@@ -274,6 +291,23 @@ fun CheckBoxSetting(
             onCheckedChange = updateValue,
             colors = checkboxColors
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@LightAndDarkPreviews
+@Composable
+private fun CheckboxSettingPreview() {
+    PreviewTheme {
+        Column {
+            CheckBoxSetting(
+                value = true,
+                updateValue = {},
+                settingTitle = { Text("Title") },
+                settingIcon = { Icon(Icons.Default.List, null) },
+                summaryValue = { Text("Value") }
+            )
+        }
     }
 }
 
@@ -360,6 +394,23 @@ fun SliderSetting(
     }
 }
 
+@LightAndDarkPreviews
+@Composable
+private fun SliderSettingPreview() {
+    PreviewTheme {
+        Column {
+            SliderSetting(
+                sliderValue = 5f,
+                updateValue = {},
+                range = 0f..10f,
+                settingTitle = { Text("Slider") },
+                settingSummary = { Text("Summary") },
+                settingIcon = { Icon(Icons.Default.List, null) },
+            )
+        }
+    }
+}
+
 @Composable
 fun ShowMoreSetting(
     settingTitle: @Composable () -> Unit,
@@ -389,6 +440,20 @@ fun ShowMoreSetting(
     }
 }
 
+@LightAndDarkPreviews
+@Composable
+private fun ShowMorePreview() {
+    PreviewTheme {
+        Column {
+            ShowMoreSetting(
+                settingTitle = { Text("Title") },
+                settingIcon = { Icon(Icons.Default.List, null) },
+                summaryValue = { Text("Value") }
+            ) { Text("Content") }
+        }
+    }
+}
+
 @Composable
 private fun DefaultPreferenceLayout(
     settingTitle: @Composable () -> Unit,
@@ -397,35 +462,21 @@ private fun DefaultPreferenceLayout(
     summaryValue: (@Composable () -> Unit)? = null,
     content: (@Composable () -> Unit)? = null
 ) {
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(modifier)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth()
     ) {
-        val (icon, text, endIcon) = createRefs()
-
         Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
                 .padding(16.dp)
                 .size(32.dp)
-                .constrainAs(icon) {
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    centerVerticallyTo(parent)
-                },
-            contentAlignment = Alignment.Center
         ) { settingIcon?.invoke(this) }
 
         Column(
-            modifier = Modifier.constrainAs(text) {
-                start.linkTo(icon.end, 8.dp)
-                end.linkTo(endIcon.start, 8.dp)
-                top.linkTo(parent.top)
-                bottom.linkTo(parent.bottom)
-                centerVerticallyTo(parent)
-                width = Dimension.fillToConstraints
-            }
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .weight(3f, true)
         ) {
             ProvideTextStyle(
                 MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
@@ -436,15 +487,25 @@ private fun DefaultPreferenceLayout(
         }
 
         Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
                 .padding(8.dp)
-                .constrainAs(endIcon) {
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    centerVerticallyTo(parent)
-                }
+                .weight(1f)
         ) { content?.invoke() }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun DefaultPreferenceLayoutPreview() {
+    PreviewTheme {
+        Column {
+            DefaultPreferenceLayout(
+                settingTitle = { Text("Title") },
+                settingIcon = { Icon(Icons.Default.List, null) },
+                summaryValue = { Text("Value") }
+            ) { Text("Content") }
+        }
     }
 }
 
@@ -457,40 +518,41 @@ fun CategorySetting(
     CompositionLocalProvider(
         LocalContentColor provides MaterialTheme.colorScheme.primary
     ) {
-        ConstraintLayout(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(modifier)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier.fillMaxWidth()
         ) {
-            val (icon, text) = createRefs()
-
             Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .padding(16.dp)
-                    .size(32.dp)
-                    .constrainAs(icon) {
-                        start.linkTo(parent.start)
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        centerVerticallyTo(parent)
-                    },
-                contentAlignment = Alignment.Center
+                    .size(32.dp),
             ) { settingIcon?.invoke(this) }
-
             Column(
-                modifier = Modifier.constrainAs(text) {
-                    start.linkTo(icon.end, 8.dp)
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    centerVerticallyTo(parent)
-                    width = Dimension.fillToConstraints
-                }
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .fillMaxWidth()
             ) {
                 ProvideTextStyle(
                     MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Start)
                 ) { settingTitle() }
             }
+        }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun CategoryPreview() {
+    PreviewTheme {
+        Column {
+            CategorySetting(
+                settingIcon = { Icon(Icons.Default.List, null) },
+                settingTitle = { Text("Title") }
+            )
+            CategorySetting(
+                settingTitle = { Text("Title") }
+            )
         }
     }
 }
@@ -521,7 +583,6 @@ fun <T> DynamicListSetting(
     val dialogPopup = remember { mutableStateOf(false) }
 
     if (dialogPopup.value) {
-
         AlertDialog(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { dialogPopup.value = false },

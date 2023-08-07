@@ -75,8 +75,8 @@ fun rememberScaleRotateOffset(
 ) = remember { ScaleRotateOffset(initialScale, initialRotation, initialOffset) }
 
 class ScaleRotateOffset(initialScale: Float = 1f, initialRotation: Float = 0f, initialOffset: Offset = Offset.Zero) {
-    val scale: MutableState<Float> = mutableStateOf(initialScale)
-    val rotation: MutableState<Float> = mutableStateOf(initialRotation)
+    val scale: MutableState<Float> = mutableFloatStateOf(initialScale)
+    val rotation: MutableState<Float> = mutableFloatStateOf(initialRotation)
     val offset: MutableState<Offset> = mutableStateOf(initialOffset)
 }
 
@@ -98,8 +98,8 @@ fun Modifier.scaleRotateOffset(
 
 @Composable
 fun Modifier.scaleRotateOffset(
-    scale: MutableState<Float> = remember { mutableStateOf(1f) },
-    rotation: MutableState<Float> = remember { mutableStateOf(0f) },
+    scale: MutableState<Float> = remember { mutableFloatStateOf(1f) },
+    rotation: MutableState<Float> = remember { mutableFloatStateOf(0f) },
     offset: MutableState<Offset> = remember { mutableStateOf(Offset.Zero) },
     canScale: Boolean = true,
     canRotate: Boolean = true,
@@ -110,12 +110,12 @@ fun Modifier.scaleRotateOffset(
         if (canRotate) rotation.value += rotationChange
         if (canOffset) offset.value += offsetChange
     }
-    val animScale = animateFloatAsState(scale.value).value
-    val (x, y) = animateOffsetAsState(offset.value).value
+    val animScale = animateFloatAsState(scale.value, label = "").value
+    val (x, y) = animateOffsetAsState(offset.value, label = "").value
     return graphicsLayer(
         scaleX = animScale,
         scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation.value).value,
+        rotationZ = animateFloatAsState(rotation.value, label = "").value,
         translationX = x,
         translationY = y
     )
@@ -131,20 +131,20 @@ fun Modifier.scaleRotateOffsetReset(
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {}
 ): Modifier = composed {
-    var scale by remember { mutableStateOf(1f) }
-    var rotation by remember { mutableStateOf(0f) }
+    var scale by remember { mutableFloatStateOf(1f) }
+    var rotation by remember { mutableFloatStateOf(0f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
         if (canScale) scale *= zoomChange
         if (canRotate) rotation += rotationChange
         if (canOffset) offset += offsetChange
     }
-    val animScale = animateFloatAsState(scale).value
-    val (x, y) = animateOffsetAsState(offset).value
+    val animScale = animateFloatAsState(scale, label = "").value
+    val (x, y) = animateOffsetAsState(offset, label = "").value
     graphicsLayer(
         scaleX = animScale,
         scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation).value,
+        rotationZ = animateFloatAsState(rotation, label = "").value,
         translationX = x,
         translationY = y
     )
@@ -171,31 +171,29 @@ fun Modifier.coloredShadow(
     shadowRadius: Dp = 20.dp,
     offsetY: Dp = 0.dp,
     offsetX: Dp = 0.dp
-) = composed {
+) = drawBehind {
     val shadowColor = color.copy(alpha = alpha).toArgb()
     val transparent = color.copy(alpha = 0f).toArgb()
-    this.drawBehind {
-        this.drawIntoCanvas {
-            val paint = Paint()
-            val frameworkPaint = paint.asFrameworkPaint()
-            frameworkPaint.color = transparent
+    drawIntoCanvas {
+        val paint = Paint()
+        val frameworkPaint = paint.asFrameworkPaint()
+        frameworkPaint.color = transparent
 
-            frameworkPaint.setShadowLayer(
-                shadowRadius.toPx(),
-                offsetX.toPx(),
-                offsetY.toPx(),
-                shadowColor
-            )
-            it.drawRoundRect(
-                0f,
-                0f,
-                this.size.width,
-                this.size.height,
-                borderRadius.toPx(),
-                borderRadius.toPx(),
-                paint
-            )
-        }
+        frameworkPaint.setShadowLayer(
+            shadowRadius.toPx(),
+            offsetX.toPx(),
+            offsetY.toPx(),
+            shadowColor
+        )
+        it.drawRoundRect(
+            0f,
+            0f,
+            this.size.width,
+            this.size.height,
+            borderRadius.toPx(),
+            borderRadius.toPx(),
+            paint
+        )
     }
 }
 
@@ -207,7 +205,7 @@ private enum class ButtonState { Pressed, Idle }
 
 fun Modifier.bounceClick(scaleAmount: Float = .7f) = composed {
     var buttonState by remember { mutableStateOf(ButtonState.Idle) }
-    val scale by animateFloatAsState(if (buttonState == ButtonState.Pressed) scaleAmount else 1f)
+    val scale by animateFloatAsState(if (buttonState == ButtonState.Pressed) scaleAmount else 1f, label = "")
 
     this
         .graphicsLayer {

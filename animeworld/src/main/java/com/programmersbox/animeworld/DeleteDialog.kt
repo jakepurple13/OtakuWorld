@@ -1,6 +1,5 @@
 package com.programmersbox.animeworld
 
-import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.widget.Toast
@@ -13,7 +12,11 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,8 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.programmersbox.helpfulutils.runOnUIThread
-import com.tonyodev.fetch2.Download
-import com.tonyodev.fetch2.Fetch
 import java.io.File
 
 @ExperimentalAnimationApi
@@ -63,23 +64,6 @@ fun SlideToDeleteDialog(
             }
         },
         onCancel = {}
-    )
-}
-
-@ExperimentalAnimationApi
-@ExperimentalMaterialApi
-@Composable
-fun SlideToDeleteDialog(
-    showDialog: Boolean,
-    onDialogDismiss: (Boolean) -> Unit,
-    download: Download
-) {
-    SlideToDeleteDialog(
-        title = Uri.parse(download.url).lastPathSegment.orEmpty(),
-        showDialog = showDialog,
-        onDialogDismiss,
-        onSlide = { Fetch.getDefaultInstance().delete(download.id) },
-        onCancel = { Fetch.getDefaultInstance().resume(download.id) }
     )
 }
 

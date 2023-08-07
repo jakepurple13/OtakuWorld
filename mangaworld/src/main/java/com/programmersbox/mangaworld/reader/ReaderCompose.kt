@@ -1,4 +1,5 @@
 @file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+@file:OptIn(ExperimentalMaterialApi::class)
 
 package com.programmersbox.mangaworld.reader
 
@@ -7,44 +8,121 @@ import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.*
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material.icons.filled.FastRewind
+import androidx.compose.material.icons.filled.FormatLineSpacing
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Pages
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItemColors
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -52,15 +130,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -69,11 +151,28 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
-import com.programmersbox.mangaworld.*
+import com.programmersbox.mangaworld.ChapterHolder
+import com.programmersbox.mangaworld.LIST_OR_PAGER
+import com.programmersbox.mangaworld.PAGE_PADDING
 import com.programmersbox.mangaworld.R
+import com.programmersbox.mangaworld.listOrPager
+import com.programmersbox.mangaworld.pagePadding
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.LifecycleHandle
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.SliderSetting
+import com.programmersbox.uiviews.utils.SwitchSetting
+import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.dataStore
+import com.programmersbox.uiviews.utils.updatePref
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import io.kamel.image.KamelImage
@@ -87,9 +186,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
-@ExperimentalMaterialApi
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
@@ -97,13 +196,15 @@ import net.engawapg.lib.zoomable.zoomable
 fun ReadView(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
+    ch: ChapterHolder = koinInject(),
     readVm: ReadViewModel = viewModel {
         ReadViewModel(
             handle = createSavedStateHandle(),
             context = context,
-            genericInfo = genericInfo
+            genericInfo = genericInfo,
+            chapterHolder = ch
         )
-    }
+    },
 ) {
     LifecycleHandle(
         onStop = { BaseMainActivity.showNavBar = true },
@@ -160,7 +261,7 @@ fun ReadView(
                         initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
                         range = 1f..100f
                     )
-                    Divider()
+                    HorizontalDivider()
                     val activity = LocalActivity.current
                     SliderSetting(
                         scope = scope,
@@ -171,7 +272,7 @@ fun ReadView(
                         initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
                         range = 0f..10f
                     )
-                    Divider()
+                    HorizontalDivider()
                     SwitchSetting(
                         settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
@@ -207,103 +308,113 @@ fun ReadView(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    var showBottomSheet by remember { mutableStateOf(false) }
 
-    BackHandler(drawerState.isOpen || sheetState.isVisible) {
+    BackHandler(drawerState.isOpen || showBottomSheet) {
         scope.launch {
             when {
                 drawerState.isOpen -> drawerState.close()
-                sheetState.isVisible -> sheetState.hide()
+                showBottomSheet -> showBottomSheet = false
             }
         }
     }
 
-    ModalBottomSheetLayout(
-        sheetState = sheetState,
-        sheetContent = {
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+        ) {
             SheetView(
                 readVm = readVm,
-                sheetState = sheetState,
+                onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
                 pages = pages,
                 listOrPager = listOrPager,
                 pagerState = pagerState,
                 listState = listState
             )
-        },
-    ) {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                ModalDrawerSheet {
-                    DrawerView(readVm = readVm, showToast = ::showToast)
-                }
-            },
-            gesturesEnabled = readVm.list.size > 1
-        ) {
-            Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                topBar = {
-                    AnimatedVisibility(
-                        visible = showItems,
-                        enter = slideInVertically() + fadeIn(),
-                        exit = slideOutVertically() + fadeOut()
-                    ) {
-                        TopBar(
-                            scrollBehavior = scrollBehavior,
-                            pages = pages,
-                            currentPage = currentPage,
-                            vm = readVm
-                        )
-                    }
-                },
-                bottomBar = {
-                    AnimatedVisibility(
-                        visible = showItems,
-                        enter = slideInVertically { it / 2 } + fadeIn(),
-                        exit = slideOutVertically { it / 2 } + fadeOut()
-                    ) {
-                        BottomBar(
-                            onPageSelectClick = { scope.launch { sheetState.show() } },
-                            onSettingsClick = { settingsPopup = true },
-                            chapterChange = ::showToast,
-                            vm = readVm
-                        )
-                    }
-                }
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .pullRefresh(pullRefreshState)
-                ) {
-                    val spacing = LocalContext.current.dpToPx(paddingPage).dp
-                    Crossfade(targetState = listOrPager, label = "") {
-                        if (it) ListView(listState, PaddingValues(top = 64.dp, bottom = 80.dp), pages, readVm, spacing) {
-                            readVm.showInfo = !readVm.showInfo
-                        }
-                        else PagerView(pagerState, PaddingValues(0.dp), pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-                    }
+        }
+    }
 
-                    PullRefreshIndicator(
-                        refreshing = readVm.isLoadingPages,
-                        state = pullRefreshState,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        backgroundColor = MaterialTheme.colorScheme.background,
-                        contentColor = MaterialTheme.colorScheme.onBackground,
-                        scale = true
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                DrawerView(readVm = readVm, showToast = ::showToast)
+            }
+        },
+        gesturesEnabled = readVm.list.size > 1
+    ) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                AnimatedVisibility(
+                    visible = showItems,
+                    enter = slideInVertically() + fadeIn(),
+                    exit = slideOutVertically() + fadeOut()
+                ) {
+                    TopBar(
+                        scrollBehavior = scrollBehavior,
+                        pages = pages,
+                        currentPage = currentPage,
+                        vm = readVm
                     )
                 }
+            },
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = showItems,
+                    enter = slideInVertically { it / 2 } + fadeIn(),
+                    exit = slideOutVertically { it / 2 } + fadeOut()
+                ) {
+                    BottomBar(
+                        onPageSelectClick = { showBottomSheet = true },
+                        onSettingsClick = { settingsPopup = true },
+                        chapterChange = ::showToast,
+                        vm = readVm
+                    )
+                }
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .padding(paddingValues.animate())
+                    .pullRefresh(pullRefreshState)
+            ) {
+                val spacing = LocalContext.current.dpToPx(paddingPage).dp
+                Crossfade(targetState = listOrPager, label = "") {
+                    if (it) ListView(listState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                    else PagerView(pagerState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                }
+
+                PullRefreshIndicator(
+                    refreshing = readVm.isLoadingPages,
+                    state = pullRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    backgroundColor = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.onBackground,
+                    scale = true
+                )
             }
         }
     }
 }
 
+@Composable
+private fun PaddingValues.animate() = PaddingValues(
+    start = calculateStartPadding(LocalLayoutDirection.current).animate().value,
+    end = calculateEndPadding(LocalLayoutDirection.current).animate().value,
+    top = calculateTopPadding().animate().value,
+    bottom = calculateBottomPadding().animate().value,
+)
+
+@Composable
+private fun Dp.animate() = animateDpAsState(targetValue = this, label = "")
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun DrawerView(
     readVm: ReadViewModel,
-    showToast: () -> Unit
+    showToast: () -> Unit,
 ) {
     val drawerScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     OtakuScaffold(
@@ -359,22 +470,22 @@ fun DrawerView(
                     shape = RoundedCornerShape(8.0.dp)//MaterialTheme.shapes.medium
                 )
 
-                if (i < readVm.list.lastIndex) Divider()
+                if (i < readVm.list.lastIndex) HorizontalDivider()
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun SheetView(
     readVm: ReadViewModel,
-    sheetState: ModalBottomSheetState,
+    onSheetHide: () -> Unit,
     currentPage: Int,
     pages: List<String>,
     listOrPager: Boolean,
     pagerState: PagerState,
-    listState: LazyListState
+    listState: LazyListState,
 ) {
     val scope = rememberCoroutineScope()
     val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -386,76 +497,72 @@ fun SheetView(
                 title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
                 actions = { PageIndicator(currentPage + 1, pages.size) },
                 navigationIcon = {
-                    IconButton(onClick = { scope.launch { sheetState.hide() } }) {
+                    IconButton(onClick = onSheetHide) {
                         Icon(Icons.Default.Close, null)
                     }
                 }
             )
         }
     ) { p ->
-        Crossfade(targetState = sheetState.isVisible, label = "") { target ->
-            if (target) {
-                LazyVerticalGrid(
-                    columns = adaptiveGridCell(),
-                    contentPadding = p,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    itemsIndexed(pages) { i, it ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                .border(
-                                    animateDpAsState(if (currentPage == i) 4.dp else 0.dp, label = "").value,
-                                    color = animateColorAsState(
-                                        if (currentPage == i) MaterialTheme.colorScheme.primary
-                                        else Color.Transparent, label = ""
-                                    ).value
-                                )
-                                .clickable {
-                                    scope.launch {
-                                        if (currentPage == i) sheetState.hide()
-                                        if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
-                                    }
-                                }
-                        ) {
-                            KamelImage(
-                                resource = asyncPainterResource(it),
-                                onLoading = { CircularProgressIndicator(progress = it) },
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.Center)
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                Color.Black
-                                            ),
-                                            startY = 50f
-                                        ),
-                                        alpha = .5f
-                                    )
-                            ) {
-                                Text(
-                                    (i + 1).toString(),
-                                    style = MaterialTheme
-                                        .typography
-                                        .bodyLarge
-                                        .copy(textAlign = TextAlign.Center, color = Color.White),
-                                    maxLines = 2,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.Center)
-                                )
+        LazyVerticalGrid(
+            columns = adaptiveGridCell(),
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            itemsIndexed(pages) { i, it ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        .border(
+                            animateDpAsState(if (currentPage == i) 4.dp else 0.dp, label = "").value,
+                            color = animateColorAsState(
+                                if (currentPage == i) MaterialTheme.colorScheme.primary
+                                else Color.Transparent, label = ""
+                            ).value
+                        )
+                        .clickable {
+                            scope.launch {
+                                if (currentPage == i) onSheetHide()
+                                if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
                             }
                         }
+                ) {
+                    KamelImage(
+                        resource = asyncPainterResource(it),
+                        onLoading = { CircularProgressIndicator(progress = it) },
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.Center)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black
+                                    ),
+                                    startY = 50f
+                                ),
+                                alpha = .5f
+                            )
+                    ) {
+                        Text(
+                            (i + 1).toString(),
+                            style = MaterialTheme
+                                .typography
+                                .bodyLarge
+                                .copy(textAlign = TextAlign.Center, color = Color.White),
+                            maxLines = 2,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center)
+                        )
                     }
                 }
             }
@@ -466,17 +573,15 @@ fun SheetView(
 @Composable
 fun ListView(
     listState: LazyListState,
-    contentPadding: PaddingValues,
     pages: List<String>,
     readVm: ReadViewModel,
     itemSpacing: Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
-        contentPadding = contentPadding
     ) { reader(pages, readVm, onClick) }
 }
 
@@ -484,17 +589,15 @@ fun ListView(
 @Composable
 fun PagerView(
     pagerState: PagerState,
-    contentPadding: PaddingValues,
     pages: List<String>,
     vm: ReadViewModel,
     itemSpacing: Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     VerticalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
         pageSpacing = itemSpacing,
-        contentPadding = contentPadding,
         beyondBoundsPageCount = 1,
         key = { it }
     ) { page ->
@@ -682,7 +785,7 @@ private fun LastPageReached(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeChapterSwipe(
     nextChapter: () -> Unit,
@@ -690,7 +793,7 @@ fun ChangeChapterSwipe(
     currentChapter: Int,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     BoxWithConstraints(
         contentAlignment = Alignment.Center,
@@ -742,7 +845,7 @@ fun ChangeChapterSwipe(
                         icon,
                         contentDescription = null,
                         modifier = Modifier.scale(scale),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -802,9 +905,9 @@ private fun ZoomableImage(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
@@ -856,7 +959,7 @@ private fun ZoomableImage(
                             headers.forEach { (t, u) -> header(t, u) }
                         }
                     },
-                    onLoading = { CircularProgressIndicator(progress = it) },
+                    onLoading = { CircularProgressIndicator(progress = animateFloatAsState(targetValue = it, label = "").value) },
                     onFailure = {
                         Text(
                             stringResource(R.string.pressToRefresh),
@@ -899,7 +1002,7 @@ private fun TopBar(
     pages: List<String>,
     currentPage: Int,
     vm: ReadViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
         windowInsets = WindowInsets(0.dp),
@@ -958,7 +1061,7 @@ private fun BottomBar(
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     BottomAppBar(
         modifier = modifier,
@@ -1044,7 +1147,7 @@ private fun WrapHeightNavigationDrawerItem(
     badge: (@Composable () -> Unit)? = null,
     shape: Shape = CircleShape,
     colors: NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(),
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     Surface(
         shape = shape,
@@ -1087,7 +1190,7 @@ private fun WrapHeightNavigationDrawerItem(
 private fun PageIndicator(
     currentPage: Int,
     pageCount: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Text(
         "$currentPage/$pageCount",
@@ -1115,7 +1218,7 @@ private fun GoBackButton(modifier: Modifier = Modifier) {
 private fun NextButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    nextChapter: () -> Unit
+    nextChapter: () -> Unit,
 ) {
     Button(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
@@ -1127,7 +1230,7 @@ private fun NextButton(
 private fun PreviousButton(
     vm: ReadViewModel,
     modifier: Modifier = Modifier,
-    previousChapter: () -> Unit
+    previousChapter: () -> Unit,
 ) {
     TextButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
@@ -1143,7 +1246,7 @@ private fun SliderSetting(
     @StringRes settingSummary: Int,
     preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
-    range: ClosedFloatingPointRange<Float>
+    range: ClosedFloatingPointRange<Float>,
 ) {
     var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 
@@ -1160,14 +1263,16 @@ private fun SliderSetting(
     )
 }
 
-@Preview
+@LightAndDarkPreviews
 @Composable
 fun LastPagePreview() {
-    LastPageReached(
-        isLoading = true,
-        currentChapter = 3,
-        chapterName = "Name".repeat(100),
-        nextChapter = {},
-        previousChapter = {}
-    )
+    PreviewTheme {
+        LastPageReached(
+            isLoading = true,
+            currentChapter = 3,
+            chapterName = "Name".repeat(100),
+            nextChapter = {},
+            previousChapter = {}
+        )
+    }
 }

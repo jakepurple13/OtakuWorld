@@ -11,8 +11,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -22,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.PreviewTheme
 
 class ListBottomSheetItemModel(
     val primaryText: String,
@@ -39,10 +41,13 @@ fun <T> ListBottomScreen(
     list: List<T>,
     onClick: (T) -> Unit,
     includeInsetPadding: Boolean = true,
+    navigationIcon: @Composable () -> Unit = {
+        val navController = LocalNavController.current
+        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
+    },
     lazyListContent: LazyListScope.() -> Unit = {},
-    itemContent: (T) -> ListBottomSheetItemModel
+    itemContent: (T) -> ListBottomSheetItemModel,
 ) {
-    val navController = LocalNavController.current
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier.navigationBarsPadding()
@@ -51,10 +56,10 @@ fun <T> ListBottomScreen(
             InsetSmallTopAppBar(
                 insetPadding = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
                 title = { Text(title) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) } },
+                navigationIcon = navigationIcon,
                 actions = { if (list.isNotEmpty()) Text("(${list.size})") }
             )
-            Divider()
+            HorizontalDivider()
         }
         lazyListContent()
         itemsIndexed(list) { index, it ->
@@ -67,7 +72,22 @@ fun <T> ListBottomScreen(
                 overlineContent = c.overlineText?.let { i -> { Text(i) } },
                 trailingContent = c.trailingText?.let { i -> { Text(i) } }
             )
-            if (index < list.size - 1) Divider()
+            if (index < list.size - 1) HorizontalDivider()
         }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ListBottomSheetPreview() {
+    PreviewTheme {
+        ListBottomScreen(
+            title = "Example",
+            list = listOf(1, 2, 3, 4, 5),
+            onClick = {},
+            itemContent = {
+                ListBottomSheetItemModel(primaryText = it.toString())
+            }
+        )
     }
 }

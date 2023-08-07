@@ -59,12 +59,13 @@ fun OtakuMaterialTheme(
         CompositionLocalProvider(
             LocalActivity provides remember { context.findActivity() },
             LocalNavController provides navController,
+            LocalCurrentSource provides remember { CurrentSourceRepository() }
         ) { content() }
     }
 }
 
 val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
-
+val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }
 val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
 
 fun Context.findActivity(): FragmentActivity {
@@ -99,9 +100,7 @@ val currentColorScheme: ColorScheme
 
 private val DPadEventsKeyCodes = listOf(
     KeyEvent.KEYCODE_DPAD_LEFT,
-    KeyEvent.KEYCODE_SYSTEM_NAVIGATION_LEFT,
     KeyEvent.KEYCODE_DPAD_RIGHT,
-    KeyEvent.KEYCODE_SYSTEM_NAVIGATION_RIGHT,
     KeyEvent.KEYCODE_DPAD_CENTER,
     KeyEvent.KEYCODE_ENTER,
     KeyEvent.KEYCODE_NUMPAD_ENTER
