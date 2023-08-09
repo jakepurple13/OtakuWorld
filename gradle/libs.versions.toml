@@ -158,7 +158,7 @@ fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
 androidxWindow = "androidx.window:window:1.2.0-beta01"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
-androidxBrowser = "androidx.browser:browser:1.5.0"
+androidxBrowser = "androidx.browser:browser:1.6.0"
 
 fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
