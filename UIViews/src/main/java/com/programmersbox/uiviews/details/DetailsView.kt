@@ -613,22 +613,32 @@ private fun DetailsLandscapeContent(
             }
         },
         second = {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(vertical = 4.dp),
-                state = listState
+            val swatchInfo = LocalSwatchInfo.current.colors
+            LazyColumnScrollbar(
+                enabled = true,
+                thickness = 8.dp,
+                padding = 2.dp,
+                listState = listState,
+                thumbColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
+                thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
             ) {
-                items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
-                    ChapterItem(
-                        infoModel = info,
-                        c = c,
-                        read = chapters,
-                        chapters = info.chapters,
-                        shareChapter = shareChapter,
-                        markAs = markAs
-                    )
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(vertical = 4.dp),
+                    state = listState
+                ) {
+                    items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                        ChapterItem(
+                            infoModel = info,
+                            c = c,
+                            read = chapters,
+                            chapters = info.chapters,
+                            shareChapter = shareChapter,
+                            markAs = markAs
+                        )
+                    }
                 }
             }
         },
