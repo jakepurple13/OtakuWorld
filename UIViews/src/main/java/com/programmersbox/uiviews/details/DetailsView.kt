@@ -124,6 +124,7 @@ import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.isScrollingUp
+import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.showErrorToast
 import com.programmersbox.uiviews.utils.toComposeColor
@@ -847,18 +848,16 @@ private fun DetailActions(
 
     IconButton(
         onClick = {
-            runCatching {
-                shareItem.launch(
-                    Intent.createChooser(
-                        Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, info.url)
-                            putExtra(Intent.EXTRA_TITLE, info.title)
-                        },
-                        context.getString(R.string.share_item, info.title)
-                    )
+            shareItem.launchCatching(
+                Intent.createChooser(
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, info.url)
+                        putExtra(Intent.EXTRA_TITLE, info.title)
+                    },
+                    context.getString(R.string.share_item, info.title)
                 )
-            }.onFailure { context.showErrorToast() }
+            ).onFailure { context.showErrorToast() }
         }
     ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
 

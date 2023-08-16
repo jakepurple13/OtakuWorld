@@ -95,6 +95,7 @@ import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
@@ -126,6 +127,10 @@ fun OtakuCustomListScreen(
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { document -> document?.let { vm.writeToFile(it, context) } }
+
+    val shareItem = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {}
 
     var deleteList by remember { mutableStateOf(false) }
 
@@ -256,13 +261,14 @@ fun OtakuCustomListScreen(
                             }
                             IconButton(
                                 onClick = {
-                                    context.startActivity(
+                                    shareItem.launchCatching(
                                         Intent.createChooser(
                                             Intent(Intent.ACTION_SEND).apply {
                                                 type = "text/plain"
                                                 putExtra(
                                                     Intent.EXTRA_TEXT,
-                                                    customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" })
+                                                    customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" }
+                                                )
                                                 putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
                                             },
                                             context.getString(R.string.share_item, customItem?.item?.name.orEmpty())

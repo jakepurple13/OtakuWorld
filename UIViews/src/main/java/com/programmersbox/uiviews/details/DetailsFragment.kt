@@ -3,6 +3,8 @@ package com.programmersbox.uiviews.details
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -133,6 +135,7 @@ import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.fadeInAnimation
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
+import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.scaleRotateOffsetReset
 import com.programmersbox.uiviews.utils.toComposeColor
@@ -160,7 +163,7 @@ fun DetailsScreen(
     localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) }
+    details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) },
 ) {
     val navController = LocalNavController.current
 
@@ -177,13 +180,21 @@ fun DetailsScreen(
                     },
                     navigationIcon = { BackButton() },
                     actions = {
+                        val shareItem = rememberLauncherForActivityResult(
+                            ActivityResultContracts.StartActivityForResult()
+                        ) {}
                         IconButton(
                             onClick = {
-                                localContext.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
-                                    putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
-                                }, localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())))
+                                shareItem.launchCatching(
+                                    Intent.createChooser(
+                                        Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
+                                            putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
+                                        },
+                                        localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
+                                    )
+                                )
                             }
                         ) { Icon(Icons.Default.Share, null) }
 
@@ -285,7 +296,7 @@ fun MarkAsScreen(
     drawerState: DrawerState,
     info: InfoModel,
     chapters: List<ChapterWatched>,
-    markAs: (ChapterModel, Boolean) -> Unit
+    markAs: (ChapterModel, Boolean) -> Unit,
 ) {
     val swatchInfo = LocalSwatchInfo.current.colors
     val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -369,7 +380,7 @@ fun ChapterItem(
     read: List<ChapterWatched>,
     chapters: List<ChapterModel>,
     shareChapter: Boolean,
-    markAs: (ChapterModel, Boolean) -> Unit
+    markAs: (ChapterModel, Boolean) -> Unit,
 ) {
     val historyDao = LocalHistoryDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
@@ -433,13 +444,21 @@ fun ChapterItem(
                         )
                     },
                     trailingContent = {
+                        val shareItem = rememberLauncherForActivityResult(
+                            ActivityResultContracts.StartActivityForResult()
+                        ) {}
                         IconButton(
                             onClick = {
-                                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, c.url)
-                                    putExtra(Intent.EXTRA_TITLE, c.name)
-                                }, context.getString(R.string.share_item, c.name)))
+                                shareItem.launchCatching(
+                                    Intent.createChooser(
+                                        Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, c.url)
+                                            putExtra(Intent.EXTRA_TITLE, c.name)
+                                        },
+                                        context.getString(R.string.share_item, c.name)
+                                    )
+                                )
                             }
                         ) {
                             Icon(
