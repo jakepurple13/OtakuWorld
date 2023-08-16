@@ -28,14 +28,14 @@ ziplineVersion = "1.1.0"
 landscapist = "2.2.6"
 protobufVersion = "3.24.0"
 sketchVersion = "3.2.5"
-composeBomVersion = "2023.09.00-alpha02"
+composeBomVersion = "2023.07.00-alpha02"
 
 ### MangaWorld
 piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.1.0"
+media3Version = "1.1.1"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
