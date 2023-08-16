@@ -3,6 +3,8 @@ package com.programmersbox.uiviews.details
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -123,6 +125,7 @@ import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
+import com.programmersbox.uiviews.utils.showErrorToast
 import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -838,13 +841,24 @@ private fun DetailActions(
         )
     }
 
+    val shareItem = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {}
+
     IconButton(
         onClick = {
-            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, info.url)
-                putExtra(Intent.EXTRA_TITLE, info.title)
-            }, context.getString(R.string.share_item, info.title)))
+            runCatching {
+                shareItem.launch(
+                    Intent.createChooser(
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, info.url)
+                            putExtra(Intent.EXTRA_TITLE, info.title)
+                        },
+                        context.getString(R.string.share_item, info.title)
+                    )
+                )
+            }.onFailure { context.showErrorToast() }
         }
     ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
 
