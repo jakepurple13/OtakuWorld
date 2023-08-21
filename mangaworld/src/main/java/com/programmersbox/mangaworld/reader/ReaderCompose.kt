@@ -607,6 +607,7 @@ fun PagerView(
             LastPageReached(
                 isLoading = vm.isLoadingPages,
                 currentChapter = vm.currentChapter,
+                lastChapter = vm.list.lastIndex,
                 chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
                 nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
                 previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
@@ -620,6 +621,7 @@ fun PagerView(
 private fun LastPageReached(
     isLoading: Boolean,
     currentChapter: Int,
+    lastChapter: Int,
     chapterName: String,
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
@@ -632,6 +634,7 @@ private fun LastPageReached(
         previousChapter = previousChapter,
         isLoading = isLoading,
         currentChapter = currentChapter,
+        lastChapter = lastChapter,
         modifier = modifier
     ) {
         Box(Modifier.fillMaxSize()) {
@@ -791,6 +794,7 @@ fun ChangeChapterSwipe(
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
     currentChapter: Int,
+    lastChapter: Int,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
@@ -819,7 +823,7 @@ fun ChangeChapterSwipe(
             else
                 setOfNotNull(
                     if (currentChapter <= 0) null else DismissDirection.EndToStart,
-                    DismissDirection.StartToEnd
+                    if (currentChapter >= lastChapter) null else DismissDirection.StartToEnd
                 ),
             background = {
                 val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
@@ -866,6 +870,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
         LastPageReached(
             isLoading = vm.isLoadingPages,
             currentChapter = vm.currentChapter,
+            lastChapter = vm.list.lastIndex,
             chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
             nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
             previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
@@ -1270,6 +1275,7 @@ fun LastPagePreview() {
         LastPageReached(
             isLoading = true,
             currentChapter = 3,
+            lastChapter = 4,
             chapterName = "Name".repeat(100),
             nextChapter = {},
             previousChapter = {}

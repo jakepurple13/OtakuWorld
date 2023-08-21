@@ -119,9 +119,9 @@ class ReadViewModel(
             }
         }
 
-        val url = handle.get<String>("mangaUrl") ?: ""
+        val url = chapterHolder.chapterModel?.url ?: handle.get<String>("mangaUrl")
         list = chapterHolder.chapters.orEmpty()
-        currentChapter = list.indexOfFirst { l -> l.url == url }
+        currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex)
 
         loadPages(modelPath)
     }
