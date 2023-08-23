@@ -7,7 +7,7 @@ kamelImage = "0.7.1"
 kotlin = "1.9.0"
 latestAboutLibsRelease = "10.8.3"
 coroutinesVersion = "1.7.3"
-glideVersion = "4.15.1"
+glideVersion = "4.16.0"
 navigationSafeArgsGradlePlugin = "2.7.0"
 pagingVersion = "3.2.0"
 roomVersion = "2.5.2"
@@ -150,7 +150,7 @@ iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
 firebaseAuth = "com.google.firebase:firebase-auth:22.1.1"
-googlePlayAds = "com.google.android.gms:play-services-ads:22.2.0"
+googlePlayAds = "com.google.android.gms:play-services-ads:22.3.0"
 
 pagingCompose = "androidx.paging:paging-compose:3.2.0"
 
@@ -255,7 +255,7 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
 androidxWebkit = "androidx.webkit:webkit:1.7.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
