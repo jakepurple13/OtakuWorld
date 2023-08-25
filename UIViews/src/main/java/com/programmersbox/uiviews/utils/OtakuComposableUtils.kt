@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -34,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -47,13 +45,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.placeholder.shimmer
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.components.BannerBox
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 
 object ComposableUtils {
     const val IMAGE_WIDTH_PX = 360
@@ -138,10 +136,6 @@ fun M3CoverCard(
 
 @Composable
 fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
-    val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-        .copy(0.1f)
-        .compositeOver(MaterialTheme.colorScheme.surface)
-
     Surface(
         modifier = modifier.size(
             ComposableUtils.IMAGE_WIDTH,
@@ -156,10 +150,9 @@ fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .placeholder(
+                    .m3placeholder(
                         true,
-                        color = placeholderColor,
-                        highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+                        highlight = PlaceholderHighlight.shimmer()
                     )
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
             )
@@ -193,10 +186,9 @@ fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
                     maxLines = 2,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .placeholder(
+                        .m3placeholder(
                             true,
-                            color = placeholderColor,
-                            highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+                            highlight = PlaceholderHighlight.shimmer()
                         )
                         .align(Alignment.BottomCenter)
                 )

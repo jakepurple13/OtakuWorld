@@ -282,7 +282,7 @@ compose = [
     "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
     "coilCompose",
     "composeConstraintLayout", "permissions",
-    "materialPlaceholder", "drawablePainter", "uiUtil",
+    "drawablePainter", "uiUtil",
     "materialYou", "materialWindow",
     "navCompose", "navMaterial", "systemUiController"
 ]

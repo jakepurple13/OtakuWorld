@@ -64,7 +64,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -78,7 +77,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
@@ -102,11 +100,13 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -317,12 +317,11 @@ fun GlobalSearchView(
                             ) {
                                 if (viewModel.isRefreshing) {
                                     items(3) {
-                                        val placeholderColor =
-                                            m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
-                                                .copy(0.1f)
-                                                .compositeOver(M3MaterialTheme.colorScheme.surface)
                                         Surface(
-                                            modifier = Modifier.placeholder(true, color = placeholderColor),
+                                            modifier = Modifier.m3placeholder(
+                                                true,
+                                                highlight = PlaceholderHighlight.shimmer()
+                                            ),
                                             tonalElevation = 4.dp,
                                             shape = M3MaterialTheme.shapes.medium
                                         ) {

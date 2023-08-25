@@ -71,9 +71,6 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -87,13 +84,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -103,16 +97,10 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.placeholder
-import com.google.accompanist.placeholder.shimmer
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
@@ -131,7 +119,9 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.animate
-import com.programmersbox.uiviews.utils.currentDetailsUrl
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.fadeInAnimation
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
@@ -148,7 +138,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -219,40 +208,6 @@ fun DetailsScreen(
 
         val shareChapter by handling.shareChapter.collectAsState(initial = true)
         var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
-
-        val systemUiController = rememberSystemUiController()
-        val statusBar = Color.Transparent
-        val statusBarColor = swatchInfo?.rgb?.toComposeColor()?.animate()
-
-        var c by remember { mutableStateOf(statusBar) }
-        val ac by animateColorAsState(c, label = "")
-
-        LaunchedEffect(ac) { systemUiController.setStatusBarColor(Color.Transparent, darkIcons = ac.luminance() > 0.5f) }
-
-        SideEffect { currentDetailsUrl = details.itemModel!!.url }
-
-        val lifecycleOwner = LocalLifecycleOwner.current
-
-        // If `lifecycleOwner` changes, dispose and reset the effect
-        DisposableEffect(lifecycleOwner, swatchInfo?.rgb) {
-            // Create an observer that triggers our remembered callbacks
-            // for sending analytics events
-            val observer = LifecycleEventObserver { _, event ->
-                c = when (event) {
-                    Lifecycle.Event.ON_CREATE -> statusBarColor?.value ?: statusBar
-                    Lifecycle.Event.ON_START -> statusBarColor?.value ?: statusBar
-                    Lifecycle.Event.ON_RESUME -> statusBarColor?.value ?: statusBar
-                    Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP, Lifecycle.Event.ON_DESTROY -> statusBar
-                    Lifecycle.Event.ON_ANY -> statusBarColor?.value ?: statusBar
-                }
-            }
-
-            // Add the observer to the lifecycle
-            lifecycleOwner.lifecycle.addObserver(observer)
-
-            // When the effect leaves the Composition, remove the observer
-            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-        }
 
         CompositionLocalProvider(
             LocalSwatchInfo provides remember(swatchInfo) { SwatchInfoColors(swatchInfo) },
@@ -804,12 +759,9 @@ internal fun DetailsHeader(
 @Composable
 private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
-    val placeholderModifier = Modifier.placeholder(
+    val placeholderModifier = Modifier.m3placeholder(
         true,
-        color = m3ContentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-            .copy(0.1f)
-            .compositeOver(MaterialTheme.colorScheme.surface),
-        highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+        highlight = PlaceholderHighlight.shimmer()
     )
 
     Box(
@@ -822,15 +774,17 @@ private fun PlaceHolderHeader(paddingValues: PaddingValues) {
 
             Card(
                 shape = RoundedCornerShape(4.dp),
-                modifier = Modifier.padding(4.dp)
+                modifier = Modifier
+                    .then(placeholderModifier)
+                    .padding(4.dp)
             ) {
                 Image(
                     imageVector = Icons.Default.CloudOff,
                     contentDescription = null,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .then(placeholderModifier)
                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+
                 )
             }
 

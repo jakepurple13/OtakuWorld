@@ -32,7 +32,6 @@ import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -47,7 +46,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -57,7 +55,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.sharedutils.MainLogo
@@ -76,6 +73,9 @@ import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.components.GradientImage
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showErrorToast
@@ -335,17 +335,15 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
 
 @Composable
 private fun HistoryItemPlaceholder() {
-    val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-        .copy(0.1f)
-        .compositeOver(MaterialTheme.colorScheme.surface)
-
     Surface(
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.placeholder(true, color = placeholderColor)
+        modifier = Modifier.m3placeholder(
+            true,
+            highlight = PlaceholderHighlight.shimmer()
+        )
     ) {
         ListItem(
-            modifier = Modifier.placeholder(true, color = placeholderColor),
             headlineContent = { Text("Otaku") },
             overlineContent = { Text("Otaku") },
             supportingContent = { Text("Otaku") },
@@ -363,7 +361,11 @@ private fun HistoryItemPlaceholder() {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = null)
                     Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
                 }
-            }
+            },
+            modifier = Modifier.m3placeholder(
+                true,
+                highlight = PlaceholderHighlight.shimmer()
+            ),
         )
     }
 }

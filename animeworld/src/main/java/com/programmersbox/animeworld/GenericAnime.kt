@@ -43,9 +43,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,7 +54,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -75,9 +72,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.placeholder.shimmer
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
@@ -109,6 +103,9 @@ import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.bottomSheet
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -334,10 +331,6 @@ class GenericAnime(
 
     @Composable
     override fun ComposeShimmerItem() {
-        val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-            .copy(0.1f)
-            .compositeOver(MaterialTheme.colorScheme.surface)
-
         LazyColumn {
             items(10) {
                 Card(
@@ -348,10 +341,9 @@ class GenericAnime(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .placeholder(
+                            .m3placeholder(
                                 true,
-                                color = placeholderColor,
-                                highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+                                highlight = PlaceholderHighlight.shimmer()
                             )
                     ) {
                         Icon(
