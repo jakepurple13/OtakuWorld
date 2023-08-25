@@ -92,7 +92,6 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
@@ -117,7 +116,6 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<GenericInfo> { GenericAnime(get(), get()) }
-    single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
 }

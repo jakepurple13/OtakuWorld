@@ -49,7 +49,6 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -219,8 +218,6 @@ fun PreviewTheme(
         }
     }
 }
-
-val MockAppIcon = MainLogo(R.drawable.ic_site_settings)
 
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, group = "themes")
 @Preview(showBackground = true, group = "themes")

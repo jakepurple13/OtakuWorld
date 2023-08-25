@@ -68,7 +68,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
@@ -84,6 +84,7 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
@@ -92,7 +93,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalFoundationApi
 @Composable
 fun AllView(
-    logo: MainLogo,
     context: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
@@ -163,7 +163,7 @@ fun AllView(
         var showBanner by remember { mutableStateOf(false) }
         OtakuBannerBox(
             showBanner = showBanner,
-            placeholder = logo.logoId,
+            placeholder = koinInject<AppLogo>().logoId,
             modifier = Modifier.padding(p1)
         ) {
             Crossfade(targetState = isConnected, label = "") { connected ->

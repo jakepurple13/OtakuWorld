@@ -10,7 +10,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -68,10 +67,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,6 +85,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
@@ -95,8 +93,8 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.all.AllView
 import com.programmersbox.uiviews.details.DetailsScreen
@@ -144,7 +142,7 @@ import org.koin.android.ext.android.inject
 abstract class BaseMainActivity : AppCompatActivity() {
 
     protected val genericInfo: GenericInfo by inject()
-    private val logo: MainLogo by inject()
+    private val appLogo: AppLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
     protected lateinit var navController: NavHostController
 
@@ -332,7 +330,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             NavigationRail(
                 header = {
                     Image(
-                        AppCompatResources.getDrawable(this@BaseMainActivity, logo.logoId)!!.toBitmap().asImageBitmap(),
+                        rememberDrawablePainter(drawable = appLogo.logo),
                         null,
                     )
                 },
@@ -455,8 +453,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
         customPreferences: ComposeSettingsDsl,
         windowSize: WindowSizeClass,
     ) {
-        composable(Screen.RecentScreen.route) { RecentView(logo = logo) }
-        composable(Screen.AllScreen.route) { AllView(logo = logo) }
+        composable(Screen.RecentScreen.route) { RecentView() }
+        composable(Screen.AllScreen.route) { AllView() }
         settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
         composable(
@@ -534,7 +532,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) {
                 InfoSettings(
-                    logo = logo,
                     usedLibraryClick = { navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true } }
                 )
             }
@@ -549,7 +546,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.HistoryScreen.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-            ) { HistoryUi(logo = logo) }
+            ) { HistoryUi() }
 
             composable(
                 Screen.FavoriteScreen.route,
@@ -557,7 +554,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
                 FavoriteUi(
-                    logo = logo,
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
             }
@@ -566,7 +562,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.AboutScreen.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-            ) { AboutLibrariesScreen(logo) }
+            ) { AboutLibrariesScreen() }
 
             composable(
                 Screen.GlobalSearchScreen.route + "?searchFor={searchFor}",
@@ -575,7 +571,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
                 GlobalSearchView(
-                    mainLogo = logo,
                     notificationLogo = notificationLogo,
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
@@ -586,14 +581,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.CustomListItemScreen.route + "/{uuid}"
             ) {
                 OtakuCustomListScreen(
-                    logo = logo,
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
             }
 
             composable(
                 Screen.ImportListScreen.route + "?uri={uri}"
-            ) { ImportListScreen(logo) }
+            ) { ImportListScreen() }
 
             composable(
                 Screen.NotificationScreen.route,
@@ -603,7 +597,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             ) {
                 val notificationManager = remember { this@BaseMainActivity.notificationManager }
                 NotificationsScreen(
-                    logo = logo,
                     notificationLogo = notificationLogo,
                     cancelNotificationById = notificationManager::cancel,
                     cancelNotification = notificationManager::cancelNotification
@@ -633,7 +626,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             GlobalSearchView(
-                mainLogo = logo,
                 notificationLogo = notificationLogo,
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
@@ -649,7 +641,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
         ) {
             val notificationManager = remember { this@BaseMainActivity.notificationManager }
             NotificationsScreen(
-                logo = logo,
                 notificationLogo = notificationLogo,
                 cancelNotificationById = notificationManager::cancel,
                 cancelNotification = notificationManager::cancelNotification
@@ -662,7 +653,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             FavoriteUi(
-                logo = logo,
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }

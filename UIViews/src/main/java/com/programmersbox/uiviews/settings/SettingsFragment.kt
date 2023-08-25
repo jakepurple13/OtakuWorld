@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.settings
 
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -51,20 +50,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
@@ -78,7 +76,6 @@ import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
-import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -163,7 +160,6 @@ fun SettingScreen(
 private fun SettingsScreen(
     dao: ItemDao = LocalItemDao.current,
     vm: SettingsViewModel = viewModel { SettingsViewModel(dao) },
-    logo: MainLogo = koinInject(),
     notificationClick: () -> Unit,
     composeSettingsDsl: ComposeSettingsDsl,
     debugMenuClick: () -> Unit,
@@ -335,7 +331,7 @@ private fun SettingsScreen(
     PreferenceSetting(
         settingIcon = {
             Image(
-                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                rememberDrawablePainter(drawable = koinInject<AppLogo>().logo),
                 null,
                 modifier = Modifier.fillMaxSize()
             )
@@ -358,7 +354,6 @@ private fun SettingsPreview() {
                 historyClick = {},
                 globalSearchClick = {},
                 listClick = {},
-                logo = MockAppIcon
             )
         }
     }

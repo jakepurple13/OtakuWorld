@@ -2,9 +2,9 @@ package com.programmersbox.animeworldtv
 
 import android.app.Application
 import com.programmersbox.loggingutils.Loged
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.FirebaseUIStyle
-import com.programmersbox.sharedutils.MainLogo
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
@@ -30,7 +30,7 @@ class AnimeWorldTV : Application() {
             androidContext(this@AnimeWorldTV)
             loadKoinModules(
                 module {
-                    single { MainLogo(R.mipmap.ic_launcher) }
+                    single { AppLogo(applicationInfo.loadIcon(packageManager), applicationInfo.icon) }
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorld) }
                 }
             )

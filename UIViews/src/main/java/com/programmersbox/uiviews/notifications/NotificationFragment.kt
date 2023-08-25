@@ -5,7 +5,6 @@ import android.graphics.drawable.Drawable
 import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -91,7 +90,7 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.R
@@ -109,7 +108,6 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
-import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -130,6 +128,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -146,7 +145,6 @@ fun NotificationManager.cancelNotification(item: NotificationItem) {
 )
 @Composable
 fun NotificationsScreen(
-    logo: MainLogo,
     notificationLogo: NotificationLogo,
     navController: NavController = LocalNavController.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
@@ -160,7 +158,7 @@ fun NotificationsScreen(
     val items = vm.items
 
     val context = LocalContext.current
-    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+    val logoDrawable = koinInject<AppLogo>().logo
 
     LaunchedEffect(Unit) {
         db.getAllNotificationCount()
@@ -751,7 +749,6 @@ private fun NotificationDeleteItem(
 private fun NotificationPreview() {
     PreviewTheme {
         NotificationsScreen(
-            logo = MockAppIcon,
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             cancelNotification = {},
             cancelNotificationById = {}

@@ -71,8 +71,8 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.BannerScope
@@ -83,7 +83,6 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
-import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -98,6 +97,7 @@ import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -105,7 +105,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalFoundationApi
 @Composable
 fun FavoriteUi(
-    logo: MainLogo,
     isHorizontal: Boolean = false,
     dao: ItemDao = LocalItemDao.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
@@ -124,6 +123,8 @@ fun FavoriteUi(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showDbModel by remember { mutableStateOf<DbModel?>(null) }
+
+    val logo = koinInject<AppLogo>().logoId
 
     SourceNotInstalledModal(
         showItem = showDbModel?.title,
@@ -147,7 +148,7 @@ fun FavoriteUi(
 
     OtakuBannerBox(
         showBanner = showBanner,
-        placeholder = logo.logoId,
+        placeholder = logo,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
     ) {
         OtakuScaffold(
@@ -382,7 +383,7 @@ private fun BannerScope.FavoritesGrid(
     navController: NavController,
     moreInfoClick: (DbModel) -> Unit,
     onShowBanner: (Boolean) -> Unit,
-    logo: MainLogo,
+    logo: Int,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -446,7 +447,7 @@ private fun BannerScope.FavoritesGrid(
                 },
                 imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                 name = info.key,
-                placeHolder = logo.logoId,
+                placeHolder = logo,
                 favoriteIcon = {
                     if (info.value.size > 1) {
                         Box(
@@ -494,6 +495,6 @@ private fun BannerScope.FavoritesGrid(
 @Composable
 private fun FavoriteScreenPreview() {
     PreviewTheme {
-        FavoriteUi(logo = MockAppIcon)
+        FavoriteUi()
     }
 }

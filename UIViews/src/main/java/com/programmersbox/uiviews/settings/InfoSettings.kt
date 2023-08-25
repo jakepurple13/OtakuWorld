@@ -2,7 +2,6 @@ package com.programmersbox.uiviews.settings
 
 import android.Manifest
 import android.os.Environment
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,14 +25,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
@@ -41,7 +39,6 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.ShowWhen
@@ -51,13 +48,13 @@ import com.programmersbox.uiviews.utils.components.icons.Github
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoSettings(
     infoViewModel: MoreInfoViewModel = viewModel(),
-    logo: MainLogo,
     usedLibraryClick: () -> Unit,
 ) {
     val activity = LocalActivity.current
@@ -110,7 +107,7 @@ fun InfoSettings(
         PreferenceSetting(
             settingIcon = {
                 Image(
-                    bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                    rememberDrawablePainter(drawable = koinInject<AppLogo>().logo),
                     null,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -195,7 +192,6 @@ fun InfoSettings(
 private fun InfoSettingsPreview() {
     PreviewTheme {
         InfoSettings(
-            logo = MockAppIcon,
             usedLibraryClick = {}
         )
     }

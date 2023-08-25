@@ -30,7 +30,7 @@ object FirebaseAuthentication : KoinComponent {
 
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    private val logo: MainLogo by inject()
+    private val logo: AppLogo by inject()
     private val style: FirebaseUIStyle by inject()
 
     fun signIn(activity: Activity) {

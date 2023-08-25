@@ -69,7 +69,6 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
@@ -98,7 +97,6 @@ import java.io.File
 val appModule = module {
     single<GenericInfo> { GenericManga(get(), get()) }
     single { NetworkHelper(get()) }
-    single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     single { ChapterHolder() }
 }

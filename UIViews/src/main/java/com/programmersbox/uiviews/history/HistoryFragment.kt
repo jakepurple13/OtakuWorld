@@ -1,6 +1,6 @@
 package com.programmersbox.uiviews.history
 
-import androidx.appcompat.content.res.AppCompatResources
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -57,7 +57,7 @@ import androidx.paging.compose.itemKey
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -68,7 +68,6 @@ import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
-import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
@@ -86,11 +85,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
 @Composable
 fun HistoryUi(
-    logo: MainLogo,
     dao: HistoryDao = LocalHistoryDao.current,
     hm: HistoryViewModel = viewModel { HistoryViewModel(dao) },
 ) {
@@ -100,6 +99,8 @@ fun HistoryUi(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var clearAllDialog by remember { mutableStateOf(false) }
+
+    val logoDrawable = koinInject<AppLogo>().logo
 
     if (clearAllDialog) {
         val onDismissRequest = { clearAllDialog = false }
@@ -158,7 +159,7 @@ fun HistoryUi(
                     HistoryItem(
                         item = item,
                         dao = dao,
-                        logo = logo,
+                        logoDrawable = logoDrawable,
                         scope = scope,
                         onError = {
                             scope.launch {
@@ -186,7 +187,13 @@ fun HistoryUi(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope, onError: () -> Unit) {
+private fun HistoryItem(
+    item: RecentModel,
+    dao: HistoryDao,
+    logoDrawable: Drawable?,
+    scope: CoroutineScope,
+    onError: () -> Unit,
+) {
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -260,7 +267,6 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
             )
 
             val context = LocalContext.current
-            val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
             val info = LocalSourcesRepository.current
             val navController = LocalNavController.current
@@ -375,7 +381,7 @@ private fun HistoryItemPlaceholder() {
 @Composable
 private fun HistoryScreenPreview() {
     PreviewTheme {
-        HistoryUi(logo = MockAppIcon)
+        HistoryUi()
     }
 }
 
@@ -392,9 +398,9 @@ private fun HistoryItemPreview() {
                 source = "MANGA_READ"
             ),
             dao = LocalHistoryDao.current,
-            logo = MockAppIcon,
             scope = rememberCoroutineScope(),
-            onError = {}
+            onError = {},
+            logoDrawable = null
         )
     }
 }

@@ -2,7 +2,6 @@ package com.programmersbox.uiviews.globalsearch
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -81,7 +80,7 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
@@ -93,7 +92,6 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
-import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -106,6 +104,7 @@ import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
@@ -114,7 +113,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 )
 @Composable
 fun GlobalSearchView(
-    mainLogo: MainLogo,
     notificationLogo: NotificationLogo,
     isHorizontal: Boolean,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
@@ -128,13 +126,12 @@ fun GlobalSearchView(
     },
 ) {
     val navController = LocalNavController.current
-    val context = LocalContext.current
 
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val pullRefreshState = rememberPullRefreshState(refreshing = viewModel.isRefreshing, onRefresh = {})
-    val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
+    val mainLogoDrawable = koinInject<AppLogo>()
 
     val networkState by viewModel.observeNetwork.collectAsState(initial = true)
 
@@ -146,7 +143,7 @@ fun GlobalSearchView(
 
     OtakuBannerBox(
         showBanner = showBanner,
-        placeholder = mainLogo.logoId,
+        placeholder = mainLogoDrawable.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
     ) {
         val bottomScaffold = rememberBottomSheetScaffoldState()
@@ -265,7 +262,7 @@ fun GlobalSearchView(
                             items(s.data) { m ->
                                 SearchCoverCard(
                                     model = m,
-                                    placeHolder = mainLogoDrawable,
+                                    placeHolder = mainLogoDrawable.logo,
                                     onLongPress = { c ->
                                         newItemModel(if (c == ComponentState.Pressed) m else null)
                                         showBanner = c == ComponentState.Pressed
@@ -382,7 +379,7 @@ fun GlobalSearchView(
                                                     items(i.data) { m ->
                                                         SearchCoverCard(
                                                             model = m,
-                                                            placeHolder = mainLogoDrawable,
+                                                            placeHolder = mainLogoDrawable.logo,
                                                             onLongPress = { c ->
                                                                 newItemModel(if (c == ComponentState.Pressed) m else null)
                                                                 showBanner = c == ComponentState.Pressed
@@ -486,7 +483,6 @@ private fun GlobalScreenPreview() {
     PreviewTheme {
         val dao = LocalHistoryDao.current
         GlobalSearchView(
-            mainLogo = MockAppIcon,
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             dao = dao,
             isHorizontal = false,

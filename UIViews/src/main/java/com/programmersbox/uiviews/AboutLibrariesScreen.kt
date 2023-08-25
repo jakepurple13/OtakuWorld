@@ -3,7 +3,6 @@ package com.programmersbox.uiviews
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -61,11 +60,12 @@ import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
 import com.mikepenz.aboutlibraries.ui.compose.LibraryPadding
 import com.mikepenz.aboutlibraries.ui.compose.util.author
 import com.mikepenz.aboutlibraries.util.withContext
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.appVersion
+import org.koin.compose.koinInject
 
 @Composable
 private fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
@@ -79,7 +79,7 @@ private fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Bu
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
 @Composable
-internal fun AboutLibrariesScreen(mainLogo: MainLogo) {
+internal fun AboutLibrariesScreen() {
     val libraries by libraryList()
     val context = LocalContext.current
 
@@ -120,10 +120,8 @@ internal fun AboutLibrariesScreen(mainLogo: MainLogo) {
             verticalArrangement = Arrangement.spacedBy(2.dp),
             header = {
                 stickyHeader {
-                    val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
-
                     DefaultHeader(
-                        logo = { Image(rememberDrawablePainter(drawable = mainLogoDrawable), null) },
+                        logo = { Image(rememberDrawablePainter(drawable = koinInject<AppLogo>().logo), null) },
                         version = appVersion(),
                     )
                 }
