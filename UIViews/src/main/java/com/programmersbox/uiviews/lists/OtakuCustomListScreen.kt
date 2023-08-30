@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -66,14 +68,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -81,7 +82,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
@@ -92,18 +93,21 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
+import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.CustomBannerBox
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
+import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
-import com.programmersbox.uiviews.utils.bounceClick
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
@@ -232,210 +236,251 @@ fun OtakuCustomListScreen(
         onDismissRequest = { showLoadingDialog = false }
     )
 
-    BottomSheetDeleteScaffold(
-        listOfItems = vm.items,
-        multipleTitle = stringResource(R.string.remove_items),
-        onRemove = { vm.removeItem(it) },
-        onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
-        bottomScrollBehavior = scrollBehavior,
-        state = state,
-        topBar = {
-            Surface {
-                Column {
-                    InsetSmallTopAppBar(
-                        title = { Text(customItem?.item?.name.orEmpty()) },
-                        navigationIcon = { BackButton() },
-                        actions = {
-                            var showMenu by remember { mutableStateOf(false) }
+    var showBanner by remember { mutableStateOf(false) }
 
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.export_list)) },
-                                    onClick = {
-                                        showMenu = false
-                                        pickDocumentLauncher.launch("${customItem?.item?.name}.json")
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.edit_import_list)) },
-                                    onClick = {
-                                        showMenu = false
-                                        showAdd = true
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(if (customListOrGrid) "List View" else "Grid View") },
-                                    onClick = {
-                                        scope.launch { context.updatePref(CUSTOM_LIST_LIST_OR_GRID, !customListOrGrid) }
-                                    },
-                                    leadingIcon = {
-                                        if (customListOrGrid) {
-                                            Icon(Icons.Default.List, null)
-                                        } else {
-                                            Icon(Icons.Default.GridView, null)
-                                        }
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.delete_list_title)) },
-                                    onClick = {
-                                        showMenu = false
-                                        deleteList = true
-                                    },
-                                    colors = MenuDefaults.itemColors(
-                                        textColor = MaterialTheme.colorScheme.onErrorContainer,
-                                    ),
-                                    modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
-                                )
-                            }
-
-                            IconButton(
-                                onClick = {
-                                    shareItem.launchCatching(
-                                        Intent.createChooser(
-                                            Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(
-                                                    Intent.EXTRA_TEXT,
-                                                    customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" }
-                                                )
-                                                putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
-                                            },
-                                            context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
-                                        )
-                                    )
-                                }
-                            ) { Icon(Icons.Default.Share, null) }
-
-                            IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
-                            Text("(${customItem?.list.orEmpty().size})")
-                        },
-                        scrollBehavior = scrollBehavior
-                    )
-
-                    DynamicSearchBar(
-                        query = vm.searchQuery,
-                        onQueryChange = vm::setQuery,
-                        isDocked = isHorizontal,
-                        onSearch = { vm.searchBarActive = false },
-                        active = vm.searchBarActive,
-                        onActiveChange = { vm.searchBarActive = it },
-                        placeholder = { Text(stringResource(id = R.string.search)) },
-                        trailingIcon = {
-                            IconButton(onClick = { vm.setQuery("") }) {
-                                Icon(Icons.Default.Cancel, null)
-                            }
-                        },
-                        windowInsets = WindowInsets(0.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            itemsIndexed(vm.items) { index, item ->
-                                ListItem(
-                                    headlineContent = { Text(item.title) },
-                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                    modifier = Modifier.clickable {
-                                        vm.setQuery(item.title)
-                                        vm.searchBarActive = false
-                                    }
-                                )
-                                if (index != vm.items.lastIndex) {
-                                    HorizontalDivider()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        itemUi = { item ->
-            ImageFlushListItem(
+    CustomBannerBox(
+        showBanner = showBanner,
+        bannerContent = {
+            ListItem(
                 leadingContent = {
-                    GradientImage(
-                        model = item.imageUrl,
-                        placeholder = rememberDrawablePainter(logoDrawable),
-                        error = rememberDrawablePainter(logoDrawable),
-                        contentScale = ContentScale.FillBounds,
-                        contentDescription = item.title,
-                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                    val logo = koinInject<AppLogo>().logoId
+                    CoilGradientImage(
+                        model = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(it?.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .placeholder(logo)
+                                .error(logo)
+                                .build()
+                        ),
+                        modifier = Modifier
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            .clip(MaterialTheme.shapes.small)
                     )
                 },
-                overlineContent = { Text(item.source) },
-                headlineContent = { Text(item.title) },
+                overlineContent = { Text(it?.source.orEmpty()) },
+                headlineContent = { Text(it?.title.orEmpty()) },
                 supportingContent = {
                     Text(
-                        item.description,
+                        it?.description.orEmpty(),
                         overflow = TextOverflow.Ellipsis,
-                        maxLines = 3
+                        maxLines = 5
                     )
                 },
+                modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
             )
-        }
-    ) { padding, ts ->
-        Crossfade(customListOrGrid, label = "") { target ->
-            when (target) {
-                true -> {
-                    LazyColumn(
-                        contentPadding = padding,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(vertical = 4.dp),
-                    ) {
-                        items(ts) { item ->
-                            CustomItem(
-                                item = item,
-                                logo = logoDrawable,
-                                showLoadingDialog = { showLoadingDialog = it },
-                                onDelete = { vm.removeItem(it) },
-                                onError = {
-                                    scope.launch {
-                                        state.snackbarHostState.currentSnackbarData?.dismiss()
-                                        state.snackbarHostState.showSnackbar(
-                                            "Something went wrong. Source might not be installed",
-                                            duration = SnackbarDuration.Short
+        },
+    ) {
+        BottomSheetDeleteScaffold(
+            listOfItems = vm.items,
+            multipleTitle = stringResource(R.string.remove_items),
+            onRemove = { vm.removeItem(it) },
+            onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
+            bottomScrollBehavior = scrollBehavior,
+            state = state,
+            topBar = {
+                Surface {
+                    Column {
+                        InsetSmallTopAppBar(
+                            title = { Text(customItem?.item?.name.orEmpty()) },
+                            navigationIcon = { BackButton() },
+                            actions = {
+                                var showMenu by remember { mutableStateOf(false) }
+
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.export_list)) },
+                                        onClick = {
+                                            showMenu = false
+                                            pickDocumentLauncher.launch("${customItem?.item?.name}.json")
+                                        }
+                                    )
+
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.edit_import_list)) },
+                                        onClick = {
+                                            showMenu = false
+                                            showAdd = true
+                                        }
+                                    )
+
+                                    DropdownMenuItem(
+                                        text = { Text(if (customListOrGrid) "List View" else "Grid View") },
+                                        onClick = {
+                                            scope.launch { context.updatePref(CUSTOM_LIST_LIST_OR_GRID, !customListOrGrid) }
+                                        },
+                                        leadingIcon = {
+                                            if (customListOrGrid) {
+                                                Icon(Icons.Default.List, null)
+                                            } else {
+                                                Icon(Icons.Default.GridView, null)
+                                            }
+                                        }
+                                    )
+
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.delete_list_title)) },
+                                        onClick = {
+                                            showMenu = false
+                                            deleteList = true
+                                        },
+                                        colors = MenuDefaults.itemColors(
+                                            textColor = MaterialTheme.colorScheme.onErrorContainer,
+                                        ),
+                                        modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        shareItem.launchCatching(
+                                            Intent.createChooser(
+                                                Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(
+                                                        Intent.EXTRA_TEXT,
+                                                        customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" }
+                                                    )
+                                                    putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
+                                                },
+                                                context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                            )
                                         )
                                     }
-                                },
-                                modifier = Modifier.animateItemPlacement()
-                            )
+                                ) { Icon(Icons.Default.Share, null) }
+
+                                IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
+                                Text("(${customItem?.list.orEmpty().size})")
+                            },
+                            scrollBehavior = scrollBehavior
+                        )
+
+                        DynamicSearchBar(
+                            query = vm.searchQuery,
+                            onQueryChange = vm::setQuery,
+                            isDocked = isHorizontal,
+                            onSearch = { vm.searchBarActive = false },
+                            active = vm.searchBarActive,
+                            onActiveChange = { vm.searchBarActive = it },
+                            placeholder = { Text(stringResource(id = R.string.search)) },
+                            trailingIcon = {
+                                IconButton(onClick = { vm.setQuery("") }) {
+                                    Icon(Icons.Default.Cancel, null)
+                                }
+                            },
+                            windowInsets = WindowInsets(0.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                itemsIndexed(vm.items) { index, item ->
+                                    ListItem(
+                                        headlineContent = { Text(item.title) },
+                                        leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                        modifier = Modifier.clickable {
+                                            vm.setQuery(item.title)
+                                            vm.searchBarActive = false
+                                        }
+                                    )
+                                    if (index != vm.items.lastIndex) {
+                                        HorizontalDivider()
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+            },
+            itemUi = { item ->
+                ImageFlushListItem(
+                    leadingContent = {
+                        GradientImage(
+                            model = item.imageUrl,
+                            placeholder = rememberDrawablePainter(logoDrawable),
+                            error = rememberDrawablePainter(logoDrawable),
+                            contentScale = ContentScale.FillBounds,
+                            contentDescription = item.title,
+                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    },
+                    overlineContent = { Text(item.source) },
+                    headlineContent = { Text(item.title) },
+                    supportingContent = {
+                        Text(
+                            item.description,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 3
+                        )
+                    },
+                )
+            }
+        ) { padding, ts ->
+            Crossfade(customListOrGrid, label = "") { target ->
+                when (target) {
+                    true -> {
+                        LazyColumn(
+                            contentPadding = padding,
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(vertical = 4.dp),
+                        ) {
+                            items(ts) { item ->
+                                CustomItem(
+                                    item = item,
+                                    logo = logoDrawable,
+                                    showLoadingDialog = { showLoadingDialog = it },
+                                    onDelete = { vm.removeItem(it) },
+                                    onError = {
+                                        scope.launch {
+                                            state.snackbarHostState.currentSnackbarData?.dismiss()
+                                            state.snackbarHostState.showSnackbar(
+                                                "Something went wrong. Source might not be installed",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.animateItemPlacement()
+                                )
+                            }
+                        }
+                    }
 
-                false -> {
-                    LazyVerticalGrid(
-                        columns = adaptiveGridCell(),
-                        contentPadding = padding,
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(ts) { item ->
-                            CustomItemVertical(
-                                item = item,
-                                logo = logoDrawable,
-                                showLoadingDialog = { showLoadingDialog = it },
-                                onError = {
-                                    scope.launch {
-                                        state.snackbarHostState.currentSnackbarData?.dismiss()
-                                        state.snackbarHostState.showSnackbar(
-                                            "Something went wrong. Source might not be installed",
-                                            duration = SnackbarDuration.Short
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.animateItemPlacement()
-                            )
+                    false -> {
+                        LazyVerticalGrid(
+                            columns = adaptiveGridCell(),
+                            contentPadding = padding,
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            items(ts) { item ->
+                                CustomItemVertical(
+                                    item = item,
+                                    logo = logoDrawable,
+                                    showLoadingDialog = { showLoadingDialog = it },
+                                    onError = {
+                                        scope.launch {
+                                            state.snackbarHostState.currentSnackbarData?.dismiss()
+                                            state.snackbarHostState.showSnackbar(
+                                                "Something went wrong. Source might not be installed",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    },
+                                    onShowBanner = {
+                                        newItem(if (it) item else null)
+                                        showBanner = it
+                                    },
+                                    modifier = Modifier.animateItemPlacement()
+                                )
+                            }
                         }
                     }
                 }
@@ -450,21 +495,18 @@ private fun CustomItemVertical(
     logo: Drawable?,
     showLoadingDialog: (Boolean) -> Unit,
     onError: () -> Unit,
+    onShowBanner: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
 
-    Surface(
-        modifier = modifier
-            .size(
-                ComposableUtils.IMAGE_WIDTH,
-                ComposableUtils.IMAGE_HEIGHT
-            )
-            .bounceClick(.9f),
-        tonalElevation = 4.dp,
-        shape = MaterialTheme.shapes.medium,
+    M3CoverCard(
+        onLongPress = { c -> onShowBanner(c == ComponentState.Pressed) },
+        imageUrl = item.imageUrl,
+        name = item.title,
+        placeHolder = logo,
         onClick = {
             sourceRepository
                 .toSourceByApiServiceName(item.source)
@@ -488,52 +530,9 @@ private fun CustomItemVertical(
                 }
                 ?.onCompletion { showLoadingDialog(false) }
                 ?.launchIn(scope) ?: onError()
-        }
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .placeholder(logo)
-                    .build(),
-                contentScale = ContentScale.FillBounds,
-                contentDescription = item.title,
-                modifier = Modifier.matchParentSize()
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 50f
-                        )
-                    )
-            ) {
-                Text(
-                    item.title,
-                    style = MaterialTheme
-                        .typography
-                        .bodyLarge
-                        .copy(textAlign = TextAlign.Center, color = Color.White),
-                    maxLines = 2,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                        .align(Alignment.BottomCenter)
-                )
-            }
-        }
-    }
+        },
+        modifier = modifier
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

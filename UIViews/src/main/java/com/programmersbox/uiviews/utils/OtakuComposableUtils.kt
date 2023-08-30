@@ -1,6 +1,8 @@
 package com.programmersbox.uiviews.utils
 
+import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -67,6 +69,80 @@ fun M3CoverCard(
     placeHolder: Int,
     modifier: Modifier = Modifier,
     error: Int = placeHolder,
+    headers: Map<String, Any> = emptyMap(),
+    onLongPress: (ComponentState) -> Unit = {},
+    favoriteIcon: @Composable BoxScope.() -> Unit = {},
+    onClick: () -> Unit = {},
+) {
+    Surface(
+        modifier = modifier
+            .size(
+                ComposableUtils.IMAGE_WIDTH,
+                ComposableUtils.IMAGE_HEIGHT
+            )
+            .bounceClick(.9f)
+            .combineClickableWithIndication(onLongPress, onClick),
+        tonalElevation = 4.dp,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
+                    .crossfade(true)
+                    .placeholder(placeHolder)
+                    .error(error)
+                    .build(),
+                contentScale = ContentScale.FillBounds,
+                contentDescription = name,
+                modifier = Modifier.matchParentSize()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 50f
+                        )
+                    )
+            ) {
+                Text(
+                    name,
+                    style = MaterialTheme
+                        .typography
+                        .bodyLarge
+                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.BottomCenter)
+                )
+            }
+
+            favoriteIcon()
+        }
+
+    }
+}
+
+@Composable
+fun M3CoverCard(
+    imageUrl: String,
+    name: String,
+    placeHolder: Drawable?,
+    modifier: Modifier = Modifier,
+    error: Drawable? = placeHolder,
     headers: Map<String, Any> = emptyMap(),
     onLongPress: (ComponentState) -> Unit = {},
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
@@ -263,6 +339,49 @@ fun OtakuBannerBox(
 
 interface BannerScope {
     fun newItemModel(itemModel: ItemModel?)
+}
+
+@Composable
+fun <T> CustomBannerBox(
+    bannerContent: @Composable BoxScope.(T?) -> Unit,
+    modifier: Modifier = Modifier,
+    showBanner: Boolean = false,
+    content: @Composable CustomBannerScope<T>.() -> Unit,
+) {
+    var itemInfo by remember { mutableStateOf<T?>(null) }
+
+    var bannerScope by remember { mutableStateOf<CustomBannerScope<T>?>(null) }
+
+    DisposableEffect(Unit) {
+        bannerScope = object : CustomBannerScope<T> {
+            override fun newItem(item: T?) {
+                itemInfo = item
+            }
+        }
+        onDispose { bannerScope = null }
+    }
+
+    BannerBox(
+        modifier = modifier,
+        showBanner = showBanner,
+        banner = {
+            Surface(
+                shape = MaterialTheme.shapes.medium.copy(topStart = CornerSize(0.dp), topEnd = CornerSize(0.dp)),
+                tonalElevation = 4.dp,
+                shadowElevation = 10.dp,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .animateContentSize(),
+            ) {
+                bannerContent(itemInfo)
+            }
+        },
+        content = { bannerScope?.content() }
+    )
+}
+
+interface CustomBannerScope<T> {
+    fun newItem(item: T?)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
