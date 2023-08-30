@@ -1,9 +1,11 @@
 package com.programmersbox.uiviews.lists
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -19,11 +21,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -61,15 +67,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -88,16 +101,21 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.bounceClick
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
+import com.programmersbox.uiviews.utils.dataStore
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.navigateToDetails
+import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -105,6 +123,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import java.util.UUID
+
+private val CUSTOM_LIST_LIST_OR_GRID = booleanPreferencesKey("custom_list_list_or_grid")
+
+private val Context.customListOrGrid get() = dataStore.data.map { it[CUSTOM_LIST_LIST_OR_GRID] ?: true }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -114,6 +136,7 @@ fun OtakuCustomListScreen(
     vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) },
 ) {
     val context = LocalContext.current
+    val customListOrGrid by context.customListOrGrid.collectAsStateWithLifecycle(true)
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -246,6 +269,20 @@ fun OtakuCustomListScreen(
                                 )
 
                                 DropdownMenuItem(
+                                    text = { Text(if (customListOrGrid) "List View" else "Grid View") },
+                                    onClick = {
+                                        scope.launch { context.updatePref(CUSTOM_LIST_LIST_OR_GRID, !customListOrGrid) }
+                                    },
+                                    leadingIcon = {
+                                        if (customListOrGrid) {
+                                            Icon(Icons.Default.List, null)
+                                        } else {
+                                            Icon(Icons.Default.GridView, null)
+                                        }
+                                    }
+                                )
+
+                                DropdownMenuItem(
                                     text = { Text(stringResource(R.string.delete_list_title)) },
                                     onClick = {
                                         showMenu = false
@@ -257,6 +294,7 @@ fun OtakuCustomListScreen(
                                     modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
                                 )
                             }
+
                             IconButton(
                                 onClick = {
                                     shareItem.launchCatching(
@@ -345,27 +383,153 @@ fun OtakuCustomListScreen(
             )
         }
     ) { padding, ts ->
-        LazyColumn(
-            contentPadding = padding,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
-        ) {
-            items(ts) { item ->
-                CustomItem(
-                    item = item,
-                    logo = logoDrawable,
-                    showLoadingDialog = { showLoadingDialog = it },
-                    onDelete = { vm.removeItem(it) },
-                    onError = {
-                        scope.launch {
-                            state.snackbarHostState.currentSnackbarData?.dismiss()
-                            state.snackbarHostState.showSnackbar(
-                                "Something went wrong. Source might not be installed",
-                                duration = SnackbarDuration.Short
+        Crossfade(customListOrGrid, label = "") { target ->
+            when (target) {
+                true -> {
+                    LazyColumn(
+                        contentPadding = padding,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    ) {
+                        items(ts) { item ->
+                            CustomItem(
+                                item = item,
+                                logo = logoDrawable,
+                                showLoadingDialog = { showLoadingDialog = it },
+                                onDelete = { vm.removeItem(it) },
+                                onError = {
+                                    scope.launch {
+                                        state.snackbarHostState.currentSnackbarData?.dismiss()
+                                        state.snackbarHostState.showSnackbar(
+                                            "Something went wrong. Source might not be installed",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.animateItemPlacement()
                             )
                         }
-                    },
-                    modifier = Modifier.animateItemPlacement()
+                    }
+                }
+
+                false -> {
+                    LazyVerticalGrid(
+                        columns = adaptiveGridCell(),
+                        contentPadding = padding,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(ts) { item ->
+                            CustomItemVertical(
+                                item = item,
+                                logo = logoDrawable,
+                                showLoadingDialog = { showLoadingDialog = it },
+                                onError = {
+                                    scope.launch {
+                                        state.snackbarHostState.currentSnackbarData?.dismiss()
+                                        state.snackbarHostState.showSnackbar(
+                                            "Something went wrong. Source might not be installed",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.animateItemPlacement()
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CustomItemVertical(
+    item: CustomListInfo,
+    logo: Drawable?,
+    showLoadingDialog: (Boolean) -> Unit,
+    onError: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scope = rememberCoroutineScope()
+    val sourceRepository = LocalSourcesRepository.current
+    val navController = LocalNavController.current
+
+    Surface(
+        modifier = modifier
+            .size(
+                ComposableUtils.IMAGE_WIDTH,
+                ComposableUtils.IMAGE_HEIGHT
+            )
+            .bounceClick(.9f),
+        tonalElevation = 4.dp,
+        shape = MaterialTheme.shapes.medium,
+        onClick = {
+            sourceRepository
+                .toSourceByApiServiceName(item.source)
+                ?.apiService
+                ?.let { source ->
+                    Cached.cache[item.url]?.let {
+                        flow {
+                            emit(
+                                it
+                                    .toDbModel()
+                                    .toItemModel(source)
+                            )
+                        }
+                    } ?: source.getSourceByUrlFlow(item.url)
+                }
+                ?.dispatchIo()
+                ?.onStart { showLoadingDialog(true) }
+                ?.onEach {
+                    showLoadingDialog(false)
+                    navController.navigateToDetails(it)
+                }
+                ?.onCompletion { showLoadingDialog(false) }
+                ?.launchIn(scope) ?: onError()
+        }
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(item.imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .crossfade(true)
+                    .placeholder(logo)
+                    .build(),
+                contentScale = ContentScale.FillBounds,
+                contentDescription = item.title,
+                modifier = Modifier.matchParentSize()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 50f
+                        )
+                    )
+            ) {
+                Text(
+                    item.title,
+                    style = MaterialTheme
+                        .typography
+                        .bodyLarge
+                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.BottomCenter)
                 )
             }
         }
