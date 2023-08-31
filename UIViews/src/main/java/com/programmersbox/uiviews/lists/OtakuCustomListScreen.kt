@@ -460,7 +460,11 @@ fun OtakuCustomListScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(ts) { item ->
+                            items(
+                                ts,
+                                key = { it },
+                                contentType = { it }
+                            ) { item ->
                                 CustomItemVertical(
                                     item = item,
                                     logo = logoDrawable,

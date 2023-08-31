@@ -211,6 +211,79 @@ fun M3CoverCard(
 }
 
 @Composable
+fun M3CoverCard(
+    imageUrl: String,
+    name: String,
+    placeHolder: Drawable?,
+    modifier: Modifier = Modifier,
+    error: Drawable? = placeHolder,
+    headers: Map<String, Any> = emptyMap(),
+    favoriteIcon: @Composable BoxScope.() -> Unit = {},
+    onClick: () -> Unit = {},
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier
+            .size(
+                ComposableUtils.IMAGE_WIDTH,
+                ComposableUtils.IMAGE_HEIGHT
+            )
+            .bounceClick(.9f),
+        tonalElevation = 4.dp,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
+                    .crossfade(true)
+                    .placeholder(placeHolder)
+                    .error(error)
+                    .build(),
+                contentScale = ContentScale.FillBounds,
+                contentDescription = name,
+                modifier = Modifier.matchParentSize()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 50f
+                        )
+                    )
+            ) {
+                Text(
+                    name,
+                    style = MaterialTheme
+                        .typography
+                        .bodyLarge
+                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.BottomCenter)
+                )
+            }
+
+            favoriteIcon()
+        }
+
+    }
+}
+
+@Composable
 fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.size(
