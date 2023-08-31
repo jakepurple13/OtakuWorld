@@ -462,8 +462,7 @@ fun OtakuCustomListScreen(
                         ) {
                             items(
                                 ts,
-                                key = { it.url + it.source },
-                                contentType = { it }
+                                key = { "${it.url}${it.source}${it.uuid}${it.uniqueId}" },
                             ) { item ->
                                 CustomItemVertical(
                                     item = item,
