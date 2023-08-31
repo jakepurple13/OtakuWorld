@@ -24,7 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -460,10 +460,11 @@ fun OtakuCustomListScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(
-                                ts,
-                                key = { "${it.url}${it.source}${it.uuid}${it.uniqueId}" },
-                            ) { item ->
+                            itemsIndexed(
+                                items = ts,
+                                key = { index, it -> "${it.url}$index" },
+                                contentType = { _, it -> it }
+                            ) { _, item ->
                                 CustomItemVertical(
                                     item = item,
                                     logo = logoDrawable,
