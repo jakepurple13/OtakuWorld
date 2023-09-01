@@ -29,7 +29,7 @@ android {
 dependencies {
     implementation(libs.material)
     testImplementation(TestDeps.junit)
-    testImplementation("com.jakewharton.picnic:picnic:0.6.0")
+    testImplementation("com.jakewharton.picnic:picnic:0.7.0")
     testImplementation("com.lordcodes.turtle:turtle:0.8.0")
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
