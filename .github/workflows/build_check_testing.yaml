@@ -33,7 +33,7 @@ jobs:
     if: github.event.inputs.build_mangaworld == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - run: echo $MANGA_GOOGLE_SERVICES_JSON > mangaworld/google-services.json
         env:
           MANGA_GOOGLE_SERVICES_JSON: ${{ secrets.MANGA_SERVICES }}
@@ -94,7 +94,7 @@ jobs:
     if: github.event.inputs.build_animeworld == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
         env:
@@ -156,7 +156,7 @@ jobs:
     if: github.event.inputs.build_animeworldtv == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - run: echo $ANIME_TV_GOOGLE_SERVICES_JSON > animeworldtv/google-services.json
         env:
@@ -218,7 +218,7 @@ jobs:
     if: github.event.inputs.build_novelworld == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - run: echo $NOVEL_GOOGLE_SERVICES_JSON > novelworld/google-services.json
         env:
