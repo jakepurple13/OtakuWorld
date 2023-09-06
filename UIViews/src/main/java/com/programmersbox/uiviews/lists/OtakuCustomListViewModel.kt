@@ -36,7 +36,12 @@ class OtakuCustomListViewModel(
     var searchQuery by mutableStateOf("")
 
     val items by derivedStateOf {
-        customItem?.list.orEmpty().filter { it.title.contains(searchQuery, ignoreCase = true) }
+        customItem?.list
+            .orEmpty()
+            .filter { it.title.contains(searchQuery, ignoreCase = true) }
+            .groupBy { it.title }
+            .entries
+            .toList()
     }
 
     init {

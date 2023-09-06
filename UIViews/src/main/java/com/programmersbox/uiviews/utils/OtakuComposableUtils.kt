@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -70,20 +72,36 @@ fun M3CoverCard(
     modifier: Modifier = Modifier,
     error: Int = placeHolder,
     headers: Map<String, Any> = emptyMap(),
-    onLongPress: (ComponentState) -> Unit = {},
+    onLongPress: ((ComponentState) -> Unit)? = null,
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {},
 ) {
-    Surface(
+    @Composable
+    fun CustomSurface(modifier: Modifier, tonalElevation: Dp, shape: Shape, content: @Composable () -> Unit) {
+        onLongPress?.let {
+            Surface(
+                modifier = modifier.combineClickableWithIndication(it, onClick),
+                tonalElevation = tonalElevation,
+                shape = shape,
+                content = content
+            )
+        } ?: Surface(
+            modifier = modifier,
+            tonalElevation = tonalElevation,
+            shape = shape,
+            onClick = onClick,
+            content = content
+        )
+    }
+    CustomSurface(
         modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f)
-            .combineClickableWithIndication(onLongPress, onClick),
+            .bounceClick(.9f),
         tonalElevation = 4.dp,
-        shape = MaterialTheme.shapes.medium
+        shape = MaterialTheme.shapes.medium,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -144,20 +162,36 @@ fun M3CoverCard(
     modifier: Modifier = Modifier,
     error: Drawable? = placeHolder,
     headers: Map<String, Any> = emptyMap(),
-    onLongPress: (ComponentState) -> Unit = {},
+    onLongPress: ((ComponentState) -> Unit)? = null,
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {},
 ) {
-    Surface(
+    @Composable
+    fun CustomSurface(modifier: Modifier, tonalElevation: Dp, shape: Shape, content: @Composable () -> Unit) {
+        onLongPress?.let {
+            Surface(
+                modifier = modifier.combineClickableWithIndication(it, onClick),
+                tonalElevation = tonalElevation,
+                shape = shape,
+                content = content
+            )
+        } ?: Surface(
+            modifier = modifier,
+            tonalElevation = tonalElevation,
+            shape = shape,
+            onClick = onClick,
+            content = content
+        )
+    }
+    CustomSurface(
         modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f)
-            .combineClickableWithIndication(onLongPress, onClick),
+            .bounceClick(.9f),
         tonalElevation = 4.dp,
-        shape = MaterialTheme.shapes.medium
+        shape = MaterialTheme.shapes.medium,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

@@ -1,11 +1,9 @@
 package com.programmersbox.uiviews.lists
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -24,14 +22,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -49,15 +46,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -77,9 +77,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
@@ -106,20 +104,19 @@ import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
-import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
-import com.programmersbox.uiviews.utils.dataStore
+import com.programmersbox.uiviews.utils.components.ListBottomScreen
+import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
+import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.navigateToDetails
-import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -127,10 +124,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import java.util.UUID
-
-private val CUSTOM_LIST_LIST_OR_GRID = booleanPreferencesKey("custom_list_list_or_grid")
-
-private val Context.customListOrGrid get() = dataStore.data.map { it[CUSTOM_LIST_LIST_OR_GRID] ?: true }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -140,12 +133,11 @@ fun OtakuCustomListScreen(
     vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) },
 ) {
     val context = LocalContext.current
-    val customListOrGrid by context.customListOrGrid.collectAsStateWithLifecycle(true)
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val customItem = vm.customItem
-    val state = rememberBottomSheetScaffoldState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val logoDrawable = koinInject<AppLogo>().logo
 
@@ -272,13 +264,8 @@ fun OtakuCustomListScreen(
             )
         },
     ) {
-        BottomSheetDeleteScaffold(
-            listOfItems = vm.items,
-            multipleTitle = stringResource(R.string.remove_items),
-            onRemove = { vm.removeItem(it) },
-            onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
-            bottomScrollBehavior = scrollBehavior,
-            state = state,
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 Surface {
                     Column {
@@ -305,20 +292,6 @@ fun OtakuCustomListScreen(
                                         onClick = {
                                             showMenu = false
                                             showAdd = true
-                                        }
-                                    )
-
-                                    DropdownMenuItem(
-                                        text = { Text(if (customListOrGrid) "List View" else "Grid View") },
-                                        onClick = {
-                                            scope.launch { context.updatePref(CUSTOM_LIST_LIST_OR_GRID, !customListOrGrid) }
-                                        },
-                                        leadingIcon = {
-                                            if (customListOrGrid) {
-                                                Icon(Icons.Default.List, null)
-                                            } else {
-                                                Icon(Icons.Default.GridView, null)
-                                            }
                                         }
                                     )
 
@@ -383,10 +356,10 @@ fun OtakuCustomListScreen(
                             ) {
                                 itemsIndexed(vm.items) { index, item ->
                                     ListItem(
-                                        headlineContent = { Text(item.title) },
+                                        headlineContent = { Text(item.key) },
                                         leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
                                         modifier = Modifier.clickable {
-                                            vm.setQuery(item.title)
+                                            vm.setQuery(item.key)
                                             vm.searchBarActive = false
                                         }
                                     )
@@ -398,104 +371,51 @@ fun OtakuCustomListScreen(
                         }
                     }
                 }
-            },
-            itemUi = { item ->
-                ImageFlushListItem(
-                    leadingContent = {
-                        GradientImage(
-                            model = item.imageUrl,
-                            placeholder = rememberDrawablePainter(logoDrawable),
-                            error = rememberDrawablePainter(logoDrawable),
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = item.title,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    },
-                    overlineContent = { Text(item.source) },
-                    headlineContent = { Text(item.title) },
-                    supportingContent = {
-                        Text(
-                            item.description,
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = 3
-                        )
-                    },
-                )
             }
-        ) { padding, ts ->
-            Crossfade(customListOrGrid, label = "") { target ->
-                when (target) {
-                    true -> {
-                        LazyColumn(
-                            contentPadding = padding,
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(vertical = 4.dp),
-                        ) {
-                            items(ts) { item ->
-                                CustomItem(
-                                    item = item,
-                                    logo = logoDrawable,
-                                    showLoadingDialog = { showLoadingDialog = it },
-                                    onDelete = { vm.removeItem(it) },
-                                    onError = {
-                                        scope.launch {
-                                            state.snackbarHostState.currentSnackbarData?.dismiss()
-                                            state.snackbarHostState.showSnackbar(
-                                                "Something went wrong. Source might not be installed",
-                                                duration = SnackbarDuration.Short
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.animateItemPlacement()
+        ) { padding ->
+            LazyVerticalGrid(
+                columns = adaptiveGridCell(),
+                contentPadding = padding,
+                modifier = Modifier.padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(
+                    items = vm.items,
+                    key = { it.key },
+                    contentType = { it }
+                ) { item ->
+                    CustomItemVertical(
+                        items = item.value,
+                        title = item.key,
+                        logo = logoDrawable,
+                        showLoadingDialog = { showLoadingDialog = it },
+                        onError = {
+                            scope.launch {
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Short
                                 )
                             }
-                        }
-                    }
-
-                    false -> {
-                        LazyVerticalGrid(
-                            columns = adaptiveGridCell(),
-                            contentPadding = padding,
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            itemsIndexed(
-                                items = ts,
-                                key = { index, it -> "${it.url}$index" },
-                                contentType = { _, it -> it }
-                            ) { _, item ->
-                                CustomItemVertical(
-                                    item = item,
-                                    logo = logoDrawable,
-                                    showLoadingDialog = { showLoadingDialog = it },
-                                    onError = {
-                                        scope.launch {
-                                            state.snackbarHostState.currentSnackbarData?.dismiss()
-                                            state.snackbarHostState.showSnackbar(
-                                                "Something went wrong. Source might not be installed",
-                                                duration = SnackbarDuration.Short
-                                            )
-                                        }
-                                    },
-                                    onShowBanner = {
-                                        newItem(if (it) item else null)
-                                        showBanner = it
-                                    },
-                                    modifier = Modifier.animateItemPlacement()
-                                )
-                            }
-                        }
-                    }
+                        },
+                        onShowBanner = {
+                            newItem(if (it) item.value.firstOrNull() else null)
+                            showBanner = it
+                        },
+                        modifier = Modifier.animateItemPlacement()
+                    )
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CustomItemVertical(
-    item: CustomListInfo,
+    items: List<CustomListInfo>,
+    title: String,
     logo: Drawable?,
     showLoadingDialog: (Boolean) -> Unit,
     onError: () -> Unit,
@@ -506,34 +426,98 @@ private fun CustomItemVertical(
     val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
 
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false }
+        ) {
+            ListBottomScreen(
+                navigationIcon = {
+                    IconButton(onClick = { showBottomSheet = false }) { Icon(Icons.Default.Close, null) }
+                },
+                includeInsetPadding = false,
+                title = stringResource(R.string.chooseASource),
+                list = items,
+                onClick = { item ->
+                    showBottomSheet = false
+                    sourceRepository
+                        .toSourceByApiServiceName(item.source)
+                        ?.apiService
+                        ?.let { source ->
+                            Cached.cache[item.url]?.let {
+                                flow {
+                                    emit(
+                                        it
+                                            .toDbModel()
+                                            .toItemModel(source)
+                                    )
+                                }
+                            } ?: source.getSourceByUrlFlow(item.url)
+                        }
+                        ?.dispatchIo()
+                        ?.onStart { showLoadingDialog(true) }
+                        ?.onEach {
+                            showLoadingDialog(false)
+                            navController.navigateToDetails(it)
+                        }
+                        ?.onCompletion { showLoadingDialog(false) }
+                        ?.launchIn(scope) ?: onError()
+                }
+            ) {
+                ListBottomSheetItemModel(
+                    primaryText = it.title,
+                    overlineText = it.source
+                )
+            }
+        }
+    }
+
     M3CoverCard(
         onLongPress = { c -> onShowBanner(c == ComponentState.Pressed) },
-        imageUrl = item.imageUrl,
-        name = item.title,
+        imageUrl = remember(items) { items.firstOrNull()?.imageUrl.orEmpty() },
+        name = title,
         placeHolder = logo,
+        favoriteIcon = {
+            if (items.size > 1) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Circle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                    Text(
+                        items.size.toString(),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+        },
         onClick = {
-            sourceRepository
-                .toSourceByApiServiceName(item.source)
-                ?.apiService
-                ?.let { source ->
-                    Cached.cache[item.url]?.let {
-                        flow {
-                            emit(
-                                it
-                                    .toDbModel()
-                                    .toItemModel(source)
-                            )
+            if (items.size == 1) {
+                runCatching {
+                    val listItem = items.first()
+                    sourceRepository.loadItem(listItem.source, listItem.url)
+                        ?.onStart { showLoadingDialog(true) }
+                        ?.onEach {
+                            showLoadingDialog(false)
+                            navController.navigateToDetails(it)
                         }
-                    } ?: source.getSourceByUrlFlow(item.url)
+                        ?.onCompletion { showLoadingDialog(false) }
+                        ?.launchIn(scope) ?: error("Nothing")
+                }.onFailure {
+                    it.printStackTrace()
+                    onError()
                 }
-                ?.dispatchIo()
-                ?.onStart { showLoadingDialog(true) }
-                ?.onEach {
-                    showLoadingDialog(false)
-                    navController.navigateToDetails(it)
-                }
-                ?.onCompletion { showLoadingDialog(false) }
-                ?.launchIn(scope) ?: onError()
+            } else {
+                showBottomSheet = true
+            }
         },
         modifier = modifier
     )
