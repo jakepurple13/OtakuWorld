@@ -36,7 +36,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -396,7 +396,7 @@ fun NovelReader(
                                     ListItem(
                                         headlineContent = { Text(c.name) },
                                         leadingContent = if (readVm.currentChapter == i) {
-                                            { Icon(Icons.Default.ArrowRight, null) }
+                                            { Icon(Icons.AutoMirrored.Filled.ArrowRight, null) }
                                         } else null,
                                         modifier = Modifier.clickable { showChangeChapter = true }
                                     )

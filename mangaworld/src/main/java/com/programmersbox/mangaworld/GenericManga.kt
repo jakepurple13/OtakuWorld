@@ -21,12 +21,12 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChromeReaderMode
+import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatLineSpacing
-import androidx.compose.material.icons.filled.LibraryBooks
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -266,7 +266,7 @@ class GenericManga(
         viewSettings {
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
-                settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
@@ -389,7 +389,7 @@ class GenericManga(
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.useNewReader)) },
                 summaryValue = { Text(stringResource(R.string.reader_summary_setting)) },
-                settingIcon = { Icon(Icons.Default.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
                 value = reader,
                 updateValue = { scope.launch { context.updatePref(USER_NEW_READER, it) } }
             )
@@ -402,7 +402,7 @@ class GenericManga(
                     summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
                     value = listOrPager,
                     updateValue = { scope.launch { context.updatePref(LIST_OR_PAGER, it) } },
-                    settingIcon = { Icon(if (listOrPager) Icons.Default.List else Icons.Default.Pages, null) }
+                    settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
                 )
             }
         }

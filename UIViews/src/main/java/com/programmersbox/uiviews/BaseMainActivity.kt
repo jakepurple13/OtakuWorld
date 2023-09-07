@@ -34,10 +34,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -366,7 +366,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 }
 
                 NavigationRailItem(
-                    imageVector = Icons.Default.List,
+                    imageVector = Icons.AutoMirrored.Default.List,
                     label = stringResource(R.string.custom_lists_title),
                     screen = Screen.CustomListScreen,
                     currentDestination = currentDestination,

@@ -37,7 +37,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -48,7 +49,6 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
@@ -239,7 +239,7 @@ fun DetailsView(
                     },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = topBarColor)
                         }
                     },
                     actions = {
@@ -465,7 +465,7 @@ fun DetailsViewLandscape(
                     title = { Text(info.title) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, null, tint = topBarColor)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = topBarColor)
                         }
                     },
                     actions = {
@@ -838,7 +838,7 @@ private fun DetailActions(
                 onReverseChaptersClick()
             },
             text = { Text(stringResource(id = R.string.reverseOrder)) },
-            leadingIcon = { Icon(Icons.Default.Sort, null) }
+            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Sort, null) }
         )
     }
 

@@ -7,8 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
@@ -66,7 +66,7 @@ fun InfoSettings(
     SettingsScaffold(stringResource(R.string.more_info_category)) {
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.view_libraries_used)) },
-            settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+            settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() },

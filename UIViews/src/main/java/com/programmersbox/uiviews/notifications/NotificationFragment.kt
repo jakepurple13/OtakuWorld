@@ -23,11 +23,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -229,7 +229,7 @@ fun NotificationsScreen(
                     IconToggleButton(
                         checked = vm.sortedBy == NotificationSortBy.Grouped,
                         onCheckedChange = { vm.toggleSort() }
-                    ) { Icon(Icons.Default.Sort, null) }
+                    ) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
                 },
                 navigationIcon = { BackButton() }
             )

@@ -23,13 +23,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReadMore
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.ReadMore
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -181,14 +181,14 @@ fun FavoriteUi(
                                         },
                                         GroupButtonModel(SortFavoritesBy.COUNT) {
                                             Icon(
-                                                Icons.Default.Sort,
+                                                Icons.AutoMirrored.Filled.Sort,
                                                 null,
                                                 modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.COUNT))
                                             )
                                         },
                                         GroupButtonModel(SortFavoritesBy.CHAPTERS) {
                                             Icon(
-                                                Icons.Default.ReadMore,
+                                                Icons.AutoMirrored.Filled.ReadMore,
                                                 null,
                                                 modifier = Modifier.rotate(rotateIcon(SortFavoritesBy.CHAPTERS))
                                             )

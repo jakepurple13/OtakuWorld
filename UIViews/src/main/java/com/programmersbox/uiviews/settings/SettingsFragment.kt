@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Check
@@ -19,7 +20,6 @@ import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -168,7 +168,6 @@ private fun SettingsScreen(
     globalSearchClick: () -> Unit,
     listClick: () -> Unit,
 ) {
-    val context = LocalContext.current
     val navController = LocalNavController.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
 
@@ -209,7 +208,7 @@ private fun SettingsScreen(
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(id = R.string.custom_lists_title)) },
-        settingIcon = { Icon(Icons.Default.List, null, modifier = Modifier.fillMaxSize()) },
+        settingIcon = { Icon(Icons.AutoMirrored.Default.List, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
@@ -487,7 +486,7 @@ fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
     }
 }
 
-private fun Modifier.click(action: () -> Unit): Modifier = composed {
+private fun Modifier.click(action: () -> Unit): Modifier = this.composed {
     clickable(
         indication = rememberRipple(),
         interactionSource = remember { MutableInteractionSource() },

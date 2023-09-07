@@ -2,10 +2,10 @@ package com.programmersbox.animeworld.videochoice
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled._360
 import androidx.compose.material.icons.filled.DeviceUnknown
 import androidx.compose.material.icons.filled._10mp
 import androidx.compose.material.icons.filled._1k
-import androidx.compose.material.icons.filled._360
 import androidx.compose.material.icons.filled._4k
 import androidx.compose.material.icons.filled._4mp
 import androidx.compose.material.icons.filled._7mp
@@ -72,7 +72,7 @@ fun VideoChoiceScreen(
             primaryText = it.quality.orEmpty(),
             icon = when (getQualityFromName(it.quality.orEmpty())) {
                 Qualities.Unknown -> Icons.Default.DeviceUnknown
-                Qualities.P360 -> Icons.Default._360
+                Qualities.P360 -> Icons.AutoMirrored.Filled._360
                 Qualities.P480 -> Icons.Default._4mp
                 Qualities.P720 -> Icons.Default._7mp
                 Qualities.P1080 -> Icons.Default._10mp

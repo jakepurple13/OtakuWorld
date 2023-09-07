@@ -49,7 +49,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -476,7 +475,6 @@ fun SearchCoverCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @LightAndDarkPreviews
 @Composable
 private fun GlobalScreenPreview() {

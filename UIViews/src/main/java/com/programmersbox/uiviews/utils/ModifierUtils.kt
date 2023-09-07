@@ -122,13 +122,14 @@ fun Modifier.scaleRotateOffset(
     }
     val animScale = animateFloatAsState(scale.value, label = "").value
     val (x, y) = animateOffsetAsState(offset.value, label = "").value
-    return graphicsLayer(
-        scaleX = animScale,
-        scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation.value, label = "").value,
-        translationX = x,
-        translationY = y
-    )
+    return this
+        .graphicsLayer(
+            scaleX = animScale,
+            scaleY = animScale,
+            rotationZ = animateFloatAsState(rotation.value, label = "").value,
+            translationX = x,
+            translationY = y
+        )
         // add transformable to listen to multitouch transformation events after offset
         .transformable(state = state)
 }
@@ -139,8 +140,8 @@ fun Modifier.scaleRotateOffsetReset(
     canRotate: Boolean = true,
     canOffset: Boolean = true,
     onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {}
-): Modifier = composed {
+    onLongClick: () -> Unit = {},
+): Modifier = this.composed {
     var scale by remember { mutableFloatStateOf(1f) }
     var rotation by remember { mutableFloatStateOf(0f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -213,7 +214,7 @@ fun Modifier.coloredShadow(
  */
 private enum class ButtonState { Pressed, Idle }
 
-fun Modifier.bounceClick(scaleAmount: Float = .7f) = composed {
+fun Modifier.bounceClick(scaleAmount: Float = .7f) = this.composed {
     var buttonState by remember { mutableStateOf(ButtonState.Idle) }
     val scale by animateFloatAsState(if (buttonState == ButtonState.Pressed) scaleAmount else 1f, label = "")
 

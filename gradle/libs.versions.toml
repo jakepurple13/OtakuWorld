@@ -22,7 +22,7 @@ jetbrainsCompiler = "1.5.1"
 accompanist = "0.32.0"
 okhttpVersion = "4.11.0"
 ktorVersion = "2.3.4"
-tvCompose = "1.0.0-alpha08"
+tvCompose = "1.0.0-alpha09"
 workVersion = "2.8.1"
 ziplineVersion = "1.1.0"
 landscapist = "2.2.8"
@@ -99,7 +99,7 @@ glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glide
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-alpha.1"
 
-androidCore = "androidx.core:core-ktx:1.10.1"
+androidCore = "androidx.core:core-ktx:1.12.0"
 appCompat = "androidx.appcompat:appcompat:1.6.1"
 material = "com.google.android.material:material:1.9.0"
 
@@ -256,7 +256,7 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
-androidxWebkit = "androidx.webkit:webkit:1.7.0"
+androidxWebkit = "androidx.webkit:webkit:1.8.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
