@@ -16,8 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -259,7 +259,7 @@ private fun SwitchSettingPreview() {
                 value = true,
                 updateValue = {},
                 settingTitle = { Text("Title") },
-                settingIcon = { Icon(Icons.Default.List, null) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
                 summaryValue = { Text("Value") }
             )
         }
@@ -304,7 +304,7 @@ private fun CheckboxSettingPreview() {
                 value = true,
                 updateValue = {},
                 settingTitle = { Text("Title") },
-                settingIcon = { Icon(Icons.Default.List, null) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
                 summaryValue = { Text("Value") }
             )
         }
@@ -405,7 +405,7 @@ private fun SliderSettingPreview() {
                 range = 0f..10f,
                 settingTitle = { Text("Slider") },
                 settingSummary = { Text("Summary") },
-                settingIcon = { Icon(Icons.Default.List, null) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
             )
         }
     }
@@ -447,7 +447,7 @@ private fun ShowMorePreview() {
         Column {
             ShowMoreSetting(
                 settingTitle = { Text("Title") },
-                settingIcon = { Icon(Icons.Default.List, null) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
                 summaryValue = { Text("Value") }
             ) { Text("Content") }
         }
@@ -502,7 +502,7 @@ private fun DefaultPreferenceLayoutPreview() {
         Column {
             DefaultPreferenceLayout(
                 settingTitle = { Text("Title") },
-                settingIcon = { Icon(Icons.Default.List, null) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
                 summaryValue = { Text("Value") }
             ) { Text("Content") }
         }
@@ -547,7 +547,7 @@ private fun CategoryPreview() {
     PreviewTheme {
         Column {
             CategorySetting(
-                settingIcon = { Icon(Icons.Default.List, null) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
                 settingTitle = { Text("Title") }
             )
             CategorySetting(
