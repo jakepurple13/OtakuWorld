@@ -28,7 +28,7 @@ ziplineVersion = "1.1.0"
 landscapist = "2.2.8"
 protobufVersion = "3.24.2"
 sketchVersion = "3.2.5"
-composeBomVersion = "2023.10.00-alpha01"
+composeBomVersion = "2023.10.00-SNAPSHOT"
 
 ### MangaWorld
 piasy = "1.8.1"
