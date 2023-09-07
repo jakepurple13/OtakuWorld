@@ -71,7 +71,7 @@ composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 composeActivity = "androidx.activity:activity-compose:1.7.2"
-composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.1"
+composeLifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-compose:2.6.2"
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
 landscapistPlaceholder = { module = "com.github.skydoves:landscapist-placeholder", version.ref = "landscapist" }
