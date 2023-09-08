@@ -292,8 +292,16 @@ fun ReadView(
         activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
     }
 
-    val listShowItems = (listState.isScrolledToTheEnd() || listState.isScrolledToTheBeginning()) && listOrPager
-    val pagerShowItems = (pagerState.currentPage == 0 || pagerState.currentPage >= pages.size) && !listOrPager
+    val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && listOrPager } }
+    val pagerShowItems by remember { derivedStateOf { pagerState.currentPage >= pages.size && !listOrPager } }
+
+    val listIndex by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0 } }
+    LaunchedEffect(listIndex, pagerState.currentPage, readVm.showInfo) {
+        if (readVm.firstScroll && (listIndex > 0 || pagerState.currentPage > 0)) {
+            readVm.showInfo = false
+            readVm.firstScroll = false
+        }
+    }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { listState.scrollToItem(it) }
@@ -303,7 +311,7 @@ fun ReadView(
         snapshotFlow { listState.firstVisibleItemIndex }.collect { pagerState.scrollToPage(it) }
     }
 
-    val showItems = readVm.showInfo || listShowItems || pagerShowItems
+    val showItems by remember { derivedStateOf { readVm.showInfo || listShowItems || pagerShowItems } }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 

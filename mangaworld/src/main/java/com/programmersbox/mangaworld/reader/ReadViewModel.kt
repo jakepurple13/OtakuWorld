@@ -126,7 +126,9 @@ class ReadViewModel(
         loadPages(modelPath)
     }
 
-    var showInfo by mutableStateOf(false)
+    var showInfo by mutableStateOf(true)
+
+    var firstScroll by mutableStateOf(true)
 
     fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
         currentChapter = newChapter
