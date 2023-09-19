@@ -150,7 +150,7 @@ iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:22.1.1"
+firebaseAuth = "com.google.firebase:firebase-auth:22.1.2"
 googlePlayAds = "com.google.android.gms:play-services-ads:22.3.0"
 
 pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagingVersion" }
