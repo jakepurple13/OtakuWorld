@@ -470,7 +470,6 @@ private fun DateSort(
                         overflow = TextOverflow.Ellipsis,
                     )
                 },
-                modifier = Modifier.padding(p)
             )
         },
     ) {
