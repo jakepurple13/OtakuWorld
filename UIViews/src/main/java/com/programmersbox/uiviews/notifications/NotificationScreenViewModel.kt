@@ -30,7 +30,7 @@ class NotificationScreenViewModel(
     var sortedBy by mutableStateOf(NotificationSortBy.Date)
 
     val groupedList by derivedStateOf {
-        items.groupBy { it.source }
+        items.groupBy { it.source }.toList()
     }
 
     val groupedListState = mutableStateMapOf(
