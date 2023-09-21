@@ -194,7 +194,7 @@ progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", versi
 
 ### AnimeWorld
 slideToAct = "com.ncorti:slidetoact:0.11.0"
-mediaRouter = "androidx.mediarouter:mediarouter:1.4.0"
+mediaRouter = "androidx.mediarouter:mediarouter:1.6.0"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
 castFramework = "com.google.android.gms:play-services-cast-framework:21.3.0"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
