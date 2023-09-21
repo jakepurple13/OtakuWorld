@@ -157,7 +157,7 @@ pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagi
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
-androidxWindow = "androidx.window:window:1.2.0-beta01"
+androidxWindow = "androidx.window:window:1.2.0-beta03"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
 androidxBrowser = "androidx.browser:browser:1.6.0"
 
