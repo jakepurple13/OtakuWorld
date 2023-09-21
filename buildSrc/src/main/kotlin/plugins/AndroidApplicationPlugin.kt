@@ -33,6 +33,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
             ProductFlavorTypes.NoFirebase(this) {
                 versionNameSuffix = "-noFirebase"
                 applicationIdSuffix = ".noFirebase"
+                isDefault = true
             }
             ProductFlavorTypes.Full(this)
         }
