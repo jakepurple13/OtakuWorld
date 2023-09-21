@@ -298,8 +298,11 @@ fun NotificationsScreen(
                         navController = navController,
                         vm = vm,
                         p = p,
+                        db = db,
                         toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
                         onLoadingChange = { showLoadingDialog = it },
+                        deleteNotification = vm::deleteNotification,
+                        cancelNotification = cancelNotification,
                         onError = {
                             scope.launch {
                                 state.snackbarHostState.currentSnackbarData?.dismiss()
@@ -428,11 +431,14 @@ fun NotificationsScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun DateSort(
     navController: NavController,
     vm: NotificationScreenViewModel,
+    deleteNotification: (db: ItemDao, item: NotificationItem, block: () -> Unit) -> Unit,
+    cancelNotification: (NotificationItem) -> Unit,
+    db: ItemDao,
     p: PaddingValues,
     toSource: (String) -> ApiService?,
     onError: (NotificationItem) -> Unit,
@@ -519,33 +525,98 @@ private fun DateSort(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         it.forEach { i ->
-                                            M3CoverCard(
-                                                imageUrl = i.imageUrl.orEmpty(),
-                                                name = i.notiTitle,
-                                                placeHolder = R.drawable.ic_site_settings,
-                                                onLongPress = {
-                                                    newItem(if (it == ComponentState.Pressed) i else null)
-                                                    showBanner = it == ComponentState.Pressed
-                                                },
-                                                onClick = {
-                                                    toSource(i.source)?.let { source ->
-                                                        Cached.cache[i.url]?.let {
-                                                            flow {
-                                                                emit(
-                                                                    it
-                                                                        .toDbModel()
-                                                                        .toItemModel(source)
-                                                                )
+                                            var showPopup by remember { mutableStateOf(false) }
+
+                                            if (showPopup) {
+                                                val onDismiss = { showPopup = false }
+
+                                                AlertDialog(
+                                                    onDismissRequest = onDismiss,
+                                                    title = { Text(stringResource(R.string.removeNoti, i.notiTitle)) },
+                                                    confirmButton = {
+                                                        TextButton(
+                                                            onClick = {
+                                                                deleteNotification(db, i, onDismiss)
+                                                                cancelNotification(i)
                                                             }
-                                                        } ?: source.getSourceByUrlFlow(i.url)
+                                                        ) { Text(stringResource(R.string.yes)) }
+                                                    },
+                                                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                                                )
+                                            }
+
+                                            val dismissState = rememberDismissState(
+                                                confirmValueChange = {
+                                                    if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+                                                        showPopup = true
                                                     }
-                                                        ?.dispatchIo()
-                                                        ?.onStart { onLoadingChange(true) }
-                                                        ?.onEach {
-                                                            onLoadingChange(false)
-                                                            navController.navigateToDetails(it)
-                                                        }
-                                                        ?.launchIn(scope) ?: onError(i)
+                                                    false
+                                                }
+                                            )
+
+                                            SwipeToDismiss(
+                                                state = dismissState,
+                                                modifier = Modifier.weight(1f, false),
+                                                background = {
+                                                    val color by animateColorAsState(
+                                                        when (dismissState.targetValue) {
+                                                            DismissValue.Default -> Color.Transparent
+                                                            DismissValue.DismissedToEnd -> Color.Red
+                                                            DismissValue.DismissedToStart -> Color.Red
+                                                        }, label = ""
+                                                    )
+
+                                                    val scale by animateFloatAsState(
+                                                        if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f,
+                                                        label = ""
+                                                    )
+
+                                                    Box(
+                                                        Modifier
+                                                            .fillMaxSize()
+                                                            .clip(MaterialTheme.shapes.medium)
+                                                            .background(color)
+                                                            .padding(horizontal = 20.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(
+                                                            Icons.Default.Delete,
+                                                            contentDescription = null,
+                                                            modifier = Modifier.scale(scale),
+                                                            tint = M3MaterialTheme.colorScheme.onSurface
+                                                        )
+                                                    }
+                                                },
+                                                dismissContent = {
+                                                    M3CoverCard(
+                                                        imageUrl = i.imageUrl.orEmpty(),
+                                                        name = i.notiTitle,
+                                                        placeHolder = R.drawable.ic_site_settings,
+                                                        onLongPress = {
+                                                            newItem(if (it == ComponentState.Pressed) i else null)
+                                                            showBanner = it == ComponentState.Pressed
+                                                        },
+                                                        onClick = {
+                                                            toSource(i.source)?.let { source ->
+                                                                Cached.cache[i.url]?.let {
+                                                                    flow {
+                                                                        emit(
+                                                                            it
+                                                                                .toDbModel()
+                                                                                .toItemModel(source)
+                                                                        )
+                                                                    }
+                                                                } ?: source.getSourceByUrlFlow(i.url)
+                                                            }
+                                                                ?.dispatchIo()
+                                                                ?.onStart { onLoadingChange(true) }
+                                                                ?.onEach {
+                                                                    onLoadingChange(false)
+                                                                    navController.navigateToDetails(it)
+                                                                }
+                                                                ?.launchIn(scope) ?: onError(i)
+                                                        },
+                                                    )
                                                 }
                                             )
                                         }

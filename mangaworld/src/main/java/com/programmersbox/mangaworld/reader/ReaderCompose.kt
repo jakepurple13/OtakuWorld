@@ -15,7 +15,11 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -73,8 +77,6 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -311,20 +313,7 @@ fun ReadView(
 
     val showItems by remember { derivedStateOf { readVm.showInfo || listShowItems || pagerShowItems } }
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(canScroll = { !showItems })
-    val bottomBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior(canScroll = { !showItems })
-
-    LaunchedEffect(showItems) {
-        if (showItems) {
-            //Expand
-            scrollBehavior.state.heightOffset = 0f
-            bottomBarScrollBehavior.state.heightOffset = 0f
-        } else {
-            //Collapse
-            scrollBehavior.state.heightOffset = -1000f
-            bottomBarScrollBehavior.state.heightOffset = -1000f
-        }
-    }
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -364,37 +353,34 @@ fun ReadView(
         gesturesEnabled = readVm.list.size > 1
     ) {
         Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .nestedScroll(bottomBarScrollBehavior.nestedScrollConnection),
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                /*AnimatedVisibility(
+                AnimatedVisibility(
                     visible = showItems,
                     enter = slideInVertically() + fadeIn(),
                     exit = slideOutVertically() + fadeOut()
-                ) {*/
-                TopBar(
-                    scrollBehavior = scrollBehavior,
-                    pages = pages,
-                    currentPage = currentPage,
-                    vm = readVm
-                )
-                //}
+                ) {
+                    TopBar(
+                        scrollBehavior = scrollBehavior,
+                        pages = pages,
+                        currentPage = currentPage,
+                        vm = readVm
+                    )
+                }
             },
             bottomBar = {
-                /*AnimatedVisibility(
+                AnimatedVisibility(
                     visible = showItems,
                     enter = slideInVertically { it / 2 } + fadeIn(),
                     exit = slideOutVertically { it / 2 } + fadeOut()
-                ) {*/
-                BottomBar(
-                    onPageSelectClick = { showBottomSheet = true },
-                    onSettingsClick = { settingsPopup = true },
-                    chapterChange = ::showToast,
-                    vm = readVm,
-                    scrollBehavior = bottomBarScrollBehavior
-                )
-                //}
+                ) {
+                    BottomBar(
+                        onPageSelectClick = { showBottomSheet = true },
+                        onSettingsClick = { settingsPopup = true },
+                        chapterChange = ::showToast,
+                        vm = readVm
+                    )
+                }
             }
         ) { paddingValues ->
             Box(
@@ -1082,20 +1068,17 @@ private fun TopBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomBar(
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit,
-    scrollBehavior: BottomAppBarScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
     BottomAppBar(
         modifier = modifier,
-        windowInsets = WindowInsets(0.dp),
-        scrollBehavior = scrollBehavior
+        windowInsets = WindowInsets(0.dp)
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0
