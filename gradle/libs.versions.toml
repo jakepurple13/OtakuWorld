@@ -26,7 +26,7 @@ tvCompose = "1.0.0-alpha09"
 workVersion = "2.8.1"
 ziplineVersion = "1.1.0"
 landscapist = "2.2.8"
-protobufVersion = "3.24.2"
+protobufVersion = "3.24.3"
 sketchVersion = "3.2.5"
 composeBomVersion = "2023.10.00-alpha02"
 
