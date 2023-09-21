@@ -1,18 +1,17 @@
 [versions]
 easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.9"
-googleServices = "4.3.15"
+googleServices = "4.4.0"
 gradle = "8.3.0-alpha04"
 kamelImage = "0.7.3"
 kotlin = "1.9.10"
 latestAboutLibsRelease = "10.8.3"
 coroutinesVersion = "1.7.3"
 glideVersion = "4.16.0"
-navigationSafeArgsGradlePlugin = "2.7.2"
 pagingVersion = "3.2.1"
 roomVersion = "2.5.2"
-navVersion = "2.7.2"
-koinVersion = "3.4.3"
+navVersion = "2.7.3"
+koinVersion = "3.5.0"
 lottieVersion = "6.0.0"
 coil = "2.4.0"
 lifecycle = "2.6.2"
@@ -26,7 +25,7 @@ tvCompose = "1.0.0-alpha09"
 workVersion = "2.8.1"
 ziplineVersion = "1.1.0"
 landscapist = "2.2.8"
-protobufVersion = "3.24.2"
+protobufVersion = "3.24.3"
 sketchVersion = "3.2.5"
 composeBomVersion = "2023.10.00-alpha02"
 
@@ -50,7 +49,7 @@ google-services = { module = "com.google.gms:google-services", version.ref = "go
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 kamel-image = { module = "media.kamel:kamel-image", version.ref = "kamelImage" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navigationSafeArgsGradlePlugin" }
+navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.10.1"
 
@@ -150,14 +149,14 @@ iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:22.1.1"
-googlePlayAds = "com.google.android.gms:play-services-ads:22.3.0"
+firebaseAuth = "com.google.firebase:firebase-auth:22.1.2"
+googlePlayAds = "com.google.android.gms:play-services-ads:22.4.0"
 
 pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagingVersion" }
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
-androidxWindow = "androidx.window:window:1.2.0-beta01"
+androidxWindow = "androidx.window:window:1.2.0-beta03"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
 androidxBrowser = "androidx.browser:browser:1.6.0"
 
@@ -172,7 +171,7 @@ datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
 jsoup = "org.jsoup:jsoup:1.16.1"
 
-crashlytics = "com.google.firebase:firebase-crashlytics:18.4.1"
+crashlytics = "com.google.firebase:firebase-crashlytics:18.4.3"
 analytics = "com.google.firebase:firebase-analytics:21.3.0"
 playServices = "com.google.android.gms:play-services-auth:20.7.0"
 
@@ -194,7 +193,7 @@ progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", versi
 
 ### AnimeWorld
 slideToAct = "com.ncorti:slidetoact:0.11.0"
-mediaRouter = "androidx.mediarouter:mediarouter:1.4.0"
+mediaRouter = "androidx.mediarouter:mediarouter:1.6.0"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
 castFramework = "com.google.android.gms:play-services-cast-framework:21.3.0"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
@@ -261,7 +260,7 @@ androidxWebkit = "androidx.webkit:webkit:1.8.0"
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
 firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.2.2"
-firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.7.1"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.8.1"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
