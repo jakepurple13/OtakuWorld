@@ -2,7 +2,7 @@
 easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.0"
-gradle = "8.3.0-alpha04"
+gradle = "8.3.0-alpha05"
 kamelImage = "0.7.3"
 kotlin = "1.9.10"
 latestAboutLibsRelease = "10.8.3"
@@ -80,7 +80,6 @@ coilCompose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coilVideo = { module = "io.coil-kt:coil-video", version.ref = "coil" }
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 #Accompanist
-materialPlaceholder = { module = "com.google.accompanist:accompanist-placeholder-material", version.ref = "accompanist" }
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 navMaterial = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
@@ -113,7 +112,7 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
 lottieCompose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
 
 koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
-koinCompose = { module = "io.insert-koin:koin-androidx-compose", version = "3.4.6" }
+koinCompose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinVersion" }
 
 roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
@@ -160,7 +159,6 @@ androidxWindow = "androidx.window:window:1.2.0-beta03"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
 androidxBrowser = "androidx.browser:browser:1.6.0"
 
-fastScroll = "me.zhanghai.android.fastscroll:library:1.1.8"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
@@ -294,7 +292,7 @@ composeTv = [
     "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
     "coilCompose",
     "composeConstraintLayout", "permissions",
-    "materialPlaceholder", "drawablePainter", "uiUtil",
+    "drawablePainter", "uiUtil",
     "navCompose", "navMaterial", "systemUiController"
 ]
 media3 = [

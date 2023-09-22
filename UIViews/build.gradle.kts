@@ -42,8 +42,6 @@ dependencies {
     implementation(libs.androidBrowserHelper)
     implementation(libs.androidxBrowser)
 
-    implementation(libs.fastScroll)
-
     implementation(libs.reactiveNetwork)
 
     implementation(libs.bundles.koinLibs)
