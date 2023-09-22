@@ -96,6 +96,7 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.ShowWhen
@@ -418,9 +419,10 @@ class GenericAnime(
         }
     }
 
-    override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
             val context = LocalContext.current
+            val navController = LocalNavController.current
 
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.video_menu_title)) },

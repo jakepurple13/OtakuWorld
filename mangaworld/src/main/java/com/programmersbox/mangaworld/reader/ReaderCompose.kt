@@ -157,10 +157,9 @@ import com.programmersbox.mangaworld.PAGE_PADDING
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.listOrPager
 import com.programmersbox.mangaworld.pagePadding
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.LifecycleHandle
+import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -206,13 +205,7 @@ fun ReadView(
         )
     },
 ) {
-    LifecycleHandle(
-        onStop = { BaseMainActivity.showNavBar = true },
-        onDestroy = { BaseMainActivity.showNavBar = true },
-        onCreate = { BaseMainActivity.showNavBar = false },
-        onStart = { BaseMainActivity.showNavBar = false },
-        onResume = { BaseMainActivity.showNavBar = false }
-    )
+    HideSystemBarsWhileOnScreen()
 
     DisposableEffect(LocalContext.current) {
         val batteryInfo = context.battery {

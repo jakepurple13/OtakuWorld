@@ -105,13 +105,12 @@ import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -239,13 +238,7 @@ fun NovelReader(
     genericInfo: GenericInfo = LocalGenericInfo.current,
     readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
 ) {
-    LifecycleHandle(
-        onStop = { BaseMainActivity.showNavBar = true },
-        onDestroy = { BaseMainActivity.showNavBar = true },
-        onCreate = { BaseMainActivity.showNavBar = false },
-        onStart = { BaseMainActivity.showNavBar = false },
-        onResume = { BaseMainActivity.showNavBar = false }
-    )
+    HideSystemBarsWhileOnScreen()
 
     val context = LocalContext.current
 

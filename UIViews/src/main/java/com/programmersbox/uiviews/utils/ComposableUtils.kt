@@ -82,7 +82,9 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
+import com.programmersbox.uiviews.ChangingSettingsRepository
 import com.programmersbox.uiviews.R
+import org.koin.compose.koinInject
 import kotlin.properties.Delegates
 
 fun Int.toComposeColor() = Color(this)
@@ -470,5 +472,18 @@ fun ManagedActivityResultLauncher<Intent, ActivityResult>.launchCatching(
     launch(
         input = intent,
         options = options
+    )
+}
+
+@Composable
+fun HideSystemBarsWhileOnScreen() {
+    val changingSettingsRepository: ChangingSettingsRepository = koinInject()
+
+    LifecycleHandle(
+        onStop = { changingSettingsRepository.showNavBar.tryEmit(true) },
+        onDestroy = { changingSettingsRepository.showNavBar.tryEmit(true) },
+        onCreate = { changingSettingsRepository.showNavBar.tryEmit(false) },
+        onStart = { changingSettingsRepository.showNavBar.tryEmit(false) },
+        onResume = { changingSettingsRepository.showNavBar.tryEmit(false) }
     )
 }

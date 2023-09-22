@@ -66,7 +66,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -144,8 +143,10 @@ import org.koin.android.ext.android.inject
 abstract class BaseMainActivity : AppCompatActivity() {
 
     protected val genericInfo: GenericInfo by inject()
+    private val customPreferences = ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
     private val appLogo: AppLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
+    private val changingSettingsRepository: ChangingSettingsRepository by inject()
     protected lateinit var navController: NavHostController
 
     protected fun isNavInitialized() = ::navController.isInitialized
@@ -181,7 +182,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        snapshotFlow { showNavBar }
+        changingSettingsRepository
+            .showNavBar
             .onEach {
                 if (it) {
                     insetsController.show(WindowInsetsCompat.Type.systemBars())
@@ -203,8 +205,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 scope.launch { bottomSheetNavigator.sheetState.hide() }
             }
 
-            val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
-
             val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
 
             OtakuMaterialTheme(navController, genericInfo) {
@@ -225,6 +225,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
+
+                    val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
 
                     Row(Modifier.fillMaxSize()) {
                         Rail(

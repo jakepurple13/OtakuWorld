@@ -98,9 +98,9 @@ import androidx.media3.ui.PlayerView
 import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.animeworld.ignoreSsl
 import com.programmersbox.helpfulutils.audioManager
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -138,30 +138,27 @@ fun VideoPlayerUi(
     val originalAudioLevel = remember { audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) }
     val originalScreenBrightness = remember { getScreenBrightness(context) }
 
+    HideSystemBarsWhileOnScreen()
+
     LifecycleHandle(
         onStop = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            BaseMainActivity.showNavBar = true
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
             setWindowBrightness(activity, originalScreenBrightness.toFloat())
         },
         onDestroy = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            BaseMainActivity.showNavBar = true
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
             setWindowBrightness(activity, originalScreenBrightness.toFloat())
         },
         onCreate = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            BaseMainActivity.showNavBar = false
         },
         onStart = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            BaseMainActivity.showNavBar = false
         },
         onResume = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            BaseMainActivity.showNavBar = false
         }
     )
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
@@ -334,7 +331,7 @@ fun VideoBottomBar(
     playPauseToggle: () -> Unit,
     seekTo: (Long) -> Unit,
     rewind: () -> Unit,
-    fastForward: () -> Unit
+    fastForward: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -454,7 +451,7 @@ fun MediaControlGestures(
     draggingProgress: DraggingProgress?,
     onDraggingProgressChange: (DraggingProgress?) -> Unit,
     viewModel: VideoViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     if (enabled && visible && gesturesEnabled) {
         Box(
@@ -585,7 +582,7 @@ fun GestureBox(
     onVerticalDragRight: (Int) -> Unit,
     onSeek: (Long) -> Unit,
     viewModel: VideoViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -763,7 +760,7 @@ suspend fun PointerInputScope.detectMediaPlayerGesture(
     onDrag: (Float) -> Unit,
     onVerticalDragStart: (Offset) -> Unit,
     onVerticalDragEnd: () -> Unit,
-    onVerticalDrag: (Float, PointerInputChange) -> Unit
+    onVerticalDrag: (Float, PointerInputChange) -> Unit,
 ) {
     coroutineScope {
         launch {
@@ -799,7 +796,7 @@ suspend fun PointerInputScope.detectMediaPlayerGesture(
 
 fun Modifier.quickSeekAnimation(
     quickSeekDirection: QuickSeekDirection,
-    onAnimationEnd: () -> Unit
+    onAnimationEnd: () -> Unit,
 ) = composed {
     val alphaRewind = remember { Animatable(0f) }
     val alphaForward = remember { Animatable(0f) }
@@ -908,7 +905,7 @@ fun Modifier.draggingProgressOverlay(draggingProgress: DraggingProgress?) = comp
 
 data class DraggingProgress(
     val finalTime: Float,
-    val diffTime: Float
+    val diffTime: Float,
 ) {
     val progressText: String
         get() {
@@ -949,7 +946,7 @@ enum class QuickSeekDirection {
 }
 
 data class QuickSeekAction(
-    val direction: QuickSeekDirection
+    val direction: QuickSeekDirection,
 ) {
     // Each action is unique
     override fun equals(other: Any?): Boolean {

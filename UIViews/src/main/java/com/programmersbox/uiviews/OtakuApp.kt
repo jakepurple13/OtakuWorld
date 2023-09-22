@@ -77,6 +77,7 @@ abstract class OtakuApp : Application() {
             module {
                 single { SourceRepository() }
                 single { CurrentSourceRepository() }
+                single { ChangingSettingsRepository() }
                 single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
                 single {
                     OtakuWorldCatalog(

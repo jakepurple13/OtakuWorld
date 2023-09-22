@@ -74,6 +74,7 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -261,9 +262,10 @@ class GenericManga(
     }
 
     @OptIn(com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
-    override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {
+            val navController = LocalNavController.current
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
                 settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },

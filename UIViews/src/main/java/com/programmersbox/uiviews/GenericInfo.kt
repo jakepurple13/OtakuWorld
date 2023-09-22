@@ -52,7 +52,7 @@ interface GenericInfo {
     fun sourceList(): List<ApiService>
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
-    fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
+    fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {}
     fun downloadChapter(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
