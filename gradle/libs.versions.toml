@@ -27,7 +27,7 @@ ziplineVersion = "1.1.0"
 landscapist = "2.2.8"
 protobufVersion = "3.24.3"
 sketchVersion = "3.2.5"
-activityKtx = "1.8.0-beta01"
+activity = "1.8.0-rc01"
 composeBomVersion = "2023.10.00-alpha02"
 
 ### MangaWorld
@@ -53,7 +53,7 @@ kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "ko
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.10.1"
-androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 
 #Compose
 composePlatform = { module = "dev.chrisbanes.compose:compose-bom", version.ref = "composeBomVersion" }
@@ -72,7 +72,7 @@ uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
-composeActivity = "androidx.activity:activity-compose:1.7.2"
+composeActivity = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 composeLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 landscapistGlide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist" }
 landscapistPalette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
