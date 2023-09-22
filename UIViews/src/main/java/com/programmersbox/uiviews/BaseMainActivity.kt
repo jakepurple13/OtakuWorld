@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -65,11 +66,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -89,7 +92,6 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
@@ -174,7 +176,20 @@ abstract class BaseMainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setup()
         onCreate()
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        enableEdgeToEdge()
+
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        snapshotFlow { showNavBar }
+            .onEach {
+                if (it) {
+                    insetsController.show(WindowInsetsCompat.Type.systemBars())
+                } else {
+                    insetsController.hide(WindowInsetsCompat.Type.systemBars())
+                }
+            }
+            .launchIn(lifecycleScope)
 
         setContent {
             val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
@@ -188,16 +203,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 scope.launch { bottomSheetNavigator.sheetState.hide() }
             }
 
-            val systemUiController = rememberSystemUiController()
             val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
-
-            if (showNavBar) {
-                systemUiController.isSystemBarsVisible = true
-                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            } else {
-                systemUiController.isSystemBarsVisible = false
-                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
 
             val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
 

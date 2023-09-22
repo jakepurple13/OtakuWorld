@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -31,7 +30,6 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
 import androidx.tv.material3.lightColorScheme
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -43,19 +41,6 @@ fun OtakuMaterialTheme(
     val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
             (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     MaterialTheme(currentColorScheme) {
-        val systemUiController = rememberSystemUiController()
-
-        SideEffect {
-            systemUiController.setNavigationBarColor(
-                color = Color.Transparent,
-                darkIcons = !darkTheme
-            )
-            systemUiController.setStatusBarColor(
-                color = Color.Transparent,
-                darkIcons = !darkTheme
-            )
-        }
-
         CompositionLocalProvider(
             LocalActivity provides remember { context.findActivity() },
             LocalNavController provides navController,

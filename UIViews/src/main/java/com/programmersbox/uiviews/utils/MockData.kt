@@ -26,7 +26,6 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +37,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -187,19 +185,6 @@ fun PreviewTheme(
                     secondary = Color(0xff90CAF9)
                 ),
         ) {
-            val systemUiController = rememberSystemUiController()
-
-            SideEffect {
-                systemUiController.setNavigationBarColor(
-                    color = Color.Transparent,
-                    darkIcons = !darkTheme
-                )
-                systemUiController.setStatusBarColor(
-                    color = Color.Transparent,
-                    darkIcons = !darkTheme
-                )
-            }
-
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,

@@ -1,6 +1,9 @@
 package com.programmersbox.uiviews.utils
 
 import android.net.Uri
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.darkColors
@@ -8,14 +11,13 @@ import androidx.compose.material.lightColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -79,11 +81,26 @@ fun NavController.navigateToDetails(model: ItemModel) = navigate(
 fun OtakuMaterialTheme(
     navController: NavHostController,
     genericInfo: GenericInfo,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
     val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
             (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+
+    DisposableEffect(darkTheme) {
+        (context as? ComponentActivity)?.enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ) { darkTheme },
+            navigationBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ) { darkTheme },
+        )
+        onDispose {}
+    }
+
     MaterialTheme(currentColorScheme) {
         androidx.compose.material.MaterialTheme(
             colors = if (darkTheme)
@@ -97,19 +114,6 @@ fun OtakuMaterialTheme(
                     secondary = Color(0xff90CAF9)
                 ),
         ) {
-            val systemUiController = rememberSystemUiController()
-
-            SideEffect {
-                systemUiController.setNavigationBarColor(
-                    color = Color.Transparent,
-                    darkIcons = !darkTheme
-                )
-                systemUiController.setStatusBarColor(
-                    color = Color.Transparent,
-                    darkIcons = !darkTheme
-                )
-            }
-
             CompositionLocalProvider(
                 LocalActivity provides remember { context.findActivity() },
                 LocalNavController provides navController,

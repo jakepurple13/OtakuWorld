@@ -27,6 +27,7 @@ ziplineVersion = "1.1.0"
 landscapist = "2.2.8"
 protobufVersion = "3.24.3"
 sketchVersion = "3.2.5"
+activityKtx = "1.8.0-beta01"
 composeBomVersion = "2023.10.00-alpha02"
 
 ### MangaWorld
@@ -52,6 +53,7 @@ kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "ko
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.10.1"
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
 
 #Compose
 composePlatform = { module = "dev.chrisbanes.compose:compose-bom", version.ref = "composeBomVersion" }
@@ -83,7 +85,6 @@ navCompose = { module = "androidx.navigation:navigation-compose", version.ref = 
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 navMaterial = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
-systemUiController = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist" }
 adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref = "accompanist" }
 okhttpLib = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
 okhttpDns = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpVersion" }
@@ -281,7 +282,7 @@ compose = [
     "composeConstraintLayout", "permissions",
     "drawablePainter", "uiUtil",
     "materialYou", "materialWindow",
-    "navCompose", "navMaterial", "systemUiController"
+    "navCompose", "navMaterial"
 ]
 composeTv = [
     "composeUi", "composeUiTooling",
@@ -293,7 +294,7 @@ composeTv = [
     "coilCompose",
     "composeConstraintLayout", "permissions",
     "drawablePainter", "uiUtil",
-    "navCompose", "navMaterial", "systemUiController"
+    "navCompose", "navMaterial"
 ]
 media3 = [
     "exoplayer",

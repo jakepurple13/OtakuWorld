@@ -111,6 +111,8 @@ dependencies {
 
     implementation(libs.bundles.ktorLibs)
 
+    implementation(libs.androidx.activity.ktx)
+
     //Multiplatform
     implementation(projects.imageloader)
 
