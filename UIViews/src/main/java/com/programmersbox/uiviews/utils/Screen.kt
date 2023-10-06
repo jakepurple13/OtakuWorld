@@ -62,14 +62,12 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object TranslationScreen : Screen("translation_models")
     data object GlobalSearchScreen : Screen("global_search") {
         fun navigate(navController: NavController, title: String? = null) {
             navController.navigate("$route?searchFor=$title") { launchSingleTop = true }
         }
     }
 
-    data object SourceChooserScreen : Screen("source_chooser")
     data object ExtensionListScreen : Screen("extension_list")
 }
 

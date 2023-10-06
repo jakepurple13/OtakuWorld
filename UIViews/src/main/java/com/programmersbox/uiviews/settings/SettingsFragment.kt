@@ -86,6 +86,8 @@ import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
+import com.programmersbox.uiviews.utils.showSourceChooser
+import com.programmersbox.uiviews.utils.showTranslationScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Locale
@@ -245,13 +247,15 @@ private fun SettingsScreen(
 
     CategorySetting { Text(stringResource(R.string.general_menu_title)) }
 
+    var showSourceChooser by showSourceChooser()
+
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
         settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { navController.navigate(Screen.SourceChooserScreen.route) }
+        ) { showSourceChooser = true }
     )
 
     PreferenceSetting(
@@ -289,13 +293,15 @@ private fun SettingsScreen(
         )
     }
 
+    var showTranslationScreen by showTranslationScreen()
+
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
         settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
-            onClick = { navController.navigate(Screen.TranslationScreen.route) }
+            onClick = { showTranslationScreen = true }
         )
     )
 

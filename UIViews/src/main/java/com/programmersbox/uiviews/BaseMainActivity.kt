@@ -62,7 +62,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -115,8 +114,6 @@ import com.programmersbox.uiviews.settings.InfoSettings
 import com.programmersbox.uiviews.settings.NotificationSettings
 import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
-import com.programmersbox.uiviews.settings.SourceChooserScreen
-import com.programmersbox.uiviews.settings.TranslationScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.uiviews.utils.ModalBottomSheetLayout
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -125,7 +122,6 @@ import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.appVersion
-import com.programmersbox.uiviews.utils.bottomSheet
 import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
@@ -160,10 +156,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @Composable
     protected open fun BottomBarAdditions() = Unit
-
-    companion object {
-        var showNavBar by mutableStateOf(true)
-    }
 
     private var notificationCount by mutableIntStateOf(0)
 
@@ -480,10 +472,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 windowSize = windowSize
             )
         }
-
-        bottomSheet(Screen.TranslationScreen.route) { TranslationScreen() }
-
-        bottomSheet(Screen.SourceChooserScreen.route) { SourceChooserScreen() }
 
         chromeCustomTabs()
 

@@ -70,11 +70,11 @@ import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
+import com.programmersbox.uiviews.utils.showSourceChooser
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -132,6 +132,8 @@ fun RecentView(
             .collect { scrollBehavior.state.contentOffset = 0f }
     }
 
+    var showSourceChooser by showSourceChooser()
+
     OtakuScaffold(
         topBar = {
             InsetSmallTopAppBar(
@@ -158,7 +160,7 @@ fun RecentView(
                     ) {
                         Box(Modifier.fillMaxHeight()) {
                             IconButton(
-                                onClick = { navController.navigate(Screen.SourceChooserScreen.route) },
+                                onClick = { showSourceChooser = true },
                                 modifier = Modifier.align(Alignment.Center)
                             ) { Icon(Icons.Default.Source, null) }
                         }

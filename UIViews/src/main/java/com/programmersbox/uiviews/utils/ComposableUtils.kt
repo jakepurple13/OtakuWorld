@@ -36,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -84,6 +85,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
 import com.programmersbox.uiviews.ChangingSettingsRepository
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.settings.SourceChooserScreen
+import com.programmersbox.uiviews.settings.TranslationScreen
 import org.koin.compose.koinInject
 import kotlin.properties.Delegates
 
@@ -486,4 +489,36 @@ fun HideSystemBarsWhileOnScreen() {
         onStart = { changingSettingsRepository.showNavBar.tryEmit(false) },
         onResume = { changingSettingsRepository.showNavBar.tryEmit(false) }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun showSourceChooser(): MutableState<Boolean> {
+    val showSourceChooser = remember { mutableStateOf(false) }
+
+    if (showSourceChooser.value) {
+        ModalBottomSheet(
+            onDismissRequest = { showSourceChooser.value = false }
+        ) {
+            SourceChooserScreen()
+        }
+    }
+
+    return showSourceChooser
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun showTranslationScreen(): MutableState<Boolean> {
+    val showTranslationScreen = remember { mutableStateOf(false) }
+
+    if (showTranslationScreen.value) {
+        ModalBottomSheet(
+            onDismissRequest = { showTranslationScreen.value = false }
+        ) {
+            TranslationScreen()
+        }
+    }
+
+    return showTranslationScreen
 }
