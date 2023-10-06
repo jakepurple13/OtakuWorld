@@ -433,10 +433,11 @@ private fun AccountSettings(
 }
 
 @Composable
-fun SourceChooserScreen() {
+fun SourceChooserScreen(
+    onChosen: () -> Unit,
+) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val navController = LocalNavController.current
     val sourceRepository = LocalSourcesRepository.current
     val currentSourceRepository = LocalCurrentSource.current
 
@@ -445,7 +446,7 @@ fun SourceChooserScreen() {
         title = stringResource(R.string.chooseASource),
         list = sourceRepository.list.filterNot { it.apiService.notWorking },
         onClick = { service ->
-            navController.popBackStack()
+            onChosen()
             scope.launch {
                 service.let {
                     currentSourceRepository.emit(it.apiService)
@@ -465,7 +466,7 @@ fun SourceChooserScreen() {
 @Composable
 private fun SourceChooserPreview() {
     PreviewTheme {
-        SourceChooserScreen()
+        SourceChooserScreen {}
     }
 }
 

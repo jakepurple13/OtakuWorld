@@ -48,6 +48,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
@@ -58,6 +59,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -87,6 +89,7 @@ import com.programmersbox.uiviews.ChangingSettingsRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import kotlin.properties.Delegates
 
@@ -495,12 +498,20 @@ fun HideSystemBarsWhileOnScreen() {
 @Composable
 fun showSourceChooser(): MutableState<Boolean> {
     val showSourceChooser = remember { mutableStateOf(false) }
+    val state = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
     if (showSourceChooser.value) {
         ModalBottomSheet(
-            onDismissRequest = { showSourceChooser.value = false }
+            onDismissRequest = { showSourceChooser.value = false },
+            sheetState = state
         ) {
-            SourceChooserScreen()
+            SourceChooserScreen(
+                onChosen = {
+                    scope.launch { state.hide() }
+                        .invokeOnCompletion { showSourceChooser.value = false }
+                }
+            )
         }
     }
 

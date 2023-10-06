@@ -6,7 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -47,7 +46,6 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
@@ -63,7 +61,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -87,7 +84,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.programmersbox.extensionloader.SourceRepository
@@ -115,7 +111,6 @@ import com.programmersbox.uiviews.settings.NotificationSettings
 import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
-import com.programmersbox.uiviews.utils.ModalBottomSheetLayout
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuMaterialTheme
 import com.programmersbox.uiviews.utils.OtakuScaffold
@@ -126,7 +121,6 @@ import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.rememberBottomSheetNavigator
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -160,10 +154,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private var notificationCount by mutableIntStateOf(0)
 
     @OptIn(
-        ExperimentalMaterialNavigationApi::class,
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterial3WindowSizeClassApi::class,
-        ExperimentalMaterialApi::class
+        ExperimentalMaterial3WindowSizeClassApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -186,16 +178,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
             .launchIn(lifecycleScope)
 
         setContent {
-            val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
             navController = rememberNavController(
-                bottomSheetNavigator,
                 remember { ChromeCustomTabsNavigator(this) }
             )
-
-            val scope = rememberCoroutineScope()
-            BackHandler(bottomSheetNavigator.sheetState.isVisible) {
-                scope.launch { bottomSheetNavigator.sheetState.hide() }
-            }
 
             val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
 
@@ -204,47 +189,42 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                 val showAllItem by settingsHandling.showAll.collectAsStateWithLifecycle(false)
 
-                ModalBottomSheetLayout(
-                    bottomSheetNavigator = bottomSheetNavigator,
-                    sheetBackgroundColor = MaterialTheme.colorScheme.surface,
-                    sheetContentColor = MaterialTheme.colorScheme.onSurface,
-                    scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
-                ) {
-                    val navType = when (windowSize.widthSizeClass) {
-                        WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
-                        else -> NavigationBarType.Bottom
-                    }
+                val navType = when (windowSize.widthSizeClass) {
+                    WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
+                    else -> NavigationBarType.Bottom
+                }
 
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentDestination = navBackStackEntry?.destination
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
 
-                    val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
+                val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
 
-                    Row(Modifier.fillMaxSize()) {
-                        Rail(
-                            navController = navController,
-                            showNavBar = showNavBar,
-                            navType = navType,
-                            showAllItem = showAllItem,
-                            currentDestination = currentDestination
-                        )
-                        OtakuScaffold(
-                            bottomBar = {
-                                BottomNav(
-                                    navController = navController,
-                                    showNavBar = showNavBar,
-                                    navType = navType,
-                                    showAllItem = showAllItem,
-                                    currentDestination = currentDestination
-                                )
-                            }
-                        ) { innerPadding ->
-                            NavHost(
+                genericInfo.DialogSetups()
+
+                Row(Modifier.fillMaxSize()) {
+                    Rail(
+                        navController = navController,
+                        showNavBar = showNavBar,
+                        navType = navType,
+                        showAllItem = showAllItem,
+                        currentDestination = currentDestination
+                    )
+                    OtakuScaffold(
+                        bottomBar = {
+                            BottomNav(
                                 navController = navController,
-                                startDestination = Screen.RecentScreen.route,
-                                modifier = Modifier.padding(innerPadding)
-                            ) { navGraph(customPreferences, windowSize) }
+                                showNavBar = showNavBar,
+                                navType = navType,
+                                showAllItem = showAllItem,
+                                currentDestination = currentDestination
+                            )
                         }
+                    ) { innerPadding ->
+                        NavHost(
+                            navController = navController,
+                            startDestination = Screen.RecentScreen.route,
+                            modifier = Modifier.padding(innerPadding)
+                        ) { navGraph(customPreferences, windowSize) }
                     }
                 }
             }

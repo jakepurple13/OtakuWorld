@@ -103,4 +103,7 @@ interface GenericInfo {
     fun NavGraphBuilder.globalNavSetup() = Unit
 
     fun NavGraphBuilder.settingsNavSetup(): Unit = Unit
+
+    @Composable
+    fun DialogSetups() = Unit
 }

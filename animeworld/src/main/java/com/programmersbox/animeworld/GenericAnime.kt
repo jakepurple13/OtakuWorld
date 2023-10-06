@@ -77,7 +77,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
-import com.programmersbox.animeworld.videochoice.VideoSourceViewModel
+import com.programmersbox.animeworld.videochoice.VideoSourceModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
@@ -101,7 +101,6 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SwitchSetting
-import com.programmersbox.uiviews.utils.bottomSheet
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
@@ -183,7 +182,7 @@ class GenericAnime(
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
         /* if ((model.source as? ShowApi)?.canDownload == false) {
              Toast.makeText(
@@ -229,7 +228,7 @@ class GenericAnime(
         filter: (Storage) -> Boolean = { true },
         navController: NavController,
         isStreaming: Boolean,
-        onAction: (Storage) -> Unit
+        onAction: (Storage) -> Unit,
     ) {
         val dialog = MaterialAlertDialogBuilder(context)
             .setTitle(R.string.loading_please_wait)
@@ -258,7 +257,12 @@ class GenericAnime(
                         }
 
                         c.isNotEmpty() -> {
-                            navController.navigate(VideoSourceViewModel.createNavigationRoute(c, infoModel, isStreaming, model))
+                            VideoSourceModel.showVideoSources = VideoSourceModel(
+                                c = c,
+                                infoModel = infoModel,
+                                isStreaming = isStreaming,
+                                model = model
+                            )
                         }
 
                         else -> {
@@ -372,7 +376,7 @@ class GenericAnime(
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
+        onClick: (ItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
@@ -531,8 +535,6 @@ class GenericAnime(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) { VideoPlayerUi() }
-
-        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
@@ -542,6 +544,18 @@ class GenericAnime(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
+    }
+
+    @Composable
+    override fun DialogSetups() {
+        VideoSourceModel.showVideoSources?.let {
+            VideoChoiceScreen(
+                items = it.c,
+                infoModel = it.infoModel,
+                isStreaming = it.isStreaming,
+                model = it.model
+            )
+        }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
