@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
@@ -487,7 +486,7 @@ fun ChapterItem(
                                 "Play",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 tint = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                                    ?: MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 stringResource(R.string.read),
@@ -518,7 +517,7 @@ fun ChapterItem(
                                 "Download",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 tint = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current)
+                                    ?: MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 stringResource(R.string.download_chapter),
@@ -685,7 +684,7 @@ internal fun DetailsHeader(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
                             tint = swatchInfo?.rgb?.toComposeColor()?.animate()?.value
-                                ?: MaterialTheme.colorScheme.onSurface.copy(alpha = LocalContentAlpha.current),
+                                ?: MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Crossfade(targetState = isFavorite, label = "") { target ->
