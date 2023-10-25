@@ -2,7 +2,7 @@
 easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.0"
-gradle = "8.3.0-alpha07"
+gradle = "8.3.0-alpha10"
 kamelImage = "0.7.3"
 kotlin = "1.9.10"
 latestAboutLibsRelease = "10.8.3"

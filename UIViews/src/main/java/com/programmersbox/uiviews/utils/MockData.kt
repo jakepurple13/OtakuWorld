@@ -1,9 +1,11 @@
 package com.programmersbox.uiviews.utils
 
+import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +39,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -46,10 +49,19 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.uiviews.BaseMainActivity
+import com.programmersbox.sharedutils.FirebaseUIStyle
+import com.programmersbox.uiviews.ChangingSettingsRepository
+import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.material.MaterialTheme as M2MaterialTheme
@@ -65,7 +77,7 @@ val MockInfo = object : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
 
     }
@@ -80,7 +92,7 @@ val MockInfo = object : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
 
     }
@@ -104,7 +116,7 @@ val MockInfo = object : GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
+        onClick: (ItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
@@ -154,52 +166,72 @@ val MockApiService = object : ApiService {
 fun PreviewTheme(
     navController: NavHostController = rememberNavController(),
     genericInfo: GenericInfo = MockInfo,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val darkTheme = isSystemInDarkTheme()
-    MaterialTheme(
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
-            darkTheme -> darkColorScheme(
-                primary = Color(0xff90CAF9),
-                secondary = Color(0xff90CAF9)
-            )
-
-            else -> lightColorScheme(
-                primary = Color(0xff2196F3),
-                secondary = Color(0xff90CAF9)
-            )
+    KoinIsolatedContext(
+        koinApplication {
+            androidLogger()
+            androidContext(context)
+            module {
+                single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
+                single { SettingsHandling(context) }
+                single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
+            }
+            module {
+                single<GenericInfo> { MockInfo }
+                single { SourceRepository() }
+                single { CurrentSourceRepository() }
+                single { ChangingSettingsRepository() }
+                single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
+                single {
+                    OtakuWorldCatalog(
+                        get<GenericInfo>().sourceType
+                            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                    )
+                }
+            }
         }
     ) {
-        M2MaterialTheme(
-            colors = if (darkTheme)
-                darkColors(
+        val darkTheme = isSystemInDarkTheme()
+        MaterialTheme(
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
+                darkTheme -> darkColorScheme(
                     primary = Color(0xff90CAF9),
                     secondary = Color(0xff90CAF9)
                 )
-            else
-                lightColors(
+
+                else -> lightColorScheme(
                     primary = Color(0xff2196F3),
                     secondary = Color(0xff90CAF9)
-                ),
+                )
+            }
         ) {
-            CompositionLocalProvider(
-                LocalNavController provides navController,
-                LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides remember { SettingsHandling(context) },
-                LocalActivity provides remember {
-                    object : BaseMainActivity() {
-                        override fun onCreate() {}
-                    }
-                },
-                LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
-                LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
-                LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
-                LocalSourcesRepository provides SourceRepository(),
-                LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) }
-            ) { Surface { content() } }
+            M2MaterialTheme(
+                colors = if (darkTheme)
+                    darkColors(
+                        primary = Color(0xff90CAF9),
+                        secondary = Color(0xff90CAF9)
+                    )
+                else
+                    lightColors(
+                        primary = Color(0xff2196F3),
+                        secondary = Color(0xff90CAF9)
+                    ),
+            ) {
+                CompositionLocalProvider(
+                    LocalNavController provides navController,
+                    LocalGenericInfo provides genericInfo,
+                    LocalSettingsHandling provides remember { SettingsHandling(context) },
+                    LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
+                    LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
+                    LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
+                    LocalSourcesRepository provides SourceRepository(),
+                    LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) }
+                ) { Surface { content() } }
+            }
         }
     }
 }
