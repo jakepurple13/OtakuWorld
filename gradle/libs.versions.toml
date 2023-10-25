@@ -167,7 +167,7 @@ lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.7.2"
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
-jsoup = "org.jsoup:jsoup:1.16.1"
+jsoup = "org.jsoup:jsoup:1.16.2"
 
 crashlytics = "com.google.firebase:firebase-crashlytics:18.4.3"
 analytics = "com.google.firebase:firebase-analytics:21.3.0"
