@@ -36,6 +36,11 @@ gradlePlugin {
             id = "otaku-multiplatform"
             implementationClass = "plugins.MultiplatformLibraryPlugin"
         }
+
+        register("otaku-benchmark") {
+            id = "otaku-benchmark"
+            implementationClass = "plugins.BenchmarkPlugin"
+        }
     }
 }
 
@@ -45,4 +50,5 @@ dependencies {
     implementation(libs.gradle)
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
     implementation(libs.easylauncher)
+    implementation(libs.androidx.baselineprofile.gradle.plugin)
 }

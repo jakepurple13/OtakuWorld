@@ -21,6 +21,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/MangaWorldbaselineprofile" />
             <option value="$PROJECT_DIR$/Models" />
             <option value="$PROJECT_DIR$/UIViews" />
             <option value="$PROJECT_DIR$/anime_sources" />

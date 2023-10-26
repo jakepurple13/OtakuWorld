@@ -7,6 +7,7 @@ plugins {
     id("com.mikepenz.aboutlibraries.plugin")
     id("otaku-easylauncher")
     alias(libs.plugins.ksp)
+    id("androidx.baselineprofile")
 }
 
 android {
@@ -28,6 +29,7 @@ dependencies {
     implementation(libs.swiperefresh)
     implementation(libs.recyclerview)
     implementation(libs.googlePlayAds)
+    implementation(libs.profileinstaller)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -46,6 +48,7 @@ dependencies {
     implementation(libs.bundles.ziplineLibs)
 
     implementation(libs.glide)
+    baselineProfile(projects.mangaWorldbaselineprofile)
     ksp(libs.glideCompiler)
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
