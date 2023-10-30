@@ -267,7 +267,7 @@ androidxWebkit = "androidx.webkit:webkit:1.8.0"
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
 firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.3.0"
-firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.9.0"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.9.1"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
