@@ -17,17 +17,6 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        gradlePluginPortal()
-        mavenCentral()
-        maven("https://jitpack.io")
-        //maven { url "https://dl.bintray.com/piasy/maven" }
-        maven("https://oss.sonatype.org/content/repositories/snapshots")
-    }
-}
-
 subprojects {
     afterEvaluate {
         when {
