@@ -195,7 +195,6 @@ zoomableModifier = "net.engawapg.lib:zoomable:1.5.1"
 ### MangaWorld
 coilGif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 subsamplingImageView = "com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0"
-subsamplingCompose = "xyz.quaver:subsampledimage:0.0.1-alpha22-SNAPSHOT"
 bigImageViewer = { module = "com.github.piasy:BigImageViewer", version.ref = "piasy" }
 bigImageGlideLoader = { module = "com.github.piasy:GlideImageLoader", version.ref = "piasy" }
 progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", version.ref = "piasy" }

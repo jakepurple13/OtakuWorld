@@ -55,7 +55,6 @@ dependencies {
 
     implementation(libs.bundles.piasyLibs)
     implementation(libs.subsamplingImageView)
-    implementation(libs.subsamplingCompose)
 
     implementation(libs.iconicsCore)
     implementation(Deps.materialTypeface)
