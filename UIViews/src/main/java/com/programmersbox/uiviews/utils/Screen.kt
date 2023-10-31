@@ -30,7 +30,9 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
+import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.compose.koinInject
+import org.koin.core.annotation.KoinExperimentalAPI
 import java.util.UUID
 
 sealed class Screen(val route: String) {
@@ -75,55 +77,58 @@ fun NavController.navigateToDetails(model: ItemModel) = navigate(
     Screen.DetailsScreen.route + "/${Uri.encode(model.toJson(ApiService::class.java to ApiServiceSerializer()))}"
 ) { launchSingleTop = true }
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun OtakuMaterialTheme(
     navController: NavHostController,
     genericInfo: GenericInfo,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
-            (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+    KoinAndroidContext {
+        val context = LocalContext.current
+        val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
+                (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
 
-    DisposableEffect(darkTheme) {
-        (context as? ComponentActivity)?.enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                android.graphics.Color.TRANSPARENT,
-                android.graphics.Color.TRANSPARENT,
-            ) { darkTheme },
-            navigationBarStyle = SystemBarStyle.auto(
-                android.graphics.Color.TRANSPARENT,
-                android.graphics.Color.TRANSPARENT,
-            ) { darkTheme },
-        )
-        onDispose {}
-    }
+        DisposableEffect(darkTheme) {
+            (context as? ComponentActivity)?.enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT,
+                ) { darkTheme },
+                navigationBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT,
+                ) { darkTheme },
+            )
+            onDispose {}
+        }
 
-    MaterialTheme(currentColorScheme) {
-        androidx.compose.material.MaterialTheme(
-            colors = if (darkTheme)
-                darkColors(
-                    primary = Color(0xff90CAF9),
-                    secondary = Color(0xff90CAF9)
-                )
-            else
-                lightColors(
-                    primary = Color(0xff2196F3),
-                    secondary = Color(0xff90CAF9)
-                ),
-        ) {
-            CompositionLocalProvider(
-                LocalActivity provides remember { context.findActivity() },
-                LocalNavController provides navController,
-                LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides koinInject(),
-                LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
-                LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
-                LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
-                LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
-                LocalSourcesRepository provides koinInject(),
-                LocalCurrentSource provides koinInject()
-            ) { content() }
+        MaterialTheme(currentColorScheme) {
+            androidx.compose.material.MaterialTheme(
+                colors = if (darkTheme)
+                    darkColors(
+                        primary = Color(0xff90CAF9),
+                        secondary = Color(0xff90CAF9)
+                    )
+                else
+                    lightColors(
+                        primary = Color(0xff2196F3),
+                        secondary = Color(0xff90CAF9)
+                    ),
+            ) {
+                CompositionLocalProvider(
+                    LocalActivity provides remember { context.findActivity() },
+                    LocalNavController provides navController,
+                    LocalGenericInfo provides genericInfo,
+                    LocalSettingsHandling provides koinInject(),
+                    LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
+                    LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
+                    LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
+                    LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
+                    LocalSourcesRepository provides koinInject(),
+                    LocalCurrentSource provides koinInject()
+                ) { content() }
+            }
         }
     }
 }
