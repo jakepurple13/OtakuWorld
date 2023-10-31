@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -71,6 +72,7 @@ import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
+import com.programmersbox.uiviews.utils.bounds
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
@@ -78,6 +80,7 @@ import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showErrorToast
+import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -141,44 +144,53 @@ fun HistoryUi(
                 actions = {
                     Text("$recentSize")
                     IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
-                }
+                },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { p ->
-        LazyColumn(
-            contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            items(
-                count = recentItems.itemCount,
-                key = recentItems.itemKey { it.url },
-                contentType = recentItems.itemContentType { it }
+        BoxWithConstraints {
+            LazyColumn(
+                contentPadding = p,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .haze(
+                        *bounds(p),
+                        backgroundColor = MaterialTheme.colorScheme.surface
+                    )
             ) {
-                val item = recentItems[it]
-                if (item != null) {
-                    HistoryItem(
-                        item = item,
-                        dao = dao,
-                        logoDrawable = logoDrawable,
-                        scope = scope,
-                        onError = {
-                            scope.launch {
-                                snackbarHostState.currentSnackbarData?.dismiss()
-                                val result = snackbarHostState.showSnackbar(
-                                    "Something went wrong. Source might not be installed",
-                                    duration = SnackbarDuration.Long,
-                                    actionLabel = "More Options",
-                                    withDismissAction = true
-                                )
-                                showRecentModel = when (result) {
-                                    SnackbarResult.Dismissed -> null
-                                    SnackbarResult.ActionPerformed -> item
+                items(
+                    count = recentItems.itemCount,
+                    key = recentItems.itemKey { it.url },
+                    contentType = recentItems.itemContentType { it }
+                ) {
+                    val item = recentItems[it]
+                    if (item != null) {
+                        HistoryItem(
+                            item = item,
+                            dao = dao,
+                            logoDrawable = logoDrawable,
+                            scope = scope,
+                            onError = {
+                                scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    val result = snackbarHostState.showSnackbar(
+                                        "Something went wrong. Source might not be installed",
+                                        duration = SnackbarDuration.Long,
+                                        actionLabel = "More Options",
+                                        withDismissAction = true
+                                    )
+                                    showRecentModel = when (result) {
+                                        SnackbarResult.Dismissed -> null
+                                        SnackbarResult.ActionPerformed -> item
+                                    }
                                 }
                             }
-                        }
-                    )
-                } else {
-                    HistoryItemPlaceholder()
+                        )
+                    } else {
+                        HistoryItemPlaceholder()
+                    }
                 }
             }
         }
