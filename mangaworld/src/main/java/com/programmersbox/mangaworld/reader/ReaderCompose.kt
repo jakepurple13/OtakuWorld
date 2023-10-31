@@ -170,10 +170,12 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.bounds
 import com.programmersbox.uiviews.utils.dataStore
 import com.programmersbox.uiviews.utils.updatePref
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import dev.chrisbanes.haze.haze
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import io.ktor.client.request.header
@@ -376,15 +378,26 @@ fun ReadView(
                 }
             }
         ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .padding(paddingValues.animate())
-                    .pullRefresh(pullRefreshState)
+            BoxWithConstraints(
+                modifier = Modifier.pullRefresh(pullRefreshState)
             ) {
+                val bounds = bounds(paddingValues)
                 val spacing = LocalContext.current.dpToPx(paddingPage).dp
                 Crossfade(targetState = listOrPager, label = "") {
-                    if (it) ListView(listState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-                    else PagerView(pagerState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                    if (it) ListView(
+                        listState,
+                        pages,
+                        readVm,
+                        spacing,
+                        Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
+                    ) { readVm.showInfo = !readVm.showInfo }
+                    else PagerView(
+                        pagerState,
+                        pages,
+                        readVm,
+                        spacing,
+                        Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
+                    ) { readVm.showInfo = !readVm.showInfo }
                 }
 
                 PullRefreshIndicator(
@@ -532,7 +545,7 @@ fun SheetView(
                 ) {
                     KamelImage(
                         resource = asyncPainterResource(it),
-                        onLoading = { CircularProgressIndicator(progress = it) },
+                        onLoading = { CircularProgressIndicator(progress = { it }) },
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -577,10 +590,11 @@ fun ListView(
     pages: List<String>,
     readVm: ReadViewModel,
     itemSpacing: Dp,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
     ) { reader(pages, readVm, onClick) }
@@ -593,11 +607,12 @@ fun PagerView(
     pages: List<String>,
     vm: ReadViewModel,
     itemSpacing: Dp,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     VerticalPager(
         state = pagerState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         pageSpacing = itemSpacing,
         beyondBoundsPageCount = 1,
         key = { it }
@@ -965,7 +980,10 @@ private fun ZoomableImage(
                             headers.forEach { (t, u) -> header(t, u) }
                         }
                     },
-                    onLoading = { CircularProgressIndicator(progress = animateFloatAsState(targetValue = it, label = "").value) },
+                    onLoading = {
+                        val progress by animateFloatAsState(targetValue = it, label = "")
+                        CircularProgressIndicator(progress = { progress })
+                    },
                     onFailure = {
                         Text(
                             stringResource(R.string.pressToRefresh),
@@ -1057,7 +1075,8 @@ private fun TopBar(
                     .padding(4.dp)
                     .align(Alignment.CenterVertically)
             )
-        }
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
     )
 }
 
@@ -1071,7 +1090,8 @@ private fun BottomBar(
 ) {
     BottomAppBar(
         modifier = modifier,
-        windowInsets = WindowInsets(0.dp)
+        windowInsets = WindowInsets(0.dp),
+        containerColor = Color.Transparent
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0

@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
@@ -68,6 +69,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
@@ -532,4 +534,22 @@ fun showTranslationScreen(): MutableState<Boolean> {
     }
 
     return showTranslationScreen
+}
+
+@Composable
+fun BoxWithConstraintsScope.bounds(paddingValues: PaddingValues): Array<Rect> {
+    val topBarBounds = with(LocalDensity.current) {
+        Rect(
+            Offset(0f, 0f),
+            Offset(maxWidth.toPx(), paddingValues.calculateTopPadding().toPx())
+        )
+    }
+    val bottomBarBounds = with(LocalDensity.current) {
+        val bottomPaddingPx = paddingValues.calculateBottomPadding().toPx()
+        Rect(
+            Offset(0f, maxHeight.toPx() - bottomPaddingPx),
+            Offset(maxWidth.toPx(), maxHeight.toPx())
+        )
+    }
+    return arrayOf(topBarBounds, bottomBarBounds)
 }

@@ -331,10 +331,10 @@ fun DetailsView(
                     var descriptionVisibility by remember { mutableStateOf(false) }
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
+                        state = listState,
                         modifier = Modifier
                             .fillMaxHeight()
                             .padding(vertical = 4.dp),
-                        state = listState
                     ) {
 
                         if (info.description.isNotEmpty()) {

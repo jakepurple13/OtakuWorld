@@ -78,4 +78,6 @@ dependencies {
     implementation(libs.glideCompose)
 
     implementation(libs.zoomableModifier)
+
+    implementation(libs.haze.jetpack.compose)
 }

@@ -4,6 +4,7 @@ easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.0"
 gradle = "8.3.0-alpha10"
+haze = "0.1.0"
 kamelImage = "0.8.2"
 kotlin = "1.9.10"
 latestAboutLibsRelease = "10.8.3"
@@ -14,13 +15,13 @@ roomVersion = "2.6.0"
 navVersion = "2.7.4"
 koinVersion = "3.5.0"
 lottieVersion = "6.0.0"
-coil = "2.4.0"
+coil = "2.5.0"
 lifecycle = "2.6.2"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.3"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.33.1-alpha"
-okhttpVersion = "4.11.0"
+okhttpVersion = "4.12.0"
 ktorVersion = "2.3.5"
 tvCompose = "1.0.0-alpha10"
 workVersion = "2.8.1"
@@ -57,6 +58,7 @@ easylauncher = { module = "com.project.starter:easylauncher", version.ref = "eas
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
+haze-jetpack-compose = { module = "dev.chrisbanes.haze:haze-jetpack-compose", version.ref = "haze" }
 kamel-image = { module = "media.kamel:kamel-image", version.ref = "kamelImage" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
@@ -178,8 +180,8 @@ datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
 jsoup = "org.jsoup:jsoup:1.16.2"
 
-crashlytics = "com.google.firebase:firebase-crashlytics:18.5.0"
-analytics = "com.google.firebase:firebase-analytics:21.4.0"
+crashlytics = "com.google.firebase:firebase-crashlytics:18.5.1"
+analytics = "com.google.firebase:firebase-analytics:21.5.0"
 playServices = "com.google.android.gms:play-services-auth:20.7.0"
 
 preference = "androidx.preference:preference-ktx:1.2.1"
@@ -267,7 +269,7 @@ androidxWebkit = "androidx.webkit:webkit:1.8.0"
 mlkitTranslate = "com.google.mlkit:translate:17.0.1"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
 firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.3.0"
-firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.9.0"
+firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.9.1"
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
