@@ -381,23 +381,26 @@ fun ReadView(
             BoxWithConstraints(
                 modifier = Modifier.pullRefresh(pullRefreshState)
             ) {
-                val bounds = bounds(paddingValues)
+                val bounds = bounds(paddingValues.animate())
                 val spacing = LocalContext.current.dpToPx(paddingPage).dp
                 Crossfade(targetState = listOrPager, label = "") {
-                    if (it) ListView(
-                        listState,
-                        pages,
-                        readVm,
-                        spacing,
-                        Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
-                    ) { readVm.showInfo = !readVm.showInfo }
-                    else PagerView(
-                        pagerState,
-                        pages,
-                        readVm,
-                        spacing,
-                        Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
-                    ) { readVm.showInfo = !readVm.showInfo }
+                    if (it) {
+                        ListView(
+                            listState = listState,
+                            pages = pages,
+                            readVm = readVm,
+                            itemSpacing = spacing,
+                            modifier = Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
+                        ) { readVm.showInfo = !readVm.showInfo }
+                    } else {
+                        PagerView(
+                            pagerState = pagerState,
+                            pages = pages,
+                            vm = readVm,
+                            itemSpacing = spacing,
+                            modifier = Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
+                        ) { readVm.showInfo = !readVm.showInfo }
+                    }
                 }
 
                 PullRefreshIndicator(

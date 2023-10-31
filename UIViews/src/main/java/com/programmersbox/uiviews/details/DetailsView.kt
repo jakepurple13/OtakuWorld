@@ -14,14 +14,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -123,11 +122,13 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
+import com.programmersbox.uiviews.utils.bounds
 import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.showErrorToast
 import com.programmersbox.uiviews.utils.toComposeColor
+import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -220,14 +221,7 @@ fun DetailsView(
                 InsetSmallTopAppBar(
                     modifier = Modifier.zIndex(2f),
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value
-                            ?: MaterialTheme.colorScheme.surface,
-                        scrolledContainerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value?.let {
-                            MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
-                        } ?: MaterialTheme.colorScheme.applyTonalElevation(
-                            backgroundColor = MaterialTheme.colorScheme.surface,
-                            elevation = 1.dp
-                        ),
+                        containerColor = Color.Transparent,
                         titleContentColor = topBarColor
                     ),
                     scrollBehavior = scrollBehavior,
@@ -314,70 +308,79 @@ fun DetailsView(
 
             val state = rememberCollapsingToolbarScaffoldState()
 
-            CollapsingToolbarScaffold(
-                modifier = Modifier.padding(p),
-                state = state,
-                scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
-                toolbar = { header() }
-            ) {
-                LazyColumnScrollbar(
-                    enabled = true,
-                    thickness = 8.dp,
-                    padding = 2.dp,
-                    listState = listState,
-                    thumbColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
-                    thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+            BoxWithConstraints {
+                CollapsingToolbarScaffold(
+                    toolbar = { header() },
+                    state = state,
+                    scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                    modifier = Modifier
+                        .haze(
+                            *bounds(p),
+                            backgroundColor = swatchInfo?.rgb
+                                ?.toComposeColor()
+                                ?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                        )
+                        .padding(p),
                 ) {
-                    var descriptionVisibility by remember { mutableStateOf(false) }
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        state = listState,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(vertical = 4.dp),
+                    LazyColumnScrollbar(
+                        enabled = true,
+                        thickness = 8.dp,
+                        padding = 2.dp,
+                        listState = listState,
+                        thumbColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
+                        thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
                     ) {
+                        var descriptionVisibility by remember { mutableStateOf(false) }
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            state = listState,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(vertical = 4.dp),
+                        ) {
 
-                        if (info.description.isNotEmpty()) {
-                            item {
-                                Box {
-                                    val progress = remember { mutableStateOf(false) }
+                            if (info.description.isNotEmpty()) {
+                                item {
+                                    Box {
+                                        val progress = remember { mutableStateOf(false) }
 
-                                    Text(
-                                        description,
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = rememberRipple(),
-                                                onClick = { descriptionVisibility = !descriptionVisibility },
-                                                onLongClick = { onTranslateDescription(progress) }
-                                            )
-                                            .padding(horizontal = 4.dp)
-                                            .fillMaxWidth()
-                                            .animateContentSize(),
-                                        overflow = TextOverflow.Ellipsis,
-                                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-
-                                    if (progress.value) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.align(Alignment.Center)
+                                        Text(
+                                            description,
+                                            modifier = Modifier
+                                                .combinedClickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = rememberRipple(),
+                                                    onClick = { descriptionVisibility = !descriptionVisibility },
+                                                    onLongClick = { onTranslateDescription(progress) }
+                                                )
+                                                .padding(horizontal = 4.dp)
+                                                .fillMaxWidth()
+                                                .animateContentSize(),
+                                            overflow = TextOverflow.Ellipsis,
+                                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
+
+                                        if (progress.value) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
-                            ChapterItem(
-                                infoModel = info,
-                                c = c,
-                                read = chapters,
-                                chapters = info.chapters,
-                                shareChapter = shareChapter,
-                                markAs = markAs
-                            )
+                            items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                                ChapterItem(
+                                    infoModel = info,
+                                    c = c,
+                                    read = chapters,
+                                    chapters = info.chapters,
+                                    shareChapter = shareChapter,
+                                    markAs = markAs
+                                )
+                            }
                         }
                     }
                 }
@@ -525,20 +528,14 @@ fun DetailsViewLandscape(
                 }
             },
             modifier = Modifier
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            swatchInfo?.rgb
-                                ?.toComposeColor()
-                                ?.animate()?.value ?: MaterialTheme.colorScheme.background,
-                            MaterialTheme.colorScheme.background
-                        )
-                    )
-                )
+                .run {
+                    val b = MaterialTheme.colorScheme.background
+                    val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
+                    drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
+                }
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
             DetailsLandscapeContent(
-                p = p,
                 info = info,
                 shareChapter = shareChapter,
                 logo = logo,
@@ -549,7 +546,8 @@ fun DetailsViewLandscape(
                 markAs = markAs,
                 isFavorite = isFavorite,
                 onFavoriteClick = onFavoriteClick,
-                listState = listState
+                listState = listState,
+                modifier = Modifier.padding(p)
             )
         }
     }
@@ -558,7 +556,6 @@ fun DetailsViewLandscape(
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun DetailsLandscapeContent(
-    p: PaddingValues,
     info: InfoModel,
     shareChapter: Boolean,
     isFavorite: Boolean,
@@ -570,9 +567,10 @@ private fun DetailsLandscapeContent(
     logo: NotificationLogo,
     reverseChapters: Boolean,
     listState: LazyListState,
+    modifier: Modifier = Modifier,
 ) {
     TwoPane(
-        modifier = Modifier.padding(p),
+        modifier = modifier,
         first = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
