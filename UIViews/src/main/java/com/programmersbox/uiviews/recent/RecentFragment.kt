@@ -36,7 +36,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,12 +45,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -79,7 +76,6 @@ import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.topBounds
 import dev.chrisbanes.haze.haze
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -109,7 +105,6 @@ fun RecentView(
         if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context)
     }
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
     val sourceList = recentVm.sources
@@ -128,12 +123,6 @@ fun RecentView(
                 context.currentService = service.apiService.serviceName
             }
         }
-    }
-
-    LaunchedEffect(state) {
-        snapshotFlow { state.firstVisibleItemScrollOffset }
-            .filter { it == 0 }
-            .collect { scrollBehavior.state.contentOffset = 0f }
     }
 
     var showSourceChooser by showSourceChooser()
@@ -175,7 +164,6 @@ fun RecentView(
                         }
                     }
                 },
-                scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
@@ -188,7 +176,6 @@ fun RecentView(
         ) {
             Crossfade(
                 targetState = isConnected,
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 label = ""
             ) { connected ->
                 when (connected) {
@@ -237,7 +224,9 @@ fun RecentView(
                             PullRefreshIndicator(
                                 refreshing = recentVm.isRefreshing,
                                 state = pull,
-                                modifier = Modifier.align(Alignment.TopCenter),
+                                modifier = Modifier
+                                    .padding(top = p.calculateTopPadding())
+                                    .align(Alignment.TopCenter),
                                 backgroundColor = MaterialTheme.colorScheme.background,
                                 contentColor = MaterialTheme.colorScheme.onBackground,
                                 scale = true
