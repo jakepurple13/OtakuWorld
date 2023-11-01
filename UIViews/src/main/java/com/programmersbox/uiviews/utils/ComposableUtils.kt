@@ -31,20 +31,17 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -65,6 +62,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -393,34 +391,6 @@ fun InsetLargeTopAppBar(
     )
 }
 
-@ExperimentalMaterial3Api
-@Composable
-fun OtakuScaffold(
-    modifier: Modifier = Modifier,
-    topBar: @Composable () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
-    snackbarHost: @Composable () -> Unit = {},
-    contentWindowInsets: WindowInsets = WindowInsets(0.dp),
-    floatingActionButton: @Composable () -> Unit = {},
-    floatingActionButtonPosition: FabPosition = FabPosition.End,
-    containerColor: Color = MaterialTheme.colorScheme.background,
-    contentColor: Color = contentColorFor(containerColor),
-    content: @Composable (PaddingValues) -> Unit,
-) {
-    Scaffold(
-        modifier,
-        topBar,
-        bottomBar,
-        snackbarHost,
-        floatingActionButton,
-        floatingActionButtonPosition,
-        containerColor,
-        contentColor,
-        contentWindowInsets,
-        content
-    )
-}
-
 @Composable
 fun LoadingDialog(
     showLoadingDialog: Boolean,
@@ -553,3 +523,15 @@ fun BoxWithConstraintsScope.bounds(paddingValues: PaddingValues): Array<Rect> {
     }
     return arrayOf(topBarBounds, bottomBarBounds)
 }
+
+@Composable
+fun BoxWithConstraintsScope.topBounds(paddingValues: PaddingValues): Rect {
+    return with(LocalDensity.current) {
+        Rect(
+            Offset(0f, 0f),
+            Offset(maxWidth.toPx(), paddingValues.calculateTopPadding().toPx())
+        )
+    }
+}
+
+val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }

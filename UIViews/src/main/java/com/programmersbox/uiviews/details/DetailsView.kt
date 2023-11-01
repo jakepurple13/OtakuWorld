@@ -118,16 +118,17 @@ import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
-import com.programmersbox.uiviews.utils.bounds
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.showErrorToast
 import com.programmersbox.uiviews.utils.toComposeColor
+import com.programmersbox.uiviews.utils.topBounds
 import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -270,7 +271,8 @@ fun DetailsView(
                     visible = isSaved,
                     enter = fadeIn() + slideInHorizontally { it / 2 },
                     exit = slideOutHorizontally { it / 2 } + fadeOut(),
-                    label = ""
+                    label = "",
+                    modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
                 ) {
                     val notificationManager = LocalContext.current.notificationManager
                     ExtendedFloatingActionButton(
@@ -306,16 +308,15 @@ fun DetailsView(
                 )
             }
 
-            val state = rememberCollapsingToolbarScaffoldState()
 
             BoxWithConstraints {
                 CollapsingToolbarScaffold(
                     toolbar = { header() },
-                    state = state,
+                    state = rememberCollapsingToolbarScaffoldState(),
                     scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
                     modifier = Modifier
                         .haze(
-                            *bounds(p),
+                            topBounds(p),
                             backgroundColor = swatchInfo?.rgb
                                 ?.toComposeColor()
                                 ?.animate()?.value ?: MaterialTheme.colorScheme.surface

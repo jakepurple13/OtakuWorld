@@ -2,12 +2,15 @@ package com.programmersbox.uiviews.globalsearch
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -33,7 +36,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,7 +43,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -84,10 +87,10 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
@@ -97,10 +100,16 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
+import com.programmersbox.uiviews.utils.components.LimitedBottomSheetScaffold
+import com.programmersbox.uiviews.utils.components.LimitedBottomSheetScaffoldDefaults
+import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
+import com.programmersbox.uiviews.utils.components.plus
 import com.programmersbox.uiviews.utils.navigateToDetails
+import com.programmersbox.uiviews.utils.topBounds
+import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -158,26 +167,17 @@ fun GlobalSearchView(
             }
         }
 
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
-        BottomSheetScaffold(
+        LimitedBottomSheetScaffold(
             scaffoldState = bottomScaffold,
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                Column {
-                    InsetSmallTopAppBar(
-                        navigationIcon = { BackButton() },
-                        title = { Text(stringResource(R.string.global_search)) },
-                        scrollBehavior = scrollBehavior
-                    )
-                    var active by rememberSaveable { mutableStateOf(false) }
+                var active by rememberSaveable { mutableStateOf(false) }
 
-                    fun closeSearchBar() {
-                        focusManager.clearFocus()
-                        active = false
-                    }
+                fun closeSearchBar() {
+                    focusManager.clearFocus()
+                    active = false
+                }
+                Column {
                     DynamicSearchBar(
-                        windowInsets = WindowInsets(0.dp),
                         query = viewModel.searchText,
                         onQueryChange = { viewModel.searchText = it },
                         isDocked = isHorizontal,
@@ -195,13 +195,23 @@ fun GlobalSearchView(
                             active = it
                             if (!active) focusManager.clearFocus()
                         },
-                        placeholder = { Text(stringResource(id = R.string.search)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        placeholder = { Text(stringResource(R.string.global_search)) },
+                        leadingIcon = { BackButton() },
                         trailingIcon = {
-                            IconButton(onClick = { viewModel.searchText = "" }) {
-                                Icon(Icons.Default.Cancel, null)
+                            AnimatedVisibility(viewModel.searchText.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.searchText = "" }) {
+                                    Icon(Icons.Default.Cancel, null)
+                                }
                             }
                         },
+                        colors = SearchBarDefaults.colors(
+                            containerColor = animateColorAsState(
+                                MaterialTheme.colorScheme.surface.copy(
+                                    alpha = if (active) 1f else 0f
+                                ),
+                                label = ""
+                            ).value,
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         LazyColumn(
@@ -236,13 +246,13 @@ fun GlobalSearchView(
                             }
                         }
                     }
+                    HorizontalDivider()
                 }
             },
             sheetContent = searchModelBottom?.let { s ->
                 {
                     val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-                    Scaffold(
-                        modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
+                    NormalOtakuScaffold(
                         topBar = {
                             TopAppBar(
                                 scrollBehavior = sheetScrollBehavior,
@@ -250,7 +260,10 @@ fun GlobalSearchView(
                                 actions = { Text(stringResource(id = R.string.search_found, s.data.size)) },
                                 windowInsets = WindowInsets(0.dp)
                             )
-                        }
+                        },
+                        modifier = Modifier
+                            .padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
+                            .nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                     ) { p ->
                         LazyVerticalGrid(
                             columns = adaptiveGridCell(),
@@ -272,7 +285,12 @@ fun GlobalSearchView(
                     }
                 }
             } ?: {},
-            sheetPeekHeight = 0.dp,
+            bottomSheet = LimitedBottomSheetScaffoldDefaults.bottomSheet(
+                sheetPeekHeight = 0.dp
+            ),
+            colors = LimitedBottomSheetScaffoldDefaults.colors(
+                topAppBarContainerColor = Color.Transparent
+            )
         ) { padding ->
             Crossfade(targetState = networkState, label = "") { network ->
                 when (network) {
@@ -299,15 +317,19 @@ fun GlobalSearchView(
                     }
 
                     true -> {
-                        Box(
+                        BoxWithConstraints(
                             modifier = Modifier.pullRefresh(pullRefreshState, false)
                         ) {
                             LazyColumn(
                                 state = listState,
-                                contentPadding = padding,
+                                contentPadding = padding + LocalNavHostPadding.current,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
+                                    .haze(
+                                        topBounds(padding),
+                                        backgroundColor = MaterialTheme.colorScheme.surface
+                                    )
                                     .fillMaxSize()
                                     .padding(top = 8.dp)
                             ) {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -61,8 +63,9 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.UUID
@@ -88,7 +91,7 @@ fun ImportListScreen(
         }
 
         is ImportListStatus.Error -> {
-            OtakuScaffold(
+            NormalOtakuScaffold(
                 topBar = {
                     InsetSmallTopAppBar(
                         title = { Text(stringResource(R.string.importing_import_list)) },
@@ -117,8 +120,9 @@ fun ImportListScreen(
         }
 
         is ImportListStatus.Success -> {
+            val lists by listDao.getAllLists().collectAsStateWithLifecycle(emptyList())
             var name by remember(status.customList?.item) { mutableStateOf(status.customList?.item?.name.orEmpty()) }
-            OtakuScaffold(
+            NormalOtakuScaffold(
                 topBar = {
                     Column {
                         InsetSmallTopAppBar(
@@ -136,13 +140,16 @@ fun ImportListScreen(
                                 placeholder = { Text(status.customList?.item?.name.orEmpty()) },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                isError = lists.any { it.item.name == name },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
                 },
                 bottomBar = {
-                    BottomAppBar {
+                    BottomAppBar(
+                        windowInsets = WindowInsets(0.dp)
+                    ) {
                         OutlinedButton(
                             onClick = {
                                 scope.launch {
@@ -150,11 +157,14 @@ fun ImportListScreen(
                                     navController.popBackStack()
                                 }
                             },
+                            enabled = lists.none { it.item.name == name },
                             modifier = Modifier.fillMaxWidth()
                         ) { Text(stringResource(R.string.import_import_list)) }
                     }
                 },
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                modifier = Modifier
+                    .padding(LocalNavHostPadding.current)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
             ) { padding ->
                 LazyColumn(
                     contentPadding = padding,
@@ -172,8 +182,6 @@ fun ImportListScreen(
             }
         }
     }
-
-
 }
 
 @Composable

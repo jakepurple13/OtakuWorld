@@ -119,7 +119,7 @@ dependencies {
     //Extension Loader
     api(projects.sharedutils.extensionloader)
 
-    implementation(libs.haze.jetpack.compose)
+    api(libs.haze.jetpack.compose)
 }
 
 protobuf {

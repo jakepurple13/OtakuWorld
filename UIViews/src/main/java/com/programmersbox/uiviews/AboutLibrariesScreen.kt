@@ -63,8 +63,8 @@ import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.appVersion
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import org.koin.compose.koinInject
 
 @Composable

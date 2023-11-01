@@ -117,6 +117,7 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
@@ -207,227 +208,231 @@ fun NotificationsScreen(
         source = showNotificationItem?.source
     )
 
-    BottomSheetDeleteScaffold(
-        listOfItems = items,
-        state = state,
-        multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
-        bottomScrollBehavior = scrollBehavior,
-        topBar = {
-            var showPopup by remember { mutableStateOf(false) }
+    Box(
+        modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
+    ) {
+        BottomSheetDeleteScaffold(
+            listOfItems = items,
+            state = state,
+            multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
+            bottomScrollBehavior = scrollBehavior,
+            topBar = {
+                var showPopup by remember { mutableStateOf(false) }
 
-            if (showPopup) {
-                val onDismiss = { showPopup = false }
-                AlertDialog(
-                    onDismissRequest = onDismiss,
-                    title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                scope.launch {
-                                    val number = db.deleteAllNotifications()
-                                    launch(Dispatchers.Main) {
-                                        onDismiss()
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.deleted_notifications, number),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        cancelNotificationById(42)
+                if (showPopup) {
+                    val onDismiss = { showPopup = false }
+                    AlertDialog(
+                        onDismissRequest = onDismiss,
+                        title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    scope.launch {
+                                        val number = db.deleteAllNotifications()
+                                        launch(Dispatchers.Main) {
+                                            onDismiss()
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.deleted_notifications, number),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            cancelNotificationById(42)
+                                        }
                                     }
                                 }
-                            }
-                        ) { Text(stringResource(R.string.yes)) }
-                    },
-                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-                )
-            }
-
-            InsetSmallTopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
-                actions = {
-                    IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
-                    IconToggleButton(
-                        checked = vm.sortedBy == NotificationSortBy.Grouped,
-                        onCheckedChange = { vm.toggleSort() }
-                    ) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
-                },
-                navigationIcon = { BackButton() }
-            )
-        },
-        onRemove = { item ->
-            vm.deleteNotification(db, item)
-            cancelNotification(item)
-        },
-        onMultipleRemove = { d ->
-            scope.launch {
-                withContext(Dispatchers.Default) {
-                    d.forEach {
-                        cancelNotification(it)
-                        db.deleteNotification(it)
-                    }
-                }
-                d.clear()
-            }
-        },
-        deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
-        itemUi = { item ->
-            NotificationDeleteItem(
-                item = item,
-                logoDrawable = logoDrawable,
-                onRemoveAllWithSameName = {
-                    scope.launch {
-                        withContext(Dispatchers.Default) {
-                            items
-                                .filter { it.notiTitle == item.notiTitle }
-                                .forEach {
-                                    cancelNotification(it)
-                                    db.deleteNotification(it)
-                                }
-                        }
-                        Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-        }
-    ) { p, _ ->
-        Crossfade(targetState = vm.sortedBy, label = "") { target ->
-            when (target) {
-                NotificationSortBy.Date -> {
-                    DateSort(
-                        navController = navController,
-                        vm = vm,
-                        p = p,
-                        db = db,
-                        toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
-                        onLoadingChange = { showLoadingDialog = it },
-                        deleteNotification = vm::deleteNotification,
-                        cancelNotification = cancelNotification,
-                        onError = {
-                            scope.launch {
-                                state.snackbarHostState.currentSnackbarData?.dismiss()
-                                val result = state.snackbarHostState.showSnackbar(
-                                    "Something went wrong. Source might not be installed",
-                                    duration = SnackbarDuration.Long,
-                                    actionLabel = "More Options",
-                                    withDismissAction = true
-                                )
-                                showNotificationItem = when (result) {
-                                    SnackbarResult.Dismissed -> null
-                                    SnackbarResult.ActionPerformed -> it
-                                }
-                            }
-                        }
+                            ) { Text(stringResource(R.string.yes)) }
+                        },
+                        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
                     )
                 }
 
-                NotificationSortBy.Grouped -> {
-                    LazyColumn(
-                        contentPadding = p,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(vertical = 4.dp),
-                    ) {
-                        vm.groupedList.forEach { item ->
-                            val expanded = vm.groupedListState[item.first]?.value == true
-
-                            stickyHeader {
-                                Surface(
-                                    shape = M3MaterialTheme.shapes.medium,
-                                    tonalElevation = 4.dp,
-                                    onClick = { vm.toggleGroupedState(item.first) },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    ListItem(
-                                        modifier = Modifier.padding(4.dp),
-                                        headlineContent = { Text(item.first) },
-                                        leadingContent = { Text(item.second.size.toString()) },
-                                        trailingContent = {
-                                            Icon(
-                                                Icons.Default.ArrowDropDown,
-                                                null,
-                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
-                                            )
-                                        }
+                InsetSmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                    actions = {
+                        IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
+                        IconToggleButton(
+                            checked = vm.sortedBy == NotificationSortBy.Grouped,
+                            onCheckedChange = { vm.toggleSort() }
+                        ) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
+                    },
+                    navigationIcon = { BackButton() }
+                )
+            },
+            onRemove = { item ->
+                vm.deleteNotification(db, item)
+                cancelNotification(item)
+            },
+            onMultipleRemove = { d ->
+                scope.launch {
+                    withContext(Dispatchers.Default) {
+                        d.forEach {
+                            cancelNotification(it)
+                            db.deleteNotification(it)
+                        }
+                    }
+                    d.clear()
+                }
+            },
+            deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
+            itemUi = { item ->
+                NotificationDeleteItem(
+                    item = item,
+                    logoDrawable = logoDrawable,
+                    onRemoveAllWithSameName = {
+                        scope.launch {
+                            withContext(Dispatchers.Default) {
+                                items
+                                    .filter { it.notiTitle == item.notiTitle }
+                                    .forEach {
+                                        cancelNotification(it)
+                                        db.deleteNotification(it)
+                                    }
+                            }
+                            Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            },
+        ) { p, _ ->
+            Crossfade(targetState = vm.sortedBy, label = "") { target ->
+                when (target) {
+                    NotificationSortBy.Date -> {
+                        DateSort(
+                            navController = navController,
+                            vm = vm,
+                            p = p,
+                            db = db,
+                            toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                            onLoadingChange = { showLoadingDialog = it },
+                            deleteNotification = vm::deleteNotification,
+                            cancelNotification = cancelNotification,
+                            onError = {
+                                scope.launch {
+                                    state.snackbarHostState.currentSnackbarData?.dismiss()
+                                    val result = state.snackbarHostState.showSnackbar(
+                                        "Something went wrong. Source might not be installed",
+                                        duration = SnackbarDuration.Long,
+                                        actionLabel = "More Options",
+                                        withDismissAction = true
                                     )
+                                    showNotificationItem = when (result) {
+                                        SnackbarResult.Dismissed -> null
+                                        SnackbarResult.ActionPerformed -> it
+                                    }
                                 }
                             }
+                        )
+                    }
 
-                            item {
-                                AnimatedVisibility(
-                                    visible = expanded,
-                                    enter = expandVertically(),
-                                    exit = shrinkVertically()
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    NotificationSortBy.Grouped -> {
+                        LazyColumn(
+                            contentPadding = p,
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(vertical = 4.dp),
+                        ) {
+                            vm.groupedList.forEach { item ->
+                                val expanded = vm.groupedListState[item.first]?.value == true
+
+                                stickyHeader {
+                                    Surface(
+                                        shape = M3MaterialTheme.shapes.medium,
+                                        tonalElevation = 4.dp,
+                                        onClick = { vm.toggleGroupedState(item.first) },
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        item.second.forEach {
-                                            NotificationItem(
-                                                item = it,
-                                                navController = navController,
-                                                deleteNotification = vm::deleteNotification,
-                                                cancelNotification = cancelNotification,
-                                                db = db,
-                                                genericInfo = genericInfo,
-                                                logoDrawable = logoDrawable,
-                                                notificationLogo = notificationLogo,
-                                                toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
-                                                sourceRepository = sourceRepository,
-                                                onLoadingChange = { showLoadingDialog = it },
-                                                onError = {
-                                                    scope.launch {
-                                                        state.snackbarHostState.currentSnackbarData?.dismiss()
-                                                        val result = state.snackbarHostState.showSnackbar(
-                                                            "Something went wrong. Source might not be installed",
-                                                            duration = SnackbarDuration.Long,
-                                                            actionLabel = "More Options",
-                                                            withDismissAction = true
-                                                        )
-                                                        showNotificationItem = when (result) {
-                                                            SnackbarResult.Dismissed -> null
-                                                            SnackbarResult.ActionPerformed -> it
+                                        ListItem(
+                                            modifier = Modifier.padding(4.dp),
+                                            headlineContent = { Text(item.first) },
+                                            leadingContent = { Text(item.second.size.toString()) },
+                                            trailingContent = {
+                                                Icon(
+                                                    Icons.Default.ArrowDropDown,
+                                                    null,
+                                                    modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+
+                                item {
+                                    AnimatedVisibility(
+                                        visible = expanded,
+                                        enter = expandVertically(),
+                                        exit = shrinkVertically()
+                                    ) {
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            item.second.forEach {
+                                                NotificationItem(
+                                                    item = it,
+                                                    navController = navController,
+                                                    deleteNotification = vm::deleteNotification,
+                                                    cancelNotification = cancelNotification,
+                                                    db = db,
+                                                    genericInfo = genericInfo,
+                                                    logoDrawable = logoDrawable,
+                                                    notificationLogo = notificationLogo,
+                                                    toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                                                    sourceRepository = sourceRepository,
+                                                    onLoadingChange = { showLoadingDialog = it },
+                                                    onError = {
+                                                        scope.launch {
+                                                            state.snackbarHostState.currentSnackbarData?.dismiss()
+                                                            val result = state.snackbarHostState.showSnackbar(
+                                                                "Something went wrong. Source might not be installed",
+                                                                duration = SnackbarDuration.Long,
+                                                                actionLabel = "More Options",
+                                                                withDismissAction = true
+                                                            )
+                                                            showNotificationItem = when (result) {
+                                                                SnackbarResult.Dismissed -> null
+                                                                SnackbarResult.ActionPerformed -> it
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            )
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                NotificationSortBy.UNRECOGNIZED -> {}
+                    NotificationSortBy.UNRECOGNIZED -> {}
+                }
             }
+
+            /*AnimatedLazyColumn(
+                contentPadding = p,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(vertical = 4.dp),
+                items = itemList.fastMap {
+                    AnimatedLazyListItem(key = it.url, value = it) {
+                        NotificationItem(
+                            item = it,
+                            navController = navController,
+                            vm = vm,
+                            notificationManager = notificationManager,
+                            db = db,
+                            parentFragmentManager = fragmentManager,
+                            genericInfo = genericInfo,
+                            logo = logo,
+                            notificationLogo = notificationLogo
+                        )
+                    }
+                }
+            )*/
+
+            /*LazyColumn(
+                contentPadding = p,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
         }
-
-        /*AnimatedLazyColumn(
-            contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
-            items = itemList.fastMap {
-                AnimatedLazyListItem(key = it.url, value = it) {
-                    NotificationItem(
-                        item = it,
-                        navController = navController,
-                        vm = vm,
-                        notificationManager = notificationManager,
-                        db = db,
-                        parentFragmentManager = fragmentManager,
-                        genericInfo = genericInfo,
-                        logo = logo,
-                        notificationLogo = notificationLogo
-                    )
-                }
-            }
-        )*/
-
-        /*LazyColumn(
-            contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp)
-        ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
     }
 }
 

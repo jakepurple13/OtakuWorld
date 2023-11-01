@@ -6,19 +6,11 @@
     android:layout_margin="5dp"
     android:gravity="center">
 
-    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/adViewEnd"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        ads:adSize="SMART_BANNER"
-        ads:adUnitId="@string/ad_unit_id" />
-
     <TextView
         android:id="@+id/lastRead"
         style="@style/TextAppearance.MaterialComponents.Headline6"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/adViewEnd"
         android:gravity="center"
         android:text="@string/reachedLastChapter" />
 

@@ -89,16 +89,16 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.OtakuBannerBox
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.adaptiveGridCell
-import com.programmersbox.uiviews.utils.bounds
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
+import com.programmersbox.uiviews.utils.topBounds
 import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -232,9 +232,7 @@ fun FavoriteUi(
         OtakuScaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
+                Column {
                     var active by rememberSaveable { mutableStateOf(false) }
 
                     fun closeSearchBar() {
@@ -425,7 +423,7 @@ fun FavoriteUi(
                         onShowBanner = { showBanner = it },
                         logo = logo,
                         modifier = Modifier.haze(
-                            *bounds(p),
+                            topBounds(p),
                             backgroundColor = MaterialTheme.colorScheme.surface
                         )
                     )

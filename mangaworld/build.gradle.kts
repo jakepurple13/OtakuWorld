@@ -28,7 +28,6 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.swiperefresh)
     implementation(libs.recyclerview)
-    implementation(libs.googlePlayAds)
     implementation(libs.profileinstaller)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
@@ -77,6 +76,4 @@ dependencies {
     implementation(libs.glideCompose)
 
     implementation(libs.zoomableModifier)
-
-    implementation(libs.haze.jetpack.compose)
 }

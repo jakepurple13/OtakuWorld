@@ -28,8 +28,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
@@ -56,6 +56,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,8 +65,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -111,13 +114,14 @@ import com.programmersbox.uiviews.settings.NotificationSettings
 import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuMaterialTheme
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.chromeCustomTabs
+import com.programmersbox.uiviews.utils.components.GlassScaffold
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
@@ -209,7 +213,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         showAllItem = showAllItem,
                         currentDestination = currentDestination
                     )
-                    OtakuScaffold(
+                    GlassScaffold(
                         bottomBar = {
                             BottomNav(
                                 navController = navController,
@@ -218,13 +222,18 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 showAllItem = showAllItem,
                                 currentDestination = currentDestination
                             )
-                        }
+                        },
+                        contentWindowInsets = WindowInsets(0.dp),
+                        blurBottomBar = true
                     ) { innerPadding ->
-                        NavHost(
-                            navController = navController,
-                            startDestination = Screen.RecentScreen.route,
-                            modifier = Modifier.padding(innerPadding)
-                        ) { navGraph(customPreferences, windowSize) }
+                        CompositionLocalProvider(
+                            LocalNavHostPadding provides innerPadding
+                        ) {
+                            NavHost(
+                                navController = navController,
+                                startDestination = Screen.RecentScreen.route,
+                            ) { navGraph(customPreferences, windowSize) }
+                        }
                     }
                 }
             }
@@ -247,7 +256,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
                 exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
             ) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = Color.Transparent
+                ) {
 
                     @Composable
                     fun ScreenBottomItem(

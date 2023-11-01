@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -401,7 +402,6 @@ fun NovelReader(
             }
         }
     ) {
-
         Scaffold(
             modifier = Modifier.nestedScroll(contentScrollBehavior.nestedScrollConnection),
             topBar = {
@@ -500,6 +500,7 @@ fun TopBar(
     ) {
         CenterAlignedTopAppBar(
             scrollBehavior = contentScrollBehavior,
+            windowInsets = WindowInsets(0.dp),
             modifier = modifier,
             navigationIcon = {
                 Row(
@@ -578,6 +579,7 @@ fun BottomBar(
     ) {
         androidx.compose.material3.BottomAppBar(
             modifier = modifier,
+            windowInsets = WindowInsets(0.dp),
         ) {
 
             val prevShown = readVm.currentChapter < readVm.list.lastIndex

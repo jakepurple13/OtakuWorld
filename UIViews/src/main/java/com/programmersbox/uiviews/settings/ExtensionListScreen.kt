@@ -44,9 +44,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -81,7 +80,6 @@ import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.all.pagerTabIndicatorOffset
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
@@ -89,8 +87,8 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -175,15 +173,9 @@ fun ExtensionList(
                     },
                     scrollBehavior = scrollBehavior,
                 )
-                TabRow(
+                PrimaryTabRow(
                     // Our selected tab is our current page
                     selectedTabIndex = pagerState.currentPage,
-                    // Override the indicator, using the provided pagerTabIndicatorOffset modifier
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
-                        )
-                    }
                 ) {
                     // Add tabs for all of our pages
                     LeadingIconTab(

@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
-import com.google.android.gms.ads.AdRequest
 import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -25,7 +24,7 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.DragSwipeGlideAdapter
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Collections
 
 class PageAdapter(
     override val fullRequest: RequestBuilder<Drawable>,
@@ -46,8 +45,6 @@ class PageAdapter(
 
     override val itemToModel: (String) -> String = { it }
 
-    private val ad by lazy { AdRequest.Builder().build() }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageHolder = when (viewType) {
         R.layout.page_end_chapter_item -> PageHolder.LastChapterHolder(PageEndChapterItemBinding.inflate(context.layoutInflater, parent, false))
         R.layout.page_next_chapter_item -> PageHolder.LoadNextChapterHolder(PageNextChapterItemBinding.inflate(context.layoutInflater, parent, false))
@@ -67,7 +64,7 @@ class PageAdapter(
         when (holder) {
             is PageHolder.ReadingHolder -> holder.render(dataList[position], onTap)
             is PageHolder.LoadNextChapterHolder -> {
-                holder.render(activity, ad) {
+                holder.render(activity) {
                     //Glide.get(activity).clearMemory()
                     chapterModels.getOrNull(--currentChapter)
                         ?.also(loadNewPages)
@@ -87,7 +84,8 @@ class PageAdapter(
                         }
                 }
             }
-            is PageHolder.LastChapterHolder -> holder.render(activity, ad)
+
+            is PageHolder.LastChapterHolder -> holder.render(activity)
         }
     }
 
@@ -107,8 +105,7 @@ class PageAdapter(
 sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     class LastChapterHolder(private val binding: PageEndChapterItemBinding) : PageHolder(binding.root) {
-        fun render(activity: AppCompatActivity, request: AdRequest) {
-            binding.adViewEnd.loadAd(request)
+        fun render(activity: AppCompatActivity) {
             binding.goBackFromReading.setOnClickListener { activity.finish() }
         }
     }
@@ -122,8 +119,7 @@ sealed class PageHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     }
 
     class LoadNextChapterHolder(private val binding: PageNextChapterItemBinding) : PageHolder(binding.root) {
-        fun render(activity: AppCompatActivity, request: AdRequest, load: () -> Unit) {
-            binding.adViewNext.loadAd(request)
+        fun render(activity: AppCompatActivity, load: () -> Unit) {
             binding.loadNextChapter.setOnClickListener { load() }
             binding.goBackFromReadingLoad.setOnClickListener { activity.finish() }
         }

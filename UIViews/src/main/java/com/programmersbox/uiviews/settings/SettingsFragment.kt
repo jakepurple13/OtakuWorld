@@ -76,7 +76,6 @@ import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
@@ -84,6 +83,7 @@ import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.showSourceChooser

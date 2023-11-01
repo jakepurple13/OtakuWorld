@@ -14,6 +14,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -68,13 +70,15 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
+import com.programmersbox.uiviews.utils.topBounds
+import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -171,7 +175,8 @@ fun RecentView(
                         }
                     }
                 },
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { p ->
@@ -183,9 +188,7 @@ fun RecentView(
         ) {
             Crossfade(
                 targetState = isConnected,
-                modifier = Modifier
-                    .padding(p)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 label = ""
             ) { connected ->
                 when (connected) {
@@ -211,17 +214,24 @@ fun RecentView(
                         ) {
                             when {
                                 sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
-                                recentVm.sourceList.isEmpty() -> info.ComposeShimmerItem()
+                                recentVm.sourceList.isEmpty() -> Box(Modifier.padding(p)) { info.ComposeShimmerItem() }
                                 else -> {
-                                    info.ItemListView(
-                                        list = recentVm.sourceList,
-                                        listState = state,
-                                        favorites = recentVm.favoriteList,
-                                        onLongPress = { item, c ->
-                                            newItemModel(if (c == ComponentState.Pressed) item else null)
-                                            showBanner = c == ComponentState.Pressed
-                                        }
-                                    ) { navController.navigateToDetails(it) }
+                                    BoxWithConstraints {
+                                        info.ItemListView(
+                                            list = recentVm.sourceList,
+                                            listState = state,
+                                            favorites = recentVm.favoriteList,
+                                            paddingValues = p,
+                                            onLongPress = { item, c ->
+                                                newItemModel(if (c == ComponentState.Pressed) item else null)
+                                                showBanner = c == ComponentState.Pressed
+                                            },
+                                            modifier = Modifier.haze(
+                                                topBounds(p),
+                                                backgroundColor = MaterialTheme.colorScheme.surface
+                                            )
+                                        ) { navController.navigateToDetails(it) }
+                                    }
                                 }
                             }
                             PullRefreshIndicator(
