@@ -60,7 +60,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
@@ -84,14 +83,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -119,8 +116,6 @@ import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
-import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
-import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GradientImage
@@ -324,6 +319,8 @@ fun OtakuCustomListScreen(
                                 }
                             }
 
+                            Text("(${customItem?.list.orEmpty().size})")
+
                             var showMenu by remember { mutableStateOf(false) }
 
                             DropdownMenu(
@@ -392,7 +389,6 @@ fun OtakuCustomListScreen(
                             AnimatedVisibility(!vm.searchBarActive) {
                                 IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
                             }
-                            Text("(${customItem?.list.orEmpty().size})")
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
