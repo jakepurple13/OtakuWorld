@@ -943,7 +943,7 @@ private fun ZoomableImage(
             .zoomable(
                 rememberZoomState(),
                 enableOneFingerZoom = false,
-                onTap = onClick
+                onTap = { onClick() }
             )
     ) {
         val scope = rememberCoroutineScope()
