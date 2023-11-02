@@ -123,7 +123,7 @@ dependencies {
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.24.4" }
+    protoc { artifact = "com.google.protobuf:protoc:3.25.0" }
     plugins {
         id("javalite") { artifact = libs.protobufJava.get().toString() }
         id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }
