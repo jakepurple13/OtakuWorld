@@ -35,6 +35,12 @@ class OtakuCustomListViewModel(
     var searchBarActive by mutableStateOf(false)
     var searchQuery by mutableStateOf("")
 
+    val listBySource by derivedStateOf {
+        customItem?.list
+            .orEmpty()
+            .groupBy { it.source }
+    }
+
     val searchItems by derivedStateOf {
         customItem?.list
             .orEmpty()
@@ -62,6 +68,12 @@ class OtakuCustomListViewModel(
             listDao.removeItem(item)
             viewModelScope.launch { customItem?.item?.let { listDao.updateFullList(it) } }
         }
+    }
+
+    suspend fun removeItems(items: List<CustomListInfo>): Result<Boolean> = runCatching {
+        items.forEach { item -> listDao.removeItem(item) }
+        customItem?.item?.let { listDao.updateFullList(it) }
+        true
     }
 
     fun rename(newName: String) {

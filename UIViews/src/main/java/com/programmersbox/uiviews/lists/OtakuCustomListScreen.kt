@@ -5,15 +5,21 @@ import android.graphics.drawable.Drawable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -24,6 +30,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -36,7 +43,10 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DropdownMenu
@@ -50,7 +60,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -62,6 +74,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -71,12 +84,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,6 +104,7 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.Alizarin
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComponentState
@@ -103,6 +119,8 @@ import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
+import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.GradientImage
@@ -134,7 +152,6 @@ fun OtakuCustomListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) },
 ) {
-    //TODO: Add a way to delete items
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
@@ -230,6 +247,17 @@ fun OtakuCustomListScreen(
         onDismissRequest = { showLoadingDialog = false }
     )
 
+    var showDeleteModal by remember { mutableStateOf(false) }
+
+    if (showDeleteModal) {
+        DeleteItemsModal(
+            list = vm.listBySource,
+            onRemove = vm::removeItems,
+            onDismiss = { showDeleteModal = false },
+            drawable = logoDrawable
+        )
+    }
+
     var showBanner by remember { mutableStateOf(false) }
 
     CustomBannerBox(
@@ -316,6 +344,17 @@ fun OtakuCustomListScreen(
                                         showMenu = false
                                         showAdd = true
                                     }
+                                )
+
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.remove_items)) },
+                                    onClick = {
+                                        showMenu = false
+                                        showDeleteModal = true
+                                    },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = Alizarin//MaterialTheme.colorScheme.error,
+                                    ),
                                 )
 
                                 DropdownMenuItem(
@@ -696,6 +735,134 @@ private fun CustomItem(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DeleteItemsModal(
+    list: Map<String, List<CustomListInfo>>,
+    onRemove: suspend (List<CustomListInfo>) -> Result<Boolean>,
+    onDismiss: () -> Unit,
+    drawable: Drawable,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(
+        onDismissRequest = onDismiss
+    ) {
+        val itemsToDelete = remember { mutableStateListOf<CustomListInfo>() }
+        var showPopup by remember { mutableStateOf(false) }
+        var removing by remember { mutableStateOf(false) }
+
+        if (showPopup) {
+            val onPopupDismiss = { showPopup = false }
+
+            AlertDialog(
+                onDismissRequest = if (removing) {
+                    {}
+                } else onPopupDismiss,
+                title = { Text("Delete") },
+                text = {
+                    Text(
+                        context.resources.getQuantityString(
+                            R.plurals.areYouSureRemove,
+                            itemsToDelete.size,
+                            itemsToDelete.size
+                        )
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            removing = true
+                            scope.launch {
+                                onRemove(itemsToDelete)
+                                    .onSuccess {
+                                        removing = false
+                                        itemsToDelete.clear()
+                                        onPopupDismiss()
+                                        onDismiss()
+                                    }
+                            }
+                        },
+                        enabled = !removing
+                    ) { Text(stringResource(R.string.yes)) }
+                },
+                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } },
+            )
+        }
+
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text(stringResource(R.string.delete_multiple)) },
+                    windowInsets = WindowInsets(0.dp),
+                )
+            },
+            bottomBar = {
+                BottomAppBar(
+                    contentPadding = PaddingValues(0.dp),
+                    windowInsets = WindowInsets(0.dp)
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    ) { Text(stringResource(id = R.string.cancel)) }
+
+                    Button(
+                        onClick = { showPopup = true },
+                        enabled = itemsToDelete.isNotEmpty(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    ) { Text(stringResource(id = R.string.remove)) }
+                }
+            }
+        ) { padding ->
+            LazyVerticalGrid(
+                columns = adaptiveGridCell(),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                contentPadding = padding,
+                modifier = Modifier.padding(4.dp),
+            ) {
+                list.forEach { (t, u) ->
+                    item(
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
+                        Column {
+                            HorizontalDivider()
+                            CenterAlignedTopAppBar(
+                                title = { Text(t) },
+                                windowInsets = WindowInsets(0.dp),
+                            )
+                        }
+                    }
+                    items(u) { item ->
+                        val transition = updateTransition(targetState = item in itemsToDelete, label = "")
+                        val outlineColor = MaterialTheme.colorScheme.outline
+                        M3CoverCard(
+                            imageUrl = item.imageUrl,
+                            name = item.title,
+                            placeHolder = drawable,
+                            onClick = {
+                                if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
+                            },
+                            modifier = Modifier.border(
+                                border = BorderStroke(
+                                    transition.animateDp(label = "border_width") { target -> if (target) 4.dp else 1.dp }.value,
+                                    transition.animateColor(label = "border_color") { target -> if (target) Color(0xfff44336) else outlineColor }.value
+                                ),
+                                shape = MaterialTheme.shapes.medium
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @LightAndDarkPreviews
