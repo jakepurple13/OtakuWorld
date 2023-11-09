@@ -173,7 +173,7 @@ androidxBrowser = "androidx.browser:browser:1.6.0"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.8.0"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.9.0"
 
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
