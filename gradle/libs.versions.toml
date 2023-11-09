@@ -4,9 +4,9 @@ easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.0"
 gradle = "8.3.0-alpha10"
-haze = "0.2.0"
-kamelImage = "0.8.2"
-kotlin = "1.9.10"
+haze = "0.3.0"
+kamelImage = "0.8.3"
+kotlin = "1.9.20"
 latestAboutLibsRelease = "10.8.3"
 coroutinesVersion = "1.7.3"
 glideVersion = "4.16.0"
@@ -18,15 +18,15 @@ lottieVersion = "6.0.0"
 coil = "2.5.0"
 lifecycle = "2.6.2"
 jetpack = "1.6.0-alpha03"
-jetpackCompiler = "1.5.3"
+jetpackCompiler = "1.5.4"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.33.1-alpha"
 okhttpVersion = "4.12.0"
-ktorVersion = "2.3.5"
+ktorVersion = "2.3.6"
 tvCompose = "1.0.0-alpha10"
 workVersion = "2.8.1"
 ziplineVersion = "1.1.0"
-landscapist = "2.2.8"
+landscapist = "2.2.11"
 protobufVersion = "3.25.0"
 sketchVersion = "3.2.5"
 activity = "1.8.0"
@@ -50,7 +50,7 @@ profileinstaller = "1.3.1"
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 navSafeArgsGradle = { id = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
-ksp = { id = "com.google.devtools.ksp", version = "1.9.10-1.0.13" }
+ksp = { id = "com.google.devtools.ksp", version = "1.9.20-1.0.13" }
 
 [libraries]
 androidx-baselineprofile-gradle-plugin = { module = "androidx.baselineprofile:androidx.baselineprofile.gradle.plugin", version.ref = "androidx-baselineprofile" }
@@ -112,7 +112,7 @@ androidCore = "androidx.core:core-ktx:1.12.0"
 appCompat = "androidx.appcompat:appcompat:1.6.1"
 material = "com.google.android.material:material:1.10.0"
 
-coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.3" }
+coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
 
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
 lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -173,7 +173,7 @@ androidxBrowser = "androidx.browser:browser:1.6.0"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.8.0"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.9.0"
 
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
@@ -265,7 +265,7 @@ retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
 androidxWebkit = "androidx.webkit:webkit:1.8.0"
 
-mlkitTranslate = "com.google.mlkit:translate:17.0.1"
+mlkitTranslate = "com.google.mlkit:translate:17.0.2"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
 firebaseDatabase = "com.google.firebase:firebase-database-ktx:20.3.0"
 firebaseFirestore = "com.google.firebase:firebase-firestore-ktx:24.9.1"
