@@ -1,3 +1,5 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.uiviews.lists
 
 import android.content.Intent

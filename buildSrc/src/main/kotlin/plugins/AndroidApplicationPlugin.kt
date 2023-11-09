@@ -11,6 +11,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
 
     override fun BaseAppModuleExtension.androidConfig(project: Project) {
         buildFeatures.compose = true
+        buildFeatures.buildConfig = true
 
         composeOptions {
             useLiveLiterals = true

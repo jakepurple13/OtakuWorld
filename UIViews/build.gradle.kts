@@ -14,6 +14,7 @@ android {
         dataBinding = true
         viewBinding = true
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
