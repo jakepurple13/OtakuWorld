@@ -136,9 +136,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import me.onebone.toolbar.CollapsingToolbarScaffold
-import me.onebone.toolbar.ScrollStrategy
-import me.onebone.toolbar.rememberCollapsingToolbarScaffoldState
+import me.tatarka.compose.collapsable.CollapsableColumn
+import me.tatarka.compose.collapsable.rememberCollapsableTopBehavior
+import my.nanihadesuka.compose.InternalLazyColumnScrollbar
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import kotlin.math.ln
 
@@ -218,44 +218,60 @@ fun DetailsView(
         val b = MaterialTheme.colorScheme.background
         val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
 
+        val collapsableBehavior = rememberCollapsableTopBehavior(
+            enterAlways = true
+        )
+
         OtakuScaffold(
             containerColor = Color.Transparent,
             topBar = {
-                InsetSmallTopAppBar(
-                    modifier = Modifier.zIndex(2f),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = topBarColor
-                    ),
-                    scrollBehavior = scrollBehavior,
-                    title = {
-                        Text(
-                            info.title,
-                            modifier = Modifier.basicMarquee()
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = topBarColor)
+                CollapsableColumn(
+                    behavior = collapsableBehavior
+                ) {
+                    InsetSmallTopAppBar(
+                        modifier = Modifier.zIndex(2f),
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = topBarColor
+                        ),
+                        scrollBehavior = scrollBehavior,
+                        title = {
+                            Text(
+                                info.title,
+                                modifier = Modifier.basicMarquee()
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = topBarColor)
+                            }
+                        },
+                        actions = {
+                            DetailActions(
+                                genericInfo = genericInfo,
+                                scaffoldState = scaffoldState,
+                                navController = navController,
+                                scope = scope,
+                                context = context,
+                                info = info,
+                                listDao = listDao,
+                                hostState = hostState,
+                                topBarColor = topBarColor,
+                                isSaved = isSaved,
+                                dao = dao,
+                                onReverseChaptersClick = { reverseChapters = !reverseChapters }
+                            )
                         }
-                    },
-                    actions = {
-                        DetailActions(
-                            genericInfo = genericInfo,
-                            scaffoldState = scaffoldState,
-                            navController = navController,
-                            scope = scope,
-                            context = context,
-                            info = info,
-                            listDao = listDao,
-                            hostState = hostState,
-                            topBarColor = topBarColor,
-                            isSaved = isSaved,
-                            dao = dao,
-                            onReverseChaptersClick = { reverseChapters = !reverseChapters }
-                        )
-                    }
-                )
+                    )
+
+                    DetailsHeader(
+                        model = info,
+                        logo = painterResource(id = logo.notificationId),
+                        isFavorite = isFavorite,
+                        favoriteClick = onFavoriteClick,
+                        modifier = Modifier.collapse()
+                    )
+                }
             },
             snackbarHost = {
                 SnackbarHost(hostState) { data ->
@@ -299,93 +315,75 @@ fun DetailsView(
             modifier = Modifier
                 .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .nestedScroll(collapsableBehavior.nestedScrollConnection)
         ) { p ->
-
-            val header: @Composable () -> Unit = {
-                DetailsHeader(
-                    model = info,
-                    logo = painterResource(id = logo.notificationId),
-                    isFavorite = isFavorite,
-                    favoriteClick = onFavoriteClick
-                )
-            }
-
-
             BoxWithConstraints {
-                CollapsingToolbarScaffold(
-                    toolbar = { header() },
-                    state = rememberCollapsingToolbarScaffoldState(),
-                    scrollStrategy = ScrollStrategy.EnterAlwaysCollapsed,
+                var descriptionVisibility by remember { mutableStateOf(false) }
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    state = listState,
+                    contentPadding = p,
                     modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(vertical = 4.dp)
                         .haze(
                             topBounds(p),
                             backgroundColor = swatchInfo?.rgb
                                 ?.toComposeColor()
                                 ?.animate()?.value ?: MaterialTheme.colorScheme.surface
-                        )
-                        .padding(p),
+                        ),
                 ) {
-                    LazyColumnScrollbar(
-                        enabled = true,
+                    if (info.description.isNotEmpty()) {
+                        item {
+                            Box {
+                                val progress = remember { mutableStateOf(false) }
+
+                                Text(
+                                    description,
+                                    modifier = Modifier
+                                        .combinedClickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = rememberRipple(),
+                                            onClick = { descriptionVisibility = !descriptionVisibility },
+                                            onLongClick = { onTranslateDescription(progress) }
+                                        )
+                                        .padding(horizontal = 4.dp)
+                                        .fillMaxWidth()
+                                        .animateContentSize(),
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+
+                                if (progress.value) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                        ChapterItem(
+                            infoModel = info,
+                            c = c,
+                            read = chapters,
+                            chapters = info.chapters,
+                            shareChapter = shareChapter,
+                            markAs = markAs
+                        )
+                    }
+                }
+                Box(Modifier.padding(p)) {
+                    InternalLazyColumnScrollbar(
                         thickness = 8.dp,
                         padding = 2.dp,
                         listState = listState,
                         thumbColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
                         thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
-                    ) {
-                        var descriptionVisibility by remember { mutableStateOf(false) }
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            state = listState,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(vertical = 4.dp),
-                        ) {
-
-                            if (info.description.isNotEmpty()) {
-                                item {
-                                    Box {
-                                        val progress = remember { mutableStateOf(false) }
-
-                                        Text(
-                                            description,
-                                            modifier = Modifier
-                                                .combinedClickable(
-                                                    interactionSource = remember { MutableInteractionSource() },
-                                                    indication = rememberRipple(),
-                                                    onClick = { descriptionVisibility = !descriptionVisibility },
-                                                    onLongClick = { onTranslateDescription(progress) }
-                                                )
-                                                .padding(horizontal = 4.dp)
-                                                .fillMaxWidth()
-                                                .animateContentSize(),
-                                            overflow = TextOverflow.Ellipsis,
-                                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-
-                                        if (progress.value) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
-                                ChapterItem(
-                                    infoModel = info,
-                                    c = c,
-                                    read = chapters,
-                                    chapters = info.chapters,
-                                    shareChapter = shareChapter,
-                                    markAs = markAs
-                                )
-                            }
-                        }
-                    }
+                    )
                 }
             }
         }

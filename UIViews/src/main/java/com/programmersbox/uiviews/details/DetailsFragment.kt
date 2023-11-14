@@ -582,7 +582,7 @@ internal fun DetailsHeader(
 
     Box(
         modifier = modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .animateContentSize()
     ) {
         GlideImage(

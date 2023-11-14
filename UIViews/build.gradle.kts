@@ -121,6 +121,8 @@ dependencies {
     api(projects.sharedutils.extensionloader)
 
     api(libs.haze.jetpack.compose)
+
+    implementation(libs.compose.collapsable)
 }
 
 protobuf {

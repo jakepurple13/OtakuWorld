@@ -1,5 +1,6 @@
 [versions]
 androidxBaselineprofileGradlePlugin = "1.2.0"
+composeCollapsable = "0.2.0"
 easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.0"
@@ -54,6 +55,7 @@ ksp = { id = "com.google.devtools.ksp", version = "1.9.20-1.0.13" }
 
 [libraries]
 androidx-baselineprofile-gradle-plugin = { module = "androidx.baselineprofile:androidx.baselineprofile.gradle.plugin", version.ref = "androidx-baselineprofile" }
+compose-collapsable = { module = "me.tatarka.compose.collapsable:compose-collapsable", version.ref = "composeCollapsable" }
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
