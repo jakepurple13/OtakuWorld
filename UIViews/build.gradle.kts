@@ -123,6 +123,10 @@ dependencies {
     api(libs.haze.jetpack.compose)
 
     implementation(libs.compose.collapsable)
+
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha01")
+    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha01")
+
 }
 
 protobuf {
