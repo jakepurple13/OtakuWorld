@@ -233,7 +233,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             NavHost(
                                 navController = navController,
                                 //startDestination = Screen.RecentScreen.route,
-                                startDestination = Screen.SettingsScreen.route
+                                startDestination = Screen.Settings.route
                             ) { navGraph(customPreferences, windowSize) }
                         }
                     }
