@@ -30,7 +30,7 @@ ziplineVersion = "1.1.0"
 landscapist = "2.2.11"
 protobufVersion = "3.25.0"
 sketchVersion = "3.2.5"
-activity = "1.8.0"
+activity = "1.8.1"
 composeBomVersion = "2023.12.00-alpha01"
 
 ### MangaWorld
