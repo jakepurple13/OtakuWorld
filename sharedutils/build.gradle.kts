@@ -36,6 +36,7 @@ dependencies {
 
     fullImplementation(libs.mlkitTranslate)
     fullImplementation(libs.mlkitLanguage)
+    fullImplementation(platform(libs.firebasePlatform))
     fullImplementation(libs.firebaseDatabase)
     fullImplementation(libs.firebaseFirestore)
     fullImplementation(libs.firebaseAuth)
