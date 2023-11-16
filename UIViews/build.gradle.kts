@@ -126,11 +126,10 @@ dependencies {
 
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha01")
     implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha01")
-
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.25.0" }
+    protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobufVersion.get().toString()}" }
     plugins {
         id("javalite") { artifact = libs.protobufJava.get().toString() }
         id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }
