@@ -33,7 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -280,10 +280,10 @@ private fun <T> DeleteItemView(
         }
     )
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
         state = dismissState,
-        background = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+        backgroundContent = {
+            val direction = dismissState.dismissDirection ?: return@SwipeToDismissBox
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
                     DismissValue.Default -> Color.Transparent
@@ -311,7 +311,7 @@ private fun <T> DeleteItemView(
                 )
             }
         },
-        dismissContent = {
+        content = {
             val transition = updateTransition(targetState = isInList, label = "")
             val outlineColor = MaterialTheme.colorScheme.outline
             OutlinedCard(

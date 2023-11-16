@@ -53,7 +53,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -559,10 +559,10 @@ private fun DateSort(
                                                 }
                                             )
 
-                                            SwipeToDismiss(
+                                            SwipeToDismissBox(
                                                 state = dismissState,
                                                 modifier = Modifier.weight(1f, false),
-                                                background = {
+                                                backgroundContent = {
                                                     val color by animateColorAsState(
                                                         when (dismissState.targetValue) {
                                                             DismissValue.Default -> Color.Transparent
@@ -592,7 +592,7 @@ private fun DateSort(
                                                         )
                                                     }
                                                 },
-                                                dismissContent = {
+                                                content = {
                                                     M3CoverCard(
                                                         imageUrl = i.imageUrl.orEmpty(),
                                                         name = i.notiTitle,
@@ -685,10 +685,10 @@ private fun NotificationItem(
         }
     )
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
         state = dismissState,
-        background = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+        backgroundContent = {
+            val direction = dismissState.dismissDirection ?: return@SwipeToDismissBox
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
                     DismissValue.Default -> Color.Transparent
@@ -721,7 +721,7 @@ private fun NotificationItem(
                 )
             }
         },
-        dismissContent = {
+        content = {
             ElevatedCard(
                 onClick = {
                     toSource(item.source)

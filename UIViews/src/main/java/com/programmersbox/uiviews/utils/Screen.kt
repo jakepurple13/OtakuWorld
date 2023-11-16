@@ -16,6 +16,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.programmersbox.extensionloader.SourceRepository
@@ -30,6 +32,7 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.R
 import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -84,6 +87,8 @@ fun OtakuMaterialTheme(
     genericInfo: GenericInfo,
     content: @Composable () -> Unit,
 ) {
+    val defaultUriHandler = LocalUriHandler.current
+
     KoinAndroidContext {
         val context = LocalContext.current
         val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
@@ -126,7 +131,26 @@ fun OtakuMaterialTheme(
                     LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
                     LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
                     LocalSourcesRepository provides koinInject(),
-                    LocalCurrentSource provides koinInject()
+                    LocalCurrentSource provides koinInject(),
+                    LocalUriHandler provides remember {
+                        object : UriHandler {
+                            override fun openUri(uri: String) {
+                                runCatching {
+                                    navController.navigateChromeCustomTabs(
+                                        uri,
+                                        {
+                                            anim {
+                                                enter = R.anim.slide_in_right
+                                                popEnter = R.anim.slide_in_right
+                                                exit = R.anim.slide_out_left
+                                                popExit = R.anim.slide_out_left
+                                            }
+                                        }
+                                    )
+                                }.onFailure { defaultUriHandler.openUri(uri) }
+                            }
+                        }
+                    }
                 ) { content() }
             }
         }

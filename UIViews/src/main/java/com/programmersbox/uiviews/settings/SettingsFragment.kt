@@ -53,6 +53,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,6 +68,7 @@ import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.CategorySetting
+import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -85,7 +87,6 @@ import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.currentService
-import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.showTranslationScreen
 import kotlinx.coroutines.launch
@@ -122,12 +123,11 @@ fun SettingScreen(
     globalSearchClick: () -> Unit = {},
     listClick: () -> Unit = {}
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     OtakuScaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            InsetSmallTopAppBar(
+            InsetLargeTopAppBar(
                 title = { Text(stringResource(R.string.settings)) },
                 scrollBehavior = scrollBehavior,
                 actions = {
@@ -137,7 +137,8 @@ fun SettingScreen(
                 }
             )
         },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { p ->
         Column(
             modifier = Modifier
@@ -171,6 +172,7 @@ private fun SettingsScreen(
     listClick: () -> Unit,
 ) {
     val navController = LocalNavController.current
+    val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
 
     if (BuildConfig.DEBUG) {
@@ -275,21 +277,7 @@ private fun SettingsScreen(
                 enabled = source != null,
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
-            ) {
-                source?.baseUrl?.let {
-                    navController.navigateChromeCustomTabs(
-                        it,
-                        {
-                            anim {
-                                enter = R.anim.slide_in_right
-                                popEnter = R.anim.slide_in_right
-                                exit = R.anim.slide_out_left
-                                popExit = R.anim.slide_out_left
-                            }
-                        }
-                    )
-                }
-            }
+            ) { source?.baseUrl?.let { uriHandler.openUri(it) } }
         )
     }
 

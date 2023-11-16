@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -52,7 +53,6 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.lists.ListChoiceScreen
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -121,6 +121,7 @@ internal fun DetailActions(
     dao: ItemDao,
     onReverseChaptersClick: () -> Unit,
 ) {
+    val uriHandler = LocalUriHandler.current
     var showLists by remember { mutableStateOf(false) }
 
     if (showLists) {
@@ -184,7 +185,7 @@ internal fun DetailActions(
         DropdownMenuItem(
             onClick = {
                 dropDownDismiss()
-                navController.navigateChromeCustomTabs(info.url)
+                uriHandler.openUri(info.url)
             },
             text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
             leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }

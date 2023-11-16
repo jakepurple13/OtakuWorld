@@ -63,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
@@ -90,7 +91,6 @@ import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -112,7 +112,7 @@ fun DetailsScreen(
     genericInfo: GenericInfo = LocalGenericInfo.current,
     details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) },
 ) {
-    val navController = LocalNavController.current
+    val uriHandler = LocalUriHandler.current
 
     if (details.info == null) {
         Scaffold(
@@ -147,9 +147,7 @@ fun DetailsScreen(
 
                         IconButton(
                             onClick = {
-                                details.itemModel?.url?.let {
-                                    navController.navigateChromeCustomTabs(it)
-                                }
+                                details.itemModel?.url?.let { uriHandler.openUri(it) }
                             }
                         ) { Icon(Icons.Default.OpenInBrowser, null) }
 

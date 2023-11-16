@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
@@ -62,6 +63,7 @@ fun InfoSettings(
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     SettingsScaffold(stringResource(R.string.more_info_category)) {
         PreferenceSetting(
@@ -80,7 +82,7 @@ fun InfoSettings(
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
-            ) { navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+            ) { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
         )
 
         PreferenceSetting(
@@ -89,7 +91,7 @@ fun InfoSettings(
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
-            ) { navController.navigateChromeCustomTabs("https://discord.gg/MhhHMWqryg") }
+            ) { uriHandler.openUri("https://discord.gg/MhhHMWqryg") }
         )
 
         PreferenceSetting(
@@ -99,7 +101,7 @@ fun InfoSettings(
             modifier = Modifier.clickable(
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
-            ) { navController.navigateChromeCustomTabs("https://ko-fi.com/V7V3D3JI") }
+            ) { uriHandler.openUri("https://ko-fi.com/V7V3D3JI") }
         )
 
         val appUpdate by updateAppCheck.collectAsState(null)

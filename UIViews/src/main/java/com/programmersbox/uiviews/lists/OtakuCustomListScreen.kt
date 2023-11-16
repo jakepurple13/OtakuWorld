@@ -68,7 +68,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -620,11 +620,11 @@ private fun CustomItem(
         }
     )
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
         modifier = modifier,
         state = dismissState,
         directions = setOf(DismissDirection.EndToStart),
-        background = {
+        backgroundContent = {
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
                     DismissValue.Default -> Color.Transparent
@@ -649,7 +649,7 @@ private fun CustomItem(
                 )
             }
         },
-        dismissContent = {
+        content = {
             ElevatedCard(
                 onClick = {
                     sourceRepository

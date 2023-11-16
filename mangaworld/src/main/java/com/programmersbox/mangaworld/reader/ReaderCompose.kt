@@ -100,7 +100,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -835,7 +835,7 @@ fun ChangeChapterSwipe(
             }
         )
 
-        SwipeToDismiss(
+        SwipeToDismissBox(
             state = dismissState,
             directions = if (isLoading)
                 emptySet()
@@ -844,8 +844,8 @@ fun ChangeChapterSwipe(
                     if (currentChapter <= 0) null else DismissDirection.EndToStart,
                     if (currentChapter >= lastChapter) null else DismissDirection.StartToEnd
                 ),
-            background = {
-                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+            backgroundContent = {
+                val direction = dismissState.dismissDirection ?: return@SwipeToDismissBox
                 val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
 
                 val alignment = when (direction) {
@@ -872,7 +872,7 @@ fun ChangeChapterSwipe(
                     )
                 }
             },
-            dismissContent = {
+            content = {
                 OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()

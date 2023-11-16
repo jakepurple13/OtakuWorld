@@ -36,7 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -279,11 +279,11 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     }
                 )
 
-                SwipeToDismiss(
+                SwipeToDismissBox(
                     modifier = Modifier.padding(start = 32.dp),
                     state = dismissState,
                     directions = setOf(DismissDirection.EndToStart),
-                    background = {
+                    backgroundContent = {
                         val color by animateColorAsState(
                             when (dismissState.targetValue) {
                                 DismissValue.Default -> Color.Transparent
@@ -308,7 +308,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                             )
                         }
                     },
-                    dismissContent = {
+                    content = {
                         val navController = LocalNavController.current
                         Surface(
                             shape = M3MaterialTheme.shapes.medium,
