@@ -55,6 +55,7 @@ sealed class Screen(val route: String) {
     data object AboutScreen : Screen("about")
     data object DebugScreen : Screen("debug")
     data object CustomListScreen : Screen("custom_list")
+    data object CustomListStuffScreen : Screen("custom_list_stuff")
     data object CustomListItemScreen : Screen("custom_list_item") {
         fun navigate(navController: NavController, uuid: UUID) {
             navController.navigate("$route/$uuid") { launchSingleTop = true }

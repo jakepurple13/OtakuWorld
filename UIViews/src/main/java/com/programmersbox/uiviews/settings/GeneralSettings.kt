@@ -3,6 +3,8 @@ package com.programmersbox.uiviews.settings
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.SettingsBrightness
@@ -12,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -23,6 +24,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.utils.HISTORY_SAVE
@@ -50,7 +52,7 @@ fun GeneralSettings(
 
         val handling = LocalSettingsHandling.current
 
-        val themeSetting by handling.systemThemeMode.collectAsState(initial = SystemThemeMode.FollowSystem)
+        val themeSetting by handling.systemThemeMode.collectAsStateWithLifecycle(SystemThemeMode.FollowSystem)
 
         val themeText by remember {
             derivedStateOf {
@@ -84,7 +86,7 @@ fun GeneralSettings(
             }
         )
 
-        val shareChapter by handling.shareChapter.collectAsState(initial = true)
+        val shareChapter by handling.shareChapter.collectAsStateWithLifecycle(true)
 
         SwitchSetting(
             settingTitle = { Text(stringResource(R.string.share_chapters)) },
@@ -93,13 +95,28 @@ fun GeneralSettings(
             updateValue = { scope.launch { handling.setShareChapter(it) } }
         )
 
-        val showAllScreen by handling.showAll.collectAsState(initial = true)
+        val showAllScreen by handling.showAll.collectAsStateWithLifecycle(true)
 
         SwitchSetting(
             settingTitle = { Text(stringResource(R.string.show_all_screen)) },
             settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
             value = showAllScreen,
             updateValue = { scope.launch { handling.setShowAll(it) } }
+        )
+
+        val showListDetail by handling.showListDetail.collectAsStateWithLifecycle(true)
+
+        SwitchSetting(
+            value = showListDetail,
+            settingTitle = { Text("Show List Detail Pane for Lists") },
+            settingIcon = {
+                Icon(
+                    if (showListDetail) Icons.AutoMirrored.Filled.List else Icons.AutoMirrored.Filled.ListAlt,
+                    null,
+                    modifier = Modifier.fillMaxSize()
+                )
+            },
+            updateValue = { scope.launch { handling.setShowListDetail(it) } }
         )
 
         var sliderValue by remember { mutableFloatStateOf(runBlocking { context.historySave.first().toFloat() }) }

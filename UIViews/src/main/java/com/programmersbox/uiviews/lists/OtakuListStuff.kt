@@ -2,16 +2,24 @@
 
 package com.programmersbox.uiviews.lists
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -27,20 +35,24 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -48,9 +60,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
@@ -68,12 +79,26 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.AnimatedPane
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.GutterSizes
+import androidx.compose.material3.adaptive.HingePolicy
+import androidx.compose.material3.adaptive.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.PaneAdaptedValue
+import androidx.compose.material3.adaptive.PaneScaffoldDirective
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.rememberListDetailPaneScaffoldState
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -83,24 +108,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.gsonutils.toJson
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.Alizarin
@@ -109,22 +135,21 @@ import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.CustomBannerBox
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
+import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.M3CoverCard
-import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
-import com.programmersbox.uiviews.utils.components.GradientImage
-import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.thenIf
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.loadItem
@@ -140,26 +165,261 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
-import java.util.UUID
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+
+//TODO: Rename this to something that makes sense
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+fun OtakuListStuff(
+    listDao: ListDao = LocalCustomListDao.current,
+    viewModel: OtakuListStuffViewModel = viewModel { OtakuListStuffViewModel(listDao) },
+) {
+    val state = rememberListDetailPaneScaffoldState(
+        scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
+    )
+
+    ListDetailPaneScaffold(
+        scaffoldState = state,
+        listPane = {
+            AnimatedPane(modifier = Modifier.fillMaxSize()) {
+                ListPart(
+                    viewModel = viewModel,
+                    navigateDetail = { state.navigateTo(ListDetailPaneScaffoldRole.Detail) }
+                )
+            }
+        },
+        detailPane = {
+            AnimatedPane(modifier = Modifier) { pane ->
+                AnimatedContent(
+                    targetState = viewModel.customItem,
+                    label = "",
+                    transitionSpec = {
+                        (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
+                    }
+                ) { targetState ->
+                    if (targetState != null) {
+                        DetailPart(
+                            viewModel = viewModel,
+                            navigateBack = {
+                                viewModel.customItem = null
+                                state.navigateBack()
+                            },
+                            isHorizontal = pane == PaneAdaptedValue.Expanded
+                        )
+                        BackHandler {
+                            viewModel.customItem = null
+                            state.navigateBack()
+                        }
+                    } else {
+                        NoDetailSelected()
+                    }
+                }
+            }
+        }
+    )
+}
+
+@ExperimentalMaterial3AdaptiveApi
+fun calculateStandardPaneScaffoldDirective(
+    windowAdaptiveInfo: WindowAdaptiveInfo,
+    verticalHingePolicy: HingePolicy = HingePolicy.AvoidSeparating,
+): PaneScaffoldDirective {
+    val maxHorizontalPartitions: Int
+    val contentPadding: PaddingValues
+    val verticalSpacerSize: Dp// = 0.dp
+    when (windowAdaptiveInfo.windowSizeClass.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            maxHorizontalPartitions = 1
+            contentPadding = PaddingValues(0.dp)
+            verticalSpacerSize = 0.dp
+        }
+
+        WindowWidthSizeClass.Medium -> {
+            maxHorizontalPartitions = 1
+            contentPadding = PaddingValues(horizontal = 0.dp)
+            verticalSpacerSize = 0.dp
+        }
+
+        else -> {
+            maxHorizontalPartitions = 2
+            contentPadding = PaddingValues(horizontal = 0.dp)
+            verticalSpacerSize = 24.dp
+        }
+    }
+    val maxVerticalPartitions: Int
+    val horizontalSpacerSize: Dp = 0.dp
+
+    // TODO(conradchen): Confirm the table top mode settings
+    if (windowAdaptiveInfo.windowPosture.isTabletop) {
+        maxVerticalPartitions = 2
+        //horizontalSpacerSize = 24.dp
+    } else {
+        maxVerticalPartitions = 1
+        //horizontalSpacerSize = 0.dp
+    }
+
+    val posture = windowAdaptiveInfo.windowPosture
+
+    return PaneScaffoldDirective(
+        maxHorizontalPartitions,
+        GutterSizes(contentPadding, verticalSpacerSize, horizontalSpacerSize),
+        maxVerticalPartitions,
+        when (verticalHingePolicy) {
+            HingePolicy.AvoidSeparating -> posture.separatingVerticalHingeBounds
+            HingePolicy.AvoidOccluding -> posture.occludingVerticalHingeBounds
+            HingePolicy.AlwaysAvoid -> posture.allVerticalHingeBounds
+            else -> emptyList()
+        }
+    )
+}
+
+@Composable
+private fun NoDetailSelected() {
+    Surface {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.PlaylistPlay,
+                    contentDescription = null,
+                    modifier = Modifier.size(120.dp)
+                )
+                Text("Select a list to view!")
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun OtakuCustomListScreen(
+private fun ListPart(
+    viewModel: OtakuListStuffViewModel,
+    navigateDetail: () -> Unit,
+) {
+    val navController = LocalNavController.current
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    val dateTimeFormatter = LocalSystemDateTimeFormat.current
+    val dao = LocalCustomListDao.current
+    val scope = rememberCoroutineScope()
+
+    val pickDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { document -> document?.let { Screen.ImportListScreen.navigate(navController, it) } }
+
+    var showAdd by remember { mutableStateOf(false) }
+
+    if (showAdd) {
+        var name by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAdd = false },
+            title = { Text(stringResource(R.string.create_new_list)) },
+            text = {
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(id = R.string.list_name)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            dao.create(name)
+                            showAdd = false
+                        }
+                    },
+                    enabled = name.isNotEmpty()
+                ) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = { TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) } }
+        )
+    }
+
+    OtakuScaffold(
+        topBar = {
+            InsetSmallTopAppBar(
+                title = { Text(stringResource(R.string.custom_lists_title)) },
+                navigationIcon = { BackButton() },
+                actions = {
+                    IconButton(
+                        onClick = { pickDocumentLauncher.launch(arrayOf("application/json")) }
+                    ) { Icon(Icons.Default.FileDownload, null) }
+
+                    IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Add, null) }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { padding ->
+        LazyColumn(
+            contentPadding = padding,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(viewModel.customLists) {
+                ElevatedCard(
+                    onClick = {
+                        viewModel.customItem = it
+                        navigateDetail()
+                    },
+                    modifier = Modifier
+                        .animateItemPlacement()
+                        .padding(horizontal = 4.dp)
+                        .thenIf(viewModel.customItem == it) {
+                            border(
+                                2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CardDefaults.elevatedShape
+                            )
+                        }
+                ) {
+                    val time = remember { dateTimeFormatter.format(it.item.time) }
+                    ListItem(
+                        overlineContent = { Text(stringResource(id = R.string.custom_list_updated_at, time)) },
+                        trailingContent = { Text("(${it.list.size})") },
+                        headlineContent = { Text(it.item.name) },
+                        supportingContent = {
+                            Column {
+                                it.list.take(3).forEach { info ->
+                                    Text(info.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                        }
+                    )
+                }
+                HorizontalDivider(Modifier.padding(top = 4.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun DetailPart(
+    viewModel: OtakuListStuffViewModel,
+    navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
-    listDao: ListDao = LocalCustomListDao.current,
-    vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) },
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
-    val customItem = vm.customItem
+    val customItem = viewModel.customItem
     val snackbarHostState = remember { SnackbarHostState() }
 
     val logoDrawable = koinInject<AppLogo>().logo
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
-    ) { document -> document?.let { vm.writeToFile(it, context) } }
+    ) { document -> document?.let { viewModel.writeToFile(it, context) } }
 
     val shareItem = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -188,9 +448,9 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            withContext(Dispatchers.IO) { vm.deleteAll() }
+                            withContext(Dispatchers.IO) { viewModel.deleteAll() }
                             deleteList = false
-                            navController.popBackStack()
+                            navigateBack()
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -224,7 +484,7 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            vm.rename(name)
+                            viewModel.rename(name)
                             showAdd = false
                         }
                     },
@@ -248,8 +508,8 @@ fun OtakuCustomListScreen(
 
     if (showDeleteModal) {
         DeleteItemsModal(
-            list = vm.listBySource,
-            onRemove = vm::removeItems,
+            list = viewModel.listBySource,
+            onRemove = viewModel::removeItems,
             onDismiss = { showDeleteModal = false },
             drawable = logoDrawable
         )
@@ -295,18 +555,20 @@ fun OtakuCustomListScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 DynamicSearchBar(
-                    query = vm.searchQuery,
-                    onQueryChange = vm::setQuery,
+                    query = viewModel.searchQuery,
+                    onQueryChange = viewModel::setQuery,
                     isDocked = isHorizontal,
-                    onSearch = { vm.searchBarActive = false },
-                    active = vm.searchBarActive,
-                    onActiveChange = { vm.searchBarActive = it },
+                    onSearch = { viewModel.searchBarActive = false },
+                    active = viewModel.searchBarActive,
+                    onActiveChange = { viewModel.searchBarActive = it },
                     placeholder = { Text(stringResource(id = R.string.search) + " " + customItem?.item?.name.orEmpty()) },
-                    leadingIcon = { BackButton() },
+                    leadingIcon = {
+                        IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                    },
                     colors = SearchBarDefaults.colors(
                         containerColor = animateColorAsState(
                             MaterialTheme.colorScheme.surface.copy(
-                                alpha = if (vm.searchBarActive) 1f else 0f
+                                alpha = if (viewModel.searchBarActive) 1f else 0f
                             ),
                             label = ""
                         ).value,
@@ -315,8 +577,8 @@ fun OtakuCustomListScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AnimatedVisibility(vm.searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { vm.setQuery("") }) {
+                            AnimatedVisibility(viewModel.searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.setQuery("") }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             }
@@ -369,7 +631,7 @@ fun OtakuCustomListScreen(
                                 )
                             }
 
-                            AnimatedVisibility(!vm.searchBarActive) {
+                            AnimatedVisibility(!viewModel.searchBarActive) {
                                 IconButton(
                                     onClick = {
                                         shareItem.launchCatching(
@@ -388,7 +650,7 @@ fun OtakuCustomListScreen(
                                     }
                                 ) { Icon(Icons.Default.Share, null) }
                             }
-                            AnimatedVisibility(!vm.searchBarActive) {
+                            AnimatedVisibility(!viewModel.searchBarActive) {
                                 IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
                             }
                         }
@@ -400,17 +662,16 @@ fun OtakuCustomListScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
                             .padding(16.dp)
-                            .padding(bottom = 80.dp)
                             .fillMaxWidth(),
                     ) {
-                        itemsIndexed(items = vm.searchItems) { index, item ->
+                        itemsIndexed(items = viewModel.searchItems) { index, item ->
                             ListItem(
                                 headlineContent = { Text(item.title) },
                                 leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
                                 modifier = Modifier
                                     .clickable {
-                                        vm.setQuery(item.title)
-                                        vm.searchBarActive = false
+                                        viewModel.setQuery(item.title)
+                                        viewModel.searchBarActive = false
                                     }
                                     .animateItemPlacement()
                             )
@@ -436,7 +697,7 @@ fun OtakuCustomListScreen(
                         )
                 ) {
                     items(
-                        items = vm.items,
+                        items = viewModel.items,
                         key = { it.key },
                         contentType = { it }
                     ) { item ->
@@ -581,163 +842,6 @@ private fun CustomItemVertical(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CustomItem(
-    item: CustomListInfo,
-    logo: Drawable?,
-    onDelete: (CustomListInfo) -> Unit,
-    showLoadingDialog: (Boolean) -> Unit,
-    onError: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val scope = rememberCoroutineScope()
-    val sourceRepository = LocalSourcesRepository.current
-    val navController = LocalNavController.current
-    var showPopup by remember { mutableStateOf(false) }
-
-    if (showPopup) {
-        val onDismiss = { showPopup = false }
-
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.removeNoti, item.title)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDismiss()
-                        onDelete(item)
-                    }
-                ) { Text(stringResource(R.string.yes)) }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-        )
-    }
-
-    val dismissState = rememberDismissState(
-        confirmValueChange = {
-            if (it == DismissValue.DismissedToStart) {
-                showPopup = true
-            }
-            false
-        }
-    )
-
-    SwipeToDismissBox(
-        modifier = modifier,
-        state = dismissState,
-        directions = setOf(DismissDirection.EndToStart),
-        backgroundContent = {
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToStart -> Color.Red
-                    DismissValue.DismissedToEnd -> Color.Red
-                }, label = ""
-            )
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(color)
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = null,
-                    modifier = Modifier.scale(scale),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
-        content = {
-            ElevatedCard(
-                onClick = {
-                    sourceRepository
-                        .toSourceByApiServiceName(item.source)
-                        ?.apiService
-                        ?.let { source ->
-                            Cached.cache[item.url]?.let {
-                                flow {
-                                    emit(
-                                        it
-                                            .toDbModel()
-                                            .toItemModel(source)
-                                    )
-                                }
-                            } ?: source.getSourceByUrlFlow(item.url)
-                        }
-                        ?.dispatchIo()
-                        ?.onStart { showLoadingDialog(true) }
-                        ?.onEach {
-                            showLoadingDialog(false)
-                            navController.navigateToDetails(it)
-                        }
-                        ?.onCompletion { showLoadingDialog(false) }
-                        ?.launchIn(scope) ?: onError()
-                },
-                modifier = Modifier
-                    .height(ComposableUtils.IMAGE_HEIGHT)
-                    .padding(horizontal = 4.dp)
-            ) {
-                ImageFlushListItem(
-                    leadingContent = {
-                        GradientImage(
-                            model = item.imageUrl,
-                            placeholder = rememberDrawablePainter(logo),
-                            error = rememberDrawablePainter(logo),
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = item.title,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    },
-                    overlineContent = { Text(item.source) },
-                    headlineContent = { Text(item.title) },
-                    supportingContent = {
-                        Text(
-                            item.description,
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = 3
-                        )
-                    },
-                    trailingContent = {
-                        var showDropDown by remember { mutableStateOf(false) }
-
-                        val dropDownDismiss = { showDropDown = false }
-
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.global_search_by_name)) },
-                                onClick = {
-                                    dropDownDismiss()
-                                    Screen.GlobalSearchScreen.navigate(navController, item.title)
-                                }
-                            )
-
-                            HorizontalDivider()
-
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.remove)) },
-                                onClick = {
-                                    dropDownDismiss()
-                                    showPopup = true
-                                }
-                            )
-                        }
-
-                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
-                    }
-                )
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 private fun DeleteItemsModal(
     list: Map<String, List<CustomListInfo>>,
     onRemove: suspend (List<CustomListInfo>) -> Result<Boolean>,
@@ -864,38 +968,95 @@ private fun DeleteItemsModal(
     }
 }
 
-@LightAndDarkPreviews
-@Composable
-private fun CustomListScreenPreview() {
-    PreviewTheme {
-        val listDao: ListDao = LocalCustomListDao.current
-        val vm: OtakuCustomListViewModel = viewModel {
-            OtakuCustomListViewModel(listDao, SavedStateHandle())
-        }
-        OtakuCustomListScreen(
-            listDao = listDao,
-            vm = vm
-        )
-    }
-}
+class OtakuListStuffViewModel(
+    private val listDao: ListDao,
+) : ViewModel() {
+    val customLists = mutableStateListOf<CustomList>()
 
-@LightAndDarkPreviews
-@Composable
-private fun CustomItemPreview() {
-    PreviewTheme {
-        CustomItem(
-            item = CustomListInfo(
-                uuid = UUID.randomUUID(),
-                title = "Title",
-                description = "description",
-                url = "",
-                imageUrl = "",
-                source = "MANGA_READ"
-            ),
-            logo = null,
-            onDelete = {},
-            showLoadingDialog = {},
-            onError = {}
-        )
+    var customItem: CustomList? by mutableStateOf(null)
+
+    var searchBarActive by mutableStateOf(false)
+    var searchQuery by mutableStateOf("")
+
+    val listBySource by derivedStateOf {
+        customItem?.list
+            .orEmpty()
+            .groupBy { it.source }
+    }
+
+    val searchItems by derivedStateOf {
+        customItem?.list
+            .orEmpty()
+            .distinctBy { it.title }
+            .filter { it.title.contains(searchQuery, ignoreCase = true) }
+    }
+
+    val items by derivedStateOf {
+        customItem?.list
+            .orEmpty()
+            .filter { it.title.contains(searchQuery, ignoreCase = true) }
+            .groupBy { it.title }
+            .entries
+            .toList()
+    }
+
+    init {
+        listDao.getAllLists()
+            .onEach {
+                customLists.clear()
+                customLists.addAll(it)
+            }
+            .launchIn(viewModelScope)
+
+        /*snapshotFlow {  }
+
+        uuid?.let(listDao::getCustomListItemFlow)
+            ?.onEach { customItem = it }
+            ?.launchIn(viewModelScope)*/
+    }
+
+    fun removeItem(item: CustomListInfo) {
+        viewModelScope.launch {
+            listDao.removeItem(item)
+            viewModelScope.launch { customItem?.item?.let { listDao.updateFullList(it) } }
+        }
+    }
+
+    suspend fun removeItems(items: List<CustomListInfo>): Result<Boolean> = runCatching {
+        items.forEach { item -> listDao.removeItem(item) }
+        customItem?.item?.let { listDao.updateFullList(it) }
+        true
+    }
+
+    fun rename(newName: String) {
+        viewModelScope.launch { customItem?.item?.copy(name = newName)?.let { listDao.updateFullList(it) } }
+    }
+
+    fun deleteAll() {
+        viewModelScope.launch { customItem?.let { item -> listDao.removeList(item) } }
+    }
+
+    fun setQuery(query: String) {
+        searchQuery = query
+    }
+
+    fun writeToFile(document: Uri, context: Context) {
+        runCatching {
+            viewModelScope.launch {
+                try {
+                    context.contentResolver.openFileDescriptor(document, "w")?.use {
+                        FileOutputStream(it.fileDescriptor).use { f ->
+                            f.write(customItem?.toJson()?.toByteArray())
+                        }
+                    }
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+            .onSuccess { println("Written!") }
+            .onFailure { it.printStackTrace() }
     }
 }

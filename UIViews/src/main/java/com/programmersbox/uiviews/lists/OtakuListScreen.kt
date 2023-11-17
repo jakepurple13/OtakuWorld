@@ -62,6 +62,7 @@ fun OtakuListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     vm: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) }
 ) {
+    //TODO: MAYBE do a ListDetailScaffold here?
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 

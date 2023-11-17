@@ -58,6 +58,7 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             showAll = true
             shouldCheckUpdate = true
             themeSetting = SystemThemeMode.FollowSystem
+            showListDetail = true
         }
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
@@ -81,5 +82,10 @@ class SettingsHandling(context: Context) {
     val notificationSortBy = all.map { it.notificationSortBy }
 
     suspend fun setNotificationSortBy(sort: NotificationSortBy) = preferences.update { setNotificationSortBy(sort) }
+
+    val showListDetail = all.map { it.showListDetail }
+
+    suspend fun setShowListDetail(show: Boolean) = preferences.update { setShowListDetail(show) }
+
 
 }
