@@ -233,7 +233,9 @@ fun OtakuListStuff(
             }
         },
         detailPane = { if (showListDetail) details() },
-        extraPane = { details() }
+        extraPane = if (!showListDetail) {
+            { details() }
+        } else null
     )
 }
 
