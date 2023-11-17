@@ -92,6 +92,7 @@ import androidx.compose.material3.adaptive.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.PaneAdaptedValue
 import androidx.compose.material3.adaptive.PaneScaffoldDirective
+import androidx.compose.material3.adaptive.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.rememberListDetailPaneScaffoldState
@@ -117,6 +118,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
@@ -139,6 +141,7 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.M3CoverCard
@@ -170,15 +173,49 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 //TODO: Rename this to something that makes sense
+// if I like it, modify the other files to accept what is needed for reusability
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun OtakuListStuff(
     listDao: ListDao = LocalCustomListDao.current,
     viewModel: OtakuListStuffViewModel = viewModel { OtakuListStuffViewModel(listDao) },
 ) {
+    val showListDetail by LocalSettingsHandling.current
+        .showListDetail
+        .collectAsStateWithLifecycle(true)
+
     val state = rememberListDetailPaneScaffoldState(
         scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
     )
+
+    val details: @Composable ThreePaneScaffoldScope.() -> Unit = {
+        AnimatedPane(modifier = Modifier) { pane ->
+            AnimatedContent(
+                targetState = viewModel.customItem,
+                label = "",
+                transitionSpec = {
+                    (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
+                }
+            ) { targetState ->
+                if (targetState != null) {
+                    DetailPart(
+                        viewModel = viewModel,
+                        navigateBack = {
+                            viewModel.customItem = null
+                            state.navigateBack()
+                        },
+                        isHorizontal = pane == PaneAdaptedValue.Expanded
+                    )
+                    BackHandler {
+                        viewModel.customItem = null
+                        state.navigateBack()
+                    }
+                } else {
+                    NoDetailSelected()
+                }
+            }
+        }
+    }
 
     ListDetailPaneScaffold(
         scaffoldState = state,
@@ -186,38 +223,17 @@ fun OtakuListStuff(
             AnimatedPane(modifier = Modifier.fillMaxSize()) {
                 ListPart(
                     viewModel = viewModel,
-                    navigateDetail = { state.navigateTo(ListDetailPaneScaffoldRole.Detail) }
+                    navigateDetail = {
+                        if (showListDetail)
+                            state.navigateTo(ListDetailPaneScaffoldRole.Detail)
+                        else
+                            state.navigateTo(ListDetailPaneScaffoldRole.Extra)
+                    }
                 )
             }
         },
-        detailPane = {
-            AnimatedPane(modifier = Modifier) { pane ->
-                AnimatedContent(
-                    targetState = viewModel.customItem,
-                    label = "",
-                    transitionSpec = {
-                        (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
-                    }
-                ) { targetState ->
-                    if (targetState != null) {
-                        DetailPart(
-                            viewModel = viewModel,
-                            navigateBack = {
-                                viewModel.customItem = null
-                                state.navigateBack()
-                            },
-                            isHorizontal = pane == PaneAdaptedValue.Expanded
-                        )
-                        BackHandler {
-                            viewModel.customItem = null
-                            state.navigateBack()
-                        }
-                    } else {
-                        NoDetailSelected()
-                    }
-                }
-            }
-        }
+        detailPane = { if (showListDetail) details() },
+        extraPane = { details() }
     )
 }
 
@@ -415,7 +431,7 @@ fun DetailPart(
     val customItem = viewModel.customItem
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val logoDrawable = koinInject<AppLogo>().logo
+    val logoDrawable = koinInject<AppLogo>()
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -511,7 +527,7 @@ fun DetailPart(
             list = viewModel.listBySource,
             onRemove = viewModel::removeItems,
             onDismiss = { showDeleteModal = false },
-            drawable = logoDrawable
+            drawable = logoDrawable.logo
         )
     }
 
@@ -522,15 +538,14 @@ fun DetailPart(
         bannerContent = {
             ListItem(
                 leadingContent = {
-                    val logo = koinInject<AppLogo>().logoId
                     CoilGradientImage(
                         model = rememberAsyncImagePainter(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(it?.imageUrl)
                                 .lifecycle(LocalLifecycleOwner.current)
                                 .crossfade(true)
-                                .placeholder(logo)
-                                .error(logo)
+                                .placeholder(logoDrawable.logoId)
+                                .error(logoDrawable.logoId)
                                 .build()
                         ),
                         modifier = Modifier
@@ -704,7 +719,7 @@ fun DetailPart(
                         CustomItemVertical(
                             items = item.value,
                             title = item.key,
-                            logo = logoDrawable,
+                            logo = logoDrawable.logo,
                             showLoadingDialog = { showLoadingDialog = it },
                             onError = {
                                 scope.launch {

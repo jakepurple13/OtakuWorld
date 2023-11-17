@@ -62,7 +62,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -159,8 +158,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     protected open fun BottomBarAdditions() = Unit
 
     private var notificationCount by mutableIntStateOf(0)
-
-    private var showListDetail by mutableStateOf(true)
 
     @OptIn(
         ExperimentalMaterial3Api::class,
@@ -366,7 +363,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 NavigationRailItem(
                     imageVector = Icons.AutoMirrored.Default.List,
                     label = stringResource(R.string.custom_lists_title),
-                    screen = if (showListDetail) Screen.CustomListStuffScreen else Screen.CustomListScreen,
+                    screen = Screen.CustomListStuffScreen,
                     currentDestination = currentDestination,
                     navController = navController,
                     customRoute = "_home"
@@ -503,11 +500,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     favoritesClick = { navController.navigate(Screen.FavoriteScreen.route) { launchSingleTop = true } },
                     historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
                     globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
-                    listClick = {
-                        navController.navigate(
-                            if (showListDetail) Screen.CustomListStuffScreen.route else Screen.CustomListScreen.route
-                        ) { launchSingleTop = true }
-                    },
+                    listClick = { navController.navigate(Screen.CustomListStuffScreen.route) { launchSingleTop = true } },
                     debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } }
                 )
             }
@@ -718,10 +711,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             .itemDao()
             .getAllNotificationCount()
             .onEach { notificationCount = it }
-            .launchIn(lifecycleScope)
-
-        settingsHandling.showListDetail
-            .onEach { showListDetail = it }
             .launchIn(lifecycleScope)
     }
 
