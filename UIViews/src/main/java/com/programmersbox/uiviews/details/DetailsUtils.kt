@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -17,7 +18,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.SaveAs
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ColorScheme
@@ -107,35 +107,27 @@ internal fun Color.surfaceColorAtElevation(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DetailActions(
-    genericInfo: GenericInfo,
-    scaffoldState: DrawerState,
-    navController: NavHostController,
-    scope: CoroutineScope,
-    context: Context,
+internal fun AddToList(
+    showLists: Boolean,
+    showListsChange: (Boolean) -> Unit,
     info: InfoModel,
     listDao: ListDao,
     hostState: SnackbarHostState,
-    topBarColor: Color,
-    isSaved: Boolean,
-    dao: ItemDao,
-    onReverseChaptersClick: () -> Unit,
+    scope: CoroutineScope,
+    context: Context,
 ) {
-    val uriHandler = LocalUriHandler.current
-    var showLists by remember { mutableStateOf(false) }
-
     if (showLists) {
-        BackHandler { showLists = false }
+        BackHandler { showListsChange(false) }
 
         ModalBottomSheet(
-            onDismissRequest = { showLists = false },
+            onDismissRequest = { showListsChange(false) },
             windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
         ) {
             ListChoiceScreen(
                 url = info.url,
                 onClick = { item ->
                     scope.launch {
-                        showLists = false
+                        showListsChange(false)
                         val result = listDao.addToList(
                             item.item.uuid,
                             info.title,
@@ -158,11 +150,28 @@ internal fun DetailActions(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { showLists = false }) { Icon(Icons.Default.Close, null) }
+                    IconButton(onClick = { showListsChange(false) }) { Icon(Icons.Default.Close, null) }
                 },
             )
         }
     }
+}
+
+@Composable
+internal fun DetailActions(
+    genericInfo: GenericInfo,
+    scaffoldState: DrawerState,
+    navController: NavHostController,
+    scope: CoroutineScope,
+    context: Context,
+    info: InfoModel,
+    topBarColor: Color,
+    isSaved: Boolean,
+    dao: ItemDao,
+    onReverseChaptersClick: () -> Unit,
+    onShowLists: () -> Unit,
+) {
+    val uriHandler = LocalUriHandler.current
 
     var showDropDown by remember { mutableStateOf(false) }
 
@@ -194,10 +203,10 @@ internal fun DetailActions(
         DropdownMenuItem(
             onClick = {
                 dropDownDismiss()
-                showLists = true
+                onShowLists()
             },
             text = { Text(stringResource(R.string.add_to_list)) },
-            leadingIcon = { Icon(Icons.Default.SaveAs, null) }
+            leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) }
         )
 
         if (!isSaved) {

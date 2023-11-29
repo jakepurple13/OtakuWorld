@@ -59,6 +59,7 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             shouldCheckUpdate = true
             themeSetting = SystemThemeMode.FollowSystem
             showListDetail = true
+            showDownload = true
         }
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
@@ -87,5 +88,15 @@ class SettingsHandling(context: Context) {
 
     suspend fun setShowListDetail(show: Boolean) = preferences.update { setShowListDetail(show) }
 
+    val showDownload = SettingInfo(
+        flow = all.map { it.showDownload },
+        updateValue = { setShowDownload(it) }
+    )
 
+    inner class SettingInfo<T>(
+        val flow: Flow<T>,
+        private val updateValue: suspend Settings.Builder.(T) -> Settings.Builder,
+    ) {
+        suspend fun updateSetting(value: T) = preferences.update { updateValue(value) }
+    }
 }

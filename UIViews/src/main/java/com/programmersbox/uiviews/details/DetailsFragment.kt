@@ -296,6 +296,7 @@ fun ChapterItem(
     val historyDao = LocalHistoryDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val navController = LocalNavController.current
+    val showDownload by LocalSettingsHandling.current.showDownload.flow.collectAsStateWithLifecycle(initialValue = true)
     val genericInfo = LocalGenericInfo.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -455,7 +456,7 @@ fun ChapterItem(
                     }
                 }
 
-                if (infoModel.source.canDownload) {
+                if (infoModel.source.canDownload && showDownload) {
                     OutlinedButton(
                         onClick = {
                             genericInfo.downloadChapter(c, chapters, infoModel, context, context.findActivity(), navController)

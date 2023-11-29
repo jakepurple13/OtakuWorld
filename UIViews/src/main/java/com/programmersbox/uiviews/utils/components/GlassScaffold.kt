@@ -291,6 +291,14 @@ operator fun PaddingValues.plus(plus: PaddingValues): PaddingValues = PaddingVal
     bottom = calculateBottomPadding() + plus.calculateBottomPadding(),
 )
 
+operator fun PaddingValues.minus(minus: PaddingValues): PaddingValues = PaddingValues(
+    start = calculateStartPadding(LayoutDirection.Ltr) -
+            minus.calculateStartPadding(LayoutDirection.Ltr),
+    top = calculateTopPadding() - minus.calculateTopPadding(),
+    end = calculateEndPadding(LayoutDirection.Ltr) - minus.calculateEndPadding(LayoutDirection.Ltr),
+    bottom = calculateBottomPadding() - minus.calculateBottomPadding(),
+)
+
 inline fun Modifier.thenIf(
     condition: Boolean,
     whenFalse: Modifier.() -> Modifier = { this },

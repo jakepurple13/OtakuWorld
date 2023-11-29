@@ -15,6 +15,7 @@ import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
@@ -46,12 +47,15 @@ abstract class ListDatabase : RoomDatabase() {
 @Dao
 interface ListDao {
 
+    @Transaction
     @Query("SELECT * FROM CustomListItem ORDER BY time DESC")
     fun getAllLists(): Flow<List<CustomList>>
 
+    @Transaction
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
     suspend fun getCustomListItem(uuid: UUID): CustomList
 
+    @Transaction
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
     fun getCustomListItemFlow(uuid: UUID): Flow<CustomList>
 

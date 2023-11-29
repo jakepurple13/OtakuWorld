@@ -52,6 +52,8 @@ fun GeneralSettings(
 
         val handling = LocalSettingsHandling.current
 
+        val showDownload = remember(key1 = handling) { handling.showDownload }
+
         val themeSetting by handling.systemThemeMode.collectAsStateWithLifecycle(SystemThemeMode.FollowSystem)
 
         val themeText by remember {
@@ -117,6 +119,13 @@ fun GeneralSettings(
                 )
             },
             updateValue = { scope.launch { handling.setShowListDetail(it) } }
+        )
+
+        SwitchSetting(
+            settingTitle = { Text("Show Download Button") },
+            settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
+            value = showDownload.flow.collectAsStateWithLifecycle(initialValue = true).value,
+            updateValue = { scope.launch { showDownload.updateSetting(it) } }
         )
 
         var sliderValue by remember { mutableFloatStateOf(runBlocking { context.historySave.first().toFloat() }) }

@@ -28,8 +28,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.ArrowDropDownCircle
 import androidx.compose.material.icons.filled.BookmarkRemove
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +45,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
@@ -51,6 +58,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,11 +68,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -82,8 +95,10 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.minus
 import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.toComposeColor
 import com.programmersbox.uiviews.utils.topBounds
@@ -142,9 +157,25 @@ fun DetailsView(
         }
     }
 
-    val topBarColor by animateColorAsState(swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface, label = "")
+    val topBarColor by animateColorAsState(
+        swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface,
+        label = ""
+    )
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+
+    var showLists by remember { mutableStateOf(false) }
+
+    AddToList(
+        showLists = showLists,
+        showListsChange = { showLists = it },
+        info = info,
+        listDao = listDao,
+        hostState = hostState,
+        scope = scope,
+        context = context
+    )
 
     ModalNavigationDrawer(
         drawerState = scaffoldState,
@@ -172,7 +203,7 @@ fun DetailsView(
         val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
 
         val collapsableBehavior = rememberCollapsableTopBehavior(
-            enterAlways = true
+            enterAlways = false
         )
 
         OtakuScaffold(
@@ -207,12 +238,11 @@ fun DetailsView(
                                 scope = scope,
                                 context = context,
                                 info = info,
-                                listDao = listDao,
-                                hostState = hostState,
                                 topBarColor = topBarColor,
                                 isSaved = isSaved,
                                 dao = dao,
-                                onReverseChaptersClick = { reverseChapters = !reverseChapters }
+                                onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                                onShowLists = { showLists = true }
                             )
                         }
                     )
@@ -226,12 +256,88 @@ fun DetailsView(
                     )
                 }
             },
+            bottomBar = {
+                BottomAppBar(
+                    actions = {
+                        NavigationBarItem(
+                            selected = false,
+                            onClick = { showLists = true },
+                            icon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
+                            label = { Text("List") },
+                            colors = NavigationBarItemDefaults.colors(
+                                unselectedIconColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+
+                        NavigationBarItem(
+                            selected = false,
+                            onClick = { Screen.GlobalSearchScreen.navigate(navController, info.title) },
+                            icon = { Icon(Icons.Default.Search, null) },
+                            label = { Text("Search") },
+                            colors = NavigationBarItemDefaults.colors(
+                                unselectedIconColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    },
+                    floatingActionButton = {
+                        val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
+
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                scope.launch {
+                                    if (expanded) collapsableBehavior.state.animateExpand()
+                                    else collapsableBehavior.state.animateCollapse()
+                                }
+                            },
+                            containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
+                            contentColor = swatchInfo?.titleColor?.toComposeColor()
+                                ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
+                            text = { Text("${if (expanded) "Show" else "Hide"} Details") },
+                            icon = {
+                                Icon(
+                                    Icons.Default.ArrowDropDownCircle,
+                                    modifier = Modifier.rotate(180 * (1 - collapsableBehavior.state.collapsedFraction)),
+                                    contentDescription = if (expanded) {
+                                        "Expand"
+                                    } else {
+                                        "Collapse"
+                                    }
+                                )
+                            },
+                        )
+                    },
+                    containerColor = Color.Transparent,
+                    contentColor = topBarColor,
+                    scrollBehavior = bottomAppBarScrollBehavior,
+                    windowInsets = WindowInsets(0.dp),
+                    modifier = Modifier
+                        .padding(LocalNavHostPadding.current)
+                        .drawWithCache {
+                            onDrawBehind {
+                                drawLine(
+                                    b,
+                                    Offset(0f, 8f),
+                                    Offset(size.width, 8f),
+                                    4 * density
+                                )
+                            }
+                        }
+                )
+            },
             snackbarHost = {
                 SnackbarHost(hostState) { data ->
                     val background = swatchInfo?.rgb?.toComposeColor() ?: SnackbarDefaults.color
                     val font = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.surface
                     Snackbar(
-                        containerColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
+                        containerColor = Color(
+                            ColorUtils.blendARGB(
+                                background.toArgb(),
+                                MaterialTheme.colorScheme.onSurface.toArgb(),
+                                .25f
+                            )
+                        ),
                         contentColor = font,
                         snackbarData = data
                     )
@@ -243,7 +349,6 @@ fun DetailsView(
                     enter = fadeIn() + slideInHorizontally { it / 2 },
                     exit = slideOutHorizontally { it / 2 } + fadeOut(),
                     label = "",
-                    modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
                 ) {
                     val notificationManager = LocalContext.current.notificationManager
                     ExtendedFloatingActionButton(
@@ -260,7 +365,8 @@ fun DetailsView(
                         text = { Text("Remove from Saved") },
                         icon = { Icon(Icons.Default.BookmarkRemove, null) },
                         containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
-                        contentColor = swatchInfo?.titleColor?.toComposeColor() ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
+                        contentColor = swatchInfo?.titleColor?.toComposeColor()
+                            ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
                         expanded = listState.isScrollingUp()
                     )
                 }
@@ -269,18 +375,31 @@ fun DetailsView(
                 .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .nestedScroll(collapsableBehavior.nestedScrollConnection)
+                .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
         ) { p ->
+            val modifiedPaddingValues = p - LocalNavHostPadding.current
             BoxWithConstraints {
                 var descriptionVisibility by remember { mutableStateOf(false) }
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     state = listState,
-                    contentPadding = p,
+                    contentPadding = modifiedPaddingValues,
                     modifier = Modifier
                         .fillMaxHeight()
                         .padding(vertical = 4.dp)
                         .haze(
-                            topBounds(p),
+                            area = arrayOf(
+                                topBounds(p),
+                                with(LocalDensity.current) {
+                                    val bottomPaddingPx = modifiedPaddingValues
+                                        .calculateBottomPadding()
+                                        .toPx()
+                                    Rect(
+                                        Offset(0f, maxHeight.toPx() - bottomPaddingPx),
+                                        Offset(maxWidth.toPx(), maxHeight.toPx())
+                                    )
+                                }
+                            ),
                             backgroundColor = swatchInfo?.rgb
                                 ?.toComposeColor()
                                 ?.animate()?.value ?: MaterialTheme.colorScheme.surface
@@ -329,7 +448,7 @@ fun DetailsView(
                         )
                     }
                 }
-                Box(Modifier.padding(p)) {
+                Box(Modifier.padding(modifiedPaddingValues)) {
                     InternalLazyColumnScrollbar(
                         thickness = 8.dp,
                         padding = 2.dp,

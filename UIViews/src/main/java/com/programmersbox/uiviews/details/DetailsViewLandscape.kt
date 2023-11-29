@@ -138,6 +138,18 @@ fun DetailsViewLandscape(
 
     val topBarColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.onSurface
 
+    var showLists by remember { mutableStateOf(false) }
+
+    AddToList(
+        showLists = showLists,
+        showListsChange = { showLists = it },
+        info = info,
+        listDao = listDao,
+        hostState = hostState,
+        scope = scope,
+        context = context
+    )
+
     ModalNavigationDrawer(
         drawerState = scaffoldState,
         drawerContent = {
@@ -182,12 +194,11 @@ fun DetailsViewLandscape(
                             scope = scope,
                             context = context,
                             info = info,
-                            listDao = listDao,
-                            hostState = hostState,
                             topBarColor = topBarColor,
                             isSaved = isSaved,
                             dao = dao,
-                            onReverseChaptersClick = { reverseChapters = !reverseChapters }
+                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                            onShowLists = { showLists = true }
                         )
                     }
                 )
