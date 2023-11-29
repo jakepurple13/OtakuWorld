@@ -68,8 +68,6 @@ dependencies {
 
     implementation(libs.recyclerview)
     implementation(libs.palette)
-    implementation(libs.lottie)
-    implementation(libs.lottieCompose)
     implementation(libs.bundles.roomLibs)
 
     implementation(libs.showMoreLess)
@@ -125,7 +123,7 @@ dependencies {
     implementation(libs.compose.collapsable)
 
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha01")
-    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha01")
+    implementation(libs.materialAdaptive)
 }
 
 protobuf {

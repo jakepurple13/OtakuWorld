@@ -68,6 +68,7 @@ fun SwipeButton(
     elevation: Dp = 8.dp,
     iconGraphicsLayer: GraphicsLayerScope.() -> Unit = {},
     icon: @Composable () -> Unit = {
+        @Suppress("DEPRECATION")
         Icon(
             imageVector = Icons.Filled.ArrowForward,
             modifier = Modifier.size(56.dp),
@@ -75,7 +76,7 @@ fun SwipeButton(
         )
     },
     text: @Composable BoxScope.() -> Unit = {},
-    onSwipe: () -> Unit
+    onSwipe: () -> Unit,
 ) {
     if (swipeableState.isAnimationRunning) {
         DisposableEffect(Unit) {
@@ -150,6 +151,7 @@ fun SwipeButtonPreview() {
                         .fillMaxWidth()
                         .padding(24.dp),
                     icon = {
+                        @Suppress("DEPRECATION")
                         Icon(
                             imageVector = Icons.Filled.ArrowForward,
                             modifier = Modifier.size(56.dp),
@@ -182,6 +184,7 @@ fun SwipeButtonPreview() {
                         .fillMaxWidth()
                         .padding(24.dp),
                     icon = {
+                        @Suppress("DEPRECATION")
                         Icon(
                             imageVector = Icons.Filled.ArrowForward,
                             modifier = Modifier.size(56.dp),

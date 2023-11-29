@@ -6,7 +6,7 @@ firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.0"
 gradle = "8.3.0-alpha10"
 haze = "0.3.1"
-kamelImage = "0.8.3"
+kamelImage = "0.9.0"
 kotlin = "1.9.20"
 latestAboutLibsRelease = "10.8.3"
 coroutinesVersion = "1.7.3"
@@ -15,7 +15,6 @@ pagingVersion = "3.2.1"
 roomVersion = "2.6.0"
 navVersion = "2.7.5"
 koinVersion = "3.5.0"
-lottieVersion = "6.0.0"
 coil = "2.5.0"
 lifecycle = "2.6.2"
 jetpack = "1.6.0-alpha03"
@@ -31,7 +30,7 @@ landscapist = "2.2.11"
 protobufVersion = "3.25.1"
 sketchVersion = "3.2.5"
 activity = "1.8.1"
-composeBomVersion = "2023.12.00-alpha01"
+composeBomVersion = "2023.12.00-alpha02"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -44,7 +43,7 @@ junit = "1.1.5"
 espresso-core = "3.5.1"
 uiautomator = "2.2.0"
 benchmark-macro-junit4 = "1.2.1"
-androidx-baselineprofile = "1.2.0"
+androidx-baselineprofile = "1.2.1"
 profileinstaller = "1.3.1"
 
 [plugins]
@@ -76,6 +75,7 @@ composeFoundation = { group = "androidx.compose.foundation", name = "foundation"
 composeMaterial = { group = "androidx.compose.material", name = "material" }
 materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
+materialAdaptive = { group = "androidx.compose.material3", name = "material3-adaptive" }
 composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
 composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
@@ -94,6 +94,7 @@ composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.
 coilCompose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coilVideo = { module = "io.coil-kt:coil-video", version.ref = "coil" }
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
+
 #Accompanist
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
@@ -120,9 +121,6 @@ lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
 lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 lifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
 lifecycleViewModel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
-
-lottie = { module = "com.airbnb.android:lottie", version.ref = "lottieVersion" }
-lottieCompose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
 
 koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
 koinCompose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinVersion" }
@@ -161,7 +159,7 @@ iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:22.2.0"
+firebaseAuth = "com.google.firebase:firebase-auth:22.3.0"
 googlePlayAds = "com.google.android.gms:play-services-ads:22.5.0"
 
 pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagingVersion" }
@@ -180,9 +178,9 @@ lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.9.0"
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
 
-jsoup = "org.jsoup:jsoup:1.16.2"
+jsoup = "org.jsoup:jsoup:1.17.1"
 
-crashlytics = "com.google.firebase:firebase-crashlytics:18.5.1"
+crashlytics = "com.google.firebase:firebase-crashlytics:18.6.0"
 analytics = "com.google.firebase:firebase-analytics:21.5.0"
 playServices = "com.google.android.gms:play-services-auth:20.7.0"
 
@@ -269,7 +267,7 @@ androidxWebkit = "androidx.webkit:webkit:1.8.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.2"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"
-firebasePlatform = "com.google.firebase:firebase-bom:32.5.0"
+firebasePlatform = "com.google.firebase:firebase-bom:32.6.0"
 firebaseDatabase = { group = "com.google.firebase", name = "firebase-database" }
 firebaseFirestore = { group = "com.google.firebase", name = "firebase-firestore" }
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"

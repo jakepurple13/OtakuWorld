@@ -32,7 +32,6 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(libs.lottie)
     implementation(libs.fileChooser)
     implementation(libs.slideToAct)
 
