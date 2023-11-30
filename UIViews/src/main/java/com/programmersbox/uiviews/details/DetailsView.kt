@@ -7,8 +7,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -45,16 +43,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -258,57 +259,48 @@ fun DetailsView(
             bottomBar = {
                 BottomAppBar(
                     actions = {
-                        NavigationBarItem(
-                            selected = false,
-                            onClick = { showLists = true },
-                            icon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
-                            label = { Text("List") },
-                            colors = NavigationBarItemDefaults.colors(
-                                unselectedIconColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
+                        ToolTipWrapper(
+                            info = { Text("Add to List") }
+                        ) {
+                            IconButton(
+                                onClick = { showLists = true },
+                            ) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) }
+                        }
 
-                        NavigationBarItem(
-                            selected = false,
-                            onClick = { Screen.GlobalSearchScreen.navigate(navController, info.title) },
-                            icon = { Icon(Icons.Default.Search, null) },
-                            label = { Text("Search") },
-                            colors = NavigationBarItemDefaults.colors(
-                                unselectedIconColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
+                        ToolTipWrapper(
+                            info = { Text("Global Search by Name") }
+                        ) {
+                            IconButton(
+                                onClick = { Screen.GlobalSearchScreen.navigate(navController, info.title) },
+                            ) { Icon(Icons.Default.Search, null) }
+                        }
 
                         val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
 
-                        NavigationBarItem(
-                            selected = false,
-                            onClick = {
-                                scope.launch {
-                                    if (expanded) collapsableBehavior.state.animateExpand()
-                                    else collapsableBehavior.state.animateCollapse()
+                        ToolTipWrapper(
+                            info = { Text("${if (expanded) "Show" else "Hide"} Details") }
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        if (expanded) collapsableBehavior.state.animateExpand()
+                                        else collapsableBehavior.state.animateCollapse()
+                                    }
                                 }
-                            },
-                            icon = {
+                            ) {
                                 Icon(
                                     Icons.Default.ArrowDropDownCircle,
                                     modifier = Modifier.rotate(180 * (1 - collapsableBehavior.state.collapsedFraction)),
                                     contentDescription = if (expanded) "Expand" else "Collapse"
                                 )
-                            },
-                            label = { Text("Details") },
-                            colors = NavigationBarItemDefaults.colors(
-                                unselectedIconColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
+                            }
+                        }
                     },
                     floatingActionButton = {
                         AnimatedVisibility(
                             visible = isSaved,
-                            enter = fadeIn() + slideInHorizontally { it / 2 },
-                            exit = slideOutHorizontally { it / 2 } + fadeOut(),
+                            enter = slideInHorizontally { it },
+                            exit = slideOutHorizontally { it },
                             label = "",
                         ) {
                             val notificationManager = LocalContext.current.notificationManager
@@ -483,4 +475,21 @@ fun DetailsView(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ToolTipWrapper(
+    info: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    tooltipState: TooltipState = rememberTooltipState(),
+    content: @Composable () -> Unit,
+) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = { RichTooltip { info() } },
+        state = tooltipState,
+        modifier = modifier,
+        content = content
+    )
 }
